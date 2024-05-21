@@ -7,7 +7,10 @@
 
 static struct {
     pvr_poly_header_t poly_conf;
-    pvr_command_t* command_list;
+
+    /* We use 'work commands' which have room for
+     * our own extra data, and are 8-byte aligned */
+    pvr_work_command_t* command_list;
     size_t command_counter;
     pvr_bool_t lists_submitting;
 } state = {{}, NULL, 0, PVR_FALSE};
@@ -139,16 +142,347 @@ void pvr_api_init() {
     started = true;
 }
 
+static inline bool is_vertex(pvr_command_t* command) {
+    return command->header.para_type == 7;
+}
+
+static inline bool is_last_vertex(pvr_command_t* command) {
+    return command->header.end_of_strip;
+}
+
+static inline float fast_invert(float x) {
+    return (1.f / __builtin_sqrtf(x * x));
+}
+
+static inline void perspective_divide(pvr_vertex3_t* vertex, const float h) {
+    TRACE();
+
+    const float f = fast_invert(vertex->w);
+
+    /* Convert to NDC and apply viewport */
+    vertex->xyz[0] = (vertex->xyz[0] * f * 320) + 320;
+    vertex->xyz[1] = (vertex->xyz[1] * f * -240) + 240;
+
+    /* Orthographic projections need to use invZ otherwise we lose
+    the depth information. As w == 1, and clip-space range is -w to +w
+    we add 1.0 to the Z to bring it into range. We add a little extra to
+    avoid a divide by zero.
+    */
+    if(vertex->w == 1.0f) {
+        vertex->xyz[2] = fast_invert(1.0001f + vertex->xyz[2]);
+    } else {
+        vertex->xyz[2] = f;
+    }
+}
+
+static inline void prepare_store_queues() {
+    //Set PVR DMA registers
+    *PVR_LMMODE0 = 0;
+    *PVR_LMMODE1 = 0;
+
+    //Set QACR registers
+    QACR[1] = QACR[0] = 0x11;
+}
+
+static inline void await_store_queues() {
+    /* Wait for both store queues to complete */
+    sq = (uint32_t*) 0xe0000000;
+    sq[0] = sq[8] = 0;
+}
+
+static inline void ta_submit(pvr_command_t* v)  {
+    uint32_t* s = (uint32_t*) v;
+    sq[0] = *(s++);
+    sq[1] = *(s++);
+    sq[2] = *(s++);
+    sq[3] = *(s++);
+    sq[4] = *(s++);
+    sq[5] = *(s++);
+    sq[6] = *(s++);
+    sq[7] = *(s++);
+    __asm__("pref @%0" : : "r"(sq));
+    sq += 8;
+}
+
+static inline void clip_edge(const pvr_vertex3_t* const v1, const pvr_vertex3_t* const v2, pvr_vertex3_t* vout) {
+    const float o = 0.003921569f;  // 1 / 255
+    const float d0 = v1->w + v1->xyz[2];
+    const float d1 = v2->w + v2->xyz[2];
+    const float t = (fabs(d0) * (1.0f / sqrtf((d1 - d0) * (d1 - d0))));
+    const float invt = 1.0f - t;
+
+    vout->xyz[0] = invt * v1->xyz[0] + t * v2->xyz[0];
+    vout->xyz[1] = invt * v1->xyz[1] + t * v2->xyz[1];
+    vout->xyz[2] = invt * v1->xyz[2] + t * v2->xyz[2];
+    vout->xyz[2] = (vout->xyz[2] < FLT_EPSILON) ? FLT_EPSILON : vout->xyz[2];
+
+    vout->uv[0] = invt * v1->uv[0] + t * v2->uv[0];
+    vout->uv[1] = invt * v1->uv[1] + t * v2->uv[1];
+
+    vout->w = invt * v1->w + t * v2->w;
+
+    const float m = 255 * t;
+    const float n = 255 - m;
+
+    vout->bgra[0] = (v1->bgra[0] * n + v2->bgra[0] * m) * o;
+    vout->bgra[1] = (v1->bgra[1] * n + v2->bgra[1] * m) * o;
+    vout->bgra[2] = (v1->bgra[2] * n + v2->bgra[2] * m) * o;
+    vout->bgra[3] = (v1->bgra[3] * n + v2->bgra[3] * m) * o;
+}
+
+typedef enum visible {
+    NONE_VISIBLE = 0,
+    FIRST_VISIBLE = 1,
+    SECOND_VISIBLE = 2,
+    THIRD_VISIBLE = 4,
+    FIRST_AND_SECOND_VISIBLE = FIRST_VISIBLE | SECOND_VISIBLE,
+    SECOND_AND_THIRD_VISIBLE = SECOND_VISIBLE | THIRD_VISIBLE,
+    FIRST_AND_THIRD_VISIBLE = FIRST_VISIBLE | THIRD_VISIBLE,
+    ALL_VISIBLE = 7
+} visible_t;
+
+
+void process_list(pvr_vertex3_t* vertices, size_t n) {
+    prepare_store_queues();
+
+    /* This is a bit cumbersome - in some cases (particularly case 2)
+       we finish the vertex submission with a duplicated final vertex so
+       that the tri-strip can be continued. However, if the next triangle in the
+       strip is not visible then the duplicated vertex would've been sent without
+       the EOL flag. We won't know if we need the EOL flag or not when processing
+       case 2. To workaround this we may queue a vertex temporarily here, in the normal
+       case it will be submitted by the next iteration with the same flags it had, but
+       in the invisible case it will be overridden to submit with EOL */
+    static pvr_vertex3_t __attribute__((aligned(32))) qv;
+    pvr_vertex3_t* queued_vertex = NULL;
+
+#define QUEUE_VERTEX(v) \
+    do { queued_vertex = &qv; *queued_vertex = *(v); } while(0)
+
+#define SUBMIT_QUEUED_VERTEX(end_of_strip) \
+    do { if(queued_vertex) { queued_vertex->header.end_of_strip = (end_of_strip); ta_submit(queued_vertex); queued_vertex = NULL; } } while(0)
+
+    uint32_t visible_mask = 0;
+
+    pvr_work_command_t* it = vertices;
+
+    for(int i = 0; i < n - 1; ++i, ++it) {
+        pvr_vertex3_t* v0 = &it->v;
+
+        if(is_header(v0)) {
+            ta_submit(v0);
+            visible_mask = 0;
+            continue;
+        }
+
+        pvr_vertex3_t* v1 = &(it + 1)->v;
+        pvr_vertex3_t* v2 = (i < n - 2) ? &(it + 2)->v : NULL;
+
+        assert(!is_header(v1));
+
+        // We are trailing if we're on the penultimate vertex, or the next but one vertex is
+        // an EOL, or v1 is an EOL (FIXME: possibly unnecessary and coverted by the other case?)
+        bool is_trailing = is_last_vertex(v1) || ((v2) ? is_header(v2) : true);
+
+        if(is_trailing) {
+            // OK so we've hit a new context header
+            // we need to finalize this strip and move on
+
+            // If the last triangle was all visible, we need
+            // to submit the last two vertices, any clipped triangles
+            // would've
+            if(visible_mask == ALL_VISIBLE) {
+                SUBMIT_QUEUED_VERTEX(qv.header.end_of_strip);
+
+                perspective_divide(v0, h);
+                ta_submit(v0);
+
+                v1.header.end_of_strip = true;
+
+                perspective_divide(v1, h);
+                ta_submit(v1);
+            } else {
+                // If the previous triangle wasn't all visible, and we
+                // queued a vertex - we force it to be EOL and submit
+                SUBMIT_QUEUED_VERTEX(true);
+            }
+
+            i++;
+            v0++;
+            visible_mask = 0;
+            continue;
+        }
+
+        visible_mask = (
+            (v0->xyz[2] >= -v0->w) << 0 |
+            (v1->xyz[2] >= -v1->w) << 1 |
+            (v2->xyz[2] >= -v2->w) << 2
+            );
+
+        /* If we've gone behind the plane, we finish the strip
+        otherwise we submit however it was */
+        if(visible_mask == NONE_VISIBLE) {
+            SUBMIT_QUEUED_VERTEX(true);
+        } else {
+            SUBMIT_QUEUED_VERTEX(qv.header.end_of_strip);
+        }
+
+        pvr_vertex3_t __attribute__((aligned(32))) scratch[4];
+        pvr_vertex3_t a = &scratch[0], *b = &scratch[1], *c = &scratch[2], *d = &scratch[3];
+
+        switch(visible_mask) {
+        case ALL_VISIBLE:
+            perspective_divide(v0, h);
+            QUEUE_VERTEX(v0);
+            break;
+        case NONE_VISIBLE:
+            break;
+            break;
+        case FIRST_VISIBLE:
+            clip_edge(v0, v1, a);
+            a.header.end_of_strip = false;
+
+            clip_edge(v2, v0, b);
+            b->header.end_of_strip = false;
+
+            perspective_divide(v0, h);
+            ta_submit(v0);
+
+            perspective_divide(a, h);
+            ta_submit(a);
+
+            perspective_divide(b, h);
+            ta_submit(b);
+
+            QUEUE_VERTEX(b);
+            break;
+        case SECOND_VISIBLE:
+            memcpy_vertex(c, v1);
+
+            clip_edge(v0, v1, a);
+            a.header.end_of_strip = false;
+
+            clip_edge(v1, v2, b);
+            b->header.end_of_strip = v2.header.end_of_strip;
+
+            perspective_divide(a, h);
+            ta_submit(a);
+
+            perspective_divide(c, h);
+            ta_submit(c);
+
+            perspective_divide(b, h);
+            QUEUE_VERTEX(b);
+            break;
+        case THIRD_VISIBLE:
+            memcpy_vertex(c, v2);
+
+            clip_edge(v2, v0, a);
+            a.header.end_of_strip = false;
+
+            clip_edge(v1, v2, b);
+            b->header.end_of_strip = false;
+
+            perspective_divide(a, h);
+            //ta_submit(a);
+            ta_submit(a);
+
+            perspective_divide(b, h);
+            ta_submit(b);
+
+            perspective_divide(c, h);
+            QUEUE_VERTEX(c);
+            break;
+        case FIRST_AND_SECOND_VISIBLE:
+            memcpy_vertex(c, v1);
+
+            clip_edge(v2, v0, b);
+            b->header.end_of_strip = false;
+
+            perspective_divide(v0, h);
+            ta_submit(v0);
+
+            clip_edge(v1, v2, a);
+            a.header.end_of_strip = v2.header.end_of_strip;
+
+            perspective_divide(c, h);
+            ta_submit(c);
+
+            perspective_divide(b, h);
+            ta_submit(b);
+
+            perspective_divide(a, h);
+            ta_submit(c);
+
+            QUEUE_VERTEX(a);
+            break;
+        case SECOND_AND_THIRD_VISIBLE:
+            memcpy_vertex(c, v1);
+            memcpy_vertex(d, v2);
+
+            clip_edge(v0, v1, a);
+            a.header.end_of_strip = false;
+
+            clip_edge(v2, v0, b);
+            b->header.end_of_strip = false;
+
+            perspective_divide(a, h);
+            ta_submit(a);
+
+            perspective_divide(c, h);
+            ta_submit(c);
+
+            perspective_divide(b, h);
+            ta_submit(b);
+            ta_submit(c);
+
+            perspective_divide(d, h);
+            QUEUE_VERTEX(d);
+            break;
+        case FIRST_AND_THIRD_VISIBLE:
+            memcpy_vertex(c, v2);
+            c->flags = GPU_CMD_VERTEX;
+            c->header.end_of_strip = false;
+
+            clip_edge(v0, v1, a);
+            a->header.end_of_strip = false;
+
+            clip_edge(v1, v2, b);
+            b->header.end_of_strip = false;
+
+            perspective_divide(v0, h);
+            ta_submit(v0);
+
+            perspective_divide(a, h);
+            ta_submit(a);
+
+            perspective_divide(c, h);
+            ta_submit(c);
+            perspective_divide(b, h);
+            ta_submit(b);
+            QUEUE_VERTEX(c);
+            break;
+        default:
+            break;
+        }
+    }
+
+    SUBMIT_QUEUED_VERTEX(true);
+
+    await_store_queues();
+}
+
+
 void pvr_flush() {
     state.lists_submitting = true;
 
-    for(size_t i = 0; i < state.command_counter; ++i) {}
+    process_list(state.command_list, state.command_counter);
 
     state.command_counter = 0;
 }
 
 void pvr_start(pvr_command_mode_t mode, void* context) {
-    state.command_list = (command_t*)context;
+    state.command_list = (pvr_work_command_t*) context;
     state.command_counter = 0;
 
     // Start the command list of with the header state
@@ -162,7 +496,9 @@ void pvr_start(pvr_command_mode_t mode, void* context) {
     ta_list_init();
 }
 
-void pvr_finish() {}
+void pvr_finish() {
+    pvr_flush();
+}
 
 void pvr_viewport(int x, int y, int width, int height) {}
 
@@ -187,7 +523,7 @@ void pvr_depth_mask(pvr_bool_t value) {}
 
 void pvr_depth_func(pvr_depth_func_t func) {}
 
-void pvr_enable(pvr_state_t state) {}
+void pvr_enable(pvr_state_t s) {}
 
 void pvr_disable(pvr_state_t state) {}
 

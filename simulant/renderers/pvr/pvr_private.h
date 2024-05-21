@@ -117,6 +117,16 @@ typedef struct {
 } pvr_vertex3_t;
 
 typedef struct {
+    union {
+        __attribute__((aligned(8))) pvr_vertex3_t v;
+        __attribute__((aligned(8))) pvr_command_t c;
+    };
+
+    float w;
+    uint32_t unused;
+} pvr_work_command_t;
+
+typedef struct {
     pvr_command_header_t header;
     union {
         pvr_poly_instruction_t poly;
