@@ -117,6 +117,30 @@ typedef struct {
 } pvr_vertex3_t;
 
 typedef struct {
+    pvr_poly_instruction_t poly;
+    pvr_tsp_instruction_t tsp;
+    pvr_rgb_texture_control_t rgb;
+
+    float v0[3];
+    float uv0[2];
+    argb_color_t color0;
+    argb_color_t offset0;
+
+    float v1[3];
+    float uv1[2];
+    argb_color_t color1;
+    argb_color_t offset1;
+
+    float v2[3];
+    float uv2[2];
+    argb_color_t color2;
+    argb_color_t offset2;
+} pvr_background_t;
+
+#define PVR_COMMAND(c) ((pvr_command_t*)c)
+#define PVR_VERTEX(c) ((pvr_vertex3_t*)c)
+
+typedef struct {
     union {
         __attribute__((aligned(8))) pvr_vertex3_t v;
         __attribute__((aligned(8))) pvr_command_t c;
