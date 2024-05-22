@@ -154,10 +154,10 @@ static inline float fast_invert(float x) {
     return (1.f / __builtin_sqrtf(x * x));
 }
 
-static inline void perspective_divide(pvr_vertex3_t* vertex, const float h) {
+static inline void perspective_divide(pvr_vertex3_t* vertex, const float w, const float h) {
     TRACE();
 
-    const float f = fast_invert(vertex->w);
+    const float f = fast_invert(w);
 
     /* Convert to NDC and apply viewport */
     vertex->xyz[0] = (vertex->xyz[0] * f * 320) + 320;
@@ -168,7 +168,7 @@ static inline void perspective_divide(pvr_vertex3_t* vertex, const float h) {
     we add 1.0 to the Z to bring it into range. We add a little extra to
     avoid a divide by zero.
     */
-    if(vertex->w == 1.0f) {
+    if(w == 1.0f) {
         vertex->xyz[2] = fast_invert(1.0001f + vertex->xyz[2]);
     } else {
         vertex->xyz[2] = f;
@@ -204,7 +204,10 @@ static inline void ta_submit(pvr_command_t* v)  {
     sq += 8;
 }
 
-static inline void clip_edge(const pvr_vertex3_t* const v1, const pvr_vertex3_t* const v2, pvr_vertex3_t* vout) {
+static float clip_edge(const pvr_work_command_t* const wv1, const pvr_work_command_t* const wv2, pvr_work_command_t* vout) {
+    pvr_vertex3_t* v1 = &wv1->v;
+    pvr_vertex3_t* v2 = &wv2->v;
+
     const float o = 0.003921569f;  // 1 / 255
     const float d0 = v1->w + v1->xyz[2];
     const float d1 = v2->w + v2->xyz[2];
@@ -219,8 +222,6 @@ static inline void clip_edge(const pvr_vertex3_t* const v1, const pvr_vertex3_t*
     vout->uv[0] = invt * v1->uv[0] + t * v2->uv[0];
     vout->uv[1] = invt * v1->uv[1] + t * v2->uv[1];
 
-    vout->w = invt * v1->w + t * v2->w;
-
     const float m = 255 * t;
     const float n = 255 - m;
 
@@ -228,6 +229,8 @@ static inline void clip_edge(const pvr_vertex3_t* const v1, const pvr_vertex3_t*
     vout->bgra[1] = (v1->bgra[1] * n + v2->bgra[1] * m) * o;
     vout->bgra[2] = (v1->bgra[2] * n + v2->bgra[2] * m) * o;
     vout->bgra[3] = (v1->bgra[3] * n + v2->bgra[3] * m) * o;
+
+    return invt * v1->w + t * v2->w;
 }
 
 typedef enum visible {
@@ -268,6 +271,7 @@ void process_list(pvr_vertex3_t* vertices, size_t n) {
 
     for(int i = 0; i < n - 1; ++i, ++it) {
         pvr_vertex3_t* v0 = &it->v;
+        float v0w = it->w;
 
         if(is_header(v0)) {
             ta_submit(v0);
@@ -275,8 +279,14 @@ void process_list(pvr_vertex3_t* vertices, size_t n) {
             continue;
         }
 
-        pvr_vertex3_t* v1 = &(it + 1)->v;
-        pvr_vertex3_t* v2 = (i < n - 2) ? &(it + 2)->v : NULL;
+        pvr_work_command_t* wv1 = (it + 1);
+        pvr_work_command_t* wv2 = (it + 2);
+
+        pvr_vertex3_t* v1 = &wv1->v;
+        pvr_vertex3_t* v2 = (i < n - 2) ? &wv2->v : NULL;
+
+        float v1w = wv1->w;
+        float v2w = wv2->w;
 
         assert(!is_header(v1));
 
@@ -294,17 +304,17 @@ void process_list(pvr_vertex3_t* vertices, size_t n) {
             if(visible_mask == ALL_VISIBLE) {
                 SUBMIT_QUEUED_VERTEX(qv.header.end_of_strip);
 
-                perspective_divide(v0, h);
+                perspective_divide(v0, v0w, h);
                 ta_submit(v0);
 
-                v1.header.end_of_strip = true;
+                v1.header.end_of_strip = 1;
 
-                perspective_divide(v1, h);
+                perspective_divide(v1, v1w, h);
                 ta_submit(v1);
             } else {
                 // If the previous triangle wasn't all visible, and we
                 // queued a vertex - we force it to be EOL and submit
-                SUBMIT_QUEUED_VERTEX(true);
+                SUBMIT_QUEUED_VERTEX(1);
             }
 
             i++;
@@ -317,12 +327,12 @@ void process_list(pvr_vertex3_t* vertices, size_t n) {
             (v0->xyz[2] >= -v0->w) << 0 |
             (v1->xyz[2] >= -v1->w) << 1 |
             (v2->xyz[2] >= -v2->w) << 2
-            );
+        );
 
         /* If we've gone behind the plane, we finish the strip
         otherwise we submit however it was */
         if(visible_mask == NONE_VISIBLE) {
-            SUBMIT_QUEUED_VERTEX(true);
+            SUBMIT_QUEUED_VERTEX(1);
         } else {
             SUBMIT_QUEUED_VERTEX(qv.header.end_of_strip);
         }
@@ -332,26 +342,26 @@ void process_list(pvr_vertex3_t* vertices, size_t n) {
 
         switch(visible_mask) {
         case ALL_VISIBLE:
-            perspective_divide(v0, h);
+            perspective_divide(v0, v0w, h);
             QUEUE_VERTEX(v0);
             break;
         case NONE_VISIBLE:
             break;
             break;
         case FIRST_VISIBLE:
-            clip_edge(v0, v1, a);
-            a.header.end_of_strip = false;
+            float aw = clip_edge(v0, v1, a);
+            a.header.end_of_strip = 0;
 
-            clip_edge(v2, v0, b);
-            b->header.end_of_strip = false;
+            float bw = clip_edge(v2, v0, b);
+            b->header.end_of_strip = 0;
 
-            perspective_divide(v0, h);
+            perspective_divide(v0, v0w, h);
             ta_submit(v0);
 
-            perspective_divide(a, h);
+            perspective_divide(a, aw, h);
             ta_submit(a);
 
-            perspective_divide(b, h);
+            perspective_divide(b, bw, h);
             ta_submit(b);
 
             QUEUE_VERTEX(b);
@@ -359,59 +369,59 @@ void process_list(pvr_vertex3_t* vertices, size_t n) {
         case SECOND_VISIBLE:
             memcpy_vertex(c, v1);
 
-            clip_edge(v0, v1, a);
-            a.header.end_of_strip = false;
+            float aw = clip_edge(v0, v1, a);
+            a.header.end_of_strip = 0;
 
-            clip_edge(v1, v2, b);
+            float bw = clip_edge(v1, v2, b);
             b->header.end_of_strip = v2.header.end_of_strip;
 
-            perspective_divide(a, h);
+            perspective_divide(a, aw, h);
             ta_submit(a);
 
-            perspective_divide(c, h);
+            perspective_divide(c, v1->w, h);
             ta_submit(c);
 
-            perspective_divide(b, h);
+            perspective_divide(b, bw, h);
             QUEUE_VERTEX(b);
             break;
         case THIRD_VISIBLE:
             memcpy_vertex(c, v2);
 
-            clip_edge(v2, v0, a);
-            a.header.end_of_strip = false;
+            float aw = clip_edge(v2, v0, a);
+            a.header.end_of_strip = 0;
 
-            clip_edge(v1, v2, b);
-            b->header.end_of_strip = false;
+            float bw = clip_edge(v1, v2, b);
+            b->header.end_of_strip = 0;
 
-            perspective_divide(a, h);
+            perspective_divide(a, aw, h);
             //ta_submit(a);
             ta_submit(a);
 
-            perspective_divide(b, h);
+            perspective_divide(b, bw, h);
             ta_submit(b);
 
-            perspective_divide(c, h);
+            perspective_divide(c, v2->w, h);
             QUEUE_VERTEX(c);
             break;
         case FIRST_AND_SECOND_VISIBLE:
             memcpy_vertex(c, v1);
 
-            clip_edge(v2, v0, b);
-            b->header.end_of_strip = false;
+            float bw = clip_edge(v2, v0, b);
+            b->header.end_of_strip = 0;
 
-            perspective_divide(v0, h);
+            perspective_divide(v0, v0w, h);
             ta_submit(v0);
 
-            clip_edge(v1, v2, a);
+            float aw = clip_edge(v1, v2, a);
             a.header.end_of_strip = v2.header.end_of_strip;
 
-            perspective_divide(c, h);
+            perspective_divide(c, v1->w, h);
             ta_submit(c);
 
-            perspective_divide(b, h);
+            perspective_divide(b, bw, h);
             ta_submit(b);
 
-            perspective_divide(a, h);
+            perspective_divide(a, aw, h);
             ta_submit(c);
 
             QUEUE_VERTEX(a);
@@ -420,45 +430,45 @@ void process_list(pvr_vertex3_t* vertices, size_t n) {
             memcpy_vertex(c, v1);
             memcpy_vertex(d, v2);
 
-            clip_edge(v0, v1, a);
-            a.header.end_of_strip = false;
+            float aw = clip_edge(v0, v1, a);
+            a.header.end_of_strip = 1;
 
-            clip_edge(v2, v0, b);
-            b->header.end_of_strip = false;
+            float bw = clip_edge(v2, v0, b);
+            b->header.end_of_strip = 1;
 
-            perspective_divide(a, h);
+            perspective_divide(a, aw, h);
             ta_submit(a);
 
-            perspective_divide(c, h);
+            perspective_divide(c, v1->w, h);
             ta_submit(c);
 
-            perspective_divide(b, h);
+            perspective_divide(b, bw, h);
             ta_submit(b);
             ta_submit(c);
 
-            perspective_divide(d, h);
+            perspective_divide(d, v2->w, h);
             QUEUE_VERTEX(d);
             break;
         case FIRST_AND_THIRD_VISIBLE:
             memcpy_vertex(c, v2);
             c->flags = GPU_CMD_VERTEX;
-            c->header.end_of_strip = false;
+            c->header.end_of_strip = 0;
 
-            clip_edge(v0, v1, a);
-            a->header.end_of_strip = false;
+            float aw = clip_edge(v0, v1, a);
+            a->header.end_of_strip = 0;
 
-            clip_edge(v1, v2, b);
-            b->header.end_of_strip = false;
+            float bw = clip_edge(v1, v2, b);
+            b->header.end_of_strip = 0;
 
-            perspective_divide(v0, h);
+            perspective_divide(v0, v0->w, h);
             ta_submit(v0);
 
-            perspective_divide(a, h);
+            perspective_divide(a, aw, h);
             ta_submit(a);
 
-            perspective_divide(c, h);
+            perspective_divide(c, v2->w, h);
             ta_submit(c);
-            perspective_divide(b, h);
+            perspective_divide(b, bw, h);
             ta_submit(b);
             QUEUE_VERTEX(c);
             break;
@@ -467,7 +477,7 @@ void process_list(pvr_vertex3_t* vertices, size_t n) {
         }
     }
 
-    SUBMIT_QUEUED_VERTEX(true);
+    SUBMIT_QUEUED_VERTEX(1);
 
     await_store_queues();
 }
