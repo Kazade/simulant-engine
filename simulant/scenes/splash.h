@@ -37,7 +37,7 @@ private:
 
     CameraPtr camera_;
 
-    AudioSource* source_;
+    AudioSource* source_ = nullptr;
 
     LayerPtr pipeline_;
 
