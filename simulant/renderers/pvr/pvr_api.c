@@ -16,7 +16,15 @@ static struct {
     pvr_bool_t lists_submitting;
 
     pvr_background_t* background;
-} state = {{}, NULL, 0, PVR_FALSE, NULL};
+
+    pvr_vec3_t* positions;
+    pvr_vec2_t* uvs;
+    argb_color_t* colors;
+    argb_color_t* color_offsets;
+    pvr_vec3_t* normals;
+    pvr_vec2_t* sts;
+    size_t stride;
+} state = {{}, NULL, 0, PVR_FALSE, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0};
 
 #define REG_SOFTRESET 0x005F8008
 #define REG_TA_LIST_INIT 0x005F8144
@@ -224,22 +232,22 @@ static inline void ta_submit(pvr_command_t* v)  {
 static float clip_edge(const pvr_work_command_t* const wv1,
                        const pvr_work_command_t* const wv2,
                        pvr_vertex3_t* vout) {
-    pvr_vertex3_t* v1 = &wv1->v;
-    pvr_vertex3_t* v2 = &wv2->v;
+    const pvr_vertex3_t* v1 = &wv1->v;
+    const pvr_vertex3_t* v2 = &wv2->v;
 
     const float o = 0.003921569f;  // 1 / 255
-    const float d0 = v1->w + v1->xyz[2];
-    const float d1 = v2->w + v2->xyz[2];
+    const float d0 = wv1->w + v1->xyz.z;
+    const float d1 = wv2->w + v2->xyz.z;
     const float t = (fabs(d0) * (1.0f / sqrtf((d1 - d0) * (d1 - d0))));
     const float invt = 1.0f - t;
 
-    vout->xyz[0] = invt * v1->xyz[0] + t * v2->xyz[0];
-    vout->xyz[1] = invt * v1->xyz[1] + t * v2->xyz[1];
-    vout->xyz[2] = invt * v1->xyz[2] + t * v2->xyz[2];
-    vout->xyz[2] = (vout->xyz[2] < FLT_EPSILON) ? FLT_EPSILON : vout->xyz[2];
+    vout->xyz.x = invt * v1->xyz.x + t * v2->xyz.x;
+    vout->xyz.y = invt * v1->xyz.y + t * v2->xyz.y;
+    vout->xyz.z = invt * v1->xyz.z + t * v2->xyz.z;
+    vout->xyz.z = (vout->xyz.z < FLT_EPSILON) ? FLT_EPSILON : vout->xyz.z;
 
-    vout->uv[0] = invt * v1->uv[0] + t * v2->uv[0];
-    vout->uv[1] = invt * v1->uv[1] + t * v2->uv[1];
+    vout->uv.x = invt * v1->uv.x + t * v2->uv.x;
+    vout->uv.y = invt * v1->uv.y + t * v2->uv.y;
 
     const float m = 255 * t;
     const float n = 255 - m;
@@ -249,7 +257,7 @@ static float clip_edge(const pvr_work_command_t* const wv1,
     vout->bgra[2] = (v1->bgra[2] * n + v2->bgra[2] * m) * o;
     vout->bgra[3] = (v1->bgra[3] * n + v2->bgra[3] * m) * o;
 
-    return invt * v1->w + t * v2->w;
+    return invt * wv1->w + t * wv2->w;
 }
 
 typedef enum visible {
@@ -349,11 +357,9 @@ void process_list(pvr_work_command_t* vertices, size_t n) {
             continue;
         }
 
-        visible_mask = (
-            (v0->xyz[2] >= -v0->w) << 0 |
-            (v1->xyz[2] >= -v1->w) << 1 |
-            (v2->xyz[2] >= -v2->w) << 2
-        );
+        visible_mask =
+            ((v0->xyz.z >= -wv0->w) << 0 | (v1->xyz.z >= -wv1->w) << 1 |
+             (v2->xyz.z >= -wv2->w) << 2);
 
         /* If we've gone behind the plane, we finish the strip
         otherwise we submit however it was */
@@ -396,7 +402,7 @@ void process_list(pvr_work_command_t* vertices, size_t n) {
                 QUEUE_VERTEX(b);
                 break;
             case SECOND_VISIBLE:
-                memcpy_vertex(c, v1);
+                *c = *v1;
 
                 aw = clip_edge(wv0, wv1, a);
                 a->header.end_of_strip = 0;
@@ -414,7 +420,7 @@ void process_list(pvr_work_command_t* vertices, size_t n) {
                 QUEUE_VERTEX(b);
                 break;
             case THIRD_VISIBLE:
-                memcpy_vertex(c, v2);
+                *c = *v2;
 
                 aw = clip_edge(wv2, wv0, a);
                 a->header.end_of_strip = 0;
@@ -433,7 +439,7 @@ void process_list(pvr_work_command_t* vertices, size_t n) {
                 QUEUE_VERTEX(c);
                 break;
             case FIRST_AND_SECOND_VISIBLE:
-                memcpy_vertex(c, v1);
+                *c = *v1;
 
                 bw = clip_edge(wv2, wv0, b);
                 b->header.end_of_strip = 0;
@@ -456,8 +462,8 @@ void process_list(pvr_work_command_t* vertices, size_t n) {
                 QUEUE_VERTEX(a);
                 break;
             case SECOND_AND_THIRD_VISIBLE:
-                memcpy_vertex(c, v1);
-                memcpy_vertex(d, v2);
+                *c = *v1;
+                *d = *v2;
 
                 aw = clip_edge(wv0, wv1, a);
                 a->header.end_of_strip = 1;
@@ -479,7 +485,8 @@ void process_list(pvr_work_command_t* vertices, size_t n) {
                 QUEUE_VERTEX(d);
                 break;
             case FIRST_AND_THIRD_VISIBLE:
-                memcpy_vertex(c, v2);
+                *c = *v2;
+
                 c->header.end_of_strip = 0;
 
                 aw = clip_edge(wv0, wv1, a);
@@ -542,8 +549,7 @@ void pvr_viewport(int x, int y, int width, int height) {}
 void pvr_shade_model(pvr_shade_model_t model) {}
 
 void pvr_clear_color(argb_color_t color) {
-    // FIXME: Read from color
-    pvr_set_bg_color(0, 0, 0);
+
 }
 
 void pvr_clear(pvr_clear_flag_mask_t mask) {}
@@ -579,9 +585,56 @@ void pvr_light_attenuation(pvr_light_t i, float constant, float linear,
 
 void pvr_vertex_pointers(pvr_vec3_t* positions, pvr_vec2_t* uvs,
                          argb_color_t* colors, argb_color_t* color_offsets,
-                         pvr_vec3_t* normals, pvr_vec2_t* sts, size_t stride) {}
+                         pvr_vec3_t* normals, pvr_vec2_t* sts, size_t stride) {
+    state.positions = positions;
+    state.uvs = uvs;
+    state.colors = colors;
+    state.color_offsets = color_offsets;
+    state.normals = normals;
+    state.sts = sts;
+    state.stride = stride;
+}
 
-void pvr_draw_arrays(pvr_primitive_t prim, size_t start, size_t count) {}
+void pvr_draw_arrays(pvr_primitive_t prim, size_t start, size_t count) {
+    pvr_work_command_t* output = &state.command_list[state.command_counter++];
+
+    size_t stride = state.stride == 0 ? sizeof(pvr_vec3_t) : state.stride;
+    uint8_t* in = (uint8_t*)state.positions + (stride * start);
+    pvr_work_command_t* out = output;
+
+    for(size_t i = 0; i < count; ++i) {
+        pvr_vec3_t* pos = (pvr_vec3_t*)in;
+        out->v.xyz = *pos;
+        in += stride;
+        out++;
+    }
+
+    in = (uint8_t*)state.uvs + (stride * start);
+    out = output;
+    stride = state.stride == 0 ? sizeof(pvr_vec2_t) : state.stride;
+
+    for(size_t i = 0; i < count; ++i) {
+        pvr_vec2_t* uv = (pvr_vec2_t*)in;
+        out->v.uv = *uv;
+        in += stride;
+        out++;
+    }
+
+    in = (uint8_t*)state.colors + (stride * start);
+    out = output;
+    stride = state.stride == 0 ? sizeof(argb_color_t) : state.stride;
+
+    for(size_t i = 0; i < count; ++i) {
+        argb_color_t* color = (argb_color_t*)in;
+        out->v.color = *color;
+        in += stride;
+        out++;
+    }
+
+    if(prim == PVR_PRIM_TRIANGLE_STRIP) {
+        state.command_list[state.command_counter - 1].v.header.end_of_strip = 1;
+    }
+}
 
 void pvr_draw_elements(pvr_primitive_t prim, size_t count,
                        const uint32_t* indices) {}

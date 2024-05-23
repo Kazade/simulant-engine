@@ -110,8 +110,8 @@ typedef struct {
  */
 typedef struct {
     pvr_command_header_t header;
-    float x, y, z;
-    float u, v;
+    pvr_vec3_t xyz;
+    pvr_vec2_t uv;
     argb_color_t color;
     argb_color_t offset_color;
 } pvr_vertex3_t;
@@ -121,18 +121,18 @@ typedef struct {
     pvr_tsp_instruction_t tsp;
     pvr_rgb_texture_control_t rgb;
 
-    float v0[3];
-    float uv0[2];
+    pvr_vec3_t v0;
+    pvr_vec2_t uv0;
     argb_color_t color0;
     argb_color_t offset0;
 
-    float v1[3];
-    float uv1[2];
+    pvr_vec3_t v1;
+    pvr_vec2_t uv1;
     argb_color_t color1;
     argb_color_t offset1;
 
-    float v2[3];
-    float uv2[2];
+    pvr_vec3_t v2;
+    pvr_vec2_t uv2;
     argb_color_t color2;
     argb_color_t offset2;
 } pvr_background_t;
