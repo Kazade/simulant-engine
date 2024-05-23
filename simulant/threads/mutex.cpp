@@ -56,8 +56,9 @@ Mutex::~Mutex() {
     assert(!err);
 #elif defined(_MSC_VER)
     #ifndef NDEBUG
-    assert(!TryEnterCriticalSection(&mutex_));
+    assert(TryEnterCriticalSection(&mutex_));
     LeaveCriticalSection(&mutex_);
+
     #endif // !NDEBUG
 
     DeleteCriticalSection(&mutex_);
@@ -90,7 +91,7 @@ bool Mutex::try_lock() {
 #elif defined(__DREAMCAST__)
     return mutex_trylock(&mutex_) == 0;
 #elif defined(_MSC_VER)
-    return TryEnterCriticalSection(&mutex_) == 0;
+    return TryEnterCriticalSection(&mutex_) == 1;
 #else
     return pthread_mutex_trylock(&mutex_) == 0;
 #endif
@@ -146,8 +147,10 @@ RecursiveMutex::RecursiveMutex() {
 #elif defined(__DREAMCAST__)
     err = mutex_init(&mutex_, MUTEX_TYPE_RECURSIVE);
 #elif defined(_MSC_VER)
+#pragma message("RecursiveMutex not implemented for MSVC")
     InitializeCriticalSection(&mutex_);
-    S_WARN_ONCE("RecursiveMutex not implemented on WINDOWS");
+
+    S_WARN_ONCE("RecursiveMutex not implemented for MSVC");
 #else
     pthread_mutexattr_t attr;
 

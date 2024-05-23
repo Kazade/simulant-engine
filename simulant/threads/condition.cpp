@@ -66,8 +66,9 @@ void Condition::wait(Mutex& mutex) {
     _S_UNUSED(err);
     assert(!err);
 #elif defined(_MSC_VER)
-    assert(!mutex.try_lock());
     int err = SleepConditionVariableCS(&cond_, &mutex.mutex_, 0);
+    mutex.unlock();
+
     _S_UNUSED(err);
     assert(!err);
 #else

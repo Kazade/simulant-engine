@@ -71,7 +71,8 @@ public:
     void mark_changed();
 
     const VertexRange* vertex_ranges() const {
-        return &vertex_ranges_[0];
+
+        return vertex_range_count() ? &vertex_ranges_[0] : nullptr;
     }
 
     std::size_t vertex_range_count() const {
