@@ -198,7 +198,7 @@ void PSPRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
         bool enabled = i < count;
 
         if(enabled) {
-            auto pos = camera_->view_matrix() * light->absolute_position();
+            auto pos = camera_->view_matrix() * light->transform->position();
 
             ScePspFVector3 light_pos = {pos.x, pos.y, -pos.z};
             sceGuEnable(GU_LIGHT0 + i);
