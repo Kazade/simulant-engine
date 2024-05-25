@@ -22,12 +22,12 @@ public:
     PSPRenderQueueVisitor(PSPRenderer* renderer, CameraPtr camera);
 
     void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, Stage* stage) override;
-    void visit(const Renderable* renderable, const MaterialPass* pass, batcher::Iteration);
+    void visit(const Renderable* renderable, const MaterialPass* pass, batcher::Iteration) override;
     void end_traversal(const batcher::RenderQueue& queue, Stage* stage) override;
 
-    void change_render_group(const batcher::RenderGroup* prev, const batcher::RenderGroup* next);
-    void change_material_pass(const MaterialPass* prev, const MaterialPass* next);
-    void apply_lights(const LightPtr* lights, const uint8_t count);
+    void change_render_group(const batcher::RenderGroup* prev, const batcher::RenderGroup* next) override;
+    void change_material_pass(const MaterialPass* prev, const MaterialPass* next) override;
+    void apply_lights(const LightPtr* lights, const uint8_t count) override;
 
 private:
     PSPRenderer* renderer_;
