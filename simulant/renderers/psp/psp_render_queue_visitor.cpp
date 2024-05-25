@@ -72,17 +72,17 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 
     sceGuSpecular(next->shininess());
 
-    switch(next->colour_material()) {
-        case COLOUR_MATERIAL_NONE:
+    switch(next->color_material()) {
+        case COLOR_MATERIAL_NONE:
             sceGuColorMaterial(0);
             break;
-        case COLOUR_MATERIAL_AMBIENT:
+        case COLOR_MATERIAL_AMBIENT:
             sceGuColorMaterial(GU_AMBIENT);
             break;
-        case COLOUR_MATERIAL_DIFFUSE:
+        case COLOR_MATERIAL_DIFFUSE:
             sceGuColorMaterial(GU_DIFFUSE);
             break;
-        case COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE:
+        case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
             sceGuColorMaterial(GU_AMBIENT | GU_DIFFUSE);
             break;
         default:
@@ -157,7 +157,7 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         case BLEND_ALPHA:
             sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
             break;
-        case BLEND_COLOUR:
+        case BLEND_COLOR:
             sceGuBlendFunc(GU_ADD, GU_SRC_COLOR, GU_ONE_MINUS_SRC_COLOR, 0, 0);
             break;
         case BLEND_MODULATE:
@@ -270,17 +270,17 @@ void convert_color(uint16_t* vout, const uint8_t* vin, VertexAttribute type) {
     const float* v = (const float*)vin;
     switch(type) {
         case VERTEX_ATTRIBUTE_4F:
-            *vout = smlt::Colour(v[0], v[1], v[2], v[3]).to_abgr_4444();
+            *vout = smlt::Color(v[0], v[1], v[2], v[3]).to_abgr_4444();
             break;
         case VERTEX_ATTRIBUTE_3F:
-            *vout = smlt::Colour(v[0], v[1], v[2], 1.0f).to_abgr_4444();
+            *vout = smlt::Color(v[0], v[1], v[2], 1.0f).to_abgr_4444();
             break;
         case VERTEX_ATTRIBUTE_4UB_RGBA:
-            *vout = smlt::Colour::from_bytes(vin[0], vin[1], vin[2], vin[3])
+            *vout = smlt::Color::from_bytes(vin[0], vin[1], vin[2], vin[3])
                         .to_abgr_4444();
             break;
         case VERTEX_ATTRIBUTE_4UB_BGRA:
-            *vout = smlt::Colour::from_bytes(vin[2], vin[1], vin[0], vin[3])
+            *vout = smlt::Color::from_bytes(vin[2], vin[1], vin[0], vin[3])
                         .to_abgr_4444();
             break;
         default:
