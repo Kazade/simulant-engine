@@ -133,7 +133,7 @@ private:
 template<typename T>
 struct PropertyValue : public BasePropertyValue {
     bool is_set_ = false;
-    T data;
+    T data {};
 
     PropertyValue() = default;
     PropertyValue(T* value) {

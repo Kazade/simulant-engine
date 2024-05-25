@@ -4,7 +4,7 @@ namespace smlt {
 
 struct Degrees;
 
-class Radians {
+struct Radians {
 private:
     float value_ = 0.0f;
 

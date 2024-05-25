@@ -10,7 +10,7 @@ namespace smlt {
 struct Radians;
 #endif
 
-class Degrees {
+struct Degrees {
 private:
     float value_ = 0.0f;
 
@@ -80,7 +80,7 @@ public:
         return !(*this == rhs);
     }
 
-    bool is_effectively_equal_to(const Degrees& rhs, float epsilon=0.0f) {
+    bool is_effectively_equal_to(const Degrees& rhs, float epsilon=0.0f) const {
         // Returns equal if the values represent basically the same thing (e.g. -90 == 270)
         float rhs_v = rhs.value_;
         if(rhs_v < 0) rhs_v += 360.0f;

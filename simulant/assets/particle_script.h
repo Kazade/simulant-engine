@@ -20,10 +20,10 @@ struct Emitter {
     Vec3 direction = Vec3::POSITIVE_Y;
     Vec3 dimensions = Vec3(100, 100, 100);
 
-    std::pair<float, float> duration_range = std::make_pair(0.0, 0.0);
-    std::pair<float, float> repeat_delay_range = std::make_pair(0.0, 0.0);
-    std::pair<float, float> velocity_range = std::make_pair(1.0, 1.0);
-    std::pair<float, float> ttl_range = std::make_pair(5.0, 5.0);
+    std::pair<float, float> duration_range = std::make_pair(0.0f, 0.0f);
+    std::pair<float, float> repeat_delay_range = std::make_pair(0.0f, 0.0f);
+    std::pair<float, float> velocity_range = std::make_pair(1.0f, 1.0f);
+    std::pair<float, float> ttl_range = std::make_pair(5.0f, 5.0f);
 
     Degrees angle;
     std::vector<Color> colors = {Color::WHITE};

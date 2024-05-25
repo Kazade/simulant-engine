@@ -203,7 +203,7 @@ public:
     bool interp_vertex(uint32_t source_idx, const VertexData& dest_state, uint32_t dest_idx, VertexData& out, uint32_t out_idx, float interp);
     uint8_t* data() { if(empty()) { return nullptr; } return &data_[0]; }
     const uint8_t* data() const { if(empty()) { return nullptr; } return &data_[0]; }
-    uint32_t data_size() const { return data_.size(); }
+    uint32_t data_size() const { return (uint32_t)data_.size(); }
 
     VertexAttribute attribute_for_type(VertexAttributeType type) const;
 
@@ -393,7 +393,7 @@ public:
             break;
         }
 
-        count_ = indices_.size() / stride_;
+        count_ = (uint32_t)(indices_.size() / stride_);
     }
 
     void index(uint32_t idx) {

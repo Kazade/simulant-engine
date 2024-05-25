@@ -119,14 +119,14 @@ public:
     bool set_pass_count(uint8_t pass_count);
 
     uint8_t pass_count() const {
-        return passes_.size();
+        return (uint8_t)passes_.size();
     }
 
     MaterialPass* pass(uint8_t pass);
 
     void each(std::function<void (uint32_t, MaterialPass*)> callback) {
         for(std::size_t i = 0; i != passes_.size(); ++i) {
-            callback(i, &passes_[i]);
+            callback((uint32_t)i, &passes_[i]);
         }
     }
 
