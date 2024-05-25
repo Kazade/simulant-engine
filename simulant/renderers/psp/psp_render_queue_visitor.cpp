@@ -27,7 +27,7 @@ void PSPRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
     _S_UNUSED(queue);
     _S_UNUSED(frame_id);
 
-    auto l = stage->ambient_light();
+    auto l = stage->scene->lighting->ambient_light();
     sceGuAmbient(l.to_abgr_8888());
 }
 
@@ -202,8 +202,8 @@ void PSPRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
 
             ScePspFVector3 light_pos = {pos.x, pos.y, -pos.z};
             sceGuEnable(GU_LIGHT0 + i);
-
-            if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
+            
+            if(light->node_type() == LIGHT_TYPE_DIRECTIONAL) {
                 sceGuLight(i, GU_DIRECTIONAL, GU_DIFFUSE_AND_SPECULAR,
                            &light_pos);
             } else {
