@@ -942,22 +942,12 @@ private:
             '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_'
         };
 
-        //const char16_t row1_accent_lower [] = {
-        //    u'à', u'á', u'â', u'ã', u'ä', u'å', u'æ', u'ç', u'è', u'é', u'ê'
-        //};
-
-        const char16_t row1_accent_lower[] = {
-            '\u0061', '\u00E1', '\u00E2', '\u00E3', '\u00E4', '\u00E5', '\u00E6', '\u00E7',
-            '\u00E8', '\u00E9', '\u00EA'
+        const char16_t row1_accent_lower [] = {
+            u'à', u'á', u'â', u'ã', u'ä', u'å', u'æ', u'ç', u'è', u'é', u'ê'
         };
 
-        //const char16_t row1_accent_upper [] = {
-        //    u'À', u'Á', u'Â', u'Ã', u'Ä', u'Å', u'Æ', u'Ç', u'È', u'É', u'Ê'
-        //};
-
-        const char16_t row1_accent_upper[] = {
-            '\u00C0', '\u00C1', '\u00C2', '\u00C3', '\u00C4', '\u00C5', '\u00C6', '\u00C7',
-            '\u00C8', '\u00C9', '\u00CA'
+        const char16_t row1_accent_upper [] = {
+            u'À', u'Á', u'Â', u'Ã', u'Ä', u'Å', u'Æ', u'Ç', u'È', u'É', u'Ê'
         };
 
         const char16_t row2_lower [] = {
@@ -968,30 +958,16 @@ private:
             'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\''
         };
 
-        //const char16_t row2_numeric [] = {
-        //    '~', '`', '=', '\\', '+', '{', '}', '|', '[', ']', u'£'
-        //};
-
-        const char16_t row2_numeric[] = {
-            '~', '`', '=', '\\', '+', '{', '}', '|', '[', ']', '\u00A3'
+        const char16_t row2_numeric [] = {
+            '~', '`', '=', '\\', '+', '{', '}', '|', '[', ']', u'£'
         };
 
-        //const char16_t row2_accent_lower [] = {
-        //    u'ë', u'ì', u'í', u'î', u'ï', u'ð', u'ñ', u'ò', u'ó', u'ô', u'õ'
-        //};
-
-        const char16_t row2_accent_lower[] = {
-            '\u00E9', '\u00EA', '\u00EB', '\u00EC', '\u00ED', '\u00EE', '\u00EF', '\u00F0',
-            '\u00F1', '\u00F2', '\u00F3'
+        const char16_t row2_accent_lower [] = {
+            u'ë', u'ì', u'í', u'î', u'ï', u'ð', u'ñ', u'ò', u'ó', u'ô', u'õ'
         };
 
-        //const char16_t row2_accent_upper [] = {
-        //    u'Ë', u'Ì', u'Í', u'Î', u'Ï', u'Ð', u'Ñ', u'Ò', u'Ó', u'Ô', u'Õ'
-        //};
-
-        const char16_t row2_accent_upper[] = {
-            '\u00CB', '\u00CC', '\u00CD', '\u00CE', '\u00CF', '\u00D0', '\u00D1', '\u00D2',
-            '\u00D3', '\u00D4', '\u00D5'
+        const char16_t row2_accent_upper [] = {
+            u'Ë', u'Ì', u'Í', u'Î', u'Ï', u'Ð', u'Ñ', u'Ò', u'Ó', u'Ô', u'Õ'
         };
 
         const char16_t row3_lower [] = {
@@ -1002,30 +978,16 @@ private:
             'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '!', '?'
         };
 
-        //const char16_t row3_numeric [] = {
-        //    '<', '>', ';', ':', '"', '\'', ',', '.', '?', '/', u'¢'
-        //};
-
-        const char16_t row3_numeric[] = {
-            '<', '>', ';', ':', '"', '\'', ',', '.', '?', '/', '\u00A2'
+        const char16_t row3_numeric [] = {
+            '<', '>', ';', ':', '"', '\'', ',', '.', '?', '/', u'¢'
         };
 
-        //const char16_t row3_accent_lower [] = {
-        //    u'ö', u'ø', u'ù', u'ú', u'û', u'ü', u'ý', u'þ', u'ÿ', u'ß', u'\0'
-        //};
-
-        const char16_t row3_accent_lower[] = {
-            '\u00F6', '\u00F8', '\u00F9', '\u00FA', '\u00FB', '\u00FC', '\u00FD', '\u00FE',
-            '\u00FF', '\u00DF', '\0'
+        const char16_t row3_accent_lower [] = {
+            u'ö', u'ø', u'ù', u'ú', u'û', u'ü', u'ý', u'þ', u'ÿ', u'ß', u'\0'
         };
 
-        //const char16_t row3_accent_upper [] = {
-        //    u'Ö', u'Ø', u'Ù', u'Ú', u'Û', u'Ü', u'Ý', u'Þ', u'¿', u'¡', u'\0'
-        //};
-
-        const char16_t row3_accent_upper[] = {
-            '\u00D6', '\u00D8', '\u00D9', '\u00DA', '\u00DB', '\u00DC', '\u00DD', '\u00DE',
-            '\u00BF', '\u00A1', '\0'
+        const char16_t row3_accent_upper [] = {
+            u'Ö', u'Ø', u'Ù', u'Ú', u'Û', u'Ü', u'Ý', u'Þ', u'¿', u'¡', u'\0'
         };
 
         const char16_t* row1 = (mode_ == KEYBOARD_MODE_LOWERCASE) ?
