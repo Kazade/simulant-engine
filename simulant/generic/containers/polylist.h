@@ -30,6 +30,7 @@
 #include <memory>
 #include <cstring>
 #include <stdexcept>
+#include <stdalign.h>
 
 namespace smlt {
 

@@ -3,6 +3,7 @@
 #include <cassert>
 #include <utility>
 #include <cstdint>
+#include <stdalign.h>
 
 namespace smlt {
 
