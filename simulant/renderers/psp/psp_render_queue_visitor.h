@@ -37,7 +37,7 @@ public:
 private:
     PSPRenderer* renderer_;
     CameraPtr camera_;
-    Colour global_ambient_;
+    Color global_ambient_;
 
     const MaterialPass* pass_ = nullptr;
     LightPtr light_;
