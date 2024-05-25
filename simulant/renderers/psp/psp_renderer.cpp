@@ -117,7 +117,7 @@ void PSPRenderer::clear(const RenderTarget& target, const Color& color, uint32_t
                  int(255.0f * color.b) << 16 | int(255.0f * color.a) << 24;
     uint32_t flags = 0;
 
-    if(clear_flags & BUFFER_CLEAR_COLOUR_BUFFER) {
+    if(clear_flags & BUFFER_CLEAR_COLOR_BUFFER) {
         flags |= GU_COLOR_BUFFER_BIT;
     }
 
