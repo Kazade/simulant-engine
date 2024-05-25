@@ -29,7 +29,9 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${TEST_FILES} ${GL_TESTS} ${TEST_GENERATOR_BIN}
 )
 
+IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-access-control")
+ENDIF()
 
 IF(PLATFORM_PSP)
     SET(PSP_TITLE "Simulant Tests")
@@ -64,7 +66,7 @@ IF(PLATFORM_PSP)
     )
 ENDIF()
 
-IF(WIN32)
+IF(WIN32 AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 # Necessary when compiling tests on mingw because the main.cpp file gets too large
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wa,-mbig-obj")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj")
