@@ -3,18 +3,19 @@ PROJECT(simulant CXX C ASM)
 
 # Set a default build type if none was specified
 IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  MESSAGE(STATUS "Setting CMAKE_BUILD_TYPE to 'Debug' by default. Use -DCMAKE_BUILD_TYPE=Release for a release build.")
-  SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
-  # Set the possible values of build type for cmake-gui
-  SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+    MESSAGE(STATUS "Setting CMAKE_BUILD_TYPE to 'Debug' by default. Use -DCMAKE_BUILD_TYPE=Release for a release build.")
+    SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+    # Set the possible values of build type for cmake-gui
+    SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 ENDIF()
 
 # Set module options
 IF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" OFF)
+    OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" OFF)
 ELSE()
-OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
+    OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
 ENDIF()
+
 OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
 OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
 OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" OFF)
@@ -25,9 +26,9 @@ OPTION(SIMULANT_PROFILE "Force profiling mode" OFF)
 OPTION(SIMULANT_USE_ALDC "Use ALdc on all platforms" OFF)
 
 IF(PLATFORM_DREAMCAST)
-OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" ON)
+    OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" ON)
 ELSE()
-OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" OFF)
+    OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" OFF)
 ENDIF()
 
 SET(OpenGL_GL_PREFERENCE "LEGACY")
@@ -36,9 +37,9 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_mo
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTIXML_USE_STL")
 
 IF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14 /W3")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14 /W3")
 ELSE()
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall")
 ENDIF()
 
 IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -50,24 +51,24 @@ IF(CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
 ENDIF()
 
 IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall")
 ELSE()
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /std:c11 /W3")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /std:c11 /W3")
 ENDIF()
 
 SET(CMAKE_ASM_FLAGS "")
 
 # If we're forcing profiling mode, set that define
 IF(SIMULANT_PROFILE)
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_PROFILE")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_PROFILE")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_PROFILE")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_PROFILE")
 ENDIF()
 
 INCLUDE(CheckFunctionExists)
 check_function_exists("pthread_yield" HAS_PTHREAD_YIELD)
 IF(${HAS_PTHREAD_YIELD})
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
 ENDIF()
 
 INCLUDE(CheckIPOSupported)
@@ -83,8 +84,8 @@ ENDIF()
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
 # Fast-math is important on DC!
 IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
-SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
+    SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
+    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
 ENDIF()
 
 IF(PLATFORM_DREAMCAST)
@@ -155,8 +156,8 @@ ENDIF()
 
 IF(SIMULANT_ENABLE_TSAN)
 IF(CMAKE_BUILD_TYPE MATCHES Debug AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-message("Enabling thread sanitizer")
-SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
+    message("Enabling thread sanitizer")
+    SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
 ENDIF()
 ENDIF()
 
@@ -311,15 +312,15 @@ LINK_LIBRARIES(
 )
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-LINK_LIBRARIES(rt)
+    LINK_LIBRARIES(rt)
 ENDIF()
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-LINK_LIBRARIES("-framework CoreFoundation")
+    LINK_LIBRARIES("-framework CoreFoundation")
 ENDIF()
 
 IF(ANDROID)
-LINK_LIBRARIES(log)
+    LINK_LIBRARIES(log)
 ENDIF()
 
 FILE(COPY ${CMAKE_SOURCE_DIR}/assets/ DESTINATION ${CMAKE_BINARY_DIR}/assets/)
@@ -344,4 +345,3 @@ configure_file(
 
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
-
