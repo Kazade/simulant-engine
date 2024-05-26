@@ -85,9 +85,6 @@ ENDIF()
 IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -g0 -ffast-math")
-ELSE()
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /Ox /Oy /fp:fast")
-SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ox /Oy /fp:fast")
 ENDIF()
 
 IF(PLATFORM_DREAMCAST)
@@ -110,13 +107,22 @@ IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 ELSEIF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # The /Zi option produces a separate PDB file that contains all the symbolic debugging information for use with the debugger. 
     # The debugging information isn't included in the object files or executable, which makes them much smaller.
-    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
+    add_compile_options("$<$<CONFIG:Debug>:/Zi>")
 
     # Disables frame pointer omission
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Oy-")
+    add_compile_options("$<$<CONFIG:Debug>:/Oy->")
 
-    # Enables unwind semantic for exception handler
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /EHsc")
+    # Enable incremental linking in debug builds
+    add_compile_options("$<$<CONFIG:Debug>:/INCREMENTAL>")
+
+    # This should reduce the binary size in release builds
+    add_compile_options("$<$<CONFIG:Release>:/LTCG>")
+
+    # Enable full optimization for release builds
+    add_compile_options("$<$<CONFIG:Release>:/Ox /Oy /fp:fast>")
+
+    # Enables unwind semantic for exception handler in debug builds
+    add_compile_options("$<$<CONFIG:Debug>:/EHsc>")
 
     # Add UTF-8 support (all builds)
     add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
