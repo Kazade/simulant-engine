@@ -55,11 +55,8 @@ Mutex::~Mutex() {
     _S_UNUSED(err);
     assert(!err);
 #elif defined(_MSC_VER)
-    #ifndef NDEBUG
     assert(TryEnterCriticalSection(&mutex_));
     LeaveCriticalSection(&mutex_);
-
-    #endif // !NDEBUG
 
     DeleteCriticalSection(&mutex_);
 #else
