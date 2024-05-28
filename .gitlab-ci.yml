@@ -1,6 +1,6 @@
 include:
   - template: Jobs/Dependency-Scanning.latest.gitlab-ci.yml
-  - template: Jobs/SAST.latest.gitlab-ci.yml  
+  - template: Jobs/SAST.latest.gitlab-ci.yml
   - template: Jobs/Code-Quality.gitlab-ci.yml
   - template: Jobs/Secret-Detection.latest.gitlab-ci.yml
 
@@ -379,6 +379,30 @@ build:linux-x64-clang:
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/release/simulant/
 
+build:linux-armv7a-gcc:
+  stage: build
+  image: arm64v8/fedora:38
+  variables:
+   TARGET: linux-armv7a-gcc
+  script:
+   - mkdir -p ${TARGET}/debug
+   - cd ${TARGET}/debug
+   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=armv7-a" -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+   - cd ../..
+   - mkdir -p ${TARGET}/release
+   - cd ${TARGET}/release
+   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=armv7-a" -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+  artifacts:
+    paths:
+      - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/assets/
+      - ${TARGET}/debug/tests/simulant_tests
+      - ${TARGET}/release/simulant/
+      - ${TARGET}/release/assets/
+      - ${TARGET}/release/tests/simulant_tests
+
 build:linux-x64-gcc:
   stage: build
   image: $CI_REGISTRY_IMAGE:linux-x64-gcc
@@ -485,7 +509,7 @@ test:linux-x64-gcc-release:
   variables:
    TARGET: macos-m1-gcc
   before_script:
-   - brew install glfw sdl2 python 
+   - brew install glfw sdl2 python
   script:
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
