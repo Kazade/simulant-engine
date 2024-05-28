@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <dc/pvr.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -252,10 +253,14 @@ static float clip_edge(const pvr_work_command_t* const wv1,
     const float m = 255 * t;
     const float n = 255 - m;
 
-    vout->bgra[0] = (v1->bgra[0] * n + v2->bgra[0] * m) * o;
-    vout->bgra[1] = (v1->bgra[1] * n + v2->bgra[1] * m) * o;
-    vout->bgra[2] = (v1->bgra[2] * n + v2->bgra[2] * m) * o;
-    vout->bgra[3] = (v1->bgra[3] * n + v2->bgra[3] * m) * o;
+    const uint8_t* v1bgra = (const uint8_t*)&v1->color;
+    const uint8_t* v2bgra = (const uint8_t*)&v2->color;
+    uint8_t* vout_bgra = (uint8_t*)&vout->color;
+
+    vout_bgra[0] = (v1bgra[0] * n + v2bgra[0] * m) * o;
+    vout_bgra[1] = (v1bgra[1] * n + v2bgra[1] * m) * o;
+    vout_bgra[2] = (v1bgra[2] * n + v2bgra[2] * m) * o;
+    vout_bgra[3] = (v1bgra[3] * n + v2bgra[3] * m) * o;
 
     return invt * wv1->w + t * wv2->w;
 }
@@ -298,6 +303,7 @@ void process_list(pvr_work_command_t* vertices, size_t n) {
     } while(0)
 
     uint32_t visible_mask = 0;
+    const float h = 480.0f;
 
     pvr_work_command_t* it = (pvr_work_command_t*)vertices;
 
@@ -530,8 +536,8 @@ void pvr_start(pvr_command_mode_t mode, void* context) {
     state.command_counter = 0;
 
     // Start the command list of with the header state
-    memcpy(state.command_list[state.command_counter++], state.header,
-           sizeof(state.header));
+    memcpy(&state.command_list[state.command_counter++], state.poly_conf,
+           sizeof(state.poly_conf));
 
     pvr_wait_ready();
 
