@@ -379,20 +379,20 @@ build:linux-x64-clang:
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/release/simulant/
 
-build:linux-armv7a-gcc:
+build:linux-armv7-gcc:
   stage: build
-  image: arm64v8/fedora:38
+  image: dockcross/linux-armv7
   variables:
-   TARGET: linux-armv7a-gcc
+   TARGET: linux-armv7-gcc
   script:
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=armv7-a" -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=armv7" -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cd ../..
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
-   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=armv7-a" -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=armv7" -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
     paths:
