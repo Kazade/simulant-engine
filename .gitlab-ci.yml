@@ -385,14 +385,15 @@ build:linux-armv7-gcc:
   variables:
    TARGET: linux-armv7-gcc
   script:
+   - conan install conanfile.txt --build=missing
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-march=armv7" -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=${CROSS_ROOT}/Toolchain.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cd ../..
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
-   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-march=armv7" -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${CROSS_ROOT}/Toolchain.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
     paths:
