@@ -20,7 +20,7 @@ PSPRenderQueueVisitor::PSPRenderQueueVisitor(PSPRenderer* renderer,
     renderer_(renderer), camera_(camera) {}
 
 void PSPRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
-                                            uint64_t frame_id, Stage* stage) {
+                                            uint64_t frame_id, StageNode* stage) {
 
     S_VERBOSE("start_traversal");
 
@@ -37,7 +37,7 @@ void PSPRenderQueueVisitor::visit(const Renderable* renderable, const MaterialPa
 }
 
 void PSPRenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
-                                          Stage* stage) {
+                                          StageNode* stage) {
     _S_UNUSED(queue);
     _S_UNUSED(stage);
 
