@@ -1,7 +1,7 @@
 [requires]
 sdl/2.30.3
 opengl/system
-openal/1.22.2
+openal-soft/1.19.1
 
 [generators]
 CMakeDeps
