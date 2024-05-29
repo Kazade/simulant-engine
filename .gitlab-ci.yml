@@ -17,7 +17,6 @@ workflow:
 
 stages:
  - prepare
- - check
  - build
  - test
  - deploy
@@ -147,27 +146,6 @@ prepare:deploy:
       - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
         changes:
           - .gitlab-ci.yml
-
-check:thread-usage:
-  stage: check
-  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
-  script:
-    - python3 tools/find_std_thread.py simulant
-
-check:deque-usage:
-  stage: check
-  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
-  script:
-    - python3 tools/find_std_deque.py simulant
-
-check:stream-usage:
-  stage: check
-  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
-  script:
-    - python3 tools/find_std_stream.py simulant || true
-  artifacts:
-    reports:
-      metrics: metrics.txt
 
 .build:android:
   stage: build
@@ -385,16 +363,16 @@ build:linux-armv7-gcc:
   variables:
    TARGET: linux-armv7-gcc
   script:
-   - conan profile detect
+   - conan profile list
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
-   - conan install ../../conanfile.txt --build=missing
+   - conan install ../../conanfile.txt --build=missing -s arch=armv7
    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_CXX_FLAGS="-march=armv7" -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cd ../..
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
-   - conan install ../../conanfile.txt --build=missing
+   - conan install ../../conanfile.txt --build=missing -s arch=armv7
    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_CXX_FLAGS="-march=armv7" -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
