@@ -3,6 +3,9 @@ sdl/2.30.3
 opengl/system
 openal-soft/1.19.1
 
+[tool_requires]
+cmake/3.22.6
+
 [generators]
 CMakeDeps
 CMakeToolchain
