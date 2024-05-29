@@ -32,7 +32,7 @@ double dot(int* g, double x, double y, double z, double w) {
     return g[0] * x + g[1] * y + g[2] * z + g[3] * w;
 }
 
-bool Simplex::init() {
+bool Simplex::on_init() {
     if(initialized_) {
         return true;
     }

@@ -29,13 +29,14 @@ class Simplex :
 
 public:
     Simplex(int seed=time(NULL));
-    bool init();
 
     float noise(double x, double y);
     float noise(double x, double y, double z);
     float noise(double x, double y, double z, double w);
 
 private:
+    bool on_init() override;
+
     std::vector<int> p;
 
     const int simplex[64][4] = {
