@@ -363,8 +363,8 @@ build:linux-armv7-gcc:
   variables:
    TARGET: linux-armv7-gcc
   script:
-   - mkdir -p ~/.conan/profiles
-   - cp platforms/evercade/conan-profile ~/.conan/profiles/default
+   - mkdir -p ~/.conan2/profiles
+   - cp platforms/evercade/conan-profile ~/.conan2/profiles/default
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
    - conan install ../../conanfile.txt --build=missing -s arch=armv7
