@@ -4,7 +4,7 @@
 
 #ifdef __DREAMCAST__
     #include "gl1x/gl1x_renderer.h"
-#elif defined(__ANDROID__)
+#elif defined(__ANDROID__) || defined(__EVERCADE__)
     #include "gl2x/generic_renderer.h"
 #elif defined(__PSP__)
     #include "psp/psp_renderer.h"
@@ -39,6 +39,8 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
         return std::make_shared<GL1XRenderer>(window);
 #elif defined(__PSP__)
         return std::make_shared<PSPRenderer>(window);
+#elif defined(__RPI__)
+        return std::make_shared<GenericRenderer>(window, /*use_es=*/false);
 #elif defined(__EVERCADE__)
         return std::make_shared<GenericRenderer>(window, /*use_es=*/true);
 #elif defined(__ANDROID__)

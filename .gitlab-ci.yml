@@ -364,8 +364,31 @@ build:evercade-armv7-gcc:
    - cd ../..
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
-   - conan install ../../conanfile.txt --build=missing -s arch=armv7
    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Evercade.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+  artifacts:
+    paths:
+      - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/assets/
+      - ${TARGET}/debug/tests/simulant_tests
+      - ${TARGET}/release/simulant/
+      - ${TARGET}/release/assets/
+      - ${TARGET}/release/tests/simulant_tests
+
+build:raspberrypi-armv7-gcc:
+  stage: build
+  image: kazade/raspberrypi-sdk
+  variables:
+   TARGET: raspberrypi-armv7-gcc
+  script:
+   - mkdir -p ${TARGET}/debug
+   - cd ${TARGET}/debug
+   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/RaspberryPi.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - make -j3
+   - cd ../..
+   - mkdir -p ${TARGET}/release
+   - cd ${TARGET}/release
+   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/RaspberryPi.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
     paths:
@@ -628,6 +651,16 @@ deploy:evercade-armv7-gcc:
   - build:evercade-armv7-gcc
   variables:
    TARGET: evercade-armv7-gcc
+   LIB_EXT: so*
+
+deploy:raspberrypi-armv7-gcc:
+  extends: .deploy:deploy
+  needs:
+  - build:raspberrypi-armv7-gcc
+  dependencies:
+  - build:raspberrypi-armv7-gcc
+  variables:
+   TARGET: raspberrypi-armv7-gcc
    LIB_EXT: so*
 
 deploy:dreamcast-sh4-gcc:
