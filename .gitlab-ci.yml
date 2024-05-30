@@ -351,24 +351,21 @@ build:linux-x64-clang:
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/release/simulant/
 
-build:linux-armv7-gcc:
+build:evercade-armv7-gcc:
   stage: build
   image: kazade/evercade-sdk
   variables:
-   TARGET: linux-armv7-gcc
+   TARGET: evercade-armv7-gcc
   script:
-   - mkdir -p ~/.conan2/profiles
-   - cp platforms/evercade/conan-profile ~/.conan2/profiles/default
    - mkdir -p ${TARGET}/debug
    - cd ${TARGET}/debug
-   - conan install ../../conanfile.txt --build=missing -s arch=armv7
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_CXX_FLAGS="-march=armv7" -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Evercade.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
    - cd ../..
    - mkdir -p ${TARGET}/release
    - cd ${TARGET}/release
    - conan install ../../conanfile.txt --build=missing -s arch=armv7
-   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_CXX_FLAGS="-march=armv7" -DSIMULANT_BUILD_SAMPLES=OFF ../..
+   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Evercade.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
    - make -j3
   artifacts:
     paths:
@@ -621,6 +618,16 @@ deploy:linux-x64-gcc11:
   - test:linux-x64-gcc-release
   variables:
    TARGET: linux-x64-gcc11
+   LIB_EXT: so*
+
+deploy:evercade-armv7-gcc:
+  extends: .deploy:deploy
+  needs:
+  - build:evercade-armv7-gcc
+  dependencies:
+  - build:evercade-armv7-gcc
+  variables:
+   TARGET: evercade-armv7-gcc
    LIB_EXT: so*
 
 deploy:dreamcast-sh4-gcc:

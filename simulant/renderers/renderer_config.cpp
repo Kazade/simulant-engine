@@ -39,6 +39,8 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
         return std::make_shared<GL1XRenderer>(window);
 #elif defined(__PSP__)
         return std::make_shared<PSPRenderer>(window);
+#elif defined(__EVERCADE__)
+        return std::make_shared<GenericRenderer>(window, /*use_es=*/true);
 #elif defined(__ANDROID__)
         return std::make_shared<GenericRenderer>(window, /*use_es=*/ true);
 #else
@@ -47,14 +49,14 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
     }
 
     if(chosen == "gl1x") {
-#if defined(__ANDROID__) || defined(__PSP__)
+#if defined(__ANDROID__) || defined(__PSP__) || defined(__EVERCADE__)
         S_ERROR("{0} is not a supported renderer", name);
         return NOT_SUPPORTED;
 #else
         return std::make_shared<GL1XRenderer>(window);
 #endif
     } else if(chosen == "gl2x") {
-#if defined(__DREAMCAST__) || defined(PSP) || defined(__ANDROID__)
+#if defined(__DREAMCAST__) || defined(PSP) || defined(__ANDROID__) || defined(__EVERCADE__)
         S_ERROR("{0} is not a supported renderer", name);
         return NOT_SUPPORTED;
 #else

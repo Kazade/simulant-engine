@@ -1,7 +1,0 @@
-[settings]
-os=Linux
-arch=armv7hf
-compiler=gcc
-compiler.libcxx=libstdc++
-compiler.version=11.3
-build_type=Release

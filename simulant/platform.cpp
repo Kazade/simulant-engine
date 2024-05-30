@@ -22,6 +22,11 @@ typedef smlt::WindowsPlatform ThisPlatform;
 #include "platforms/android/platform.h"
 typedef smlt::AndroidPlatform ThisPlatform;
 
+#elif defined(__EVERCADE__)
+
+#include "platforms/evercade/platform.h"
+typedef smlt::EvercadePlatform ThisPlatform;
+
 #elif defined(__linux__)
 
 #include "platforms/linux/platform.h"
