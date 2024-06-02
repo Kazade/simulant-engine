@@ -25,6 +25,16 @@ ELSEIF(PLATFORM_PSP)
        SIMULANT_SEARCH_PATHS
        ${CMAKE_SOURCE_DIR}/libraries/psp-mips-gcc/
     )
+ELSEIF(PLATFORM_EVERCADE)
+    SET(
+       SIMULANT_SEARCH_PATHS
+       ${CMAKE_SOURCE_DIR}/libraries/evercade-armv7-gcc/
+    )
+ELSEIF(PLATFORM_RASPBERRYPI)
+    SET(
+       SIMULANT_SEARCH_PATHS
+       ${CMAKE_SOURCE_DIR}/libraries/raspberrypi-armv7-gcc/
+    )
 ELSEIF(WIN32)
     SET(
        SIMULANT_SEARCH_PATHS
