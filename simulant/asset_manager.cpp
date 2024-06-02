@@ -606,7 +606,7 @@ FontPtr AssetManager::create_font_from_memory(
 }
 
 FontPtr AssetManager::create_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
-    uint16_t size = flags.size | get_app()->config->ui.font_size;
+    uint16_t size = flags.size ? flags.size : get_app()->config->ui.font_size;
     const std::string px_as_string = smlt::to_string(size);
     const std::string weight_string = font_weight_name(flags.weight);
     const std::string style_string = (flags.style == FONT_STYLE_NORMAL) ? "" : font_style_name(flags.style);

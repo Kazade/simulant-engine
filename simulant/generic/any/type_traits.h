@@ -122,7 +122,7 @@ using underlying_type_t = typename ::std::underlying_type<T>::type;
 template <class... Args> using invoke_of_t = typename invoke_of<Args...>::type;
 template <class T> using class_of_t = typename class_of<T>::type;
 
-namespace implm {
+namespace _any_impl {
 
 struct undefined { undefined (...); };
 
@@ -211,13 +211,13 @@ struct is_nothrow_swappable : ::std::integral_constant<
 template <class... Args> struct invokable : ::std::integral_constant<
   bool,
   not ::std::is_same<
-    decltype(implm::invoke_expr(::std::declval<Args>()...)),
-    implm::undefined
+    decltype(_any_impl::invoke_expr(::std::declval<Args>()...)),
+    _any_impl::undefined
   >::value
 > { };
 
 template <class... Args> struct invoke_of :
-  implm::invoke_of<invokable<Args...>::value, Args...>
+  _any_impl::invoke_of<invokable<Args...>::value, Args...>
 { };
 
 template <class F, class... Args>
@@ -261,12 +261,12 @@ struct is_null_pointer< ::std::nullptr_t> : ::std::true_type { };
 template <class T, class U=T>
 using is_swappable = ::std::integral_constant<
   bool,
-  implm::is_swappable<T, U>::value
+  _any_impl::is_swappable<T, U>::value
 >;
 
 /* is_nothrow_swappable */
 template <class T, class U=T>
-using is_nothrow_swappable = implm::is_nothrow_swappable<T, U>;
+using is_nothrow_swappable = _any_impl::is_nothrow_swappable<T, U>;
 
 /* all-traits */
 template <class...> struct all_traits;

@@ -3,16 +3,8 @@
 #include <cassert>
 #include <utility>
 #include <cstdint>
-#include <stdalign.h>
 
-// Based on: https://stackoverflow.com/questions/7895869/cross-platform-alignx-macro
-#if defined(__GNUC__) || defined(__clang__)
-    #define ALIGN(x) __attribute__ ((aligned(x)))
-#elif defined(_MSC_VER)
-    #define ALIGN(x) alignas(x)
-#else
-    #error "Unable to define ALIGN due to unknown compiler"
-#endif
+#include "../macros.h"
 
 namespace smlt {
 
@@ -107,7 +99,7 @@ public:
     }
 
 private:
-    uint8_t ALIGN(8) data_[sizeof(T)];
+    uint8_t _S_ALIGN(8) data_[sizeof(T)];
     bool has_value_ = false;
 
     T* value_ptr() const {

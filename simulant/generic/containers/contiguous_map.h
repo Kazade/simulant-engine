@@ -19,22 +19,14 @@
 #include <cassert>
 #include <stdexcept>
 #include <string>
-#include <stdalign.h>
 
- // Based on: https://stackoverflow.com/questions/7895869/cross-platform-alignx-macro
-#if defined(__GNUC__) || defined(__clang__)
-#define ALIGN(x) __attribute__ ((aligned(x)))
-#elif defined(_MSC_VER)
-#define ALIGN(x) alignas(x)
-#else
-#error "Unable to define ALIGN due to unknown compiler"
-#endif
+#include "../../macros.h"
 
 namespace smlt {
 
 namespace _contiguous_map {
 template<typename K, typename V>
-struct ALIGN(8) NodeMeta {
+struct _S_ALIGN(8) NodeMeta {
     NodeMeta(const K& key, const V& value) :
         pair(std::make_pair(key, value)) {}
 

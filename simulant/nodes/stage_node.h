@@ -348,7 +348,6 @@ private:
         StageNode* ptr;
     };
 
-public:
     std::unordered_map<StageNodeType, MixinInfo> mixins_;
     void add_mixin(StageNode* mixin);
 

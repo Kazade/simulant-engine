@@ -30,16 +30,8 @@
 #include <memory>
 #include <cstring>
 #include <stdexcept>
-#include <stdalign.h>
 
-// Based on: https://stackoverflow.com/questions/7895869/cross-platform-alignx-macro
-#if defined(__GNUC__) || defined(__clang__)
-    #define ALIGN(x) __attribute__ ((aligned(x)))
-#elif defined(_MSC_VER)
-    #define ALIGN(x) alignas(x)
-#else
-    #error "Unable to define ALIGN due to unknown compiler"
-#endif
+#include "../../macros.h"
 
 namespace smlt {
 
@@ -387,8 +379,8 @@ private:
         std::size_t index = 0;  // 4
     };
 
-    typedef struct ALIGN(8) {
-        byte ALIGN(8) data[entry_size];
+    typedef struct _S_ALIGN(8) {
+        byte _S_ALIGN(8) data[entry_size];
         EntryMeta meta;
     } EntryWithMeta;
 

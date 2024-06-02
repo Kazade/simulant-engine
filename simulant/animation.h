@@ -47,7 +47,7 @@ public:
     void add_animation(const std::string& name, uint32_t start_frame, uint32_t end_frame);
 
     bool has_animations() const { return !animations_.empty(); }
-    uint32_t animation_count() const { return (uint32_t)animations_.size(); }
+    std::size_t animation_count() const { return animations_.size(); }
 
     void set_default_fps(float fps);
     float default_fps() const;

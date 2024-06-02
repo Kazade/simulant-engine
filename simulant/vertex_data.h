@@ -203,7 +203,7 @@ public:
     bool interp_vertex(uint32_t source_idx, const VertexData& dest_state, uint32_t dest_idx, VertexData& out, uint32_t out_idx, float interp);
     uint8_t* data() { if(empty()) { return nullptr; } return &data_[0]; }
     const uint8_t* data() const { if(empty()) { return nullptr; } return &data_[0]; }
-    uint32_t data_size() const { return (uint32_t)data_.size(); }
+    std::size_t data_size() const { return data_.size(); }
 
     VertexAttribute attribute_for_type(VertexAttributeType type) const;
 
