@@ -107,15 +107,11 @@ public:
             f 1 2 3
         )");
 
-        loaders::OBJLoader loader(
-            "test.obj",
-            std::make_shared<std::istringstream>(obj_file)
-        );
+        loaders::OBJLoader loader("assets/samples/test.obj",
+                                  std::make_shared<std::istringstream>(obj_file));
 
-        auto mesh = application->shared_assets->load_mesh(
-            "cube.obj",
-            smlt::VertexSpecification::POSITION_ONLY
-        );
+        auto mesh = application->shared_assets->load_mesh("assets/samples/cube.obj",
+                                                          smlt::VertexSpecification::POSITION_ONLY);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
