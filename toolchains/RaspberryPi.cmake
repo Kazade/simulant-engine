@@ -22,8 +22,8 @@ SET(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
 SET(CMAKE_CROSSCOMPILING_EMULATOR "qemu-arm;-L;/usr/arm-linux-gnueabihf")
 
-set(CMAKE_C_FLAGS "-march=armv6 -mfloat-abi=hard -mfpu=vfp")
-set(CMAKE_CXX_FLAGS "-march=armv6 -mfloat-abi=hard -mfpu=vfp")
+set(CMAKE_C_FLAGS "-march=armv7 -mfloat-abi=hard -mfpu=vfpv4")
+set(CMAKE_CXX_FLAGS "-march=armv7 -mfloat-abi=hard -mfpu=vfpv4")
 
 # cache flags
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" CACHE STRING "c flags")
