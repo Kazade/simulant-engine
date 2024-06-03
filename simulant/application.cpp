@@ -555,7 +555,6 @@ bool Application::run_frame() {
 
             S_PROFILE_SECTION("swap");
             window_->swap_buffers();
-            GLChecker::end_of_frame_check();
         }
     }
 
