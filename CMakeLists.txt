@@ -53,7 +53,7 @@ ENDIF()
 IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99 -Wall")
 ELSE()
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /std:c11 /W3")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /std:c99 /W3")
 ENDIF()
 
 SET(CMAKE_ASM_FLAGS "")
@@ -244,8 +244,46 @@ ELSEIF(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # Needed to allow our custom min max implementations
     add_definitions(-DNOMINMAX)
 
-    # Do not show warnings abour relative include path containing '..'
+    # Disable warnings
+    # Signed / unsigned mismatch
+    add_definitions("/wd4018")
+
+    # conditional expression is constant
+    add_definitions("/wd4127")
+
+    # nonstandard extension used : nameless struct/union
+    add_definitions("/wd4201")
+
+    #'class1' : inherits 'class2::member' via dominance
+    add_definitions("/wd4250")
+
+    # relative include path contains '..'
     add_definitions("/wd4464")
+
+    # decorated name length exceeded, name was truncated
+    add_definitions("/wd4503")
+
+    # assignment operator could not be generated
+    add_definitions("/wd4512")
+
+    # C++ exception handler used, but unwind semantics are not enabled (EHsc)
+    add_definitions("/wd4530")
+
+    # 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed
+    add_definitions("/wd4577")
+
+    # conversion from 'type_1' to 'type_2' requires a narrowing conversion
+    add_definitions("/wd4838")
+
+    # _alloca indicates failure by raising a stack overflow exception. Consider using _malloca instead
+    add_definitions("/wd6255")
+
+    # Enable warnings
+    # unreferenced local variable
+    add_definitions("/w34101")
+
+    # local variable is initialized but not referenced
+    add_definitions("/w34189")
 
 ELSEIF(PLATFORM_DREAMCAST)
     MESSAGE("-- Cross-Compiling for the Sega Dreamcast.")
