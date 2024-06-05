@@ -295,7 +295,7 @@ public:
     }
 
     void test_complex_example() {
-        const char* path = "sample_data/level1.json";
+        const char* path = "assets/samples/level1.json";
         std::ifstream t(path);
         assert_true(t.good());
         std::string str((std::istreambuf_iterator<char>(t)),
