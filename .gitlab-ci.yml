@@ -252,9 +252,7 @@ build:windows-x64-vcxx:release:
   stage: build
   allow_failure: true
   tags:
-    - shared-windows
-    - windows
-    - windows-1809
+    - saas-windows-medium-amd64
   variables:
     TARGET: windows-x64-vcxx
     MSBUILD: 'C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild.exe'
