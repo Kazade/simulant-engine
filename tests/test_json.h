@@ -7,9 +7,8 @@ namespace {
 
 using namespace smlt;
 
-class JSONTests : public test::TestCase {
+class JSONTests: public test::TestCase {
 public:
-
     void test_basic_usage() {
         std::string data = R"(
 {
@@ -60,6 +59,25 @@ public:
         assert_equal(obj["five"]->type(), JSON_NULL);
     }
 
+    void test_invalid_accesses() {
+        std::string data = R"(
+{
+    "object": {
+        "array": [1, 2, 3]
+    }
+}
+)";
+
+        auto json = json_parse(data);
+        assert_true(json["object"].is_valid());
+        assert_true(json["object"]["array"].is_valid());
+        assert_false(json["blah"].is_valid());
+        assert_false(json["blah"]["blah"].is_valid());
+        auto node = json["blah"];
+        assert_true(node->is_null());
+        assert_equal(json["blah"]->to_int().value_or(1), 1);
+    }
+
     void test_nested_accesses() {
         std::string data = R"(
 {
@@ -70,10 +88,7 @@ public:
 )";
 
         auto json = json_parse(data);
-        assert_equal(
-            json["object"]["array"][0]->to_int().value_or(0),
-            1
-        );
+        assert_equal(json["object"]["array"][0]->to_int().value_or(0), 1);
     }
 
     void test_nested_arrays() {
@@ -85,20 +100,11 @@ public:
 
         auto json = json_parse(data);
 
-        assert_equal(
-            json["array"][0][0]->to_int().value_or(0),
-            1
-        );
+        assert_equal(json["array"][0][0]->to_int().value_or(0), 1);
 
-        assert_equal(
-            json["array"][0][1]->to_int().value_or(0),
-            2
-        );
+        assert_equal(json["array"][0][1]->to_int().value_or(0), 2);
 
-        assert_equal(
-            json["array"][1]->to_str().value(),
-            "cheese"
-        );
+        assert_equal(json["array"][1]->to_str().value(), "cheese");
     }
 
     void test_nested_objects() {
@@ -294,4 +300,4 @@ public:
     }
 };
 
-}
+} // namespace

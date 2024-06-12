@@ -1,7 +1,7 @@
 #pragma once
 
-#include <memory>
 #include <iosfwd>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -21,7 +21,7 @@ enum JSONNodeType {
 };
 
 namespace _json_impl {
-    typedef std::shared_ptr<std::istream> IStreamPtr;
+typedef std::shared_ptr<std::istream> IStreamPtr;
 }
 
 class JSONIterator;
@@ -29,9 +29,11 @@ class JSONIterator;
 class JSONNode {
 private:
     std::string read_value_from_stream() const;
+
 public:
     JSONNode() = default;
-    JSONNode(_json_impl::IStreamPtr stream, std::streampos start, std::streampos end, std::size_t size=0):
+    JSONNode(_json_impl::IStreamPtr stream, std::streampos start,
+             std::streampos end, std::size_t size = 0) :
         stream_(stream), start_(start), end_(end), size_(size) {}
 
     std::streampos start() const {
@@ -92,13 +94,20 @@ public:
      */
     optional<std::string> to_str() const {
         switch(type_) {
-            case JSON_OBJECT: return optional<std::string>();
-            case JSON_ARRAY: return optional<std::string>();
-            case JSON_STRING: return optional<std::string>(read_value_from_stream());
-            case JSON_NUMBER: return optional<std::string>(read_value_from_stream());
-            case JSON_TRUE: return optional<std::string>("true");
-            case JSON_FALSE: return optional<std::string>("false");
-            case JSON_NULL: return optional<std::string>("null");
+            case JSON_OBJECT:
+                return optional<std::string>();
+            case JSON_ARRAY:
+                return optional<std::string>();
+            case JSON_STRING:
+                return optional<std::string>(read_value_from_stream());
+            case JSON_NUMBER:
+                return optional<std::string>(read_value_from_stream());
+            case JSON_TRUE:
+                return optional<std::string>("true");
+            case JSON_FALSE:
+                return optional<std::string>("false");
+            case JSON_NULL:
+                return optional<std::string>("null");
             default:
                 return optional<std::string>();
         }
@@ -123,7 +132,7 @@ private:
     std::streampos start_ = 0;
     std::streampos end_ = 0;
     std::size_t size_ = 0;
-    JSONNodeType type_ = JSON_OBJECT;
+    JSONNodeType type_ = JSON_NULL;
 
     /* Internal function. If this is an object type,
      * will read from start to end and call cb() with
@@ -138,17 +147,23 @@ class JSONIterator {
     friend JSONIterator json_read(std::shared_ptr<std::istream>);
 
     friend class JSONNode;
-private:
-    JSONIterator() = default;  /* Invalid or end */
 
-    JSONIterator(_json_impl::IStreamPtr stream, std::streampos pos, bool is_array_item=false):
-        stream_(stream),
-        is_array_iterator_(is_array_item) {
+private:
+    JSONIterator() {
+        /* We set the current node to the static invalid node
+           so we can do comparisons, and accessors always return
+           a NULL node and not a null ptr
+        */
+        current_node_ = invalid_node;
+    }
+
+    JSONIterator(_json_impl::IStreamPtr stream, std::streampos pos,
+                 bool is_array_item = false) :
+        stream_(stream), is_array_iterator_(is_array_item) {
 
         current_node_ = std::make_shared<JSONNode>();
         parse_node(*current_node_, stream, pos);
     }
-
 
     /* mutable as we need to manipulate inside const contexts */
     mutable _json_impl::IStreamPtr stream_;
@@ -156,8 +171,11 @@ private:
 
     std::shared_ptr<JSONNode> current_node_;
 
-    void parse_node(JSONNode& node, _json_impl::IStreamPtr stream, std::streampos pos);
+    void parse_node(JSONNode& node, _json_impl::IStreamPtr stream,
+                    std::streampos pos);
     void set_invalid(const std::string& message);
+
+    static std::shared_ptr<JSONNode> invalid_node;
 
 public:
     typedef JSONNode value_type;
@@ -166,7 +184,7 @@ public:
     typedef std::input_iterator_tag iterator_category;
 
     bool is_valid() const {
-        return bool(current_node_);
+        return current_node_ != invalid_node;
     }
 
     JSONNode* operator->() const {
@@ -242,4 +260,4 @@ JSONIterator json_load(const Path& path);
 JSONIterator json_parse(const std::string& data);
 JSONIterator json_read(std::shared_ptr<std::istream> stream);
 
-}
+} // namespace smlt
