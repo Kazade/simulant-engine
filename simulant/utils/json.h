@@ -162,6 +162,7 @@ private:
         stream_(stream), is_array_iterator_(is_array_item) {
 
         current_node_ = std::make_shared<JSONNode>();
+        current_node_->type_ = JSON_OBJECT;
         parse_node(*current_node_, stream, pos);
     }
 

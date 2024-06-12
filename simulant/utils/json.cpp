@@ -6,7 +6,8 @@
 namespace smlt {
 
 const std::string WHITESPACE = "\t\n\r ";
-std::shared_ptr<JSONNode> JSONIterator::invalid_node;
+std::shared_ptr<JSONNode> JSONIterator::invalid_node =
+    std::make_shared<JSONNode>();
 
 static void unget(_json_impl::IStreamPtr& stream) {
     /* Frustratingly, if you hit the end of the stream
@@ -583,7 +584,7 @@ JSONIterator JSONIterator::operator[](const std::size_t i) const {
 }
 
 JSONIterator JSONIterator::begin() const {
-    if(!current_node_) {
+    if(!is_valid()) {
         return JSONIterator();
     }
 
@@ -599,7 +600,7 @@ JSONIterator JSONIterator::begin() const {
 }
 
 JSONIterator& JSONIterator::operator++() {
-    if(!current_node_ || !is_array_iterator()) {
+    if(!is_valid() || !is_array_iterator()) {
         return *this;
     }
 

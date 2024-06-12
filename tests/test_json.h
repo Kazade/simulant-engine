@@ -287,6 +287,10 @@ public:
         std::size_t counter = 0;
         for(auto _: json["array"]) {
             counter++;
+
+            if(counter > 3) {
+                throw test::AssertionError("Too many iterations");
+            }
         }
 
         assert_equal(counter, json["array"]->size());
