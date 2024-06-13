@@ -59,6 +59,10 @@ public:
         assert_equal(obj["five"]->type(), JSON_NULL);
     }
 
+    void test_invalid_iterator_comparison() {
+        assert_true(JSONIterator() == JSONIterator());
+    }
+
     void test_invalid_accesses() {
         std::string data = R"(
 {

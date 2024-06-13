@@ -212,7 +212,7 @@ public:
 
     JSONIterator& operator++();
     bool operator==(const JSONIterator& rhs) const {
-        if(!current_node_ && !rhs.current_node_) {
+        if(!is_valid() && !rhs.is_valid()) {
             return true;
         }
 
