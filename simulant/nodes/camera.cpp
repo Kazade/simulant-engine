@@ -1,25 +1,23 @@
 #include "camera.h"
 #include "actor.h"
 
-#include "../stage.h"
-#include "../window.h"
-#include "../viewport.h"
 #include "../application.h"
+#include "../stage.h"
+#include "../viewport.h"
+#include "../window.h"
 
 namespace smlt {
 
-
-Camera::Camera(Scene *owner):
+Camera::Camera(Scene* owner) :
     ContainerNode(owner, STAGE_NODE_TYPE_CAMERA) {
 
     assert(owner);
 
-    set_perspective_projection(smlt::Degrees(45.0f), get_app()->window->aspect_ratio());
+    set_perspective_projection(smlt::Degrees(45.0f),
+                               get_app()->window->aspect_ratio());
 }
 
-Camera::~Camera() {
-
-}
+Camera::~Camera() {}
 
 void Camera::on_transformation_changed() {
     StageNode::on_transformation_changed();
@@ -27,35 +25,45 @@ void Camera::on_transformation_changed() {
 }
 
 void Camera::update_frustum() {
-    //Recalculate the view matrix
-    view_matrix_ = Mat4::as_look_at(
-        transform->position(),
-        transform->position() + transform->orientation().forward(),
-        transform->orientation().up()
-    );
+    // Recalculate the view matrix
+    view_matrix_ = Mat4::as_look_at(transform->position(),
+                                    transform->position() +
+                                        transform->orientation().forward(),
+                                    transform->orientation().up());
 
     Mat4 mvp = projection_matrix_ * view_matrix_;
 
-    frustum_.build(&mvp); //Update the frustum for this camera
+    frustum_.build(&mvp); // Update the frustum for this camera
 }
 
-void Camera::set_perspective_projection(const Degrees& fov, float aspect, float near, float far) {
-    projection_matrix_ = Mat4::as_projection(fov, aspect, near, far);
+void Camera::set_projection_matrix(const Mat4& matrix) {
+    projection_matrix_ = matrix;
     update_frustum();
 }
 
-void Camera::set_orthographic_projection(float left, float right, float bottom, float top, float near, float far) {
-    projection_matrix_ = Mat4::as_orthographic(left, right, bottom, top, near, far);
-    update_frustum();
+void Camera::set_perspective_projection(const Degrees& fov, float aspect,
+                                        float near, float far) {
+    set_projection_matrix(Mat4::as_projection(fov, aspect, near, far));
 }
 
-float Camera::set_orthographic_projection_from_height(float desired_height_in_units, float ratio) {
+void Camera::set_orthographic_projection(float left, float right, float bottom,
+                                         float top, float near, float far) {
+    set_projection_matrix(
+        Mat4::as_orthographic(left, right, bottom, top, near, far));
+}
+
+float Camera::set_orthographic_projection_from_height(
+    float desired_height_in_units, float ratio) {
     float width = desired_height_in_units * ratio;
-    set_orthographic_projection(-width / 2.0f, width / 2.0f, -desired_height_in_units / 2.0f, desired_height_in_units / 2.0f, -10.0f, 10.0f);
+    set_orthographic_projection(-width / 2.0f, width / 2.0f,
+                                -desired_height_in_units / 2.0f,
+                                desired_height_in_units / 2.0f, -10.0f, 10.0f);
     return width;
 }
 
-smlt::optional<Vec3> Camera::project_point(const RenderTarget &target, const Viewport &viewport, const Vec3& point) const {
+smlt::optional<Vec3> Camera::project_point(const RenderTarget& target,
+                                           const Viewport& viewport,
+                                           const Vec3& point) const {
     Vec4 in(point, 1.0);
     Vec4 out = view_matrix() * in;
     in = projection_matrix() * out;
@@ -77,14 +85,13 @@ smlt::optional<Vec3> Camera::project_point(const RenderTarget &target, const Vie
     float vp_xoffset = target.width() * viewport.x();
     float vp_yoffset = target.height() * viewport.y();
 
-    return Vec3(
-        in.x * vp_width + vp_xoffset,
-        in.y * vp_height + vp_yoffset,
-        in.z
-    );
+    return Vec3(in.x * vp_width + vp_xoffset, in.y * vp_height + vp_yoffset,
+                in.z);
 }
 
-smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const Viewport& viewport, const Vec3& win) {
+smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target,
+                                             const Viewport& viewport,
+                                             const Vec3& win) {
     /*
      * WARNING: This function is untested (FIXME) !!!
      */
@@ -97,8 +104,8 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const V
 
     float vx = float(target.width()) * viewport.x();
     float vy = float(target.height()) * viewport.y();
-    float vw = (float) viewport.width_in_pixels(target);
-    float vh = (float) viewport.height_in_pixels(target);
+    float vw = (float)viewport.width_in_pixels(target);
+    float vh = (float)viewport.height_in_pixels(target);
 
     in.x = (win.x - vx) / vw * 2.0f - 1.0f;
     in.y = (win.y - vy) / vh * 2.0f - 1.0f;
@@ -122,4 +129,4 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const V
     return smlt::optional<Vec3>(std::move(ret));
 }
 
-}
+} // namespace smlt
