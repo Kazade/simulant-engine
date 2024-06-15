@@ -332,22 +332,22 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
     for(uint8_t i = 0; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
         current = (i < count) ? lights[i] : nullptr;
 
-        auto pos = (current->node_type()) == LIGHT_TYPE_DIRECTIONAL
-                       ? current->direction()
-                       : current->transform->position();
+        smlt::Vec3 pos;
+        LightState state = disabled_state;
 
-        auto state =
-            (current)
-                ? LightState(
-                      true,
-                      Vec4(pos, (current->node_type() == LIGHT_TYPE_DIRECTIONAL)
-                                    ? 0
-                                    : 1),
-                      current->diffuse(), current->ambient(),
-                      current->specular(), current->constant_attenuation(),
-                      current->linear_attenuation(),
-                      current->quadratic_attenuation())
-                : disabled_state;
+        if(current) {
+            pos = (current->node_type()) == LIGHT_TYPE_DIRECTIONAL
+                      ? current->direction()
+                      : current->transform->position();
+
+            state = LightState(
+                true,
+                Vec4(pos,
+                     (current->node_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
+                current->diffuse(), current->ambient(), current->specular(),
+                current->constant_attenuation(), current->linear_attenuation(),
+                current->quadratic_attenuation());
+        }
 
         /* No need to update this light */
         if(light_states_[i].initialized && light_states_[i] == state) {
