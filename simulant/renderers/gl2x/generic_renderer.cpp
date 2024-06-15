@@ -101,11 +101,11 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass,
     auto pos_loc = program->locate_uniform(LIGHT_POSITION_PROPERTY, true);
     if(pos_loc > -1) {
         auto pos = (light) ? light->transform->position() : Vec3();
-        if(light->node_type() == LIGHT_TYPE_DIRECTIONAL) {
+        if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
             pos = light->direction();
         }
         auto vec =
-            (light) ? Vec4(pos, (light->node_type() == LIGHT_TYPE_DIRECTIONAL)
+            (light) ? Vec4(pos, (light->light_type() == LIGHT_TYPE_DIRECTIONAL)
                                     ? 0.0
                                     : 1.0)
                     : Vec4();
