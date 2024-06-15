@@ -336,14 +336,14 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
         LightState state = disabled_state;
 
         if(current) {
-            pos = (current->node_type()) == LIGHT_TYPE_DIRECTIONAL
+            pos = (current->light_type()) == LIGHT_TYPE_DIRECTIONAL
                       ? current->direction()
                       : current->transform->position();
 
             state = LightState(
                 true,
                 Vec4(pos,
-                     (current->node_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
+                     (current->light_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
                 current->diffuse(), current->ambient(), current->specular(),
                 current->constant_attenuation(), current->linear_attenuation(),
                 current->quadratic_attenuation());
