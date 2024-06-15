@@ -77,29 +77,14 @@ Mat4 Transform::world_space_matrix() const {
         return absolute_transformation_;
     }
 
-    auto c0 = smlt::Vec4(orientation_ * smlt::Vec3(scale_factor_.x, 0, 0), 0);
-    auto c1 = smlt::Vec4(orientation_ * smlt::Vec3(0, scale_factor_.y, 0), 0);
-    auto c2 = smlt::Vec4(orientation_ * smlt::Vec3(0, 0, scale_factor_.z), 0);
+    auto t = smlt::Mat4::as_translation(position_);
+    auto r = smlt::Mat4(orientation_);
+    auto s = smlt::Mat4();
+    s[0] = scale_factor_.x;
+    s[5] = scale_factor_.y;
+    s[10] = scale_factor_.z;
 
-    absolute_transformation_[0] = c0.x;
-    absolute_transformation_[1] = c0.y;
-    absolute_transformation_[2] = c0.z;
-    absolute_transformation_[3] = 0.0f;
-
-    absolute_transformation_[4] = c1.x;
-    absolute_transformation_[5] = c1.y;
-    absolute_transformation_[6] = c1.z;
-    absolute_transformation_[7] = 0.0f;
-
-    absolute_transformation_[8] = c2.x;
-    absolute_transformation_[9] = c2.y;
-    absolute_transformation_[10] = c2.z;
-    absolute_transformation_[11] = 0.0f;
-
-    absolute_transformation_[12] = position_.x;
-    absolute_transformation_[13] = position_.y;
-    absolute_transformation_[14] = position_.z;
-    absolute_transformation_[15] = 1.0f;
+    absolute_transformation_ = t * r * s;
 
     absolute_transformation_is_dirty_ = false;
     return absolute_transformation_;
