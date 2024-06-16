@@ -15,9 +15,9 @@ private:
     std::array<float, 9> m;
 
 public:
-    static Mat3 from_rotation_x(const Degrees& angle);
-    static Mat3 from_rotation_y(const Degrees& angle);
-    static Mat3 from_rotation_z(const Degrees& angle);
+    static Mat3 as_rotation_x(const Degrees& angle);
+    static Mat3 as_rotation_y(const Degrees& angle);
+    static Mat3 as_rotation_z(const Degrees& angle);
 
     Mat3() {
         m.fill(0);
@@ -31,7 +31,7 @@ public:
     }
 
     Mat3(const Mat4& rhs);
-    Mat3(const Quaternion& q);
+    static Mat3 as_rotation(const Quaternion& q);
     Mat3(const Vec3& c0, const Vec3& c1, const Vec3& c2);
 
     const float& operator[](const uint32_t index) const {

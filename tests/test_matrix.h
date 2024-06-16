@@ -61,7 +61,7 @@ public:
     }
 
     void test_as_scaling() {
-        Mat4 a = Mat4::as_scaling(1.0f);
+        Mat4 a = Mat4::as_scale(Vec3(1.0f));
         assert_close(a[0], 1.0f, 0.00001f);
         assert_close(a[5], 1.0f, 0.00001f);
         assert_close(a[10], 1.0f, 0.00001f);

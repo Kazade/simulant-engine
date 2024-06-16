@@ -9,19 +9,37 @@ std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
 }
 
 Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up) {
-    float d = fast_abs(up.dot(direction));
-    if(almost_equal(d, 1.0f)) {
-        return Quaternion();
-    }
+    // float d = fast_abs(up.dot(direction));
+    // if(almost_equal(d, 1.0f)) {
+    //     return Quaternion();
+    // }
 
-    if(almost_equal(direction.length_squared(), 0.0f) ||
-        almost_equal(up.length_squared(), 0.0f)) {
-        return Quaternion();
-    }
+    // if(almost_equal(direction.length_squared(), 0.0f) ||
+    //     almost_equal(up.length_squared(), 0.0f)) {
+    //     return Quaternion();
+    // }
 
-    Vec3 t = up.cross(-direction).normalized();
-    auto ret = Quaternion(Mat3(t, -direction.cross(t), -direction));
-    return ret;
+    // Vec3 t = up.cross(-direction).normalized();
+    // auto ret = Quaternion(Mat3(t, -direction.cross(t), -direction));
+
+    auto forward = direction.normalized();
+    auto right = forward.cross(up).normalized();
+    auto up_ = right.cross(forward);
+
+    Mat3 rot;
+    rot[0] = right.x;
+    rot[1] = right.y;
+    rot[2] = right.z;
+
+    rot[3] = up_.x;
+    rot[4] = up_.y;
+    rot[5] = up_.z;
+
+    rot[6] = -forward.x;
+    rot[7] = -forward.y;
+    rot[8] = -forward.z;
+
+    return Quaternion(rot);
 }
 
 Quaternion::Quaternion(const Degrees &pitch, const Degrees &yaw, const Degrees &roll) {
@@ -67,33 +85,29 @@ Quaternion::Quaternion(const Mat3& rot_matrix) {
     float t = m00 + m11 + m22;
     // we protect the division by s by ensuring that s>=1
     if (t > 0) { // by w
-        float root = fast_sqrt(t + 1.0f);
-        w = 0.5f * root;
-        root = fast_divide(0.5f, root);
-        x = (m21 - m12) * root;
-        y = (m02 - m20) * root;
-        z = (m10 - m01) * root;
+        float s = 0.5f / fast_sqrt(t + 1.0f);
+        w = fast_divide(0.25f, s);
+        x = (m12 - m21) * s;
+        y = (m20 - m02) * s;
+        z = (m01 - m10) * s;
     } else if ((m00 > m11) && (m00 > m22)) { // by x
-        float s = fast_sqrt(1 + m00 - m11 - m22);
-        x = s * 0.5f;
-        s = fast_divide(0.5f, s);
-        y = (m10 + m01) * s;
-        z = (m02 + m20) * s;
-        w = (m21 - m12) * s;
+        float s = 2.0f * fast_sqrt(1.0f + m00 - m11 - m22);
+        w = (m12 - m21) / s;
+        x = 0.25f * s;
+        y = (m10 + m01) / s;
+        z = (m20 + m02) / s;
     } else if (m11 > m22) { // by y
-        float s = fast_sqrt(1 + m11 - m00 - m22);
-        y = s * 0.5f;
-        s = fast_divide(0.5f, s);
-        x = (m10 + m01) * s;
-        z = (m21 + m12) * s;
-        w = (m02 - m20) * s;
+        float s = 2.0f * fast_sqrt(1.0f + m11 - m00 - m22);
+        w = (m20 - m02) / s;
+        x = (m10 + m01) / s;
+        y = 0.25f * s;
+        z = (m21 + m12) / s;
     } else { // by z
-        float s = fast_sqrt(1 + m22 - m00 - m11);
-        z = s * 0.5f;
-        s = fast_divide(0.5f, s);
-        x = (m02 + m20) * s;
-        y = (m21 + m12) * s;
-        w = (m10 - m01) * s;
+        float s = 2.0f * fast_sqrt(1.0f + m22 - m00 - m11);
+        w = (m01 - m10) / s;
+        x = (m20 + m02) / s;
+        y = (m21 + m12) / s;
+        z = 0.25f * s;
     }
 }
 

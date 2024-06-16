@@ -38,7 +38,7 @@ MeshPtr MeshInstancer::mesh() const {
 MeshInstanceID MeshInstancer::create_mesh_instance(const Vec3 &position, const Quaternion &rotation) {
     MeshInstance i;
     i.id = ++MeshInstancer::id_counter_;
-    i.transformation = Mat4::from_pos_rot_scale(position, rotation, Vec3(1));
+    i.transformation = Mat4::as_transform(position, rotation, Vec3(1));
     i.abs_transformation = transform->world_space_matrix() * i.transformation;
     i.recalc_aabb(mesh_);
 

@@ -67,6 +67,11 @@ public:
         assert_close(quat.y, 0.0f, 0.001f);
         assert_close(quat.z, 0.707f, 0.001f);
         assert_close(quat.w, 0.707f, 0.001f);
+
+        auto mat2 = smlt::Mat3::as_rotation(quat);
+        for(uint32_t i = 0; i < 9; ++i) {
+            assert_equal(mat[i], mat2[i]);
+        }
     }
 
     void test_forward_right_up() {

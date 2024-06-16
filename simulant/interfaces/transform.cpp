@@ -77,14 +77,8 @@ Mat4 Transform::world_space_matrix() const {
         return absolute_transformation_;
     }
 
-    auto t = smlt::Mat4::as_translation(position_);
-    auto r = smlt::Mat4(orientation_);
-    auto s = smlt::Mat4();
-    s[0] = scale_factor_.x;
-    s[5] = scale_factor_.y;
-    s[10] = scale_factor_.z;
-
-    absolute_transformation_ = t * r * s;
+    absolute_transformation_ =
+        smlt::Mat4::as_transform(position_, orientation_, scale_factor_);
 
     absolute_transformation_is_dirty_ = false;
     return absolute_transformation_;
@@ -130,7 +124,7 @@ void Transform::update_transformation_from_parent() {
         auto parent_rot = parent->orientation();
 
         orientation_ = parent_rot * rotation_;
-        position_ = parent_pos + parent_rot * translation_;
+        position_ = parent_pos + (parent_rot * translation_);
     }
 
     absolute_transformation_is_dirty_ = true;
