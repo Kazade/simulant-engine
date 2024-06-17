@@ -108,12 +108,16 @@ public:
         // Always look at the fairy
         camera_->transform->look_at(fairy_actor_->transform->position());
 
-        // Also make sure the fairy is always at the camera (billboard)
-        Vec3 dir = (camera_->transform->position() - fairy_actor_->transform->position()).normalized();
-        Quaternion rot = smlt::Vec3::NEGATIVE_Z.rotation_to(dir);
+        // // Also make sure the fairy is always at the camera (billboard)
+        // Vec3 dir = (camera_->transform->position() -
+        // fairy_actor_->transform->position()).normalized(); Quaternion rot =
+        // smlt::Vec3::NEGATIVE_Z.rotation_to(dir);
 
-        // Offset the rotation on the UP axis by 90 degrees
-        fairy_actor_->transform->set_orientation(rot * Quaternion(Vec3::UP, Degrees(90)));
+        // // Offset the rotation on the UP axis by 90 degrees
+        // fairy_actor_->transform->set_orientation(rot * Quaternion(Vec3::UP,
+        // Degrees(90)));
+        fairy_actor_->transform->look_at(camera_->transform->position());
+        fairy_actor_->transform->rotate(Vec3::UP, Degrees(90));
 
         // Make sure the fairy loops the path (t ranges from 0 to 1)
         if(fairyPathTime_ >= 1)
@@ -188,6 +192,7 @@ int main(int argc, char* argv[]) {
     config.title = "Cave Demo";
     config.fullscreen = false;
     config.log_level = smlt::LOG_LEVEL_INFO;
+    config.development.force_renderer = "gl1x";
 
 #ifdef __DREAMCAST__
     config.width = 640;

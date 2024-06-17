@@ -1,46 +1,46 @@
 #include "mat4.h"
-#include "mat3.h"
 #include "../types.h"
+#include "mat3.h"
+#include "simulant/math/quaternion.h"
 #include "utils.h"
 
 namespace smlt {
 
-Mat4::Mat4(const Quaternion &rhs) {
-    Mat3 tmp(rhs);
+Mat4 Mat4::as_rotation(const Quaternion& rhs) {
+    Mat4 m;
 
-    m[0] = tmp[0];
-    m[1] = tmp[1];
-    m[2] = tmp[2];
-    m[3] = 0.0f;
+    float yy = rhs.y * rhs.y;
+    float zz = rhs.z * rhs.z;
+    float xx = rhs.x * rhs.x;
+    float xy = rhs.x * rhs.y;
+    float xz = rhs.x * rhs.z;
+    float yz = rhs.y * rhs.z;
+    float wx = rhs.w * rhs.x;
+    float wy = rhs.w * rhs.y;
+    float wz = rhs.w * rhs.z;
 
-    m[4] = tmp[3];
-    m[5] = tmp[4];
-    m[6] = tmp[5];
-    m[7] = 0.0f;
+    m[0] = 1 - 2 * (yy + zz);
+    m[1] = 2 * (xy + wz);
+    m[2] = 2 * (xz - wy);
+    m[3] = 0;
 
-    m[8] = tmp[6];
-    m[9] = tmp[7];
-    m[10] = tmp[8];
-    m[11] = 0.0f;
+    m[4] = 2 * (xy - wz);
+    m[5] = 1 - 2 * (xx + zz);
+    m[6] = 2 * (yz + wx);
+    m[7] = 0;
 
-    m[12] = 0.0f;
-    m[13] = 0.0f;
-    m[14] = 0.0f;
-    m[15] = 1.0f;
+    m[8] = 2 * (xz + wy);
+    m[9] = 2 * (yz - wx);
+    m[10] = 1 - 2 * (xx + yy);
+    m[11] = 0;
+
+    m[12] = 0;
+    m[13] = 0;
+    m[14] = 0;
+    m[15] = 1;
+
+    return m;
 }
-
-Mat4::Mat4(const Quaternion& rot, const Vec3& trans, const Vec3& scale):
-    Mat4(rot) {
-
-    m[12] = trans.x;
-    m[13] = trans.y;
-    m[14] = trans.z;
-
-    m[0] = scale.x;
-    m[5] = scale.y;
-    m[10] = scale.z;
-}
-
 
 Vec4 Mat4::operator*(const Vec4 &v) const {
     Vec4 ret;
@@ -70,44 +70,37 @@ void Mat4::extract_rotation_and_translation(Quaternion& rotation, Vec3& translat
 
 Mat4 Mat4::as_rotation_x(const Degrees &angle) {
     Quaternion rot(angle, Degrees(), Degrees());
-    return Mat4(rot);
+    return Mat4::as_rotation(rot);
 }
 
 Mat4 Mat4::as_rotation_y(const Degrees &angle) {
     Quaternion rot(Degrees(), angle, Degrees());
-    return Mat4(rot);
+    return Mat4::as_rotation(rot);
 }
 
 Mat4 Mat4::as_rotation_z(const Degrees &angle) {
     Quaternion rot(Degrees(), Degrees(), angle);
-    return Mat4(rot);
+    return Mat4::as_rotation(rot);
 }
 
 Mat4 Mat4::as_rotation_xyz(const Degrees& angle_x, const Degrees& angle_y, const Degrees& angle_z) {
     Quaternion rot(angle_x, angle_y, angle_z);
-    return Mat4(rot);
+    return Mat4::as_rotation(rot);
 }
 
-Mat4 Mat4::as_scaling(float s) {
+Mat4 Mat4::as_scale(const smlt::Vec3& s) {
     Mat4 ret;
-    ret[0] = s;
-    ret[5] = s;
-    ret[10] = s;
+    ret[0] = s.x;
+    ret[5] = s.y;
+    ret[10] = s.z;
     return ret;
 }
 
-Mat4 Mat4::from_pos_rot_scale(const Vec3 &pos, const Quaternion &rot, const Vec3 &scale) {
-    Mat4 s;
-    Mat4 t;
-    Mat4 r(rot);
-
-    s[0] = scale.x;
-    s[5] = scale.y;
-    s[10] = scale.z;
-
-    t[12] = pos.x;
-    t[13] = pos.y;
-    t[14] = pos.z;
+Mat4 Mat4::as_transform(const Vec3& pos, const Quaternion& rot,
+                        const Vec3& scale) {
+    Mat4 s = as_scale(scale);
+    Mat4 t = as_translation(pos);
+    Mat4 r = as_rotation(rot);
 
     return t * r * s;
 }
@@ -117,6 +110,7 @@ Mat4 Mat4::as_translation(const Vec3 &v) {
     ret[12] = v.x;
     ret[13] = v.y;
     ret[14] = v.z;
+    ret[15] = 1.0f;
 
     return ret;
 }
