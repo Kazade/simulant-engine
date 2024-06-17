@@ -7,7 +7,7 @@
 namespace smlt {
 
 Mat4 Mat4::as_rotation(const Quaternion& rhs) {
-    Mat4 result;
+    Mat4 m;
 
     float yy = rhs.y * rhs.y;
     float zz = rhs.z * rhs.z;
@@ -19,27 +19,27 @@ Mat4 Mat4::as_rotation(const Quaternion& rhs) {
     float wy = rhs.w * rhs.y;
     float wz = rhs.w * rhs.z;
 
-    result[0] = 1 - 2 * yy - 2 * zz;
-    result[1] = 2 * xy - 2 * wz;
-    result[2] = 2 * xz + 2 * wy;
-    result[3] = 0;
+    m[0] = 1 - 2 * (yy + zz);
+    m[1] = 2 * (xy + wz);
+    m[2] = 2 * (xz - wy);
+    m[3] = 0;
 
-    result[4] = 2 * xy + 2 * wz;
-    result[5] = 1 - 2 * xx - 2 * zz;
-    result[6] = 2 * yz - 2 * wx;
-    result[7] = 0;
+    m[4] = 2 * (xy - wz);
+    m[5] = 1 - 2 * (xx + zz);
+    m[6] = 2 * (yz + wx);
+    m[7] = 0;
 
-    result[8] = 2 * xz - 2 * wy;
-    result[9] = 2 * yz + 2 * wx;
-    result[10] = 1 - 2 * xx - 2 * yy;
-    result[11] = 0;
+    m[8] = 2 * (xz + wy);
+    m[9] = 2 * (yz - wx);
+    m[10] = 1 - 2 * (xx + yy);
+    m[11] = 0;
 
-    result[12] = 0;
-    result[13] = 0;
-    result[14] = 0;
-    result[15] = 1;
+    m[12] = 0;
+    m[13] = 0;
+    m[14] = 0;
+    m[15] = 1;
 
-    return result;
+    return m;
 }
 
 Vec4 Mat4::operator*(const Vec4 &v) const {

@@ -80,21 +80,21 @@ Mat3 Mat3::as_rotation(const Quaternion& q) {
     float wy(q.w * q.y);
     float wz(q.w * q.z);
 
-    Mat3 result;
+    Mat3 m;
 
-    result[0] = 1 - 2 * yy - 2 * zz;
-    result[1] = 2 * xy - 2 * wz;
-    result[2] = 2 * xz + 2 * wy;
+    m[0] = 1 - 2 * (yy + zz);
+    m[1] = 2 * (xy + wz);
+    m[2] = 2 * (xz - wy);
 
-    result[3] = 2 * xy + 2 * wz;
-    result[4] = 1 - 2 * xx - 2 * zz;
-    result[5] = 2 * yz - 2 * wx;
+    m[3] = 2 * (xy - wz);
+    m[4] = 1 - 2 * (xx + zz);
+    m[5] = 2 * (yz + wx);
 
-    result[6] = 2 * xz - 2 * wy;
-    result[7] = 2 * yz + 2 * wx;
-    result[8] = 1 - 2 * xx - 2 * yy;
+    m[6] = 2 * (xz + wy);
+    m[7] = 2 * (yz - wx);
+    m[8] = 1 - 2 * (xx + yy);
 
-    return result;
+    return m;
 }
 
 Mat3::Mat3(const Vec3& c0, const Vec3& c1, const Vec3& c2) {

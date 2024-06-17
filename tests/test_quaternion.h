@@ -70,7 +70,7 @@ public:
 
         auto mat2 = smlt::Mat3::as_rotation(quat);
         for(uint32_t i = 0; i < 9; ++i) {
-            assert_equal(mat[i], mat2[i]);
+            assert_close(mat[i], mat2[i], 0.00001f);
         }
     }
 

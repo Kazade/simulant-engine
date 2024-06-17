@@ -99,7 +99,7 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target,
     Mat4 A, m;
     Vec4 in;
 
-    A = projection_matrix() * view_matrix();
+    A = view_matrix() * projection_matrix();
     m = A.inversed();
 
     float vx = float(target.width()) * viewport.x();

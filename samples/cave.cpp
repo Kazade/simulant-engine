@@ -117,6 +117,7 @@ public:
         // fairy_actor_->transform->set_orientation(rot * Quaternion(Vec3::UP,
         // Degrees(90)));
         fairy_actor_->transform->look_at(camera_->transform->position());
+        fairy_actor_->transform->rotate(Vec3::UP, Degrees(90));
 
         // Make sure the fairy loops the path (t ranges from 0 to 1)
         if(fairyPathTime_ >= 1)
