@@ -44,7 +44,7 @@ IF(${TEST_DISCOVERY_RESULT} EQUAL 0)
     STRING(REPLACE "\n" ";" TEST_LIST ${TEST_LIST})
     FOREACH(test_name ${TEST_LIST})
         STRING(STRIP "${test_name}" test_name)
-        ADD_TEST(NAME ${test_name} COMMAND simulant_tests ${test_name} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+        ADD_TEST(NAME "${test_name}" COMMAND simulant_tests ${test_name} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
     ENDFOREACH()
 ENDIF()
 
