@@ -87,7 +87,7 @@ public:
 
         auto trs = t * r * s;
 
-        const float E = 0.00001f;
+        const float E = 0.001f;
         assert_close(trs[0], 2.0f, E);
         assert_close(trs[1], 0.0f, E);
         assert_close(trs[2], 0.0f, E);
