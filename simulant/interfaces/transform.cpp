@@ -1,6 +1,5 @@
 #include "transform.h"
 
-
 namespace smlt {
 
 void Transform::set_translation_if_necessary(const Vec3& trans) {
@@ -56,12 +55,12 @@ void Transform::set_scale(const Vec3& scale) {
     }
 }
 
-void Transform::set_translation(const Vec3 &translation) {
+void Transform::set_translation(const Vec3& translation) {
     signal_change_attempted();
     set_translation_if_necessary(translation);
 }
 
-void Transform::set_rotation(const Quaternion &rotation) {
+void Transform::set_rotation(const Quaternion& rotation) {
     signal_change_attempted();
     set_rotation_if_necessary(rotation);
 }
@@ -71,15 +70,11 @@ void Transform::set_scale_factor(const Vec3& scale) {
     set_scale_factor_if_necessary(scale);
 }
 
-void Transform::rotate(const Quaternion &q) {
+void Transform::rotate(const Quaternion& q) {
     signal_change_attempted();
 
-    assert(
-        !std::isnan(q.x) &&
-        !std::isnan(q.y) &&
-        !std::isnan(q.z) &&
-        !std::isnan(q.w)
-    );
+    assert(!std::isnan(q.x) && !std::isnan(q.y) && !std::isnan(q.z) &&
+           !std::isnan(q.w));
 
     set_rotation_if_necessary(q * rotation_);
 }
@@ -107,11 +102,11 @@ Mat4 Transform::world_space_matrix() const {
     return absolute_transformation_;
 }
 
-void Transform::set_position_2d(const Vec2 &pos) {
+void Transform::set_position_2d(const Vec2& pos) {
     set_position(Vec3(pos, 0));
 }
 
-void Transform::set_translation_2d(const Vec2 &trans) {
+void Transform::set_translation_2d(const Vec2& trans) {
     set_translation(Vec3(trans, 0));
 }
 
@@ -149,14 +144,14 @@ void Transform::update_transformation_from_parent() {
         auto parent_scale = parent->scale();
 
         orientation_ = parent_rot * rotation_;
-        position_ = parent_pos + (parent_rot * translation_);
         scale_ = parent_scale * scale_factor_;
+        position_ = parent_pos + (parent_rot * translation_ * parent_scale);
     }
 
     absolute_transformation_is_dirty_ = true;
 }
 
-void Transform::sync(const Transform *other) {
+void Transform::sync(const Transform* other) {
     set_position(other->position());
     set_orientation(other->orientation());
     set_scale_factor(other->scale_factor());
@@ -164,22 +159,19 @@ void Transform::sync(const Transform *other) {
 
 void Transform::look_at(const Vec3& target, const Vec3& up) {
     set_orientation(
-        Quaternion::look_rotation(
-            (target - position_).normalized(),
-            up
-        )
-    );
+        Quaternion::look_rotation((target - position_).normalized(), up));
 }
 
-void Transform::set_parent(Transform* new_parent, TransformRetainMode retain_mode) {
+void Transform::set_parent(Transform* new_parent,
+                           TransformRetainMode retain_mode) {
     signal_change_attempted();
 
-    if(parent_ == new_parent) {        
+    if(parent_ == new_parent) {
         return;
     }
 
     /* When we set the parent, we want to keep our existing position so
-         * we update our translation and rotation to be relative to the parent */
+     * we update our translation and rotation to be relative to the parent */
 
     parent_ = new_parent;
 
@@ -206,5 +198,4 @@ void Transform::signal_change() {
     }
 }
 
-
-}
+} // namespace smlt
