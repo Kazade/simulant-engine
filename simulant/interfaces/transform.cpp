@@ -17,6 +17,13 @@ void Transform::set_rotation_if_necessary(const Quaternion& rot) {
     }
 }
 
+void Transform::set_scale_factor_if_necessary(const Vec3& scale) {
+    if(!scale_factor_.equals(scale)) {
+        scale_factor_ = scale;
+        signal_change();
+    }
+}
+
 void Transform::set_position(const Vec3& position) {
     signal_change_attempted();
     if(has_parent()) {
@@ -39,6 +46,16 @@ void Transform::set_orientation(const Quaternion& orientation) {
     }
 }
 
+void Transform::set_scale(const Vec3& scale) {
+    signal_change_attempted();
+    if(has_parent()) {
+        auto prot = parent_->scale();
+        set_scale_factor_if_necessary(prot / scale);
+    } else {
+        set_scale_factor_if_necessary(scale);
+    }
+}
+
 void Transform::set_translation(const Vec3 &translation) {
     signal_change_attempted();
     set_translation_if_necessary(translation);
@@ -47,6 +64,11 @@ void Transform::set_translation(const Vec3 &translation) {
 void Transform::set_rotation(const Quaternion &rotation) {
     signal_change_attempted();
     set_rotation_if_necessary(rotation);
+}
+
+void Transform::set_scale_factor(const Vec3& scale) {
+    signal_change_attempted();
+    set_scale_factor_if_necessary(scale);
 }
 
 void Transform::rotate(const Quaternion &q) {
@@ -77,8 +99,9 @@ Mat4 Transform::world_space_matrix() const {
         return absolute_transformation_;
     }
 
+    // auto p = (parent_) ? parent_->world_space_matrix() : Mat4();
     absolute_transformation_ =
-        smlt::Mat4::as_transform(position_, orientation_, scale_factor_);
+        smlt::Mat4::as_transform(position_, orientation_, scale_);
 
     absolute_transformation_is_dirty_ = false;
     return absolute_transformation_;
@@ -119,12 +142,15 @@ void Transform::update_transformation_from_parent() {
     if(!parent) {
         orientation_ = rotation_;
         position_ = translation_;
+        scale_ = scale_factor_;
     } else {
         auto parent_pos = parent->position();
         auto parent_rot = parent->orientation();
+        auto parent_scale = parent->scale();
 
         orientation_ = parent_rot * rotation_;
         position_ = parent_pos + (parent_rot * translation_);
+        scale_ = parent_scale * scale_factor_;
     }
 
     absolute_transformation_is_dirty_ = true;
@@ -160,6 +186,7 @@ void Transform::set_parent(Transform* new_parent, TransformRetainMode retain_mod
     if(parent_ && retain_mode == TRANSFORM_RETAIN_MODE_KEEP) {
         translation_ = (position_ - new_parent->position_);
         rotation_ = (orientation_ * new_parent->orientation_.inversed());
+        scale_ = scale_factor_ / new_parent->scale_;
     }
 
     signal_change();

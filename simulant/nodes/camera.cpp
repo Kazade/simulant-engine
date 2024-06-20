@@ -5,6 +5,7 @@
 #include "../stage.h"
 #include "../viewport.h"
 #include "../window.h"
+#include "simulant/math/mat4.h"
 
 namespace smlt {
 
@@ -26,10 +27,15 @@ void Camera::on_transformation_changed() {
 
 void Camera::update_frustum() {
     // Recalculate the view matrix
-    view_matrix_ = Mat4::as_look_at(transform->position(),
-                                    transform->position() +
-                                        transform->orientation().forward(),
-                                    transform->orientation().up());
+    // view_matrix_ = Mat4::as_look_at(transform->position(),
+    //                                 transform->position() +
+    //                                     transform->orientation().forward(),
+    //                                 transform->orientation().up());
+
+    auto rot = smlt::Mat4::as_rotation(transform->orientation());
+    auto irot = rot.inversed();
+    auto trns = smlt::Mat4::as_translation(-transform->position());
+    view_matrix_ = irot * trns;
 
     Mat4 mvp = projection_matrix_ * view_matrix_;
 
