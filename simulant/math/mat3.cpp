@@ -40,19 +40,19 @@ void Mat3::inverse() {
     *this = adj * detInv;
 }
 
-Mat3 Mat3::from_rotation_x(const Degrees& angle) {
+Mat3 Mat3::as_rotation_x(const Degrees& angle) {
     Quaternion q(angle, Degrees(), Degrees());
-    return Mat3(q);
+    return Mat3::as_rotation(q);
 }
 
-Mat3 Mat3::from_rotation_y(const Degrees &angle) {
+Mat3 Mat3::as_rotation_y(const Degrees& angle) {
     Quaternion q(Degrees(), angle, Degrees());
-    return Mat3(q);
+    return Mat3::as_rotation(q);
 }
 
-Mat3 Mat3::from_rotation_z(const Degrees& angle) {
+Mat3 Mat3::as_rotation_z(const Degrees& angle) {
     Quaternion q(Degrees(), Degrees(), angle);
-    return Mat3(q);
+    return Mat3::as_rotation(q);
 }
 
 Mat3::Mat3(const Mat4 &rhs) {
@@ -69,28 +69,32 @@ Mat3::Mat3(const Mat4 &rhs) {
     m[8] = rhs[10];
 }
 
-Mat3::Mat3(const Quaternion &q) {
-    float qxx(q.x * q.x);
-    float qyy(q.y * q.y);
-    float qzz(q.z * q.z);
-    float qxz(q.x * q.z);
-    float qxy(q.x * q.y);
-    float qyz(q.y * q.z);
-    float qwx(q.w * q.x);
-    float qwy(q.w * q.y);
-    float qwz(q.w * q.z);
+Mat3 Mat3::as_rotation(const Quaternion& q) {
+    float xx(q.x * q.x);
+    float yy(q.y * q.y);
+    float zz(q.z * q.z);
+    float xz(q.x * q.z);
+    float xy(q.x * q.y);
+    float yz(q.y * q.z);
+    float wx(q.w * q.x);
+    float wy(q.w * q.y);
+    float wz(q.w * q.z);
 
-    m[0] = 1.0f - 2.0f * (qyy +  qzz);
-    m[1] = 2.0f * (qxy + qwz);
-    m[2] = 2.0f * (qxz - qwy);
+    Mat3 m;
 
-    m[3] = 2.0f * (qxy - qwz);
-    m[4] = 1.0f - 2.0f * (qxx +  qzz);
-    m[5] = 2.0f * (qyz + qwx);
+    m[0] = 1 - 2 * (yy + zz);
+    m[1] = 2 * (xy + wz);
+    m[2] = 2 * (xz - wy);
 
-    m[6] = 2.0f * (qxz + qwy);
-    m[7] = 2.0f * (qyz - qwx);
-    m[8] = 1.0f - 2.0f * (qxx +  qyy);
+    m[3] = 2 * (xy - wz);
+    m[4] = 1 - 2 * (xx + zz);
+    m[5] = 2 * (yz + wx);
+
+    m[6] = 2 * (xz + wy);
+    m[7] = 2 * (yz - wx);
+    m[8] = 1 - 2 * (xx + yy);
+
+    return m;
 }
 
 Mat3::Mat3(const Vec3& c0, const Vec3& c1, const Vec3& c2) {

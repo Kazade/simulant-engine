@@ -22,4 +22,13 @@ gradle/*/build/*
 .flatpak-builder
 platform/android/openal/openal-soft*
 platform/android/openal/oboe*
+.cache
+dcbuild
+dbuild
+pbuild
+abuild
+wbuild
+builda
+dcnative
+evbuild
 

@@ -5,9 +5,10 @@ import re
 import sys
 
 parser = argparse.ArgumentParser(description="Generate C++ unit tests")
-parser.add_argument("--output", type=str, nargs=1, help="The output source file for the generated test main()", required=True)
-parser.add_argument("test_files", type=str, nargs="+", help="The list of C++ files containing your tests")
-parser.add_argument("--verbose", help="Verbose logging", action="store_true", default=False)
+parser.add_argument("--output", type=str, nargs=1, help="The output source file for the generated test main()")  # noqa
+parser.add_argument("test_files", type=str, nargs="+", help="The list of C++ files containing your tests")  # noqa
+parser.add_argument("--verbose", help="Verbose logging", action="store_true", default=False)  # noqa
+parser.add_argument("--list-tests", help="Don't generate the tests, simply output the discovered tests", action="store_true", default=False)  # noqa
 
 
 CLASS_REGEX = r"\s*class\s+(\w+)\s*([\:|,]\s*(?:public|private|protected)\s+[\w|::]+\s*)*"
@@ -155,7 +156,6 @@ def find_tests(files):
 
                 source_file_data = source_file_data[end:]
 
-
     # Now, simplify the list by finding all potential superclasses, and then keeping any classes
     # that subclass them.
     test_case_subclasses = []
@@ -168,8 +168,7 @@ def find_tests(files):
         if "TestCase" in subclass_names or "SimulantTestCase" in subclass_names or any(x[1] in subclasses[i][2] for x in test_case_subclasses):
             if subclasses[i] not in test_case_subclasses:
                 test_case_subclasses.append(subclasses[i])
-
-                i = 0 # Go back to the start, as we may have just found another parent class
+                i = 0  # Go back to the start, as we may have just found another parent class
                 continue
         i += 1
 
@@ -186,7 +185,19 @@ def main():
 
     testcases = find_tests(args.test_files)
 
-    includes = "\n".join([ INCLUDE_TEMPLATE % { 'file_path' : x } for x in set([y[0] for y in testcases]) ])
+    if args.list_tests:
+        for f, klass, bases, tests in testcases:
+            for test in tests:
+                print(f"{klass}::{test}")
+        return 0
+    elif not args.output:
+        print("OUTPUT is required")
+        return 1
+
+    includes = "\n".join([
+        INCLUDE_TEMPLATE % {'file_path': x}
+        for x in set([y[0] for y in testcases])
+    ])
     registrations = []
 
     for path, class_name, superclasses, funcs in testcases:

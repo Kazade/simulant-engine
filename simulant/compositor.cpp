@@ -228,9 +228,11 @@ static bool build_renderables(
                  * of many polygons, by choosing the light closest to the center you may find that
                  * that polygons far away from the center aren't affected by lights when they should be.
                  * This needs more thought, probably. */
-            if(lhs->node_type() == LIGHT_TYPE_DIRECTIONAL && rhs->node_type() != LIGHT_TYPE_DIRECTIONAL) {
+            if(lhs->light_type() == LIGHT_TYPE_DIRECTIONAL &&
+               rhs->light_type() != LIGHT_TYPE_DIRECTIONAL) {
                 return true;
-            } else if(rhs->node_type() == LIGHT_TYPE_DIRECTIONAL && lhs->node_type() != LIGHT_TYPE_DIRECTIONAL) {
+            } else if(rhs->light_type() == LIGHT_TYPE_DIRECTIONAL &&
+                      lhs->light_type() != LIGHT_TYPE_DIRECTIONAL) {
                 return false;
             }
 
@@ -354,7 +356,7 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
         if(node->node_type() == STAGE_NODE_TYPE_DIRECTIONAL_LIGHT ||
            node->node_type() == STAGE_NODE_TYPE_POINT_LIGHT) {
             Light* light = (Light*)node;
-            if(light->node_type() == LIGHT_TYPE_DIRECTIONAL) {
+            if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
                 lights_visible.push_back(light);
             } else {
                 if(camera->frustum().intersects_sphere(

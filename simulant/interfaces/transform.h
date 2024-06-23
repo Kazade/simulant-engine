@@ -44,6 +44,10 @@ public:
         return orientation_;
     }
 
+    const Vec3& scale() const {
+        return scale_;
+    }
+
     const Vec3& translation() const {
         return translation_;
     }
@@ -64,6 +68,9 @@ public:
     /* Set the absolute world-space orientation of the object */
     void set_orientation(const Quaternion& orientation);
 
+    /* Set the absolute world-space scale of the object */
+    void set_scale(const Vec3& scale);
+
     /* Set the translation relative to the parent node. */
     void set_translation(const Vec3& translation);
 
@@ -71,10 +78,7 @@ public:
     void set_rotation(const Quaternion& rotation);
 
     /* Set scale-factor relative to parent */
-    void set_scale_factor(const Vec3& scale) {
-        scale_factor_ = scale;
-        signal_change();
-    }
+    void set_scale_factor(const Vec3& scale);
 
     /* Change the relative translation by v */
     void translate(const Vec3& v) {
@@ -179,6 +183,7 @@ private:
 
     Vec3 position_;
     Quaternion orientation_;
+    Vec3 scale_ = Vec3(1);
 
     Vec3 translation_;
     Quaternion rotation_;
@@ -189,6 +194,7 @@ private:
 
     void set_translation_if_necessary(const Vec3& trans);
     void set_rotation_if_necessary(const Quaternion& rot);
+    void set_scale_factor_if_necessary(const Vec3& scale);
 };
 
 }

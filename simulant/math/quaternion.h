@@ -66,7 +66,7 @@ struct Quaternion {
         w *= l;
     }
 
-    const Quaternion normalized() {
+    const Quaternion normalized() const {
         Quaternion result = *this;
         result.normalize();
         return result;

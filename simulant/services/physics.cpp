@@ -525,7 +525,7 @@ void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, c
     uint8_t* pos = mesh->vertex_data->data();
     auto stride = mesh->vertex_data->vertex_specification().stride();
 
-    Mat4 tx(rotation, offset, Vec3(1));
+    Mat4 tx = Mat4::as_transform(offset, rotation, Vec3(1));
 
     for(std::size_t i = 0; i < mesh->vertex_data->count(); ++i, pos += stride) {
         auto p = tx * Vec4(*((Vec3*) pos), 1);

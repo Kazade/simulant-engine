@@ -60,7 +60,7 @@ void OctreeCuller::_compile(const Vec3 &pos, const Quaternion &rot, const Vec3 &
     mesh_->vertex_data->clone_into(*data->vertices);
 
     /* Transform the vertices by the passed in transformation */
-    Mat4 transform(rot, pos, scale);
+    Mat4 transform = Mat4::as_transform(pos, rot, scale);
     data->vertices->transform_by(transform);
 
     AABB bounds(*data->vertices);

@@ -43,9 +43,6 @@ public:
         m[0] = m[5] = m[10] = m[15] = 1.0f;
     }
 
-    Mat4(const Quaternion& rhs);
-    Mat4(const Quaternion& rot, const Vec3& trans, const Vec3& scale);
-
     Mat4 operator*(const Mat4& rhs) const {
 
         Mat4 result;
@@ -105,8 +102,6 @@ public:
     static Mat4 as_rotation_z(const Degrees& angle);
     static Mat4 as_rotation_xyz(const Degrees& angle_x, const Degrees& angle_y, const Degrees& angle_z);
     static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
-    static Mat4 as_scaling(float s);
-    static Mat4 from_pos_rot_scale(const Vec3& pos, const Quaternion& rot, const Vec3& scale);
 
     inline const float& operator[](const uint32_t index) const {
         return m[index];
@@ -125,6 +120,10 @@ public:
     }
 
     static Mat4 as_translation(const Vec3& v);
+    static Mat4 as_rotation(const Quaternion& r);
+    static Mat4 as_scale(const Vec3& v);
+    static Mat4 as_transform(const Vec3& pos, const Quaternion& rot,
+                             const Vec3& scale);
 
     static Mat4 as_projection(const Degrees& fov, float aspect, float near, float far);
 
