@@ -111,6 +111,9 @@ ELSEIF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # The debugging information isn't included in the object files or executable, which makes them much smaller.
     add_compile_options("$<$<CONFIG:Debug>:/Zi>")
 
+    # This option enables a token-based preprocessor that conforms to C99 and C++11 and later standards.
+    add_compile_options("$<$<CONFIG:Release>:/Zc:preprocessor>")
+
     # Disables frame pointer omission
     add_compile_options("$<$<CONFIG:Debug>:/Oy->")
 
