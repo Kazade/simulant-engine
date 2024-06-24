@@ -180,16 +180,16 @@ public:
 
     Vec3 lerp_smooth(const Vec3& end, const float dt, const float p, const float t) const {
         return Vec3(
-            fast_fmaf((end.x - x), 1.0f - ::powf(p, fast_divide(dt, t)), x),
-            fast_fmaf((end.y - y), 1.0f - ::powf(p, fast_divide(dt, t)), y),
-            fast_fmaf((end.z - z), 1.0f - ::powf(p, fast_divide(dt, t)), z)
+            fast_fmaf((end.x - x), 1.0f - std::powf(p, fast_divide(dt, t)), x),
+            fast_fmaf((end.y - y), 1.0f - std::powf(p, fast_divide(dt, t)), y),
+            fast_fmaf((end.z - z), 1.0f - std::powf(p, fast_divide(dt, t)), z)
         );
     }
 
     // Exponential decay function based on Freya Holmer's talk
     // Reference: https://www.youtube.com/watch?v=LSNQuFEDOyQ
     Vec3 lerp_decay(const Vec3& end, const float dt, const float decay) const {
-        const float expDecay = ::exp(-decay * dt);
+        const float expDecay = std::exp(-decay * dt);
 
         return Vec3(
             fast_fmaf((x - end.x), expDecay, end.x),
