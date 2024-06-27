@@ -5,13 +5,12 @@
 
 namespace smlt {
 
-class CylindricalBillboard:
-    public StageNode {
+class CylindricalBillboard: public StageNode {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD);
 
-    CylindricalBillboard(Scene* owner):
+    CylindricalBillboard(Scene* owner) :
         StageNode(owner, STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD) {}
 
     void set_target(StageNode* target) {
@@ -22,12 +21,13 @@ public:
         static AABB aabb;
         return aabb;
     }
+
 private:
     StageNode* target_ = nullptr;
     Vec3 forward_;
 
-    bool on_create(ConstructionArgs* params) override {
-        forward_ = params->arg<Vec3>("forward").value_or(Vec3::FORWARD);
+    bool on_create(const ConstructionArgs& params) override {
+        forward_ = params.arg<Vec3>("forward").value_or(Vec3::FORWARD);
         return true;
     }
 
@@ -35,9 +35,8 @@ private:
         _S_UNUSED(dt);
 
         if(target_) {
-            auto dir = (
-                target_->transform->position() - transform->position()
-            ).normalized();
+            auto dir = (target_->transform->position() - transform->position())
+                           .normalized();
 
             smlt::Plane up_plane(smlt::Vec3::POSITIVE_Y, 0);
 
@@ -54,7 +53,6 @@ private:
             transform->set_orientation(rot);
         }
     }
-
 };
 
-}
+} // namespace smlt

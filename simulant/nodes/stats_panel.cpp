@@ -4,9 +4,9 @@
 //     This file is part of Simulant.
 //
 //     Simulant is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU Lesser General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
+//     it under the terms of the GNU Lesser General Public License as published
+//     by the Free Software Foundation, either version 3 of the License, or (at
+//     your option) any later version.
 //
 //     Simulant is distributed in the hope that it will be useful,
 //     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,29 +18,26 @@
 //
 
 #include "stats_panel.h"
-#include "../window.h"
-#include "../stage.h"
-#include "../nodes/ui/ui_manager.h"
-#include "../nodes/camera.h"
-#include "../nodes/actor.h"
-#include "../compositor.h"
-#include "../nodes/ui/label.h"
-#include "../platform.h"
 #include "../application.h"
+#include "../compositor.h"
+#include "../nodes/actor.h"
+#include "../nodes/camera.h"
+#include "../nodes/ui/label.h"
+#include "../nodes/ui/ui_manager.h"
+#include "../platform.h"
+#include "../stage.h"
 #include "../time_keeper.h"
+#include "../window.h"
 
 #if defined(__WIN32__)
-    #include <windows.h>
-    #include <psapi.h>
+#include <psapi.h>
+#include <windows.h>
 #endif
-
 
 namespace smlt {
 
-StatsPanel::StatsPanel(Scene *owner):
-    Panel(owner, STAGE_NODE_TYPE_STATS_PANEL) {
-
-}
+StatsPanel::StatsPanel(Scene* owner) :
+    Panel(owner, STAGE_NODE_TYPE_STATS_PANEL) {}
 
 bool StatsPanel::on_init() {
     if(!Panel::on_init()) {
@@ -53,23 +50,18 @@ bool StatsPanel::on_init() {
     const float diff = 32;
     float vheight = scene->window->height() - diff;
 
-    auto heading1 = create_child<ui::Label>({
-        {"text",  "performance"},
-        {"width", label_width  }
-    });
+    auto heading1 = create_child<ui::Label>(
+        ConstructionArgs({"text", "performance", "width", label_width}));
     heading1->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    fps_ = create_child<ui::Label>({
-        {"text",  "FPS: 0"   },
-        {"width", label_width}
-    });
+    fps_ = create_child<ui::Label>(
+        ConstructionArgs({"text", "FPS: 0", "width", label_width}));
     fps_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
     frame_time_ = create_child<ui::Label>({
-        {"text",  "Frame Time: 0ms"},
-        {"width", label_width      }
+        {{"text", "Frame Time: 0ms"}, {"width", label_width}}
     });
     frame_time_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
@@ -102,11 +94,13 @@ bool StatsPanel::on_init() {
     });
     polygons_rendered_->transform->set_position_2d(Vec2(hw, vheight));
 
-    graph_material_ = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
+    graph_material_ =
+        scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
     graph_material_->set_blend_func(BLEND_ALPHA);
     graph_material_->set_depth_test_enabled(false);
     graph_material_->set_cull_mode(CULL_MODE_NONE);
-    ram_graph_mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+    ram_graph_mesh_ =
+        scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
     ram_graph_ = create_child<Actor>({
         {"mesh", ram_graph_mesh_}
     });
@@ -119,7 +113,8 @@ bool StatsPanel::on_init() {
         {"text", "0M"}
     });
 
-    frame_started_ = get_app()->signal_frame_started().connect(std::bind(&StatsPanel::update_stats, this));
+    frame_started_ = get_app()->signal_frame_started().connect(
+        std::bind(&StatsPanel::update_stats, this));
 
     return true;
 }
@@ -150,8 +145,8 @@ int32_t StatsPanel::get_memory_usage_in_megabytes() {
 }
 
 #ifndef __DREAMCAST__
-static unsigned int round(unsigned int value, unsigned int multiple){
-    return ((value-1u) & ~(multiple-1u)) + multiple;
+static unsigned int round(unsigned int value, unsigned int multiple) {
+    return ((value - 1u) & ~(multiple - 1u)) + multiple;
 }
 #endif
 
@@ -165,8 +160,7 @@ void StatsPanel::rebuild_ram_graph() {
     float height = 64;
 
     ram_graph_mesh_->reset(
-        ram_graph_mesh_->vertex_data->vertex_specification()
-    );
+        ram_graph_mesh_->vertex_data->vertex_specification());
 
     if(free_ram_history_.size() < 2) {
         // Can't make a graph with a single sample point
@@ -176,7 +170,8 @@ void StatsPanel::rebuild_ram_graph() {
 #ifdef __DREAMCAST__
     float graph_max = 16.0f;
 #else
-    float max_y = *(std::max_element(free_ram_history_.begin(), free_ram_history_.end()));
+    float max_y =
+        *(std::max_element(free_ram_history_.begin(), free_ram_history_.end()));
     float graph_max = round(max_y, 8.0f);
 #endif
 
@@ -185,7 +180,9 @@ void StatsPanel::rebuild_ram_graph() {
         return;
     }
 
-    auto submesh = ram_graph_mesh_->create_submesh("ram-usage", graph_material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_QUADS);
+    auto submesh = ram_graph_mesh_->create_submesh("ram-usage", graph_material_,
+                                                   INDEX_TYPE_16_BIT,
+                                                   MESH_ARRANGEMENT_QUADS);
     auto& vdata = ram_graph_mesh_->vertex_data;
     auto& idata = submesh->index_data;
 
@@ -277,7 +274,8 @@ void StatsPanel::update_stats() {
     if(first_update_ || last_update_ >= 1.0f) {
         auto mem_usage = get_memory_usage_in_megabytes();
         auto tot_mem = bytes_to_megabytes(get_platform()->total_ram_in_bytes());
-        auto vram_usage = bytes_to_megabytes(get_platform()->available_vram_in_bytes());
+        auto vram_usage =
+            bytes_to_megabytes(get_platform()->available_vram_in_bytes());
         auto actors_rendered = get_app()->stats->subactors_rendered();
 
         free_ram_history_.push_back(mem_usage);
@@ -287,12 +285,18 @@ void StatsPanel::update_stats() {
 
         rebuild_ram_graph();
 
-        fps_->set_text(_F("FPS: {0}").format(get_app()->stats->frames_per_second()));
-        frame_time_->set_text(_F("Frame Time: {0}ms").format(get_app()->stats->frame_time()));
-        ram_usage_->set_text(_F("RAM Usage: {0} / {1} MB").format(mem_usage, tot_mem));
+        fps_->set_text(
+            _F("FPS: {0}").format(get_app()->stats->frames_per_second()));
+        frame_time_->set_text(
+            _F("Frame Time: {0}ms").format(get_app()->stats->frame_time()));
+        ram_usage_->set_text(
+            _F("RAM Usage: {0} / {1} MB").format(mem_usage, tot_mem));
         vram_usage_->set_text(_F("VRAM Free: {0} MB").format(vram_usage));
-        actors_rendered_->set_text(_F("Renderables Visible: {0}").format(actors_rendered));
-        polygons_rendered_->set_text(_F("Polygons Rendered: {0}").format(get_app()->stats->polygons_rendered()));
+        actors_rendered_->set_text(
+            _F("Renderables Visible: {0}").format(actors_rendered));
+        polygons_rendered_->set_text(
+            _F("Polygons Rendered: {0}")
+                .format(get_app()->stats->polygons_rendered()));
 
         last_update_ = 0.0f;
         first_update_ = false;
@@ -305,17 +309,19 @@ void StatsPanel::update_stats() {
         this->window_->each_stage([&](uint32_t i, Stage* stage) {
             auto stage_row = stages.append_row();
             stage_row.append_row().append_label(
-                (stage->name().empty()) ? "Stage " + smlt::to_string(i) : stage->name().encode()
+                (stage->name().empty()) ? "Stage " + smlt::to_string(i) :
+        stage->name().encode()
             );
             stage_row.append_row().append_label(
                 "   Actors: " + smlt::to_string(stage->actor_count())
             );
 
             stage_row.append_row().append_label(
-                "   Particle Systems: " + smlt::to_string(stage->particle_system_count())
+                "   Particle Systems: " +
+        smlt::to_string(stage->particle_system_count())
             );
         }); */
     }
 }
 
-}
+} // namespace smlt

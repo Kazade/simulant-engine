@@ -10,7 +10,7 @@ namespace smlt {
 class ConstructionArgs;
 
 typedef std::function<StageNode*(void*)> StageNodeConstructFunction;
-typedef std::function<void (StageNode*)> StageNodeDestructFunction;
+typedef std::function<void(StageNode*)> StageNodeDestructFunction;
 
 struct StageNodeTypeInfo {
     StageNodeType type;
@@ -27,11 +27,11 @@ class StageNodeManager {
 private:
     template<typename T>
     static StageNode* standard_new(Scene* scene, void* mem) {
-        return new (mem) T(scene);
+        return new(mem) T(scene);
     }
 
     template<typename T>
-    static void standard_delete(StageNode *mem) {
+    static void standard_delete(StageNode* mem) {
         T* to_delete = dynamic_cast<T*>(mem);
         to_delete->~T();
     }
@@ -40,9 +40,8 @@ private:
         void* alloc_base;
         StageNode* ptr;
 
-        NodeData(void* alloc_base, StageNode* ptr):
-            alloc_base(alloc_base),
-            ptr(ptr) {}
+        NodeData(void* alloc_base, StageNode* ptr) :
+            alloc_base(alloc_base), ptr(ptr) {}
     };
 
     std::unordered_map<StageNodeType, StageNodeTypeInfo> registered_nodes_;
@@ -52,8 +51,9 @@ protected:
     bool clean_up_node(StageNode* node);
 
     Scene* scene_;
+
 public:
-    StageNodeManager(Scene* scene):
+    StageNodeManager(Scene* scene) :
         scene_(scene) {}
 
     virtual ~StageNodeManager();
@@ -69,44 +69,31 @@ public:
     }
 
     /* Non-template API does the work for easier binding with other languages */
-    StageNode* create_node(StageNodeType type, ConstructionArgs* params);
+    StageNode* create_node(StageNodeType type, const ConstructionArgs& params);
 
     template<typename T>
-    T* create_node(
-        std::initializer_list<std::pair<std::string, smlt::any>> params) {
-        ConstructionArgs args;
-        for(auto& arg: params) {
-            args.set_arg(arg.first.c_str(), arg.second);
-        }
-
-        return (T*)create_node(T::Meta::node_type, &args);
-    }
-
-    template<typename T>
-    T* create_node(ConstructionArgs args) {
-        return (T*)create_node(T::Meta::node_type, &args);
+    T* create_node(const ConstructionArgs& args) {
+        return (T*)create_node(T::Meta::node_type, args);
     }
 
     template<typename T>
     T* create_node() {
         ConstructionArgs args;
-        return (T*)create_node(T::Meta::node_type, &args);
+        return (T*)create_node(T::Meta::node_type, args);
     }
 
-    bool register_stage_node(
-        StageNodeType type,
-        std::size_t size_in_bytes,
-        std::size_t alignment,
-        StageNodeConstructFunction construct_func, StageNodeDestructFunction destruct_func) {
+    bool register_stage_node(StageNodeType type, std::size_t size_in_bytes,
+                             std::size_t alignment,
+                             StageNodeConstructFunction construct_func,
+                             StageNodeDestructFunction destruct_func) {
 
         if(registered_nodes_.find(type) != registered_nodes_.end()) {
             S_WARN("Attempted to register duplicate node: {0}", type);
             return false;
         }
 
-        StageNodeTypeInfo info = {
-            type, size_in_bytes, alignment, construct_func, destruct_func
-        };
+        StageNodeTypeInfo info = {type, size_in_bytes, alignment,
+                                  construct_func, destruct_func};
 
         registered_nodes_.insert(std::make_pair(type, info));
         S_DEBUG("Registered new stage node type: {0}", type);
@@ -115,13 +102,11 @@ public:
 
     template<typename T>
     bool register_stage_node() {
-        return register_stage_node(
-            T::Meta::node_type,
-            sizeof(T), alignof(T),
-            std::bind(&StageNodeManager::standard_new<T>, scene_, std::placeholders::_1),
-            &StageNodeManager::standard_delete<T>
-        );
+        return register_stage_node(T::Meta::node_type, sizeof(T), alignof(T),
+                                   std::bind(&StageNodeManager::standard_new<T>,
+                                             scene_, std::placeholders::_1),
+                                   &StageNodeManager::standard_delete<T>);
     }
 };
 
-}
+} // namespace smlt

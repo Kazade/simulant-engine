@@ -3,9 +3,9 @@
  *     This file is part of Simulant.
  *
  *     Simulant is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Lesser General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  *
  *     Simulant is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,8 +19,8 @@
 #ifndef LIGHT_H_INCLUDED
 #define LIGHT_H_INCLUDED
 
-#include "../generic/managed.h"
 #include "../generic/identifiable.h"
+#include "../generic/managed.h"
 #include "../generic/manual_object.h"
 #include "../types.h"
 
@@ -31,9 +31,7 @@ namespace smlt {
 
 extern const Color DEFAULT_LIGHT_COLOR;
 
-class Light :
-    public ContainerNode,
-    public ChainNameable<Light> {
+class Light: public ContainerNode, public ChainNameable<Light> {
 
 public:
     typedef std::shared_ptr<Light> ptr;
@@ -78,28 +76,45 @@ public:
         specular_ = color;
     }
 
-    LightType light_type() const { return type_; }
-    const smlt::Color& ambient() const { return ambient_; }
-    const smlt::Color& diffuse() const { return diffuse_; }
-    const smlt::Color& specular() const { return specular_; }
+    LightType light_type() const {
+        return type_;
+    }
+    const smlt::Color& ambient() const {
+        return ambient_;
+    }
+    const smlt::Color& diffuse() const {
+        return diffuse_;
+    }
+    const smlt::Color& specular() const {
+        return specular_;
+    }
 
     /** Returns the owner stage's global ambient value. */
     smlt::Color global_ambient() const;
 
-    void set_attenuation(float range, float constant, float linear, float quadratic);
+    void set_attenuation(float range, float constant, float linear,
+                         float quadratic);
     void set_attenuation_from_range(float range);
 
-    float range() const { return range_; }
-    float constant_attenuation() const { return const_attenuation_; }
-    float linear_attenuation() const { return linear_attenuation_; }
-    float quadratic_attenuation() const { return quadratic_attenuation_; }
+    float range() const {
+        return range_;
+    }
+    float constant_attenuation() const {
+        return const_attenuation_;
+    }
+    float linear_attenuation() const {
+        return linear_attenuation_;
+    }
+    float quadratic_attenuation() const {
+        return quadratic_attenuation_;
+    }
 
     const AABB& aabb() const override {
         return bounds_;
     }
 
 protected:
-    bool on_create(ConstructionArgs* params) override;
+    bool on_create(const ConstructionArgs& params) override;
 
 private:
     LightType type_;
@@ -115,43 +130,42 @@ private:
     float quadratic_attenuation_;
 };
 
-
-class PointLight : public Light {
+class PointLight: public Light {
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_POINT_LIGHT);
-    PointLight(Scene* owner):
+    PointLight(Scene* owner) :
         Light(owner, STAGE_NODE_TYPE_POINT_LIGHT) {}
 
 private:
-    bool on_create(ConstructionArgs* params) override {
+    bool on_create(const ConstructionArgs& params) override {
         if(!Light::on_create(params)) {
             return false;
         }
 
         set_type(LIGHT_TYPE_POINT);
-        transform->set_position(params->arg<Vec3>("position").value_or(Vec3()));
+        transform->set_position(params.arg<Vec3>("position").value_or(Vec3()));
         return true;
     }
 };
 
-class DirectionalLight : public Light {
+class DirectionalLight: public Light {
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_DIRECTIONAL_LIGHT);
 
-    DirectionalLight(Scene* owner):
+    DirectionalLight(Scene* owner) :
         Light(owner, STAGE_NODE_TYPE_DIRECTIONAL_LIGHT) {}
 
-    bool on_create(ConstructionArgs* params) override {
+    bool on_create(const ConstructionArgs& params) override {
         if(!Light::on_create(params)) {
             return false;
         }
 
         set_type(LIGHT_TYPE_DIRECTIONAL);
-        auto direction = params->arg<Vec3>("direction");
+        auto direction = params.arg<Vec3>("direction");
         set_direction(direction.value_or(Vec3(1, -0.5, 0)));
         return true;
     }
 };
 
-}
+} // namespace smlt
 #endif

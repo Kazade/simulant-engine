@@ -3,10 +3,8 @@
 
 namespace smlt {
 
-SmoothFollow::SmoothFollow(Scene* owner):
-    StageNode(owner, STAGE_NODE_TYPE_SMOOTH_FOLLOW) {
-
-}
+SmoothFollow::SmoothFollow(Scene* owner) :
+    StageNode(owner, STAGE_NODE_TYPE_SMOOTH_FOLLOW) {}
 
 SmoothFollow::~SmoothFollow() {
     if(destroy_conn_) {
@@ -28,30 +26,34 @@ void SmoothFollow::on_late_update(float dt) {
     /* We only move the camera if following is enabled, otherwise we
      * just change the rotation */
     if(following_enabled_) {
-        assert(!(std::isnan(target_position.x) || std::isnan(target_position.y) || std::isnan(target_position.z)));
+        assert(!(std::isnan(target_position.x) ||
+                 std::isnan(target_position.y) ||
+                 std::isnan(target_position.z)));
 
-        auto wanted_position = target_position + Vec3(0, height_, distance_).rotated_by(target_rotation);
+        auto wanted_position =
+            target_position +
+            Vec3(0, height_, distance_).rotated_by(target_rotation);
 
         // Keep within 0.0 - 1.0f;
         auto damping_to_apply = std::max(std::min(damping_ * dt, 1.0f), 0.0f);
         transform->set_position(
-            transform->position().lerp(wanted_position, damping_to_apply)
-        );
+            transform->position().lerp(wanted_position, damping_to_apply));
 
         if(smlt::almost_equal(dir.length_squared(), 0.0f)) {
-            // The two things are the same, we can't really do much about rotation so just
-            // return
+            // The two things are the same, we can't really do much about
+            // rotation so just return
             return;
         }
     }
 
-    auto wanted_rotation = Quaternion::look_rotation(dir.normalized(), target_rotation.up());
+    auto wanted_rotation =
+        Quaternion::look_rotation(dir.normalized(), target_rotation.up());
 
     // Keep within 0.0 - 1.0f;
-    auto rot_damping_to_apply = std::max(std::min(rotation_damping_ * dt, 1.0f), 0.0f);
+    auto rot_damping_to_apply =
+        std::max(std::min(rotation_damping_ * dt, 1.0f), 0.0f);
     transform->set_orientation(
-        transform->orientation().slerp(wanted_rotation, rot_damping_to_apply)
-    );
+        transform->orientation().slerp(wanted_rotation, rot_damping_to_apply));
 }
 
 void SmoothFollow::set_target(StageNodePtr node) {
@@ -80,8 +82,8 @@ void SmoothFollow::set_following_enabled(bool v) {
     following_enabled_ = v;
 }
 
-bool SmoothFollow::on_create(ConstructionArgs* params) {
-    set_target(params->arg<StageNodePtr>("target").value_or(nullptr));
+bool SmoothFollow::on_create(const ConstructionArgs& params) {
+    set_target(params.arg<StageNodePtr>("target").value_or(nullptr));
     return true;
 }
 
@@ -93,4 +95,4 @@ StageNode* SmoothFollow::target() const {
     return target_;
 }
 
-}
+} // namespace smlt

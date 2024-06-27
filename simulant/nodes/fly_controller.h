@@ -7,17 +7,15 @@ namespace smlt {
 
 class FlyController;
 
-class FlyController : public StageNode {
+class FlyController: public StageNode {
 private:
     float speed_ = 600.0f;
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_FLY_CONTROLLER);
 
-    FlyController(Scene* owner):
-        StageNode(owner, STAGE_NODE_TYPE_FLY_CONTROLLER) {
-
-    }
+    FlyController(Scene* owner) :
+        StageNode(owner, STAGE_NODE_TYPE_FLY_CONTROLLER) {}
 
     void set_speed(float v) {
         speed_ = v;
@@ -34,10 +32,10 @@ public:
     }
 
 private:
-    bool on_create(ConstructionArgs* params) override {
-        set_speed(params->arg<float>("speed").value_or(600.0f));
+    bool on_create(const ConstructionArgs& params) override {
+        set_speed(params.arg<float>("speed").value_or(600.0f));
         return true;
     }
 };
 
-}
+} // namespace smlt

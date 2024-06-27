@@ -6,17 +6,15 @@
 namespace smlt {
 namespace ui {
 
-class Label:
-    public Widget,
-    public RefCounted<Label> {
+class Label: public Widget, public RefCounted<Label> {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_LABEL);
 
     Label(Scene* owner);
 
-    bool on_create(ConstructionArgs* params) override;
+    bool on_create(const ConstructionArgs& params) override;
 };
 
-}
-}
+} // namespace ui
+} // namespace smlt

@@ -7,15 +7,10 @@
 namespace smlt {
 namespace ui {
 
+ProgressBar::ProgressBar(Scene* owner) :
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR) {}
 
-ProgressBar::ProgressBar(Scene* owner):
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR) {
-
-}
-
-ProgressBar::~ProgressBar() {
-
-}
+ProgressBar::~ProgressBar() {}
 
 void ProgressBar::set_pulse_fraction(float value) {
     pulse_fraction_ = value;
@@ -70,14 +65,17 @@ void ProgressBar::refresh_bar(float dt) {
     }
 }
 
-Widget::WidgetBounds ProgressBar::calculate_foreground_size(const UIDim& content_dimensions) const {
+Widget::WidgetBounds ProgressBar::calculate_foreground_size(
+    const UIDim& content_dimensions) const {
     WidgetBounds result = Widget::calculate_foreground_size(content_dimensions);
 
     if(mode_ == PROGRESS_BAR_MODE_PULSE) {
         result.min.x = Px(pulse_position_ - (pulse_width_ / 2));
         result.max.x = Px(pulse_position_ + (pulse_width_ / 2));
     } else {
-        result.max.x = result.min.x + int(float((result.max.x - result.min.x).value) * fraction_);
+        result.max.x =
+            result.min.x +
+            int(float((result.max.x - result.min.x).value) * fraction_);
     }
     return result;
 }
@@ -127,13 +125,13 @@ void ProgressBar::on_update(float dt) {
     refresh_bar(dt);
 }
 
-bool ProgressBar::on_create(ConstructionArgs* params) {
+bool ProgressBar::on_create(const ConstructionArgs& params) {
     if(!Widget::on_create(params)) {
         return true;
     }
 
-    auto sstyle = params->arg<WidgetStyle>("shared_style");
-    auto theme = params->arg<UIConfig>("theme").value_or(UIConfig());
+    auto sstyle = params.arg<WidgetStyle>("shared_style");
+    auto theme = params.arg<UIConfig>("theme").value_or(UIConfig());
 
     if(!sstyle) {
         set_background_color(theme.progress_bar_background_color_);
@@ -143,18 +141,18 @@ bool ProgressBar::on_create(ConstructionArgs* params) {
         set_text_color(theme.progress_bar_text_color_);
     }
 
-    auto min = params->arg<float>("min").value_or(0.0f);
-    auto max = params->arg<float>("max").value_or(100.0f);
-    auto value = params->arg<float>("value").value_or(0.0f);
+    auto min = params.arg<float>("min").value_or(0.0f);
+    auto max = params.arg<float>("max").value_or(100.0f);
+    auto value = params.arg<float>("value").value_or(0.0f);
     set_range(min, max);
     set_value(value);
 
-    auto w = params->arg<int>("width").value_or(-1);
-    auto h = params->arg<int>("height").value_or(-1);
+    auto w = params.arg<int>("width").value_or(-1);
+    auto h = params.arg<int>("height").value_or(-1);
 
     set_resize_mode(RESIZE_MODE_FIXED);
     resize(w, h);
     return true;
 }
-}
-}
+} // namespace ui
+} // namespace smlt

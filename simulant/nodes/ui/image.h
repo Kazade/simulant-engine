@@ -12,19 +12,19 @@ namespace ui {
  * All images have their resize mode set to fixed width and do not
  * allow text.
  */
-class Image:
-    public Widget {
+class Image: public Widget {
 
     void clear_layers();
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_IMAGE);
 
-    Image(Scene *owner);
+    Image(Scene* owner);
     virtual ~Image() {}
 
     /* Set the texture of the Image. By default the image will be sized to the
-     * full size of the texture, all set_source_rect to use a subsection of the texture */
+     * full size of the texture, all set_source_rect to use a subsection of the
+     * texture */
     void set_texture(const TexturePtr& texture_id);
 
     /* Selects the source region of the texture to display in the image */
@@ -32,8 +32,8 @@ public:
 
     bool set_resize_mode(ResizeMode resize_mode) override;
 
-    bool on_create(ConstructionArgs* params) override;
+    bool on_create(const ConstructionArgs& params) override;
 };
 
-}
-}
+} // namespace ui
+} // namespace smlt

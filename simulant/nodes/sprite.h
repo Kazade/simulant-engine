@@ -3,9 +3,9 @@
  *     This file is part of Simulant.
  *
  *     Simulant is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Lesser General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  *
  *     Simulant is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,13 +21,13 @@
 
 #include "stage_node.h"
 
-#include "../types.h"
-#include "../interfaces.h"
-#include "../generic/managed.h"
-#include "../generic/identifiable.h"
-#include "../sound.h"
 #include "../animation.h"
+#include "../generic/identifiable.h"
+#include "../generic/managed.h"
+#include "../interfaces.h"
 #include "../macros.h"
+#include "../sound.h"
+#include "../types.h"
 
 namespace smlt {
 
@@ -41,7 +41,7 @@ struct SpritesheetAttrs {
     uint32_t padding_horizontal = 0;
 };
 
-class Sprite :
+class Sprite:
     public ContainerNode,
     public KeyFrameAnimated,
     public ChainNameable<Sprite> {
@@ -49,7 +49,7 @@ class Sprite :
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SPRITE);
 
-    bool on_create(ConstructionArgs* params) override;
+    bool on_create(const ConstructionArgs& params) override;
     bool on_destroy() override;
     void on_update(float dt) override;
 
@@ -63,17 +63,19 @@ public:
 
     void set_alpha(float alpha);
 
-    float alpha() const { return alpha_; }
-    MaterialPtr material() const { return material_; }
+    float alpha() const {
+        return alpha_;
+    }
+    MaterialPtr material() const {
+        return material_;
+    }
 
-    void set_spritesheet(TexturePtr texture,
-        uint32_t frame_width,
-        uint32_t frame_height,
-        SpritesheetAttrs attrs=SpritesheetAttrs()
-    );
+    void set_spritesheet(TexturePtr texture, uint32_t frame_width,
+                         uint32_t frame_height,
+                         SpritesheetAttrs attrs = SpritesheetAttrs());
 
-    void flip_vertically(bool value=true);
-    void flip_horizontally(bool value=true);
+    void flip_vertically(bool value = true);
+    void flip_horizontally(bool value = true);
 
     const AABB& aabb() const override;
 
@@ -100,7 +102,8 @@ private:
     bool flipped_vertically_ = false;
     bool flipped_horizontally_ = false;
 
-    void refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp) {
+    void refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
+                                 float interp) {
         _S_UNUSED(current_frame);
         _S_UNUSED(next_frame);
         _S_UNUSED(interp);
@@ -112,10 +115,9 @@ private:
 
 public:
     Property<ActorPtr Sprite::*> actor = {this, &Sprite::actor_};
-    Property<decltype(&Sprite::animation_state_)> animations = {this, &Sprite::animation_state_};
+    Property<decltype(&Sprite::animation_state_)> animations = {
+        this, &Sprite::animation_state_};
 };
 
-
-
-}
+} // namespace smlt
 #endif // SPRITE_H

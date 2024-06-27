@@ -4,9 +4,9 @@
 //     This file is part of Simulant.
 //
 //     Simulant is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU Lesser General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
+//     it under the terms of the GNU Lesser General Public License as published
+//     by the Free Software Foundation, either version 3 of the License, or (at
+//     your option) any later version.
 //
 //     Simulant is distributed in the hope that it will be useful,
 //     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,22 +20,21 @@
 #include "debug.h"
 #include "actor.h"
 
+#include "../application.h"
 #include "../compat.h"
+#include "../macros.h"
 #include "../stage.h"
+#include "../time_keeper.h"
 #include "../utils/random.h"
 #include "../window.h"
-#include "../macros.h"
-#include "../application.h"
-#include "../time_keeper.h"
 
 namespace smlt {
 
-Debug::Debug(Scene* owner):
+Debug::Debug(Scene* owner) :
     StageNode(owner, STAGE_NODE_TYPE_DEBUG) {
 
     frame_finished_connection_ = get_app()->signal_frame_finished().connect(
-        std::bind(&Debug::frame_finished, this)
-    );
+        std::bind(&Debug::frame_finished, this));
 }
 
 Debug::~Debug() {
@@ -70,7 +69,9 @@ void Debug::on_update(float dt) {
 
     for(auto& element: elements_) {
         if(element.type == DET_LINE) {
-            auto& array = (element.depth_test) ? lines_with_depth_->index_data : lines_without_depth_->index_data;
+            auto& array = (element.depth_test)
+                              ? lines_with_depth_->index_data
+                              : lines_without_depth_->index_data;
             auto i = mesh_->vertex_data->count();
             mesh_->vertex_data->position(element.points[0]);
             mesh_->vertex_data->diffuse(element.color);
@@ -85,26 +86,32 @@ void Debug::on_update(float dt) {
         } else {
             /* HACKITY HACKITY HACKITY HACK */
             /*
-             * Need to support points sprites, and use those... or at least make these billboard quads!
-             * (Simulant issue #133)
-            */
+             * Need to support points sprites, and use those... or at least make
+             * these billboard quads! (Simulant issue #133)
+             */
 
             float hs = element.size / 2.0f;
-            auto& array = (element.depth_test) ? points_with_depth_->index_data : points_without_depth_->index_data;
+            auto& array = (element.depth_test)
+                              ? points_with_depth_->index_data
+                              : points_without_depth_->index_data;
             auto i = mesh_->vertex_data->count();
-            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(-hs, hs, 0));
+            mesh_->vertex_data->position(element.points[0] +
+                                         smlt::Vec3(-hs, hs, 0));
             mesh_->vertex_data->diffuse(element.color);
             mesh_->vertex_data->move_next();
 
-            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(-hs, -hs, 0));
+            mesh_->vertex_data->position(element.points[0] +
+                                         smlt::Vec3(-hs, -hs, 0));
             mesh_->vertex_data->diffuse(element.color);
             mesh_->vertex_data->move_next();
 
-            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(hs, -hs, 0));
+            mesh_->vertex_data->position(element.points[0] +
+                                         smlt::Vec3(hs, -hs, 0));
             mesh_->vertex_data->diffuse(element.color);
             mesh_->vertex_data->move_next();
 
-            mesh_->vertex_data->position(element.points[0] + smlt::Vec3(hs, hs, 0));
+            mesh_->vertex_data->position(element.points[0] +
+                                         smlt::Vec3(hs, hs, 0));
             mesh_->vertex_data->diffuse(element.color);
             mesh_->vertex_data->move_next();
 
@@ -145,9 +152,7 @@ void Debug::initialize_actor() {
         return;
     }
 
-    actor_ = scene->create_node<Actor>({
-        {"mesh", mesh_}
-    });
+    actor_ = scene->create_node<Actor>(ConstructionArgs({_u("mesh"), mesh_}));
 
     // Important. Debug stuff shouldn't be culled
     actor_->set_cullable(false);
@@ -159,9 +164,11 @@ void Debug::initialize_actor() {
 }
 
 bool Debug::on_init() {
-    mesh_ = scene->assets->create_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
+    mesh_ =
+        scene->assets->create_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
 
-    //Don't GC the material, if there are no debug lines then it won't be attached to the mesh
+    // Don't GC the material, if there are no debug lines then it won't be
+    // attached to the mesh
     material_ = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
 
     material_->set_cull_mode(CULL_MODE_NONE);
@@ -169,15 +176,24 @@ bool Debug::on_init() {
     // Never write to the depth buffer with debug stuff
     material_->set_depth_write_enabled(false);
 
-    material_no_depth_ = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
+    material_no_depth_ =
+        scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
     material_no_depth_->set_depth_write_enabled(false);
     material_no_depth_->set_depth_test_enabled(false);
     material_no_depth_->set_cull_mode(CULL_MODE_NONE);
 
-    lines_with_depth_ = mesh_->create_submesh("lines_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
-    lines_without_depth_ = mesh_->create_submesh("lines_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
-    points_with_depth_ = mesh_->create_submesh("points_with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
-    points_without_depth_ = mesh_->create_submesh("points_without_depth", material_no_depth_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    lines_with_depth_ =
+        mesh_->create_submesh("lines_with_depth", material_, INDEX_TYPE_16_BIT,
+                              MESH_ARRANGEMENT_LINES);
+    lines_without_depth_ =
+        mesh_->create_submesh("lines_without_depth", material_no_depth_,
+                              INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    points_with_depth_ =
+        mesh_->create_submesh("points_with_depth", material_, INDEX_TYPE_16_BIT,
+                              MESH_ARRANGEMENT_TRIANGLES);
+    points_without_depth_ =
+        mesh_->create_submesh("points_without_depth", material_no_depth_,
+                              INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     return true;
 }
@@ -190,7 +206,8 @@ float Debug::point_size() const {
     return current_point_size_;
 }
 
-void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Color &color, double duration, bool depth_test) {
+void Debug::draw_line(const Vec3& start, const Vec3& end, const Color& color,
+                      double duration, bool depth_test) {
     initialize_actor();
 
     DebugElement element;
@@ -204,13 +221,15 @@ void Debug::draw_line(const Vec3 &start, const Vec3 &end, const Color &color, do
     elements_.push_back(element);
 }
 
-void Debug::draw_ray(const Vec3 &start, const Vec3 &dir, const Color &color, double duration, bool depth_test) {
+void Debug::draw_ray(const Vec3& start, const Vec3& dir, const Color& color,
+                     double duration, bool depth_test) {
     initialize_actor();
 
-    draw_line(start, start+dir, color, duration, depth_test);
+    draw_line(start, start + dir, color, duration, depth_test);
 }
 
-void Debug::draw_point(const Vec3 &position, const Color &color, double duration, bool depth_test) {
+void Debug::draw_point(const Vec3& position, const Color& color,
+                       double duration, bool depth_test) {
     initialize_actor();
 
     DebugElement element;
@@ -223,4 +242,4 @@ void Debug::draw_point(const Vec3 &position, const Color &color, double duration
     elements_.push_back(element);
 }
 
-}
+} // namespace smlt

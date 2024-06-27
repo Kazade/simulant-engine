@@ -6,22 +6,19 @@
 namespace smlt {
 namespace ui {
 
-TextEntry::TextEntry(Scene *owner):
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY) {
+TextEntry::TextEntry(Scene* owner) :
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY) {}
 
-
-}
-
-bool TextEntry::on_create(ConstructionArgs* params) {
+bool TextEntry::on_create(const ConstructionArgs& params) {
     if(!Widget::on_create(params)) {
         return false;
     }
 
-    set_text(params->arg<unicode>("name").value_or(""));
+    set_text(params.arg<unicode>("name").value_or(""));
     set_resize_mode(RESIZE_MODE_FIXED_WIDTH);
 
-    auto w = params->arg<int>("width").value_or(-1);
-    auto h = params->arg<int>("height").value_or(-1);
+    auto w = params.arg<int>("width").value_or(-1);
+    auto h = params.arg<int>("height").value_or(-1);
     resize(w, h);
 
     return true;
@@ -107,6 +104,5 @@ bool TextEntry::pre_set_text(const unicode& txt) {
     return true;
 }
 
-}
-}
-
+} // namespace ui
+} // namespace smlt

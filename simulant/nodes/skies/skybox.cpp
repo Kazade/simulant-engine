@@ -12,13 +12,10 @@
 
 namespace smlt {
 
-Skybox::Skybox(Scene* owner):
-    ContainerNode(owner, STAGE_NODE_TYPE_SKYBOX) {
+Skybox::Skybox(Scene* owner) :
+    ContainerNode(owner, STAGE_NODE_TYPE_SKYBOX) {}
 
-}
-
-
-const AABB &Skybox::aabb() const {
+const AABB& Skybox::aabb() const {
     return actor_->aabb();
 }
 
@@ -41,7 +38,8 @@ optional<SkyboxImageDict> discover_files_from_directory(const Path& folder) {
 
         if(file_lower.contains("top") || file_lower.contains("up")) {
             face = SKYBOX_FACE_TOP;
-        } else if(file_lower.contains("bottom") || file_lower.contains("down")) {
+        } else if(file_lower.contains("bottom") ||
+                  file_lower.contains("down")) {
             face = SKYBOX_FACE_BOTTOM;
         } else if(file_lower.contains("left")) {
             face = SKYBOX_FACE_LEFT;
@@ -65,7 +63,8 @@ optional<SkyboxImageDict> discover_files_from_directory(const Path& folder) {
 
         // If we already have found this face, then throw an error
         if(files.count(face)) {
-            throw SkyboxImageDuplicateError("Found multiple potential images for face");
+            throw SkyboxImageDuplicateError(
+                "Found multiple potential images for face");
         }
 
         // Store the relative path, rather than the absolute one
@@ -79,15 +78,15 @@ optional<SkyboxImageDict> discover_files_from_directory(const Path& folder) {
     return files;
 }
 
-bool Skybox::on_create(ConstructionArgs* params) {
-    auto maybe_dir = params->arg<Path>("source_directory");
+bool Skybox::on_create(const ConstructionArgs& params) {
+    auto maybe_dir = params.arg<Path>("source_directory");
 
     if(!maybe_dir) {
         S_ERROR("No skybox directory specified");
         return false;
     }
 
-    auto flags = params->arg<TextureFlags>("flags").value_or(TextureFlags());
+    auto flags = params.arg<TextureFlags>("flags").value_or(TextureFlags());
 
     auto maybe_files = discover_files_from_directory(maybe_dir.value());
     if(maybe_files) {
@@ -104,15 +103,9 @@ bool Skybox::on_create(ConstructionArgs* params) {
     return true;
 }
 
-void Skybox::generate(
-    const Path& up,
-    const Path& down,
-    const Path& left,
-    const Path& right,
-    const Path& front,
-    const Path& back,
-    const TextureFlags& flags
-) {
+void Skybox::generate(const Path& up, const Path& down, const Path& left,
+                      const Path& right, const Path& front, const Path& back,
+                      const TextureFlags& flags) {
     auto& assets = scene->assets;
     mesh_ = assets->create_mesh_as_cube_with_submesh_per_face(DEFAULT_SIZE);
 
@@ -123,7 +116,8 @@ void Skybox::generate(
     for(auto sm: mesh->each_submesh()) {
         auto mat = assets->load_material(Material::BuiltIns::TEXTURE_ONLY);
 
-        // Disable depth writes and depth testing, but otherwise use the default texture_only material
+        // Disable depth writes and depth testing, but otherwise use the default
+        // texture_only material
         mat->set_depth_write_enabled(false);
         mat->set_depth_test_enabled(false);
 
@@ -146,17 +140,27 @@ void Skybox::generate(
         sm->material()->set_diffuse_map(tex);
     };
 
-    set_texture(mesh->find_submesh("top"), assets->load_texture(up_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-    set_texture(mesh->find_submesh("bottom"), assets->load_texture(down_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-    set_texture(mesh->find_submesh("left"), assets->load_texture(left_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-    set_texture(mesh->find_submesh("right"), assets->load_texture(right_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-    set_texture(mesh->find_submesh("front"), assets->load_texture(front_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
-    set_texture(mesh->find_submesh("back"), assets->load_texture(back_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("top"),
+                assets->load_texture(
+                    up_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("bottom"),
+                assets->load_texture(
+                    down_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("left"),
+                assets->load_texture(
+                    left_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("right"),
+                assets->load_texture(
+                    right_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("front"),
+                assets->load_texture(
+                    front_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
+    set_texture(mesh->find_submesh("back"),
+                assets->load_texture(
+                    back_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
 
     if(!actor_) {
-        actor_ = scene->create_node<Actor>({
-            {"mesh", mesh_}
-        });
+        actor_ = scene->create_node<Actor>({{{"mesh", mesh_}}});
         actor_->set_parent(this);
         actor_->transform->set_position(Vec3());
         actor_->set_render_priority(smlt::RENDER_PRIORITY_ABSOLUTE_BACKGROUND);
@@ -166,6 +170,4 @@ void Skybox::generate(
     }
 }
 
-
-
-}
+} // namespace smlt

@@ -12,16 +12,15 @@ enum ProgressBarMode {
     PROGRESS_BAR_MODE_FRACTION
 };
 
-class ProgressBar:
-    public Widget {
+class ProgressBar: public Widget {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR);
 
-    using Widget::init; // Pull in init to satisfy Managed<Button>
     using Widget::clean_up;
+    using Widget::init; // Pull in init to satisfy Managed<Button>
 
-    ProgressBar(Scene *owner);
+    ProgressBar(Scene* owner);
     virtual ~ProgressBar();
 
     void pulse();
@@ -36,11 +35,14 @@ public:
     float min() const;
     float max() const;
 
-    ProgressBarMode current_mode() const { return mode_; }
+    ProgressBarMode current_mode() const {
+        return mode_;
+    }
 
     void on_update(float dt) override;
+
 private:
-    bool on_create(ConstructionArgs* params) override;
+    bool on_create(const ConstructionArgs& params) override;
 
     ProgressBarMode mode_ = PROGRESS_BAR_MODE_FRACTION;
 
@@ -61,8 +63,9 @@ private:
     void refresh_fraction();
     void refresh_bar(float dt);
 
-    WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const override;
+    WidgetBounds calculate_foreground_size(
+        const UIDim& content_dimensions) const override;
 };
 
-}
-}
+} // namespace ui
+} // namespace smlt

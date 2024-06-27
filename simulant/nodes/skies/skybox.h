@@ -20,21 +20,19 @@ enum SkyboxFace {
     SKYBOX_FACE_MAX
 };
 
-class SkyboxImageNotFoundError : public std::runtime_error {
+class SkyboxImageNotFoundError: public std::runtime_error {
 public:
-    SkyboxImageNotFoundError(const std::string& what):
+    SkyboxImageNotFoundError(const std::string& what) :
         std::runtime_error(what) {}
 };
 
-class SkyboxImageDuplicateError : public std::runtime_error {
+class SkyboxImageDuplicateError: public std::runtime_error {
 public:
-    SkyboxImageDuplicateError(const std::string& what):
+    SkyboxImageDuplicateError(const std::string& what) :
         std::runtime_error(what) {}
 };
 
-class Skybox:
-    public ContainerNode,
-    public ChainNameable<Skybox> {
+class Skybox: public ContainerNode, public ChainNameable<Skybox> {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SKYBOX);
@@ -42,25 +40,23 @@ public:
 
     Skybox(Scene* owner);
 
-    void set_size(float size) { width_ = size; }
-    float size() const { return width_; }
+    void set_size(float size) {
+        width_ = size;
+    }
+    float size() const {
+        return width_;
+    }
 
-    void generate(
-        const Path& up,
-        const Path& down,
-        const Path& left,
-        const Path& right,
-        const Path& front,
-        const Path& back,
-        const TextureFlags& flags
-    );
+    void generate(const Path& up, const Path& down, const Path& left,
+                  const Path& right, const Path& front, const Path& back,
+                  const TextureFlags& flags);
 
     const AABB& aabb() const override;
 
 private:
     friend class SkyManager;
 
-    bool on_create(ConstructionArgs* params) override;
+    bool on_create(const ConstructionArgs& params) override;
 
     StageNodeID follow_camera_;
 
@@ -71,5 +67,4 @@ private:
     float width_;
 };
 
-
-}
+} // namespace smlt

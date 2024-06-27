@@ -6,19 +6,16 @@
 namespace smlt {
 namespace ui {
 
-Button::Button(Scene *owner):
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_BUTTON) {
+Button::Button(Scene* owner) :
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_BUTTON) {}
 
-
-}
-
-bool Button::on_create(ConstructionArgs* params) {
+bool Button::on_create(const ConstructionArgs& params) {
     if(!Widget::on_create(params)) {
         return false;
     }
 
-    auto sstyle = params->arg<WidgetStyle>("shared_style");
-    auto theme = params->arg<UIConfig>("theme").value_or(UIConfig());
+    auto sstyle = params.arg<WidgetStyle>("shared_style");
+    auto theme = params.arg<UIConfig>("theme").value_or(UIConfig());
     if(!sstyle) {
         set_padding(theme.button_padding_.left, theme.button_padding_.right,
                     theme.button_padding_.bottom, theme.button_padding_.top);
@@ -30,9 +27,9 @@ bool Button::on_create(ConstructionArgs* params) {
         set_border_width(theme.button_border_width_);
     }
 
-    auto text = params->arg<unicode>("text").value_or("");
-    auto w = params->arg<int>("width").value_or(-1);
-    auto h = params->arg<int>("height").value_or(-1);
+    auto text = params.arg<unicode>("text").value_or("");
+    auto w = params.arg<int>("width").value_or(-1);
+    auto h = params.arg<int>("height").value_or(-1);
 
     set_text(text);
     set_resize_mode(RESIZE_MODE_FIXED_HEIGHT);
@@ -41,5 +38,5 @@ bool Button::on_create(ConstructionArgs* params) {
 
     return true;
 }
-}
-}
+} // namespace ui
+} // namespace smlt

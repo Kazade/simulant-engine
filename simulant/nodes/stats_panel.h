@@ -3,9 +3,9 @@
  *     This file is part of Simulant.
  *
  *     Simulant is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Lesser General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  *
  *     Simulant is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -29,9 +29,7 @@ namespace smlt {
 
 class Window;
 
-class StatsPanel:
-    public Panel,
-    public RefCounted<StatsPanel> {
+class StatsPanel: public Panel, public RefCounted<StatsPanel> {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_STATS_PANEL);
@@ -67,10 +65,10 @@ private:
     bool first_update_ = true;
     float last_update_ = 0.0f;
 
-    bool on_create(ConstructionArgs* params) override {
+    bool on_create(const ConstructionArgs& params) override {
         _S_UNUSED(params);
         return true;
     }
 };
 
-}
+} // namespace smlt

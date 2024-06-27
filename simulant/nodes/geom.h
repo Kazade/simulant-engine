@@ -3,9 +3,9 @@
  *     This file is part of Simulant.
  *
  *     Simulant is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Lesser General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  *
  *     Simulant is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,9 +28,7 @@
 
 namespace smlt {
 
-
 class GeomCuller;
-
 
 enum GeomCullerType {
     GEOM_CULLER_TYPE_OCTREE,
@@ -54,11 +52,11 @@ struct GeomCullerOptions {
  *
  * Also unlike an actor, a mesh is a requirement.
  */
-class Geom :
+class Geom:
     public StageNode,
     public virtual Boundable,
     public HasMutableRenderPriority,
-    public ChainNameable<Geom>  {
+    public ChainNameable<Geom> {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_GEOM);
@@ -68,10 +66,10 @@ public:
     const AABB& aabb() const override;
 
     void do_generate_renderables(batcher::RenderQueue* render_queue,
-        const Camera*, const Viewport* viewport, const DetailLevel detail_level
-    ) override;
+                                 const Camera*, const Viewport* viewport,
+                                 const DetailLevel detail_level) override;
 
-    bool on_create(ConstructionArgs* params) override;
+    bool on_create(const ConstructionArgs& params) override;
 
 private:
     std::shared_ptr<GeomCuller> culler_;
@@ -80,8 +78,6 @@ private:
 
 public:
     Property<decltype(&Geom::culler_)> culler = {this, &Geom::culler_};
-
 };
 
-}
-
+} // namespace smlt

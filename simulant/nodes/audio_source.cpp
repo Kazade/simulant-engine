@@ -14,17 +14,18 @@ AudioSource::~AudioSource() {
     assert(is_destroyed());
 }
 
-bool AudioSource::on_create(ConstructionArgs* params) {
+bool AudioSource::on_create(const ConstructionArgs& params) {
     _S_UNUSED(params);
 
     thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);
 
     /* Start the source update thread if we didn't already */
     if(!SOURCE_UPDATE_THREAD) {
-        SOURCE_UPDATE_THREAD = std::make_shared<thread::Thread>(&source_update_thread);
+        SOURCE_UPDATE_THREAD =
+            std::make_shared<thread::Thread>(&source_update_thread);
 
-        /* When the app shuts down, wait for the thread to finish before continuing
-         * with the shutdown process */
+        /* When the app shuts down, wait for the thread to finish before
+         * continuing with the shutdown process */
         get_app()->signal_shutdown().connect([&]() {
             SOURCE_UPDATE_THREAD->join();
             SOURCE_UPDATE_THREAD.reset();
@@ -88,7 +89,8 @@ void AudioSource::source_update_thread() {
     S_INFO("Stopping audio thread");
 }
 
-PlayingSoundPtr AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, DistanceModel model) {
+PlayingSoundPtr AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat,
+                                        DistanceModel model) {
     if(!sound) {
         S_WARN("Tried to play an invalid sound");
         return PlayingSoundPtr();
@@ -99,12 +101,8 @@ PlayingSoundPtr AudioSource::play_sound(SoundPtr sound, AudioRepeat repeat, Dist
     thread::Lock<thread::Mutex> lock(mutex_);
 
     // If this is the window, we create an ambient source
-    PlayingSound::ptr new_source = PlayingSound::create(
-        this,
-        sound,
-        repeat,
-        model
-    );
+    PlayingSound::ptr new_source =
+        PlayingSound::create(this, sound, repeat, model);
 
     sound->init_source(*new_source);
     new_source->start();
@@ -135,22 +133,18 @@ bool AudioSource::stop_sound(PlayingAssetID sound_id) {
 void AudioSource::update_source(float dt) {
     thread::Lock<thread::Mutex> lock(mutex_);
 
-    //Remove any instances that have finished playing
-    instances_.erase(
-        std::remove_if(
-            instances_.begin(),
-            instances_.end(),
-            std::bind(&PlayingSound::is_dead, std::placeholders::_1)
-        ),
-        instances_.end()
-    );
+    // Remove any instances that have finished playing
+    instances_.erase(std::remove_if(instances_.begin(), instances_.end(),
+                                    std::bind(&PlayingSound::is_dead,
+                                              std::placeholders::_1)),
+                     instances_.end());
 
     for(auto instance: instances_) {
         instance->update(dt);
     }
 }
 
-SoundDriver *AudioSource::_sound_driver() const {
+SoundDriver* AudioSource::_sound_driver() const {
     return driver_;
 }
 
@@ -169,17 +163,14 @@ uint8_t AudioSource::playing_sound_count() const {
 uint8_t AudioSource::played_sound_count() const {
     thread::Lock<thread::Mutex> lock(mutex_);
 
-    return std::count_if(
-        instances_.begin(),
-        instances_.end(),
-        [](PlayingSound::ptr ptr) -> bool {
-            return ptr->is_dead();
-        }
-    );
+    return std::count_if(instances_.begin(), instances_.end(),
+                         [](PlayingSound::ptr ptr) -> bool {
+        return ptr->is_dead();
+    });
 }
 
 bool AudioSource::is_sound_playing() const {
     return playing_sound_count() > 0;
 }
 
-}
+} // namespace smlt

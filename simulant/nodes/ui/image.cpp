@@ -8,18 +8,17 @@
 namespace smlt {
 namespace ui {
 
-Image::Image(Scene* owner):
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_IMAGE) {
-}
+Image::Image(Scene* owner) :
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_IMAGE) {}
 
-bool Image::on_create(ConstructionArgs* params) {
+bool Image::on_create(const ConstructionArgs& params) {
     if(!Widget::on_create(params)) {
         return false;
     }
 
-    auto sstyle = params->arg<WidgetStyle>("shared_style");
-    auto theme = params->arg<UIConfig>("theme").value_or(UIConfig());
-    auto texture = params->arg<TexturePtr>("texture").value_or(TexturePtr());
+    auto sstyle = params.arg<WidgetStyle>("shared_style");
+    auto theme = params.arg<UIConfig>("theme").value_or(UIConfig());
+    auto texture = params.arg<TexturePtr>("texture").value_or(TexturePtr());
     if(!sstyle) {
         /* By default, images don't have a border */
         set_border_width(theme.image_border_width_);
@@ -47,7 +46,7 @@ void Image::clear_layers() {
     set_text("");
 }
 
-void Image::set_texture(const TexturePtr &texture) {
+void Image::set_texture(const TexturePtr& texture) {
     clear_layers();
     set_background_image(texture);
 
@@ -56,7 +55,7 @@ void Image::set_texture(const TexturePtr &texture) {
     set_source_rect(UICoord(), UICoord(Px(dim.x), Px(dim.y)));
 }
 
-void Image::set_source_rect(const UICoord &bottom_left, const UICoord& size) {
+void Image::set_source_rect(const UICoord& bottom_left, const UICoord& size) {
     clear_layers();
     set_background_image_source_rect(bottom_left, size);
 
@@ -70,6 +69,5 @@ bool Image::set_resize_mode(ResizeMode resize_mode) {
     return false;
 }
 
-
-}
-}
+} // namespace ui
+} // namespace smlt

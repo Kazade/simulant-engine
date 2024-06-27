@@ -2,22 +2,22 @@
 
 #include <queue>
 
+#include "../coroutines/helpers.h"
+#include "../generic/data_carrier.h"
+#include "../generic/manual_object.h"
+#include "../interfaces/boundable.h"
+#include "../interfaces/has_auto_id.h"
 #include "../interfaces/nameable.h"
 #include "../interfaces/printable.h"
-#include "../interfaces/updateable.h"
-#include "../interfaces/boundable.h"
 #include "../interfaces/transform.h"
-#include "../interfaces/has_auto_id.h"
-#include "../generic/data_carrier.h"
+#include "../interfaces/updateable.h"
 #include "../shadows.h"
-#include "../generic/manual_object.h"
-#include "../coroutines/helpers.h"
 #include "../sound.h"
 
-#include "iterators/sibling_iterator.h"
+#include "iterators/ancestor_iterator.h"
 #include "iterators/child_iterator.h"
 #include "iterators/descendent_iterator.h"
-#include "iterators/ancestor_iterator.h"
+#include "iterators/sibling_iterator.h"
 
 #include "builtins.h"
 #include "simulant/generic/managed.h"
@@ -30,8 +30,8 @@ class RenderableFactory;
 class Seconds;
 class Scene;
 
-typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
-typedef sig::signal<void ()> CleanedUpSignal;
+typedef sig::signal<void(AABB)> BoundsUpdatedSignal;
+typedef sig::signal<void()> CleanedUpSignal;
 
 /* Used for multiple levels of detail when rendering stage nodes */
 
@@ -43,7 +43,6 @@ enum DetailLevel {
     DETAIL_LEVEL_FARTHEST,
     DETAIL_LEVEL_MAX
 };
-
 
 /* Must be implemented as follows for each node type
  *
@@ -78,7 +77,7 @@ T* child_factory(F& factory, StageNode* parent, Args&&... args) {
 template<typename F, typename T, typename... Args>
 T* mixin_factory(F& factory, StageNode* base, Args&&... args);
 
-}
+} // namespace impl
 
 class StageNode:
     public generic::Identifiable<StageNodeID>,
@@ -91,7 +90,9 @@ class StageNode:
     public TransformListener {
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
-    DEFINE_SIGNAL(CleanedUpSignal, signal_cleaned_up); // Fired when the node is cleaned up later, following destroy
+    DEFINE_SIGNAL(CleanedUpSignal,
+                  signal_cleaned_up); // Fired when the node is cleaned up
+                                      // later, following destroy
 
 private:
     /* Heirarchy */
@@ -105,7 +106,8 @@ private:
     StageNode* first_child_ = nullptr;
     StageNode* last_child_ = nullptr;
 
-    virtual void on_parent_set(StageNode* oldp, StageNode* newp, TransformRetainMode transform_retain) {
+    virtual void on_parent_set(StageNode* oldp, StageNode* newp,
+                               TransformRetainMode transform_retain) {
         _S_UNUSED(oldp);
 
         if(newp) {
@@ -118,7 +120,8 @@ private:
     }
 
 public:
-    std::vector<StageNode*> find_descendents_by_types(std::initializer_list<StageNodeType> type_list) const;
+    std::vector<StageNode*> find_descendents_by_types(
+        std::initializer_list<StageNodeType> type_list) const;
 
     StageNode* find_descendent_with_id(StageNodeID id) {
         for(auto& it: each_descendent()) {
@@ -197,18 +200,19 @@ public:
 
     void set_parent(
         StageNode* new_parent,
-        TransformRetainMode transform_retain=TRANSFORM_RETAIN_MODE_LOSE
-    );
+        TransformRetainMode transform_retain = TRANSFORM_RETAIN_MODE_LOSE);
+
+    template<typename T>
+    T* create_child() {
+        ConstructionArgs args;
+        return impl::child_factory<decltype(owner_), T>(
+            owner_, this, std::forward<const ConstructionArgs&>(args));
+    }
 
     template<typename T>
     T* create_child(const ConstructionArgs& args) {
         return impl::child_factory<decltype(owner_), T>(
             owner_, this, std::forward<const ConstructionArgs&>(args));
-    }
-
-    template<typename T, typename... Args>
-    T* create_child(Args&&... args) {
-        return impl::child_factory<decltype(owner_), T, Args...>(owner_, this, std::forward<Args>(args)...);
     }
 
     void adopt_children(StageNode* node) {
@@ -222,8 +226,9 @@ public:
     }
 
     template<typename T, typename... Args>
-    T* create_mixin(Args&& ... args) {
-        return impl::mixin_factory<decltype(owner_), T, Args...>(owner_, this, std::forward<Args>(args)...);
+    T* create_mixin(Args&&... args) {
+        return impl::mixin_factory<decltype(owner_), T, Args...>(
+            owner_, this, std::forward<Args>(args)...);
     }
 
     StageNode* find_mixin(const std::string& name) const;
@@ -264,11 +269,9 @@ public:
 
     /** Populates the render queue with a list of renderables to send to be
      *  rendered by the render pipelines */
-    void generate_renderables(
-        batcher::RenderQueue* render_queue,
-        const Camera*, const Viewport* viewport,
-        const DetailLevel detail_level
-    );
+    void generate_renderables(batcher::RenderQueue* render_queue, const Camera*,
+                              const Viewport* viewport,
+                              const DetailLevel detail_level);
 
     void update(float dt) override final;
     void late_update(float dt) override final;
@@ -278,7 +281,7 @@ public:
      *  dynamic_cast on the entire subtree. Use for testing
      *  *only*. */
     template<typename T>
-    size_t count_nodes_by_type(bool include_destroyed=false) const {
+    size_t count_nodes_by_type(bool include_destroyed = false) const {
         size_t ret = 0;
         for(auto& node: each_descendent()) {
             if(node.is_destroyed() && !include_destroyed) {
@@ -297,11 +300,19 @@ public:
     }
 
 protected:
-    virtual bool on_create(ConstructionArgs* params) = 0;
-    virtual bool on_destroy() override { return true; }
-    virtual void on_update(float dt) override { _S_UNUSED(dt); }
-    virtual void on_fixed_update(float step) override { _S_UNUSED(step); }
-    virtual void on_late_update(float dt) override { _S_UNUSED(dt); }
+    virtual bool on_create(const ConstructionArgs& params) = 0;
+    virtual bool on_destroy() override {
+        return true;
+    }
+    virtual void on_update(float dt) override {
+        _S_UNUSED(dt);
+    }
+    virtual void on_fixed_update(float step) override {
+        _S_UNUSED(step);
+    }
+    virtual void on_late_update(float dt) override {
+        _S_UNUSED(dt);
+    }
 
     void on_transformation_changed() override {
         mark_transformed_aabb_dirty();
@@ -321,7 +332,7 @@ private:
     Transform transform_;
 
     // NVI idiom
-    bool _create(ConstructionArgs* params) {
+    bool _create(const ConstructionArgs& params) {
         return on_create(params);
     }
 
@@ -332,11 +343,10 @@ private:
     }
 
     /* Return a list of renderables to pass into the render queue */
-    virtual void do_generate_renderables(
-        batcher::RenderQueue* render_queue,
-        const Camera*, const Viewport* viewport,
-        const DetailLevel detail_level
-    ) {
+    virtual void do_generate_renderables(batcher::RenderQueue* render_queue,
+                                         const Camera*,
+                                         const Viewport* viewport,
+                                         const DetailLevel detail_level) {
         _S_UNUSED(render_queue);
         _S_UNUSED(viewport);
         _S_UNUSED(detail_level);
@@ -371,7 +381,7 @@ public:
     class SiblingIteratorPair {
         friend class StageNode;
 
-        SiblingIteratorPair(const StageNode* root):
+        SiblingIteratorPair(const StageNode* root) :
             root_(root) {}
 
         const StageNode* root_;
@@ -383,9 +393,8 @@ public:
             }
 
             return SiblingIterator<false>(
-                root_,
-                (root_->next_sibling()) ? root_->next_sibling() : root_->parent_->first_child()
-            );
+                root_, (root_->next_sibling()) ? root_->next_sibling()
+                                               : root_->parent_->first_child());
         }
 
         SiblingIterator<false> end() {
@@ -396,7 +405,7 @@ public:
     class ChildIteratorPair {
         friend class StageNode;
 
-        ChildIteratorPair(const StageNode* root):
+        ChildIteratorPair(const StageNode* root) :
             root_(root) {}
 
         const StageNode* root_;
@@ -414,7 +423,7 @@ public:
     class DescendentIteratorPair {
         friend class StageNode;
 
-        DescendentIteratorPair(const StageNode* root):
+        DescendentIteratorPair(const StageNode* root) :
             root_(root) {}
 
         const StageNode* root_;
@@ -432,7 +441,7 @@ public:
     class AncestorIteratorPair {
         friend class StageNode;
 
-        AncestorIteratorPair(const StageNode* root):
+        AncestorIteratorPair(const StageNode* root) :
             root_(root) {}
 
         const StageNode* root_;
@@ -491,11 +500,14 @@ public:
 
     bool is_visible() const;
 
-    bool is_intended_visible() const { return is_visible_; }
+    bool is_intended_visible() const {
+        return is_visible_;
+    }
     void set_visible(bool visible);
 
-    Property<generic::DataCarrier StageNode::*> data = { this, &StageNode::data_ };
-    Property<Scene* StageNode::*> scene = { this, &StageNode::owner_ };
+    Property<generic::DataCarrier StageNode::*> data = {this,
+                                                        &StageNode::data_};
+    Property<Scene * StageNode::*> scene = {this, &StageNode::owner_};
 
     smlt::Promise<void> destroy_after(const Seconds& seconds);
 
@@ -508,17 +520,23 @@ public:
         return AABB::ZERO;
     }
 
-    /* Control shading on the stage node (behaviour depends on the type of node) */
-    ShadowCast shadow_cast() const { return shadow_cast_; }
+    /* Control shading on the stage node (behaviour depends on the type of node)
+     */
+    ShadowCast shadow_cast() const {
+        return shadow_cast_;
+    }
     void set_shadow_cast(ShadowCast cast) {
         shadow_cast_ = cast;
     }
 
-    ShadowReceive shadow_receive() const { return shadow_receive_; }
-    void set_shadow_receive(ShadowReceive receive) { shadow_receive_ = receive; }
+    ShadowReceive shadow_receive() const {
+        return shadow_receive_;
+    }
+    void set_shadow_receive(ShadowReceive receive) {
+        shadow_receive_ = receive;
+    }
 
     StageNode* find_descendent_with_name(const std::string& name);
-
 
     void set_cullable(bool v);
     bool is_cullable() const;
@@ -526,12 +544,17 @@ public:
     void set_precedence(int16_t precedence);
 
     int16_t precedence() const;
+
 protected:
-    // Faster than properties, useful for subclasses where a clean API isn't as important
-    Scene* get_scene() const { return owner_; }
+    // Faster than properties, useful for subclasses where a clean API isn't as
+    // important
+    Scene* get_scene() const {
+        return owner_;
+    }
 
     void recalc_bounds_if_necessary() const;
     void mark_transformed_aabb_dirty();
+
 private:
     friend class Layer;
 
@@ -557,13 +580,16 @@ private:
     ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;
     ShadowReceive shadow_receive_ = SHADOW_RECEIVE_ALWAYS;
 
-    /* Whether or not this node should be culled by the partitioner (e.g. when offscreen) */
+    /* Whether or not this node should be culled by the partitioner (e.g. when
+     * offscreen) */
     bool cullable_ = true;
 
-    /* Passed to coroutines and used to detect when the object has been destroyed */
+    /* Passed to coroutines and used to detect when the object has been
+     * destroyed */
     std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
 
     int16_t precedence_ = 0;
+
 public:
     Transform* get_transform() const {
         return &base_->transform_;
@@ -572,11 +598,10 @@ public:
     S_DEFINE_PROPERTY(transform, &StageNode::get_transform);
 };
 
-
 class StageNodeVisitorBFS {
 public:
     template<typename Func>
-    StageNodeVisitorBFS(StageNode* start, Func&& callback):
+    StageNodeVisitorBFS(StageNode* start, Func&& callback) :
         callback_(callback) {
 
         queue_.push(start);
@@ -596,18 +621,18 @@ public:
     }
 
 private:
-    std::function<void (StageNode*)> callback_;
+    std::function<void(StageNode*)> callback_;
     std::queue<StageNode*> queue_;
 };
 
-
-class ContainerNode : public StageNode {
+class ContainerNode: public StageNode {
 public:
-    ContainerNode(Scene* scene, StageNodeType node_type):
+    ContainerNode(Scene* scene, StageNodeType node_type) :
         StageNode(scene, node_type) {}
 
     /* Containers don't directly have renderables, but their children do */
-    void do_generate_renderables(batcher::RenderQueue*, const Camera*, const Viewport*, const DetailLevel) override {}
+    void do_generate_renderables(batcher::RenderQueue*, const Camera*,
+                                 const Viewport*, const DetailLevel) override {}
 
     virtual ~ContainerNode() {}
 };
@@ -634,16 +659,16 @@ T* mixin_factory(F& factory, StageNode* base, Args&&... args) {
     return node;
 }
 
-}
+} // namespace impl
 
 typedef default_init_ptr<StageNode> StageNodePtr;
 
-}
+} // namespace smlt
 
-#include "iterators/sibling_iterator.inc"
+#include "iterators/ancestor_iterator.inc"
 #include "iterators/child_iterator.inc"
 #include "iterators/descendent_iterator.inc"
-#include "iterators/ancestor_iterator.inc"
+#include "iterators/sibling_iterator.inc"
 
 #define S_DEFINE_STAGE_NODE_META(node_type_id)                                 \
     struct Meta {                                                              \

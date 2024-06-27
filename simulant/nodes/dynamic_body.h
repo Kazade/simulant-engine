@@ -8,14 +8,14 @@ namespace smlt {
 
 class Scene;
 
-class DynamicBody:
-    public ReactiveBody {
+class DynamicBody: public ReactiveBody {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY);
 
-    DynamicBody(Scene* owner):
-        ReactiveBody(owner, STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY, PHYSICS_BODY_TYPE_DYNAMIC) {}
+    DynamicBody(Scene* owner) :
+        ReactiveBody(owner, STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY,
+                     PHYSICS_BODY_TYPE_DYNAMIC) {}
 
     const AABB& aabb() const override {
         static AABB aabb;
@@ -23,9 +23,9 @@ public:
     }
 
 private:
-    bool on_create(ConstructionArgs* params) override {
+    bool on_create(const ConstructionArgs& params) override {
         return PhysicsBody::on_create(params);
     }
 };
 
-}
+} // namespace smlt

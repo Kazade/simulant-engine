@@ -4,9 +4,9 @@
 //     This file is part of Simulant.
 //
 //     Simulant is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU Lesser General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
+//     it under the terms of the GNU Lesser General Public License as published
+//     by the Free Software Foundation, either version 3 of the License, or (at
+//     your option) any later version.
 //
 //     Simulant is distributed in the hope that it will be useful,
 //     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,13 +26,11 @@
 
 namespace smlt {
 
-Geom::Geom(Scene* owner):
-    StageNode(owner, STAGE_NODE_TYPE_GEOM) {
+Geom::Geom(Scene* owner) :
+    StageNode(owner, STAGE_NODE_TYPE_GEOM) {}
 
-}
-
-bool Geom::on_create(ConstructionArgs* params) {
-    auto mesh_ptr = params->arg<MeshPtr>("mesh").value_or(MeshPtr());
+bool Geom::on_create(const ConstructionArgs& params) {
+    auto mesh_ptr = params.arg<MeshPtr>("mesh").value_or(MeshPtr());
     assert(mesh_ptr);
 
     if(!mesh_ptr) {
@@ -40,7 +38,7 @@ bool Geom::on_create(ConstructionArgs* params) {
     }
 
     auto opts =
-        params->arg<GeomCullerOptions>("options").value_or(GeomCullerOptions());
+        params.arg<GeomCullerOptions>("options").value_or(GeomCullerOptions());
 
     if(opts.type == GEOM_CULLER_TYPE_QUADTREE) {
         culler_.reset(
@@ -53,21 +51,23 @@ bool Geom::on_create(ConstructionArgs* params) {
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();
 
-    auto pos = params->arg<Vec3>("position").value_or(Vec3());
-    auto rot = params->arg<Quaternion>("orientation").value_or(Quaternion());
-    auto scale = params->arg<Vec3>("scale").value_or(Vec3(1));
+    auto pos = params.arg<Vec3>("position").value_or(Vec3());
+    auto rot = params.arg<Quaternion>("orientation").value_or(Quaternion());
+    auto scale = params.arg<Vec3>("scale").value_or(Vec3(1));
     culler_->compile(pos, rot, scale);
     return true;
 }
 
-const AABB &Geom::aabb() const {
+const AABB& Geom::aabb() const {
     return aabb_;
 }
 
-void Geom::do_generate_renderables(batcher::RenderQueue* render_queue, const Camera* camera, const Viewport* , const DetailLevel detail_level) {
+void Geom::do_generate_renderables(batcher::RenderQueue* render_queue,
+                                   const Camera* camera, const Viewport*,
+                                   const DetailLevel detail_level) {
     _S_UNUSED(detail_level);
 
     culler_->renderables_visible(camera->frustum(), render_queue);
 }
 
-}
+} // namespace smlt

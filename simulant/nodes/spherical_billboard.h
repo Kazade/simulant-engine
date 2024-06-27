@@ -5,13 +5,12 @@
 
 namespace smlt {
 
-class SphericalBillboard:
-    public StageNode {
+class SphericalBillboard: public StageNode {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SPHERICAL_BILLBOARD);
 
-    SphericalBillboard(Scene* owner):
+    SphericalBillboard(Scene* owner) :
         StageNode(owner, STAGE_NODE_TYPE_SPHERICAL_BILLBOARD) {}
 
     void set_target(StageNode* target) {
@@ -24,8 +23,8 @@ public:
     }
 
 private:
-    bool on_create(ConstructionArgs* params) override {
-        forward_ = params->arg<Vec3>("forward").value_or(Vec3::FORWARD);
+    bool on_create(const ConstructionArgs& params) override {
+        forward_ = params.arg<Vec3>("forward").value_or(Vec3::FORWARD);
         return true;
     }
 
@@ -36,9 +35,8 @@ private:
         _S_UNUSED(dt);
 
         if(target_) {
-            auto dir = (
-                target_->transform->position() - transform->position()
-            ).normalized();
+            auto dir = (target_->transform->position() - transform->position())
+                           .normalized();
 
             auto rot = forward_.rotation_to(dir);
             transform->set_orientation(rot);
@@ -46,4 +44,4 @@ private:
     }
 };
 
-}
+} // namespace smlt

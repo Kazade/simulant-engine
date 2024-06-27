@@ -27,9 +27,9 @@ struct SoftKeyPressedEvent {
     }
 };
 
-typedef sig::signal<void (SoftKeyPressedEvent&)> KeyboardKeyPressedSignal;
-typedef sig::signal<void (const unicode&)> KeyboardDoneSignal;
-typedef sig::signal<void ()> KeyboardCancelledSignal;
+typedef sig::signal<void(SoftKeyPressedEvent&)> KeyboardKeyPressedSignal;
+typedef sig::signal<void(const unicode&)> KeyboardDoneSignal;
+typedef sig::signal<void()> KeyboardCancelledSignal;
 
 enum KeyboardMode {
     KEYBOARD_MODE_UPPERCASE,
@@ -42,17 +42,17 @@ enum KeyboardMode {
 class KeyboardPanel;
 
 /* A keyboard is combined of a TextInput and a KeyboardPanel */
-class Keyboard:
-    public Widget {
+class Keyboard: public Widget {
 
     DEFINE_SIGNAL(KeyboardKeyPressedSignal, signal_key_pressed);
     DEFINE_SIGNAL(KeyboardDoneSignal, signal_done);
     DEFINE_SIGNAL(KeyboardCancelledSignal, signal_cancelled);
+
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_KEYBOARD);
 
-    using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
     using Widget::clean_up;
+    using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
 
     Keyboard(Scene* owner);
     ~Keyboard();
@@ -88,8 +88,9 @@ public:
     TextEntry* entry() {
         return entry_;
     }
+
 private:
-    bool on_create(ConstructionArgs* params) override;
+    bool on_create(const ConstructionArgs& params) override;
     void on_transformation_change_attempted() override;
 
     UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
@@ -107,7 +108,6 @@ private:
     const unicode& calc_text() const override;
 };
 
-}
+} // namespace ui
 
-
-}
+} // namespace smlt

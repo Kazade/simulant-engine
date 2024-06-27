@@ -2,6 +2,8 @@
 
 #include "../generic/any/any.h"
 #include "../generic/optional.h"
+#include "../logging.h"
+#include "../utils/unicode.h"
 #include "limited_string.h"
 #include <initializer_list>
 #include <vector>
@@ -17,10 +19,35 @@ typedef std::vector<LimitedString<32>> ConstructionArgNames;
 class ConstructionArgs {
 public:
     ConstructionArgs() = default;
-    ConstructionArgs(
-        std::initializer_list<std::pair<std::string, smlt::any>> params) {
-        for(auto& p: params) {
-            set_arg(p.first.c_str(), p.second);
+    ConstructionArgs(const std::initializer_list<smlt::any>& params) {
+        int i = 0;
+        std::string key;
+        bool skip = false;
+        for(auto& param: params) {
+            if(skip) {
+                skip = false;
+            } else {
+                if(i % 2 == 0) {
+                    try {
+                        key = any_cast<const char*>(param);
+                    } catch(bad_any_cast& e) {
+                        try {
+                            key = any_cast<std::string>(param);
+                        } catch(bad_any_cast& e) {
+                            try {
+                                key = any_cast<unicode>(param).encode();
+                            } catch(bad_any_cast& e) {
+                                S_ERROR("Couldn't parse arg: {0}", i);
+                                skip = true;
+                            }
+                        }
+                    }
+                } else {
+                    set_arg(key.c_str(), param);
+                }
+            }
+
+            ++i;
         }
     }
 

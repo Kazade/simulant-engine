@@ -5,10 +5,11 @@
 
 namespace smlt {
 
-typedef sig::signal<void (SoundPtr, AudioRepeat, DistanceModel)> SoundPlayedSignal;
-typedef sig::signal<void ()> StreamFinishedSignal;
+typedef sig::signal<void(SoundPtr, AudioRepeat, DistanceModel)>
+    SoundPlayedSignal;
+typedef sig::signal<void()> StreamFinishedSignal;
 
-class AudioSource : public StageNode {
+class AudioSource: public StageNode {
 
     DEFINE_SIGNAL(SoundPlayedSignal, signal_sound_played);
     DEFINE_SIGNAL(StreamFinishedSignal, signal_stream_finished);
@@ -16,16 +17,14 @@ class AudioSource : public StageNode {
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_AUDIO_SOURCE);
 
-    AudioSource(Scene* owner):
+    AudioSource(Scene* owner) :
         StageNode(owner, STAGE_NODE_TYPE_AUDIO_SOURCE) {}
 
     virtual ~AudioSource();
 
-    PlayingSoundPtr play_sound(
-        SoundPtr sound_id,
-        AudioRepeat repeat=AUDIO_REPEAT_NONE,
-        DistanceModel model=DISTANCE_MODEL_DEFAULT
-    );
+    PlayingSoundPtr play_sound(SoundPtr sound_id,
+                               AudioRepeat repeat = AUDIO_REPEAT_NONE,
+                               DistanceModel model = DISTANCE_MODEL_DEFAULT);
 
     bool stop_sound(PlayingAssetID sound_id);
 
@@ -48,7 +47,7 @@ protected:
     SoundDriver* _sound_driver() const;
 
 public:
-    bool on_create(ConstructionArgs* params) override;
+    bool on_create(const ConstructionArgs& params) override;
     bool on_destroy() override;
 
     Scene* scene_ = nullptr;
@@ -63,4 +62,4 @@ public:
     static void source_update_thread();
 };
 
-}
+} // namespace smlt

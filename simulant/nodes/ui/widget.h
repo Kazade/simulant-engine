@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../stage_node.h"
-#include "../../generic/optional.h"
 #include "../../generic/identifiable.h"
 #include "../../generic/managed.h"
+#include "../../generic/optional.h"
 #include "../../generic/range_value.h"
+#include "../stage_node.h"
 #include "ui_config.h"
 
 namespace smlt {
@@ -19,11 +19,12 @@ enum WidgetLayerIndex {
 
 class UIManager;
 
-typedef sig::signal<void ()> WidgetPressedSignal;
-typedef sig::signal<void ()> WidgetReleasedSignal; // Triggered on fingerup, but also on leave
-typedef sig::signal<void ()> WidgetClickedSignal; // Triggered on fingerup only
-typedef sig::signal<void ()> WidgetFocusedSignal;
-typedef sig::signal<void ()> WidgetBlurredSignal;
+typedef sig::signal<void()> WidgetPressedSignal;
+typedef sig::signal<void()>
+    WidgetReleasedSignal; // Triggered on fingerup, but also on leave
+typedef sig::signal<void()> WidgetClickedSignal; // Triggered on fingerup only
+typedef sig::signal<void()> WidgetFocusedSignal;
+typedef sig::signal<void()> WidgetBlurredSignal;
 
 struct ImageRect {
     UICoord bottom_left;
@@ -52,7 +53,7 @@ struct WidgetStyle {
     ImageRect foreground_image_rect_;
 
     PackedColor4444 background_color_ = Color::WHITE;
-    PackedColor4444 foreground_color_ = Color::NONE; //Transparent
+    PackedColor4444 foreground_color_ = Color::NONE; // Transparent
     PackedColor4444 text_color_ = Color::BLACK;
 
     float opacity_ = 1.0f;
@@ -66,16 +67,17 @@ typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
  *
  * Widgets follow a similar model to the border-box model in CSS. Effectively:
  *
- * - If a dimension length has not been defined (e.g. requested_width_ == -1) then
- *   the dimension is calculated as the content size + padding + border.
- * - If a dimension length has been defined, then the content size is reduced to make
- *   room for the padding and border.
+ * - If a dimension length has not been defined (e.g. requested_width_ == -1)
+ * then the dimension is calculated as the content size + padding + border.
+ * - If a dimension length has been defined, then the content size is reduced to
+ * make room for the padding and border.
  *
  * Content area:
  *
- * - The size of the content area varies depending on widget, but for most widgets this
- *   is defined as the area that the text takes to render, unless a fixed size has been
- *   specified and then this would be the requested size without padding or border
+ * - The size of the content area varies depending on widget, but for most
+ * widgets this is defined as the area that the text takes to render, unless a
+ * fixed size has been specified and then this would be the requested size
+ * without padding or border
  */
 
 struct WidgetParams {
@@ -87,15 +89,14 @@ struct WidgetParams {
     UIConfig theme;
     WidgetStylePtr shared_style;
 
-    WidgetParams(const UIConfig& theme, const WidgetStylePtr& shared_style):
-        theme(theme),
-        shared_style(shared_style) {}
+    WidgetParams(const UIConfig& theme, const WidgetStylePtr& shared_style) :
+        theme(theme), shared_style(shared_style) {}
 };
 
 class Widget:
     public ContainerNode,
     public HasMutableRenderPriority,
-    public ChainNameable<Widget>  {
+    public ChainNameable<Widget> {
 
     DEFINE_SIGNAL(WidgetPressedSignal, signal_pressed);
     DEFINE_SIGNAL(WidgetReleasedSignal, signal_released);
@@ -112,15 +113,20 @@ public:
     virtual bool on_init() override;
     virtual void on_clean_up() override;
 
-    bool on_create(ConstructionArgs* params) override;
+    bool on_create(const ConstructionArgs& params) override;
 
     void resize(Rem width, Px height);
     void resize(Px width, Rem height);
     void resize(Rem width, Rem height);
     void resize(Px width, Px height);
 
-    void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Rem size=Rem(1.0f), FontWeight weight=FONT_WEIGHT_NORMAL, FontStyle style=FONT_STYLE_NORMAL);
-    void set_font(const std::string& family=DEFAULT_FONT_FAMILY, Px size=DEFAULT_FONT_SIZE, FontWeight weight=FONT_WEIGHT_NORMAL, FontStyle style=FONT_STYLE_NORMAL);
+    void set_font(const std::string& family = DEFAULT_FONT_FAMILY,
+                  Rem size = Rem(1.0f), FontWeight weight = FONT_WEIGHT_NORMAL,
+                  FontStyle style = FONT_STYLE_NORMAL);
+    void set_font(const std::string& family = DEFAULT_FONT_FAMILY,
+                  Px size = DEFAULT_FONT_SIZE,
+                  FontWeight weight = FONT_WEIGHT_NORMAL,
+                  FontStyle style = FONT_STYLE_NORMAL);
 
     // You probably don't want this one
     virtual void set_font(FontPtr font);
@@ -136,8 +142,10 @@ public:
 
     WidgetPtr next_in_focus_chain() const;
     WidgetPtr previous_in_focus_chain() const;
-    void focus_next_in_chain(ChangeFocusBehaviour behaviour = FOCUS_THIS_IF_NONE_FOCUSED);
-    void focus_previous_in_chain(ChangeFocusBehaviour behaviour = FOCUS_THIS_IF_NONE_FOCUSED);
+    void focus_next_in_chain(
+        ChangeFocusBehaviour behaviour = FOCUS_THIS_IF_NONE_FOCUSED);
+    void focus_previous_in_chain(
+        ChangeFocusBehaviour behaviour = FOCUS_THIS_IF_NONE_FOCUSED);
     WidgetPtr first_in_focus_chain();
     WidgetPtr last_in_focus_chain();
     WidgetPtr focused_in_chain();
@@ -166,8 +174,12 @@ public:
     virtual bool set_resize_mode(ResizeMode resize_mode);
 
     ResizeMode resize_mode() const;
-    WrapMode wrap_mode() const { return wrap_mode_; }
-    void set_wrap_mode(WrapMode mode) { wrap_mode_ = mode; }
+    WrapMode wrap_mode() const {
+        return wrap_mode_;
+    }
+    void set_wrap_mode(WrapMode mode) {
+        wrap_mode_ = mode;
+    }
 
     bool has_background_image() const;
 
@@ -176,8 +188,10 @@ public:
     /** Set the background image, pass AssetID() to clear */
     void set_background_image(TexturePtr texture);
 
-    /** Set the background to a region of its image. Coordinates are in texels */
-    void set_background_image_source_rect(const UICoord& bottom_left, const UICoord& size);
+    /** Set the background to a region of its image. Coordinates are in texels
+     */
+    void set_background_image_source_rect(const UICoord& bottom_left,
+                                          const UICoord& size);
 
     void set_background_color(const Color& color);
     void set_foreground_color(const Color& color);
@@ -185,8 +199,10 @@ public:
     /** Set the foreground image, pass AssetID() to clear */
     void set_foreground_image(TexturePtr texture);
 
-    /** Set the foreground to a region of its image. Coordinates are in texels */
-    void set_foreground_image_source_rect(const UICoord& bottom_left, const UICoord& size);
+    /** Set the foreground to a region of its image. Coordinates are in texels
+     */
+    void set_foreground_image_source_rect(const UICoord& bottom_left,
+                                          const UICoord& size);
 
     void set_text_color(const Color& color);
 
@@ -196,18 +212,18 @@ public:
     Px content_width() const;
     Px content_height() const;
 
-    /** This returns the outside width of the widget, this will be the same as the
-     * requested_width if it was specified, else it will be the width of the content
-     * area plus padding and border */
+    /** This returns the outside width of the widget, this will be the same as
+     * the requested_width if it was specified, else it will be the width of the
+     * content area plus padding and border */
     Px outer_width() const;
     Px outer_height() const;
 
     /*
-    bool is_checked() const; // Widget dependent, returns false if widget has no concept of 'active'
-    bool is_enabled() const; // Widget dependent, returns true if widget has no concept of 'disabled'
-    bool is_hovered() const; // Widget dependent, returns false if widget has no concept of 'hovered'
+    bool is_checked() const; // Widget dependent, returns false if widget has no
+    concept of 'active' bool is_enabled() const; // Widget dependent, returns
+    true if widget has no concept of 'disabled' bool is_hovered() const; //
+    Widget dependent, returns false if widget has no concept of 'hovered'
     */
-
 
     const AABB& aabb() const override;
 
@@ -237,19 +253,25 @@ public:
     void set_precedence(int16_t precedence);
 
     int16_t precedence() const;
+
 public:
-    MaterialPtr border_material() const { return style_->materials_[0]; }
-    MaterialPtr background_material() const { return style_->materials_[1]; }
-    MaterialPtr foreground_material() const { return style_->materials_[2]; }
+    MaterialPtr border_material() const {
+        return style_->materials_[0];
+    }
+    MaterialPtr background_material() const {
+        return style_->materials_[1];
+    }
+    MaterialPtr foreground_material() const {
+        return style_->materials_[2];
+    }
 
 private:
     virtual const unicode& calc_text() const {
         return text_;
     }
 
-    void on_render_priority_changed(
-        RenderPriority old_priority, RenderPriority new_priority
-    ) override;
+    void on_render_priority_changed(RenderPriority old_priority,
+                                    RenderPriority new_priority) override;
 
     bool initialized_ = false;
 
@@ -309,8 +331,12 @@ protected:
         UICoord min;
         UICoord max;
 
-        Px width() const { return max.x - min.x; }
-        Px height() const { return max.y - min.y; }
+        Px width() const {
+            return max.x - min.x;
+        }
+        Px height() const {
+            return max.y - min.y;
+        }
 
         bool has_non_zero_area() const {
             Px w = width();
@@ -319,30 +345,33 @@ protected:
         }
     };
 
-    virtual WidgetBounds calculate_background_size(const UIDim& content_dimensions) const;
-    virtual WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const;
+    virtual WidgetBounds
+        calculate_background_size(const UIDim& content_dimensions) const;
+    virtual WidgetBounds
+        calculate_foreground_size(const UIDim& content_dimensions) const;
 
     virtual UIDim calculate_content_dimensions(Px text_width, Px text_height);
 
+    void apply_image_rect(SubMeshPtr submesh, TexturePtr image,
+                          ImageRect& rect);
 
-    void apply_image_rect(SubMeshPtr submesh, TexturePtr image, ImageRect& rect);
-
-    SubMeshPtr new_rectangle(const std::string& name,
-        WidgetBounds bounds,
-        const smlt::Color& color,
-        const Px &border_radius,
-        const Vec2 *uvs=nullptr, float z_offset=0.0f
-    );
+    SubMeshPtr new_rectangle(const std::string& name, WidgetBounds bounds,
+                             const smlt::Color& color, const Px& border_radius,
+                             const Vec2* uvs = nullptr, float z_offset = 0.0f);
     void clear_mesh();
 
-    bool is_initialized() const { return initialized_; }
+    bool is_initialized() const {
+        return initialized_;
+    }
 
-    MeshPtr mesh() { return mesh_; }
+    MeshPtr mesh() {
+        return mesh_;
+    }
 
     virtual void render_text();
-    virtual void render_border(const WidgetBounds &border_bounds);
-    virtual void render_background(const WidgetBounds &background_bounds);
-    virtual void render_foreground(const WidgetBounds &foreground_bounds);
+    virtual void render_border(const WidgetBounds& border_bounds);
+    virtual void render_background(const WidgetBounds& background_bounds);
+    virtual void render_foreground(const WidgetBounds& foreground_bounds);
 
     WidgetPtr focused_in_chain_or_this();
 
@@ -353,20 +382,22 @@ protected:
     virtual void prepare_build() {}
     virtual void finalize_render() {}
     virtual void finalize_build() {}
-    virtual bool pre_set_text(const unicode&) { return true; }
+    virtual bool pre_set_text(const unicode&) {
+        return true;
+    }
 
     void build_text_submeshes();
 
-    FontPtr load_or_get_font(const std::string& family, const Px& size, const FontWeight& weight, const FontStyle &style);
+    FontPtr load_or_get_font(const std::string& family, const Px& size,
+                             const FontWeight& weight, const FontStyle& style);
 
 private:
     MaterialPtr find_or_create_material(const char* name);
 
-
     FontPtr _load_or_get_font(AssetManager* assets, AssetManager* shared_assets,
-            const std::string &familyc, const Px &sizec, const FontWeight& weight, const FontStyle& style);
-
+                              const std::string& familyc, const Px& sizec,
+                              const FontWeight& weight, const FontStyle& style);
 };
 
-}
-}
+} // namespace ui
+} // namespace smlt

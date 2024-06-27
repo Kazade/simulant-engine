@@ -3,9 +3,9 @@
  *     This file is part of Simulant.
  *
  *     Simulant is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Lesser General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  *
  *     Simulant is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,44 +18,30 @@
 
 #pragma once
 
-#include "stage_node.h"
-#include "../types.h"
 #include "../generic/managed.h"
 #include "../meshes/mesh.h"
-
+#include "../types.h"
+#include "stage_node.h"
 
 namespace smlt {
 
-class Debug : public StageNode {
+class Debug: public StageNode {
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_DEBUG);
 
     Debug(Scene* owner);
     virtual ~Debug();
 
-    void draw_ray(
-        const Vec3& start,
-        const Vec3& dir,
-        const Color& color=Color::WHITE,
-        double duration=0.0,
-        bool depth_test=true
-    );
+    void draw_ray(const Vec3& start, const Vec3& dir,
+                  const Color& color = Color::WHITE, double duration = 0.0,
+                  bool depth_test = true);
 
+    void draw_line(const Vec3& start, const Vec3& end,
+                   const Color& color = Color::WHITE, double duration = 0.0,
+                   bool depth_test = true);
 
-    void draw_line(
-        const Vec3& start,
-        const Vec3& end,
-        const Color& color=Color::WHITE,
-        double duration=0.0,
-        bool depth_test=true
-    );
-
-    void draw_point(
-        const Vec3& position,
-        const Color& color=Color::WHITE,
-        double duration=0.0,
-        bool depth_test=true
-    );
+    void draw_point(const Vec3& position, const Color& color = Color::WHITE,
+                    double duration = 0.0, bool depth_test = true);
 
     bool on_init() override;
 
@@ -90,7 +76,7 @@ private:
         float duration = 0.0;
 
         smlt::Vec3 points[2]; // For lines, or the first one for points
-        float size; // Diameter for spheres + points
+        float size;           // Diameter for spheres + points
     };
 
     std::list<DebugElement> elements_;
@@ -108,10 +94,10 @@ private:
 
     sig::Connection frame_finished_connection_;
 
-    bool on_create(ConstructionArgs* params) override {
+    bool on_create(const ConstructionArgs& params) override {
         _S_UNUSED(params);
         return true;
     }
 };
 
-}
+} // namespace smlt

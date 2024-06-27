@@ -8,15 +8,14 @@
 namespace smlt {
 namespace ui {
 
-class Button:
-    public Widget {
+class Button: public Widget {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_BUTTON);
 
-    Button(Scene *owner);
-    bool on_create(ConstructionArgs* params) override;
+    Button(Scene* owner);
+    bool on_create(const ConstructionArgs& params) override;
 };
 
-}
-}
+} // namespace ui
+} // namespace smlt
