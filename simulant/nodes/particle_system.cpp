@@ -343,9 +343,13 @@ void ParticleSystem::on_update(float dt) {
     }
 }
 
-bool ParticleSystem::on_create(void* params) {
-    ParticleSystemParams* args = (ParticleSystemParams*) params;
-    script_ = args->script;
+bool ParticleSystem::on_create(ConstructionArgs* params) {
+    auto maybe_script = params->arg<ParticleScriptPtr>("script");
+    if(!maybe_script) {
+        return false;
+    }
+
+    script_ = maybe_script.value();
 
     // Initialize the emitter states
     for(auto i = 0u; i < script_->emitter_count(); ++i) {

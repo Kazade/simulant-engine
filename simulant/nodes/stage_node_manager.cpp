@@ -42,7 +42,8 @@ StageNodeManager::~StageNodeManager() {
 
 }
 
-StageNode* StageNodeManager::create_node(StageNodeType type, void* params) {
+StageNode* StageNodeManager::create_node(StageNodeType type,
+                                         ConstructionArgs* params) {
     auto info = registered_nodes_.find(type);
     if(info == registered_nodes_.end()) {
         S_ERROR("Unable to find registered node: {0}", type);
@@ -73,5 +74,4 @@ StageNode* StageNodeManager::create_node(StageNodeType type, void* params) {
 
     return node;
 }
-
 }

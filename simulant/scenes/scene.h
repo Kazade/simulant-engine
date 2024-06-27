@@ -39,17 +39,18 @@
 
 #include <set>
 
-#include "../utils/unicode.h"
-#include "../types.h"
-#include "../generic/managed.h"
-#include "../generic/property.h"
-#include "../interfaces/nameable.h"
-#include "../interfaces/updateable.h"
-#include "../interfaces.h"
-#include "../generic/any/any.h"
-#include "../nodes/stage_node_manager.h"
 #include "../asset_manager.h"
 #include "../compositor.h"
+#include "../generic/any/any.h"
+#include "../generic/managed.h"
+#include "../generic/property.h"
+#include "../interfaces.h"
+#include "../interfaces/nameable.h"
+#include "../interfaces/updateable.h"
+#include "../nodes/stage_node_manager.h"
+#include "../types.h"
+#include "../utils/unicode.h"
+#include "simulant/utils/construction_args.h"
 
 namespace smlt {
 
@@ -220,7 +221,7 @@ private:
 
     /* Don't allow overriding on_create in subclasses, currently
      * the hook for that is init + load */
-    bool on_create(void*) override final {
+    bool on_create(ConstructionArgs*) override final {
         return true;
     }
 

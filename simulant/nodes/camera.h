@@ -6,6 +6,7 @@
 #include "../generic/optional.h"
 #include "../math/aabb.h"
 #include "../sound.h"
+#include "simulant/utils/construction_args.h"
 #include "stage_node.h"
 
 namespace smlt {
@@ -16,10 +17,7 @@ class CameraParams {};
 class Camera: public ContainerNode, public ChainNameable<Camera> {
 
 public:
-    struct Meta {
-        typedef CameraParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_CAMERA;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CAMERA);
 
     using ContainerNode::do_generate_renderables;
 
@@ -50,6 +48,7 @@ public:
     const Mat4& view_matrix() const {
         return view_matrix_;
     }
+
     const Mat4& projection_matrix() const {
         return projection_matrix_;
     }
@@ -70,7 +69,7 @@ public:
     float set_orthographic_projection_from_height(float desired_height_in_units,
                                                   float ratio);
 
-    bool on_create(void* params) override {
+    bool on_create(ConstructionArgs* params) override {
         _S_UNUSED(params);
         return true;
     }

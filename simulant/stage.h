@@ -19,6 +19,7 @@
 #pragma once
 
 #include "nodes/stage_node.h"
+#include "simulant/utils/construction_args.h"
 
 namespace smlt {
 
@@ -33,10 +34,7 @@ class Stage;
 
 class Stage : public StageNode {
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_STAGE;
-        typedef StageParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_STAGE);
 
     Stage(Scene* owner);
 
@@ -45,7 +43,7 @@ public:
         return aabb;
     }
 private:
-    bool on_create(void *params) override {
+    bool on_create(ConstructionArgs* params) override {
         _S_UNUSED(params);
         return true;
     }

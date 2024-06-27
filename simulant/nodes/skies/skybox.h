@@ -1,11 +1,12 @@
 #pragma once
 
-#include <stdexcept>
-#include "../stage_node.h"
+#include "../../asset_manager.h"
 #include "../../generic/identifiable.h"
 #include "../../path.h"
-#include "../../asset_manager.h"
-#include "../../path.h"
+#include "../stage_node.h"
+#include "simulant/nodes/builtins.h"
+#include "simulant/utils/construction_args.h"
+#include <stdexcept>
 
 namespace smlt {
 
@@ -31,26 +32,12 @@ public:
         std::runtime_error(what) {}
 };
 
-
-struct SkyboxParams {
-    Path source_directory;
-    TextureFlags flags;
-
-    SkyboxParams(const Path& directory, const TextureFlags& flags=TextureFlags()):
-        source_directory(directory),
-        flags(flags) {}
-};
-
 class Skybox:
     public ContainerNode,
     public ChainNameable<Skybox> {
 
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_SKYBOX;
-        typedef SkyboxParams params_type;
-    };
-
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SKYBOX);
     constexpr static float DEFAULT_SIZE = 128.0f;
 
     Skybox(Scene* owner);
@@ -73,7 +60,7 @@ public:
 private:
     friend class SkyManager;
 
-    bool on_create(void* params) override;
+    bool on_create(ConstructionArgs* params) override;
 
     StageNodeID follow_camera_;
 

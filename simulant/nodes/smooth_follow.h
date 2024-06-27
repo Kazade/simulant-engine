@@ -4,18 +4,9 @@
 
 namespace smlt {
 
-struct SmoothFollowParams {
-    StageNode* target;
-    SmoothFollowParams(StageNode* target=nullptr):
-        target(target) {}
-};
-
 class SmoothFollow : public StageNode {
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_SMOOTH_FOLLOW;
-        typedef SmoothFollowParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SMOOTH_FOLLOW);
 
     SmoothFollow(Scene* owner);
     ~SmoothFollow();
@@ -42,7 +33,7 @@ public:
 private:
     StageNode* target_ = nullptr;
 
-    bool on_create(void *params) override;
+    bool on_create(ConstructionArgs* params) override;
 
     bool following_enabled_ = true;
 

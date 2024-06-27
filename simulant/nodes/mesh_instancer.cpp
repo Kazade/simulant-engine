@@ -1,6 +1,8 @@
 #include "mesh_instancer.h"
-#include "../stage.h"
 #include "../meshes/mesh.h"
+#include "../stage.h"
+#include "simulant/types.h"
+#include "simulant/utils/construction_args.h"
 
 namespace smlt {
 
@@ -94,9 +96,8 @@ void MeshInstancer::recalc_aabb() {
     std::swap(aabb_, new_aabb);
 }
 
-bool MeshInstancer::on_create(void* params) {
-    MeshInstancerParams* args = (MeshInstancerParams*) params;
-    set_mesh(args->mesh);
+bool MeshInstancer::on_create(ConstructionArgs* params) {
+    set_mesh(params->arg<MeshPtr>("mesh").value_or(MeshPtr()));
     return true;
 }
 

@@ -2,6 +2,7 @@
 #include "audio_source.h"
 #include "../application.h"
 #include "../time_keeper.h"
+#include "simulant/utils/construction_args.h"
 
 namespace smlt {
 
@@ -13,7 +14,7 @@ AudioSource::~AudioSource() {
     assert(is_destroyed());
 }
 
-bool AudioSource::on_create(void* params) {
+bool AudioSource::on_create(ConstructionArgs* params) {
     _S_UNUSED(params);
 
     thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);

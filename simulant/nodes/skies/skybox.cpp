@@ -2,12 +2,13 @@
 
 #include "skybox.h"
 
-#include "../../stage.h"
-#include "../../assets/material.h"
-#include "../../window.h"
 #include "../../application.h"
+#include "../../assets/material.h"
+#include "../../stage.h"
 #include "../../vfs.h"
+#include "../../window.h"
 #include "../actor.h"
+#include "simulant/utils/construction_args.h"
 
 namespace smlt {
 
@@ -78,26 +79,26 @@ optional<SkyboxImageDict> discover_files_from_directory(const Path& folder) {
     return files;
 }
 
-bool Skybox::on_create(void* params) {
-    SkyboxParams* args = (SkyboxParams*) params;
+bool Skybox::on_create(ConstructionArgs* params) {
+    auto maybe_dir = params->arg<Path>("source_directory");
 
-    if(!args->source_directory.str().empty()) {
-        auto maybe_files = discover_files_from_directory(args->source_directory);
-        if(maybe_files) {
-            auto files = maybe_files.value();
-            generate(
-                files.at(SKYBOX_FACE_TOP),
-                files.at(SKYBOX_FACE_BOTTOM),
-                files.at(SKYBOX_FACE_LEFT),
-                files.at(SKYBOX_FACE_RIGHT),
-                files.at(SKYBOX_FACE_FRONT),
-                files.at(SKYBOX_FACE_BACK),
-                args->flags
-            );
-        } else {
-            S_ERROR("Couldn't determine all skybox images");
-            return false;
-        }
+    if(!maybe_dir) {
+        S_ERROR("No skybox directory specified");
+        return false;
+    }
+
+    auto flags = params->arg<TextureFlags>("flags").value_or(TextureFlags());
+
+    auto maybe_files = discover_files_from_directory(maybe_dir.value());
+    if(maybe_files) {
+        auto files = maybe_files.value();
+        generate(files.at(SKYBOX_FACE_TOP), files.at(SKYBOX_FACE_BOTTOM),
+                 files.at(SKYBOX_FACE_LEFT), files.at(SKYBOX_FACE_RIGHT),
+                 files.at(SKYBOX_FACE_FRONT), files.at(SKYBOX_FACE_BACK),
+                 flags);
+    } else {
+        S_ERROR("Couldn't determine all skybox images");
+        return false;
     }
 
     return true;
@@ -153,7 +154,9 @@ void Skybox::generate(
     set_texture(mesh->find_submesh("back"), assets->load_texture(back_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
 
     if(!actor_) {
-        actor_ = scene->create_node<Actor>(mesh_);
+        actor_ = scene->create_node<Actor>({
+            {"mesh", mesh_}
+        });
         actor_->set_parent(this);
         actor_->transform->set_position(Vec3());
         actor_->set_render_priority(smlt::RENDER_PRIORITY_ABSOLUTE_BACKGROUND);

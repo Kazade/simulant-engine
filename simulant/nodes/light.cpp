@@ -72,17 +72,15 @@ void Light::set_attenuation_from_range(float range) {
     quadratic_attenuation_ = 75.0f / (range * range);
 }
 
-bool Light::on_create(void* params) {
-    LightParams* args = (LightParams*) params;
-
+bool Light::on_create(ConstructionArgs* args) {
     set_range(100.0f);
     set_attenuation_from_range(100.0);
-    set_ambient(args->color);
-    set_diffuse(args->color);
-    set_specular(args->color);
+
+    auto c = args->arg<Color>("color").value_or(DEFAULT_LIGHT_COLOR);
+    set_ambient(c);
+    set_diffuse(c);
+    set_specular(c);
 
     return true;
 }
-
-
 }

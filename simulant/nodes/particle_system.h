@@ -23,13 +23,6 @@ class ParticleSystem;
 
 typedef sig::signal<void (ParticleSystem*, AssetID, AssetID)> ParticleSystemMaterialChangedSignal;
 
-struct ParticleSystemParams {
-    ParticleScriptPtr script;
-
-    ParticleSystemParams(const ParticleScriptPtr& script):
-        script(script) {}
-};
-
 class ParticleSystem :
     public StageNode,
     public Loadable,
@@ -39,10 +32,7 @@ class ParticleSystem :
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);
 
 public:
-    struct Meta {
-        typedef ParticleSystemParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_PARTICLE_SYSTEM;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PARTICLE_SYSTEM);
 
     ParticleSystem(Scene* owner);
     virtual ~ParticleSystem();
@@ -91,7 +81,7 @@ public:
     }
 
 private:
-    bool on_create(void* params) override;
+    bool on_create(ConstructionArgs* params) override;
 
     struct EmitterState {
         bool is_active = true;

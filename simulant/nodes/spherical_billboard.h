@@ -1,23 +1,15 @@
 #pragma once
 
+#include "simulant/utils/construction_args.h"
 #include "stage_node.h"
 
 namespace smlt {
-
-struct SphericalBillboardParams {
-    Vec3 forward;
-    SphericalBillboardParams(const Vec3& forward=Vec3::NEGATIVE_Z):
-        forward(forward) {}
-};
 
 class SphericalBillboard:
     public StageNode {
 
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_SPHERICAL_BILLBOARD;
-        typedef SphericalBillboardParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SPHERICAL_BILLBOARD);
 
     SphericalBillboard(Scene* owner):
         StageNode(owner, STAGE_NODE_TYPE_SPHERICAL_BILLBOARD) {}
@@ -26,14 +18,14 @@ public:
         target_ = target;
     }
 
-    const AABB& aabb() const {
+    const AABB& aabb() const override {
         static AABB aabb;
         return aabb;
     }
+
 private:
-    bool on_create(void* params) {
-        SphericalBillboardParams* args = (SphericalBillboardParams*) params;
-        forward_ = args->forward;
+    bool on_create(ConstructionArgs* params) override {
+        forward_ = params->arg<Vec3>("forward").value_or(Vec3::FORWARD);
         return true;
     }
 

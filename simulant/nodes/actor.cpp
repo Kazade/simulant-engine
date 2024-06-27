@@ -285,7 +285,7 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue, const Ca
     }
 }
 
-bool Actor::on_create(void *params) {
+bool Actor::on_create(ConstructionArgs* params) {
     ActorParams* args = (ActorParams*) params;
     if(!args->mesh) {
         return false;

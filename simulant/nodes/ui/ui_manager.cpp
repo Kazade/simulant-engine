@@ -20,13 +20,15 @@
 #include "frame.h"
 #include "keyboard.h"
 
-#include "../../stage.h"
-#include "../camera.h"
-#include "../../window.h"
-#include "../stage_node_manager.h"
-#include "../../viewport.h"
 #include "../../application.h"
+#include "../../stage.h"
 #include "../../vfs.h"
+#include "../../viewport.h"
+#include "../../window.h"
+#include "../camera.h"
+#include "../stage_node_manager.h"
+#include "simulant/nodes/ui/ui_config.h"
+#include "simulant/utils/construction_args.h"
 
 namespace smlt {
 namespace ui {
@@ -62,9 +64,8 @@ UIManager::~UIManager() {
     }
 }
 
-bool UIManager::on_create(void *params) {
-    UIManagerParams* args = (UIManagerParams*) params;
-    config_ = args->config;
+bool UIManager::on_create(ConstructionArgs* params) {
+    config_ = params->arg<UIConfig>("config").value_or(UIConfig());
     return true;
 }
 

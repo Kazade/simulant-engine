@@ -1,23 +1,15 @@
 #pragma once
 
+#include "simulant/utils/construction_args.h"
 #include "stage_node.h"
 
 namespace smlt {
-
-struct CylindricalBillboardParams {
-    Vec3 forward;
-    CylindricalBillboardParams(const Vec3& forward=Vec3::NEGATIVE_Z):
-        forward(forward) {}
-};
 
 class CylindricalBillboard:
     public StageNode {
 
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD;
-        typedef CylindricalBillboardParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD);
 
     CylindricalBillboard(Scene* owner):
         StageNode(owner, STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD) {}
@@ -34,9 +26,8 @@ private:
     StageNode* target_ = nullptr;
     Vec3 forward_;
 
-    bool on_create(void* params) override {
-        CylindricalBillboardParams* args = (CylindricalBillboardParams*) params;
-        forward_ = args->forward;
+    bool on_create(ConstructionArgs* params) override {
+        forward_ = params->arg<Vec3>("forward").value_or(Vec3::FORWARD);
         return true;
     }
 

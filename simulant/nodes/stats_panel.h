@@ -20,22 +20,21 @@
 
 #include <list>
 
+#include "../generic/managed.h"
 #include "../panels/panel.h"
 #include "../types.h"
-#include "../generic/managed.h"
+#include "simulant/utils/construction_args.h"
 
 namespace smlt {
 
 class Window;
-
-struct StatsPanelParams {};
 
 class StatsPanel:
     public Panel,
     public RefCounted<StatsPanel> {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_STATS_PANEL, StatsPanelParams);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_STATS_PANEL);
 
     StatsPanel(Scene* owner);
 
@@ -68,7 +67,7 @@ private:
     bool first_update_ = true;
     float last_update_ = 0.0f;
 
-    bool on_create(void *params) override {
+    bool on_create(ConstructionArgs* params) override {
         _S_UNUSED(params);
         return true;
     }

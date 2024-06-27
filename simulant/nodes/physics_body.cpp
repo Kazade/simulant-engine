@@ -1,11 +1,12 @@
-#include "../generic/raii.h"
 #include "physics_body.h"
-#include "bounce/bounce.h"
-#include "../services/physics.h"
-#include "stage_node.h"
-#include "../scenes/scene.h"
 #include "../application.h"
+#include "../generic/raii.h"
+#include "../scenes/scene.h"
+#include "../services/physics.h"
 #include "../time_keeper.h"
+#include "bounce/bounce.h"
+#include "simulant/math/quaternion.h"
+#include "stage_node.h"
 
 namespace smlt {
 
@@ -186,20 +187,21 @@ PhysicsService* PhysicsBody::get_simulation() const {
     return simulation_;
 }
 
-bool PhysicsBody::on_create(void* params) {
-    PhysicsBodyParams* args = (PhysicsBodyParams*) params;
-
+bool PhysicsBody::on_create(ConstructionArgs* params) {
+    auto initial_pos = params->arg<Vec3>("position").value_or(Vec3());
+    auto initial_rot =
+        params->arg<Quaternion>("orientation").value_or(Quaternion());
     auto sim = get_simulation();
     if(sim) {
-        sim->register_body(this, args->initial_position, args->initial_rotation);
+        sim->register_body(this, initial_pos, initial_rot);
     } else {
         S_WARN("PhysicsBody added without an active PhysicsService");
     }
 
     /* FIXME: These should probably be create arguments for *all* stage nodes,
      * not just PhysicsBodies */
-    transform->set_position(args->initial_position);
-    transform->set_orientation(args->initial_rotation);
+    transform->set_position(initial_pos);
+    transform->set_orientation(initial_rot);
 
     return true;
 }

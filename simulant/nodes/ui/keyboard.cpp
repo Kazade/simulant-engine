@@ -1,10 +1,14 @@
-#include <vector>
-#include "ui_manager.h"
 #include "keyboard.h"
 #include "button.h"
 #include "frame.h"
-#include "text_entry.h"
 #include "label.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/nodes/ui/ui_config.h"
+#include "simulant/nodes/ui/widget.h"
+#include "simulant/utils/construction_args.h"
+#include "text_entry.h"
+#include "ui_manager.h"
+#include <vector>
 
 #include "../../window.h"
 #include "../../stage.h"
@@ -15,15 +19,6 @@ namespace smlt {
 namespace ui {
 
 class KeyboardPanel;
-
-struct KeyboardPanelParams : public WidgetParams {
-    KeyboardPanelParams(
-        const UIConfig& config=UIConfig(),
-        const WidgetStylePtr& shared_style=WidgetStylePtr()
-    ):
-        WidgetParams(config, shared_style) {}
-};
-
 }
 }
 
@@ -617,15 +612,12 @@ class KeyboardPanel:
     friend class Keyboard;
 
 public:
-    struct Meta {
-        typedef ui::KeyboardPanelParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL);
 
     KeyboardPanel(Scene* owner):
         Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL) {}
 
-    bool on_create(void *params) override {
+    bool on_create(ConstructionArgs* params) override {
         if(!Widget::on_create(params)) {
             return false;
         }
@@ -1184,66 +1176,76 @@ Keyboard::Keyboard(Scene *owner):
 
 }
 
-bool Keyboard::on_create(void *params) {
+bool Keyboard::on_create(ConstructionArgs* params) {
     if(!Widget::on_create(params)) {
         return false;
     }
 
-    KeyboardParams* args = (KeyboardParams*) params;
-
-    if(!args->shared_style) {
+    auto sstyle = params->arg<WidgetStyle>("shared_style");
+    auto config = params->arg<UIConfig>("theme").value_or(UIConfig());
+    if(!sstyle) {
         set_background_color(smlt::Color::NONE);
         set_foreground_color(smlt::Color::NONE);
         set_border_color(smlt::Color::NONE);
         set_text_color(smlt::Color::NONE);
     }
 
-    auto config = &args->theme;
-
     resize(-1, -1);
 
-    main_frame_ = scene->create_node<Frame>("");
+    main_frame_ = scene->create_node<Frame>({
+        {"text", ""}
+    });
     main_frame_->set_parent(this);
     main_frame_->set_space_between(0);
     main_frame_->set_border_width(0);
-    main_frame_->set_background_color(config->background_color_);
-    main_frame_->set_border_color(config->background_color_);
+    main_frame_->set_background_color(config.background_color_);
+    main_frame_->set_border_color(config.background_color_);
     main_frame_->set_foreground_color(smlt::Color::NONE);
 
     /* FIXME: Registration here is ugly. KeyboardPanel should either be a publically
      * accessible node, or, not be a node */
     scene->register_stage_node<KeyboardPanel>();
 
-    panel_ = scene->create_node<KeyboardPanel>(*config);
+    panel_ = scene->create_node<KeyboardPanel>({
+        {"theme", config}
+    });
 
-    panel_->set_background_color(config->background_color_);
-    panel_->set_border_color(config->background_color_);
+    panel_->set_background_color(config.background_color_);
+    panel_->set_border_color(config.background_color_);
     panel_->set_border_width(2);
     panel_->rebuild();
 
-    entry_ = scene->create_node<TextEntry>(args->initial_text);
+    auto initial_text = params->arg<unicode>("initial_text").value_or("");
+
+    entry_ = scene->create_node<TextEntry>({
+        {"text", initial_text}
+    });
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
     entry_->set_background_color(smlt::Color::WHITE);
-    entry_->set_border_color(config->background_color_);
-    entry_->set_text_color(config->foreground_color_);
+    entry_->set_border_color(config.background_color_);
+    entry_->set_text_color(config.foreground_color_);
     entry_->set_text_alignment(TEXT_ALIGNMENT_LEFT);
     entry_->set_padding(Px(4));
 
     info_row_ = scene->create_node<Frame>();
-    info_row_->set_border_color(config->foreground_color_);
+    info_row_->set_border_color(config.foreground_color_);
     info_row_->set_border_width(2);
     info_row_->set_background_color(style_->foreground_color_);
     info_row_->set_foreground_color(style_->foreground_color_);
     info_row_->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
 
-    auto x_button = scene->create_node<Label>("");
+    auto x_button = scene->create_node<Label>({
+        {"text", ""}
+    });
     x_button->set_text("X");
     x_button->set_text_color(smlt::Color::WHITE);
     x_button->resize(panel_->key_height(), panel_->key_height());
     x_button->rebuild();
 
-    auto x_label = scene->create_node<Label>("");
+    auto x_label = scene->create_node<Label>({
+        {"text", ""}
+    });
     x_label->set_background_color(smlt::Color::RED);
     x_label->set_text(_T("Cancel"));
     x_label->set_text_color(smlt::Color::WHITE);
@@ -1260,7 +1262,9 @@ bool Keyboard::on_create(void *params) {
     main_frame_->pack_child(info_row_);
     main_frame_->rebuild();
 
-    set_mode(args->mode);
+    auto mode =
+        params->arg<KeyboardMode>("mode").value_or(KEYBOARD_MODE_UPPERCASE);
+    set_mode(mode);
 
     return true;
 }

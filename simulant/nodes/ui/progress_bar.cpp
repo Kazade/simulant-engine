@@ -1,7 +1,8 @@
-#include "ui_manager.h"
 #include "progress_bar.h"
 #include "../../stage.h"
 #include "../../window.h"
+#include "simulant/utils/construction_args.h"
+#include "ui_manager.h"
 
 namespace smlt {
 namespace ui {
@@ -126,28 +127,34 @@ void ProgressBar::on_update(float dt) {
     refresh_bar(dt);
 }
 
-bool ProgressBar::on_create(void* params) {
+bool ProgressBar::on_create(ConstructionArgs* params) {
     if(!Widget::on_create(params)) {
         return true;
     }
 
-    ProgressBarParams* args = (ProgressBarParams*) params;
+    auto sstyle = params->arg<WidgetStyle>("shared_style");
+    auto theme = params->arg<UIConfig>("theme").value_or(UIConfig());
 
-    if(!args->shared_style) {
-        set_background_color(args->theme.progress_bar_background_color_);
-        set_foreground_color(args->theme.progress_bar_foreground_color_);
-        set_border_color(args->theme.progress_bar_border_color_);
-        set_border_width(args->theme.progress_bar_border_width_);
-        set_text_color(args->theme.progress_bar_text_color_);
+    if(!sstyle) {
+        set_background_color(theme.progress_bar_background_color_);
+        set_foreground_color(theme.progress_bar_foreground_color_);
+        set_border_color(theme.progress_bar_border_color_);
+        set_border_width(theme.progress_bar_border_width_);
+        set_text_color(theme.progress_bar_text_color_);
     }
 
-    set_range(args->min, args->max);
-    set_value(args->value);
+    auto min = params->arg<float>("min").value_or(0.0f);
+    auto max = params->arg<float>("max").value_or(100.0f);
+    auto value = params->arg<float>("value").value_or(0.0f);
+    set_range(min, max);
+    set_value(value);
+
+    auto w = params->arg<int>("width").value_or(-1);
+    auto h = params->arg<int>("height").value_or(-1);
 
     set_resize_mode(RESIZE_MODE_FIXED);
-    resize(args->width, args->height);
+    resize(w, h);
     return true;
 }
-
 }
 }

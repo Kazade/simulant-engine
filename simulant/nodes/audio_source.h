@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simulant/utils/construction_args.h"
 #include "stage_node.h"
 
 namespace smlt {
@@ -7,19 +8,13 @@ namespace smlt {
 typedef sig::signal<void (SoundPtr, AudioRepeat, DistanceModel)> SoundPlayedSignal;
 typedef sig::signal<void ()> StreamFinishedSignal;
 
-struct AudioSourceParams {};
-
 class AudioSource : public StageNode {
 
     DEFINE_SIGNAL(SoundPlayedSignal, signal_sound_played);
     DEFINE_SIGNAL(StreamFinishedSignal, signal_stream_finished);
 
 public:
-
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_AUDIO_SOURCE;
-        typedef AudioSourceParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_AUDIO_SOURCE);
 
     AudioSource(Scene* owner):
         StageNode(owner, STAGE_NODE_TYPE_AUDIO_SOURCE) {}
@@ -53,7 +48,7 @@ protected:
     SoundDriver* _sound_driver() const;
 
 public:
-    bool on_create(void* params) override;
+    bool on_create(ConstructionArgs* params) override;
     bool on_destroy() override;
 
     Scene* scene_ = nullptr;

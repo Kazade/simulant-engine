@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simulant/nodes/stage_node.h"
+#include "simulant/utils/construction_args.h"
 #include "widget.h"
 
 namespace smlt {
@@ -10,33 +12,11 @@ enum ProgressBarMode {
     PROGRESS_BAR_MODE_FRACTION
 };
 
-struct ProgressBarParams : public WidgetParams {
-    float min = 0.0f;
-    float max = 100.0f;
-    float value = 0.0f;
-
-    Px width;
-    Px height;
-
-    ProgressBarParams(
-        float min=0.0f, float max=100.0f, float value=0.0f,
-        Px width = Px(250),
-        Px height = Rem(1.5f),
-        const UIConfig& theme=UIConfig(),
-        WidgetStylePtr shared_style=WidgetStylePtr()
-    ):
-        WidgetParams(theme, shared_style),
-        min(min), max(max), value(value), width(width), height(height) {}
-};
-
 class ProgressBar:
     public Widget {
 
 public:
-    struct Meta {
-        typedef ui::ProgressBarParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR);
 
     using Widget::init; // Pull in init to satisfy Managed<Button>
     using Widget::clean_up;
@@ -60,7 +40,7 @@ public:
 
     void on_update(float dt) override;
 private:
-    bool on_create(void *params) override;
+    bool on_create(ConstructionArgs* params) override;
 
     ProgressBarMode mode_ = PROGRESS_BAR_MODE_FRACTION;
 

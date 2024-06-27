@@ -43,26 +43,6 @@ struct GeomCullerOptions {
     uint8_t quadtree_max_depth = 4;
 };
 
-struct GeomParams {
-    MeshPtr mesh;
-    Vec3 position = Vec3();
-    Quaternion rotation = Quaternion();
-    Vec3 scale = Vec3(1);
-    GeomCullerOptions options = GeomCullerOptions();
-
-    GeomParams(
-        const MeshPtr& mesh,
-        const Vec3& pos=Vec3(),
-        const Quaternion& rot=Quaternion(),
-        const Vec3& scale=Vec3(1),
-        const GeomCullerOptions& opts=GeomCullerOptions()):
-        mesh(mesh),
-        position(pos),
-        rotation(rot),
-        scale(scale),
-        options(opts) {}
-};
-
 /**
  * @brief The Geom class
  *
@@ -81,10 +61,7 @@ class Geom :
     public ChainNameable<Geom>  {
 
 public:
-    struct Meta {
-        typedef GeomParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_GEOM;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_GEOM);
 
     Geom(Scene* owner);
 
@@ -94,7 +71,7 @@ public:
         const Camera*, const Viewport* viewport, const DetailLevel detail_level
     ) override;
 
-    bool on_create(void *params) override;
+    bool on_create(ConstructionArgs* params) override;
 
 private:
     std::shared_ptr<GeomCuller> culler_;

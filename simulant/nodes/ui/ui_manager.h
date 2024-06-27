@@ -50,11 +50,6 @@ struct UIEvent {
     };
 };
 
-
-struct UIManagerParams {
-    UIConfig config;
-};
-
 class UIManager:
     public EventListener,
     public StageNode {
@@ -62,7 +57,7 @@ class UIManager:
     friend class Widget;
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_UI_MANAGER, UIManagerParams);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_UI_MANAGER);
 
     UIManager(Scene* owner, UIConfig config=UIConfig());
     virtual ~UIManager();
@@ -74,7 +69,7 @@ public:
 private:
     UIConfig config_;
 
-    bool on_create(void *params) override;
+    bool on_create(ConstructionArgs* params) override;
 
     void on_mouse_down(const MouseEvent &evt) override;
     void on_mouse_up(const MouseEvent &evt) override;

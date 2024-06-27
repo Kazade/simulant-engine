@@ -1,27 +1,18 @@
 #pragma once
 
+#include "simulant/utils/construction_args.h"
 #include "stage_node.h"
 
 namespace smlt {
 
 class FlyController;
 
-struct FlyControllerParams {
-    float speed;
-    FlyControllerParams(float speed=600.0f):
-        speed(speed) {}
-};
-
-
 class FlyController : public StageNode {
 private:
     float speed_ = 600.0f;
 
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_FLY_CONTROLLER;
-        typedef FlyControllerParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_FLY_CONTROLLER);
 
     FlyController(Scene* owner):
         StageNode(owner, STAGE_NODE_TYPE_FLY_CONTROLLER) {
@@ -43,9 +34,8 @@ public:
     }
 
 private:
-    bool on_create(void *params) override {
-        FlyControllerParams* args = (FlyControllerParams*) params;
-        set_speed(args->speed);
+    bool on_create(ConstructionArgs* params) override {
+        set_speed(params->arg<float>("speed").value_or(600.0f));
         return true;
     }
 };

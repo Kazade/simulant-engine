@@ -24,11 +24,12 @@
 
 #include "../signals/signal.h"
 
-#include "stage_node.h"
+#include "../generic/manual_object.h"
 #include "../interfaces.h"
 #include "../meshes/mesh.h"
 #include "../sound.h"
-#include "../generic/manual_object.h"
+#include "simulant/utils/construction_args.h"
+#include "stage_node.h"
 
 #include "../renderers/batching/render_queue.h"
 #include "../renderers/batching/renderable.h"
@@ -52,10 +53,7 @@ class Actor :
     public ChainNameable<Actor> {
 
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_ACTOR;
-        typedef ActorParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_ACTOR);
 
     Actor(Scene* owner);
     virtual ~Actor();
@@ -103,7 +101,7 @@ public:
     }
 
 private:
-    bool on_create(void *params) override;
+    bool on_create(ConstructionArgs* params) override;
 
     const MeshPtr& find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search downwards

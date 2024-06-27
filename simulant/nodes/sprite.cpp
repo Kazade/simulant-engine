@@ -17,12 +17,13 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <functional>
 #include "sprite.h"
-#include "actor.h"
+#include "../animation.h"
 #include "../scenes/scene.h"
 #include "../window.h"
-#include "../animation.h"
+#include "actor.h"
+#include "simulant/utils/construction_args.h"
+#include <functional>
 
 using namespace smlt;
 
@@ -32,17 +33,15 @@ Sprite::Sprite(Scene *owner):
     sprite_sheet_padding_ = std::make_pair(0, 0);
 }
 
-
-bool Sprite::on_create(void* params) {
-    SpriteParams* args = (SpriteParams*) params;
-    _S_UNUSED(args);
+bool Sprite::on_create(ConstructionArgs* params) {
+    _S_UNUSED(params);
 
     mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
     mesh_->create_submesh_as_rectangle("sprite", scene->assets->create_material(), 1.0, 1.0f);
 
     //Annoyingly, we can't use new_actor_with_parent_and_mesh here, because that looks
     //up our ID in the stage, which doesn't exist until this function returns
-    actor_ = scene->create_node<Actor>(mesh_);
+    actor_ = scene->create_node<Actor>(ConstructionArgs().set("mesh", mesh_));
     actor_->set_parent(this);
 
     set_render_dimensions(1.0f, 1.0f);

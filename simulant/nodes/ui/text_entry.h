@@ -1,39 +1,19 @@
 #pragma once
 
-#include "widget.h"
 #include "../../generic/managed.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/utils/construction_args.h"
+#include "widget.h"
 
 namespace smlt {
 namespace ui {
-
-struct TextEntryParams : public WidgetParams {
-    unicode text;
-    Px width;
-    Px height;
-
-    TextEntryParams(
-        const unicode& text,
-        const Px& width = Px(320),
-        const Px& height = Px(-1),
-        const UIConfig& theme=UIConfig(),
-        WidgetStylePtr shared_style=WidgetStylePtr()
-    ):
-        WidgetParams(theme, shared_style),
-        text(text),
-        width(width),
-        height(height) {}
-};
-
 
 class TextEntry:
     public Widget,
     public RefCounted<TextEntry> {
 
 public:
-    struct Meta {
-        typedef ui::TextEntryParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY);
 
     using Widget::init; // Pull in init to satisfy Managed<TextEntry>
     using Widget::clean_up;
@@ -70,7 +50,7 @@ private:
 
     virtual bool pre_set_text(const unicode&) override;
 
-    bool on_create(void* params) override;
+    bool on_create(ConstructionArgs* params) override;
 };
 
 }

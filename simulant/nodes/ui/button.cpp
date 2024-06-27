@@ -1,5 +1,7 @@
-#include "ui_manager.h"
 #include "button.h"
+#include "simulant/nodes/ui/widget.h"
+#include "simulant/utils/construction_args.h"
+#include "ui_manager.h"
 
 namespace smlt {
 namespace ui {
@@ -10,37 +12,34 @@ Button::Button(Scene *owner):
 
 }
 
-bool Button::on_create(void* params) {
+bool Button::on_create(ConstructionArgs* params) {
     if(!Widget::on_create(params)) {
         return false;
     }
 
-    ButtonParams* args = (ButtonParams*) params;
+    auto sstyle = params->arg<WidgetStyle>("shared_style");
+    auto theme = params->arg<UIConfig>("theme").value_or(UIConfig());
+    if(!sstyle) {
+        set_padding(theme.button_padding_.left, theme.button_padding_.right,
+                    theme.button_padding_.bottom, theme.button_padding_.top);
 
-    if(!args->shared_style) {
-        set_padding(
-            args->theme.button_padding_.left,
-            args->theme.button_padding_.right,
-            args->theme.button_padding_.bottom,
-            args->theme.button_padding_.top
-        );
-
-        set_text_color(args->theme.button_text_color_);
-        set_background_color(args->theme.button_background_color_);
-        set_foreground_color(args->theme.button_foreground_color_);
-        set_border_color(args->theme.button_border_color_);
-        set_border_width(args->theme.button_border_width_);
+        set_text_color(theme.button_text_color_);
+        set_background_color(theme.button_background_color_);
+        set_foreground_color(theme.button_foreground_color_);
+        set_border_color(theme.button_border_color_);
+        set_border_width(theme.button_border_width_);
     }
 
-    set_text(args->text);
+    auto text = params->arg<unicode>("text").value_or("");
+    auto w = params->arg<int>("width").value_or(-1);
+    auto h = params->arg<int>("height").value_or(-1);
+
+    set_text(text);
     set_resize_mode(RESIZE_MODE_FIXED_HEIGHT);
 
-    resize(args->width, args->height);
+    resize(w, h);
 
     return true;
 }
-
-
-
 }
 }

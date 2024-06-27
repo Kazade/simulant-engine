@@ -4,8 +4,9 @@
 #include <unordered_map>
 #include <set>
 
-#include "stage_node.h"
 #include "../types.h"
+#include "simulant/utils/construction_args.h"
+#include "stage_node.h"
 
 namespace smlt {
 
@@ -135,7 +136,7 @@ protected:
     void clear_simulation_cache();
     PhysicsService* get_simulation() const;
 
-    bool on_create(void *params) override;
+    bool on_create(ConstructionArgs* params) override;
     bool on_destroy() override;
 
     void on_transformation_changed() override;

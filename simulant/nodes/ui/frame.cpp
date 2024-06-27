@@ -1,6 +1,7 @@
-#include "ui_manager.h"
 #include "frame.h"
 #include "../../meshes/mesh.h"
+#include "simulant/utils/construction_args.h"
+#include "ui_manager.h"
 
 namespace smlt {
 namespace ui {
@@ -10,19 +11,20 @@ Frame::Frame(Scene *owner):
 
 }
 
-bool Frame::on_create(void *params) {
+bool Frame::on_create(ConstructionArgs* params) {
     if(!Widget::on_create(params)) {
         return false;
     }
 
-    FrameParams* args = (FrameParams*) params;
+    auto sstyle = params->arg<WidgetStyle>("shared_style");
+    auto theme = params->arg<UIConfig>("theme").value_or(UIConfig());
 
-    if(!args->shared_style) {
-        set_background_color(args->theme.frame_background_color_);
-        set_foreground_color(args->theme.frame_titlebar_color_);
-        set_text_color(args->theme.frame_text_color_);
-        set_border_width(args->theme.frame_border_width_);
-        set_border_color(args->theme.frame_border_color_);
+    if(!sstyle) {
+        set_background_color(theme.frame_background_color_);
+        set_foreground_color(theme.frame_titlebar_color_);
+        set_text_color(theme.frame_text_color_);
+        set_border_width(theme.frame_border_width_);
+        set_border_color(theme.frame_border_color_);
     }
 
     return true;

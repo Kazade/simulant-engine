@@ -1,15 +1,16 @@
 #pragma once
 
-#include <functional>
-
+#include "../utils/construction_args.h"
 #include "stage_node.h"
-#include "../core/memory.h"
+#include <functional>
+#include <initializer_list>
 
 namespace smlt {
 
-typedef std::function<StageNode* (void*)> StageNodeConstructFunction;
-typedef std::function<void (StageNode*)> StageNodeDestructFunction;
+class ConstructionArgs;
 
+typedef std::function<StageNode*(void*)> StageNodeConstructFunction;
+typedef std::function<void (StageNode*)> StageNodeDestructFunction;
 
 struct StageNodeTypeInfo {
     StageNodeType type;
@@ -68,12 +69,28 @@ public:
     }
 
     /* Non-template API does the work for easier binding with other languages */
-    StageNode* create_node(StageNodeType type, void* params);
+    StageNode* create_node(StageNodeType type, ConstructionArgs* params);
 
-    template<typename T, typename... Args>
-    T* create_node(Args&&... args) {
-        auto params = typename T::Meta::params_type(std::forward<Args>(args)...);
-        return (T*) create_node(T::Meta::node_type, &params);
+    template<typename T>
+    T* create_node(
+        std::initializer_list<std::pair<std::string, smlt::any>> params) {
+        ConstructionArgs args;
+        for(auto& arg: params) {
+            args.set_arg(arg.first.c_str(), arg.second);
+        }
+
+        return (T*)create_node(T::Meta::node_type, &args);
+    }
+
+    template<typename T>
+    T* create_node(ConstructionArgs args) {
+        return (T*)create_node(T::Meta::node_type, &args);
+    }
+
+    template<typename T>
+    T* create_node() {
+        ConstructionArgs args;
+        return (T*)create_node(T::Meta::node_type, &args);
     }
 
     bool register_stage_node(

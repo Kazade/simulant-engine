@@ -19,9 +19,10 @@
 
 #include "geom.h"
 #include "../stage.h"
+#include "camera.h"
 #include "geoms/octree_culler.h"
 #include "geoms/quadtree_culler.h"
-#include "camera.h"
+#include "simulant/utils/construction_args.h"
 
 namespace smlt {
 
@@ -30,27 +31,32 @@ Geom::Geom(Scene* owner):
 
 }
 
-bool Geom::on_create(void* params) {
-    GeomParams* args = (GeomParams*) params;
-
-    auto mesh_ptr = args->mesh;
+bool Geom::on_create(ConstructionArgs* params) {
+    auto mesh_ptr = params->arg<MeshPtr>("mesh").value_or(MeshPtr());
     assert(mesh_ptr);
 
     if(!mesh_ptr) {
         return false;
     }
 
-    if(args->options.type == GEOM_CULLER_TYPE_QUADTREE) {
-        culler_.reset(new QuadtreeCuller(this, mesh_ptr, args->options.quadtree_max_depth));
+    auto opts =
+        params->arg<GeomCullerOptions>("options").value_or(GeomCullerOptions());
+
+    if(opts.type == GEOM_CULLER_TYPE_QUADTREE) {
+        culler_.reset(
+            new QuadtreeCuller(this, mesh_ptr, opts.quadtree_max_depth));
     } else {
-        assert(args->options.type == GEOM_CULLER_TYPE_OCTREE);
-        culler_.reset(new OctreeCuller(this, mesh_ptr, args->options.octree_max_depth));
+        assert(opts.type == GEOM_CULLER_TYPE_OCTREE);
+        culler_.reset(new OctreeCuller(this, mesh_ptr, opts.octree_max_depth));
     }
 
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();
 
-    culler_->compile(args->position, args->rotation, args->scale);
+    auto pos = params->arg<Vec3>("position").value_or(Vec3());
+    auto rot = params->arg<Quaternion>("orientation").value_or(Quaternion());
+    auto scale = params->arg<Vec3>("scale").value_or(Vec3(1));
+    culler_->compile(pos, rot, scale);
     return true;
 }
 

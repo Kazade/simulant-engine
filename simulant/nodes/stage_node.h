@@ -20,6 +20,9 @@
 #include "iterators/ancestor_iterator.h"
 
 #include "builtins.h"
+#include "simulant/generic/managed.h"
+#include "simulant/nodes/stage_node_manager.h"
+#include "simulant/utils/construction_args.h"
 
 namespace smlt {
 
@@ -197,6 +200,12 @@ public:
         TransformRetainMode transform_retain=TRANSFORM_RETAIN_MODE_LOSE
     );
 
+    template<typename T>
+    T* create_child(const ConstructionArgs& args) {
+        return impl::child_factory<decltype(owner_), T>(
+            owner_, this, std::forward<const ConstructionArgs&>(args));
+    }
+
     template<typename T, typename... Args>
     T* create_child(Args&&... args) {
         return impl::child_factory<decltype(owner_), T, Args...>(owner_, this, std::forward<Args>(args)...);
@@ -288,7 +297,7 @@ public:
     }
 
 protected:
-    virtual bool on_create(void* params) = 0;
+    virtual bool on_create(ConstructionArgs* params) = 0;
     virtual bool on_destroy() override { return true; }
     virtual void on_update(float dt) override { _S_UNUSED(dt); }
     virtual void on_fixed_update(float step) override { _S_UNUSED(step); }
@@ -312,7 +321,7 @@ private:
     Transform transform_;
 
     // NVI idiom
-    bool _create(void* params) {
+    bool _create(ConstructionArgs* params) {
         return on_create(params);
     }
 
@@ -636,8 +645,7 @@ typedef default_init_ptr<StageNode> StageNodePtr;
 #include "iterators/descendent_iterator.inc"
 #include "iterators/ancestor_iterator.inc"
 
-#define S_DEFINE_STAGE_NODE_META(node_type_id, params_type_klass) \
-struct Meta { \
-    const static smlt::StageNodeType node_type = node_type_id; \
-    typedef params_type_klass params_type; \
-}
+#define S_DEFINE_STAGE_NODE_META(node_type_id)                                 \
+    struct Meta {                                                              \
+        const static smlt::StageNodeType node_type = node_type_id;             \
+    }

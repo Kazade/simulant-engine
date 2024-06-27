@@ -12,13 +12,6 @@
 
 namespace smlt {
 
-struct MeshInstancerParams {
-    MeshPtr mesh;
-
-    MeshInstancerParams(const MeshPtr& mesh):
-        mesh(mesh) {}
-};
-
 typedef std::size_t MeshInstanceID;
 
 /**
@@ -48,10 +41,7 @@ class MeshInstancer:
     public ChainNameable<MeshInstancer> {
 
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
-        typedef MeshInstancerParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_MESH_INSTANCER);
 
     MeshInstancer(Scene* owner);
     virtual ~MeshInstancer();
@@ -104,7 +94,7 @@ private:
 
     void recalc_aabb();
 
-    bool on_create(void* params) override;
+    bool on_create(ConstructionArgs* params) override;
 
     void on_transformation_changed() override;
 

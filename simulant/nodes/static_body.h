@@ -7,19 +7,11 @@
 
 namespace smlt {
 
-struct StaticBodyParams : public PhysicsBodyParams {
-    StaticBodyParams(const Vec3& position=Vec3(), const Quaternion& rotation=Quaternion()):
-        PhysicsBodyParams(position, rotation) {}
-};
-
 class StaticBody:
     public PhysicsBody {
 
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_PHYSICS_STATIC_BODY;
-        typedef StaticBodyParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_STATIC_BODY);
 
     StaticBody(Scene* owner):
         PhysicsBody(owner, STAGE_NODE_TYPE_PHYSICS_STATIC_BODY, PHYSICS_BODY_TYPE_STATIC) {}
@@ -37,7 +29,7 @@ public:
     }
 
 private:
-    bool on_create(void *params) override;
+    bool on_create(ConstructionArgs* params) override;
 };
 
 }

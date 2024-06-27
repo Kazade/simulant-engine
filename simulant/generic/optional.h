@@ -68,8 +68,12 @@ public:
         return *value_ptr();
     }
 
+    T value_or(const T& def) const {
+        return *this ? **this : def;
+    }
+
     T value_or(T&& def) const {
-        bool(*this) ? **this : static_cast<T>(std::forward<T>(def));
+        return bool(*this) ? **this : static_cast<T>(std::forward<T>(def));
     }
 
     T value_or(T&& def) {

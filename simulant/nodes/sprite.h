@@ -41,20 +41,15 @@ struct SpritesheetAttrs {
     uint32_t padding_horizontal = 0;
 };
 
-struct SpriteParams {};
-
 class Sprite :
     public ContainerNode,
     public KeyFrameAnimated,
     public ChainNameable<Sprite> {
 
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_SPRITE;
-        typedef SpriteParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SPRITE);
 
-    bool on_create(void* params) override;
+    bool on_create(ConstructionArgs* params) override;
     bool on_destroy() override;
     void on_update(float dt) override;
 

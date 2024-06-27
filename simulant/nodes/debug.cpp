@@ -145,7 +145,9 @@ void Debug::initialize_actor() {
         return;
     }
 
-    actor_ = scene->create_node<Actor>(mesh_);
+    actor_ = scene->create_node<Actor>({
+        {"mesh", mesh_}
+    });
 
     // Important. Debug stuff shouldn't be culled
     actor_->set_cullable(false);

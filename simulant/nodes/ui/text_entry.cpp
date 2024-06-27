@@ -1,6 +1,7 @@
-#include "ui_manager.h"
 #include "text_entry.h"
 #include "../../font.h"
+#include "simulant/utils/construction_args.h"
+#include "ui_manager.h"
 
 namespace smlt {
 namespace ui {
@@ -11,16 +12,17 @@ TextEntry::TextEntry(Scene *owner):
 
 }
 
-bool TextEntry::on_create(void* params) {
+bool TextEntry::on_create(ConstructionArgs* params) {
     if(!Widget::on_create(params)) {
         return false;
     }
 
-    TextEntryParams* args = (TextEntryParams*) params;
-
-    set_text(args->text);
+    set_text(params->arg<unicode>("name").value_or(""));
     set_resize_mode(RESIZE_MODE_FIXED_WIDTH);
-    resize(args->width, args->height);
+
+    auto w = params->arg<int>("width").value_or(-1);
+    auto h = params->arg<int>("height").value_or(-1);
+    resize(w, h);
 
     return true;
 }
