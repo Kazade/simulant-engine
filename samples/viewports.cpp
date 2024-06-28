@@ -14,7 +14,8 @@ public:
 
         auto cube = assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         cube->create_submesh_as_cube("cube", assets->create_material(), 1.0);
-        smlt::ActorPtr actor = create_child<smlt::Actor>(cube);
+        smlt::ActorPtr actor =
+            create_child<smlt::Actor>(smlt::Args({"mesh", cube}));
 
         actor->transform->set_position(smlt::Vec3(0, 0, -5));
 

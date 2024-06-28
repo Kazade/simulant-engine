@@ -7,7 +7,7 @@
 
 namespace smlt {
 
-class ConstructionArgs;
+class Args;
 
 typedef std::function<StageNode*(void*)> StageNodeConstructFunction;
 typedef std::function<void(StageNode*)> StageNodeDestructFunction;
@@ -69,16 +69,16 @@ public:
     }
 
     /* Non-template API does the work for easier binding with other languages */
-    StageNode* create_node(StageNodeType type, const ConstructionArgs& params);
+    StageNode* create_node(StageNodeType type, const Args& params);
 
     template<typename T>
-    T* create_node(const ConstructionArgs& args) {
+    T* create_node(const Args& args) {
         return (T*)create_node(T::Meta::node_type, args);
     }
 
     template<typename T>
     T* create_node() {
-        ConstructionArgs args;
+        Args args;
         return (T*)create_node(T::Meta::node_type, args);
     }
 

@@ -13,7 +13,7 @@ public:
 
     Label(Scene* owner);
 
-    bool on_create(const ConstructionArgs& params) override;
+    bool on_create(const Args& params) override;
 };
 
 } // namespace ui

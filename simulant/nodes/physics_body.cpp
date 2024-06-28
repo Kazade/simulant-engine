@@ -201,7 +201,7 @@ PhysicsService* PhysicsBody::get_simulation() const {
     return simulation_;
 }
 
-bool PhysicsBody::on_create(const ConstructionArgs& params) {
+bool PhysicsBody::on_create(const Args& params) {
     auto initial_pos = params.arg<Vec3>("position").value_or(Vec3());
     auto initial_rot =
         params.arg<Quaternion>("orientation").value_or(Quaternion());

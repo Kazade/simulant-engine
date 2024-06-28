@@ -296,7 +296,7 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
     }
 }
 
-bool Actor::on_create(const ConstructionArgs& params) {
+bool Actor::on_create(const Args& params) {
     auto mesh = params.arg<MeshPtr>("mesh");
     if(!mesh) {
         return false;

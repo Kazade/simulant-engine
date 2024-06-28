@@ -37,7 +37,7 @@ public:
 private:
     StageNode* target_ = nullptr;
 
-    bool on_create(const ConstructionArgs& params) override;
+    bool on_create(const Args& params) override;
 
     bool following_enabled_ = true;
 

@@ -78,7 +78,7 @@ optional<SkyboxImageDict> discover_files_from_directory(const Path& folder) {
     return files;
 }
 
-bool Skybox::on_create(const ConstructionArgs& params) {
+bool Skybox::on_create(const Args& params) {
     auto maybe_dir = params.arg<Path>("source_directory");
 
     if(!maybe_dir) {
@@ -160,7 +160,7 @@ void Skybox::generate(const Path& up, const Path& down, const Path& left,
                     back_path.value_or(Texture::BuiltIns::CHECKERBOARD), tf));
 
     if(!actor_) {
-        actor_ = scene->create_node<Actor>({{{"mesh", mesh_}}});
+        actor_ = scene->create_node<Actor>(Args({"mesh", mesh_}));
         actor_->set_parent(this);
         actor_->transform->set_position(Vec3());
         actor_->set_render_priority(smlt::RENDER_PRIORITY_ABSOLUTE_BACKGROUND);

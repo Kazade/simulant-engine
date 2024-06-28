@@ -104,7 +104,7 @@ public:
     }
 
 private:
-    bool on_create(const ConstructionArgs& params) override;
+    bool on_create(const Args& params) override;
 
     const MeshPtr& find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search

@@ -14,7 +14,7 @@ AudioSource::~AudioSource() {
     assert(is_destroyed());
 }
 
-bool AudioSource::on_create(const ConstructionArgs& params) {
+bool AudioSource::on_create(const Args& params) {
     _S_UNUSED(params);
 
     thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);

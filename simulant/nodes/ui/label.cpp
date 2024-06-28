@@ -7,7 +7,7 @@ namespace ui {
 Label::Label(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_LABEL) {}
 
-bool Label::on_create(const ConstructionArgs& params) {
+bool Label::on_create(const Args& params) {
     if(!Widget::on_create(params)) {
         return false;
     }

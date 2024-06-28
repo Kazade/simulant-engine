@@ -17,7 +17,7 @@ void StaticBody::add_mesh_collider(const MeshPtr& mesh,
                                          rotation);
 }
 
-bool StaticBody::on_create(const ConstructionArgs& params) {
+bool StaticBody::on_create(const Args& params) {
     return PhysicsBody::on_create(params);
 }
 } // namespace smlt

@@ -28,7 +28,8 @@ public:
 
         // Create a nice skybox (not on DC, the image is too big)
         if(get_platform()->name() != "dreamcast") {
-            create_child<Skybox>("sample_data/skyboxes/TropicalSunnyDay");
+            create_child<Skybox>(Args(
+                {"source_directory", "sample_data/skyboxes/TropicalSunnyDay"}));
         }
 
         auto crate = app->shared_assets->load_texture("sample_data/crate.png");
@@ -45,7 +46,7 @@ public:
         ); //window->shared_assets->load_mesh("sample_data/playground.obj");
 
         ground_mesh_ = ground_mesh;
-        ground_ = create_child<smlt::Actor>(ground_mesh_);
+        ground_ = create_child<smlt::Actor>(Args({"mesh", ground_mesh_}));
 
         // Make the ground a staticbody
         auto c = create_child<smlt::StaticBody>();
@@ -56,9 +57,7 @@ public:
     }
 
     void spawn_box() {
-        boxes_.push_back(
-            create_child<smlt::Actor>(box_mesh_)
-        );
+        boxes_.push_back(create_child<smlt::Actor>(Args({"mesh", box_mesh_})));
 
         auto box = boxes_.back();
         auto pos = Vec3(
@@ -67,7 +66,8 @@ public:
             ((float(rand()) / RAND_MAX) * 10.0f) - 5.0f
         );
 
-        auto controller = create_child<smlt::DynamicBody>(pos);
+        auto controller =
+            create_child<smlt::DynamicBody>(Args({"position", pos}));
         controller->add_box_collider(box->aabb().dimensions(), PhysicsMaterial::WOOD);
 
         box->set_parent(controller);

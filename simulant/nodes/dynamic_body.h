@@ -23,7 +23,7 @@ public:
     }
 
 private:
-    bool on_create(const ConstructionArgs& params) override {
+    bool on_create(const Args& params) override {
         return PhysicsBody::on_create(params);
     }
 };

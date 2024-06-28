@@ -113,7 +113,7 @@ public:
     virtual bool on_init() override;
     virtual void on_clean_up() override;
 
-    bool on_create(const ConstructionArgs& params) override;
+    bool on_create(const Args& params) override;
 
     void resize(Rem width, Px height);
     void resize(Px width, Rem height);

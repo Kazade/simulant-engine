@@ -226,7 +226,7 @@ private:
 
     /* Don't allow overriding on_create in subclasses, currently
      * the hook for that is init + load */
-    bool on_create(const ConstructionArgs&) override final {
+    bool on_create(const Args&) override final {
         return true;
     }
 

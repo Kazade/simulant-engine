@@ -9,7 +9,7 @@ namespace ui {
 TextEntry::TextEntry(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY) {}
 
-bool TextEntry::on_create(const ConstructionArgs& params) {
+bool TextEntry::on_create(const Args& params) {
     if(!Widget::on_create(params)) {
         return false;
     }

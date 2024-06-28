@@ -66,7 +66,7 @@ UIManager::~UIManager() {
     }
 }
 
-bool UIManager::on_create(const ConstructionArgs& params) {
+bool UIManager::on_create(const Args& params) {
     config_ = params.arg<UIConfig>("config").value_or(UIConfig());
     return true;
 }

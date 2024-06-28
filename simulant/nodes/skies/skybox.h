@@ -56,7 +56,7 @@ public:
 private:
     friend class SkyManager;
 
-    bool on_create(const ConstructionArgs& params) override;
+    bool on_create(const Args& params) override;
 
     StageNodeID follow_camera_;
 

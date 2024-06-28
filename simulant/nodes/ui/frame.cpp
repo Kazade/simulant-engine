@@ -9,7 +9,7 @@ namespace ui {
 Frame::Frame(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_FRAME) {}
 
-bool Frame::on_create(const ConstructionArgs& params) {
+bool Frame::on_create(const Args& params) {
     if(!Widget::on_create(params)) {
         return false;
     }

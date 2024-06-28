@@ -1028,7 +1028,7 @@ public:
     KeyboardPanel(Scene* owner) :
         Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL) {}
 
-    bool on_create(const ConstructionArgs& params) override {
+    bool on_create(const Args& params) override {
         if(!Widget::on_create(params)) {
             return false;
         }
@@ -1594,7 +1594,7 @@ private:
 Keyboard::Keyboard(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD) {}
 
-bool Keyboard::on_create(const ConstructionArgs& params) {
+bool Keyboard::on_create(const Args& params) {
     if(!Widget::on_create(params)) {
         return false;
     }
@@ -1610,9 +1610,7 @@ bool Keyboard::on_create(const ConstructionArgs& params) {
 
     resize(-1, -1);
 
-    main_frame_ = scene->create_node<Frame>({
-        {"text", ""}
-    });
+    main_frame_ = scene->create_node<Frame>(Args({"text", ""}));
     main_frame_->set_parent(this);
     main_frame_->set_space_between(0);
     main_frame_->set_border_width(0);
@@ -1635,9 +1633,7 @@ bool Keyboard::on_create(const ConstructionArgs& params) {
 
     auto initial_text = params.arg<unicode>("initial_text").value_or("");
 
-    entry_ = scene->create_node<TextEntry>({
-        {"text", initial_text}
-    });
+    entry_ = scene->create_node<TextEntry>(Args({"text", initial_text}));
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
     entry_->set_background_color(smlt::Color::WHITE);
@@ -1653,17 +1649,17 @@ bool Keyboard::on_create(const ConstructionArgs& params) {
     info_row_->set_foreground_color(style_->foreground_color_);
     info_row_->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
 
-    auto x_button = scene->create_node<Label>({
+    auto x_button = scene->create_node<Label>(Args(
         {"text", ""}
-    });
+    ));
     x_button->set_text("X");
     x_button->set_text_color(smlt::Color::WHITE);
     x_button->resize(panel_->key_height(), panel_->key_height());
     x_button->rebuild();
 
-    auto x_label = scene->create_node<Label>({
+    auto x_label = scene->create_node<Label>(Args(
         {"text", ""}
-    });
+    ));
     x_label->set_background_color(smlt::Color::RED);
     x_label->set_text(_T("Cancel"));
     x_label->set_text_color(smlt::Color::WHITE);

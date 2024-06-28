@@ -204,15 +204,15 @@ public:
 
     template<typename T>
     T* create_child() {
-        ConstructionArgs args;
+        Args args;
         return impl::child_factory<decltype(owner_), T>(
-            owner_, this, std::forward<const ConstructionArgs&>(args));
+            owner_, this, std::forward<const Args&>(args));
     }
 
     template<typename T>
-    T* create_child(const ConstructionArgs& args) {
+    T* create_child(const Args& args) {
         return impl::child_factory<decltype(owner_), T>(
-            owner_, this, std::forward<const ConstructionArgs&>(args));
+            owner_, this, std::forward<const Args&>(args));
     }
 
     void adopt_children(StageNode* node) {
@@ -300,7 +300,7 @@ public:
     }
 
 protected:
-    virtual bool on_create(const ConstructionArgs& params) = 0;
+    virtual bool on_create(const Args& params) = 0;
     virtual bool on_destroy() override {
         return true;
     }
@@ -332,7 +332,7 @@ private:
     Transform transform_;
 
     // NVI idiom
-    bool _create(const ConstructionArgs& params) {
+    bool _create(const Args& params) {
         return on_create(params);
     }
 

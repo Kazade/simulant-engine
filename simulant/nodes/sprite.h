@@ -49,7 +49,7 @@ class Sprite:
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SPRITE);
 
-    bool on_create(const ConstructionArgs& params) override;
+    bool on_create(const Args& params) override;
     bool on_destroy() override;
     void on_update(float dt) override;
 

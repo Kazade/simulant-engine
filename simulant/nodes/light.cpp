@@ -71,7 +71,7 @@ void Light::set_attenuation_from_range(float range) {
     quadratic_attenuation_ = 75.0f / (range * range);
 }
 
-bool Light::on_create(const ConstructionArgs& args) {
+bool Light::on_create(const Args& args) {
     set_range(100.0f);
     set_attenuation_from_range(100.0);
 

@@ -86,7 +86,7 @@ public:
     }
 
 private:
-    bool on_create(const ConstructionArgs& params) override;
+    bool on_create(const Args& params) override;
 
     struct EmitterState {
         bool is_active = true;

@@ -42,7 +42,7 @@ public:
     void on_update(float dt) override;
 
 private:
-    bool on_create(const ConstructionArgs& params) override;
+    bool on_create(const Args& params) override;
 
     ProgressBarMode mode_ = PROGRESS_BAR_MODE_FRACTION;
 

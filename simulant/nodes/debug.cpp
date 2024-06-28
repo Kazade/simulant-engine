@@ -152,7 +152,7 @@ void Debug::initialize_actor() {
         return;
     }
 
-    actor_ = scene->create_node<Actor>(ConstructionArgs({_u("mesh"), mesh_}));
+    actor_ = scene->create_node<Actor>(Args({_u("mesh"), mesh_}));
 
     // Important. Debug stuff shouldn't be culled
     actor_->set_cullable(false);
