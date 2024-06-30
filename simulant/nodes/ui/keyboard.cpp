@@ -1622,9 +1622,7 @@ bool Keyboard::on_create(const Params& params) {
      * publically accessible node, or, not be a node */
     scene->register_stage_node<KeyboardPanel>();
 
-    panel_ = scene->create_node<KeyboardPanel>({
-        {"theme", config}
-    });
+    panel_ = scene->create_node<KeyboardPanel>(Params().set("theme", config));
 
     panel_->set_background_color(config.background_color_);
     panel_->set_border_color(config.background_color_);
@@ -1633,7 +1631,7 @@ bool Keyboard::on_create(const Params& params) {
 
     auto initial_text = params.arg<unicode>("initial_text").value_or("");
 
-    entry_ = scene->create_node<TextEntry>(Params({"text", initial_text}));
+    entry_ = scene->create_node<TextEntry>(Params().set("text", initial_text));
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
     entry_->set_background_color(smlt::Color::WHITE);
@@ -1649,13 +1647,13 @@ bool Keyboard::on_create(const Params& params) {
     info_row_->set_foreground_color(style_->foreground_color_);
     info_row_->set_layout_direction(LAYOUT_DIRECTION_LEFT_TO_RIGHT);
 
-    auto x_button = scene->create_node<Label>(Params({"text", ""}));
+    auto x_button = scene->create_node<Label>(Params().set("text", ""));
     x_button->set_text("X");
     x_button->set_text_color(smlt::Color::WHITE);
     x_button->resize(panel_->key_height(), panel_->key_height());
     x_button->rebuild();
 
-    auto x_label = scene->create_node<Label>(Params({"text", ""}));
+    auto x_label = scene->create_node<Label>(Params().set("text", ""));
     x_label->set_background_color(smlt::Color::RED);
     x_label->set_text(_T("Cancel"));
     x_label->set_text_color(smlt::Color::WHITE);

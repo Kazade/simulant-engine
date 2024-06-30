@@ -59,24 +59,24 @@ bool StatsPanel::on_init() {
     fps_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    frame_time_ = create_child<ui::Label>("Frame Time: 0ms", label_width));
+    frame_time_ = create_child<ui::Label>("Frame Time: 0ms", label_width);
     frame_time_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    ram_usage_ = create_child<ui::Label>("RAM Used: 0", label_width));
+    ram_usage_ = create_child<ui::Label>("RAM Used: 0", label_width);
 
     ram_usage_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    vram_usage_ = create_child<ui::Label>("VRAM Used: 0", label_width));
+    vram_usage_ = create_child<ui::Label>("VRAM Used: 0", label_width);
     vram_usage_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    actors_rendered_ = create_child<ui::Label>("Renderables visible: 0", label_width));
+    actors_rendered_ = create_child<ui::Label>("Renderables visible: 0", label_width);
     actors_rendered_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    polygons_rendered_ = create_child<ui::Label>("Polygons Rendered: 0", label_width));
+    polygons_rendered_ = create_child<ui::Label>("Polygons Rendered: 0", label_width);
     polygons_rendered_->transform->set_position_2d(Vec2(hw, vheight));
 
     graph_material_ =

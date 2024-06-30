@@ -82,6 +82,17 @@ public:
         return (T*)create_node(T::Meta::node_type, args);
     }
 
+    template<typename T, typename... Args>
+    T* create_node(Args&&... args) {
+        Params params;
+
+        auto node_params = get_node_params<T>();
+        auto it = node_params.begin();
+        unpack(params, it, node_params.end(), args...);
+
+        return (T*)create_node(T::Meta::node_type, params);
+    }
+
     bool register_stage_node(StageNodeType type, std::size_t size_in_bytes,
                              std::size_t alignment,
                              StageNodeConstructFunction construct_func,

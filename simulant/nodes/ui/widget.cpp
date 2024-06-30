@@ -89,21 +89,17 @@ void Widget::on_clean_up() {
 }
 
 bool Widget::on_create(const Params& params) {
-    uint32_t* check = (uint32_t*)params;
-    if(*check != 0xDEADBEEF) {
-        S_ERROR("Widget params type codes not subclass WidgetParams");
-        return false;
-    }
+    auto shared_style = params.arg<WidgetStylePtr>("shared_style");
+    auto theme = params.arg<UIConfig>("theme").value_or(UIConfig());
 
-    WidgetParams* args = (WidgetParams*)params;
-    if(!args->shared_style) {
+    if(!shared_style) {
         style_ = std::make_shared<WidgetStyle>();
 
-        set_foreground_color(args->theme.foreground_color_);
-        set_background_color(args->theme.background_color_);
-        set_text_color(args->theme.text_color_);
+        set_foreground_color(theme.foreground_color_);
+        set_background_color(theme.background_color_);
+        set_text_color(theme.text_color_);
     } else {
-        style_ = args->shared_style;
+        style_ = shared_style.value();
     }
 
     VertexSpecification spec = VertexSpecification::DEFAULT;
@@ -135,13 +131,12 @@ bool Widget::on_create(const Params& params) {
                           style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND],
                           MESH_ARRANGEMENT_TRIANGLE_STRIP);
 
-    std::string family = (args->theme.font_family_.empty())
+    std::string family = (theme.font_family_.empty())
                              ? get_app()->config->ui.font_family
-                             : args->theme.font_family_;
+                             : theme.font_family_;
 
-    Px size = (args->theme.font_size_ == Px(0))
-                  ? Px(get_app()->config->ui.font_size)
-                  : Px(args->theme.font_size_);
+    Px size = (theme.font_size_ == Px(0)) ? Px(get_app()->config->ui.font_size)
+                                          : Px(theme.font_size_);
 
     auto font =
         load_or_get_font(family, size, FONT_WEIGHT_NORMAL, FONT_STYLE_NORMAL);

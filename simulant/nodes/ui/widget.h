@@ -7,6 +7,16 @@
 #include "../stage_node.h"
 #include "ui_config.h"
 
+#define S_DEFINE_CORE_WIDGET_PROPERTIES()                                      \
+    S_DEFINE_STAGE_NODE_PARAM("width", int, -1, "The width of the widget");    \
+    S_DEFINE_STAGE_NODE_PARAM("height", int, -1, "The height of the widget");  \
+    S_DEFINE_STAGE_NODE_PARAM("theme", smlt::ui::UIConfig,                     \
+                              smlt::ui::UIConfig(),                            \
+                              "The theme to use for this widget");             \
+    S_DEFINE_STAGE_NODE_PARAM("shared_style", smlt::ui::WidgetStylePtr,        \
+                              smlt::ui::WidgetStylePtr(),                      \
+                              "A shared style to use for this widget")
+
 namespace smlt {
 namespace ui {
 
@@ -79,14 +89,6 @@ typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
  * fixed size has been specified and then this would be the requested size
  * without padding or border
  */
-
-#define S_DEFINE_CORE_WIDGET_PROPERTIES()                                      \
-    S_DEFINE_STAGE_NODE_PARAM("width", int, -1, "The width of the widget");    \
-    S_DEFINE_STAGE_NODE_PARAM("height", int, -1, "The height of the widget");  \
-    S_DEFINE_STAGE_NODE_PARAM("theme", UIConfig, UIConfig(),                   \
-                              "The theme to use for this widget");             \
-    S_DEFINE_STAGE_NODE_PARAM("shared_style", WidgetStylePtr, nullptr,         \
-                              "A shared style to use for this widget")
 
 class Widget:
     public ContainerNode,

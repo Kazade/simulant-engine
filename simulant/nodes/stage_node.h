@@ -22,7 +22,6 @@
 #include "builtins.h"
 #include "simulant/generic/any/any.h"
 #include "simulant/generic/managed.h"
-#include "simulant/nodes/stage_node_manager.h"
 #include "simulant/utils/construction_args.h"
 
 namespace smlt {
@@ -30,6 +29,12 @@ namespace smlt {
 class RenderableFactory;
 class Seconds;
 class Scene;
+
+namespace ui {
+struct UIConfig;
+struct WidgetStyle;
+typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
+} // namespace ui
 
 typedef sig::signal<void(AABB)> BoundsUpdatedSignal;
 typedef sig::signal<void()> CleanedUpSignal;
@@ -91,6 +96,10 @@ enum NodeParamType {
     NODE_PARAM_TYPE_UNICODE,
     NODE_PARAM_TYPE_MESH_PTR,
     NODE_PARAM_TYPE_TEXTURE_PTR,
+    // FIXME: Ideally these wouldn't exist and instead
+    // widgets would take base types as arguments
+    NODE_PARAM_TYPE_UI_CONFIG,
+    NODE_PARAM_TYPE_WIDGET_STYLE_PTR,
 };
 
 template<typename T>
@@ -134,6 +143,16 @@ struct type_to_node_param_type<MeshPtr> {
 template<>
 struct type_to_node_param_type<TexturePtr> {
     static const NodeParamType value = NODE_PARAM_TYPE_TEXTURE_PTR;
+};
+
+template<>
+struct type_to_node_param_type<ui::UIConfig> {
+    static const NodeParamType value = NODE_PARAM_TYPE_UI_CONFIG;
+};
+
+template<>
+struct type_to_node_param_type<ui::WidgetStylePtr> {
+    static const NodeParamType value = NODE_PARAM_TYPE_WIDGET_STYLE_PTR;
 };
 
 template<NodeParamType T>
@@ -275,9 +294,19 @@ private:
 #define _S_GEN_PARAM(param, line) __S_GEN_PARAM(param, line)
 
 #define S_DEFINE_STAGE_NODE_PARAM(name, type, fallback, desc)                  \
-    static_assert(!has_spaces(name));                                          \
-    TypedNodeParam<type> _S_GEN_PARAM(param_, __LINE__) = {                    \
-        __LINE__, name, fallback, desc, this}
+    static_assert(!has_spaces(name), "Param name must not have spaces");       \
+    TypedNodeParam<type> _S_GEN_PARAM(param_, __COUNTER__) = {                 \
+        __COUNTER__, name, fallback, desc, this}
+
+template<typename T>
+void unpack(Params& params, std::set<NodeParam>::iterator it,
+            std::set<NodeParam>::iterator end, T x) {
+    if(it == end) {
+        return;
+    }
+
+    params.set(it->name(), x);
+}
 
 template<typename T, typename... Args>
 void unpack(Params& params, std::set<NodeParam>::iterator it,
