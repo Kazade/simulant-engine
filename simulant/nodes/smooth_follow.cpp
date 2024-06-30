@@ -82,7 +82,7 @@ void SmoothFollow::set_following_enabled(bool v) {
     following_enabled_ = v;
 }
 
-bool SmoothFollow::on_create(const Args& params) {
+bool SmoothFollow::on_create(const Params& params) {
     set_target(params.arg<StageNodePtr>("target").value_or(nullptr));
     return true;
 }

@@ -20,6 +20,7 @@
 #include "iterators/sibling_iterator.h"
 
 #include "builtins.h"
+#include "simulant/generic/any/any.h"
 #include "simulant/generic/managed.h"
 #include "simulant/nodes/stage_node_manager.h"
 #include "simulant/utils/construction_args.h"
@@ -78,6 +79,217 @@ template<typename F, typename T, typename... Args>
 T* mixin_factory(F& factory, StageNode* base, Args&&... args);
 
 } // namespace impl
+
+enum NodeParamType {
+    NODE_PARAM_TYPE_FLOAT,
+    NODE_PARAM_TYPE_VEC2,
+    NODE_PARAM_TYPE_VEC3,
+    NODE_PARAM_TYPE_VEC4,
+    NODE_PARAM_TYPE_INT,
+    NODE_PARAM_TYPE_BOOL,
+    NODE_PARAM_TYPE_STRING,
+    NODE_PARAM_TYPE_UNICODE,
+    NODE_PARAM_TYPE_MESH_PTR,
+    NODE_PARAM_TYPE_TEXTURE_PTR,
+};
+
+template<typename T>
+struct type_to_node_param_type;
+
+template<>
+struct type_to_node_param_type<float> {
+    static const NodeParamType value = NODE_PARAM_TYPE_FLOAT;
+};
+
+template<>
+struct type_to_node_param_type<int> {
+    static const NodeParamType value = NODE_PARAM_TYPE_INT;
+};
+
+template<>
+struct type_to_node_param_type<Vec2> {
+    static const NodeParamType value = NODE_PARAM_TYPE_VEC2;
+};
+
+template<>
+struct type_to_node_param_type<Vec3> {
+    static const NodeParamType value = NODE_PARAM_TYPE_VEC3;
+};
+
+template<>
+struct type_to_node_param_type<Vec4> {
+    static const NodeParamType value = NODE_PARAM_TYPE_VEC4;
+};
+
+template<>
+struct type_to_node_param_type<unicode> {
+    static const NodeParamType value = NODE_PARAM_TYPE_UNICODE;
+};
+
+template<>
+struct type_to_node_param_type<MeshPtr> {
+    static const NodeParamType value = NODE_PARAM_TYPE_MESH_PTR;
+};
+
+template<>
+struct type_to_node_param_type<TexturePtr> {
+    static const NodeParamType value = NODE_PARAM_TYPE_TEXTURE_PTR;
+};
+
+template<NodeParamType T>
+struct node_param_type_to_type;
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_FLOAT> {
+    typedef float type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_VEC2> {
+    typedef Vec2 type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_VEC3> {
+    typedef Vec3 type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_VEC4> {
+    typedef Vec4 type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_INT> {
+    typedef int type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_BOOL> {
+    typedef bool type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_STRING> {
+    typedef std::string type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_MESH_PTR> {
+    typedef MeshPtr type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_TEXTURE_PTR> {
+    typedef TexturePtr type;
+};
+
+constexpr bool has_spaces(const char* s) {
+    return *s && (*s == ' ' || has_spaces(s + 1));
+}
+
+class NodeParam {
+public:
+    NodeParam(int order, const char* name, NodeParamType type,
+              smlt::any default_value, const char* desc) :
+        order_(order),
+        name_(name),
+        type_(type),
+        default_value_(default_value),
+        desc_(desc) {}
+
+    bool operator<(const NodeParam& rhs) const {
+        return order_ < rhs.order_;
+    }
+
+    const char* name() const {
+        return name_;
+    }
+
+    NodeParamType type() const {
+        return type_;
+    }
+
+    const char* description() const {
+        return desc_;
+    }
+
+    template<typename T>
+    T default_value() const {
+        return any_cast<T>(default_value_);
+    }
+
+private:
+    int order_;
+    const char* name_;
+    NodeParamType type_;
+    any default_value_;
+    const char* desc_;
+};
+
+template<typename T>
+std::set<NodeParam>& get_node_params() {
+    static std::set<NodeParam> properties;
+    return properties;
+}
+
+template<typename T>
+any to_any(const smlt::optional<T>& fallback) {
+    return (fallback) ? any() : fallback.value();
+}
+
+template<typename T>
+class TypedNodeParam {
+public:
+    typedef T type;
+
+    template<typename U>
+    TypedNodeParam(int order, const char* name,
+                   const smlt::optional<T>& fallback, const char* desc,
+                   const U*) :
+        param_(NodeParam(order, name, type_to_node_param_type<T>::value,
+                         to_any(fallback), desc)) {
+
+        get_node_params<U>().insert(param_);
+    }
+
+    const NodeParam& param() const {
+        return param_;
+    }
+
+private:
+    NodeParam param_;
+};
+
+/**
+    Defines a new parameter for a stage node:
+
+    - name: this is the name of the parameter, it should be a valid variable
+            name, ideally in snake-case format.
+    - type: this is the type of the parameter, e.g. float, int, TexturePtr etc.
+    - fallback: if provided this will be the default value for the parameter, if
+                the parameter is required, you should pass no_value
+    - desc: A short description < 64 chars
+*/
+#define __S_GEN_PARAM(param, line) param##line
+#define _S_GEN_PARAM(param, line) __S_GEN_PARAM(param, line)
+
+#define S_DEFINE_STAGE_NODE_PARAM(name, type, fallback, desc)                  \
+    static_assert(!has_spaces(name));                                          \
+    TypedNodeParam<type> _S_GEN_PARAM(param_, __LINE__) = {                    \
+        __LINE__, name, fallback, desc, this}
+
+template<typename T, typename... Args>
+void unpack(Params& params, std::set<NodeParam>::iterator it,
+            std::set<NodeParam>::iterator end, T x, Args... args) {
+    if(it == end) {
+        return;
+    }
+
+    params.set(it->name(), x);
+
+    unpack(params, ++it, end, args...);
+}
 
 class StageNode:
     public generic::Identifiable<StageNodeID>,
@@ -202,25 +414,37 @@ public:
         StageNode* new_parent,
         TransformRetainMode transform_retain = TRANSFORM_RETAIN_MODE_LOSE);
 
-    template<typename T>
-    T* create_child() {
-        Args args;
+    template<typename T, typename... Args>
+    T* create_child(Args&&... args) {
+        Params params;
+
+        auto node_params = get_node_params<T>();
+        auto it = node_params.begin();
+        unpack(params, it, node_params.end(), args...);
+
         return impl::child_factory<decltype(owner_), T>(
-            owner_, this, std::forward<const Args&>(args));
+            owner_, this, std::forward<const Params&>(params));
     }
 
     template<typename T>
-    T* create_child(const Args& args) {
+    T* create_child() {
+        Params args;
         return impl::child_factory<decltype(owner_), T>(
-            owner_, this, std::forward<const Args&>(args));
+            owner_, this, std::forward<const Params&>(args));
+    }
+
+    template<typename T>
+    T* create_child(const Params& args) {
+        return impl::child_factory<decltype(owner_), T>(
+            owner_, this, std::forward<const Params&>(args));
     }
 
     void adopt_children(StageNode* node) {
         node->set_parent(this);
     }
 
-    template<typename... Args>
-    void adopt_children(StageNode* node, Args... args) {
+    template<typename... Params>
+    void adopt_children(StageNode* node, Params... args) {
         node->set_parent(this);
         adopt_children(args...);
     }
@@ -300,7 +524,7 @@ public:
     }
 
 protected:
-    virtual bool on_create(const Args& params) = 0;
+    virtual bool on_create(const Params& params) = 0;
     virtual bool on_destroy() override {
         return true;
     }
@@ -332,7 +556,7 @@ private:
     Transform transform_;
 
     // NVI idiom
-    bool _create(const Args& params) {
+    bool _create(const Params& params) {
         return on_create(params);
     }
 

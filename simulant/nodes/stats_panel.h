@@ -65,7 +65,7 @@ private:
     bool first_update_ = true;
     float last_update_ = 0.0f;
 
-    bool on_create(const Args& params) override {
+    bool on_create(const Params& params) override {
         _S_UNUSED(params);
         return true;
     }

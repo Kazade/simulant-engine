@@ -80,18 +80,13 @@ typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
  * without padding or border
  */
 
-struct WidgetParams {
-    /* We need to ensure that all subclass params objects inherit this one, but
-     * because we pass void* we can't dynamic cast to check. So we ensure that
-     * the first 4-bytes matches this. See on_create() for more. */
-    uint32_t magic_check = 0xDEADBEEF;
-
-    UIConfig theme;
-    WidgetStylePtr shared_style;
-
-    WidgetParams(const UIConfig& theme, const WidgetStylePtr& shared_style) :
-        theme(theme), shared_style(shared_style) {}
-};
+#define S_DEFINE_CORE_WIDGET_PROPERTIES()                                      \
+    S_DEFINE_STAGE_NODE_PARAM("width", int, -1, "The width of the widget");    \
+    S_DEFINE_STAGE_NODE_PARAM("height", int, -1, "The height of the widget");  \
+    S_DEFINE_STAGE_NODE_PARAM("theme", UIConfig, UIConfig(),                   \
+                              "The theme to use for this widget");             \
+    S_DEFINE_STAGE_NODE_PARAM("shared_style", WidgetStylePtr, nullptr,         \
+                              "A shared style to use for this widget")
 
 class Widget:
     public ContainerNode,
@@ -113,7 +108,7 @@ public:
     virtual bool on_init() override;
     virtual void on_clean_up() override;
 
-    bool on_create(const Args& params) override;
+    bool on_create(const Params& params) override;
 
     void resize(Rem width, Px height);
     void resize(Px width, Rem height);

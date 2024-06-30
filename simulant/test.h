@@ -71,15 +71,15 @@ public:
         return _do_format(count.c, ss.str());
     }
 
-    template<typename T, typename... Args>
-    std::string format(T value, const Args&... args) {
+    template<typename T, typename... Params>
+    std::string format(T value, const Params&... args) {
         std::stringstream ss;
         ss << value;
         return StringFormatter(_do_format(0, ss.str())).format(Counter(1), args...);
     }
 
-    template<typename T, typename... Args>
-    std::string format(Counter count, T value, const Args&... args) {
+    template<typename T, typename... Params>
+    std::string format(Counter count, T value, const Params&... args) {
         std::stringstream ss;
         ss << value;
         return StringFormatter(_do_format(count.c, ss.str())).format(Counter(count.c + 1), args...);

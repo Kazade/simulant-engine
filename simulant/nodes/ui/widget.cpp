@@ -88,7 +88,7 @@ void Widget::on_clean_up() {
     force_release();
 }
 
-bool Widget::on_create(const Args& params) {
+bool Widget::on_create(const Params& params) {
     uint32_t* check = (uint32_t*)params;
     if(*check != 0xDEADBEEF) {
         S_ERROR("Widget params type codes not subclass WidgetParams");
@@ -113,7 +113,7 @@ bool Widget::on_create(const Args& params) {
     spec.texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
 
     mesh_ = scene->assets->create_mesh(spec);
-    actor_ = scene->create_node<Actor>(Args({"mesh", mesh_}));
+    actor_ = scene->create_node<Actor>(mesh_);
     actor_->set_parent(this);
 
     /* Use the global materials until we can't anymore! */

@@ -6,6 +6,10 @@
 
 namespace smlt {
 
+enum OptionalInit {
+    no_value = 0,
+};
+
 /* When all compilers support the true optional class we can delete this. This exists largely for compatibility
  * with old GCC for the Dreamcast port */
 
@@ -13,6 +17,9 @@ template<typename T>
 class optional {
 public:
     optional() = default;
+
+    optional(OptionalInit) :
+        optional() {}
 
     ~optional() {
         reset();
@@ -98,6 +105,11 @@ public:
     T& operator*() {
         assert(has_value());
         return *value_ptr();
+    }
+
+    optional& operator=(const OptionalInit&) {
+        reset();
+        return *this;
     }
 
 private:

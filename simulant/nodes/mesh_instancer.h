@@ -93,7 +93,7 @@ private:
 
     void recalc_aabb();
 
-    bool on_create(const Args& params) override;
+    bool on_create(const Params& params) override;
 
     void on_transformation_changed() override;
 

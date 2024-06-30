@@ -32,7 +32,7 @@ public:
 
     bool set_resize_mode(ResizeMode resize_mode) override;
 
-    bool on_create(const Args& params) override;
+    bool on_create(const Params& params) override;
 };
 
 } // namespace ui

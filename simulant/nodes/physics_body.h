@@ -129,7 +129,7 @@ protected:
     void clear_simulation_cache();
     PhysicsService* get_simulation() const;
 
-    bool on_create(const Args& params) override;
+    bool on_create(const Params& params) override;
     bool on_destroy() override;
 
     void on_transformation_changed() override;

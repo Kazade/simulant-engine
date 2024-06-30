@@ -16,10 +16,10 @@ namespace smlt {
 
 typedef std::vector<LimitedString<32>> ConstructionArgNames;
 
-class Args {
+class Params {
 public:
-    Args() = default;
-    Args(const std::initializer_list<smlt::any>& params) {
+    Params() = default;
+    Params(const std::initializer_list<smlt::any>& params) {
         int i = 0;
         std::string key;
         bool skip = false;
@@ -61,7 +61,7 @@ public:
     ConstructionArgNames arg_names() const;
 
     template<typename T>
-    Args set(const char* name, T value) {
+    Params set(const char* name, T value) {
         auto ret = *this;
         ret.set_arg(name, value);
         return ret;

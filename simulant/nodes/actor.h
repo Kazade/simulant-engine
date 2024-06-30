@@ -54,6 +54,8 @@ class Actor:
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_ACTOR);
+    S_DEFINE_STAGE_NODE_PARAM("mesh", MeshPtr, no_value,
+                              "The base mesh associated with this actor");
 
     Actor(Scene* owner);
     virtual ~Actor();
@@ -104,7 +106,7 @@ public:
     }
 
 private:
-    bool on_create(const Args& params) override;
+    bool on_create(const Params& params) override;
 
     const MeshPtr& find_mesh(DetailLevel level) const {
         /* Find the most suitable mesh at the specified level. This will search

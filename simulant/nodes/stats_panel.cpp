@@ -51,40 +51,32 @@ bool StatsPanel::on_init() {
     const float diff = 32;
     float vheight = scene->window->height() - diff;
 
-    auto heading1 = create_child<ui::Label>(
-        Args({"text", "performance", "width", label_width}));
+    auto heading1 = create_child<ui::Label>("performance", label_width);
     heading1->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    fps_ =
-        create_child<ui::Label>(Args({"text", "FPS: 0", "width", label_width}));
+    fps_ = create_child<ui::Label>("FPS: 0", label_width);
     fps_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    frame_time_ = create_child<ui::Label>(Args(
-        {"text", "Frame Time: 0ms", "width", label_width}
-    ));
+    frame_time_ = create_child<ui::Label>("Frame Time: 0ms", label_width));
     frame_time_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    ram_usage_ = create_child<ui::Label>(
-        Args({"text", "RAM Used: 0", "width", label_width}));
+    ram_usage_ = create_child<ui::Label>("RAM Used: 0", label_width));
 
     ram_usage_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    vram_usage_ = create_child<ui::Label>(
-        Args({"text", "VRAM Used: 0", "width", label_width}));
+    vram_usage_ = create_child<ui::Label>("VRAM Used: 0", label_width));
     vram_usage_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    actors_rendered_ = create_child<ui::Label>(
-        Args({"text", "Renderables visible: 0", "width", label_width}));
+    actors_rendered_ = create_child<ui::Label>("Renderables visible: 0", label_width));
     actors_rendered_->transform->set_position_2d(Vec2(hw, vheight));
     vheight -= diff;
 
-    polygons_rendered_ = create_child<ui::Label>(
-        Args({"text", "Polygons Rendered: 0", "width", label_width}));
+    polygons_rendered_ = create_child<ui::Label>("Polygons Rendered: 0", label_width));
     polygons_rendered_->transform->set_position_2d(Vec2(hw, vheight));
 
     graph_material_ =
@@ -94,11 +86,11 @@ bool StatsPanel::on_init() {
     graph_material_->set_cull_mode(CULL_MODE_NONE);
     ram_graph_mesh_ =
         scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
-    ram_graph_ = create_child<Actor>(Args({"mesh", ram_graph_mesh_}));
+    ram_graph_ = create_child<Actor>(ram_graph_mesh_);
     ram_graph_->set_cullable(false);
 
-    low_mem_ = create_child<ui::Label>(Args({"text", "0M"}));
-    high_mem_ = create_child<ui::Label>(Args({"text", "0M"}));
+    low_mem_ = create_child<ui::Label>("0M");
+    high_mem_ = create_child<ui::Label>("0M");
 
     frame_started_ = get_app()->signal_frame_started().connect(
         std::bind(&StatsPanel::update_stats, this));

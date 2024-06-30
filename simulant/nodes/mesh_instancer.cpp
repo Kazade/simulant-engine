@@ -93,7 +93,7 @@ void MeshInstancer::recalc_aabb() {
     std::swap(aabb_, new_aabb);
 }
 
-bool MeshInstancer::on_create(const Args& params) {
+bool MeshInstancer::on_create(const Params& params) {
     set_mesh(params.arg<MeshPtr>("mesh").value_or(MeshPtr()));
     return true;
 }

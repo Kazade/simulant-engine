@@ -39,7 +39,7 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
 StageNodeManager::~StageNodeManager() {}
 
 StageNode* StageNodeManager::create_node(StageNodeType type,
-                                         const Args& params) {
+                                         const Params& params) {
     auto info = registered_nodes_.find(type);
     if(info == registered_nodes_.end()) {
         S_ERROR("Unable to find registered node: {0}", type);

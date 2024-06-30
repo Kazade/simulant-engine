@@ -44,7 +44,7 @@ public:
     }
 
 private:
-    bool on_create(const Args& params) override {
+    bool on_create(const Params& params) override {
         _S_UNUSED(params);
         return true;
     }

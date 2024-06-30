@@ -33,7 +33,7 @@ Sprite::Sprite(Scene* owner) :
     sprite_sheet_padding_ = std::make_pair(0, 0);
 }
 
-bool Sprite::on_create(const Args& params) {
+bool Sprite::on_create(const Params& params) {
     _S_UNUSED(params);
 
     mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
@@ -43,7 +43,7 @@ bool Sprite::on_create(const Args& params) {
     // Annoyingly, we can't use new_actor_with_parent_and_mesh here, because
     // that looks up our ID in the stage, which doesn't exist until this
     // function returns
-    actor_ = scene->create_node<Actor>(Args().set("mesh", mesh_));
+    actor_ = scene->create_node<Actor>(Params().set("mesh", mesh_));
     actor_->set_parent(this);
 
     set_render_dimensions(1.0f, 1.0f);

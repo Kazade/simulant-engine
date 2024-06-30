@@ -26,7 +26,7 @@ private:
     StageNode* target_ = nullptr;
     Vec3 forward_;
 
-    bool on_create(const Args& params) override {
+    bool on_create(const Params& params) override {
         forward_ = params.arg<Vec3>("forward").value_or(Vec3::FORWARD);
         return true;
     }
