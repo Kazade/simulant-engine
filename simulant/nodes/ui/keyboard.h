@@ -90,7 +90,7 @@ public:
     }
 
 private:
-    bool on_create(const Params& params) override;
+    bool on_create(Params params) override;
     void on_transformation_change_attempted() override;
 
     UIDim calculate_content_dimensions(Px text_width, Px text_height) override;

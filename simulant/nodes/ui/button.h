@@ -14,7 +14,7 @@ public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_BUTTON);
 
     Button(Scene* owner);
-    bool on_create(const Params& params) override;
+    bool on_create(Params params) override;
 };
 
 } // namespace ui

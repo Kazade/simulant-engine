@@ -27,7 +27,7 @@ public:
     }
 
 private:
-    bool on_create(const Params& params) override;
+    bool on_create(Params params) override;
 };
 
 } // namespace smlt

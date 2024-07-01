@@ -226,7 +226,7 @@ private:
 
     /* Don't allow overriding on_create in subclasses, currently
      * the hook for that is init + load */
-    bool on_create(const Params&) override final {
+    bool on_create(Params) override final {
         return true;
     }
 

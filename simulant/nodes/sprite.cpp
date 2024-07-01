@@ -33,7 +33,7 @@ Sprite::Sprite(Scene* owner) :
     sprite_sheet_padding_ = std::make_pair(0, 0);
 }
 
-bool Sprite::on_create(const Params& params) {
+bool Sprite::on_create(Params params) {
     _S_UNUSED(params);
 
     mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);

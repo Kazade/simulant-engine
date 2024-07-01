@@ -49,7 +49,7 @@ private:
 
     virtual bool pre_set_text(const unicode&) override;
 
-    bool on_create(const Params& params) override;
+    bool on_create(Params params) override;
 };
 
 } // namespace ui

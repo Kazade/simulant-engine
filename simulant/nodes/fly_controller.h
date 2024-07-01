@@ -32,7 +32,7 @@ public:
     }
 
 private:
-    bool on_create(const Params& params) override {
+    bool on_create(Params params) override {
         set_speed(params.arg<float>("speed").value_or(600.0f));
         return true;
     }

@@ -125,7 +125,7 @@ void ProgressBar::on_update(float dt) {
     refresh_bar(dt);
 }
 
-bool ProgressBar::on_create(const Params& params) {
+bool ProgressBar::on_create(Params params) {
     if(!Widget::on_create(params)) {
         return true;
     }

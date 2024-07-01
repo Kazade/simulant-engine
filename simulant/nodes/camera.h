@@ -69,7 +69,7 @@ public:
     float set_orthographic_projection_from_height(float desired_height_in_units,
                                                   float ratio);
 
-    bool on_create(const Params& params) override {
+    bool on_create(Params params) override {
         _S_UNUSED(params);
         return true;
     }

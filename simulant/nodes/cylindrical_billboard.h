@@ -9,6 +9,8 @@ class CylindricalBillboard: public StageNode {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD);
+    S_DEFINE_STAGE_NODE_PARAM(CylindricalBillboard, "forward", Vec3::FORWARD,
+                              "The forward direction of the billboard");
 
     CylindricalBillboard(Scene* owner) :
         StageNode(owner, STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD) {}
@@ -26,7 +28,11 @@ private:
     StageNode* target_ = nullptr;
     Vec3 forward_;
 
-    bool on_create(const Params& params) override {
+    bool on_create(Params params) override {
+        if(!clean_params<CylindricalBillboard>(params)) {
+            return false;
+        }
+
         forward_ = params.arg<Vec3>("forward").value_or(Vec3::FORWARD);
         return true;
     }

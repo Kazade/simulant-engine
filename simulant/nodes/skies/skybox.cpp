@@ -78,7 +78,7 @@ optional<SkyboxImageDict> discover_files_from_directory(const Path& folder) {
     return files;
 }
 
-bool Skybox::on_create(const Params& params) {
+bool Skybox::on_create(Params params) {
     auto maybe_dir = params.arg<Path>("source_directory");
 
     if(!maybe_dir) {

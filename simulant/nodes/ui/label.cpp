@@ -7,7 +7,7 @@ namespace ui {
 Label::Label(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_LABEL) {}
 
-bool Label::on_create(const Params& params) {
+bool Label::on_create(Params params) {
     if(!Widget::on_create(params)) {
         return false;
     }
@@ -26,8 +26,8 @@ bool Label::on_create(const Params& params) {
         auto txt = params.arg<unicode>("text").value_or(unicode());
         set_text(txt);
 
-        auto width = params.arg<Px>("width").value_or(Px(-1));
-        auto height = params.arg<Px>("height").value_or(Px(-1));
+        auto width = params.arg<int>("width").value_or(-1);
+        auto height = params.arg<int>("height").value_or(-1);
         resize(width, height);
     }
 

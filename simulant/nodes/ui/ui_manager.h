@@ -64,7 +64,7 @@ public:
 private:
     UIConfig config_;
 
-    bool on_create(const Params& params) override;
+    bool on_create(Params params) override;
 
     void on_mouse_down(const MouseEvent& evt) override;
     void on_mouse_up(const MouseEvent& evt) override;

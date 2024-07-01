@@ -23,7 +23,7 @@ public:
     }
 
 private:
-    bool on_create(const Params& params) override {
+    bool on_create(Params params) override {
         forward_ = params.arg<Vec3>("forward").value_or(Vec3::FORWARD);
         return true;
     }

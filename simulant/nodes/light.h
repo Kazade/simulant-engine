@@ -114,7 +114,7 @@ public:
     }
 
 protected:
-    bool on_create(const Params& params) override;
+    bool on_create(Params params) override;
 
 private:
     LightType type_;
@@ -137,7 +137,7 @@ public:
         Light(owner, STAGE_NODE_TYPE_POINT_LIGHT) {}
 
 private:
-    bool on_create(const Params& params) override {
+    bool on_create(Params params) override {
         if(!Light::on_create(params)) {
             return false;
         }
@@ -155,7 +155,7 @@ public:
     DirectionalLight(Scene* owner) :
         Light(owner, STAGE_NODE_TYPE_DIRECTIONAL_LIGHT) {}
 
-    bool on_create(const Params& params) override {
+    bool on_create(Params params) override {
         if(!Light::on_create(params)) {
             return false;
         }

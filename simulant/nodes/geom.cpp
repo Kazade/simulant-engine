@@ -29,7 +29,7 @@ namespace smlt {
 Geom::Geom(Scene* owner) :
     StageNode(owner, STAGE_NODE_TYPE_GEOM) {}
 
-bool Geom::on_create(const Params& params) {
+bool Geom::on_create(Params params) {
     auto mesh_ptr = params.arg<MeshPtr>("mesh").value_or(MeshPtr());
     assert(mesh_ptr);
 

@@ -47,7 +47,7 @@ protected:
     SoundDriver* _sound_driver() const;
 
 public:
-    bool on_create(const Params& params) override;
+    bool on_create(Params params) override;
     bool on_destroy() override;
 
     Scene* scene_ = nullptr;

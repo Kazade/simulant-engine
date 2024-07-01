@@ -39,7 +39,7 @@ public:
     }
 
 private:
-    bool on_create(const Params&) override {
+    bool on_create(Params) override {
         return true;
     }
 

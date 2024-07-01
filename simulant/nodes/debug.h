@@ -94,7 +94,7 @@ private:
 
     sig::Connection frame_finished_connection_;
 
-    bool on_create(const Params& params) override {
+    bool on_create(Params params) override {
         _S_UNUSED(params);
         return true;
     }

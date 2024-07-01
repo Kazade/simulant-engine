@@ -87,8 +87,7 @@ public:
         Params params;
 
         auto node_params = get_node_params<T>();
-        auto it = node_params.begin();
-        unpack(params, it, node_params.end(), args...);
+        params_unpack(params, node_params.begin(), node_params.end(), args...);
 
         return (T*)create_node(T::Meta::node_type, params);
     }

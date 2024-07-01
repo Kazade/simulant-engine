@@ -233,9 +233,8 @@ public:
         return desc_;
     }
 
-    template<typename T>
-    T default_value() const {
-        return any_cast<T>(default_value_);
+    any default_value() const {
+        return default_value_;
     }
 
 private:
@@ -254,22 +253,20 @@ std::set<NodeParam>& get_node_params() {
 
 template<typename T>
 any to_any(const smlt::optional<T>& fallback) {
-    return (fallback) ? any() : fallback.value();
+    return (fallback) ? fallback.value() : any();
 }
 
-template<typename T>
+template<typename T, typename C>
 class TypedNodeParam {
 public:
     typedef T type;
 
-    template<typename U>
     TypedNodeParam(int order, const char* name,
-                   const smlt::optional<T>& fallback, const char* desc,
-                   const U*) :
+                   const smlt::optional<T>& fallback, const char* desc) :
         param_(NodeParam(order, name, type_to_node_param_type<T>::value,
                          to_any(fallback), desc)) {
 
-        get_node_params<U>().insert(param_);
+        get_node_params<C>().insert(param_);
     }
 
     const NodeParam& param() const {
@@ -293,31 +290,53 @@ private:
 #define __S_GEN_PARAM(param, line) param##line
 #define _S_GEN_PARAM(param, line) __S_GEN_PARAM(param, line)
 
-#define S_DEFINE_STAGE_NODE_PARAM(name, type, fallback, desc)                  \
+#define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc)           \
     static_assert(!has_spaces(name), "Param name must not have spaces");       \
-    TypedNodeParam<type> _S_GEN_PARAM(param_, __COUNTER__) = {                 \
-        __COUNTER__, name, fallback, desc, this}
+    static inline TypedNodeParam<type, klass> _S_GEN_PARAM(                    \
+        param_, __LINE__) = {__LINE__, name, fallback, desc}
+
+/* We need to coerce const char* into the correct string class */
+template<typename T>
+void params_set(Params& params, const NodeParam& p, T x) {
+    params.set(p.name(), x);
+}
+
+inline void params_set(Params& params, const NodeParam& p, const char* x) {
+    if(p.type() == NODE_PARAM_TYPE_UNICODE) {
+        params.set(p.name(), unicode(x));
+    } else {
+        params.set(p.name(), std::string(x));
+    }
+}
 
 template<typename T>
-void unpack(Params& params, std::set<NodeParam>::iterator it,
-            std::set<NodeParam>::iterator end, T x) {
+void params_unpack(Params& params, std::set<NodeParam>::iterator it,
+                   std::set<NodeParam>::iterator end, T x) {
     if(it == end) {
         return;
     }
 
-    params.set(it->name(), x);
+    params_set(params, *it, x);
+
+    /* This is the terminating case. If we've got here we've hit the
+    last passed argument, but there may still be un-passed parameters
+    so we need to set the defaults! */
+    for(++it; it != end; ++it) {
+        params_set(params, *it, it->default_value());
+    }
 }
 
 template<typename T, typename... Args>
-void unpack(Params& params, std::set<NodeParam>::iterator it,
-            std::set<NodeParam>::iterator end, T x, Args... args) {
+void params_unpack(Params& params, std::set<NodeParam>::iterator it,
+                   std::set<NodeParam>::iterator end, T x, Args... args) {
     if(it == end) {
+        S_WARN("Ignoring additional unknown parameters");
         return;
     }
 
-    params.set(it->name(), x);
+    params_set(params, *it, x);
 
-    unpack(params, ++it, end, args...);
+    params_unpack(params, ++it, end, args...);
 }
 
 class StageNode:
@@ -448,8 +467,7 @@ public:
         Params params;
 
         auto node_params = get_node_params<T>();
-        auto it = node_params.begin();
-        unpack(params, it, node_params.end(), args...);
+        params_unpack(params, node_params.begin(), node_params.end(), args...);
 
         return impl::child_factory<decltype(owner_), T>(
             owner_, this, std::forward<const Params&>(params));
@@ -553,7 +571,7 @@ public:
     }
 
 protected:
-    virtual bool on_create(const Params& params) = 0;
+    virtual bool on_create(Params params) = 0;
     virtual bool on_destroy() override {
         return true;
     }
@@ -578,6 +596,24 @@ protected:
     }
 
     void on_transformation_change_attempted() override {}
+
+protected:
+    template<typename N>
+    bool clean_params(Params& params) {
+        Params cleaned = params;
+        for(auto param: get_node_params<N>()) {
+            bool passed = params.has_arg(param.name());
+            if(param.default_value().empty() && !passed) {
+                // No default and not provided
+                return false;
+            } else if(!passed) {
+                cleaned.set(param.name(), param.default_value());
+            }
+        }
+
+        std::swap(params, cleaned);
+        return true;
+    }
 
 private:
     friend class StageNodeManager;

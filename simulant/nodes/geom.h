@@ -69,7 +69,7 @@ public:
                                  const Camera*, const Viewport* viewport,
                                  const DetailLevel detail_level) override;
 
-    bool on_create(const Params& params) override;
+    bool on_create(Params params) override;
 
 private:
     std::shared_ptr<GeomCuller> culler_;

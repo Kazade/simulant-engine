@@ -339,7 +339,7 @@ void ParticleSystem::on_update(float dt) {
     }
 }
 
-bool ParticleSystem::on_create(const Params& params) {
+bool ParticleSystem::on_create(Params params) {
     auto maybe_script = params.arg<ParticleScriptPtr>("script");
     if(!maybe_script) {
         return false;

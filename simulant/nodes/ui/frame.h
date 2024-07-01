@@ -36,7 +36,7 @@ public:
 
     Frame(Scene* owner);
 
-    bool on_create(const Params& params) override;
+    bool on_create(Params params) override;
 
     bool pack_child(Widget* widget);
     bool unpack_child(Widget* widget,

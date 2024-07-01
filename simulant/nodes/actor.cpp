@@ -296,13 +296,17 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
     }
 }
 
-bool Actor::on_create(const Params& params) {
+bool Actor::on_create(Params params) {
+    if(!clean_params<Actor>(params)) {
+        return false;
+    }
+
     auto mesh = params.arg<MeshPtr>("mesh");
     if(!mesh) {
         return false;
     }
 
-    set_mesh(mesh.value_or(MeshPtr()));
+    set_mesh(mesh.value());
     return true;
 }
 

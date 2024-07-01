@@ -6,13 +6,19 @@
 #include "../utils/unicode.h"
 #include "limited_string.h"
 #include <initializer_list>
+#include <map>
 #include <vector>
 
 namespace smlt {
 
 /* A set of named arguments that have been passed
    to construct a stage node. It's up to the stage node
-   to define which args and types are valid */
+   to define which args and types are valid.
+
+   Note: Due to unresolved problems with const char* and smlt::any
+   passing a const char* value will implicitly convert to std::string
+   internally and must be fetched using std::string.
+*/
 
 typedef std::vector<LimitedString<32>> ConstructionArgNames;
 
@@ -52,20 +58,48 @@ public:
     }
 
     template<typename T>
-    bool set_arg(const char* name, T value);
-    bool has_arg(const char* name) const;
+    bool set_arg(const char* name, T value) {
+        auto existed = dict_.count(name);
+        dict_[name] = value;
+        return !existed;
+    }
+
+    bool set_arg(const char* name, const char* value) {
+        auto existed = dict_.count(name);
+        dict_[name] = std::string(value);
+        return !existed;
+    }
+
+    bool has_arg(const char* name) const {
+        return dict_.count(name);
+    }
 
     template<typename T>
-    optional<T> arg(const char* name) const;
+    optional<T> arg(const char* name) const {
+        auto it = dict_.find(name);
+        if(it == dict_.end()) {
+            return no_value;
+        }
 
-    ConstructionArgNames arg_names() const;
+        return any_cast<T>(it->second);
+    }
+
+    ConstructionArgNames arg_names() const {
+        ConstructionArgNames ret;
+        for(auto& p: dict_) {
+            ret.push_back(p.first);
+        }
+        return ret;
+    }
 
     template<typename T>
     Params set(const char* name, T value) {
-        auto ret = *this;
-        ret.set_arg(name, value);
-        return ret;
+        set_arg(name, value);
+        return *this;
     }
+
+private:
+    std::map<LimitedString<32>, any> dict_;
 };
 
 } // namespace smlt

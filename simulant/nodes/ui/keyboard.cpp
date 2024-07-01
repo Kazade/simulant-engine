@@ -1028,7 +1028,7 @@ public:
     KeyboardPanel(Scene* owner) :
         Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL) {}
 
-    bool on_create(const Params& params) override {
+    bool on_create(Params params) override {
         if(!Widget::on_create(params)) {
             return false;
         }
@@ -1594,7 +1594,7 @@ private:
 Keyboard::Keyboard(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD) {}
 
-bool Keyboard::on_create(const Params& params) {
+bool Keyboard::on_create(Params params) {
     if(!Widget::on_create(params)) {
         return false;
     }

@@ -6,7 +6,7 @@
 
 Simulant is a cross-platform general-purpose game engine written in C++.
 
-It is designed with portability in mind, using minimal dependencies and targetting C++14 (rather than more modern versions of the language).
+It is designed with portability in mind, using minimal dependencies and targetting C++17 (rather than more modern versions of the language).
 
 The aim of Simulant is to create an easy-to-use game engine to allow building homebrew for older games consoles, as well as creating a great developer-experience on modern platforms.
 
@@ -17,7 +17,7 @@ Simulant currently supports the following platforms:
  - SEGA Dreamcast
  - Sony PSP
  - Android
- 
+
 # Patreons
 
 Simulant is supported by the following Patreons:
@@ -65,7 +65,7 @@ Compiling the code requires CMake. Currently there are the following external de
 To build:
 
 ```
-    git submodule update --init 
+    git submodule update --init
     mkdir build && cd build
     cmake ..
     make
