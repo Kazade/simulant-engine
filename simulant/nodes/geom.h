@@ -60,6 +60,17 @@ class Geom:
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_GEOM);
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "mesh", MeshPtr, no_value,
+                              "The base mesh associated with this geom");
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "options", GeomCullerOptions,
+                              GeomCullerOptions(),
+                              "The options to use when creating the culler");
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "position", Vec3, Vec3(),
+                              "The position of the geom");
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "orientation", Quaternion, Quaternion(),
+                              "The orientation of the geom");
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "scale", Vec3, Vec3(1),
+                              "The scale of the geom");
 
     Geom(Scene* owner);
 

@@ -18,6 +18,10 @@ void StaticBody::add_mesh_collider(const MeshPtr& mesh,
 }
 
 bool StaticBody::on_create(Params params) {
+    if(!clean_params<StaticBody>(params)) {
+        return false;
+    }
+
     return PhysicsBody::on_create(params);
 }
 } // namespace smlt

@@ -42,6 +42,8 @@ class MeshInstancer:
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_MESH_INSTANCER);
+    S_DEFINE_STAGE_NODE_PARAM(MeshInstancer, "mesh", MeshPtr, no_value,
+                              "The base mesh associated with this instancer");
 
     MeshInstancer(Scene* owner);
     virtual ~MeshInstancer();

@@ -34,6 +34,9 @@ class ParticleSystem:
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PARTICLE_SYSTEM);
+    S_DEFINE_STAGE_NODE_PARAM(ParticleSystem, "script", ParticleScriptPtr,
+                              no_value,
+                              "The particle script to use for this system");
 
     ParticleSystem(Scene* owner);
     virtual ~ParticleSystem();

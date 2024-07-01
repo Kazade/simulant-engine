@@ -12,6 +12,8 @@ class KinematicBody: public ReactiveBody {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_KINEMATIC_BODY);
+    S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(KinematicBody);
+
     KinematicBody(Scene* owner) :
         ReactiveBody(owner, STAGE_NODE_TYPE_PHYSICS_KINEMATIC_BODY,
                      PHYSICS_BODY_TYPE_KINEMATIC) {}
@@ -23,6 +25,10 @@ public:
 
 private:
     bool on_create(Params params) override {
+        if(!clean_params<KinematicBody>(params)) {
+            return false;
+        }
+
         return PhysicsBody::on_create(params);
     }
 };

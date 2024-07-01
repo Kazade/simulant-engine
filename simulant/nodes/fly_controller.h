@@ -13,7 +13,8 @@ private:
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_FLY_CONTROLLER);
-
+    S_DEFINE_STAGE_NODE_PARAM(FlyController, "speed", float, 600.0f,
+                              "The speed at which the controller moves");
     FlyController(Scene* owner) :
         StageNode(owner, STAGE_NODE_TYPE_FLY_CONTROLLER) {}
 
@@ -33,6 +34,9 @@ public:
 
 private:
     bool on_create(Params params) override {
+        if(!clean_params<FlyController>(params)) {
+            return false;
+        }
         set_speed(params.arg<float>("speed").value_or(600.0f));
         return true;
     }

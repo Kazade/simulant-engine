@@ -126,6 +126,10 @@ void ProgressBar::on_update(float dt) {
 }
 
 bool ProgressBar::on_create(Params params) {
+    if(!clean_params<ProgressBar>(params)) {
+        return false;
+    }
+
     if(!Widget::on_create(params)) {
         return true;
     }

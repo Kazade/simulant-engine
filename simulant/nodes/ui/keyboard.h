@@ -51,6 +51,11 @@ class Keyboard: public Widget {
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_KEYBOARD);
 
+    S_DEFINE_STAGE_NODE_PARAM(Keyboard, "mode", int,
+                              int(KEYBOARD_MODE_UPPERCASE),
+                              "The mode of the keyboard");
+    S_DEFINE_CORE_WIDGET_PROPERTIES(Keyboard);
+
     using Widget::clean_up;
     using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
 

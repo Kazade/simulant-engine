@@ -10,11 +10,15 @@ TextEntry::TextEntry(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY) {}
 
 bool TextEntry::on_create(Params params) {
+    if(!clean_params<TextEntry>(params)) {
+        return false;
+    }
+
     if(!Widget::on_create(params)) {
         return false;
     }
 
-    set_text(params.arg<unicode>("name").value_or(""));
+    set_text(params.arg<unicode>("text").value_or(""));
     set_resize_mode(RESIZE_MODE_FIXED_WIDTH);
 
     auto w = params.arg<int>("width").value_or(-1);

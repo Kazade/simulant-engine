@@ -12,6 +12,7 @@ class DynamicBody: public ReactiveBody {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY);
+    S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(DynamicBody);
 
     DynamicBody(Scene* owner) :
         ReactiveBody(owner, STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY,
@@ -24,6 +25,9 @@ public:
 
 private:
     bool on_create(Params params) override {
+        if(!clean_params<DynamicBody>(params)) {
+            return false;
+        }
         return PhysicsBody::on_create(params);
     }
 };

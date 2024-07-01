@@ -8,6 +8,13 @@
 #include "simulant/utils/construction_args.h"
 #include "stage_node.h"
 
+#define S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(klass)                           \
+    TypedNodeParam<smlt::Vec3, klass> param_10000 = {                          \
+        10000, "position", smlt::Vec3(), "The initial position of the body"};  \
+    TypedNodeParam<smlt::Quaternion, klass> param_10001 = {                    \
+        10001, "orientation", smlt::Quaternion(),                              \
+        "The initial rotation of the body"}
+
 namespace smlt {
 
 class StageNode;

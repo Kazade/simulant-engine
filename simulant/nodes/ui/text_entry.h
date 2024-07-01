@@ -12,6 +12,9 @@ class TextEntry: public Widget, public RefCounted<TextEntry> {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY);
+    S_DEFINE_STAGE_NODE_PARAM(TextEntry, "text", unicode, no_value,
+                              "The text to display in the text entry");
+    S_DEFINE_CORE_WIDGET_PROPERTIES(TextEntry);
 
     using Widget::clean_up;
     using Widget::init; // Pull in init to satisfy Managed<TextEntry>

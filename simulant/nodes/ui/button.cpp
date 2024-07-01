@@ -10,6 +10,10 @@ Button::Button(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_BUTTON) {}
 
 bool Button::on_create(Params params) {
+    if(!clean_params<Button>(params)) {
+        return false;
+    }
+
     if(!Widget::on_create(params)) {
         return false;
     }

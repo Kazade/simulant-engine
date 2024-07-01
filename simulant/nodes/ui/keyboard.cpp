@@ -1595,6 +1595,10 @@ Keyboard::Keyboard(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD) {}
 
 bool Keyboard::on_create(Params params) {
+    if(!clean_params<Keyboard>(params)) {
+        return false;
+    }
+
     if(!Widget::on_create(params)) {
         return false;
     }
@@ -1671,8 +1675,8 @@ bool Keyboard::on_create(Params params) {
     main_frame_->rebuild();
 
     auto mode =
-        params.arg<KeyboardMode>("mode").value_or(KEYBOARD_MODE_UPPERCASE);
-    set_mode(mode);
+        params.arg<KeyboardMode>("mode").value_or((int)KEYBOARD_MODE_UPPERCASE);
+    set_mode((KeyboardMode)mode);
 
     return true;
 }

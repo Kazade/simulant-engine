@@ -83,6 +83,10 @@ void SmoothFollow::set_following_enabled(bool v) {
 }
 
 bool SmoothFollow::on_create(Params params) {
+    if(!clean_params<SmoothFollow>(params)) {
+        return false;
+    }
+
     set_target(params.arg<StageNodePtr>("target").value_or(nullptr));
     return true;
 }

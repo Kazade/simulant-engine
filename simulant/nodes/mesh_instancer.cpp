@@ -94,6 +94,10 @@ void MeshInstancer::recalc_aabb() {
 }
 
 bool MeshInstancer::on_create(Params params) {
+    if(!clean_params<MeshInstancer>(params)) {
+        return false;
+    }
+
     set_mesh(params.arg<MeshPtr>("mesh").value_or(MeshPtr()));
     return true;
 }

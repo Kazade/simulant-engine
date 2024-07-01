@@ -8,6 +8,10 @@ Label::Label(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_LABEL) {}
 
 bool Label::on_create(Params params) {
+    if(!clean_params<Label>(params)) {
+        return false;
+    }
+
     if(!Widget::on_create(params)) {
         return false;
     }

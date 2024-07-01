@@ -30,6 +30,10 @@ Geom::Geom(Scene* owner) :
     StageNode(owner, STAGE_NODE_TYPE_GEOM) {}
 
 bool Geom::on_create(Params params) {
+    if(!clean_params<Geom>(params)) {
+        return false;
+    }
+
     auto mesh_ptr = params.arg<MeshPtr>("mesh").value_or(MeshPtr());
     assert(mesh_ptr);
 

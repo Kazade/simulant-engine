@@ -11,6 +11,7 @@ class StaticBody: public PhysicsBody {
 
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_STATIC_BODY);
+    S_DEFINE_PHYSICS_BODY_PARAMS(StaticBody);
 
     StaticBody(Scene* owner) :
         PhysicsBody(owner, STAGE_NODE_TYPE_PHYSICS_STATIC_BODY,

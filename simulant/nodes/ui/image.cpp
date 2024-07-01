@@ -12,6 +12,10 @@ Image::Image(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_IMAGE) {}
 
 bool Image::on_create(Params params) {
+    if(!clean_params<Image>(params)) {
+        return false;
+    }
+
     if(!Widget::on_create(params)) {
         return false;
     }

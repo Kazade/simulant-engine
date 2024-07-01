@@ -17,6 +17,15 @@ class ProgressBar: public Widget {
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR);
 
+    S_DEFINE_STAGE_NODE_PARAM(ProgressBar, "min", float, 0.0f,
+                              "The minimum value of the progress bar");
+    S_DEFINE_STAGE_NODE_PARAM(ProgressBar, "max", float, 100.0f,
+                              "The maximum value of the progress bar");
+    S_DEFINE_STAGE_NODE_PARAM(ProgressBar, "value", float, 0.0f,
+                              "The current value of the progress bar");
+
+    S_DEFINE_CORE_WIDGET_PROPERTIES(ProgressBar);
+
     using Widget::clean_up;
     using Widget::init; // Pull in init to satisfy Managed<Button>
 

@@ -10,6 +10,10 @@ Frame::Frame(Scene* owner) :
     Widget(owner, STAGE_NODE_TYPE_WIDGET_FRAME) {}
 
 bool Frame::on_create(Params params) {
+    if(!clean_params<Frame>(params)) {
+        return false;
+    }
+
     if(!Widget::on_create(params)) {
         return false;
     }
