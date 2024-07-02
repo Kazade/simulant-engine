@@ -29,6 +29,7 @@ namespace smlt {
 class RenderableFactory;
 class Seconds;
 class Scene;
+class GeomCullerOptions;
 
 namespace ui {
 struct UIConfig;
@@ -90,16 +91,19 @@ enum NodeParamType {
     NODE_PARAM_TYPE_VEC2,
     NODE_PARAM_TYPE_VEC3,
     NODE_PARAM_TYPE_VEC4,
+    NODE_PARAM_TYPE_QUATERNION,
     NODE_PARAM_TYPE_INT,
     NODE_PARAM_TYPE_BOOL,
     NODE_PARAM_TYPE_STRING,
     NODE_PARAM_TYPE_UNICODE,
     NODE_PARAM_TYPE_MESH_PTR,
     NODE_PARAM_TYPE_TEXTURE_PTR,
+    NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR,
     // FIXME: Ideally these wouldn't exist and instead
     // widgets would take base types as arguments
     NODE_PARAM_TYPE_UI_CONFIG,
     NODE_PARAM_TYPE_WIDGET_STYLE_PTR,
+    NODE_PARAM_TYPE_GEOM_CULLER_OPTS,
 };
 
 template<typename T>
@@ -131,6 +135,16 @@ struct type_to_node_param_type<Vec4> {
 };
 
 template<>
+struct type_to_node_param_type<Quaternion> {
+    static const NodeParamType value = NODE_PARAM_TYPE_QUATERNION;
+};
+
+template<>
+struct type_to_node_param_type<std::string> {
+    static const NodeParamType value = NODE_PARAM_TYPE_STRING;
+};
+
+template<>
 struct type_to_node_param_type<unicode> {
     static const NodeParamType value = NODE_PARAM_TYPE_UNICODE;
 };
@@ -146,6 +160,11 @@ struct type_to_node_param_type<TexturePtr> {
 };
 
 template<>
+struct type_to_node_param_type<ParticleScriptPtr> {
+    static const NodeParamType value = NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR;
+};
+
+template<>
 struct type_to_node_param_type<ui::UIConfig> {
     static const NodeParamType value = NODE_PARAM_TYPE_UI_CONFIG;
 };
@@ -153,6 +172,11 @@ struct type_to_node_param_type<ui::UIConfig> {
 template<>
 struct type_to_node_param_type<ui::WidgetStylePtr> {
     static const NodeParamType value = NODE_PARAM_TYPE_WIDGET_STYLE_PTR;
+};
+
+template<>
+struct type_to_node_param_type<GeomCullerOptions> {
+    static const NodeParamType value = NODE_PARAM_TYPE_GEOM_CULLER_OPTS;
 };
 
 template<NodeParamType T>
@@ -201,6 +225,11 @@ struct node_param_type_to_type<NODE_PARAM_TYPE_MESH_PTR> {
 template<>
 struct node_param_type_to_type<NODE_PARAM_TYPE_TEXTURE_PTR> {
     typedef TexturePtr type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR> {
+    typedef ParticleScriptPtr type;
 };
 
 constexpr bool has_spaces(const char* s) {
