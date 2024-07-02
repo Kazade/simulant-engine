@@ -98,6 +98,15 @@ public:
         return *this;
     }
 
+    optional<any> raw(const char* name) const {
+        auto it = dict_.find(name);
+        if(it != dict_.end()) {
+            return it->second;
+        }
+
+        return no_value;
+    }
+
 private:
     std::map<LimitedString<32>, any> dict_;
 };

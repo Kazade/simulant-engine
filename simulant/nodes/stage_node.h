@@ -30,6 +30,7 @@ class RenderableFactory;
 class Seconds;
 class Scene;
 class GeomCullerOptions;
+class TextureFlags;
 
 namespace ui {
 struct UIConfig;
@@ -104,6 +105,7 @@ enum NodeParamType {
     NODE_PARAM_TYPE_UI_CONFIG,
     NODE_PARAM_TYPE_WIDGET_STYLE_PTR,
     NODE_PARAM_TYPE_GEOM_CULLER_OPTS,
+    NODE_PARAM_TYPE_TEXTURE_FLAGS,
 };
 
 template<typename T>
@@ -179,6 +181,11 @@ struct type_to_node_param_type<GeomCullerOptions> {
     static const NodeParamType value = NODE_PARAM_TYPE_GEOM_CULLER_OPTS;
 };
 
+template<>
+struct type_to_node_param_type<TextureFlags> {
+    static const NodeParamType value = NODE_PARAM_TYPE_TEXTURE_FLAGS;
+};
+
 template<NodeParamType T>
 struct node_param_type_to_type;
 
@@ -238,13 +245,17 @@ constexpr bool has_spaces(const char* s) {
 
 class NodeParam {
 public:
+    typedef std::function<any(any)> coerce_func;
+
     NodeParam(int order, const char* name, NodeParamType type,
-              smlt::any default_value, const char* desc) :
+              smlt::any default_value, const char* desc,
+              const coerce_func& coerce = coerce_func()) :
         order_(order),
         name_(name),
         type_(type),
         default_value_(default_value),
-        desc_(desc) {}
+        desc_(desc),
+        coerce_(coerce) {}
 
     bool operator<(const NodeParam& rhs) const {
         return order_ < rhs.order_;
@@ -263,7 +274,15 @@ public:
     }
 
     any default_value() const {
+        if(coerce_) {
+            return coerce_(default_value_);
+        }
+
         return default_value_;
+    }
+
+    coerce_func coerce() const {
+        return coerce_;
     }
 
 private:
@@ -272,6 +291,7 @@ private:
     NodeParamType type_;
     any default_value_;
     const char* desc_;
+    coerce_func coerce_;
 };
 
 template<typename T>
@@ -290,10 +310,12 @@ class TypedNodeParam {
 public:
     typedef T type;
 
-    TypedNodeParam(int order, const char* name,
-                   const smlt::optional<T>& fallback, const char* desc) :
+    TypedNodeParam(
+        int order, const char* name, const smlt::optional<T>& fallback,
+        const char* desc,
+        const NodeParam::coerce_func& coerce = NodeParam::coerce_func()) :
         param_(NodeParam(order, name, type_to_node_param_type<T>::value,
-                         to_any(fallback), desc)) {
+                         to_any(fallback), desc, coerce)) {
 
         get_node_params<C>().insert(param_);
     }
@@ -319,10 +341,10 @@ private:
 #define __S_GEN_PARAM(param, line) param##line
 #define _S_GEN_PARAM(param, line) __S_GEN_PARAM(param, line)
 
-#define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc)           \
+#define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc, ...)      \
     static_assert(!has_spaces(name), "Param name must not have spaces");       \
     static inline TypedNodeParam<type, klass> _S_GEN_PARAM(                    \
-        param_, __LINE__) = {__LINE__, name, fallback, desc}
+        param_, __LINE__) = {__LINE__, name, fallback, desc, ##__VA_ARGS__}
 
 /* We need to coerce const char* into the correct string class */
 template<typename T>
@@ -510,9 +532,9 @@ public:
     }
 
     template<typename T>
-    T* create_child(const Params& args) {
+    T* create_child(Params args) {
         return impl::child_factory<decltype(owner_), T>(
-            owner_, this, std::forward<const Params&>(args));
+            owner_, this, std::forward<Params>(args));
     }
 
     void adopt_children(StageNode* node) {
@@ -637,6 +659,9 @@ protected:
                 return false;
             } else if(!passed) {
                 cleaned.set(param.name(), param.default_value());
+            } else if(param.coerce()) {
+                cleaned.set(param.name(),
+                            param.coerce()(cleaned.raw(param.name())));
             }
         }
 

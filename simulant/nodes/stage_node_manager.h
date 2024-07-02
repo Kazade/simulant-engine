@@ -72,7 +72,7 @@ public:
     StageNode* create_node(StageNodeType type, const Params& params);
 
     template<typename T>
-    T* create_node(const Params& args) {
+    T* create_node(Params args) {
         return (T*)create_node(T::Meta::node_type, args);
     }
 

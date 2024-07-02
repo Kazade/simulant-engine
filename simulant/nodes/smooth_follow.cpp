@@ -1,4 +1,5 @@
 #include "smooth_follow.h"
+#include "../scenes/scene.h"
 #include "simulant/utils/construction_args.h"
 
 namespace smlt {
@@ -87,7 +88,16 @@ bool SmoothFollow::on_create(Params params) {
         return false;
     }
 
-    set_target(params.arg<StageNodePtr>("target").value_or(nullptr));
+    auto target_name =
+        params.arg<std::string>("target").value_or(std::string());
+
+    auto target = scene->find_descendent_with_name(target_name);
+    if(target) {
+        set_target(target);
+    } else if(!target_name.empty()) {
+        S_WARN("Unable to find target with name: {0}", target_name);
+    }
+
     return true;
 }
 

@@ -1674,8 +1674,7 @@ bool Keyboard::on_create(Params params) {
     main_frame_->pack_child(info_row_);
     main_frame_->rebuild();
 
-    auto mode =
-        params.arg<KeyboardMode>("mode").value_or((int)KEYBOARD_MODE_UPPERCASE);
+    auto mode = params.arg<int>("mode").value_or((int)KEYBOARD_MODE_UPPERCASE);
     set_mode((KeyboardMode)mode);
 
     return true;
