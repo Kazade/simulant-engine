@@ -7,11 +7,36 @@
 #include "../stage_node.h"
 #include "ui_config.h"
 
+namespace smlt {
+namespace ui {
+
+/* We implicitly convert Px and float to int */
+struct WidgetImpl {
+    static any coerce_to_int(any in) {
+        any result = in;
+        try {
+            auto px = any_cast<Px>(in);
+            result = (int)px.value;
+        } catch(bad_any_cast&) {
+            if(do_coerce<float, int>(in, result)) {
+                return result;
+            }
+        }
+
+        return result;
+    }
+};
+
+} // namespace ui
+} // namespace smlt
+
 #define S_DEFINE_CORE_WIDGET_PROPERTIES(klass)                                 \
-    TypedNodeParam<int, klass> param_10000 = {10000, "width", -1,              \
-                                              "The width of the widget"};      \
-    TypedNodeParam<int, klass> param_10001 = {10001, "height", -1,             \
-                                              "The height of the widget"};     \
+    TypedNodeParam<int, klass> param_10000 = {                                 \
+        10000, "width", -1, "The width of the widget",                         \
+        smlt::ui::WidgetImpl::coerce_to_int};                                  \
+    TypedNodeParam<int, klass> param_10001 = {                                 \
+        10001, "height", -1, "The height of the widget",                       \
+        smlt::ui::WidgetImpl::coerce_to_int};                                  \
     TypedNodeParam<smlt::ui::UIConfig, klass> param_10002 = {                  \
         10002, "theme", smlt::ui::UIConfig(),                                  \
         "The theme to use for this widget"};                                   \

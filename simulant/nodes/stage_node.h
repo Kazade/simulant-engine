@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <queue>
 
 #include "../coroutines/helpers.h"
@@ -357,6 +358,17 @@ inline void params_set(Params& params, const NodeParam& p, const char* x) {
         params.set(p.name(), unicode(x));
     } else {
         params.set(p.name(), std::string(x));
+    }
+}
+
+/* Simple coercion via copy constructor */
+template<typename Source, typename Dest>
+bool do_coerce(const any& in, any& out) {
+    try {
+        out = Dest(any_cast<Source>(in));
+        return true;
+    } catch(bad_any_cast&) {
+        return false;
     }
 }
 
