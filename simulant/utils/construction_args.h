@@ -64,6 +64,12 @@ public:
         return !existed;
     }
 
+    bool set_arg(const char* name, any value) {
+        auto existed = dict_.count(name);
+        dict_.insert(std::make_pair(name, value));
+        return !existed;
+    }
+
     bool set_arg(const char* name, const char* value) {
         auto existed = dict_.count(name);
         dict_[name] = std::string(value);
@@ -94,6 +100,7 @@ public:
 
     template<typename T>
     Params set(const char* name, T value) {
+        S_ERROR("Setting {0} in {1}", typeid(T).name(), name);
         set_arg(name, value);
         return *this;
     }
