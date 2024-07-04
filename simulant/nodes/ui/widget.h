@@ -13,17 +13,22 @@ namespace ui {
 /* We implicitly convert Px and float to int */
 struct WidgetImpl {
     static any coerce_to_int(any in) {
-        any result = in;
         try {
-            auto px = any_cast<Px>(in);
-            result = (int)px.value;
+            return any_cast<int>(in);
         } catch(bad_any_cast&) {
-            if(do_coerce<float, int>(in, result)) {
-                return result;
+            any result = in;
+            try {
+                auto px = any_cast<Px>(in);
+                result = (int)px.value;
+            } catch(bad_any_cast&) {
+                if(do_coerce<float, int>(in, result)) {
+                    return result;
+                } else {
+                    throw;
+                }
             }
+            return result;
         }
-
-        return result;
     }
 };
 

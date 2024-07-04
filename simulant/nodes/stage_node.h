@@ -663,21 +663,26 @@ protected:
 protected:
     template<typename N>
     bool clean_params(Params& params) {
-        Params cleaned = params;
+        Params cleaned;
         for(auto param: get_node_params<N>()) {
-            bool passed = params.has_arg(param.name());
-            if(param.default_value().empty() && !passed) {
+            auto name = param.name();
+            bool passed = params.has_arg(name);
+            auto to_set = param.default_value();
+            if(!passed && to_set.empty()) {
                 // No default and not provided
                 return false;
-            } else if(!passed) {
-                cleaned.set(param.name(), param.default_value());
-            } else if(param.coerce()) {
-                cleaned.set(param.name(),
-                            param.coerce()(cleaned.raw(param.name())));
+            } else if(passed) {
+                to_set = params.raw(name);
             }
+
+            if(param.coerce()) {
+                to_set = param.coerce()(to_set);
+            }
+
+            cleaned.set(name, to_set);
         }
 
-        std::swap(params, cleaned);
+        params = cleaned;
         return true;
     }
 
