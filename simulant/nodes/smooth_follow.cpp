@@ -89,7 +89,7 @@ bool SmoothFollow::on_create(Params params) {
     }
 
     auto target_name =
-        params.arg<std::string>("target").value_or(std::string());
+        params.get<std::string>("target").value_or(std::string());
 
     auto target = scene->find_descendent_with_name(target_name);
     if(target) {

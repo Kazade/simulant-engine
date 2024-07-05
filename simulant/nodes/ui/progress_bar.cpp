@@ -134,8 +134,8 @@ bool ProgressBar::on_create(Params params) {
         return true;
     }
 
-    auto sstyle = params.arg<WidgetStylePtr>("shared_style");
-    auto theme = params.arg<UIConfig>("theme").value_or(UIConfig());
+    auto sstyle = params.get<WidgetStylePtr>("shared_style");
+    auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
 
     if(!sstyle) {
         set_background_color(theme.progress_bar_background_color_);
@@ -145,14 +145,14 @@ bool ProgressBar::on_create(Params params) {
         set_text_color(theme.progress_bar_text_color_);
     }
 
-    auto min = params.arg<float>("min").value_or(0.0f);
-    auto max = params.arg<float>("max").value_or(100.0f);
-    auto value = params.arg<float>("value").value_or(0.0f);
+    auto min = params.get<float>("min").value_or(0.0f);
+    auto max = params.get<float>("max").value_or(100.0f);
+    auto value = params.get<float>("value").value_or(0.0f);
     set_range(min, max);
     set_value(value);
 
-    auto w = params.arg<int>("width").value_or(-1);
-    auto h = params.arg<int>("height").value_or(-1);
+    auto w = params.get<int>("width").value_or(-1);
+    auto h = params.get<int>("height").value_or(-1);
 
     set_resize_mode(RESIZE_MODE_FIXED);
     resize(w, h);

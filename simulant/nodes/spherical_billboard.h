@@ -24,7 +24,7 @@ public:
 
 private:
     bool on_create(Params params) override {
-        forward_ = params.arg<FloatArray>("forward").value_or(Vec3::FORWARD);
+        forward_ = params.get<FloatArray>("forward").value_or(Vec3::FORWARD);
         return true;
     }
 

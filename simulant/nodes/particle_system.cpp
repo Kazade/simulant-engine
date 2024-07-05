@@ -344,7 +344,7 @@ bool ParticleSystem::on_create(Params params) {
         return false;
     }
 
-    auto maybe_script = params.arg<ParticleScriptPtr>("script");
+    auto maybe_script = params.get<ParticleScriptPtr>("script");
     if(!maybe_script) {
         return false;
     }

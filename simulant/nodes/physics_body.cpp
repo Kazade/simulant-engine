@@ -202,9 +202,9 @@ PhysicsService* PhysicsBody::get_simulation() const {
 }
 
 bool PhysicsBody::on_create(Params params) {
-    Vec3 initial_pos = params.arg<FloatArray>("position").value_or(Vec3());
+    Vec3 initial_pos = params.get<FloatArray>("position").value_or(Vec3());
     Quaternion initial_rot =
-        params.arg<FloatArray>("orientation").value_or(Quaternion());
+        params.get<FloatArray>("orientation").value_or(Quaternion());
     auto sim = get_simulation();
     if(sim) {
         sim->register_body(this, initial_pos, initial_rot);

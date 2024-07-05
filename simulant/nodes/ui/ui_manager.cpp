@@ -67,7 +67,7 @@ UIManager::~UIManager() {
 }
 
 bool UIManager::on_create(Params params) {
-    config_ = params.arg<UIConfig>("config").value_or(UIConfig());
+    config_ = params.get<UIConfig>("config").value_or(UIConfig());
     return true;
 }
 

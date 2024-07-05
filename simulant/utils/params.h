@@ -52,7 +52,7 @@ public:
     }
 
     template<typename T>
-    optional<T> arg(const char* name) const {
+    optional<T> get(const char* name) const {
         auto it = dict_.find(name);
         if(it == dict_.end()) {
             return no_value;

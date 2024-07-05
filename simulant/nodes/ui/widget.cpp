@@ -89,8 +89,8 @@ void Widget::on_clean_up() {
 }
 
 bool Widget::on_create(Params params) {
-    auto shared_style = params.arg<WidgetStylePtr>("shared_style");
-    auto theme = params.arg<UIConfig>("theme").value_or(UIConfig());
+    auto shared_style = params.get<WidgetStylePtr>("shared_style");
+    auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
 
     if(!shared_style || !shared_style.value()) {
         style_ = std::make_shared<WidgetStyle>();

@@ -18,8 +18,8 @@ bool Frame::on_create(Params params) {
         return false;
     }
 
-    auto sstyle = params.arg<WidgetStylePtr>("shared_style");
-    auto theme = params.arg<UIConfig>("theme").value_or(UIConfig());
+    auto sstyle = params.get<WidgetStylePtr>("shared_style");
+    auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
 
     if(!sstyle) {
         set_background_color(theme.frame_background_color_);

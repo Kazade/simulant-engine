@@ -664,7 +664,7 @@ protected:
         Params cleaned;
         for(auto param: get_node_params<N>()) {
             auto name = param.name();
-            bool passed = params.has_arg(name);
+            bool passed = params.contains(name);
             if(!passed && !param.default_value()) {
                 // No default and not provided
                 return false;

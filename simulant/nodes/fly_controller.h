@@ -37,7 +37,7 @@ private:
         if(!clean_params<FlyController>(params)) {
             return false;
         }
-        set_speed(params.arg<float>("speed").value_or(600.0f));
+        set_speed(params.get<float>("speed").value_or(600.0f));
         return true;
     }
 };

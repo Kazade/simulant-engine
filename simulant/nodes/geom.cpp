@@ -34,7 +34,7 @@ bool Geom::on_create(Params params) {
         return false;
     }
 
-    auto mesh_ptr = params.arg<MeshPtr>("mesh").value_or(MeshPtr());
+    auto mesh_ptr = params.get<MeshPtr>("mesh").value_or(MeshPtr());
     assert(mesh_ptr);
 
     if(!mesh_ptr) {
@@ -42,7 +42,7 @@ bool Geom::on_create(Params params) {
     }
 
     auto opts =
-        params.arg<GeomCullerOptions>("options").value_or(GeomCullerOptions());
+        params.get<GeomCullerOptions>("options").value_or(GeomCullerOptions());
 
     if(opts.type == GEOM_CULLER_TYPE_QUADTREE) {
         culler_.reset(
@@ -55,10 +55,10 @@ bool Geom::on_create(Params params) {
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();
 
-    Vec3 pos = params.arg<FloatArray>("position").value_or(Vec3());
+    Vec3 pos = params.get<FloatArray>("position").value_or(Vec3());
     Quaternion rot =
-        params.arg<FloatArray>("orientation").value_or(Quaternion());
-    Vec3 scale = params.arg<FloatArray>("scale").value_or(Vec3(1));
+        params.get<FloatArray>("orientation").value_or(Quaternion());
+    Vec3 scale = params.get<FloatArray>("scale").value_or(Vec3(1));
     culler_->compile(pos, rot, scale);
     return true;
 }

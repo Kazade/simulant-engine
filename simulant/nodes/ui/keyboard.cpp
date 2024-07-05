@@ -1603,8 +1603,8 @@ bool Keyboard::on_create(Params params) {
         return false;
     }
 
-    auto sstyle = params.arg<WidgetStylePtr>("shared_style");
-    auto config = params.arg<UIConfig>("theme").value_or(UIConfig());
+    auto sstyle = params.get<WidgetStylePtr>("shared_style");
+    auto config = params.get<UIConfig>("theme").value_or(UIConfig());
     if(!sstyle) {
         set_background_color(smlt::Color::NONE);
         set_foreground_color(smlt::Color::NONE);
@@ -1633,7 +1633,7 @@ bool Keyboard::on_create(Params params) {
     panel_->set_border_width(2);
     panel_->rebuild();
 
-    auto initial_text = params.arg<std::string>("initial_text").value_or("");
+    auto initial_text = params.get<std::string>("initial_text").value_or("");
 
     entry_ = scene->create_node<TextEntry>(initial_text);
     entry_->set_border_width(2);
@@ -1674,7 +1674,7 @@ bool Keyboard::on_create(Params params) {
     main_frame_->pack_child(info_row_);
     main_frame_->rebuild();
 
-    auto mode = params.arg<int>("mode").value_or((int)KEYBOARD_MODE_UPPERCASE);
+    auto mode = params.get<int>("mode").value_or((int)KEYBOARD_MODE_UPPERCASE);
     set_mode((KeyboardMode)mode);
 
     return true;

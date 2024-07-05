@@ -301,7 +301,7 @@ bool Actor::on_create(Params params) {
         return false;
     }
 
-    auto mesh = params.arg<MeshPtr>("mesh");
+    auto mesh = params.get<MeshPtr>("mesh");
     if(!mesh) {
         return false;
     }

@@ -83,14 +83,14 @@ bool Skybox::on_create(Params params) {
         return false;
     }
 
-    auto maybe_dir = params.arg<std::string>("source_directory");
+    auto maybe_dir = params.get<std::string>("source_directory");
 
     if(!maybe_dir) {
         S_ERROR("No skybox directory specified");
         return false;
     }
 
-    auto flags = params.arg<TextureFlags>("flags").value_or(TextureFlags());
+    auto flags = params.get<TextureFlags>("flags").value_or(TextureFlags());
 
     auto maybe_files = discover_files_from_directory(maybe_dir.value());
     if(maybe_files) {
