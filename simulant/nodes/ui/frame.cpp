@@ -1,6 +1,6 @@
 #include "frame.h"
 #include "../../meshes/mesh.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 #include "ui_manager.h"
 
 namespace smlt {

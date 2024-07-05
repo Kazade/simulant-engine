@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "../types.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 #include "stage_node.h"
 
 #define S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(klass)                           \

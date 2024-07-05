@@ -5,7 +5,7 @@
 #include "simulant/nodes/stage_node.h"
 #include "simulant/nodes/ui/ui_config.h"
 #include "simulant/nodes/ui/widget.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 #include "text_entry.h"
 #include "ui_manager.h"
 #include <vector>

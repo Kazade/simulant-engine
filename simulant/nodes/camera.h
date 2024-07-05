@@ -6,7 +6,7 @@
 #include "../generic/optional.h"
 #include "../math/aabb.h"
 #include "../sound.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 #include "stage_node.h"
 
 namespace smlt {

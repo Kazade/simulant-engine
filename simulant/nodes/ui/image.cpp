@@ -2,7 +2,7 @@
 #include "../../macros.h"
 #include "../../texture.h"
 #include "simulant/types.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 #include "ui_manager.h"
 
 namespace smlt {

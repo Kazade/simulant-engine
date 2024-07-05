@@ -28,7 +28,7 @@
 #include "../interfaces.h"
 #include "../meshes/mesh.h"
 #include "../sound.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 #include "stage_node.h"
 
 #include "../renderers/batching/render_queue.h"

@@ -22,7 +22,7 @@
 #include "../scenes/scene.h"
 #include "../window.h"
 #include "actor.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 #include <functional>
 
 using namespace smlt;

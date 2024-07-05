@@ -22,7 +22,7 @@
 #include "camera.h"
 #include "geoms/octree_culler.h"
 #include "geoms/quadtree_culler.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 
 namespace smlt {
 

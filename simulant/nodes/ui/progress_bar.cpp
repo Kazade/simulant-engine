@@ -1,7 +1,7 @@
 #include "progress_bar.h"
 #include "../../stage.h"
 #include "../../window.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 #include "ui_manager.h"
 
 namespace smlt {

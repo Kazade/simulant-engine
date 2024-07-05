@@ -32,7 +32,7 @@
 #include "../camera.h"
 #include "../stage_node_manager.h"
 #include "simulant/nodes/ui/ui_config.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 
 namespace smlt {
 namespace ui {

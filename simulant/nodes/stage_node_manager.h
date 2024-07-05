@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/construction_args.h"
+#include "../utils/params.h"
 #include "stage_node.h"
 #include <functional>
 #include <initializer_list>

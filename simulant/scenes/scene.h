@@ -50,7 +50,7 @@
 #include "../nodes/stage_node_manager.h"
 #include "../types.h"
 #include "../utils/unicode.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 
 namespace smlt {
 

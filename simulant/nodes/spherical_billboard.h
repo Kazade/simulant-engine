@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 #include "stage_node.h"
 
 namespace smlt {

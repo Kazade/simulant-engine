@@ -28,7 +28,7 @@
 #include "../stage.h"
 #include "../time_keeper.h"
 #include "../window.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 
 #if defined(__WIN32__)
 #include <psapi.h>

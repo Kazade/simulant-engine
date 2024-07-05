@@ -24,7 +24,7 @@
 #include "../generic/manual_object.h"
 #include "../types.h"
 
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 #include "stage_node.h"
 
 namespace smlt {

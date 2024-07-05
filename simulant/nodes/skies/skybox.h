@@ -5,7 +5,7 @@
 #include "../../path.h"
 #include "../stage_node.h"
 #include "simulant/nodes/builtins.h"
-#include "simulant/utils/construction_args.h"
+#include "simulant/utils/params.h"
 #include <stdexcept>
 
 namespace smlt {
