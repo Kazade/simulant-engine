@@ -55,9 +55,10 @@ bool Geom::on_create(Params params) {
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();
 
-    auto pos = params.arg<Vec3>("position").value_or(Vec3());
-    auto rot = params.arg<Quaternion>("orientation").value_or(Quaternion());
-    auto scale = params.arg<Vec3>("scale").value_or(Vec3(1));
+    Vec3 pos = params.arg<FloatArray>("position").value_or(Vec3());
+    Quaternion rot =
+        params.arg<FloatArray>("orientation").value_or(Quaternion());
+    Vec3 scale = params.arg<FloatArray>("scale").value_or(Vec3(1));
     culler_->compile(pos, rot, scale);
     return true;
 }

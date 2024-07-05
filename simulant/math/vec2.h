@@ -7,6 +7,8 @@
 
 namespace smlt {
 
+typedef std::vector<float> FloatArray;
+
 struct Vec3;
 struct Vec4;
 struct Degrees;
@@ -29,9 +31,11 @@ public:
     float x;
     float y;
 
-    Vec2():
-        x(0.0f), y(0.0f) {
-    }
+    Vec2() :
+        x(0.0f), y(0.0f) {}
+
+    Vec2(const FloatArray& arr) :
+        x(arr[0]), y(arr[1]) {}
 
     Vec2(float x, float y):
         x(x), y(y) {
@@ -86,6 +90,10 @@ public:
             normalize();
             *this *= l;
         }
+    }
+
+    operator FloatArray() const {
+        return {x, y};
     }
 
     Vec2 operator*(float rhs) const {

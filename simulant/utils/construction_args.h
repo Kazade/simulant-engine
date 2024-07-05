@@ -4,6 +4,9 @@
 #include "../utils/unicode.h"
 
 #include "../assets/texture_flags.h"
+#include "../nodes/geoms/geom_culler_opts.h"
+#include "../nodes/ui/ui_config.h"
+
 #include "limited_string.h"
 #include <initializer_list>
 #include <map>
@@ -13,18 +16,12 @@
 
 namespace smlt {
 namespace ui {
-class UIConfig;
 struct WidgetStyle;
 typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
 } // namespace ui
 
-struct GeomCullerOptions;
-
 typedef LimitedString<32> ParamKey;
 typedef std::vector<ParamKey> ParamKeys;
-
-typedef std::vector<int> IntArray;
-typedef std::vector<float> FloatArray;
 
 typedef std::variant<float, FloatArray, int, IntArray, std::string, TexturePtr,
                      MeshPtr, ParticleScriptPtr, ui::UIConfig,
@@ -99,6 +96,10 @@ private:
         auto existed = dict_.count(name);
         dict_[name] = value;
         return !existed;
+    }
+
+    bool set_arg(const char* name, const ui::Px& px) {
+        return set_arg(name, px.value);
     }
 
     bool set_arg(const char* name, const Vec2& vec) {

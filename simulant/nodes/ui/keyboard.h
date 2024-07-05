@@ -2,6 +2,7 @@
 
 #include "../../keycodes.h"
 #include "simulant/nodes/stage_node.h"
+#include "ui_config.h"
 #include "widget.h"
 
 namespace smlt {

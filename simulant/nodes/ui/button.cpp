@@ -18,7 +18,7 @@ bool Button::on_create(Params params) {
         return false;
     }
 
-    auto sstyle = params.arg<WidgetStyle>("shared_style");
+    auto sstyle = params.arg<WidgetStylePtr>("shared_style");
     auto theme = params.arg<UIConfig>("theme").value_or(UIConfig());
     if(!sstyle) {
         set_padding(theme.button_padding_.left, theme.button_padding_.right,
@@ -31,7 +31,7 @@ bool Button::on_create(Params params) {
         set_border_width(theme.button_border_width_);
     }
 
-    auto text = params.arg<unicode>("text").value_or("");
+    auto text = params.arg<std::string>("text").value_or("");
     auto w = params.arg<int>("width").value_or(-1);
     auto h = params.arg<int>("height").value_or(-1);
 

@@ -83,7 +83,7 @@ bool Skybox::on_create(Params params) {
         return false;
     }
 
-    auto maybe_dir = params.arg<Path>("source_directory");
+    auto maybe_dir = params.arg<std::string>("source_directory");
 
     if(!maybe_dir) {
         S_ERROR("No skybox directory specified");

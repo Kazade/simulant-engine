@@ -129,7 +129,7 @@ public:
 
     void test_null_mesh_returns_no_renderables() {
         Viewport viewport;
-        auto instancer = scene->create_child<MeshInstancer>(nullptr);
+        auto instancer = scene->create_child<MeshInstancer>(MeshPtr());
         instancer->create_mesh_instance(Vec3());
 
         auto camera = scene->create_child<smlt::Camera>();

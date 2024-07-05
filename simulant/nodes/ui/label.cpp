@@ -27,7 +27,7 @@ bool Label::on_create(Params params) {
         set_text_color(config.label_text_color_);
         set_border_color(config.label_border_color_);
 
-        auto txt = params.arg<unicode>("text").value_or(unicode());
+        unicode txt = params.arg<std::string>("text").value_or("");
         set_text(txt);
 
         auto width = params.arg<int>("width").value_or(-1);

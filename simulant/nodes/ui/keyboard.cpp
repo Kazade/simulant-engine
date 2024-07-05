@@ -1603,7 +1603,7 @@ bool Keyboard::on_create(Params params) {
         return false;
     }
 
-    auto sstyle = params.arg<WidgetStyle>("shared_style");
+    auto sstyle = params.arg<WidgetStylePtr>("shared_style");
     auto config = params.arg<UIConfig>("theme").value_or(UIConfig());
     if(!sstyle) {
         set_background_color(smlt::Color::NONE);
@@ -1633,9 +1633,9 @@ bool Keyboard::on_create(Params params) {
     panel_->set_border_width(2);
     panel_->rebuild();
 
-    auto initial_text = params.arg<unicode>("initial_text").value_or("");
+    auto initial_text = params.arg<std::string>("initial_text").value_or("");
 
-    entry_ = scene->create_node<TextEntry>(Params().set("text", initial_text));
+    entry_ = scene->create_node<TextEntry>(initial_text);
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
     entry_->set_background_color(smlt::Color::WHITE);

@@ -1,12 +1,14 @@
 #pragma once
 
 #include "degrees.h"
-#include "radians.h"
 #include "euler.h"
+#include "radians.h"
 #include "utils.h"
 #include "vec3.h"
 
 namespace smlt {
+
+typedef std::vector<float> FloatArray;
 
 struct Vec3;
 struct Mat3;
@@ -31,6 +33,9 @@ struct Quaternion {
         x(0), y(0), z(0), w(1) {
 
     }
+
+    Quaternion(const FloatArray& arr) :
+        x(arr[0]), y(arr[1]), z(arr[2]), w(arr[3]) {}
 
     Quaternion(const Degrees& pitch, const Degrees& yaw, const Degrees& roll);
 
@@ -93,6 +98,10 @@ struct Quaternion {
         Quaternion result(*this);
         result.inverse();
         return result;
+    }
+
+    operator FloatArray() const {
+        return {x, y, z, w};
     }
 
     bool equals(const Quaternion& rhs) const {

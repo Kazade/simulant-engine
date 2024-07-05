@@ -34,7 +34,7 @@ private:
             return false;
         }
 
-        forward_ = params.arg<Vec3>("forward").value_or(Vec3::FORWARD);
+        forward_ = params.arg<FloatArray>("forward").value_or(Vec3::FORWARD);
         return true;
     }
 

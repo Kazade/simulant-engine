@@ -11,6 +11,8 @@
 
 namespace smlt {
 
+typedef std::vector<float> FloatArray;
+
 struct Vec2;
 struct Quaternion;
 struct Mat4;
@@ -54,6 +56,9 @@ public:
         y(0.0f),
         z(0.0f) {
     }
+
+    Vec3(const FloatArray& arr) :
+        x(arr[0]), y(arr[1]), z(arr[2]) {}
 
     Vec3(float xyz):
         x(xyz), y(xyz), z(xyz) {}
@@ -285,6 +290,10 @@ public:
 
     static Vec3 max(const Vec3& a, const Vec3& b) {
         return Vec3(fast_max(a.x, b.x), fast_max(a.y, b.y), fast_max(a.z, b.z));
+    }
+
+    operator FloatArray() const {
+        return {x, y, z};
     }
 };
 

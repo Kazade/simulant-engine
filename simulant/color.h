@@ -21,17 +21,22 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "generic/range_value.h"
 #include "math/utils.h"
 
 namespace smlt {
+typedef std::vector<float> FloatArray;
 
 struct Color {
     float r, g, b, a;
 
     Color():
         r(1.0), g(1.0), b(1.0), a(1.0) {}
+
+    Color(const FloatArray& arr) :
+        r(arr[0]), g(arr[1]), b(arr[2]), a(arr[3]) {}
 
     static Color from_bytes(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
         return Color(float(r) / 255.0f, float(g) / 255.0f, float(b) / 255.0f, float(a) / 255.0f);
@@ -57,6 +62,10 @@ struct Color {
 
     Color(float r, float g, float b, float a):
         r(r), g(g), b(b), a(a) {}
+
+    operator FloatArray() const {
+        return {r, g, b, a};
+    }
 
     Color operator*(const float rhs) const {
         return Color(r * rhs, g * rhs, b * rhs, a * rhs);

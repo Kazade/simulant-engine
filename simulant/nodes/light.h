@@ -150,7 +150,8 @@ private:
         }
 
         set_type(LIGHT_TYPE_POINT);
-        transform->set_position(params.arg<Vec3>("position").value_or(Vec3()));
+        transform->set_position(
+            params.arg<FloatArray>("position").value_or(Vec3()));
         return true;
     }
 };
@@ -175,7 +176,7 @@ public:
         }
 
         set_type(LIGHT_TYPE_DIRECTIONAL);
-        auto direction = params.arg<Vec3>("direction");
+        auto direction = params.arg<FloatArray>("direction");
         set_direction(direction.value_or(Vec3(1, -0.5, 0)));
         return true;
     }

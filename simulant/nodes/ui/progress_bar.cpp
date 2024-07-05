@@ -134,7 +134,7 @@ bool ProgressBar::on_create(Params params) {
         return true;
     }
 
-    auto sstyle = params.arg<WidgetStyle>("shared_style");
+    auto sstyle = params.arg<WidgetStylePtr>("shared_style");
     auto theme = params.arg<UIConfig>("theme").value_or(UIConfig());
 
     if(!sstyle) {

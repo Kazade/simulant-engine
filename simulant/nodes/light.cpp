@@ -75,7 +75,7 @@ bool Light::on_create(Params args) {
     set_range(100.0f);
     set_attenuation_from_range(100.0);
 
-    auto c = args.arg<Color>("color").value_or(DEFAULT_LIGHT_COLOR);
+    Color c = args.arg<FloatArray>("color").value_or(DEFAULT_LIGHT_COLOR);
     set_ambient(c);
     set_diffuse(c);
     set_specular(c);

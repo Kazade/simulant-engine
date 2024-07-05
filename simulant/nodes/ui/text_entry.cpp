@@ -18,7 +18,7 @@ bool TextEntry::on_create(Params params) {
         return false;
     }
 
-    set_text(params.arg<unicode>("text").value_or(""));
+    set_text(params.arg<std::string>("text").value_or(""));
     set_resize_mode(RESIZE_MODE_FIXED_WIDTH);
 
     auto w = params.arg<int>("width").value_or(-1);

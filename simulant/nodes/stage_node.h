@@ -378,7 +378,12 @@ void params_unpack(Params& params, std::set<NodeParam>::iterator it,
     last passed argument, but there may still be un-passed parameters
     so we need to set the defaults! */
     for(++it; it != end; ++it) {
-        params_set(params, *it, it->default_value());
+        auto default_v = it->default_value();
+        if(default_v) {
+            params_set(params, *it, default_v.value());
+        } else {
+            S_ERROR("Missing required parameter: {0}", it->name());
+        }
     }
 }
 
