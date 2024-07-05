@@ -47,7 +47,7 @@ public:
         }
     }
 
-    bool has_arg(const char* name) const {
+    bool contains(const char* name) const {
         return dict_.count(name);
     }
 
