@@ -12,22 +12,24 @@ namespace ui {
 
 /* We implicitly convert Px and float to int */
 struct WidgetImpl {
-    static any coerce_to_int(any in) {
+    static optional<ParamValue> coerce_to_int(any in) {
         try {
-            return any_cast<int>(in);
+            ParamValue ret = any_cast<int>(in);
+            return ret;
         } catch(bad_any_cast&) {
             any result = in;
             try {
                 auto px = any_cast<Px>(in);
                 result = (int)px.value;
             } catch(bad_any_cast&) {
-                if(do_coerce<float, int>(in, result)) {
-                    return result;
-                } else {
-                    throw;
+                try {
+                    float f = any_cast<float>(in);
+                    return ParamValue(f);
+                } catch(bad_any_cast&) {
+                    return no_value;
                 }
             }
-            return result;
+            return no_value;
         }
     }
 };
@@ -36,12 +38,10 @@ struct WidgetImpl {
 } // namespace smlt
 
 #define S_DEFINE_CORE_WIDGET_PROPERTIES(klass)                                 \
-    TypedNodeParam<int, klass> param_10000 = {                                 \
-        10000, "width", -1, "The width of the widget",                         \
-        smlt::ui::WidgetImpl::coerce_to_int};                                  \
-    TypedNodeParam<int, klass> param_10001 = {                                 \
-        10001, "height", -1, "The height of the widget",                       \
-        smlt::ui::WidgetImpl::coerce_to_int};                                  \
+    TypedNodeParam<int, klass> param_10000 = {10000, "width", -1,              \
+                                              "The width of the widget"};      \
+    TypedNodeParam<int, klass> param_10001 = {10001, "height", -1,             \
+                                              "The height of the widget"};     \
     TypedNodeParam<smlt::ui::UIConfig, klass> param_10002 = {                  \
         10002, "theme", smlt::ui::UIConfig(),                                  \
         "The theme to use for this widget"};                                   \

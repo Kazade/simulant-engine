@@ -246,17 +246,13 @@ constexpr bool has_spaces(const char* s) {
 
 class NodeParam {
 public:
-    typedef std::function<any(any)> coerce_func;
-
     NodeParam(int order, const char* name, NodeParamType type,
-              smlt::any default_value, const char* desc,
-              const coerce_func& coerce = coerce_func()) :
+              optional<ParamValue> default_value, const char* desc) :
         order_(order),
         name_(name),
         type_(type),
         default_value_(default_value),
-        desc_(desc),
-        coerce_(coerce) {}
+        desc_(desc) {}
 
     bool operator<(const NodeParam& rhs) const {
         return order_ < rhs.order_;
@@ -274,25 +270,16 @@ public:
         return desc_;
     }
 
-    any default_value() const {
-        if(coerce_) {
-            return coerce_(default_value_);
-        }
-
+    optional<ParamValue> default_value() const {
         return default_value_;
-    }
-
-    coerce_func coerce() const {
-        return coerce_;
     }
 
 private:
     int order_;
     const char* name_;
     NodeParamType type_;
-    any default_value_;
+    optional<ParamValue> default_value_;
     const char* desc_;
-    coerce_func coerce_;
 };
 
 template<typename T>
@@ -302,8 +289,15 @@ std::set<NodeParam>& get_node_params() {
 }
 
 template<typename T>
-any to_any(const smlt::optional<T>& fallback) {
-    return (fallback) ? fallback.value() : any();
+optional<ParamValue> to_param(const smlt::optional<T>& fallback) {
+    /* We abuse the default coersion rules of Params */
+    if(fallback) {
+        Params tmp;
+        tmp.set("value", fallback.value());
+        return tmp.raw("value");
+    } else {
+        return no_value;
+    }
 }
 
 template<typename T, typename C>
@@ -311,12 +305,10 @@ class TypedNodeParam {
 public:
     typedef T type;
 
-    TypedNodeParam(
-        int order, const char* name, const smlt::optional<T>& fallback,
-        const char* desc,
-        const NodeParam::coerce_func& coerce = NodeParam::coerce_func()) :
+    TypedNodeParam(int order, const char* name,
+                   const smlt::optional<T>& fallback, const char* desc) :
         param_(NodeParam(order, name, type_to_node_param_type<T>::value,
-                         to_any(fallback), desc, coerce)) {
+                         to_param(fallback), desc)) {
 
         get_node_params<C>().insert(param_);
     }
@@ -342,10 +334,10 @@ private:
 #define __S_GEN_PARAM(param, line) param##line
 #define _S_GEN_PARAM(param, line) __S_GEN_PARAM(param, line)
 
-#define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc, ...)      \
+#define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc)           \
     static_assert(!has_spaces(name), "Param name must not have spaces");       \
     static inline TypedNodeParam<type, klass> _S_GEN_PARAM(                    \
-        param_, __LINE__) = {__LINE__, name, fallback, desc, ##__VA_ARGS__}
+        param_, __LINE__) = {__LINE__, name, fallback, desc}
 
 /* We need to coerce const char* into the correct string class */
 template<typename T>
@@ -363,12 +355,12 @@ inline void params_set(Params& params, const NodeParam& p, const char* x) {
 
 /* Simple coercion via copy constructor */
 template<typename Source, typename Dest>
-bool do_coerce(const any& in, any& out) {
+optional<Dest> do_coerce(const any& in) {
     try {
-        out = Dest(any_cast<Source>(in));
-        return true;
+        Source s = any_cast<Source>(in);
+        return (Dest)s;
     } catch(bad_any_cast&) {
-        return false;
+        return no_value;
     }
 }
 
@@ -667,19 +659,14 @@ protected:
         for(auto param: get_node_params<N>()) {
             auto name = param.name();
             bool passed = params.has_arg(name);
-            auto to_set = param.default_value();
-            if(!passed && to_set.empty()) {
+            if(!passed && !param.default_value()) {
                 // No default and not provided
                 return false;
             } else if(passed) {
-                to_set = params.raw(name);
+                cleaned.set(name, params.raw(name).value());
+            } else {
+                cleaned.set(name, param.default_value().value());
             }
-
-            if(param.coerce()) {
-                to_set = param.coerce()(to_set);
-            }
-
-            cleaned.set(name, to_set);
         }
 
         params = cleaned;

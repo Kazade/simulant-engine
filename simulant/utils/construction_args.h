@@ -1,79 +1,49 @@
 #pragma once
 
-#include "../generic/any/any.h"
 #include "../generic/optional.h"
 #include "../logging.h"
+#include "../nodes/geoms/geom_culler.h"
+#include "../nodes/ui/ui_config.h"
+#include "../nodes/ui/widget.h"
 #include "../utils/unicode.h"
+
 #include "limited_string.h"
 #include <initializer_list>
 #include <map>
+#include <variant>
 #include <vector>
 
 namespace smlt {
+struct TextureFlags;
 
-/* A set of named arguments that have been passed
-   to construct a stage node. It's up to the stage node
-   to define which args and types are valid.
+typedef LimitedString<32> ParamKey;
+typedef std::vector<ParamKey> ParamKeys;
 
-   Note: Due to unresolved problems with const char* and smlt::any
-   passing a const char* value will implicitly convert to std::string
-   internally and must be fetched using std::string.
+typedef std::vector<int> IntArray;
+typedef std::vector<float> FloatArray;
+
+typedef std::variant<float, FloatArray, int, IntArray, std::string, TexturePtr,
+                     MeshPtr, ParticleScriptPtr, ui::UIConfig,
+                     ui::WidgetStylePtr, GeomCullerOptions, TextureFlags>
+    ParamValue;
+
+/*
+   Generic Key <> Value type for passing arguments to things like stage nodes.
+   The available types are modelled on Blender's custom properties with the
+   exception that bool and bool array can be represented instead by int an int
+   array. Additional types are required for stage node parameters.
+
+   Vector and Matrix types are implicitly converted to FloatArray.
 */
-
-typedef std::vector<LimitedString<32>> ConstructionArgNames;
 
 class Params {
 public:
     Params() = default;
-    Params(const std::initializer_list<smlt::any>& params) {
-        int i = 0;
-        std::string key;
-        bool skip = false;
+    Params(const std::initializer_list<std::pair<const char*, ParamValue>>&
+               params) {
         for(auto& param: params) {
-            if(skip) {
-                skip = false;
-            } else {
-                if(i % 2 == 0) {
-                    try {
-                        key = any_cast<const char*>(param);
-                    } catch(bad_any_cast& e) {
-                        try {
-                            key = any_cast<std::string>(param);
-                        } catch(bad_any_cast& e) {
-                            try {
-                                key = any_cast<unicode>(param).encode();
-                            } catch(bad_any_cast& e) {
-                                S_ERROR("Couldn't parse arg: {0}", i);
-                                skip = true;
-                            }
-                        }
-                    }
-                } else {
-                    set_arg(key.c_str(), param);
-                }
-            }
-
-            ++i;
+            set_arg(param.first, param.second);
         }
-    }
-
-    template<typename T>
-    bool set_arg(const char* name, T value) {
-        auto existed = dict_.count(name);
-        dict_[name] = value;
-        return !existed;
-    }
-
-    bool set_arg(const char* name, any value) {
-        auto existed = dict_.count(name);
-        dict_.insert(std::make_pair(name, value));
-        return !existed;
-    }
-
-    bool set_arg(const char* name, const char* value) {
-        auto existed = dict_.count(name);
-        dict_[name] = std::string(value);
-        return !existed;
     }
 
     bool has_arg(const char* name) const {
@@ -87,11 +57,15 @@ public:
             return no_value;
         }
 
-        return any_cast<T>(it->second);
+        try {
+            return std::get<T>(it->second);
+        } catch(std::bad_variant_access&) {
+            return no_value;
+        }
     }
 
-    ConstructionArgNames arg_names() const {
-        ConstructionArgNames ret;
+    ParamKeys arg_names() const {
+        ParamKeys ret;
         for(auto& p: dict_) {
             ret.push_back(p.first);
         }
@@ -100,12 +74,11 @@ public:
 
     template<typename T>
     Params set(const char* name, T value) {
-        S_ERROR("Setting {0} in {1}", typeid(T).name(), name);
         set_arg(name, value);
         return *this;
     }
 
-    optional<any> raw(const char* name) const {
+    optional<ParamValue> raw(const char* name) const {
         auto it = dict_.find(name);
         if(it != dict_.end()) {
             return it->second;
@@ -115,7 +88,44 @@ public:
     }
 
 private:
-    std::map<LimitedString<32>, any> dict_;
+    std::map<ParamKey, ParamValue> dict_;
+
+    template<typename T>
+    bool set_arg(const char* name, T value) {
+        auto existed = dict_.count(name);
+        dict_[name] = value;
+        return !existed;
+    }
+
+    bool set_arg(const char* name, const Vec2& vec) {
+        return set_arg(name, FloatArray({vec.x, vec.y}));
+    }
+
+    bool set_arg(const char* name, const Vec3& vec) {
+        return set_arg(name, FloatArray({vec.x, vec.y, vec.z}));
+    }
+
+    bool set_arg(const char* name, const Vec4& vec) {
+        return set_arg(name, FloatArray({vec.x, vec.y, vec.z, vec.w}));
+    }
+
+    bool set_arg(const char* name, const Quaternion& vec) {
+        return set_arg(name, FloatArray({vec.x, vec.y, vec.z, vec.w}));
+    }
+
+    bool set_arg(const char* name, const char* text) {
+        return set_arg(name, std::string(text));
+    }
+
+    bool set_arg(const char* name, const unicode& text) {
+        return set_arg(name, text.encode());
+    }
+
+    bool set_arg(const char* name, ParamValue value) {
+        auto existed = dict_.count(name);
+        dict_.insert(std::make_pair(name, value));
+        return !existed;
+    }
 };
 
 } // namespace smlt
