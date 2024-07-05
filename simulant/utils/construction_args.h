@@ -1,20 +1,24 @@
 #pragma once
 
 #include "../generic/optional.h"
-#include "../logging.h"
-#include "../nodes/geoms/geom_culler.h"
-#include "../nodes/ui/ui_config.h"
-#include "../nodes/ui/widget.h"
 #include "../utils/unicode.h"
 
+#include "../assets/texture_flags.h"
 #include "limited_string.h"
 #include <initializer_list>
 #include <map>
+#include <memory>
 #include <variant>
 #include <vector>
 
 namespace smlt {
-struct TextureFlags;
+namespace ui {
+class UIConfig;
+struct WidgetStyle;
+typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
+} // namespace ui
+
+struct GeomCullerOptions;
 
 typedef LimitedString<32> ParamKey;
 typedef std::vector<ParamKey> ParamKeys;

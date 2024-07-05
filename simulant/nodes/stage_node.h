@@ -20,6 +20,7 @@
 #include "iterators/descendent_iterator.h"
 #include "iterators/sibling_iterator.h"
 
+#include "../texture.h"
 #include "builtins.h"
 #include "simulant/generic/any/any.h"
 #include "simulant/generic/managed.h"

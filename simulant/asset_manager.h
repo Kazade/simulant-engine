@@ -3,9 +3,9 @@
  *     This file is part of Simulant.
  *
  *     Simulant is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Lesser General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  *
  *     Simulant is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,22 +18,23 @@
 
 #pragma once
 
-#include <string>
 #include <map>
+#include <string>
 
-#include "generic/object_manager.h"
-#include "managers/window_holder.h"
-#include "loaders/heightmap_loader.h"
-#include "loader.h"
-#include "texture.h"
-#include "meshes/mesh.h"
-#include "assets/material.h"
-#include "sound.h"
-#include "font.h"
-#include "assets/particle_script.h"
-#include "path.h"
 #include "assets/binary_data.h"
+#include "assets/material.h"
+#include "assets/particle_script.h"
+#include "assets/texture_flags.h"
+#include "font.h"
 #include "generic/lru_cache.h"
+#include "generic/object_manager.h"
+#include "loader.h"
+#include "loaders/heightmap_loader.h"
+#include "managers/window_holder.h"
+#include "meshes/mesh.h"
+#include "path.h"
+#include "sound.h"
+#include "texture.h"
 
 namespace smlt {
 
@@ -44,27 +45,9 @@ typedef ObjectManager<AssetID, Material, DO_REFCOUNT> MaterialManager;
 typedef ObjectManager<AssetID, Texture, DO_REFCOUNT> TextureManager;
 typedef ObjectManager<AssetID, Sound, DO_REFCOUNT> SoundManager;
 typedef ObjectManager<AssetID, Font, DO_REFCOUNT> FontManager;
-typedef ObjectManager<AssetID, ParticleScript, DO_REFCOUNT> ParticleScriptManager;
+typedef ObjectManager<AssetID, ParticleScript, DO_REFCOUNT>
+    ParticleScriptManager;
 typedef ObjectManager<AssetID, Binary, DO_REFCOUNT> BinaryManager;
-
-struct TextureFlags {
-    TextureFlags(
-        MipmapGenerate mipmap = MIPMAP_GENERATE_COMPLETE,
-        TextureWrap wrap = TEXTURE_WRAP_REPEAT,
-        TextureFilter filter = TEXTURE_FILTER_POINT):
-        mipmap(mipmap),
-        wrap(wrap),
-        filter(filter) {
-
-    }
-
-    MipmapGenerate mipmap = MIPMAP_GENERATE_COMPLETE;
-    TextureWrap wrap = TEXTURE_WRAP_REPEAT;
-    TextureFilter filter = TEXTURE_FILTER_POINT;
-    TextureFreeData free_data = TEXTURE_FREE_DATA_AFTER_UPLOAD;
-    bool flip_vertically = false;
-    bool auto_upload = true; // Should the texture be uploaded automatically?
-};
 
 struct FontFlags {
     uint16_t size = 0;
@@ -85,8 +68,9 @@ struct SoundFlags {
  *
  * TEMPLATE="""
     // %(klass)s API
-    %(klass)sPtr load_%(name)s(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    void destroy_%(name)s(%(klass)sID id);
+    %(klass)sPtr load_%(name)s(const Path& filename, GarbageCollectMethod
+garbage_collect=GARBAGE_COLLECT_PERIODIC); void destroy_%(name)s(%(klass)sID
+id);
     %(klass)sPtr %(name)s(%(klass)sID id);
     const %(klass)sPtr %(name)s (%(klass)sID id) const;
     std::size_t %(name)s_count() const;
@@ -107,63 +91,67 @@ for klass, name in (
 
 class AssetManager {
 public:
-    AssetManager(AssetManager* parent=nullptr);
+    AssetManager(AssetManager* parent = nullptr);
     virtual ~AssetManager();
 
     // Generated API
 
     /* ParticleScript API */
-    ParticleScriptPtr load_particle_script(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    ParticleScriptPtr load_particle_script(
+        const Path& filename,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     void destroy_particle_script(AssetID id);
     ParticleScriptPtr particle_script(AssetID id);
-    const ParticleScriptPtr particle_script (AssetID id) const;
+    const ParticleScriptPtr particle_script(AssetID id) const;
     std::size_t particle_script_count() const;
     bool has_particle_script(AssetID id) const;
     ParticleScriptPtr find_particle_script(const std::string& name);
 
     /* Texture API */
-    TexturePtr load_texture(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr load_texture(
+        const Path& filename,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     void destroy_texture(AssetID id);
     TexturePtr texture(AssetID id);
-    const TexturePtr texture (AssetID id) const;
+    const TexturePtr texture(AssetID id) const;
     std::size_t texture_count() const;
     bool has_texture(AssetID id) const;
     TexturePtr find_texture(const std::string& alias);
 
-
     /* Mesh API */
     void destroy_mesh(AssetID id);
     MeshPtr mesh(AssetID id);
-    const MeshPtr mesh (AssetID id) const;
+    const MeshPtr mesh(AssetID id) const;
     std::size_t mesh_count() const;
     bool has_mesh(AssetID id) const;
     MeshPtr find_mesh(const std::string& name);
 
-
     /* Material API */
-    MaterialPtr load_material(const Path &filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr load_material(
+        const Path& filename,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     void destroy_material(const AssetID& id);
     MaterialPtr material(const AssetID& id);
-    const MaterialPtr material (const AssetID& id) const;
+    const MaterialPtr material(const AssetID& id) const;
     std::size_t material_count() const;
     bool has_material(const AssetID& id) const;
     MaterialPtr find_material(const std::string& name);
 
     /* Sound API */
     SoundPtr load_sound(
-        const Path& filename,
-        const SoundFlags& flags=SoundFlags(),
-        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
-    );
+        const Path& filename, const SoundFlags& flags = SoundFlags(),
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     void destroy_sound(AssetID id);
     SoundPtr sound(AssetID id);
-    const SoundPtr sound (AssetID id) const;
+    const SoundPtr sound(AssetID id) const;
     std::size_t sound_count() const;
     bool has_sound(AssetID id) const;
     SoundPtr find_sound(const std::string& name);
 
     /* Load raw binary data from a file */
-    BinaryPtr load_binary(const Path& filename, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    BinaryPtr load_binary(
+        const Path& filename,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     BinaryPtr binary(AssetID id) const;
     std::size_t binary_count() const;
     bool has_binary(AssetID id) const;
@@ -190,49 +178,77 @@ public:
     FontPtr create_font_from_memory(
         const uint8_t* data, const std::size_t size, const FontFlags& flags,
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
-    FontPtr create_font_from_family(const std::string& family, const FontFlags& flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    FontPtr load_font(const Path &filename, const FontFlags& flags=FontFlags(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    FontPtr create_font_from_family(
+        const std::string& family, const FontFlags& flags,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+    FontPtr load_font(
+        const Path& filename, const FontFlags& flags = FontFlags(),
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     void destroy_font(AssetID id);
     FontPtr font(AssetID id);
-    const FontPtr font (AssetID id) const;
+    const FontPtr font(AssetID id) const;
     std::size_t font_count() const;
     bool has_font(AssetID id) const;
     FontPtr find_font(const std::string& alias);
 
     // Customisations
-    TexturePtr create_texture(uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    TexturePtr load_texture(const Path& path, TextureFlags flags, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    TexturePtr create_texture(
+        uint16_t width, uint16_t height,
+        TextureFormat format = TEXTURE_FORMAT_RGBA_4UB_8888,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+    TexturePtr load_texture(
+        const Path& path, TextureFlags flags,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
-    MaterialPtr create_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr create_material(
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
-    MeshPtr create_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshPtr create_mesh(VertexDataPtr vertex_data, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MeshPtr load_mesh(const Path& path, const VertexSpecification& desired_specification=VertexSpecification::DEFAULT, const MeshLoadOptions& options=MeshLoadOptions(), GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr create_mesh(
+        VertexSpecification vertex_specification,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+    MeshPtr create_mesh(
+        VertexDataPtr vertex_data,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+    MeshPtr load_mesh(
+        const Path& path,
+        const VertexSpecification& desired_specification =
+            VertexSpecification::DEFAULT,
+        const MeshLoadOptions& options = MeshLoadOptions(),
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     /*
      * Given a submesh, this creates a new mesh with just that single submesh
      */
-    MeshPtr create_mesh_from_submesh(SubMesh* submesh, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr create_mesh_from_submesh(
+        SubMesh* submesh,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
-    MeshPtr create_mesh_from_heightmap(const Path& image_file, const HeightmapSpecification &spec=HeightmapSpecification(),
-        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
-    );
+    MeshPtr create_mesh_from_heightmap(
+        const Path& image_file,
+        const HeightmapSpecification& spec = HeightmapSpecification(),
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     MeshPtr create_mesh_from_heightmap(
         const TexturePtr& texture,
-        const HeightmapSpecification& spec=HeightmapSpecification(),
-        GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC
-    );
+        const HeightmapSpecification& spec = HeightmapSpecification(),
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
-    MeshPtr create_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialPtr create_material_from_texture(TexturePtr texture, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MeshPtr create_mesh_as_cube_with_submesh_per_face(
+        float width,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr create_material_from_texture(
+        TexturePtr texture,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     void update(float dt);
 
     virtual MaterialPtr default_material() const;
 
-    MaterialPtr clone_material(const AssetID& mat_id, GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
-    MaterialPtr clone_default_material(GarbageCollectMethod garbage_collect=GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr clone_material(
+        const AssetID& mat_id,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+    MaterialPtr clone_default_material(
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     AssetManager* base_manager() const;
 
@@ -266,12 +282,15 @@ private:
     }
 
     void unregister_child(AssetManager* child) {
-        children_.erase(std::remove(children_.begin(), children_.end(), child), children_.end());
+        children_.erase(std::remove(children_.begin(), children_.end(), child),
+                        children_.end());
     }
 
-    void set_garbage_collection_method(const Asset* resource, GarbageCollectMethod method) {
-        // FIXME: This is ugly, but I'm struggling to think of another way to get from the Resource
-        // to the right manager while keeping Resource as a non-template
+    void set_garbage_collection_method(const Asset* resource,
+                                       GarbageCollectMethod method) {
+        // FIXME: This is ugly, but I'm struggling to think of another way to
+        // get from the Resource to the right manager while keeping Resource as
+        // a non-template
 
         if(auto p = dynamic_cast<const Mesh*>(resource)) {
             mesh_manager_.set_garbage_collection_method(p->id(), method);
@@ -284,7 +303,8 @@ private:
         } else if(auto p = dynamic_cast<const Texture*>(resource)) {
             texture_manager_.set_garbage_collection_method(p->id(), method);
         } else if(auto p = dynamic_cast<const ParticleScript*>(resource)) {
-            particle_script_manager_.set_garbage_collection_method(p->id(), method);
+            particle_script_manager_.set_garbage_collection_method(p->id(),
+                                                                   method);
         } else if(auto p = dynamic_cast<const Binary*>(resource)) {
             binary_manager_.set_garbage_collection_method(p->id(), method);
         } else {
@@ -300,12 +320,13 @@ class LocalAssetManager:
     public RefCounted<LocalAssetManager> {
 
 public:
-    LocalAssetManager(AssetManager* parent=nullptr):
+    LocalAssetManager(AssetManager* parent = nullptr) :
         AssetManager(parent) {}
 
-    bool init() { return true; }
+    bool init() {
+        return true;
+    }
     void clean_up() {}
-
 };
 
 class SharedAssetManager:
@@ -316,7 +337,7 @@ public:
 
     virtual MaterialPtr default_material() const override;
 
-    void set_default_material_filename(const Path &filename);
+    void set_default_material_filename(const Path& filename);
     Path default_material_filename() const;
 
 private:
@@ -340,8 +361,6 @@ private:
     TexturePtr z_tex_;
 };
 
-
 #undef ASSET_METHOD_DEFINITIONS
 
-}
-
+} // namespace smlt
