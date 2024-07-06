@@ -289,25 +289,13 @@ std::set<NodeParam>& get_node_params() {
     return properties;
 }
 
-template<typename T>
-optional<ParamValue> to_param(const smlt::optional<T>& fallback) {
-    /* We abuse the default coersion rules of Params */
-    if(fallback) {
-        Params tmp;
-        tmp.set("value", fallback.value());
-        return tmp.raw("value");
-    } else {
-        return no_value;
-    }
-}
-
 template<typename T, typename C>
 class TypedNodeParam {
 public:
     typedef T type;
 
-    TypedNodeParam(int order, const char* name,
-                   const smlt::optional<T>& fallback, const char* desc) :
+    template<typename F>
+    TypedNodeParam(int order, const char* name, F fallback, const char* desc) :
         param_(NodeParam(order, name, type_to_node_param_type<T>::value,
                          to_param(fallback), desc)) {
 
@@ -319,6 +307,22 @@ public:
     }
 
 private:
+    template<typename F>
+    optional<ParamValue> to_param(const F& fallback) {
+        /* We abuse the default coersion rules of Params */
+        Params tmp;
+        tmp.set("value", fallback);
+        return tmp.raw("value");
+    }
+
+    optional<ParamValue> to_param(const OptionalInit&) {
+        return no_value;
+    }
+
+    optional<ParamValue> to_param(const std::nullptr_t&) {
+        return no_value;
+    }
+
     NodeParam param_;
 };
 
@@ -337,8 +341,8 @@ private:
 
 #define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc)           \
     static_assert(!has_spaces(name), "Param name must not have spaces");       \
-    static inline TypedNodeParam<type, klass> _S_GEN_PARAM(                    \
-        param_, __LINE__) = {__LINE__, name, fallback, desc}
+    static inline auto _S_GEN_PARAM(param_, __LINE__) =                        \
+        TypedNodeParam<type, klass>(__LINE__, name, fallback, desc)
 
 /* We need to coerce const char* into the correct string class */
 template<typename T>

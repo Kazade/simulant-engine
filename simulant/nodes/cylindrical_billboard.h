@@ -10,7 +10,7 @@ class CylindricalBillboard: public StageNode {
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD);
     S_DEFINE_STAGE_NODE_PARAM(CylindricalBillboard, "forward", Vec3,
-                              Vec3::FORWARD,
+                              Vec3(0, 0, -1),
                               "The forward direction of the billboard");
 
     CylindricalBillboard(Scene* owner) :

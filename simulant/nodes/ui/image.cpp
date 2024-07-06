@@ -20,7 +20,8 @@ bool Image::on_create(Params params) {
         return false;
     }
 
-    auto sstyle = params.get<WidgetStylePtr>("shared_style");
+    auto sstyle =
+        params.get<WidgetStylePtr>("shared_style").value_or(WidgetStylePtr());
     auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
     auto texture = params.get<TexturePtr>("texture").value_or(TexturePtr());
     if(!sstyle) {
