@@ -295,7 +295,8 @@ public:
     typedef T type;
 
     template<typename F>
-    TypedNodeParam(int order, const char* name, F fallback, const char* desc) :
+    TypedNodeParam(int order, const char* name, const F& fallback,
+                   const char* desc) :
         param_(NodeParam(order, name, type_to_node_param_type<T>::value,
                          to_param(fallback), desc)) {
 
