@@ -91,14 +91,12 @@ T* mixin_factory(F& factory, StageNode* base, Args&&... args);
 
 enum NodeParamType {
     NODE_PARAM_TYPE_FLOAT,
-    NODE_PARAM_TYPE_VEC2,
-    NODE_PARAM_TYPE_VEC3,
-    NODE_PARAM_TYPE_VEC4,
-    NODE_PARAM_TYPE_QUATERNION,
+    NODE_PARAM_TYPE_FLOAT_ARRAY,
     NODE_PARAM_TYPE_INT,
+    NODE_PARAM_TYPE_INT_ARRAY,
     NODE_PARAM_TYPE_BOOL,
+    NODE_PARAM_TYPE_BOOL_ARRAY,
     NODE_PARAM_TYPE_STRING,
-    NODE_PARAM_TYPE_UNICODE,
     NODE_PARAM_TYPE_MESH_PTR,
     NODE_PARAM_TYPE_TEXTURE_PTR,
     NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR,
@@ -119,38 +117,33 @@ struct type_to_node_param_type<float> {
 };
 
 template<>
+struct type_to_node_param_type<FloatArray> {
+    static const NodeParamType value = NODE_PARAM_TYPE_FLOAT_ARRAY;
+};
+
+template<>
 struct type_to_node_param_type<int> {
     static const NodeParamType value = NODE_PARAM_TYPE_INT;
 };
 
 template<>
-struct type_to_node_param_type<Vec2> {
-    static const NodeParamType value = NODE_PARAM_TYPE_VEC2;
+struct type_to_node_param_type<IntArray> {
+    static const NodeParamType value = NODE_PARAM_TYPE_INT_ARRAY;
 };
 
 template<>
-struct type_to_node_param_type<Vec3> {
-    static const NodeParamType value = NODE_PARAM_TYPE_VEC3;
+struct type_to_node_param_type<bool> {
+    static const NodeParamType value = NODE_PARAM_TYPE_BOOL;
 };
 
 template<>
-struct type_to_node_param_type<Vec4> {
-    static const NodeParamType value = NODE_PARAM_TYPE_VEC4;
-};
-
-template<>
-struct type_to_node_param_type<Quaternion> {
-    static const NodeParamType value = NODE_PARAM_TYPE_QUATERNION;
+struct type_to_node_param_type<BoolArray> {
+    static const NodeParamType value = NODE_PARAM_TYPE_BOOL_ARRAY;
 };
 
 template<>
 struct type_to_node_param_type<std::string> {
     static const NodeParamType value = NODE_PARAM_TYPE_STRING;
-};
-
-template<>
-struct type_to_node_param_type<unicode> {
-    static const NodeParamType value = NODE_PARAM_TYPE_UNICODE;
 };
 
 template<>
@@ -197,18 +190,8 @@ struct node_param_type_to_type<NODE_PARAM_TYPE_FLOAT> {
 };
 
 template<>
-struct node_param_type_to_type<NODE_PARAM_TYPE_VEC2> {
-    typedef Vec2 type;
-};
-
-template<>
-struct node_param_type_to_type<NODE_PARAM_TYPE_VEC3> {
-    typedef Vec3 type;
-};
-
-template<>
-struct node_param_type_to_type<NODE_PARAM_TYPE_VEC4> {
-    typedef Vec4 type;
+struct node_param_type_to_type<NODE_PARAM_TYPE_FLOAT_ARRAY> {
+    typedef FloatArray type;
 };
 
 template<>
@@ -217,8 +200,18 @@ struct node_param_type_to_type<NODE_PARAM_TYPE_INT> {
 };
 
 template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_INT_ARRAY> {
+    typedef IntArray type;
+};
+
+template<>
 struct node_param_type_to_type<NODE_PARAM_TYPE_BOOL> {
     typedef bool type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_BOOL_ARRAY> {
+    typedef BoolArray type;
 };
 
 template<>
@@ -342,6 +335,16 @@ private:
 
 #define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc)           \
     static_assert(!has_spaces(name), "Param name must not have spaces");       \
+    static_assert(std::is_same<type, int>::value ||                            \
+                  std::is_same<type, IntArray>::value ||                       \
+                  std::is_same<type, float>::value ||                          \
+                  std::is_same<type, FloatArray>::value ||                     \
+                  std::is_same<type, ParticleScriptPtr>::value ||              \
+                  std::is_same<type, MeshPtr>::value ||                        \
+                  std::is_same<type, GeomCullerOptions>::value ||              \
+                  std::is_same<type, std::string>::value ||                    \
+                  std::is_same<type, TextureFlags>::value ||                   \
+                  std::is_same<type, TexturePtr>::value);                      \
     static inline auto _S_GEN_PARAM(param_, __LINE__) =                        \
         TypedNodeParam<type, klass>(__LINE__, name, fallback, desc)
 
@@ -352,11 +355,7 @@ void params_set(Params& params, const NodeParam& p, T x) {
 }
 
 inline void params_set(Params& params, const NodeParam& p, const char* x) {
-    if(p.type() == NODE_PARAM_TYPE_UNICODE) {
-        params.set(p.name(), unicode(x));
-    } else {
-        params.set(p.name(), std::string(x));
-    }
+    params.set(p.name(), std::string(x));
 }
 
 /* Simple coercion via copy constructor */

@@ -23,9 +23,10 @@ typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
 typedef LimitedString<32> ParamKey;
 typedef std::vector<ParamKey> ParamKeys;
 
-typedef std::variant<float, FloatArray, int, IntArray, std::string, TexturePtr,
-                     MeshPtr, ParticleScriptPtr, ui::UIConfig,
-                     ui::WidgetStylePtr, GeomCullerOptions, TextureFlags>
+typedef std::variant<float, FloatArray, int, IntArray, bool, BoolArray,
+                     std::string, TexturePtr, MeshPtr, ParticleScriptPtr,
+                     ui::UIConfig, ui::WidgetStylePtr, GeomCullerOptions,
+                     TextureFlags>
     ParamValue;
 
 /*

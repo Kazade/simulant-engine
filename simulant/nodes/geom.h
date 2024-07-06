@@ -54,11 +54,11 @@ public:
     S_DEFINE_STAGE_NODE_PARAM(Geom, "options", GeomCullerOptions,
                               GeomCullerOptions(),
                               "The options to use when creating the culler");
-    S_DEFINE_STAGE_NODE_PARAM(Geom, "position", Vec3, Vec3(),
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "position", FloatArray, Vec3(),
                               "The position of the geom");
-    S_DEFINE_STAGE_NODE_PARAM(Geom, "orientation", Quaternion, Quaternion(),
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "orientation", FloatArray, Quaternion(),
                               "The orientation of the geom");
-    S_DEFINE_STAGE_NODE_PARAM(Geom, "scale", Vec3, Vec3(1),
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "scale", FloatArray, Vec3(1),
                               "The scale of the geom");
 
     Geom(Scene* owner);
