@@ -31,8 +31,10 @@
 #include "simulant/utils/params.h"
 
 #if defined(__WIN32__)
-#include <psapi.h>
+// clang-format off
 #include <windows.h>
+#include <psapi.h>
+// clang-format on
 #endif
 
 namespace smlt {

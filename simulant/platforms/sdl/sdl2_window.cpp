@@ -20,10 +20,12 @@
 #ifdef __linux__
 #include <unistd.h>
 #elif defined(__WIN32__)
+// clang-format off
 #include <windows.h>
 #include <psapi.h>
 #include <sysinfoapi.h>
 #include <processthreadsapi.h>
+// clang-format on
 #endif
 
 #include "../../logging.h"
