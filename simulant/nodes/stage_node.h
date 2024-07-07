@@ -393,7 +393,7 @@ void params_unpack(Params& params, std::set<NodeParam>::iterator it,
 
 template<typename T, typename... Args>
 void params_unpack(Params& params, std::set<NodeParam>::iterator it,
-                   std::set<NodeParam>::iterator end, T x, Args... args) {
+                   std::set<NodeParam>::iterator end, T x, Args&&... args) {
     if(it == end) {
         S_WARN("Ignoring additional unknown parameters");
         return;
@@ -401,7 +401,7 @@ void params_unpack(Params& params, std::set<NodeParam>::iterator it,
 
     params_set(params, *it, x);
 
-    params_unpack(params, ++it, end, args...);
+    params_unpack(params, ++it, end, std::forward<Args>(args)...);
 }
 
 class StageNode:
@@ -532,7 +532,8 @@ public:
         Params params;
 
         auto node_params = get_node_params<T>();
-        params_unpack(params, node_params.begin(), node_params.end(), args...);
+        params_unpack(params, node_params.begin(), node_params.end(),
+                      std::forward<Args>(args)...);
 
         return impl::child_factory<decltype(owner_), T>(
             owner_, this, std::forward<const Params&>(params));
