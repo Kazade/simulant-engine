@@ -180,9 +180,9 @@ public:
 
     Vec3 lerp_smooth(const Vec3& end, const float dt, const float p, const float t) const {
         return Vec3(
-            fast_fmaf((end.x - x), 1.0f - std::powf(p, fast_divide(dt, t)), x),
-            fast_fmaf((end.y - y), 1.0f - std::powf(p, fast_divide(dt, t)), y),
-            fast_fmaf((end.z - z), 1.0f - std::powf(p, fast_divide(dt, t)), z)
+            fast_fmaf((end.x - x), 1.0f - std::pow(p, fast_divide(dt, t)), x),
+            fast_fmaf((end.y - y), 1.0f - std::pow(p, fast_divide(dt, t)), y),
+            fast_fmaf((end.z - z), 1.0f - std::pow(p, fast_divide(dt, t)), z)
         );
     }
 
