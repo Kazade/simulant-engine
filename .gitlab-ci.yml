@@ -11,15 +11,15 @@ code_quality:
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
     - if: '$CI_COMMIT_REF_NAME == "next"'
-    - if: '$CI_COMMIT_TAG'
+    - if: "$CI_COMMIT_TAG"
 
 stages:
- - prepare
- - build
- - test
- - deploy
+  - prepare
+  - build
+  - test
+  - deploy
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
@@ -29,12 +29,12 @@ pages:
   stage: prepare
   image: fedora:33
   script:
-   - dnf install -y doxygen python3 git
-   - python3 tools/gendocs.py `pwd` `git describe --abbrev=4 --always --tags | cut -d - -f 1-2` `pwd`
-   - mv `git describe --abbrev=4 --always --tags | cut -d - -f 1-2`/html public
+    - dnf install -y doxygen python3 git
+    - python3 tools/gendocs.py `pwd` `git describe --abbrev=4 --always --tags | cut -d - -f 1-2` `pwd`
+    - mv `git describe --abbrev=4 --always --tags | cut -d - -f 1-2`/html public
   artifacts:
-   paths:
-    - public
+    paths:
+      - public
   only:
     - master
 
@@ -44,26 +44,26 @@ prepare:linux-x64-gcc:
   services:
     - docker:dind
   variables:
-    GIT_STRATEGY: none  # Prevent cloning
+    GIT_STRATEGY: none # Prevent cloning
     DOCKERFILE: >- # Generate a Dockerfile for the build image
       FROM fedora:32\n
       RUN dnf update -y && dnf clean all\n
       RUN dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers\n
-  before_script:  # Put the variable into a Dockerfile
-     - echo -e $DOCKERFILE > Dockerfile
-     - cat Dockerfile
+  before_script: # Put the variable into a Dockerfile
+    - echo -e $DOCKERFILE > Dockerfile
+    - cat Dockerfile
   script:
-     - docker pull $CI_REGISTRY_IMAGE:linux-x64-gcc || true
-     - docker build --cache-from $CI_REGISTRY_IMAGE:linux-x64-gcc -t $CI_REGISTRY_IMAGE:linux-x64-gcc .
-     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-     - docker push $CI_REGISTRY_IMAGE:linux-x64-gcc
+    - docker pull $CI_REGISTRY_IMAGE:linux-x64-gcc || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:linux-x64-gcc -t $CI_REGISTRY_IMAGE:linux-x64-gcc .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:linux-x64-gcc
   rules:
-      - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-        changes:
-          - .gitlab-ci.yml
-      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
-        changes:
-          - .gitlab-ci.yml
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - .gitlab-ci.yml
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
+      changes:
+        - .gitlab-ci.yml
 
 prepare:linux-x64-gcc11:
   stage: prepare
@@ -71,48 +71,46 @@ prepare:linux-x64-gcc11:
   services:
     - docker:dind
   variables:
-    GIT_STRATEGY: none  # Prevent cloning
+    GIT_STRATEGY: none # Prevent cloning
     DOCKERFILE: >- # Generate a Dockerfile for the build image
       FROM fedora:33\n
       RUN dnf update -y && dnf clean all\n
       RUN dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers\n
-  before_script:  # Put the variable into a Dockerfile
-     - echo -e $DOCKERFILE > Dockerfile
-     - cat Dockerfile
+  before_script: # Put the variable into a Dockerfile
+    - echo -e $DOCKERFILE > Dockerfile
+    - cat Dockerfile
   script:
-     - docker pull $CI_REGISTRY_IMAGE:linux-x64-gcc11 || true
-     - docker build --cache-from $CI_REGISTRY_IMAGE:linux-x64-gcc11 -t $CI_REGISTRY_IMAGE:linux-x64-gcc11 .
-     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-     - docker push $CI_REGISTRY_IMAGE:linux-x64-gcc11
+    - docker pull $CI_REGISTRY_IMAGE:linux-x64-gcc11 || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:linux-x64-gcc11 -t $CI_REGISTRY_IMAGE:linux-x64-gcc11 .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:linux-x64-gcc11
   rules:
-      - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-        changes:
-          - .gitlab-ci.yml
-      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
-        changes:
-          - .gitlab-ci.yml
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - .gitlab-ci.yml
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
+      changes:
+        - .gitlab-ci.yml
 
 prepare:windows-x64-mingw:
   stage: prepare
   image: docker:latest
   services:
     - docker:dind
-  variables:
-    GIT_STRATEGY: none  # Prevent cloning
-  before_script:  # Put the variable into a Dockerfile
-     - cp platforms/windows/Dockerfile Dockerfile
+  before_script: # Put the variable into a Dockerfile
+    - cp platforms/windows/Dockerfile Dockerfile
   script:
-     - docker pull $CI_REGISTRY_IMAGE:windows-x64-mingw || true
-     - docker build --cache-from $CI_REGISTRY_IMAGE:windows-x64-mingw -t $CI_REGISTRY_IMAGE:windows-x64-mingw .
-     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-     - docker push $CI_REGISTRY_IMAGE:windows-x64-mingw
+    - docker pull $CI_REGISTRY_IMAGE:windows-x64-mingw || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:windows-x64-mingw -t $CI_REGISTRY_IMAGE:windows-x64-mingw .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:windows-x64-mingw
   rules:
-      - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-        changes:
-          - platforms/windows/Dockerfile
-      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
-        changes:
-          - platforms/windows/Dockerfile
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - platforms/windows/Dockerfile
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
+      changes:
+        - platforms/windows/Dockerfile
 
 prepare:deploy:
   stage: prepare
@@ -120,26 +118,25 @@ prepare:deploy:
   services:
     - docker:dind
   variables:
-    GIT_STRATEGY: none  # Prevent cloning
     DOCKERFILE: >- # Generate a Dockerfile for the build image
       FROM fedora:33\n
       RUN dnf -y install openssl-devel python-devel python-setuptools libffi-devel python-pip rsync zip\n
       RUN pip install gsutil\n
-  before_script:  # Put the variable into a Dockerfile
-     - echo -e $DOCKERFILE > Dockerfile
-     - cat Dockerfile
+  before_script: # Put the variable into a Dockerfile
+    - echo -e $DOCKERFILE > Dockerfile
+    - cat Dockerfile
   script:
-     - docker pull $CI_REGISTRY_IMAGE:deploy || true
-     - docker build --cache-from $CI_REGISTRY_IMAGE:deploy -t $CI_REGISTRY_IMAGE:deploy .
-     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-     - docker push $CI_REGISTRY_IMAGE:deploy
+    - docker pull $CI_REGISTRY_IMAGE:deploy || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:deploy -t $CI_REGISTRY_IMAGE:deploy .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:deploy
   rules:
-      - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-        changes:
-          - .gitlab-ci.yml
-      - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
-        changes:
-          - .gitlab-ci.yml
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - .gitlab-ci.yml
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
+      changes:
+        - .gitlab-ci.yml
 
 .build:android:
   stage: build
@@ -153,14 +150,14 @@ prepare:deploy:
       - gradle/.gradle/notifications/
       - gradle/.gradle/wrapper/
   script:
-   - cd gradle
-   - export ABI_FILTERS=${ABI}
-   - ./gradlew --parallel --build-cache --gradle-user-home .gradle/ ${BUILD_JOB}
-   - cd ..
-   - mkdir -p ${TARGET}/${BUILD_TYPE}/simulant
-   - mv gradle/simulant/build/outputs/aar/simulant-${BUILD_TYPE}.aar ${TARGET}/${BUILD_TYPE}/simulant/simulant-${BUILD_TYPE}.aar
-   # - mkdir -p ${TARGET}/${BUILD_TYPE}/tests
-   # - mv gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
+    - cd gradle
+    - export ABI_FILTERS=${ABI}
+    - ./gradlew --parallel --build-cache --gradle-user-home .gradle/ ${BUILD_JOB}
+    - cd ..
+    - mkdir -p ${TARGET}/${BUILD_TYPE}/simulant
+    - mv gradle/simulant/build/outputs/aar/simulant-${BUILD_TYPE}.aar ${TARGET}/${BUILD_TYPE}/simulant/simulant-${BUILD_TYPE}.aar
+    # - mkdir -p ${TARGET}/${BUILD_TYPE}/tests
+    # - mv gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
   artifacts:
     paths:
       - ${TARGET}/${BUILD_TYPE}/simulant/
@@ -188,10 +185,10 @@ build:psp-mips-gcc:debug:
   variables:
     TARGET: psp-mips-gcc
   script:
-   - mkdir -p ${TARGET}/debug
-   - cd ${TARGET}/debug
-   - psp-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
+    - mkdir -p ${TARGET}/debug
+    - cd ${TARGET}/debug
+    - psp-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
@@ -204,10 +201,10 @@ build:psp-mips-gcc:release:
   variables:
     TARGET: psp-mips-gcc
   script:
-   - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - psp-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
+    - mkdir -p ${TARGET}/release
+    - cd ${TARGET}/release
+    - psp-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
   artifacts:
     paths:
       - ${TARGET}/release/simulant/
@@ -221,32 +218,31 @@ test:psp-mips-gcc:
     TARGET: psp-mips-gcc
   needs: ["build:psp-mips-gcc:debug", "build:psp-mips-gcc:release"]
   dependencies:
-   - build:psp-mips-gcc:debug
-   - build:psp-mips-gcc:release
+    - build:psp-mips-gcc:debug
+    - build:psp-mips-gcc:release
   before_script:
-   - dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-   - dnf install -y dpkg ppsspp-sdl pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy mesa-dri-drivers
-   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
-   - sleep 3
-   - export LIBGL_ALWAYS_SOFTWARE=1
-   - export DISPLAY=:99
+    - dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+    - dnf install -y dpkg ppsspp-sdl pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy mesa-dri-drivers
+    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
+    - sleep 3
+    - export LIBGL_ALWAYS_SOFTWARE=1
+    - export DISPLAY=:99
   script:
-   - mkdir -p /root/.config/ppsspp/PSP/SYSTEM/
-   - cd ${TARGET}/debug
-   - export SIMULANT_SOUND_DRIVER=null
-   - ln -s ../simulant simulant
-   - ln -s ../assets assets
-   - cp tests/EBOOT.PBP .
-   # FIXME: PSP tests currently hang on future tests, we need to fix that!
-   - timeout 120s PPSSPPSDL -d --escape-exit EBOOT.PBP || true
+    - mkdir -p /root/.config/ppsspp/PSP/SYSTEM/
+    - cd ${TARGET}/debug
+    - export SIMULANT_SOUND_DRIVER=null
+    - ln -s ../simulant simulant
+    - ln -s ../assets assets
+    - cp tests/EBOOT.PBP .
+    # FIXME: PSP tests currently hang on future tests, we need to fix that!
+    - timeout 120s PPSSPPSDL -d --escape-exit EBOOT.PBP || true
   artifacts:
-   when: always
-   reports:
+    when: always
+    reports:
       junit: ${TARGET}/debug/report.xml
-   paths:
-    - ${TARGET}/debug/simulant/libsimulant.a
-    - ${TARGET}/release/simulant/libsimulant.a
-
+    paths:
+      - ${TARGET}/debug/simulant/libsimulant.a
+      - ${TARGET}/release/simulant/libsimulant.a
 
 build:windows-x64-vcxx:release:
   stage: build
@@ -260,15 +256,14 @@ build:windows-x64-vcxx:release:
     - choco install -y cmake
     - $env:Path += ';C:\Program Files\CMake\bin'
   script:
-   - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - dir
-   - '& "$MSBUILD" my.vcxproj'
+    - mkdir -p ${TARGET}/release
+    - cd ${TARGET}/release
+    - cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - dir
+    - '& "$MSBUILD" my.vcxproj'
   artifacts:
     paths:
       - ${TARGET}/release/simulant/*.dll
-
 
 build:windows-x64-mingw:release:
   stage: build
@@ -277,17 +272,17 @@ build:windows-x64-mingw:release:
     MINGW_BIN_DIR: /usr/x86_64-w64-mingw32/sys-root/mingw/bin/
     TARGET: windows-x64-mingw
   script:
-   - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
-   - cp $MINGW_BIN_DIR/zlib1.dll simulant/
-   - cp $MINGW_BIN_DIR/SDL2.dll simulant/
-   - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
-   - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
-   - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
-   - cp $MINGW_BIN_DIR/OpenAL32.dll simulant/
-   - cp $MINGW_BIN_DIR/libssp-0.dll simulant/
+    - mkdir -p ${TARGET}/release
+    - cd ${TARGET}/release
+    - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
+    - cp $MINGW_BIN_DIR/zlib1.dll simulant/
+    - cp $MINGW_BIN_DIR/SDL2.dll simulant/
+    - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
+    - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
+    - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
+    - cp $MINGW_BIN_DIR/OpenAL32.dll simulant/
+    - cp $MINGW_BIN_DIR/libssp-0.dll simulant/
   artifacts:
     paths:
       - ${TARGET}/release/simulant/*.dll
@@ -299,18 +294,18 @@ build:windows-x64-mingw:debug:
     MINGW_BIN_DIR: /usr/x86_64-w64-mingw32/sys-root/mingw/bin/
     TARGET: windows-x64-mingw
   script:
-   - mkdir -p ${TARGET}/debug
-   - cd ${TARGET}/debug
-   - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
-   - cp $MINGW_BIN_DIR/zlib1.dll simulant/
-   - cp $MINGW_BIN_DIR/SDL2.dll simulant/
-   - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
-   - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
-   - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
-   - cp $MINGW_BIN_DIR/OpenAL32.dll simulant/
-   - cp $MINGW_BIN_DIR/libssp-0.dll simulant/
-   - cp simulant/*.dll tests/
+    - mkdir -p ${TARGET}/debug
+    - cd ${TARGET}/debug
+    - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
+    - cp $MINGW_BIN_DIR/zlib1.dll simulant/
+    - cp $MINGW_BIN_DIR/SDL2.dll simulant/
+    - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
+    - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
+    - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
+    - cp $MINGW_BIN_DIR/OpenAL32.dll simulant/
+    - cp $MINGW_BIN_DIR/libssp-0.dll simulant/
+    - cp simulant/*.dll tests/
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
@@ -325,48 +320,48 @@ test:windows-x64-mingw:
   variables:
     TARGET: windows-x64-mingw
   dependencies:
-   - build:windows-x64-mingw:debug
-   - build:windows-x64-mingw:release
+    - build:windows-x64-mingw:debug
+    - build:windows-x64-mingw:release
   before_script:
-   - dnf install -y xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
-   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
-   - sleep 3
-   - export LIBGL_ALWAYS_SOFTWARE=1
-   - export SIMULANT_SOUND_DRIVER=null
-   - export DISPLAY=:99
+    - dnf install -y xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
+    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
+    - sleep 3
+    - export LIBGL_ALWAYS_SOFTWARE=1
+    - export SIMULANT_SOUND_DRIVER=null
+    - export DISPLAY=:99
   script:
-   - cd ${TARGET}/debug/tests
-   - ln -s ../simulant
-   - ln -s ../assets
-   - wine64 simulant_tests.exe --junit-xml=report.xml
+    - cd ${TARGET}/debug/tests
+    - ln -s ../simulant
+    - ln -s ../assets
+    - wine64 simulant_tests.exe --junit-xml=report.xml
   artifacts:
-   reports:
-    junit: ${TARGET}/debug/tests/report.xml
-   paths:
-    - ${TARGET}/debug/simulant/*.dll
-    - ${TARGET}/release/simulant/*.dll
+    reports:
+      junit: ${TARGET}/debug/tests/report.xml
+    paths:
+      - ${TARGET}/debug/simulant/*.dll
+      - ${TARGET}/release/simulant/*.dll
 
 ## clang build is currently just for checking compilation
 build:linux-x64-clang:
   stage: build
   image: fedora:32
   variables:
-   TARGET: linux-x64-clang
+    TARGET: linux-x64-clang
   before_script:
-   - dnf install -y dnf && dnf clean all
-   - dnf install -y cmake make clang python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
+    - dnf install -y dnf && dnf clean all
+    - dnf install -y cmake make clang python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel
   script:
-   - export CC=/usr/bin/clang
-   - export CXX=/usr/bin/clang++
-   - mkdir -p ${TARGET}/debug
-   - cd ${TARGET}/debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
-   - cd ../..
-   - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
+    - export CC=/usr/bin/clang
+    - export CXX=/usr/bin/clang++
+    - mkdir -p ${TARGET}/debug
+    - cd ${TARGET}/debug
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
+    - cd ../..
+    - mkdir -p ${TARGET}/release
+    - cd ${TARGET}/release
+    - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
@@ -378,17 +373,17 @@ build:evercade-armv7-gcc:
   stage: build
   image: kazade/evercade-sdk
   variables:
-   TARGET: evercade-armv7-gcc
+    TARGET: evercade-armv7-gcc
   script:
-   - mkdir -p ${TARGET}/debug
-   - cd ${TARGET}/debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Evercade.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
-   - cd ../..
-   - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Evercade.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
+    - mkdir -p ${TARGET}/debug
+    - cd ${TARGET}/debug
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Evercade.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
+    - cd ../..
+    - mkdir -p ${TARGET}/release
+    - cd ${TARGET}/release
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Evercade.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
@@ -402,17 +397,17 @@ build:raspberrypi-armv7-gcc:
   stage: build
   image: kazade/raspberrypi-sdk
   variables:
-   TARGET: raspberrypi-armv7-gcc
+    TARGET: raspberrypi-armv7-gcc
   script:
-   - mkdir -p ${TARGET}/debug
-   - cd ${TARGET}/debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/RaspberryPi.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
-   - cd ../..
-   - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/RaspberryPi.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
+    - mkdir -p ${TARGET}/debug
+    - cd ${TARGET}/debug
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/RaspberryPi.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
+    - cd ../..
+    - mkdir -p ${TARGET}/release
+    - cd ${TARGET}/release
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/RaspberryPi.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
@@ -426,17 +421,17 @@ build:linux-x64-gcc:
   stage: build
   image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   variables:
-   TARGET: linux-x64-gcc
+    TARGET: linux-x64-gcc
   script:
-   - mkdir -p ${TARGET}/debug
-   - cd ${TARGET}/debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
-   - cd ../..
-   - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
+    - mkdir -p ${TARGET}/debug
+    - cd ${TARGET}/debug
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
+    - cd ../..
+    - mkdir -p ${TARGET}/release
+    - cd ${TARGET}/release
+    - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
@@ -450,17 +445,17 @@ build:linux-x64-gcc11:
   stage: build
   image: $CI_REGISTRY_IMAGE:linux-x64-gcc11
   variables:
-   TARGET: linux-x64-gcc11
+    TARGET: linux-x64-gcc11
   script:
-   - mkdir -p ${TARGET}/debug
-   - cd ${TARGET}/debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
-   - cd ../..
-   - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
+    - mkdir -p ${TARGET}/debug
+    - cd ${TARGET}/debug
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
+    - cd ../..
+    - mkdir -p ${TARGET}/release
+    - cd ${TARGET}/release
+    - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
@@ -470,53 +465,52 @@ build:linux-x64-gcc11:
       - ${TARGET}/release/assets/
       - ${TARGET}/release/tests/simulant_tests
 
-
 test:linux-x64-gcc-debug:
   stage: test
   image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   needs: ["build:linux-x64-gcc"]
   dependencies:
-   - build:linux-x64-gcc
+    - build:linux-x64-gcc
   variables:
-   TARGET: linux-x64-gcc
+    TARGET: linux-x64-gcc
   before_script:
-   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render -noreset
-   - sleep 2
-   - export DISPLAY=:99
+    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render -noreset
+    - sleep 2
+    - export DISPLAY=:99
   script:
-   - cd ${TARGET}/debug
-   - export SIMULANT_SOUND_DRIVER=null
-   - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests --junit-xml=report.xml
+    - cd ${TARGET}/debug
+    - export SIMULANT_SOUND_DRIVER=null
+    - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests --junit-xml=report.xml
   artifacts:
-   reports:
+    reports:
       junit: ${TARGET}/debug/report.xml
-   paths:
-    - ${TARGET}/debug/simulant/
-    - ${TARGET}/release/simulant/
+    paths:
+      - ${TARGET}/debug/simulant/
+      - ${TARGET}/release/simulant/
 
 test:linux-x64-gcc-release:
   stage: test
   image: $CI_REGISTRY_IMAGE:linux-x64-gcc
   needs: ["build:linux-x64-gcc"]
   dependencies:
-   - build:linux-x64-gcc
+    - build:linux-x64-gcc
   variables:
-   TARGET: linux-x64-gcc
+    TARGET: linux-x64-gcc
   before_script:
-   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render -noreset
-   - sleep 2
-   - export DISPLAY=:99
+    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render -noreset
+    - sleep 2
+    - export DISPLAY=:99
   script:
-   - cd ${TARGET}/release
-   - export SIMULANT_SOUND_DRIVER=null
-   - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests --junit-xml=report.xml
+    - cd ${TARGET}/release
+    - export SIMULANT_SOUND_DRIVER=null
+    - env SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/usr/lib64/libSegFault.so ./tests/simulant_tests --junit-xml=report.xml
   artifacts:
-   when: always
-   paths:
-    - ${TARGET}/debug/simulant/*.a
-    - ${TARGET}/release/simulant/*.a
-    - ${TARGET}/release/*.out
-   reports:
+    when: always
+    paths:
+      - ${TARGET}/debug/simulant/*.a
+      - ${TARGET}/release/simulant/*.a
+      - ${TARGET}/release/*.out
+    reports:
       junit: ${TARGET}/release/report.xml
 
 .build:macos-m1-gcc:
@@ -525,19 +519,19 @@ test:linux-x64-gcc-release:
   tags:
     - saas-macos-medium-m1
   variables:
-   TARGET: macos-m1-gcc
+    TARGET: macos-m1-gcc
   before_script:
-   - brew install glfw sdl2 python
+    - brew install glfw sdl2 python
   script:
-   - mkdir -p ${TARGET}/debug
-   - cd ${TARGET}/debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
-   - cd ../..
-   - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
+    - mkdir -p ${TARGET}/debug
+    - cd ${TARGET}/debug
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
+    - cd ../..
+    - mkdir -p ${TARGET}/release
+    - cd ${TARGET}/release
+    - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
@@ -551,24 +545,24 @@ build:dreamcast-sh4-gcc:
   stage: build
   image: kazade/dreamcast-sdk
   variables:
-   TARGET: dreamcast-sh4-gcc
+    TARGET: dreamcast-sh4-gcc
   script:
-   - source /etc/bash.bashrc
-   - mkdir -p ${TARGET}/debug
-   - cd ${TARGET}/debug
-   - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
-   - cd ../..
-   - mkdir -p ${TARGET}/release
-   - cd ${TARGET}/release
-   - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
-   - make -j3
+    - source /etc/bash.bashrc
+    - mkdir -p ${TARGET}/debug
+    - cd ${TARGET}/debug
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
+    - cd ../..
+    - mkdir -p ${TARGET}/release
+    - cd ${TARGET}/release
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - make -j3
   artifacts:
     paths:
-     - ${TARGET}/debug/simulant/
-     - ${TARGET}/debug/assets/
-     - ${TARGET}/debug/tests/simulant_tests.elf
-     - ${TARGET}/release/simulant/
+      - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/assets/
+      - ${TARGET}/debug/tests/simulant_tests.elf
+      - ${TARGET}/release/simulant/
 
 test:dreamcast-sh4-gcc:
   stage: test
@@ -576,7 +570,7 @@ test:dreamcast-sh4-gcc:
   needs: ["build:dreamcast-sh4-gcc"]
   allow_failure: true
   variables:
-   TARGET: dreamcast-sh4-gcc
+    TARGET: dreamcast-sh4-gcc
   dependencies:
     - build:dreamcast-sh4-gcc
   before_script:
@@ -588,119 +582,119 @@ test:dreamcast-sh4-gcc:
     - cd ${TARGET}/debug
     - lxdream-nitro --audio=null -H -b -u -C `pwd` -e tests/simulant_tests.elf
   artifacts:
-   when: always
-   paths:
-    - ${TARGET}/debug/simulant/*.a
-    - ${TARGET}/release/simulant/*.a
-    - ${TARGET}/release/*.out
+    when: always
+    paths:
+      - ${TARGET}/debug/simulant/*.a
+      - ${TARGET}/release/simulant/*.a
+      - ${TARGET}/release/*.out
 
 .deploy:deploy:
   stage: deploy
   only:
-   - master
-   - main
-   - next
-   - tags
+    - master
+    - main
+    - next
+    - tags
   variables:
     LIB_EXT: a
   image: $CI_REGISTRY_IMAGE:deploy
   script:
-   - mkdir -p ./upload/${TARGET}/lib
-   - mkdir -p ./upload/${TARGET}/lib/debug
-   - mkdir -p ./upload/${TARGET}/lib/release
-   - mkdir -p ./upload/${TARGET}/include/simulant
-   - cp ${TARGET}/release/simulant/*.${LIB_EXT} ./upload/${TARGET}/lib/release/
-   - cp ${TARGET}/debug/simulant/*.${LIB_EXT} ./upload/${TARGET}/lib/debug/
-   - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
-   - cd upload
-   - zip -r ${TARGET}.zip ${TARGET}/
-   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
-   - gsutil cp ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
-   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
+    - mkdir -p ./upload/${TARGET}/lib
+    - mkdir -p ./upload/${TARGET}/lib/debug
+    - mkdir -p ./upload/${TARGET}/lib/release
+    - mkdir -p ./upload/${TARGET}/include/simulant
+    - cp ${TARGET}/release/simulant/*.${LIB_EXT} ./upload/${TARGET}/lib/release/
+    - cp ${TARGET}/debug/simulant/*.${LIB_EXT} ./upload/${TARGET}/lib/debug/
+    - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
+    - cd upload
+    - zip -r ${TARGET}.zip ${TARGET}/
+    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
+    - gsutil cp ${TARGET}.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+    - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/${TARGET}.zip
   artifacts:
-   paths:
-    - upload/${TARGET}.zip
+    paths:
+      - upload/${TARGET}.zip
 
 deploy:psp-mips-gcc:
   extends: .deploy:deploy
   needs: ["test:psp-mips-gcc"]
   dependencies:
-   - test:psp-mips-gcc
+    - test:psp-mips-gcc
   variables:
-   TARGET: psp-mips-gcc
+    TARGET: psp-mips-gcc
 
 deploy:windows-x64-mingw:
   extends: .deploy:deploy
   needs: ["test:windows-x64-mingw"]
   dependencies:
-   - test:windows-x64-mingw
+    - test:windows-x64-mingw
   variables:
-   TARGET: windows-x64-mingw
-   LIB_EXT: dll
+    TARGET: windows-x64-mingw
+    LIB_EXT: dll
 
 deploy:linux-x64-gcc:
   extends: .deploy:deploy
   needs:
-  - build:linux-x64-gcc
-  - test:linux-x64-gcc-debug
-  - test:linux-x64-gcc-release
+    - build:linux-x64-gcc
+    - test:linux-x64-gcc-debug
+    - test:linux-x64-gcc-release
   dependencies:
-  - test:linux-x64-gcc-debug
-  - test:linux-x64-gcc-release
+    - test:linux-x64-gcc-debug
+    - test:linux-x64-gcc-release
   variables:
-   TARGET: linux-x64-gcc
-   LIB_EXT: so*
+    TARGET: linux-x64-gcc
+    LIB_EXT: so*
 
 deploy:linux-x64-gcc11:
   extends: .deploy:deploy
   needs:
-  - build:linux-x64-gcc11
-  - test:linux-x64-gcc-debug
-  - test:linux-x64-gcc-release
+    - build:linux-x64-gcc11
+    - test:linux-x64-gcc-debug
+    - test:linux-x64-gcc-release
   dependencies:
-  - build:linux-x64-gcc11
-  - test:linux-x64-gcc-debug
-  - test:linux-x64-gcc-release
+    - build:linux-x64-gcc11
+    - test:linux-x64-gcc-debug
+    - test:linux-x64-gcc-release
   variables:
-   TARGET: linux-x64-gcc11
-   LIB_EXT: so*
+    TARGET: linux-x64-gcc11
+    LIB_EXT: so*
 
 deploy:evercade-armv7-gcc:
   extends: .deploy:deploy
   needs:
-  - build:evercade-armv7-gcc
+    - build:evercade-armv7-gcc
   dependencies:
-  - build:evercade-armv7-gcc
+    - build:evercade-armv7-gcc
   variables:
-   TARGET: evercade-armv7-gcc
-   LIB_EXT: so*
+    TARGET: evercade-armv7-gcc
+    LIB_EXT: so*
 
 deploy:raspberrypi-armv7-gcc:
   extends: .deploy:deploy
   needs:
-  - build:raspberrypi-armv7-gcc
+    - build:raspberrypi-armv7-gcc
   dependencies:
-  - build:raspberrypi-armv7-gcc
+    - build:raspberrypi-armv7-gcc
   variables:
-   TARGET: raspberrypi-armv7-gcc
-   LIB_EXT: so*
+    TARGET: raspberrypi-armv7-gcc
+    LIB_EXT: so*
 
 deploy:dreamcast-sh4-gcc:
   extends: .deploy:deploy
   needs: ["test:dreamcast-sh4-gcc"]
   dependencies:
-   - test:dreamcast-sh4-gcc
+    - test:dreamcast-sh4-gcc
   variables:
-   TARGET: dreamcast-sh4-gcc
+    TARGET: dreamcast-sh4-gcc
 
 deploy:android-all-clang:
   extends: .deploy:deploy
   needs:
-   - build:android-all-clang:release
-   - build:android-all-clang:debug
+    - build:android-all-clang:release
+    - build:android-all-clang:debug
   dependencies:
-   - build:android-all-clang:release
-   - build:android-all-clang:debug
+    - build:android-all-clang:release
+    - build:android-all-clang:debug
   variables:
     TARGET: android-all-clang
     LIB_EXT: aar
@@ -708,42 +702,42 @@ deploy:android-all-clang:
 deploy:assets:
   stage: deploy
   only:
-   - master
-   - main
-   - next
-   - tags
+    - master
+    - main
+    - next
+    - tags
   image: $CI_REGISTRY_IMAGE:deploy
   script:
-   - mkdir -p upload
-   - mv assets upload/simulant
-   - cd upload
-   - zip -r assets.zip simulant/
-   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
-   - gsutil cp assets.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
-   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/assets.zip
+    - mkdir -p upload
+    - mv assets upload/simulant
+    - cd upload
+    - zip -r assets.zip simulant/
+    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
+    - gsutil cp assets.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+    - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/assets.zip
   artifacts:
-   paths:
-    - upload/assets.zip
+    paths:
+      - upload/assets.zip
 
 deploy:tools:
   stage: deploy
   only:
-   - master
-   - main
-   - next
-   - tags
+    - master
+    - main
+    - next
+    - tags
   image: $CI_REGISTRY_IMAGE:deploy
   script:
-   - mkdir -p upload/simulant
-   - mkdir -p upload/simulant/cmake_modules
-   - cp tools/test_generator.py upload/simulant
-   - cp cmake_modules/FindSDL2.cmake upload/simulant/cmake_modules
-   - cp cmake_modules/FindSimulant.cmake upload/simulant/cmake_modules
-   - cd upload
-   - zip -r tools.zip simulant/
-   - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
-   - gsutil cp tools.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
-   - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/tools.zip
+    - mkdir -p upload/simulant
+    - mkdir -p upload/simulant/cmake_modules
+    - cp tools/test_generator.py upload/simulant
+    - cp cmake_modules/FindSDL2.cmake upload/simulant/cmake_modules
+    - cp cmake_modules/FindSimulant.cmake upload/simulant/cmake_modules
+    - cd upload
+    - zip -r tools.zip simulant/
+    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
+    - gsutil cp tools.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+    - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/tools.zip
   artifacts:
-   paths:
-    - upload/tools.zip
+    paths:
+      - upload/tools.zip
