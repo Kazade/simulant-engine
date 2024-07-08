@@ -182,17 +182,36 @@ struct Color {
         return ((a >> 4) << 12) | ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
     }
 
-    static const Color BLACK;
-    static const Color GREY;
-    static const Color WHITE;
-    static const Color RED;
-    static const Color GREEN;
-    static const Color BLUE;
-    static const Color YELLOW;
-    static const Color PURPLE;
-    static const Color TURQUOISE;
-    static const Color NONE;
-
+    static Color black() {
+        return Color(0, 0, 0, 1);
+    }
+    static Color grey() {
+        return Color(0.5, 0.5, 0.5, 1);
+    }
+    static Color white() {
+        return Color(1, 1, 1, 1);
+    }
+    static Color red() {
+        return Color(1, 0, 0, 1);
+    }
+    static Color green() {
+        return Color(0, 1, 0, 1);
+    }
+    static Color blue() {
+        return Color(0, 0, 1, 1);
+    }
+    static Color yellow() {
+        return Color(1, 1, 0, 1);
+    }
+    static Color purple() {
+        return Color(1, 0, 1, 1);
+    }
+    static Color turquoise() {
+        return Color(0, 1, 1, 1);
+    }
+    static Color none() {
+        return Color(0, 0, 0, 0);
+    }
 };
 
 /* 16bit packed color in ARGB4444 format. This is useful for minimising

@@ -13,7 +13,7 @@ public:
         camera_ = create_child<smlt::Camera>();
         auto pipeline = compositor->create_layer(this, camera_);
 
-        pipeline->viewport->set_color(smlt::Color::BLACK);
+        pipeline->viewport->set_color(smlt::Color::black());
 
         // Camera
         camera_->set_perspective_projection(

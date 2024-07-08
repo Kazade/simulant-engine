@@ -27,7 +27,7 @@ bool Image::on_create(Params params) {
     if(!sstyle) {
         /* By default, images don't have a border */
         set_border_width(theme.image_border_width_);
-        set_border_color(smlt::Color::NONE);
+        set_border_color(smlt::Color::none());
         set_background_color(theme.image_background_color_);
         set_padding(theme.image_padding_.left, theme.image_padding_.right,
                     theme.image_padding_.bottom, theme.image_padding_.top);

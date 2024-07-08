@@ -18,7 +18,7 @@ public:
             this, camera_
         );
 
-        pipeline_->viewport->set_color(smlt::Color::BLUE);
+        pipeline_->viewport->set_color(smlt::Color::blue());
 
         camera_->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 1.0, 1000.0

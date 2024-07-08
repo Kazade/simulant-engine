@@ -970,12 +970,12 @@ bool Widget::foreground_active() const {
 
 void Widget::_recalc_active_layers() {
     style_->active_layers_ =
-        ((style_->border_color_ != Color::NONE) << WIDGET_LAYER_INDEX_BORDER |
-         (style_->background_color_ != Color::NONE)
+        ((style_->border_color_ != Color::none()) << WIDGET_LAYER_INDEX_BORDER |
+         (style_->background_color_ != Color::none())
              << WIDGET_LAYER_INDEX_BACKGROUND |
-         (style_->foreground_color_ != Color::NONE)
+         (style_->foreground_color_ != Color::none())
              << WIDGET_LAYER_INDEX_FOREGROUND |
-         (style_->text_color_ != Color::NONE) << WIDGET_LAYER_INDEX_TEXT);
+         (style_->text_color_ != Color::none()) << WIDGET_LAYER_INDEX_TEXT);
 }
 
 const AABB& Widget::aabb() const {

@@ -26,7 +26,7 @@ struct Emitter {
     std::pair<float, float> ttl_range = std::make_pair(5.0, 5.0);
 
     Degrees angle;
-    std::vector<Color> colors = {Color::WHITE};
+    std::vector<Color> colors = {Color::white()};
 
     float emission_rate = 10.0f;
 };

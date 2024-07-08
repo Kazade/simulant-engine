@@ -33,14 +33,14 @@ public:
     virtual ~Debug();
 
     void draw_ray(const Vec3& start, const Vec3& dir,
-                  const Color& color = Color::WHITE, double duration = 0.0,
+                  const Color& color = Color::white(), double duration = 0.0,
                   bool depth_test = true);
 
     void draw_line(const Vec3& start, const Vec3& end,
-                   const Color& color = Color::WHITE, double duration = 0.0,
+                   const Color& color = Color::white(), double duration = 0.0,
                    bool depth_test = true);
 
-    void draw_point(const Vec3& position, const Color& color = Color::WHITE,
+    void draw_point(const Vec3& position, const Color& color = Color::white(),
                     double duration = 0.0, bool depth_test = true);
 
     bool on_init() override;
@@ -71,7 +71,7 @@ private:
     struct DebugElement {
         float time_since_created = 0.0;
         DebugElementType type = DET_LINE;
-        Color color = Color::WHITE;
+        Color color = Color::white();
         bool depth_test = true;
         float duration = 0.0;
 

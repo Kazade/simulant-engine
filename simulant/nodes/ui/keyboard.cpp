@@ -1214,7 +1214,7 @@ private:
     void finalize_render() override {
         render_key_letters();
 
-        auto color = smlt::Color::WHITE;
+        auto color = smlt::Color::white();
         color.a = (color.a * style_->opacity_);
 
         /* Space key */
@@ -1606,10 +1606,10 @@ bool Keyboard::on_create(Params params) {
     auto sstyle = params.get<WidgetStylePtr>("shared_style");
     auto config = params.get<UIConfig>("theme").value_or(UIConfig());
     if(!sstyle) {
-        set_background_color(smlt::Color::NONE);
-        set_foreground_color(smlt::Color::NONE);
-        set_border_color(smlt::Color::NONE);
-        set_text_color(smlt::Color::NONE);
+        set_background_color(smlt::Color::none());
+        set_foreground_color(smlt::Color::none());
+        set_border_color(smlt::Color::none());
+        set_text_color(smlt::Color::none());
     }
 
     resize(-1, -1);
@@ -1620,7 +1620,7 @@ bool Keyboard::on_create(Params params) {
     main_frame_->set_border_width(0);
     main_frame_->set_background_color(config.background_color_);
     main_frame_->set_border_color(config.background_color_);
-    main_frame_->set_foreground_color(smlt::Color::NONE);
+    main_frame_->set_foreground_color(smlt::Color::none());
 
     /* FIXME: Registration here is ugly. KeyboardPanel should either be a
      * publically accessible node, or, not be a node */
@@ -1638,7 +1638,7 @@ bool Keyboard::on_create(Params params) {
     entry_ = scene->create_node<TextEntry>(initial_text);
     entry_->set_border_width(2);
     entry_->resize(panel_->content_width(), panel_->key_height());
-    entry_->set_background_color(smlt::Color::WHITE);
+    entry_->set_background_color(smlt::Color::white());
     entry_->set_border_color(config.background_color_);
     entry_->set_text_color(config.foreground_color_);
     entry_->set_text_alignment(TEXT_ALIGNMENT_LEFT);
@@ -1653,14 +1653,14 @@ bool Keyboard::on_create(Params params) {
 
     auto x_button = scene->create_node<Label>(Params().set("text", ""));
     x_button->set_text("X");
-    x_button->set_text_color(smlt::Color::WHITE);
+    x_button->set_text_color(smlt::Color::white());
     x_button->resize(panel_->key_height(), panel_->key_height());
     x_button->rebuild();
 
     auto x_label = scene->create_node<Label>(Params().set("text", ""));
-    x_label->set_background_color(smlt::Color::RED);
+    x_label->set_background_color(smlt::Color::red());
     x_label->set_text(_T("Cancel"));
-    x_label->set_text_color(smlt::Color::WHITE);
+    x_label->set_text_color(smlt::Color::white());
     x_label->resize(-1, panel_->key_height());
     x_label->rebuild();
 

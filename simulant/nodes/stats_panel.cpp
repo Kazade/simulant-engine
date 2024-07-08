@@ -134,7 +134,7 @@ static unsigned int round(unsigned int value, unsigned int multiple) {
 #define RAM_SAMPLES 25
 
 void StatsPanel::rebuild_ram_graph() {
-    smlt::Color color = smlt::Color::BLUE;
+    smlt::Color color = smlt::Color::blue();
     color.a = 0.35;
 
     float width = scene->window->width();

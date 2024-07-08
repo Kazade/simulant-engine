@@ -340,7 +340,7 @@ SubMeshPtr Mesh::create_submesh_as_capsule(
             vdata->tex_coord0(new_tex);
             vdata->tex_coord1(new_tex);
             vdata->normal(new_normal);
-            vdata->diffuse(smlt::Color::WHITE);
+            vdata->diffuse(smlt::Color::white());
             vdata->move_next();
 
             // each vertex (except the last) has six indices pointing to it
@@ -383,7 +383,7 @@ SubMeshPtr Mesh::create_submesh_as_capsule(
             vdata->tex_coord0(new_tex);
             vdata->tex_coord1(new_tex);
             vdata->normal(new_normal);
-            vdata->diffuse(smlt::Color::WHITE);
+            vdata->diffuse(smlt::Color::white());
             vdata->move_next();
 
             idata->index(offset + segment_count + 1);
@@ -425,7 +425,7 @@ SubMeshPtr Mesh::create_submesh_as_capsule(
             vdata->tex_coord0(new_tex);
             vdata->tex_coord1(new_tex);
             vdata->normal(new_normal);
-            vdata->diffuse(smlt::Color::WHITE);
+            vdata->diffuse(smlt::Color::white());
             vdata->move_next();
 
             if (ring != ring_count) {
@@ -487,25 +487,25 @@ SubMesh* Mesh::create_submesh_as_box(const std::string& name, MaterialPtr materi
 
         vd->position(ox + -1 * rx, oy + -1 * ry, oz + z * rz);
         vd->tex_coord0(0, 0);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + 1 * rx, oy + -1 * ry, oz + z * rz);
         vd->tex_coord0(1, 0);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + 1 * rx,  oy + 1 * ry, oz + z * rz);
         vd->tex_coord0(1, 1);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + -1 * rx, oy + 1 * ry, oz + z * rz);
         vd->tex_coord0(0, 1);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
@@ -534,25 +534,25 @@ SubMesh* Mesh::create_submesh_as_box(const std::string& name, MaterialPtr materi
 
         vd->position(ox + x * rx, oy + -1 * ry, oz + -1 * rz);
         vd->tex_coord0(0, 0);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + 1 * ry, oz + -1 * rz);
         vd->tex_coord0(1, 0);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + 1 * ry, oz + 1 * rz);
         vd->tex_coord0(1, 1);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + -1 * ry, oz + 1 * rz);
         vd->tex_coord0(0, 1);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
@@ -582,25 +582,25 @@ SubMesh* Mesh::create_submesh_as_box(const std::string& name, MaterialPtr materi
 
         vd->position(ox + 1 * rx, oy + y * ry, oz + -1 * rz);
         vd->tex_coord0(0, 0);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + -1 * rx,  oy + y * ry, oz + -1 * rz);
         vd->tex_coord0(1, 0);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + -1 * rx, oy + y * ry, oz + 1 * rz);
         vd->tex_coord0(1, 1);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + 1 * rx, oy + y * ry, oz + 1 * rz);
         vd->tex_coord0(0, 1);
-        vd->diffuse(smlt::Color::WHITE);
+        vd->diffuse(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
@@ -648,28 +648,36 @@ SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr 
 
     //Build some shared vertex data
     vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Color::WHITE);
+    if(spec.has_diffuse()) {
+        vertex_data->diffuse(smlt::Color::white());
+    }
     if(spec.has_texcoord0()) vertex_data->tex_coord0(0.0, 0.0f);
     if(spec.has_texcoord1()) vertex_data->tex_coord1(0.0, 0.0f);
     if(spec.has_normals())   vertex_data->normal(0, 0, 1);
     vertex_data->move_next();
 
     vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Color::WHITE);
+    if(spec.has_diffuse()) {
+        vertex_data->diffuse(smlt::Color::white());
+    }
     if(spec.has_texcoord0()) vertex_data->tex_coord0(1.0, 0.0f);
     if(spec.has_texcoord1()) vertex_data->tex_coord1(1.0, 0.0f);
     if(spec.has_normals())   vertex_data->normal(0, 0, 1);
     vertex_data->move_next();
 
     vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Color::WHITE);
+    if(spec.has_diffuse()) {
+        vertex_data->diffuse(smlt::Color::white());
+    }
     if(spec.has_texcoord0()) vertex_data->tex_coord0(1.0, 1.0f);
     if(spec.has_texcoord1()) vertex_data->tex_coord1(1.0, 1.0f);
     if(spec.has_normals())   vertex_data->normal(0, 0, 1);
     vertex_data->move_next();
 
     vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Color::WHITE);
+    if(spec.has_diffuse()) {
+        vertex_data->diffuse(smlt::Color::white());
+    }
     if(spec.has_texcoord0()) vertex_data->tex_coord0(0.0, 1.0f);
     if(spec.has_texcoord1()) vertex_data->tex_coord1(0.0, 1.0f);
     if(spec.has_normals())   vertex_data->normal(0, 0, 1);

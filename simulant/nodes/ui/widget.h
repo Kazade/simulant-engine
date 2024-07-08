@@ -76,14 +76,14 @@ struct ImageRect {
 struct WidgetStyle {
     /* There are 4 layers: Border, background, foreground and text and
      * by default all are enabled. Setting any of the colors of these
-     * layers to Color::NONE will deactivate drawing of the layer
+     * layers to Color::none() will deactivate drawing of the layer
      * for performance reasons. We track that here */
     uint8_t active_layers_ = ~0;
 
     UInt4 padding_ = {Px(), Px(), Px(), Px()};
     Px border_radius_ = Px(0);
     Px border_width_ = Px(1);
-    PackedColor4444 border_color_ = Color::BLACK;
+    PackedColor4444 border_color_ = Color::black();
     TextAlignment text_alignment_ = TEXT_ALIGNMENT_CENTER;
 
     OverflowType overflow_ = OVERFLOW_TYPE_AUTO;
@@ -94,9 +94,9 @@ struct WidgetStyle {
     TexturePtr foreground_image_;
     ImageRect foreground_image_rect_;
 
-    PackedColor4444 background_color_ = Color::WHITE;
-    PackedColor4444 foreground_color_ = Color::NONE; // Transparent
-    PackedColor4444 text_color_ = Color::BLACK;
+    PackedColor4444 background_color_ = Color::white();
+    PackedColor4444 foreground_color_ = Color::none(); // Transparent
+    PackedColor4444 text_color_ = Color::black();
 
     float opacity_ = 1.0f;
 

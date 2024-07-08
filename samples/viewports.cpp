@@ -9,8 +9,10 @@ public:
 
     void on_load() override {
         // Create two viewports for the left and right hand side of the screen, set different clear colors
-        smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT, smlt::Color::RED);
-        smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT, smlt::Color::GREEN);
+        smlt::Viewport first(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_LEFT,
+                             smlt::Color::red());
+        smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT,
+                              smlt::Color::green());
 
         auto cube = assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         cube->create_submesh_as_cube("cube", assets->create_material(), 1.0);
