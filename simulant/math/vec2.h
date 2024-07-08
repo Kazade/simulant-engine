@@ -16,17 +16,21 @@ struct Degrees;
 struct Vec2 {
 
 public:
-    static const Vec2 NEGATIVE_X;
-    static const Vec2 POSITIVE_X;
-    static const Vec2 NEGATIVE_Y;
-    static const Vec2 POSITIVE_Y;
+    static Vec2 left() {
+        return Vec2(-1.0f, 0.0f);
+    }
 
-    static const Vec2 DOWN;
-    static const Vec2 LEFT;
-    static const Vec2 ONE;
-    static const Vec2 RIGHT;
-    static const Vec2 UP;
-    static const Vec2 ZERO;
+    static Vec2 right() {
+        return Vec2(1.0f, 0.0f);
+    }
+
+    static Vec2 up() {
+        return Vec2(0.0f, 1.0f);
+    }
+
+    static Vec2 down() {
+        return Vec2(0.0f, -1.0f);
+    }
 
     float x;
     float y;
