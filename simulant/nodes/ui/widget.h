@@ -38,16 +38,16 @@ struct WidgetImpl {
 } // namespace smlt
 
 #define S_DEFINE_CORE_WIDGET_PROPERTIES(klass)                                 \
-    TypedNodeParam<int, klass> param_10000 = {10000, "width", -1,              \
-                                              "The width of the widget"};      \
-    TypedNodeParam<int, klass> param_10001 = {10001, "height", -1,             \
-                                              "The height of the widget"};     \
-    TypedNodeParam<smlt::ui::UIConfig, klass> param_10002 = {                  \
-        10002, "theme", smlt::ui::UIConfig(),                                  \
-        "The theme to use for this widget"};                                   \
-    TypedNodeParam<smlt::ui::WidgetStylePtr, klass> param_10003 = {            \
-        10003, "shared_style", smlt::ui::WidgetStylePtr(),                     \
-        "A shared style to use for this widget"}
+    _S_DEFINE_STAGE_NODE_PARAM(10000, klass, "width", int, -1,                 \
+                               "The width of the widget");                     \
+    _S_DEFINE_STAGE_NODE_PARAM(10001, klass, "height", int, -1,                \
+                               "The height of the widget");                    \
+    _S_DEFINE_STAGE_NODE_PARAM(10002, klass, "theme", smlt::ui::UIConfig,      \
+                               smlt::ui::UIConfig(),                           \
+                               "The theme to use for this widget");            \
+    _S_DEFINE_STAGE_NODE_PARAM(                                                \
+        10003, klass, "shared_style", smlt::ui::WidgetStylePtr,                \
+        smlt::ui::WidgetStylePtr(), "A shared style to use for this widget")
 
 namespace smlt {
 namespace ui {
@@ -107,18 +107,20 @@ typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
 
 /* Sizing:
  *
- * Widgets follow a similar model to the border-box model in CSS. Effectively:
+ * Widgets follow a similar model to the border-box model in CSS.
+ * Effectively:
  *
- * - If a dimension length has not been defined (e.g. requested_width_ == -1)
- * then the dimension is calculated as the content size + padding + border.
- * - If a dimension length has been defined, then the content size is reduced to
- * make room for the padding and border.
+ * - If a dimension length has not been defined (e.g. requested_width_ ==
+ * -1) then the dimension is calculated as the content size + padding +
+ * border.
+ * - If a dimension length has been defined, then the content size is
+ * reduced to make room for the padding and border.
  *
  * Content area:
  *
  * - The size of the content area varies depending on widget, but for most
- * widgets this is defined as the area that the text takes to render, unless a
- * fixed size has been specified and then this would be the requested size
+ * widgets this is defined as the area that the text takes to render, unless
+ * a fixed size has been specified and then this would be the requested size
  * without padding or border
  */
 
@@ -160,8 +162,9 @@ public:
     // You probably don't want this one
     virtual void set_font(FontPtr font);
 
-    /* Allow creating a double-linked list of widgets for focusing. There is no
-     * global focused widget but there is only one focused widget in a chain
+    /* Allow creating a double-linked list of widgets for focusing. There is
+     * no global focused widget but there is only one focused widget in a
+     * chain
      */
     bool is_focused() const;
     void set_focus_previous(WidgetPtr previous_widget);
@@ -217,7 +220,8 @@ public:
     /** Set the background image, pass AssetID() to clear */
     void set_background_image(TexturePtr texture);
 
-    /** Set the background to a region of its image. Coordinates are in texels
+    /** Set the background to a region of its image. Coordinates are in
+     * texels
      */
     void set_background_image_source_rect(const UICoord& bottom_left,
                                           const UICoord& size);
@@ -228,7 +232,8 @@ public:
     /** Set the foreground image, pass AssetID() to clear */
     void set_foreground_image(TexturePtr texture);
 
-    /** Set the foreground to a region of its image. Coordinates are in texels
+    /** Set the foreground to a region of its image. Coordinates are in
+     * texels
      */
     void set_foreground_image_source_rect(const UICoord& bottom_left,
                                           const UICoord& size);
@@ -241,17 +246,18 @@ public:
     Px content_width() const;
     Px content_height() const;
 
-    /** This returns the outside width of the widget, this will be the same as
-     * the requested_width if it was specified, else it will be the width of the
-     * content area plus padding and border */
+    /** This returns the outside width of the widget, this will be the same
+     * as the requested_width if it was specified, else it will be the width
+     * of the content area plus padding and border */
     Px outer_width() const;
     Px outer_height() const;
 
     /*
-    bool is_checked() const; // Widget dependent, returns false if widget has no
-    concept of 'active' bool is_enabled() const; // Widget dependent, returns
-    true if widget has no concept of 'disabled' bool is_hovered() const; //
-    Widget dependent, returns false if widget has no concept of 'hovered'
+    bool is_checked() const; // Widget dependent, returns false if widget
+    has no concept of 'active' bool is_enabled() const; // Widget dependent,
+    returns true if widget has no concept of 'disabled' bool is_hovered()
+    const; // Widget dependent, returns false if widget has no concept of
+    'hovered'
     */
 
     const AABB& aabb() const override;

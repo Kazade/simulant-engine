@@ -333,7 +333,7 @@ private:
 #define __S_GEN_PARAM(param, line) param##line
 #define _S_GEN_PARAM(param, line) __S_GEN_PARAM(param, line)
 
-#define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc)           \
+#define _S_DEFINE_STAGE_NODE_PARAM(line, klass, name, type, fallback, desc)    \
     static_assert(!has_spaces(name), "Param name must not have spaces");       \
     static_assert(std::is_same<type, int>::value ||                            \
                   std::is_same<type, IntArray>::value ||                       \
@@ -344,9 +344,14 @@ private:
                   std::is_same<type, GeomCullerOptions>::value ||              \
                   std::is_same<type, std::string>::value ||                    \
                   std::is_same<type, TextureFlags>::value ||                   \
-                  std::is_same<type, TexturePtr>::value);                      \
-    static inline auto _S_GEN_PARAM(param_, __LINE__) =                        \
-        TypedNodeParam<type, klass>(__LINE__, name, fallback, desc)
+                  std::is_same<type, TexturePtr>::value ||                     \
+                  std::is_same<type, ui::UIConfig>::value ||                   \
+                  std::is_same<type, ui::WidgetStylePtr>::value);              \
+    static inline auto _S_GEN_PARAM(param_, line) =                            \
+        TypedNodeParam<type, klass>(line, name, fallback, desc)
+
+#define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc)           \
+    _S_DEFINE_STAGE_NODE_PARAM(__LINE__, klass, name, type, fallback, desc)
 
 /* We need to coerce const char* into the correct string class */
 template<typename T>
