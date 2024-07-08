@@ -244,15 +244,15 @@ struct Quaternion {
 
     Vec3 forward() const {
         // OpenGL coordinate system has Neg-z as "forward"
-        return Vec3::NEGATIVE_Z.rotated_by(*this);
+        return Vec3::forward().rotated_by(*this);
     }
 
     Vec3 up() const {
-        return Vec3::POSITIVE_Y.rotated_by(*this);
+        return Vec3::up().rotated_by(*this);
     }
 
     Vec3 right() const {
-        return Vec3::POSITIVE_X.rotated_by(*this);
+        return Vec3::right().rotated_by(*this);
     }
 
     /* Returns the Quaternion rotation representing a turn to direction, using up as a basis.

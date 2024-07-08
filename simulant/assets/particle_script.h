@@ -17,7 +17,7 @@ enum EmitterType {
 struct Emitter {
     EmitterType type = PARTICLE_EMITTER_POINT;
     Vec3 relative_position;
-    Vec3 direction = Vec3::POSITIVE_Y;
+    Vec3 direction = Vec3::up();
     Vec3 dimensions = Vec3(100, 100, 100);
 
     std::pair<float, float> duration_range = std::make_pair(0.0, 0.0);

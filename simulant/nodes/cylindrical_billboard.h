@@ -34,7 +34,7 @@ private:
             return false;
         }
 
-        forward_ = params.get<FloatArray>("forward").value_or(Vec3::FORWARD);
+        forward_ = params.get<FloatArray>("forward").value_or(Vec3::forward());
         return true;
     }
 
@@ -45,11 +45,11 @@ private:
             auto dir = (target_->transform->position() - transform->position())
                            .normalized();
 
-            smlt::Plane up_plane(smlt::Vec3::POSITIVE_Y, 0);
+            smlt::Plane up_plane(smlt::Vec3::up(), 0);
 
             /* If we're right above/below the Y axis then default to
              * looking down negative Z */
-            auto d = std::abs(dir.dot(Vec3::POSITIVE_Y));
+            auto d = std::abs(dir.dot(Vec3::up()));
             if(almost_equal(d, 1.0f)) {
                 dir = forward_;
             }

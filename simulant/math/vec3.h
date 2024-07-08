@@ -31,21 +31,29 @@ private:
     friend struct Ray;
 
 public:
-    static const Vec3 NEGATIVE_X;
-    static const Vec3 POSITIVE_X;
-    static const Vec3 NEGATIVE_Y;
-    static const Vec3 POSITIVE_Y;
-    static const Vec3 POSITIVE_Z;
-    static const Vec3 NEGATIVE_Z;
+    static Vec3 up() {
+        return Vec3(0.0f, 1.0f, 0.0f);
+    }
 
-    static const Vec3 BACK;
-    static const Vec3 DOWN;
-    static const Vec3 FORWARD;
-    static const Vec3 LEFT;
-    static const Vec3 ONE;
-    static const Vec3 RIGHT;
-    static const Vec3 UP;
-    static const Vec3 ZERO;
+    static Vec3 down() {
+        return Vec3(0.0f, -1.0f, 0.0f);
+    }
+
+    static Vec3 left() {
+        return Vec3(-1.0f, 0.0f, 0.0f);
+    }
+
+    static Vec3 right() {
+        return Vec3(1.0f, 0.0f, 0.0f);
+    }
+
+    static Vec3 forward() {
+        return Vec3(0.0f, 0.0f, -1.0f);
+    }
+
+    static Vec3 backward() {
+        return Vec3(0.0f, 0.0f, 1.0f);
+    }
 
     float x;
     float y;

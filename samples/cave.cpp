@@ -19,7 +19,7 @@ public:
         camera_->set_perspective_projection(
             Degrees(60.0), float(window->width()) / float(window->height()),
             0.01f, 1000.0f);
-        camera_->transform->rotate(smlt::Vec3::UP, Degrees(180 - 90));
+        camera_->transform->rotate(smlt::Vec3::up(), Degrees(180 - 90));
 
         smlt::MeshLoadOptions opts;
 #ifdef __DREAMCAST__
@@ -118,7 +118,7 @@ public:
 
         // Move the camera between two points
         camera_->transform->set_position(camera_->transform->position() +
-                                         Vec3::LEFT * cameraSpeed_ * dt);
+                                         Vec3::left() * cameraSpeed_ * dt);
         if(camera_->transform->position().x > 0 ||
            camera_->transform->position().x < -15) {
             cameraSpeed_ *= -1;
@@ -136,7 +136,7 @@ public:
         // fairy_actor_->transform->set_orientation(rot * Quaternion(Vec3::UP,
         // Degrees(90)));
         fairy_actor_->transform->look_at(camera_->transform->position());
-        fairy_actor_->transform->rotate(Vec3::UP, Degrees(90));
+        fairy_actor_->transform->rotate(Vec3::up(), Degrees(90));
 
         // Make sure the fairy loops the path (t ranges from 0 to 1)
         if(fairyPathTime_ >= 1) {
