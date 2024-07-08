@@ -14,7 +14,7 @@ public:
         auto pipeline = compositor->create_layer(
             this, camera_
         )->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
-        pipeline->viewport->set_color(smlt::Color::grey());
+        pipeline->viewport->set_color(smlt::Color::gray());
 
         auto coord = window->coordinate_from_normalized(0.05, 0.95);
         int x = coord.x;
@@ -91,7 +91,7 @@ public:
         auto pl = create_child<smlt::ui::Label>("PL");
         pl->set_padding(10, 0, 0, 0);
         //pl->resize(80, -1);
-        pl->set_background_color(smlt::Color::grey());
+        pl->set_background_color(smlt::Color::gray());
         pl->set_anchor_point(1.0f, 1.0f);
         pl->transform->set_position_2d(window->coordinate_from_normalized(0.75f, 0.75f));
 

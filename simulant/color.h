@@ -185,7 +185,7 @@ struct Color {
     static Color black() {
         return Color(0, 0, 0, 1);
     }
-    static Color grey() {
+    static Color gray() {
         return Color(0.5, 0.5, 0.5, 1);
     }
     static Color white() {
