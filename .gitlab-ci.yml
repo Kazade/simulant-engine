@@ -334,6 +334,8 @@ test:windows-x64-mingw:
     - ln -s ../simulant
     - ln -s ../assets
     - wine64 simulant_tests.exe --junit-xml=report.xml
+    - echo "Stopping Xvfb"
+    - start-stop-daemon --stop --quiet --pidfile /tmp/custom_xvfb_99.pid
   artifacts:
     reports:
       junit: ${TARGET}/debug/tests/report.xml
