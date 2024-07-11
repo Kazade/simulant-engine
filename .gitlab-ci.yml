@@ -337,11 +337,11 @@ test:windows-x64-mingw-wine:
    - ln -s ../assets
    - wine simulant_tests.exe --junit-xml=report.xml
   artifacts:
-  reports:
-    junit: ${TARGET}/debug/tests/report.xml
-  paths:
-    - ${TARGET}/debug/simulant/*.dll
-    - ${TARGET}/release/simulant/*.dll
+    reports:
+      junit: ${TARGET}/debug/tests/report.xml
+    paths:
+      - ${TARGET}/debug/simulant/*.dll
+      - ${TARGET}/release/simulant/*.dll
 
 test:windows-x64-mingw:
   stage: test
