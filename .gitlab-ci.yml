@@ -327,7 +327,7 @@ test:windows-x64-mingw:
   variables:
     TARGET: windows-x64-mingw
     SIMULANT_SOUND_DRIVER: "null"
-    GALLIUM_DRIVER: "llvmpipe"
+    GALLIUM_DRIVER: softpipe
   script:
     - cd ${TARGET}/debug/tests
     - Copy-item -Recurse ..\simulant -Destination simulant
