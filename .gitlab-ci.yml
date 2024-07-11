@@ -332,7 +332,8 @@ test:windows-x64-mingw:
     - Copy-item -Recurse ..\assets -Destination assets
     - Get-ChildItem *.exe
     - Get-ChildItem *.dll
-    - setx GALLIUM_DRIVER llvmpipe
+    - setx GALLIUM_DRIVER softpipe
+    - setx SIMULANT_SOUND_DRIVER null
     - .\simulant_tests.exe --junit-xml=report.xml
   artifacts:
     reports:
