@@ -114,7 +114,7 @@ public:
 
     template<typename T>
     bool register_stage_node() {
-        return register_stage_node(T::Meta::node_type, T::meta::name, sizeof(T),
+        return register_stage_node(T::Meta::node_type, T::Meta::name, sizeof(T),
                                    alignof(T),
                                    std::bind(&StageNodeManager::standard_new<T>,
                                              scene_, std::placeholders::_1),
