@@ -11,7 +11,7 @@ parser.add_argument("--verbose", help="Verbose logging", action="store_true", de
 parser.add_argument("--list-tests", help="Don't generate the tests, simply output the discovered tests", action="store_true", default=False)  # noqa
 
 
-CLASS_REGEX = r"\s*class\s+(\w+)\s*([\:|,]\s*(?:public|private|protected)\s+[\w|::]+\s*)*"
+CLASS_REGEX = r"\s*class\s+(\w+)\s*([\:|,]\s*(?:public|private|protected)\s+[\w|::]+\s*)*"  # noqa
 TEST_FUNC_REGEX = r"void\s+(?P<func_name>test_\S[^\(]+)\(\s*(void)?\s*\)"
 
 
@@ -89,6 +89,7 @@ int main(int argc, char* argv[]) {
 
 VERBOSE = False
 
+
 def log_verbose(message):
     if VERBOSE:
         print(message)
@@ -108,16 +109,20 @@ def find_tests(files):
                 if not match:
                     break
 
-                class_name = match.group().split(":")[0].replace("class", "").strip()
+                class_name = match.group().split(":")[0].replace(
+                    "class", ""
+                ).strip()
 
                 try:
                     parents = match.group().split(":", 1)[1]
                 except IndexError:
                     pass
                 else:
-                    parents = [ x.strip() for x in parents.split(",") ]
+                    parents = [x.strip() for x in parents.split(",")]
                     parents = [
-                        x.replace("public", "").replace("private", "").replace("protected", "").strip()
+                        x.replace("public", "").replace(
+                            "private", ""
+                        ).replace("protected", "").strip()
                         for x in parents
                     ]
 
@@ -138,8 +143,10 @@ def find_tests(files):
                     brace_counter = 1
                     for i in range(start+2, len(source_file_data)):
                         class_data.append(source_file_data[i])
-                        if class_data[-1] == '{': brace_counter += 1
-                        if class_data[-1] == '}': brace_counter -= 1
+                        if class_data[-1] == '{':
+                            brace_counter += 1
+                        if class_data[-1] == '}':
+                            brace_counter -= 1
                         if not brace_counter:
                             end = i
                             break
@@ -156,19 +163,24 @@ def find_tests(files):
 
                 source_file_data = source_file_data[end:]
 
-    # Now, simplify the list by finding all potential superclasses, and then keeping any classes
+    # Now, simplify the list by finding all potential superclasses,
+    # and then keeping any classes
     # that subclass them.
     test_case_subclasses = []
     i = 0
     while i < len(subclasses):
         subclass_names = [x.rsplit("::")[-1] for x in subclasses[i][2]]
 
-        # If this subclasses TestCase, or it subclasses any of the already found testcase subclasses
+        # If this subclasses TestCase, or it subclasses any of the already
+        # found testcase subclasses
         # then add it to the list
-        if "TestCase" in subclass_names or "SimulantTestCase" in subclass_names or any(x[1] in subclasses[i][2] for x in test_case_subclasses):
+        if "TestCase" in subclass_names or \
+           "SimulantTestCase" in subclass_names or \
+           any(x[1] in subclasses[i][2] for x in test_case_subclasses):
             if subclasses[i] not in test_case_subclasses:
                 test_case_subclasses.append(subclasses[i])
-                i = 0  # Go back to the start, as we may have just found another parent class
+                i = 0  # Go back to the start, as we may have just found
+                # another parent class
                 continue
         i += 1
 
@@ -203,21 +215,31 @@ def main():
     for path, class_name, superclasses, funcs in testcases:
         BIND_TEMPLATE = "&%(class_name)s::%(func)s"
 
-        members = ", ".join([ BIND_TEMPLATE % { 'class_name' : class_name, 'func' : x } for x in funcs ])
-        names = ", ".join([ '"%s::%s"' % (class_name, x) for x in funcs ])
+        members = ", ".join([
+            BIND_TEMPLATE % {'class_name': class_name, 'func': x}
+            for x in funcs
+        ])
+        names = ", ".join(['"%s::%s"' % (class_name, x) for x in funcs])
 
-        registrations.append(REGISTER_TEMPLATE % { 'class_name' : class_name, 'members' : members, 'names' : names })
+        registrations.append(
+            REGISTER_TEMPLATE % {
+                'class_name': class_name,
+                'members': members,
+                'names': names
+            }
+        )
 
     registrations = "\n".join(registrations)
 
     final = MAIN_TEMPLATE % {
-        'registrations' : registrations,
-        'includes' : includes
+        'registrations': registrations,
+        'includes': includes
     }
 
     open(args.output[0], "w").write(final)
 
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())
