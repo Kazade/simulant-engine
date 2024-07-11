@@ -341,30 +341,6 @@ test:windows-x64-mingw:
       - ${TARGET}/debug/simulant/*.dll
       - ${TARGET}/release/simulant/*.dll
 
-test:windows-x64-mingw2:
-  stage: test
-  allow_failure: true
-  tags:
-    - saas-windows-medium-amd64
-  needs: ["build:windows-x64-mingw:debug", "build:windows-x64-mingw:release"]
-  dependencies:
-    - build:windows-x64-mingw:debug
-    - build:windows-x64-mingw:release
-  variables:
-    TARGET: windows-x64-mingw
-  script:
-    - cd ${TARGET}/debug/tests
-    - Copy-item -Recurse ..\simulant -Destination simulant
-    - Copy-item -Recurse ..\assets -Destination assets
-    - Get-ChildItem *.exe
-    - .\simulant_tests.exe --junit-xml=report.xml
-  artifacts:
-    reports:
-      junit: ${TARGET}/debug/tests/report.xml
-    paths:
-      - ${TARGET}/debug/simulant/*.dll
-      - ${TARGET}/release/simulant/*.dll
-
 ## clang build is currently just for checking compilation
 build:linux-x64-clang:
   stage: build
