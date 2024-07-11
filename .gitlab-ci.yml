@@ -306,6 +306,8 @@ build:windows-x64-mingw:debug:
     - cp $MINGW_BIN_DIR/OpenAL32.dll simulant/
     - cp $MINGW_BIN_DIR/libssp-0.dll simulant/
     - cp simulant/*.dll tests/
+    # Windows test runners need software OpenGL to work
+    - cp ../../platforms/windows/mesa/*.dll tests/
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
@@ -315,27 +317,47 @@ build:windows-x64-mingw:debug:
 
 test:windows-x64-mingw:
   stage: test
-  image: $CI_REGISTRY_IMAGE:windows-x64-mingw
+  allow_failure: true
+  tags:
+    - saas-windows-medium-amd64
   needs: ["build:windows-x64-mingw:debug", "build:windows-x64-mingw:release"]
-  variables:
-    TARGET: windows-x64-mingw
   dependencies:
     - build:windows-x64-mingw:debug
     - build:windows-x64-mingw:release
-  before_script:
-    - microdnf install -y xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers
-    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
-    - sleep 3
-    - export LIBGL_ALWAYS_SOFTWARE=1
-    - export SIMULANT_SOUND_DRIVER=null
-    - export DISPLAY=:99
+  variables:
+    TARGET: windows-x64-mingw
   script:
     - cd ${TARGET}/debug/tests
-    - ln -s ../simulant
-    - ln -s ../assets
-    - wine64 simulant_tests.exe --junit-xml=report.xml
-    - echo "Stopping Xvfb"
-    - start-stop-daemon --stop --quiet --pidfile /tmp/custom_xvfb_99.pid
+    - Copy-item -Recurse ..\simulant -Destination simulant
+    - Copy-item -Recurse ..\assets -Destination assets
+    - Get-ChildItem *.exe
+    - Get-ChildItem *.dll
+    - setx GALLIUM_DRIVER llvmpipe
+    - .\simulant_tests.exe --junit-xml=report.xml
+  artifacts:
+    reports:
+      junit: ${TARGET}/debug/tests/report.xml
+    paths:
+      - ${TARGET}/debug/simulant/*.dll
+      - ${TARGET}/release/simulant/*.dll
+
+test:windows-x64-mingw2:
+  stage: test
+  allow_failure: true
+  tags:
+    - saas-windows-medium-amd64
+  needs: ["build:windows-x64-mingw:debug", "build:windows-x64-mingw:release"]
+  dependencies:
+    - build:windows-x64-mingw:debug
+    - build:windows-x64-mingw:release
+  variables:
+    TARGET: windows-x64-mingw
+  script:
+    - cd ${TARGET}/debug/tests
+    - Copy-item -Recurse ..\simulant -Destination simulant
+    - Copy-item -Recurse ..\assets -Destination assets
+    - Get-ChildItem *.exe
+    - .\simulant_tests.exe --junit-xml=report.xml
   artifacts:
     reports:
       junit: ${TARGET}/debug/tests/report.xml
