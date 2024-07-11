@@ -10,7 +10,8 @@ namespace smlt {
 class StaticBody: public PhysicsBody {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_STATIC_BODY);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_STATIC_BODY,
+                             "static_body");
     S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(StaticBody);
 
     StaticBody(Scene* owner) :

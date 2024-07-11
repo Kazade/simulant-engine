@@ -35,7 +35,7 @@ public:
 class Skybox: public ContainerNode, public ChainNameable<Skybox> {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SKYBOX);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SKYBOX, "skybox");
     S_DEFINE_STAGE_NODE_PARAM(Skybox, "source_directory", std::string, no_value,
                               "The directory containing the skybox images");
     S_DEFINE_STAGE_NODE_PARAM(Skybox, "flags", TextureFlags, TextureFlags(),

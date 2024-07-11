@@ -11,7 +11,8 @@ class Scene;
 class DynamicBody: public ReactiveBody {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY,
+                             "dynamic_body");
     S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(DynamicBody);
 
     DynamicBody(Scene* owner) :

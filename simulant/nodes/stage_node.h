@@ -1021,7 +1021,8 @@ typedef default_init_ptr<StageNode> StageNodePtr;
 #include "iterators/descendent_iterator.inc"
 #include "iterators/sibling_iterator.inc"
 
-#define S_DEFINE_STAGE_NODE_META(node_type_id)                                 \
+#define S_DEFINE_STAGE_NODE_META(node_type_id, alias)                          \
     struct Meta {                                                              \
         const static smlt::StageNodeType node_type = node_type_id;             \
+        const char* name = alias;                                              \
     }

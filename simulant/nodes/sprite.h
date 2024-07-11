@@ -47,7 +47,7 @@ class Sprite:
     public ChainNameable<Sprite> {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SPRITE);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SPRITE, "sprite");
 
     bool on_create(Params params) override;
     bool on_destroy() override;

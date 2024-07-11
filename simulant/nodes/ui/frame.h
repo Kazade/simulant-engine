@@ -29,7 +29,7 @@ enum ChildCleanup {
 class Frame: public Widget, public RefCounted<Frame> {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_FRAME);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_FRAME, "frame");
     S_DEFINE_CORE_WIDGET_PROPERTIES(Frame);
 
     using Widget::clean_up;

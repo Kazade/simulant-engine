@@ -132,7 +132,7 @@ private:
 
 class PointLight: public Light {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_POINT_LIGHT);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_POINT_LIGHT, "point_light");
     S_DEFINE_STAGE_NODE_PARAM(PointLight, "position", FloatArray, Vec3(),
                               "The position of the light");
 
@@ -158,7 +158,8 @@ private:
 
 class DirectionalLight: public Light {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_DIRECTIONAL_LIGHT);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_DIRECTIONAL_LIGHT,
+                             "directional_light");
     S_DEFINE_STAGE_NODE_PARAM(DirectionalLight, "direction", FloatArray,
                               Vec3(1, -0.5, 0),
                               "The direction the light is pointing");

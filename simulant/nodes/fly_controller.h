@@ -12,7 +12,7 @@ private:
     float speed_ = 600.0f;
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_FLY_CONTROLLER);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_FLY_CONTROLLER, "fly");
     S_DEFINE_STAGE_NODE_PARAM(FlyController, "speed", float, 600.0f,
                               "The speed at which the controller moves");
     FlyController(Scene* owner) :

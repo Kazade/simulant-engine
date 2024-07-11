@@ -17,7 +17,7 @@ class CameraParams {};
 class Camera: public ContainerNode, public ChainNameable<Camera> {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CAMERA);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CAMERA, "camera");
 
     using ContainerNode::do_generate_renderables;
 

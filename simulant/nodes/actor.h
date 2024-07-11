@@ -53,7 +53,7 @@ class Actor:
     public ChainNameable<Actor> {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_ACTOR);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_ACTOR, "actor");
     S_DEFINE_STAGE_NODE_PARAM(Actor, "mesh", MeshPtr, no_value,
                               "The base mesh associated with this actor");
 

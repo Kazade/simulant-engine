@@ -33,7 +33,8 @@ class ParticleSystem:
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PARTICLE_SYSTEM);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PARTICLE_SYSTEM,
+                             "particle_system");
     S_DEFINE_STAGE_NODE_PARAM(ParticleSystem, "script", ParticleScriptPtr,
                               no_value,
                               "The particle script to use for this system");

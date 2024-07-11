@@ -1023,7 +1023,8 @@ class KeyboardPanel: public Widget, public RefCounted<KeyboardPanel> {
     friend class Keyboard;
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL,
+                             "keyboard_panel");
 
     KeyboardPanel(Scene* owner) :
         Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL) {}

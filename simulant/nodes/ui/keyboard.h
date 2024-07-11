@@ -50,7 +50,7 @@ class Keyboard: public Widget {
     DEFINE_SIGNAL(KeyboardCancelledSignal, signal_cancelled);
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_KEYBOARD);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_KEYBOARD, "keyboard");
 
     S_DEFINE_STAGE_NODE_PARAM(Keyboard, "mode", int,
                               int(KEYBOARD_MODE_UPPERCASE),

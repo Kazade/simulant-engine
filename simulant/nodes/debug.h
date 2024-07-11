@@ -27,7 +27,7 @@ namespace smlt {
 
 class Debug: public StageNode {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_DEBUG);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_DEBUG, "debug");
 
     Debug(Scene* owner);
     virtual ~Debug();

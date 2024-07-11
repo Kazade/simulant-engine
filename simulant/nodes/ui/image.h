@@ -17,7 +17,7 @@ class Image: public Widget {
     void clear_layers();
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_IMAGE);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_IMAGE, "image");
     S_DEFINE_STAGE_NODE_PARAM(Image, "texture", TexturePtr, no_value,
                               "The texture to display in the image");
     S_DEFINE_CORE_WIDGET_PROPERTIES(Image);

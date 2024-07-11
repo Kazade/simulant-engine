@@ -34,7 +34,7 @@ class Stage;
 
 class Stage: public StageNode {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_STAGE);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_STAGE, "stage");
 
     Stage(Scene* owner);
 

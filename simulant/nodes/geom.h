@@ -48,7 +48,7 @@ class Geom:
     public ChainNameable<Geom> {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_GEOM);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_GEOM, "geom");
     S_DEFINE_STAGE_NODE_PARAM(Geom, "mesh", MeshPtr, no_value,
                               "The base mesh associated with this geom");
     S_DEFINE_STAGE_NODE_PARAM(Geom, "options", GeomCullerOptions,

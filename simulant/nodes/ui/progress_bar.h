@@ -15,7 +15,8 @@ enum ProgressBarMode {
 class ProgressBar: public Widget {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR,
+                             "progress_bar");
 
     S_DEFINE_STAGE_NODE_PARAM(ProgressBar, "min", float, 0.0f,
                               "The minimum value of the progress bar");

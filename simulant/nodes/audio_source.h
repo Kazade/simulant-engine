@@ -15,7 +15,7 @@ class AudioSource: public StageNode {
     DEFINE_SIGNAL(StreamFinishedSignal, signal_stream_finished);
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_AUDIO_SOURCE);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_AUDIO_SOURCE, "audio_source");
 
     AudioSource(Scene* owner) :
         StageNode(owner, STAGE_NODE_TYPE_AUDIO_SOURCE) {}

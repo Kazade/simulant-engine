@@ -6,7 +6,7 @@ namespace smlt {
 
 class SmoothFollow: public StageNode {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SMOOTH_FOLLOW);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SMOOTH_FOLLOW, "smooth_follow");
     S_DEFINE_STAGE_NODE_PARAM(SmoothFollow, "target", std::string,
                               std::string(),
                               "The name of the target to follow");
