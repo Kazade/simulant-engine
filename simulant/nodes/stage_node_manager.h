@@ -14,6 +14,7 @@ typedef std::function<void(StageNode*)> StageNodeDestructFunction;
 
 struct StageNodeTypeInfo {
     StageNodeType type;
+    const char* name;
     std::size_t size_in_bytes;
     std::size_t alignment;
 
@@ -70,6 +71,7 @@ public:
 
     /* Non-template API does the work for easier binding with other languages */
     StageNode* create_node(StageNodeType type, const Params& params);
+    StageNode* create_node(const char* node_type_name, const Params& params);
 
     template<typename T>
     T* create_node(Params args) {
@@ -92,8 +94,8 @@ public:
         return (T*)create_node(T::Meta::node_type, params);
     }
 
-    bool register_stage_node(StageNodeType type, std::size_t size_in_bytes,
-                             std::size_t alignment,
+    bool register_stage_node(StageNodeType type, const char* name,
+                             std::size_t size_in_bytes, std::size_t alignment,
                              StageNodeConstructFunction construct_func,
                              StageNodeDestructFunction destruct_func) {
 
@@ -102,8 +104,8 @@ public:
             return false;
         }
 
-        StageNodeTypeInfo info = {type, size_in_bytes, alignment,
-                                  construct_func, destruct_func};
+        StageNodeTypeInfo info = {type,      name,           size_in_bytes,
+                                  alignment, construct_func, destruct_func};
 
         registered_nodes_.insert(std::make_pair(type, info));
         S_DEBUG("Registered new stage node type: {0}", type);
@@ -112,7 +114,8 @@ public:
 
     template<typename T>
     bool register_stage_node() {
-        return register_stage_node(T::Meta::node_type, sizeof(T), alignof(T),
+        return register_stage_node(T::Meta::node_type, T::meta::name, sizeof(T),
+                                   alignof(T),
                                    std::bind(&StageNodeManager::standard_new<T>,
                                              scene_, std::placeholders::_1),
                                    &StageNodeManager::standard_delete<T>);
