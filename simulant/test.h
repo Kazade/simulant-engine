@@ -359,23 +359,57 @@ public:
                   << std::endl;
 
         std::vector<std::string> junit_lines;
+        std::vector<std::string> junit_suite;
         junit_lines.push_back("<testsuites>\n");
+
+        auto gen_suite_line =
+            [&](const std::string& name, clock::time_point start,
+                clock::time_point end,
+                const std::string& content = "") -> std::string {
+            return "    <testcase name=\"" + name + "\" time=\"" +
+                   std::to_string(
+                       std::chrono::duration_cast<std::chrono::duration<float>>(
+                           end - start)
+                           .count()) +
+                   "\">" + content + "</testcase>\n";
+        };
+
+        auto suite_start = clock::now();
+
+        auto gen_suite = [&](const std::string& this_class) {
+            auto end = clock::now();
+            auto t = std::to_string(
+                std::chrono::duration_cast<std::chrono::duration<float>>(
+                    end - suite_start)
+                    .count());
+
+            junit_lines.push_back("<testsuite name=\"" + this_class +
+                                  "\" time=\"" + t + "\">\n");
+
+            for(auto& line: junit_suite) {
+                junit_lines.push_back(line);
+            }
+
+            junit_lines.push_back("</testsuite>\n");
+            junit_suite.clear();
+        };
 
         std::string klass = "";
 
+        bool first_iter = true;
         for(std::function<void()> test: new_tests) {
             std::string name = new_names[ran];
             std::string this_klass(name.begin(),
                                    name.begin() + name.find_first_of(":"));
-            bool close_klass = ran == (int)new_tests.size() - 1;
+
+            if(first_iter) {
+                klass = this_klass;
+                first_iter = false;
+            }
 
             if(this_klass != klass) {
-                if(!klass.empty()) {
-                    junit_lines.push_back("  </testsuite>\n");
-                }
+                gen_suite(klass);
                 klass = this_klass;
-                junit_lines.push_back("  <testsuite name=\"" + this_klass +
-                                      "\">\n");
             }
 
             try {
@@ -394,26 +428,32 @@ public:
                 std::cout << "\033[32m"
                           << "   OK   "
                           << "\033[0m" << std::endl;
-                junit_lines.push_back(
-                    "    <testcase name=\"" + new_names[ran] + "\" time=\"" +
-                    std::to_string(
-                        std::chrono::duration_cast<
-                            std::chrono::duration<float>>(end - start)
-                            .count()) +
-                    "\">\n");
-                junit_lines.push_back("    </testcase>\n");
+
+                junit_suite.push_back(
+                    gen_suite_line(new_names[ran], start, end));
             } catch(test::NotImplementedError& e) {
                 std::cout << "\033[34m"
                           << " SKIPPED"
                           << "\033[0m" << std::endl;
                 ++skipped;
-                junit_lines.push_back("    </testcase>\n");
+
+                auto skip_line =
+                    "\n        <skipped message=\"" + std::string(e.what()) +
+                    "\" type=\"NotImplementedError\"></skipped>\n    ";
+                auto t = clock::now();
+                junit_suite.push_back(
+                    gen_suite_line(new_names[ran], t, t, skip_line));
             } catch(test::SkippedTestError& e) {
                 std::cout << "\033[34m"
                           << " SKIPPED"
                           << "\033[0m" << std::endl;
                 ++skipped;
-                junit_lines.push_back("    </testcase>\n");
+                auto skip_line =
+                    "\n        <skipped message=\"" + std::string(e.what()) +
+                    "\" type=\"SkippedTestError\"></skipped>\n    ";
+                auto t = clock::now();
+                junit_suite.push_back(
+                    gen_suite_line(new_names[ran], t, t, skip_line));
             } catch(test::AssertionError& e) {
                 std::cout << "\033[33m"
                           << " FAILED "
@@ -440,28 +480,32 @@ public:
                 }
                 ++failed;
 
-                junit_lines.push_back("      <failure message=\"" +
-                                      std::string(e.what()) + "\"/>\n");
-                junit_lines.push_back("    </testcase>\n");
+                auto skip_line = "\n        <failure message=\"" +
+                                 std::string(e.what()) +
+                                 "\" type=\"AssertionError\"></failure>\n    ";
+                auto t = clock::now();
+                junit_suite.push_back(
+                    gen_suite_line(new_names[ran], t, t, skip_line));
+
             } catch(std::exception& e) {
                 std::cout << "\033[31m"
                           << " EXCEPT " << std::endl;
                 std::cout << "        " << e.what() << "\033[0m" << std::endl;
                 ++crashed;
 
-                junit_lines.push_back("      <failure message=\"" +
-                                      std::string(e.what()) + "\"/>\n");
-                junit_lines.push_back("    </testcase>\n");
+                auto skip_line = "\n        <error message=\"" +
+                                 std::string(e.what()) + "\" type=\"" +
+                                 typeid(e).name() + "\"></error>\n    ";
+                auto t = clock::now();
+                junit_suite.push_back(
+                    gen_suite_line(new_names[ran], t, t, skip_line));
             }
             std::cout << "\033[0m";
             ++ran;
-
-            if(close_klass) {
-                junit_lines.push_back("  </testsuite>\n");
-            }
         }
 
-        junit_lines.push_back("</testsuites>\n");
+        gen_suite(klass);
+        junit_lines.push_back("</testsuites>");
 
         if(!junit_output.empty()) {
             FILE* f = fopen(junit_output.c_str(), "wt");
