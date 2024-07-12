@@ -21,6 +21,14 @@ struct Vec4 {
     float z;
     float w;
 
+    static Vec4 zero() {
+        return Vec4();
+    }
+
+    static Vec4 one() {
+        return Vec4(1, 1, 1, 1);
+    }
+
     Vec4():
         x(0), y(0), z(0), w(0) {
     }
