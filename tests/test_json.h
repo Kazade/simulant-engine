@@ -58,6 +58,9 @@ public:
         assert_equal(one->to_str().value(), "1");
 
         assert_equal(obj["five"]->type(), JSON_NULL);
+
+        assert_true(obj["two"]->is_float());
+        assert_false(obj["one"]->is_float());
     }
 
     void test_invalid_iterator_comparison() {

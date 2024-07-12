@@ -126,6 +126,8 @@ public:
     /* Returns an iterator pointing to this node */
     JSONIterator to_iterator() const;
 
+    bool is_float() const;
+
 private:
     friend class JSONIterator;
     mutable _json_impl::IStreamPtr stream_;
