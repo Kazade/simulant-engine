@@ -1,10 +1,13 @@
 #pragma once
 
+#include "utils.h"
 #include <cmath>
 #include <ostream>
-#include "utils.h"
+#include <vector>
 
 namespace smlt {
+
+typedef std::vector<float> FloatArray;
 
 struct Vec2;
 struct Vec3;
@@ -22,12 +25,19 @@ struct Vec4 {
         x(0), y(0), z(0), w(0) {
     }
 
+    Vec4(const FloatArray& arr) :
+        x(arr[0]), y(arr[1]), z(arr[2]), w(arr[3]) {}
+
     Vec4(float x, float y, float z, float w):
         x(x), y(y), z(z), w(w) {
 
     }
 
     Vec4(const Vec3& v, float w);
+
+    operator FloatArray() const {
+        return {x, y, z, w};
+    }
 
     bool equals(const Vec4& rhs) const {
         return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;

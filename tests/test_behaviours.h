@@ -4,6 +4,7 @@
 #include <simulant/simulant.h>
 
 #include "../simulant/nodes/locators/node_locator.h"
+#include "simulant/nodes/stage_node.h"
 
 namespace {
 
@@ -13,10 +14,8 @@ struct NodeWithLookupsParams {};
 
 class NodeWithLookups : public StageNode {
 public:
-    struct Meta {
-        const static StageNodeType node_type = (STAGE_NODE_TYPE_USER_BASE + 1);
-        typedef NodeWithLookupsParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META((STAGE_NODE_TYPE_USER_BASE + 1),
+                             "node_with_lookups");
 
     NodeWithLookups(Scene* owner):
         StageNode(owner, STAGE_NODE_TYPE_USER_BASE + 1) {}
@@ -30,7 +29,9 @@ public:
 
     FindResult<Actor> parent = FindAncestor("Some Parent", this);
 
-    bool on_create(void*) { return true; }
+    bool on_create(Params) {
+        return true;
+    }
     void do_generate_renderables(batcher::RenderQueue *, const Camera *, const Viewport *, const DetailLevel) override {}
     const AABB& aabb() const {
         static AABB aabb;

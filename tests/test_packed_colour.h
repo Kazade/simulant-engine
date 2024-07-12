@@ -10,7 +10,7 @@ using namespace smlt;
 class PackedColorTests : public smlt::test::SimulantTestCase {
 public:
     void test_conversion_to_and_from_color() {
-        PackedColor4444 pc = Color::YELLOW;
+        PackedColor4444 pc = Color::yellow();
 
         assert_equal(pc.r8(), 255);
         assert_equal(pc.g8(), 255);
@@ -24,7 +24,7 @@ public:
 
         Color c = pc;
 
-        assert_equal(c, Color::YELLOW);
+        assert_equal(c, Color::yellow());
     }
 };
 

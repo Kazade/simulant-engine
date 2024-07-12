@@ -3,9 +3,9 @@
  *     This file is part of Simulant.
  *
  *     Simulant is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Lesser General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  *
  *     Simulant is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -39,17 +39,18 @@
 
 #include <set>
 
-#include "../utils/unicode.h"
-#include "../types.h"
-#include "../generic/managed.h"
-#include "../generic/property.h"
-#include "../interfaces/nameable.h"
-#include "../interfaces/updateable.h"
-#include "../interfaces.h"
-#include "../generic/any/any.h"
-#include "../nodes/stage_node_manager.h"
 #include "../asset_manager.h"
 #include "../compositor.h"
+#include "../generic/any/any.h"
+#include "../generic/managed.h"
+#include "../generic/property.h"
+#include "../interfaces.h"
+#include "../interfaces/nameable.h"
+#include "../interfaces/updateable.h"
+#include "../nodes/stage_node_manager.h"
+#include "../types.h"
+#include "../utils/unicode.h"
+#include "simulant/utils/params.h"
 
 namespace smlt {
 
@@ -59,17 +60,18 @@ class InputManager;
 class SceneManager;
 class Service;
 
-class SceneLoadException : public std::runtime_error {};
+class SceneLoadException: public std::runtime_error {};
 
-typedef sig::signal<void ()> SceneOnActivatedSignal;
-typedef sig::signal<void ()> SceneOnDeactivatedSignal;
+typedef sig::signal<void()> SceneOnActivatedSignal;
+typedef sig::signal<void()> SceneOnDeactivatedSignal;
 
-typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeCreatedSignal;
-typedef sig::signal<void (StageNode*, StageNodeType)> StageNodeDestroyedSignal;
+typedef sig::signal<void(StageNode*, StageNodeType)> StageNodeCreatedSignal;
+typedef sig::signal<void(StageNode*, StageNodeType)> StageNodeDestroyedSignal;
 
-typedef sig::signal<void (Camera*, Viewport*, StageNode*)> LayerRenderStartedSignal;
-typedef sig::signal<void (Camera*, Viewport*, StageNode*)> LayerRenderFinishedSignal;
-
+typedef sig::signal<void(Camera*, Viewport*, StageNode*)>
+    LayerRenderStartedSignal;
+typedef sig::signal<void(Camera*, Viewport*, StageNode*)>
+    LayerRenderFinishedSignal;
 
 class LightingSettings {
 public:
@@ -85,10 +87,7 @@ private:
     smlt::Color ambient_light_;
 };
 
-
-class Scene:
-    public StageNode,
-    public StageNodeManager {
+class Scene: public StageNode, public StageNodeManager {
 
     DEFINE_SIGNAL(SceneOnActivatedSignal, signal_activated);
     DEFINE_SIGNAL(SceneOnDeactivatedSignal, signal_deactivated);
@@ -98,6 +97,7 @@ class Scene:
 
     DEFINE_SIGNAL(LayerRenderStartedSignal, signal_layer_render_started);
     DEFINE_SIGNAL(LayerRenderFinishedSignal, signal_layer_render_finished);
+
 public:
     typedef std::shared_ptr<Scene> ptr;
 
@@ -110,8 +110,12 @@ public:
     void activate();
     void deactivate();
 
-    bool is_loaded() const { return is_loaded_; }
-    bool is_active() const { return is_active_; }
+    bool is_loaded() const {
+        return is_loaded_;
+    }
+    bool is_active() const {
+        return is_active_;
+    }
 
     const std::string name() const {
         return name_;
@@ -123,7 +127,9 @@ public:
 
     /* Whether or not the scene should be unloaded when it's deactivated
      * this is the default behaviour */
-    bool unload_on_deactivate() const { return unload_on_deactivate_; }
+    bool unload_on_deactivate() const {
+        return unload_on_deactivate_;
+    }
     void set_unload_on_deactivate(bool v) {
         unload_on_deactivate_ = v;
     }
@@ -188,7 +194,7 @@ private:
 
     bool is_loaded_ = false;
     bool is_active_ = false;
-    bool unload_on_deactivate_ = true;    
+    bool unload_on_deactivate_ = true;
 
     std::string name_;
 
@@ -220,13 +226,13 @@ private:
 
     /* Don't allow overriding on_create in subclasses, currently
      * the hook for that is init + load */
-    bool on_create(void*) override final {
+    bool on_create(Params) override final {
         return true;
     }
 
-    void do_generate_renderables(
-        batcher::RenderQueue*,
-        const Camera*, const Viewport*, const DetailLevel) override final {
+    void do_generate_renderables(batcher::RenderQueue*, const Camera*,
+                                 const Viewport*,
+                                 const DetailLevel) override final {
         /* Do nothing, Scenes don't create renderables.. for now */
     }
 
@@ -235,8 +241,6 @@ private:
         static AABB ret;
         return ret;
     }
-
-
 
 protected:
     /* Returns the number of arguments passed when loading */
@@ -257,8 +261,6 @@ public:
     S_DEFINE_PROPERTY(assets, &Scene::assets_);
 };
 
-
-
-}
+} // namespace smlt
 
 #endif // SCENE_H

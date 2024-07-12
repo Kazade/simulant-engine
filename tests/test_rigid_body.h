@@ -24,7 +24,7 @@ public:
         auto actor = scene->create_child<smlt::Stage>();
 
         actor->transform->set_translation(Vec3(10, 0, 0));
-        actor->transform->rotate(smlt::Vec3::POSITIVE_X, smlt::Degrees(90));
+        actor->transform->rotate(smlt::Vec3::right(), smlt::Degrees(90));
 
         scene->start_service<PhysicsService>();
         auto controller = scene->create_child<DynamicBody>();

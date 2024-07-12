@@ -12,10 +12,8 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
     auto type = node->node_type();
     auto it = registered_nodes_.find(type);
     if(it == registered_nodes_.end()) {
-        S_ERROR(
-            "Tried to destroy an unknown type of node: {0} at address {1}",
-            type, node
-            );
+        S_ERROR("Tried to destroy an unknown type of node: {0} at address {1}",
+                type, node);
         return false;
     }
 
@@ -42,11 +40,21 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
     return true;
 }
 
-StageNodeManager::~StageNodeManager() {
+StageNodeManager::~StageNodeManager() {}
 
+StageNode* StageNodeManager::create_node(const char* node_type_name,
+                                         const Params& params) {
+    for(auto& node: registered_nodes_) {
+        if(node.second.name == node_type_name) {
+            return create_node(node.first, params);
+        }
+    }
+    S_ERROR("Unable to find registered node: {0}", node_type_name);
+    return nullptr;
 }
 
-StageNode* StageNodeManager::create_node(StageNodeType type, void* params) {
+StageNode* StageNodeManager::create_node(StageNodeType type,
+                                         const Params& params) {
     auto info = registered_nodes_.find(type);
     if(info == registered_nodes_.end()) {
         S_ERROR("Unable to find registered node: {0}", type);
@@ -54,8 +62,9 @@ StageNode* StageNodeManager::create_node(StageNodeType type, void* params) {
     }
 
     /* Allocate aligned memory. This is temporary, in future we'll do some
-         * chunked allocation depending on the node size */
-    void* mem = smlt::aligned_alloc(info->second.alignment, info->second.size_in_bytes);
+     * chunked allocation depending on the node size */
+    void* mem =
+        smlt::aligned_alloc(info->second.alignment, info->second.size_in_bytes);
     StageNode* node = info->second.constructor(mem);
 
     if(!node->init()) {
@@ -72,10 +81,10 @@ StageNode* StageNodeManager::create_node(StageNodeType type, void* params) {
         return nullptr;
     }
 
-    S_DEBUG("Created new node of type {0} at address {1}", node->node_type(), node);
+    S_DEBUG("Created new node of type {0} at address {1}", node->node_type(),
+            node);
     all_nodes_.insert(std::make_pair(node->id(), NodeData(mem, node)));
 
     return node;
 }
-
-}
+} // namespace smlt

@@ -1,26 +1,29 @@
-#include "ui_manager.h"
 #include "text_entry.h"
 #include "../../font.h"
+#include "simulant/utils/params.h"
+#include "ui_manager.h"
 
 namespace smlt {
 namespace ui {
 
-TextEntry::TextEntry(Scene *owner):
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY) {
+TextEntry::TextEntry(Scene* owner) :
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY) {}
 
+bool TextEntry::on_create(Params params) {
+    if(!clean_params<TextEntry>(params)) {
+        return false;
+    }
 
-}
-
-bool TextEntry::on_create(void* params) {
     if(!Widget::on_create(params)) {
         return false;
     }
 
-    TextEntryParams* args = (TextEntryParams*) params;
-
-    set_text(args->text);
+    set_text(params.get<std::string>("text").value_or(""));
     set_resize_mode(RESIZE_MODE_FIXED_WIDTH);
-    resize(args->width, args->height);
+
+    auto w = params.get<int>("width").value_or(-1);
+    auto h = params.get<int>("height").value_or(-1);
+    resize(w, h);
 
     return true;
 }
@@ -105,6 +108,5 @@ bool TextEntry::pre_set_text(const unicode& txt) {
     return true;
 }
 
-}
-}
-
+} // namespace ui
+} // namespace smlt

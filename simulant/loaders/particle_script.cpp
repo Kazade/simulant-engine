@@ -90,7 +90,7 @@ static auto parse_color = [](const std::string& color) -> smlt::Color {
         );
     } else {
         S_WARN("Invalid number of color components to color fader");
-        return smlt::Color::WHITE;
+        return smlt::Color::white();
     }
 };
 

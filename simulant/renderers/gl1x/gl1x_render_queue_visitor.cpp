@@ -324,16 +324,20 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 
 void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
                                          const uint8_t count) {
-    if(!count) {
-        return;
-    }
-
-    Light* current = nullptr;
 
     const LightState disabled_state;
 
-    bool matrix_loaded = false;
+    Light* current = nullptr;
 
+    if(count) {
+        GLCheck(glMatrixMode, GL_MODELVIEW);
+        GLCheck(glPushMatrix);
+
+        const Mat4& view = camera_->view_matrix();
+
+        GLCheck(glLoadMatrixf, view.data());        
+    }
+    
     for(uint8_t i = 0; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
         current = (i < count) ? lights[i] : nullptr;
 
@@ -361,18 +365,6 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
 
         if(state.enabled) {
             GLCheck(glEnable, GL_LIGHT0 + i);
-
-            /* Only load the matrix on the first enabled light */
-            if(!matrix_loaded) {
-                GLCheck(glMatrixMode, GL_MODELVIEW);
-                GLCheck(glPushMatrix);
-
-                const Mat4& view = camera_->view_matrix();
-
-                GLCheck(glLoadMatrixf, view.data());
-                matrix_loaded = true;
-            }
-
             GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &state.position.x);
             GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &state.ambient.r);
             GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &state.diffuse.r);
@@ -392,7 +384,7 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
         light_states_[i].initialized = true;
     }
 
-    if(matrix_loaded) {
+    if(count) {
         GLCheck(glPopMatrix);
     }
 }

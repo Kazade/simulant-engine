@@ -4,18 +4,12 @@
 
 namespace smlt {
 
-struct SmoothFollowParams {
-    StageNode* target;
-    SmoothFollowParams(StageNode* target=nullptr):
-        target(target) {}
-};
-
-class SmoothFollow : public StageNode {
+class SmoothFollow: public StageNode {
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_SMOOTH_FOLLOW;
-        typedef SmoothFollowParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SMOOTH_FOLLOW, "smooth_follow");
+    S_DEFINE_STAGE_NODE_PARAM(SmoothFollow, "target", std::string,
+                              std::string(),
+                              "The name of the target to follow");
 
     SmoothFollow(Scene* owner);
     ~SmoothFollow();
@@ -26,8 +20,12 @@ public:
     bool has_target() const;
     StageNode* target() const;
 
-    void set_follow_distance(float dist) { distance_ = dist; }
-    void set_follow_height(float height) { height_ = height; }
+    void set_follow_distance(float dist) {
+        distance_ = dist;
+    }
+    void set_follow_height(float height) {
+        height_ = height;
+    }
     void set_damping(float damping);
     void set_rotation_damping(float damping);
 
@@ -42,7 +40,7 @@ public:
 private:
     StageNode* target_ = nullptr;
 
-    bool on_create(void *params) override;
+    bool on_create(Params params) override;
 
     bool following_enabled_ = true;
 
@@ -55,4 +53,4 @@ private:
     sig::Connection destroy_conn_;
 };
 
-}
+} // namespace smlt

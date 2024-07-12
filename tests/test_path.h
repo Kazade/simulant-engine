@@ -6,9 +6,8 @@ namespace {
 
 using namespace smlt;
 
-class PathTests : public smlt::test::SimulantTestCase {
+class PathTests: public smlt::test::SimulantTestCase {
 public:
-
     void test_replace_ext() {
         Path p1("/etc/my_path");
         Path p2("/etc/my_path.png");
@@ -20,12 +19,13 @@ public:
 
     void test_append() {
         Path p1("/etc/my_path");
-        assert_equal(p1.append("another_path").normalize().str(), Path("/etc/my_path/another_path").normalize().str());
+        assert_equal(p1.append("another_path").normalize().str(),
+                     Path("/etc/my_path/another_path").normalize().str());
     }
 
     void test_is_absolute() {
 #ifdef _WIN32
-        Path p1("C:\etc\my_path");
+        Path p1("C:\\etc\\my_path");
         Path p2("another_path");
 #else
         Path p1("/etc/my_path");
@@ -37,4 +37,4 @@ public:
     }
 };
 
-}
+} // namespace

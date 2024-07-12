@@ -15,7 +15,7 @@ Most of the arguments are self explanatory with the exception of `duration`. `du
 ### Sample Usage
 
 ```
-    stage->debug->draw_line(Vec3(0, 0, 0), Vec3(1, 1, 1), Colour::RED);
+    stage->debug->draw_line(Vec3(0, 0, 0), Vec3(1, 1, 1), Colour::red());
     stage->debug->draw_ray(Vec3(0, 0, 0), Vec3(0, 1, 0));  // Defaults to WHITE
 
     // Draws a blue point for 1 second that won't be depth tested

@@ -123,10 +123,10 @@ bool SharedAssetManager::on_init() {
     S_DEBUG("Initializing default materials, textures, and fonts (AssetManager: {0})", this);
     set_default_material_filename(Material::BuiltIns::DEFAULT);
 
-    white_tex_ = create_texture_with_color(this, smlt::Color::WHITE);
+    white_tex_ = create_texture_with_color(this, smlt::Color::white());
     white_tex_->set_name("s_white_texture");
 
-    black_tex_ = create_texture_with_color(this, smlt::Color::BLACK);
+    black_tex_ = create_texture_with_color(this, smlt::Color::black());
     black_tex_->set_name("s_black_texture");
 
     z_tex_ = create_texture_with_color(this, smlt::Color::from_hex_string("#8080FF"));

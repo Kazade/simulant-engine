@@ -3,12 +3,12 @@
 #define _WIN32_WINNT 0x0600
 #endif
 
+#include <algorithm>
+#include <cassert>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
-#include <iostream>
-#include <cassert>
-#include <algorithm>
 
 #include "../logging.h"
 
@@ -21,18 +21,17 @@
 #include "kfs.h"
 
 #ifdef _arch_dreamcast
-    #include <kos.h>
-    #include <dirent.h>
-    #include <errno.h>
+#include <dirent.h>
+#include <errno.h>
+#include <kos.h>
 #elif defined(__PSP__)
-    #include <utime.h>
-    #include <unistd.h>
-    #include <sys/types.h>
-    #include <dirent.h>
-    #include <pspiofilemgr.h>
+#include <dirent.h>
+#include <pspiofilemgr.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <utime.h>
 #elif defined(__WIN32__)
-    #include <windows.h>
-    
+  
 #if defined(_MSC_VER)
     #include <direct.h>
 
@@ -46,23 +45,22 @@
 
 #endif // _MSC_VER
 
-    #include <sys/types.h>
-    #include <sys/stat.h>
-
-    #include <userenv.h>
-    #include "realpath.h"
+#include "realpath.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <userenv.h>
+#include <windows.h>
 #else
-    // Yay POSIX
-    #include <utime.h>
-    #include <unistd.h>
-    #include <sys/types.h>
-    #include <dirent.h>
+// Yay POSIX
+#include <dirent.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <utime.h>
 #endif
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #endif
-
 
 namespace kfs {
 
@@ -90,29 +88,34 @@ static bool starts_with(const Path& p, const std::string& thing) {
     return p.find(thing) == 0;
 }
 
-static std::string slice(const std::string& input, uint32_t start, void* end=nullptr) {
-    (void) (end);
+static std::string slice(const std::string& input, uint32_t start,
+                         void* end = nullptr) {
+    (void)(end);
     return std::string(input.begin() + start, input.end());
 }
 
-static std::string slice(const std::string &input, void* start, uint32_t end) {
-    (void) (start);
+static std::string slice(const std::string& input, void* start, uint32_t end) {
+    (void)(start);
     return std::string(input.begin(), input.begin() + end);
 }
 
 static std::string multiply(const std::string& input, const uint32_t count) {
     std::string result;
-    for(uint32_t i = 0; i < count; ++i) result += input;
+    for(uint32_t i = 0; i < count; ++i) {
+        result += input;
+    }
     return result;
 }
 
-static std::string rstrip(const std::string& input, const std::string& what=" \n\r\t") {
+static std::string rstrip(const std::string& input,
+                          const std::string& what = " \n\r\t") {
     std::string result = input;
     result.erase(result.find_last_not_of(what) + 1);
     return result;
 }
 
-static std::string str_join(const std::string& joiner, const std::vector<std::string>& parts) {
+static std::string str_join(const std::string& joiner,
+                            const std::vector<std::string>& parts) {
     std::string result;
 
     std::size_t i = 0;
@@ -126,46 +129,52 @@ static std::string str_join(const std::string& joiner, const std::vector<std::st
     return result;
 }
 
-static std::vector<std::string> str_split(const std::string& input, const std::string& on) {
+static std::vector<std::string> str_split(const std::string& input,
+                                          const std::string& on) {
     std::vector<std::string> elems;
     std::stringstream ss(input);
     std::string item;
 
     assert(on.length() == 1);
 
-    while (std::getline(ss, item, on[0])) {
-        if(item.empty()) continue;
+    while(std::getline(ss, item, on[0])) {
+        if(item.empty()) {
+            continue;
+        }
 
         elems.push_back(item);
     }
     return elems;
 }
 
-static std::vector<std::string> common_prefix(const std::vector<std::string>& lhs, const std::vector<std::string>& rhs) {
+static std::vector<std::string>
+    common_prefix(const std::vector<std::string>& lhs,
+                  const std::vector<std::string>& rhs) {
     if(lhs.empty() && rhs.empty()) {
         return std::vector<std::string>();
     }
 
-    auto shorter = (lhs.size() < rhs.size()) ? lhs: rhs;
-    auto longer = (lhs.size() > rhs.size()) ? lhs: rhs;
+    auto shorter = (lhs.size() < rhs.size()) ? lhs : rhs;
+    auto longer = (lhs.size() > rhs.size()) ? lhs : rhs;
 
     for(std::vector<std::string>::size_type i = 0; i < shorter.size(); ++i) {
         if(shorter[i] != longer[i]) {
-            return std::vector<std::string>(shorter.begin(), shorter.begin() + i);
+            return std::vector<std::string>(shorter.begin(),
+                                            shorter.begin() + i);
         }
     }
 
     return shorter;
 }
 
-
-// =================== END UTILITY FUNCTIONS ======================================================
+// =================== END UTILITY FUNCTIONS
+// ======================================================
 // ================================================================================================
 
 #ifdef __PSP__
 uint32_t psp_time_to_epoch(ScePspDateTime pt) {
     struct tm t;
-    t.tm_year = pt.year;  // This is year-1900, so 112 = 2012
+    t.tm_year = pt.year; // This is year-1900, so 112 = 2012
     t.tm_mon = pt.month;
     t.tm_mday = pt.day;
     t.tm_hour = pt.hour;
@@ -210,9 +219,10 @@ std::pair<Stat, bool> lstat(const Path& path) {
 
     // FIXME: Other things!
 #elif defined(__ANDROID__)
-    AAssetManager* asset_manager = (AAssetManager*) platform_data;
+    AAssetManager* asset_manager = (AAssetManager*)platform_data;
     if(asset_manager) {
-        auto asset = AAssetManager_open(asset_manager, path.c_str(), AASSET_MODE_UNKNOWN);
+        auto asset = AAssetManager_open(asset_manager, path.c_str(),
+                                        AASSET_MODE_UNKNOWN);
         if(asset) {
             S_INFO("Found asset!");
             AAsset_close(asset);
@@ -252,18 +262,11 @@ std::pair<Stat, bool> lstat(const Path& path) {
 
 void touch(const Path& path) {
 #if defined(_arch_dreamcast) || defined(__PSP__)
-    (void) (path);
+    (void)(path);
     throw std::logic_error("Not implemented");
 #elif __WIN32__
-    auto handle = CreateFile(
-        path.c_str(),
-        FILE_WRITE_ATTRIBUTES,
-        0,
-        NULL,
-        CREATE_NEW,
-        FILE_ATTRIBUTE_NORMAL,
-        NULL
-    );
+    auto handle = CreateFile(path.c_str(), FILE_WRITE_ATTRIBUTES, 0, NULL,
+                             CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
 
     FILETIME ft;
     SYSTEMTIME st;
@@ -307,6 +310,7 @@ void make_dir(const Path& path, Mode mode) {
             throw kfs::IOError("Error creating directory");
         }
 #elif __WIN32__
+        _S_UNUSED(mode);
         if(mkdir(path.c_str()) != 0) {
             throw kfs::IOError(errno);
         }
@@ -325,8 +329,8 @@ void make_link(const Path& source, const Path& dest) {
         throw IOError("Unable to make symlink");
     }
 #elif defined(__PSP__)
-    (void) (source);
-    (void) (dest);
+    (void)(source);
+    (void)(dest);
     throw std::logic_error("Not Implemented");
 #elif defined(__WIN32__)
     if(!CreateSymbolicLinkA(source.c_str(), dest.c_str(), 0) == 0) {
@@ -338,10 +342,9 @@ void make_link(const Path& source, const Path& dest) {
         throw IOError(errno);
     }
 #endif
-
 }
 
-void make_dirs(const Path &path, Mode mode) {
+void make_dirs(const Path& path, Mode mode) {
     std::pair<Path, Path> res = kfs::path::split(path);
 
     Path head = res.first;
@@ -357,7 +360,7 @@ void make_dirs(const Path &path, Mode mode) {
         try {
             make_dirs(head, mode);
         } catch(kfs::IOError& e) {
-            //Only ignore errors if someone already created the directory
+            // Only ignore errors if someone already created the directory
             if(e.err != EEXIST) {
                 throw;
             }
@@ -471,7 +474,7 @@ Path exe_path() {
     return "/unknown.java";
 #else
     char buff[1024];
-    ssize_t len = ::readlink("/proc/self/exe", buff, sizeof(buff)-1);
+    ssize_t len = ::readlink("/proc/self/exe", buff, sizeof(buff) - 1);
     if(len != -1) {
         buff[len] = '\0';
         return Path(buff);
@@ -486,7 +489,7 @@ Path exe_dirname() {
     return path::dir_name(path);
 }
 
-Path get_cwd(){
+Path get_cwd() {
     char buf[FILENAME_MAX];
     char* succ = getcwd(buf, FILENAME_MAX);
 
@@ -497,10 +500,9 @@ Path get_cwd(){
     throw std::runtime_error("Unable to get the current working directory");
 }
 
-
 namespace path {
 
-Path join(const Path &p1, const Path &p2) {
+Path join(const Path& p1, const Path& p2) {
     return p1 + SEP + p2;
 }
 
@@ -546,11 +548,13 @@ std::pair<Path, Path> split_drive(const Path& p) {
         result[0] + result[1] == p
 
     If the path contained a drive letter, drive_or_unc will contain everything
-    up to and including the colon.  e.g. splitdrive("c:/dir") returns ("c:", "/dir")
+    up to and including the colon.  e.g. splitdrive("c:/dir") returns ("c:",
+    "/dir")
 
-    If the path contained a UNC path, the drive_or_unc will contain the host name
-    and share up to but not including the fourth directory SEParator character.
-    e.g. splitdrive("//host/computer/dir") returns ("//host/computer", "/dir")
+    If the path contained a UNC path, the drive_or_unc will contain the host
+    name and share up to but not including the fourth directory SEParator
+    character. e.g. splitdrive("//host/computer/dir") returns
+    ("//host/computer", "/dir")
 
     Paths cannot contain both a drive letter and a UNC path.
     */
@@ -566,8 +570,8 @@ std::pair<Path, Path> split_drive(const Path& p) {
 
             auto index2 = normp.find(SEP, index + 1);
             if(index2 == index + 1) {
-                //# a UNC path can't have two slashes in a row
-                //# (after the initial two)
+                // # a UNC path can't have two slashes in a row
+                // # (after the initial two)
                 return std::make_pair("", p);
             }
 
@@ -575,17 +579,13 @@ std::pair<Path, Path> split_drive(const Path& p) {
                 index2 = p.size();
             }
 
-            return std::make_pair(
-                p.substr(0, index2),
-                p.substr(index2, std::string::npos)
-            );
+            return std::make_pair(p.substr(0, index2),
+                                  p.substr(index2, std::string::npos));
         }
 
         if(normp[1] == ':') {
-            return std::make_pair(
-                p.substr(0, 2),
-                p.substr(2, std::string::npos)
-            );
+            return std::make_pair(p.substr(0, 2),
+                                  p.substr(2, std::string::npos));
         }
     }
 
@@ -662,7 +662,6 @@ static Path nt_norm_path(Path path) {
 }
 #endif
 
-
 #ifndef __WIN32__
 static Path posix_norm_path(const Path& path) {
     Path slash = Path(SEP);
@@ -672,9 +671,10 @@ static Path posix_norm_path(const Path& path) {
         return dot;
     }
 
-    int32_t initial_slashes = starts_with(path, SEP) ? 1: 0;
-    //POSIX treats 3 or more slashes as a single one
-    if(initial_slashes && starts_with(path, SEP + SEP) && !starts_with(path, SEP+SEP+SEP)) {
+    int32_t initial_slashes = starts_with(path, SEP) ? 1 : 0;
+    // POSIX treats 3 or more slashes as a single one
+    if(initial_slashes && starts_with(path, SEP + SEP) &&
+       !starts_with(path, SEP + SEP + SEP)) {
         initial_slashes = 2;
     }
 
@@ -686,10 +686,8 @@ static Path posix_norm_path(const Path& path) {
             continue;
         }
 
-        if(comp != ".." ||
-            (initial_slashes == 0 && new_comps.empty()) ||
-            (!new_comps.empty() && new_comps.back() == "..")
-            ) {
+        if(comp != ".." || (initial_slashes == 0 && new_comps.empty()) ||
+           (!new_comps.empty() && new_comps.back() == "..")) {
             new_comps.push_back(comp);
         } else if(!new_comps.empty()) {
             new_comps.pop_back();
@@ -727,7 +725,7 @@ std::pair<Path, Path> split(const Path& path) {
     return std::make_pair(head, tail);
 }
 
-bool exists(const Path &path) {
+bool exists(const Path& path) {
     return lstat(path).second;
 }
 
@@ -741,18 +739,19 @@ Path dir_name(const Path& path) {
 }
 
 bool is_absolute(const Path& path) {
-    #ifdef _WIN32
-        return (path.c_str()[1] == ':');
-    #elif defined(__PSP__)
-        return starts_with(path, "umd0:") || starts_with(path, "ms0:") || starts_with(path, "disc0:") || starts_with(path, "host0:");
-    #else
-        return starts_with(path, "/");
-    #endif
+#ifdef _WIN32
+    return (path.c_str()[1] == ':');
+#elif defined(__PSP__)
+    return starts_with(path, "umd0:") || starts_with(path, "ms0:") ||
+           starts_with(path, "disc0:") || starts_with(path, "host0:");
+#else
+    return starts_with(path, "/");
+#endif
 }
 
 bool is_dir(const Path& path) {
 #ifdef __ANDROID__
-    AAssetManager* asset_manager = (AAssetManager*) platform_data;
+    AAssetManager* asset_manager = (AAssetManager*)platform_data;
     if(asset_manager) {
         auto asset = AAssetManager_openDir(asset_manager, path.c_str());
         if(asset) {
@@ -797,7 +796,7 @@ Path real_path(const Path& path) {
 #if defined(_arch_dreamcast) | defined(__PSP__)
     throw std::logic_error("Not implemented");
 #else
-    char *real_path = realpath(path.c_str(), NULL);
+    char* real_path = realpath(path.c_str(), NULL);
     if(!real_path) {
         return Path();
     }
@@ -820,7 +819,8 @@ Path rel_path(const Path& path, const Path& start) {
     Path pardir = "..";
 
     std::vector<Path> result;
-    for(std::vector<std::string>::size_type j = 0; j < (start_list.size() - i); ++j) {
+    for(std::vector<std::string>::size_type j = 0; j < (start_list.size() - i);
+        ++j) {
         result.push_back(pardir);
     }
 
@@ -861,11 +861,13 @@ Path expand_user(const Path& path) {
         DWORD buflen = 512;
         char buff[512];
 
-        if(!OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &hToken))
+        if(!OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &hToken)) {
             return "";
+        }
 
-        if(!GetUserProfileDirectory(hToken, buff, &buflen))
+        if(!GetUserProfileDirectory(hToken, buff, &buflen)) {
             return "";
+        }
 
         CloseHandle(hToken);
         return std::string(buff, buff + buflen);
@@ -886,21 +888,21 @@ Path expand_user(const Path& path) {
 #endif
 }
 
-void hide_dir(const Path &path) {
+void hide_dir(const Path& path) {
 #ifdef WIN32
-    return;//assert(0 && "Not Implemented");
+    _S_UNUSED(path);
+    return; // assert(0 && "Not Implemented");
 #elif defined(_arch_dreamcast)
     // No-op on Dreamcast
     return;
 #else
-    //On Unix systems, prefix with a dot
+    // On Unix systems, prefix with a dot
     std::pair<Path, Path> parts = path::split(path);
     Path final = parts.first + "." + parts.second;
     if(::rename(path.c_str(), final.c_str()) != 0) {
         throw IOError(errno);
     }
 #endif
-
 }
 
 std::vector<Path> list_dir(const Path& path) {
@@ -919,13 +921,14 @@ std::vector<Path> list_dir(const Path& path) {
     pattern.append("\\*");
     WIN32_FIND_DATA data;
     HANDLE hFind;
-    if((hFind = FindFirstFile(pattern.c_str(), &data)) != INVALID_HANDLE_VALUE) {
+    if((hFind = FindFirstFile(pattern.c_str(), &data)) !=
+       INVALID_HANDLE_VALUE) {
         do {
             result.push_back(data.cFileName);
             if(result.back() == "." || result.back() == "..") {
                 result.pop_back();
             }
-        } while (FindNextFile(hFind, &data) != 0);
+        } while(FindNextFile(hFind, &data) != 0);
 
         FindClose(hFind);
     }
@@ -947,17 +950,16 @@ std::vector<Path> list_dir(const Path& path) {
 std::string read_file_contents(const Path& path) {
     std::ifstream t(path);
     std::string str((std::istreambuf_iterator<char>(t)),
-                 std::istreambuf_iterator<char>());
+                    std::istreambuf_iterator<char>());
 
     return str;
 }
-
 
 std::pair<Path, Path> split_ext(const Path& path) {
     int SEP_index = path.rfind(SEP);
     int dot_index = path.rfind(".");
 
-    if(SEP_index == (int) Path::npos) {
+    if(SEP_index == (int)Path::npos) {
         SEP_index = -1;
     }
 
@@ -966,10 +968,8 @@ std::pair<Path, Path> split_ext(const Path& path) {
 
         while(filename_index < dot_index) {
             if(path[filename_index] != '.') {
-                return std::make_pair(
-                    slice(path, nullptr, dot_index),
-                    slice(path, dot_index, nullptr)
-                );
+                return std::make_pair(slice(path, nullptr, dot_index),
+                                      slice(path, dot_index, nullptr));
             }
             filename_index += 1;
         }
@@ -978,24 +978,31 @@ std::pair<Path, Path> split_ext(const Path& path) {
     return std::make_pair(path, "");
 }
 
-
-
-}
+} // namespace path
 
 #ifndef _arch_dreamcast
 std::string IOError::get_message(int err) {
     switch(err) {
-    case EEXIST: return "File or folder already exists";
-    case ELOOP: return "Loop exists in symbolic links";
-    case EACCES: return "Permission denied";
-    case EMLINK: return "Exceeded link count of the parent directory";
-    case ENAMETOOLONG: return "Path is too long, exceeded PATH_MAX";
-    case ENOENT: return "Path was invalid";
-    case ENOSPC: return "Not enough disk space";
-    case ENOTDIR: return "Not a directory";
-    case EROFS: return "Read-only filesystem";
-    default:
-        return "Unspecified error";
+        case EEXIST:
+            return "File or folder already exists";
+        case ELOOP:
+            return "Loop exists in symbolic links";
+        case EACCES:
+            return "Permission denied";
+        case EMLINK:
+            return "Exceeded link count of the parent directory";
+        case ENAMETOOLONG:
+            return "Path is too long, exceeded PATH_MAX";
+        case ENOENT:
+            return "Path was invalid";
+        case ENOSPC:
+            return "Not enough disk space";
+        case ENOTDIR:
+            return "Not a directory";
+        case EROFS:
+            return "Read-only filesystem";
+        default:
+            return "Unspecified error";
     }
 }
 #else
@@ -1004,5 +1011,4 @@ std::string IOError::get_message(int err) {
 }
 #endif
 
-
-}
+} // namespace kfs

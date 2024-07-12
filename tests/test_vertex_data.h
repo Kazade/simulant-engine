@@ -70,12 +70,12 @@ public:
         smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
         data->position(smlt::Vec3());
         data->diffuse(smlt::Color(0, 0, 0, 0));
-        data->normal(smlt::Vec3::POSITIVE_Y);
+        data->normal(smlt::Vec3::up());
         data->move_next();
 
         data->position(smlt::Vec3());
         data->diffuse(smlt::Color(0, 0, 0, 0));
-        data->normal(smlt::Vec3::NEGATIVE_X);
+        data->normal(smlt::Vec3::left());
         data->move_next();
 
         data->position(smlt::Vec3());

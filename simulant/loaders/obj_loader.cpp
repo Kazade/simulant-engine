@@ -448,7 +448,7 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
             nindex = (parts[2].empty()) ? -1 : smlt::stoi(parts[2]);
         }
 
-        smlt::Color diffuse = smlt::Color::WHITE;
+        smlt::Color diffuse = smlt::Color::white();
         if(vindex == -1) {
             return false;
         } else if((vindex - 1) < (int) VERTICES->size()) {

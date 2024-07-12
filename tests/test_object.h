@@ -57,7 +57,7 @@ public:
 
         auto actor2 = scene->create_child<smlt::Stage>();
 
-        actor2->transform->rotate(smlt::Vec3::POSITIVE_Y, smlt::Degrees(1.0));
+        actor2->transform->rotate(smlt::Vec3::up(), smlt::Degrees(1.0));
 
         auto first = actor2->transform->world_space_matrix();
 
@@ -136,8 +136,10 @@ public:
 
         actor2->transform->set_orientation(smlt::Quaternion(smlt::Vec3(0, 0, 1), smlt::Degrees(20)));
 
-        smlt::Quaternion expected_rel(smlt::Vec3::POSITIVE_Z, smlt::Degrees(10));
-        smlt::Quaternion expected_abs(smlt::Vec3::POSITIVE_Z, smlt::Degrees(20));
+        smlt::Quaternion expected_rel(smlt::Vec3::backward(),
+                                      smlt::Degrees(10));
+        smlt::Quaternion expected_abs(smlt::Vec3::backward(),
+                                      smlt::Degrees(20));
 
         assert_close(expected_abs.x, actor2->transform->orientation().x, 0.000001f);
         assert_close(expected_abs.y, actor2->transform->orientation().y, 0.000001f);
