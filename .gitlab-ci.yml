@@ -320,22 +320,23 @@ test:windows-x64-mingw-wine:
   image: fedora:38
   needs: ["build:windows-x64-mingw:debug", "build:windows-x64-mingw:release"]
   dependencies:
-   - build:windows-x64-mingw:debug
-   - build:windows-x64-mingw:release
+    - build:windows-x64-mingw:debug
+    - build:windows-x64-mingw:release
   variables:
     TARGET: windows-x64-mingw
+    GIT_STRATEGY: none # Prevent cloning
   before_script:
-   - dnf install -y xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers wine
-   - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
-   - sleep 3
-   - export LIBGL_ALWAYS_SOFTWARE=1
-   - export SIMULANT_SOUND_DRIVER=null
-   - export DISPLAY=:99
+    - dnf install -y xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers wine
+    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
+    - sleep 3
+    - export LIBGL_ALWAYS_SOFTWARE=1
+    - export SIMULANT_SOUND_DRIVER=null
+    - export DISPLAY=:99
   script:
-   - cd ${TARGET}/debug/tests
-   - ln -s ../simulant
-   - ln -s ../assets
-   - wine simulant_tests.exe --junit-xml=report.xml
+    - cd ${TARGET}/debug/tests
+    - ln -s ../simulant
+    - ln -s ../assets
+    - wine simulant_tests.exe --junit-xml=report.xml
   artifacts:
     reports:
       junit: ${TARGET}/debug/tests/report.xml
@@ -343,32 +344,33 @@ test:windows-x64-mingw-wine:
       - ${TARGET}/debug/simulant/*.dll
       - ${TARGET}/release/simulant/*.dll
 
-test:windows-x64-mingw:
-  stage: test
-  allow_failure: true
-  tags:
-    - saas-windows-medium-amd64
-  needs: ["build:windows-x64-mingw:debug", "build:windows-x64-mingw:release"]
-  dependencies:
-    - build:windows-x64-mingw:debug
-    - build:windows-x64-mingw:release
-  variables:
-    TARGET: windows-x64-mingw
-    SIMULANT_SOUND_DRIVER: "null"
-    GALLIUM_DRIVER: softpipe
-  script:
-    - cd ${TARGET}/debug/tests
-    - Copy-item -Recurse ..\simulant -Destination simulant
-    - Copy-item -Recurse ..\assets -Destination assets
-    - Get-ChildItem *.exe
-    - Get-ChildItem *.dll
-    - .\simulant_tests.exe --junit-xml=report.xml
-  artifacts:
-    reports:
-      junit: ${TARGET}/debug/tests/report.xml
-    paths:
-      - ${TARGET}/debug/simulant/*.dll
-      - ${TARGET}/release/simulant/*.dll
+# test:windows-x64-mingw:
+#   stage: test
+#   allow_failure: true
+#   tags:
+#     - saas-windows-medium-amd64
+#   needs: ["build:windows-x64-mingw:debug", "build:windows-x64-mingw:release"]
+#   dependencies:
+#     - build:windows-x64-mingw:debug
+#     - build:windows-x64-mingw:release
+#   variables:
+#     TARGET: windows-x64-mingw
+#     SIMULANT_SOUND_DRIVER: "null"
+#     GALLIUM_DRIVER: softpipe
+#     GIT_STRATEGY: none # Prevent cloning
+#   script:
+#     - cd ${TARGET}/debug/tests
+#     - Copy-item -Recurse ..\simulant -Destination simulant
+#     - Copy-item -Recurse ..\assets -Destination assets
+#     - Get-ChildItem *.exe
+#     - Get-ChildItem *.dll
+#     - .\simulant_tests.exe --junit-xml=report.xml
+#   artifacts:
+#     reports:
+#       junit: ${TARGET}/debug/tests/report.xml
+#     paths:
+#       - ${TARGET}/debug/simulant/*.dll
+#       - ${TARGET}/release/simulant/*.dll
 
 ## clang build is currently just for checking compilation
 build:linux-x64-clang:
