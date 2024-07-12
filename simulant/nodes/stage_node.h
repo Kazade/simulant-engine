@@ -334,19 +334,19 @@ private:
 #define _S_GEN_PARAM(param, line) __S_GEN_PARAM(param, line)
 
 #define _S_DEFINE_STAGE_NODE_PARAM(line, klass, name, type, fallback, desc)    \
-    static_assert(!has_spaces(name), "Param name must not have spaces");       \
+    static_assert(!smlt::has_spaces(name), "Param name must not have spaces"); \
     static_assert(std::is_same<type, int>::value ||                            \
-                  std::is_same<type, IntArray>::value ||                       \
+                  std::is_same<type, smlt::IntArray>::value ||                 \
                   std::is_same<type, float>::value ||                          \
-                  std::is_same<type, FloatArray>::value ||                     \
-                  std::is_same<type, ParticleScriptPtr>::value ||              \
-                  std::is_same<type, MeshPtr>::value ||                        \
-                  std::is_same<type, GeomCullerOptions>::value ||              \
+                  std::is_same<type, smlt::FloatArray>::value ||               \
+                  std::is_same<type, smlt::ParticleScriptPtr>::value ||        \
+                  std::is_same<type, smlt::MeshPtr>::value ||                  \
+                  std::is_same<type, smlt::GeomCullerOptions>::value ||        \
                   std::is_same<type, std::string>::value ||                    \
-                  std::is_same<type, TextureFlags>::value ||                   \
-                  std::is_same<type, TexturePtr>::value ||                     \
-                  std::is_same<type, ui::UIConfig>::value ||                   \
-                  std::is_same<type, ui::WidgetStylePtr>::value);              \
+                  std::is_same<type, smlt::TextureFlags>::value ||             \
+                  std::is_same<type, smlt::TexturePtr>::value ||               \
+                  std::is_same<type, smlt::ui::UIConfig>::value ||             \
+                  std::is_same<type, smlt::ui::WidgetStylePtr>::value);        \
     static inline auto _S_GEN_PARAM(param_, line) =                            \
         TypedNodeParam<type, klass>(line, name, fallback, desc)
 
