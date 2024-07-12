@@ -17,6 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include "SDL_rwops.h"
 #ifdef __linux__
 #include <unistd.h>
 #elif defined(__WIN32__)
@@ -33,10 +34,9 @@
 #include "../../logging.h"
 #include "../../sound/drivers/null_sound_driver.h"
 #include "../../sound/drivers/openal_sound_driver.h"
-#include "../../utils/unicode.h"
+#include "../../vfs.h"
 #include "sdl2_window.h"
 
-#include "../../input/sdl/gamecontrollerdb.h"
 #include "../../renderers/renderer_config.h"
 
 namespace smlt {
@@ -388,13 +388,21 @@ std::shared_ptr<SoundDriver>
 
 bool SDL2Window::_init_window() {
     /* Load the game controller mappings */
-    auto rw_ops =
-        SDL_RWFromConstMem(SDL_CONTROLLER_DB.c_str(), SDL_CONTROLLER_DB.size());
-    int ret = SDL_GameControllerAddMappingsFromRW(rw_ops, 1);
-    if(ret < 0) {
-        S_WARN("Unable to load controller mappings!");
+    auto controller_db =
+        app->vfs->locate_file("assets/other/gamecontrollerdb.txt");
+
+    if(controller_db) {
+        auto rw_ops = SDL_RWFromFile(controller_db.value().str().c_str(), "r");
+        int ret = SDL_GameControllerAddMappingsFromRW(rw_ops, 1);
+        SDL_RWclose(rw_ops);
+
+        if(ret < 0) {
+            S_WARN("Unable to load controller mappings!");
+        } else {
+            S_DEBUG("Successfully loaded {0} SDL controller mappings", ret);
+        }
     } else {
-        S_DEBUG("Successfully loaded {0} SDL controller mappings", ret);
+        S_WARN("Unable to load controller mappings!");
     }
 
     int32_t flags = SDL_WINDOW_OPENGL;
