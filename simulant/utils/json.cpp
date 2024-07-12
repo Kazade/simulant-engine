@@ -295,6 +295,15 @@ optional<int64_t> JSONNode::to_int() const {
     return optional<int64_t>(ret);
 }
 
+bool JSONNode::is_float() const {
+    if(type_ == JSON_NUMBER) {
+        std::string value = read_value_from_stream();
+        return value.find('.') != std::string::npos;
+    }
+
+    return false;
+}
+
 optional<float> JSONNode::to_float() const {
     if(type_ != JSON_NUMBER) {
         return optional<float>();
