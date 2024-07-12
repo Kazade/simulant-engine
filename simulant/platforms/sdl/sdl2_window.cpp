@@ -4,9 +4,9 @@
 //     This file is part of Simulant.
 //
 //     Simulant is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU Lesser General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
+//     it under the terms of the GNU Lesser General Public License as published
+//     by the Free Software Foundation, either version 3 of the License, or (at
+//     your option) any later version.
 //
 //     Simulant is distributed in the hope that it will be useful,
 //     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,45 +20,47 @@
 #ifdef __linux__
 #include <unistd.h>
 #elif defined(__WIN32__)
+// clang-format off
 #include <windows.h>
 #include <psapi.h>
 #include <sysinfoapi.h>
 #include <processthreadsapi.h>
+// clang-format on
 #endif
 
-#include "../../logging.h"
-#include "../../utils/unicode.h"
-#include "../../input/input_state.h"
-#include "sdl2_window.h"
 #include "../../application.h"
-#include "../../sound/drivers/openal_sound_driver.h"
+#include "../../input/input_state.h"
+#include "../../logging.h"
 #include "../../sound/drivers/null_sound_driver.h"
+#include "../../sound/drivers/openal_sound_driver.h"
+#include "../../utils/unicode.h"
+#include "sdl2_window.h"
 
+#include "../../input/sdl/gamecontrollerdb.h"
 #include "../../renderers/renderer_config.h"
-
-static const std::string SDL_CONTROLLER_DB =
-#include "../../input/sdl/gamecontrollerdb.txt"
-;
 
 namespace smlt {
 
 SDL2Window::SDL2Window() {
-    auto default_flags = SDL_INIT_EVERYTHING & (~SDL_INIT_HAPTIC) & (~SDL_INIT_SENSOR);
+    auto default_flags =
+        SDL_INIT_EVERYTHING & (~SDL_INIT_HAPTIC) & (~SDL_INIT_SENSOR);
 
     if(SDL_Init(default_flags) != 0) {
         S_ERROR("Unable to initialize SDL {0}", SDL_GetError());
         FATAL_ERROR(ERROR_CODE_SDL_INIT_FAILED, "Failed to initialize SDL");
     }
 
-    /* Some platforms don't ship SDL compiled with haptic support, so try it, but don't
-     * die if it's not there! */
+    /* Some platforms don't ship SDL compiled with haptic support, so try it,
+     * but don't die if it's not there! */
     if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
-        S_WARN("Unable to initialize force-feedback. Errors was {0}.", SDL_GetError());
+        S_WARN("Unable to initialize force-feedback. Errors was {0}.",
+               SDL_GetError());
     }
 
     /* SDL_INIT_SENSOR doesn't always work under some platforms (e.g. Wine) */
     if(SDL_InitSubSystem(SDL_INIT_SENSOR) != 0) {
-        S_WARN("Unable to initialize sensor system. Errors was {0}.", SDL_GetError());
+        S_WARN("Unable to initialize sensor system. Errors was {0}.",
+               SDL_GetError());
     }
 }
 
@@ -86,24 +88,24 @@ int event_filter(void* user_data, SDL_Event* event) {
     /*
      *  This event filter is for Android, e.g. when someone switches task
      */
-    SDL2Window* _this = (SDL2Window*) user_data;
+    SDL2Window* _this = (SDL2Window*)user_data;
 
     switch(event->type) {
         case SDL_APP_TERMINATING:
             get_app()->stop_running();
-        break;
+            break;
         case SDL_APP_WILLENTERBACKGROUND: {
             std::string sdl_err = SDL_GetError();
             if(!sdl_err.empty()) {
                 S_ERROR("Something went wrong with SDL: {0}", sdl_err);
             }
 
-            S_INFO("Application is entering the background, disabling rendering");
-
+            S_INFO(
+                "Application is entering the background, disabling rendering");
 
             _this->set_has_focus(false);
             {
-                //See Window::context_lock_ for details
+                // See Window::context_lock_ for details
                 thread::Lock<thread::Mutex> context_lock(_this->context_lock());
                 _this->set_has_context(false);
             }
@@ -114,13 +116,14 @@ int event_filter(void* user_data, SDL_Event* event) {
                 S_ERROR("Something went wrong with SDL: " + sdl_err);
             }
 
-            S_INFO("Application is entering the foreground, enabling rendering");
+            S_INFO(
+                "Application is entering the foreground, enabling rendering");
             {
-                //See Window::context_lock_ for details
+                // See Window::context_lock_ for details
                 thread::Lock<thread::Mutex> context_lock(_this->context_lock());
                 _this->set_has_context(true);
             }
-            //FIXME: Reload textures and shaders
+            // FIXME: Reload textures and shaders
             _this->set_has_focus(true);
         } break;
         default:
@@ -132,14 +135,20 @@ int event_filter(void* user_data, SDL_Event* event) {
 
 JoystickAxis SDL_axis_to_simulant_axis(Uint8 axis) {
     switch(axis) {
-    case SDL_CONTROLLER_AXIS_LEFTX: return JOYSTICK_AXIS_0;
-    case SDL_CONTROLLER_AXIS_LEFTY: return JOYSTICK_AXIS_1;
-    case SDL_CONTROLLER_AXIS_RIGHTX: return JOYSTICK_AXIS_2;
-    case SDL_CONTROLLER_AXIS_RIGHTY: return JOYSTICK_AXIS_3;
-    case SDL_CONTROLLER_AXIS_TRIGGERLEFT: return JOYSTICK_AXIS_LTRIGGER;
-    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: return JOYSTICK_AXIS_RTRIGGER;
-    default:
-        throw std::out_of_range("Invalid axis");
+        case SDL_CONTROLLER_AXIS_LEFTX:
+            return JOYSTICK_AXIS_0;
+        case SDL_CONTROLLER_AXIS_LEFTY:
+            return JOYSTICK_AXIS_1;
+        case SDL_CONTROLLER_AXIS_RIGHTX:
+            return JOYSTICK_AXIS_2;
+        case SDL_CONTROLLER_AXIS_RIGHTY:
+            return JOYSTICK_AXIS_3;
+        case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
+            return JOYSTICK_AXIS_LTRIGGER;
+        case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
+            return JOYSTICK_AXIS_RTRIGGER;
+        default:
+            throw std::out_of_range("Invalid axis");
     }
 }
 
@@ -165,14 +174,16 @@ void SDL2Window::check_events() {
 
     auto to_mouse_button_id = [](uint8_t SDL_button) -> MouseButtonID {
         switch(SDL_button) {
-        case SDL_BUTTON_LEFT: return 0;
-        case SDL_BUTTON_RIGHT: return 1;
-        case SDL_BUTTON_MIDDLE: return 2;
-        default:
-            return -1;
+            case SDL_BUTTON_LEFT:
+                return 0;
+            case SDL_BUTTON_RIGHT:
+                return 1;
+            case SDL_BUTTON_MIDDLE:
+                return 2;
+            default:
+                return -1;
         }
     };
-
 
     while(SDL_PollEvent(&event)) {
         switch(event.type) {
@@ -188,64 +199,70 @@ void SDL2Window::check_events() {
                     auto controllers = detect_game_controllers();
                     S_DEBUG(
                         "Updating game controller list with {0} controllers",
-                        controllers.size()
-                    );
+                        controllers.size());
                     input->_update_game_controllers(controllers);
                 }
             } break;
             case SDL_CONTROLLERAXISMOTION: {
                 auto value = float(event.caxis.value);
-                if(event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT || event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) {
-                    value = clamp(value / float(SDL_JOYSTICK_AXIS_MAX), 0.0f, 1.0f);
+                if(event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT ||
+                   event.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) {
+                    value =
+                        clamp(value / float(SDL_JOYSTICK_AXIS_MAX), 0.0f, 1.0f);
                 } else {
-                    value = clamp(value / float(SDL_JOYSTICK_AXIS_MAX), -1.0f, 1.0f);
+                    value = clamp(value / float(SDL_JOYSTICK_AXIS_MAX), -1.0f,
+                                  1.0f);
                 }
 
-                /* For some reason, SDL Y axis is reversed - up == -1, down == 1. I have no idea if this is a bug or correct */
-                if(event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY || event.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTY) {
+                /* For some reason, SDL Y axis is reversed - up == -1, down
+                 * == 1. I have no idea if this is a bug or correct */
+                if(event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY ||
+                   event.caxis.axis == SDL_CONTROLLER_AXIS_RIGHTY) {
                     value = -value;
                 }
 
                 input_state->_handle_joystick_axis_motion(
                     GameControllerID(event.caxis.which),
-                    SDL_axis_to_simulant_axis(event.caxis.axis),
-                    value
-                );
+                    SDL_axis_to_simulant_axis(event.caxis.axis), value);
             } break;
             case SDL_CONTROLLERBUTTONDOWN: {
                 input_state->_handle_joystick_button_down(
                     GameControllerID(event.cbutton.which),
-                    (JoystickButton) event.cbutton.button
-                );
-                auto idx = input_state->game_controller_index_from_id(GameControllerID(event.cbutton.which));
-                on_game_controller_button_down(idx, (JoystickButton) event.cbutton.button);
+                    (JoystickButton)event.cbutton.button);
+                auto idx = input_state->game_controller_index_from_id(
+                    GameControllerID(event.cbutton.which));
+                on_game_controller_button_down(
+                    idx, (JoystickButton)event.cbutton.button);
             } break;
             case SDL_CONTROLLERBUTTONUP: {
                 input_state->_handle_joystick_button_up(
                     GameControllerID(event.cbutton.which),
-                    (JoystickButton) event.cbutton.button
-                );
-                auto idx = input_state->game_controller_index_from_id(GameControllerID(event.cbutton.which));
-                on_game_controller_button_up(idx, (JoystickButton) event.cbutton.button);
+                    (JoystickButton)event.cbutton.button);
+                auto idx = input_state->game_controller_index_from_id(
+                    GameControllerID(event.cbutton.which));
+                on_game_controller_button_up(
+                    idx, (JoystickButton)event.cbutton.button);
             } break;
             case SDL_JOYHATMOTION:
                 input_state->_handle_joystick_hat_motion(
-                    GameControllerID(event.jhat.which),
-                    event.jhat.hat, (HatPosition) event.jhat.value
-                );
-            break;
+                    GameControllerID(event.jhat.which), event.jhat.hat,
+                    (HatPosition)event.jhat.value);
+                break;
             case SDL_KEYDOWN: {
                 input_state->_handle_key_down(
                     KeyboardID(0), (KeyboardCode)event.key.keysym.scancode);
-                on_key_down((KeyboardCode) event.key.keysym.scancode, get_modifiers());
+                on_key_down((KeyboardCode)event.key.keysym.scancode,
+                            get_modifiers());
             } break;
             case SDL_KEYUP: {
                 input_state->_handle_key_up(
                     KeyboardID(0), (KeyboardCode)event.key.keysym.scancode);
-                on_key_up((KeyboardCode) event.key.keysym.scancode, get_modifiers());
+                on_key_up((KeyboardCode)event.key.keysym.scancode,
+                          get_modifiers());
             } break;
             case SDL_MOUSEMOTION: {
-                bool is_touch_device = (event.motion.which == SDL_TOUCH_MOUSEID);
+                bool is_touch_device =
+                    (event.motion.which == SDL_TOUCH_MOUSEID);
                 input_state->_handle_mouse_motion(
                     MouseID(event.motion.which), event.motion.x,
                     height() - event.motion.y, event.motion.xrel,
@@ -254,7 +271,8 @@ void SDL2Window::check_events() {
                               height() - event.motion.y, is_touch_device);
             } break;
             case SDL_MOUSEBUTTONDOWN: {
-                bool is_touch_device = (event.button.which == SDL_TOUCH_MOUSEID);
+                bool is_touch_device =
+                    (event.button.which == SDL_TOUCH_MOUSEID);
                 input_state->_handle_mouse_down(
                     MouseID(event.button.which),
                     to_mouse_button_id(event.button.button));
@@ -264,7 +282,8 @@ void SDL2Window::check_events() {
                               is_touch_device);
             } break;
             case SDL_MOUSEBUTTONUP: {
-                bool is_touch_device = (event.button.which == SDL_TOUCH_MOUSEID);
+                bool is_touch_device =
+                    (event.button.which == SDL_TOUCH_MOUSEID);
                 input_state->_handle_mouse_up(
                     MouseID(event.button.which),
                     to_mouse_button_id(event.button.button));
@@ -283,9 +302,8 @@ void SDL2Window::check_events() {
                 x /= float(this->width());
                 y /= float(this->height());
 #endif
-                on_finger_motion(
-                    event.tfinger.fingerId, x, y, event.tfinger.dx, event.tfinger.dy
-                );
+                on_finger_motion(event.tfinger.fingerId, x, y, event.tfinger.dx,
+                                 event.tfinger.dy);
             } break;
             case SDL_FINGERDOWN: {
                 float x = event.tfinger.x;
@@ -297,9 +315,8 @@ void SDL2Window::check_events() {
                 x /= float(this->width());
                 y /= float(this->height());
 #endif
-                on_finger_down(
-                    event.tfinger.fingerId, x, y, event.tfinger.pressure
-                );
+                on_finger_down(event.tfinger.fingerId, x, y,
+                               event.tfinger.pressure);
             } break;
             case SDL_FINGERUP: {
                 float x = event.tfinger.x;
@@ -311,22 +328,21 @@ void SDL2Window::check_events() {
                 x /= float(this->width());
                 y /= float(this->height());
 #endif
-                on_finger_up(
-                    event.tfinger.fingerId, x, y
-                );
+                on_finger_up(event.tfinger.fingerId, x, y);
             } break;
             case SDL_WINDOWEVENT: {
-                /* Make sure we pause/unpause when the window is minimized and restored.
-                 * We also unpause on maximize just in case (although I imagine that we shouldn't
-                 * see a maximize without a restore */
+                /* Make sure we pause/unpause when the window is minimized and
+                 * restored. We also unpause on maximize just in case (although
+                 * I imagine that we shouldn't see a maximize without a restore
+                 */
                 switch(event.window.event) {
                     case SDL_WINDOWEVENT_MINIMIZED:
                         set_has_focus(false);
-                    break;
+                        break;
                     case SDL_WINDOWEVENT_RESTORED:
                     case SDL_WINDOWEVENT_MAXIMIZED:
                         set_has_focus(true);
-                    break;
+                        break;
                     default:
                         break;
                 }
@@ -343,23 +359,27 @@ void SDL2Window::denormalize(float x, float y, int& xout, int& yout) {
         Given normalized screen coordinates, outputs the absolute position
     */
 
-    //FIXME: This should use SDL_GetTouch and a touchID to get the device dimensions
-    xout = (int) (x * float(width()));
-    yout = (int) (y * float(height()));
+    // FIXME: This should use SDL_GetTouch and a touchID to get the device
+    // dimensions
+    xout = (int)(x * float(width()));
+    yout = (int)(y * float(height()));
 }
 
-std::shared_ptr<SoundDriver> SDL2Window::create_sound_driver(const std::string& from_config) {
+std::shared_ptr<SoundDriver>
+    SDL2Window::create_sound_driver(const std::string& from_config) {
     const char* from_env = std::getenv("SIMULANT_SOUND_DRIVER");
 
-    std::string selected = (from_env) ? from_env :
-        (from_config.empty()) ? "openal" : from_config;
+    std::string selected = (from_env)              ? from_env
+                           : (from_config.empty()) ? "openal"
+                                                   : from_config;
 
     if(selected == "null") {
         S_DEBUG("Null sound driver activated");
         return std::make_shared<NullSoundDriver>(this);
     } else {
         if(selected != "openal") {
-            S_WARN("Unknown sound driver ({0}) falling back to OpenAL", selected);
+            S_WARN("Unknown sound driver ({0}) falling back to OpenAL",
+                   selected);
         }
         S_DEBUG("OpenAL sound driver activated");
         return std::make_shared<OpenALSoundDriver>(this);
@@ -368,7 +388,8 @@ std::shared_ptr<SoundDriver> SDL2Window::create_sound_driver(const std::string& 
 
 bool SDL2Window::_init_window() {
     /* Load the game controller mappings */
-    auto rw_ops = SDL_RWFromConstMem(SDL_CONTROLLER_DB.c_str(), SDL_CONTROLLER_DB.size());
+    auto rw_ops =
+        SDL_RWFromConstMem(SDL_CONTROLLER_DB.c_str(), SDL_CONTROLLER_DB.size());
     int ret = SDL_GameControllerAddMappingsFromRW(rw_ops, 1);
     if(ret < 0) {
         S_WARN("Unable to load controller mappings!");
@@ -382,13 +403,9 @@ bool SDL2Window::_init_window() {
         flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     }
 
-    screen_ = SDL_CreateWindow(
-        "",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        this->width(), this->height(),
-        flags
-    );
+    screen_ =
+        SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                         this->width(), this->height(), flags);
 
     if(!screen_) {
         S_ERROR(std::string(SDL_GetError()));
@@ -403,7 +420,7 @@ bool SDL2Window::_init_window() {
     SDL_SetEventFilter(event_filter, this);
 
 #ifndef NDEBUG
-    //DEBUG mode
+    // DEBUG mode
     SDL_ShowCursor(1);
 #else
     SDL_ShowCursor(0);
@@ -429,7 +446,8 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     } else if(renderer->name() == "gles2x") {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-        SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                            SDL_GL_CONTEXT_PROFILE_ES);
     }
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -449,7 +467,7 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
     SDL_GL_MakeCurrent(screen_, context_);
     SDL_GL_SetSwapInterval((vsync_enabled()) ? 1 : 0);
 
-    set_has_context(true); //Mark that we have a valid GL context
+    set_has_context(true); // Mark that we have a valid GL context
     return true;
 }
 
@@ -473,12 +491,12 @@ std::vector<GameControllerInfo> SDL2Window::detect_game_controllers() {
     return joypads;
 }
 
-void SDL2Window::initialize_input_controller(InputState &controller) {
+void SDL2Window::initialize_input_controller(InputState& controller) {
 
     MouseDeviceInfo mouse;
     mouse.id = 0;
     mouse.button_count = 3; // FIXME: Not always true
-    mouse.axis_count = 2; // X + Y FIXME: Add scrollwheels
+    mouse.axis_count = 2;   // X + Y FIXME: Add scrollwheels
 
     KeyboardDeviceInfo keyboard;
     keyboard.id = 0;
@@ -490,7 +508,9 @@ void SDL2Window::initialize_input_controller(InputState &controller) {
     controller._update_game_controllers(joypads);
 }
 
-void SDL2Window::initialize_virtual_screen(uint16_t width, uint16_t height, ScreenFormat format, uint16_t integer_scale) {
+void SDL2Window::initialize_virtual_screen(uint16_t width, uint16_t height,
+                                           ScreenFormat format,
+                                           uint16_t integer_scale) {
     /* Create the virtual screen */
     Screen* screen = _create_screen("virtual", width, height, format, 60);
     screen->_set_integer_scale(integer_scale);
@@ -521,15 +541,12 @@ void SDL2Window::do_swap_buffers() {
     SDL_GL_SwapWindow(screen_);
 }
 
-bool SDL2Window::initialize_screen(Screen *screen) {
+bool SDL2Window::initialize_screen(Screen* screen) {
     auto current = SDL_GL_GetCurrentContext();
-    auto window = SDL_CreateWindow(
-        "Virtual Screen",
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
-        screen->width(),
-        screen->height(),
-        0 //SDL_WINDOW_BORDERLESS
+    auto window = SDL_CreateWindow("Virtual Screen", SDL_WINDOWPOS_UNDEFINED,
+                                   SDL_WINDOWPOS_UNDEFINED, screen->width(),
+                                   screen->height(),
+                                   0 // SDL_WINDOW_BORDERLESS
     );
 
     if(!window) {
@@ -549,13 +566,14 @@ void SDL2Window::shutdown_screen(Screen* screen) {
     }
 }
 
-void SDL2Window::render_screen(Screen* screen, const uint8_t* data, int row_stride) {
+void SDL2Window::render_screen(Screen* screen, const uint8_t* data,
+                               int row_stride) {
     auto current = SDL_GL_GetCurrentContext();
     auto window = screen->get<SDL_Window*>("window");
 
     auto surface = SDL_GetWindowSurface(window);
 
-    uint32_t* pixels = (uint32_t*) surface->pixels;
+    uint32_t* pixels = (uint32_t*)surface->pixels;
 
     if(screen->format() == SCREEN_FORMAT_G1) {
         auto x = 0;
@@ -596,18 +614,20 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data, int row_stri
     SDL_GL_MakeCurrent(screen_, current);
 }
 
-void SDL2Window::game_controller_start_rumble(GameController *controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const Seconds &duration) {
+void SDL2Window::game_controller_start_rumble(GameController* controller,
+                                              RangeValue<0, 1> low_rumble,
+                                              RangeValue<0, 1> high_rumble,
+                                              const Seconds& duration) {
     SDL_GameControllerRumble(
         SDL_GameControllerFromInstanceID(controller->id().to_int8_t()),
-        low_rumble * float(0xFFFF),
-        high_rumble * float(0xFFFF),
-        duration.to_float() * 1000
-    );
+        low_rumble * float(0xFFFF), high_rumble * float(0xFFFF),
+        duration.to_float() * 1000);
 }
 
-void SDL2Window::game_controller_stop_rumble(GameController *controller) {
-    SDL_GameControllerRumble(SDL_GameControllerFromInstanceID(controller->id().to_int8_t()), 0, 0, 0);
+void SDL2Window::game_controller_stop_rumble(GameController* controller) {
+    SDL_GameControllerRumble(
+        SDL_GameControllerFromInstanceID(controller->id().to_int8_t()), 0, 0,
+        0);
 }
 
-
-}
+} // namespace smlt

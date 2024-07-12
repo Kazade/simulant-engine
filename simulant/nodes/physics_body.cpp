@@ -1,11 +1,12 @@
-#include "../generic/raii.h"
 #include "physics_body.h"
-#include "bounce/bounce.h"
-#include "../services/physics.h"
-#include "stage_node.h"
-#include "../scenes/scene.h"
 #include "../application.h"
+#include "../generic/raii.h"
+#include "../scenes/scene.h"
+#include "../services/physics.h"
 #include "../time_keeper.h"
+#include "bounce/bounce.h"
+#include "simulant/math/quaternion.h"
+#include "stage_node.h"
 
 namespace smlt {
 
@@ -20,45 +21,58 @@ const static auto& r = PhysicsMaterial::RUBBER;
 const static auto& i = PhysicsMaterial::IRON;
 const static auto& s = PhysicsMaterial::STONE;
 
-const PhysicsMaterial PhysicsMaterial::WOOD_25(w.density * 0.25f, w.friction, w.bounciness);
-const PhysicsMaterial PhysicsMaterial::WOOD_50(w.density * 0.50f, w.friction, w.bounciness);
-const PhysicsMaterial PhysicsMaterial::WOOD_75(w.density * 0.75f, w.friction, w.bounciness);
+const PhysicsMaterial PhysicsMaterial::WOOD_25(w.density * 0.25f, w.friction,
+                                               w.bounciness);
+const PhysicsMaterial PhysicsMaterial::WOOD_50(w.density * 0.50f, w.friction,
+                                               w.bounciness);
+const PhysicsMaterial PhysicsMaterial::WOOD_75(w.density * 0.75f, w.friction,
+                                               w.bounciness);
 
-const PhysicsMaterial PhysicsMaterial::RUBBER_25(r.density * 0.25f, r.friction, r.bounciness);
-const PhysicsMaterial PhysicsMaterial::RUBBER_50(r.density * 0.50f, r.friction, r.bounciness);
-const PhysicsMaterial PhysicsMaterial::RUBBER_75(r.density * 0.75f, r.friction, r.bounciness);
+const PhysicsMaterial PhysicsMaterial::RUBBER_25(r.density * 0.25f, r.friction,
+                                                 r.bounciness);
+const PhysicsMaterial PhysicsMaterial::RUBBER_50(r.density * 0.50f, r.friction,
+                                                 r.bounciness);
+const PhysicsMaterial PhysicsMaterial::RUBBER_75(r.density * 0.75f, r.friction,
+                                                 r.bounciness);
 
-const PhysicsMaterial PhysicsMaterial::IRON_25(i.density * 0.25f, i.friction, i.bounciness);
-const PhysicsMaterial PhysicsMaterial::IRON_50(i.density * 0.50f, i.friction, i.bounciness);
-const PhysicsMaterial PhysicsMaterial::IRON_75(i.density * 0.75f, i.friction, i.bounciness);
+const PhysicsMaterial PhysicsMaterial::IRON_25(i.density * 0.25f, i.friction,
+                                               i.bounciness);
+const PhysicsMaterial PhysicsMaterial::IRON_50(i.density * 0.50f, i.friction,
+                                               i.bounciness);
+const PhysicsMaterial PhysicsMaterial::IRON_75(i.density * 0.75f, i.friction,
+                                               i.bounciness);
 
-const PhysicsMaterial PhysicsMaterial::STONE_25(s.density * 0.25f, s.friction, s.bounciness);
-const PhysicsMaterial PhysicsMaterial::STONE_50(s.density * 0.50f, s.friction, s.bounciness);
-const PhysicsMaterial PhysicsMaterial::STONE_75(s.density * 0.75f, s.friction, s.bounciness);
+const PhysicsMaterial PhysicsMaterial::STONE_25(s.density * 0.25f, s.friction,
+                                                s.bounciness);
+const PhysicsMaterial PhysicsMaterial::STONE_50(s.density * 0.50f, s.friction,
+                                                s.bounciness);
+const PhysicsMaterial PhysicsMaterial::STONE_75(s.density * 0.75f, s.friction,
+                                                s.bounciness);
 
-PhysicsBody::PhysicsBody(Scene *owner, StageNodeType node_type, PhysicsBodyType type):
-    StageNode(owner, node_type),
-    type_(type) {
-
-
-}
+PhysicsBody::PhysicsBody(Scene* owner, StageNodeType node_type,
+                         PhysicsBodyType type) :
+    StageNode(owner, node_type), type_(type) {}
 
 PhysicsBody::~PhysicsBody() {
     assert(is_destroyed());
 }
 
-void PhysicsBody::add_box_collider(
-    const Vec3 &size, const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation
-    ) {
+void PhysicsBody::add_box_collider(const Vec3& size,
+                                   const PhysicsMaterial& properties,
+                                   uint16_t kind, const Vec3& offset,
+                                   const Quaternion& rotation) {
     auto simulation = get_simulation();
     if(!simulation) {
         return;
     }
 
-    simulation->add_box_collider(this, size, properties, kind, offset, rotation);
+    simulation->add_box_collider(this, size, properties, kind, offset,
+                                 rotation);
 }
 
-void PhysicsBody::add_sphere_collider(const float diameter, const PhysicsMaterial& properties, uint16_t kind, const Vec3& offset) {
+void PhysicsBody::add_sphere_collider(const float diameter,
+                                      const PhysicsMaterial& properties,
+                                      uint16_t kind, const Vec3& offset) {
     auto simulation = get_simulation();
     if(!simulation) {
         return;
@@ -67,10 +81,11 @@ void PhysicsBody::add_sphere_collider(const float diameter, const PhysicsMateria
     simulation->add_sphere_collider(this, diameter, properties, kind, offset);
 }
 
-void PhysicsBody::add_triangle_collider(
-    const smlt::Vec3& v1, const smlt::Vec3& v2, const smlt::Vec3& v3,
-    const PhysicsMaterial& properties, uint16_t kind
-    ) {
+void PhysicsBody::add_triangle_collider(const smlt::Vec3& v1,
+                                        const smlt::Vec3& v2,
+                                        const smlt::Vec3& v3,
+                                        const PhysicsMaterial& properties,
+                                        uint16_t kind) {
 
     auto simulation = get_simulation();
     if(!simulation) {
@@ -80,21 +95,25 @@ void PhysicsBody::add_triangle_collider(
     simulation->add_triangle_collider(this, v1, v2, v3, properties, kind);
 }
 
-void PhysicsBody::add_capsule_collider(const Vec3& v0, const Vec3& v1, const float diameter, const PhysicsMaterial& properties, uint16_t kind) {
+void PhysicsBody::add_capsule_collider(const Vec3& v0, const Vec3& v1,
+                                       const float diameter,
+                                       const PhysicsMaterial& properties,
+                                       uint16_t kind) {
     auto simulation = get_simulation();
     if(!simulation) {
         return;
     }
 
-    return simulation->add_capsule_collider(this, v0, v1, diameter, properties, kind);
+    return simulation->add_capsule_collider(this, v0, v1, diameter, properties,
+                                            kind);
 }
 
-void PhysicsBody::register_collision_listener(CollisionListener *listener) {
+void PhysicsBody::register_collision_listener(CollisionListener* listener) {
     listeners_.insert(listener);
     listener->watching_.insert(this);
 }
 
-void PhysicsBody::unregister_collision_listener(CollisionListener *listener) {
+void PhysicsBody::unregister_collision_listener(CollisionListener* listener) {
     listener->watching_.erase(this);
     listeners_.erase(listener);
 }
@@ -105,12 +124,10 @@ Vec3 PhysicsBody::simulated_position() const {
         return {};
     }
 
-    b3Body* b = (b3Body*) sim->private_body(this);
+    b3Body* b = (b3Body*)sim->private_body(this);
     if(b) {
         auto vec = b->GetTransform().translation;
-        return Vec3(
-            vec.x, vec.y, vec.z
-        );
+        return Vec3(vec.x, vec.y, vec.z);
     }
 
     return {};
@@ -122,21 +139,19 @@ Quaternion PhysicsBody::simulated_rotation() const {
         return {};
     }
 
-    b3Body* b = (b3Body*) sim->private_body(this);
+    b3Body* b = (b3Body*)sim->private_body(this);
     if(b) {
         auto vec = b->GetTransform().rotation;
-        return Quaternion(
-            vec.v.x, vec.v.y, vec.v.z, vec.s
-        );
+        return Quaternion(vec.v.x, vec.v.y, vec.v.z, vec.s);
     }
 
     return {};
 }
 
-void PhysicsBody::set_simulated_position(const Vec3 &position) {
+void PhysicsBody::set_simulated_position(const Vec3& position) {
     auto sim = get_simulation();
     if(sim) {
-        b3Body* b = (b3Body*) sim->private_body(this);
+        b3Body* b = (b3Body*)sim->private_body(this);
         if(b) {
             b3Vec3 p(position.x, position.y, position.z);
             b->SetTransform(p, b->GetTransform().rotation);
@@ -144,10 +159,10 @@ void PhysicsBody::set_simulated_position(const Vec3 &position) {
     }
 }
 
-void PhysicsBody::set_simulated_rotation(const Quaternion &rotation) {
+void PhysicsBody::set_simulated_rotation(const Quaternion& rotation) {
     auto sim = get_simulation();
     if(sim) {
-        b3Body* b = (b3Body*) sim->private_body(this);
+        b3Body* b = (b3Body*)sim->private_body(this);
         if(b) {
             b3Quat q;
             q.v.x = rotation.x;
@@ -163,7 +178,7 @@ void PhysicsBody::clear_simulation_cache() {
     simulation_ = nullptr;
 }
 
-void PhysicsBody::contact_started(const Collision &collision) {
+void PhysicsBody::contact_started(const Collision& collision) {
     for(auto listener: listeners_) {
         listener->on_collision_enter(collision);
     }
@@ -179,27 +194,28 @@ PhysicsService* PhysicsBody::get_simulation() const {
     /* Caches the PhysicsService for perf */
     if(!simulation_) {
         /* FIXME: If the physics service is destroyed, we need
-             * to wipe this out for every physics body */
+         * to wipe this out for every physics body */
         simulation_ = scene->find_service<PhysicsService>();
     }
 
     return simulation_;
 }
 
-bool PhysicsBody::on_create(void* params) {
-    PhysicsBodyParams* args = (PhysicsBodyParams*) params;
-
+bool PhysicsBody::on_create(Params params) {
+    Vec3 initial_pos = params.get<FloatArray>("position").value_or(Vec3());
+    Quaternion initial_rot =
+        params.get<FloatArray>("orientation").value_or(Quaternion());
     auto sim = get_simulation();
     if(sim) {
-        sim->register_body(this, args->initial_position, args->initial_rotation);
+        sim->register_body(this, initial_pos, initial_rot);
     } else {
         S_WARN("PhysicsBody added without an active PhysicsService");
     }
 
     /* FIXME: These should probably be create arguments for *all* stage nodes,
      * not just PhysicsBodies */
-    transform->set_position(args->initial_position);
-    transform->set_orientation(args->initial_rotation);
+    transform->set_position(initial_pos);
+    transform->set_orientation(initial_rot);
 
     return true;
 }
@@ -228,7 +244,7 @@ void PhysicsBody::on_transformation_changed() {
     // so we need to update the rigid body to where it was intended
 
     auto sim = get_simulation();
-    b3Body* b = (b3Body*) sim->private_body(this);
+    b3Body* b = (b3Body*)sim->private_body(this);
     if(b) {
         auto o = transform->orientation();
         auto pos = transform->position();
@@ -247,11 +263,10 @@ void PhysicsBody::on_update(float dt) {
     });
 
     if(transform->smoothing_mode() == TRANSFORM_SMOOTHING_EXTRAPOLATE) {
-        auto prev_state = last_state_; // This is set by the signal connected in Body::Body()
-        auto next_state = std::make_pair(
-            simulated_position(),
-            simulated_rotation()
-        );
+        auto prev_state =
+            last_state_; // This is set by the signal connected in Body::Body()
+        auto next_state =
+            std::make_pair(simulated_position(), simulated_rotation());
 
         // Prevent a divide by zero.
         float r = get_app()->time_keeper->fixed_step_remainder();
@@ -268,4 +283,4 @@ void PhysicsBody::on_update(float dt) {
     }
 }
 
-}
+} // namespace smlt

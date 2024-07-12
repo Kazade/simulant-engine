@@ -1,42 +1,23 @@
 #pragma once
 
-#include "widget.h"
 #include "../../generic/managed.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/utils/params.h"
+#include "widget.h"
 
 namespace smlt {
 namespace ui {
 
-struct TextEntryParams : public WidgetParams {
-    unicode text;
-    Px width;
-    Px height;
-
-    TextEntryParams(
-        const unicode& text,
-        const Px& width = Px(320),
-        const Px& height = Px(-1),
-        const UIConfig& theme=UIConfig(),
-        WidgetStylePtr shared_style=WidgetStylePtr()
-    ):
-        WidgetParams(theme, shared_style),
-        text(text),
-        width(width),
-        height(height) {}
-};
-
-
-class TextEntry:
-    public Widget,
-    public RefCounted<TextEntry> {
+class TextEntry: public Widget, public RefCounted<TextEntry> {
 
 public:
-    struct Meta {
-        typedef ui::TextEntryParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY, "text_entry");
+    S_DEFINE_STAGE_NODE_PARAM(TextEntry, "text", std::string, no_value,
+                              "The text to display in the text entry");
+    S_DEFINE_CORE_WIDGET_PROPERTIES(TextEntry);
 
-    using Widget::init; // Pull in init to satisfy Managed<TextEntry>
     using Widget::clean_up;
+    using Widget::init; // Pull in init to satisfy Managed<TextEntry>
 
     TextEntry(Scene* owner);
 
@@ -63,15 +44,16 @@ private:
     /* If true, then set_text won't update the caret position */
     bool freeze_caret_ = false;
 
-    /* The caret is rendered using the foreground layer. Usually 1px wide and the
-     * same height as the font. The position will depend on the caret_position_
-     * and the text */
-    virtual WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const override;
+    /* The caret is rendered using the foreground layer. Usually 1px wide and
+     * the same height as the font. The position will depend on the
+     * caret_position_ and the text */
+    virtual WidgetBounds calculate_foreground_size(
+        const UIDim& content_dimensions) const override;
 
     virtual bool pre_set_text(const unicode&) override;
 
-    bool on_create(void* params) override;
+    bool on_create(Params params) override;
 };
 
-}
-}
+} // namespace ui
+} // namespace smlt

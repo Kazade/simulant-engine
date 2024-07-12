@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstddef>
-#include <string>
 #include <cstring>
+#include <string>
 
 namespace smlt {
 
@@ -44,7 +44,7 @@ public:
     LimitedString& operator=(const LimitedString&) = default;
     LimitedString& operator=(const std::string& rhs) {
         std::strncpy(string_, rhs.c_str(), N);
-        len_ = std::min((std::size_t) rhs.length(), N);
+        len_ = std::min((std::size_t)rhs.length(), N);
         assert(string_[N] == '\0');
         return *this;
     }
@@ -82,9 +82,22 @@ public:
         return N;
     }
 
+    bool operator<(const LimitedString<N, T>& rhs) const {
+        for(std::size_t i = 0; i < std::min(len_, rhs.len_); ++i) {
+            if(string_[i] < rhs.string_[i]) {
+                return true;
+            } else if(string_[i] > rhs.string_[i]) {
+                return false;
+            }
+        }
+
+        // Same chars, return true if shorter
+        return len_ < rhs.len_;
+    }
+
 private:
     T string_[N + 1] = {'\0'};
     std::size_t len_ = 0;
 };
 
-}
+} // namespace smlt

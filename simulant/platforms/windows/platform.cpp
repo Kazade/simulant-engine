@@ -1,7 +1,8 @@
 #define WIN32_LEAN_AND_MEAN
+// clang-format off
 #include <windows.h>
 #include <psapi.h>
-
+// clang-format on
 #include <SDL.h>
 
 #include "platform.h"

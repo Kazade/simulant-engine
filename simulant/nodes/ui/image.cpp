@@ -1,38 +1,41 @@
-#include "ui_manager.h"
 #include "image.h"
-#include "../../texture.h"
 #include "../../macros.h"
+#include "../../texture.h"
+#include "simulant/types.h"
+#include "simulant/utils/params.h"
+#include "ui_manager.h"
 
 namespace smlt {
 namespace ui {
 
-Image::Image(Scene* owner):
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_IMAGE) {
-}
+Image::Image(Scene* owner) :
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_IMAGE) {}
 
-bool Image::on_create(void* params) {
+bool Image::on_create(Params params) {
+    if(!clean_params<Image>(params)) {
+        return false;
+    }
+
     if(!Widget::on_create(params)) {
         return false;
     }
 
-    ImageParams* args = (ImageParams*) params;
-
-    if(!args->shared_style) {
+    auto sstyle =
+        params.get<WidgetStylePtr>("shared_style").value_or(WidgetStylePtr());
+    auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
+    auto texture = params.get<TexturePtr>("texture").value_or(TexturePtr());
+    if(!sstyle) {
         /* By default, images don't have a border */
-        set_border_width(args->theme.image_border_width_);
-        set_border_color(smlt::Color::NONE);
-        set_background_color(args->theme.image_background_color_);
-        set_padding(
-            args->theme.image_padding_.left,
-            args->theme.image_padding_.right,
-            args->theme.image_padding_.bottom,
-            args->theme.image_padding_.top
-        );
+        set_border_width(theme.image_border_width_);
+        set_border_color(smlt::Color::none());
+        set_background_color(theme.image_background_color_);
+        set_padding(theme.image_padding_.left, theme.image_padding_.right,
+                    theme.image_padding_.bottom, theme.image_padding_.top);
 
-        set_foreground_color(args->theme.image_foreground_color_);
+        set_foreground_color(theme.image_foreground_color_);
 
-        if(args->texture) {
-            set_texture(args->texture);
+        if(texture) {
+            set_texture(texture);
         }
 
         if(!Widget::set_resize_mode(RESIZE_MODE_FIXED)) {
@@ -48,7 +51,7 @@ void Image::clear_layers() {
     set_text("");
 }
 
-void Image::set_texture(const TexturePtr &texture) {
+void Image::set_texture(const TexturePtr& texture) {
     clear_layers();
     set_background_image(texture);
 
@@ -57,7 +60,7 @@ void Image::set_texture(const TexturePtr &texture) {
     set_source_rect(UICoord(), UICoord(Px(dim.x), Px(dim.y)));
 }
 
-void Image::set_source_rect(const UICoord &bottom_left, const UICoord& size) {
+void Image::set_source_rect(const UICoord& bottom_left, const UICoord& size) {
     clear_layers();
     set_background_image_source_rect(bottom_left, size);
 
@@ -71,6 +74,5 @@ bool Image::set_resize_mode(ResizeMode resize_mode) {
     return false;
 }
 
-
-}
-}
+} // namespace ui
+} // namespace smlt

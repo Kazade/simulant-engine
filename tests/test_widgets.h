@@ -238,11 +238,12 @@ public:
     }
 
     void test_set_value() {
-        auto progress_bar = scene->create_child<ui::ProgressBar>(0, 100, 50);
+        auto progress_bar =
+            scene->create_child<ui::ProgressBar>(0.0f, 100.0f, 50.0f);
 
-        assert_equal(progress_bar->value(), 50);
-        assert_equal(progress_bar->min(), 0);
-        assert_equal(progress_bar->max(), 100);
+        assert_equal(progress_bar->value(), 50.0f);
+        assert_equal(progress_bar->min(), 0.0f);
+        assert_equal(progress_bar->max(), 100.0f);
 
         progress_bar->set_value(75);
 

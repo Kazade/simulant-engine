@@ -14,7 +14,7 @@ public:
         auto pipeline = compositor->create_layer(
             this, camera_
         )->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
-        pipeline->viewport->set_color(smlt::Color::GREY);
+        pipeline->viewport->set_color(smlt::Color::gray());
 
         auto coord = window->coordinate_from_normalized(0.05, 0.95);
         int x = coord.x;
@@ -53,7 +53,8 @@ public:
         flags.size = 32;
         auto blurred_font = assets->load_font("fonts/Orbitron/Orbitron-Regular.ttf", flags);
 
-        auto big_label = create_child<smlt::ui::Label>("Using a TrueType font!");
+        auto big_label =
+            create_child<smlt::ui::Label>("Using a TrueType font!");
         big_label->resize(column, -1);
         big_label->set_font(blurred_font);
         frame->pack_child(big_label);
@@ -67,34 +68,39 @@ public:
 
         //stage_->ui->transform_input_with_camera(camera_);
 
-        auto fixed_width = create_child<smlt::ui::Label>("This is some long text with a fixed width.\n See it works!");
+        auto fixed_width = create_child<smlt::ui::Label>(
+            "This is some long text with a fixed width.\n See it works!");
         fixed_width->resize(200, -1);
         fixed_width->transform->set_position_2d(smlt::Vec2(400, 500));
-        fixed_width->set_background_color(smlt::Color::PURPLE);
+        fixed_width->set_background_color(smlt::Color::purple());
         fixed_width->set_border_radius(smlt::ui::Px(10));
         fixed_width->set_padding(10);
 
-        auto fixed_height = create_child<smlt::ui::Label>("This is some text with a fixed height.\n See it works!");
+        auto fixed_height = create_child<smlt::ui::Label>(
+            "This is some text with a fixed height.\n See it works!");
         fixed_height->resize(-1, 200);
         fixed_height->transform->set_position_2d(smlt::Vec2(300, 200));
-        fixed_height->set_background_color(smlt::Color::PURPLE);
+        fixed_height->set_background_color(smlt::Color::purple());
 
-        auto fit_content = create_child<smlt::ui::Label>("This widget fits its text content. See it works!");
+        auto fit_content = create_child<smlt::ui::Label>(
+            "This widget fits its text content. See it works!");
         fit_content->resize(-1, -1);
         fit_content->transform->set_position_2d(smlt::Vec2(700, 200));
-        fit_content->set_background_color(smlt::Color::PURPLE);
+        fit_content->set_background_color(smlt::Color::purple());
 
         auto pl = create_child<smlt::ui::Label>("PL");
         pl->set_padding(10, 0, 0, 0);
         //pl->resize(80, -1);
-        pl->set_background_color(smlt::Color::GREY);
+        pl->set_background_color(smlt::Color::gray());
         pl->set_anchor_point(1.0f, 1.0f);
         pl->transform->set_position_2d(window->coordinate_from_normalized(0.75f, 0.75f));
 
-
-        auto left_label = create_child<smlt::ui::Label>("This label has left alignment");
-        auto middle_label = create_child<smlt::ui::Label>("This label has center alignment");
-        auto right_label = create_child<smlt::ui::Label>("This label has right alignment");
+        auto left_label =
+            create_child<smlt::ui::Label>("This label has left alignment");
+        auto middle_label =
+            create_child<smlt::ui::Label>("This label has center alignment");
+        auto right_label =
+            create_child<smlt::ui::Label>("This label has right alignment");
 
         left_label->set_text_alignment(smlt::ui::TEXT_ALIGNMENT_LEFT);
         middle_label->set_text_alignment(smlt::ui::TEXT_ALIGNMENT_CENTER);
@@ -118,7 +124,8 @@ public:
 
         if(!input->start_text_input(true)) {
             /* No on-screen keyboard, so show a dialog */
-            auto dialog = create_child<smlt::ui::Frame>("Please enter some text");
+            auto dialog =
+                create_child<smlt::ui::Frame>("Please enter some text");
             dialog->pack_child(entry);
             dialog->transform->set_position_2d(smlt::Vec2(window->width() / 2, window->height() / 2));
         } else {

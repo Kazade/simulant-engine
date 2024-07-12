@@ -23,6 +23,7 @@
 #include <cstdlib>
 
 #define DEFINE_STAGENODEPOOL
+#include "nodes/stage_node.h"
 #include "nodes/stage_node_pool.h"
 
 #ifdef __DREAMCAST__

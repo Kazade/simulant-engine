@@ -1,9 +1,9 @@
 #include "particle_system.h"
 
 #include "../frustum.h"
+#include "../meshes/submesh.h"
 #include "../stage.h"
 #include "../types.h"
-#include "../meshes/submesh.h"
 #include "camera.h"
 
 namespace smlt {
@@ -19,16 +19,13 @@ const static VertexSpecification
 #ifdef __DREAMCAST__
                    smlt::VERTEX_ATTRIBUTE_4UB_BGRA // Diffuse
 #else
-    smlt::VERTEX_ATTRIBUTE_4F // Diffuse
+                   smlt::VERTEX_ATTRIBUTE_4F // Diffuse
 #endif
     );
 
-ParticleSystem::ParticleSystem(Scene* owner):
+ParticleSystem::ParticleSystem(Scene* owner) :
     StageNode(owner, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
-    vertex_data_(new VertexData(PS_VERTEX_SPEC)) {
-
-
-}
+    vertex_data_(new VertexData(PS_VERTEX_SPEC)) {}
 
 ParticleSystem::~ParticleSystem() {
     delete vertex_data_;
@@ -55,8 +52,8 @@ void ParticleSystem::calc_aabb() {
                 result.encapsulate(pos);
             }
         } else {
-            // If this is not a point emitter, then calculate the max/min possible for
-            // each emitter using their dimensions.
+            // If this is not a point emitter, then calculate the max/min
+            // possible for each emitter using their dimensions.
 
             float hw = smlt::fast_divide(emitter->dimensions.x, 2.0f);
             float hh = smlt::fast_divide(emitter->dimensions.y, 2.0f);
@@ -72,8 +69,8 @@ void ParticleSystem::calc_aabb() {
     }
 }
 
-//Boundable entity things
-const AABB &ParticleSystem::aabb() const {
+// Boundable entity things
+const AABB& ParticleSystem::aabb() const {
     return aabb_;
 }
 
@@ -84,7 +81,6 @@ bool ParticleSystem::emitters_active() const {
 void ParticleSystem::set_emitters_active(bool value) {
     emitters_active_ = value;
 }
-
 
 bool ParticleSystem::has_active_emitters() const {
     if(!emitters_active_) {
@@ -109,9 +105,10 @@ void ParticleSystem::set_update_when_hidden(bool value) {
     update_when_hidden_ = value;
 }
 
-void ParticleSystem::do_generate_renderables(
-    batcher::RenderQueue* render_queue, const Camera* camera, const Viewport*, const DetailLevel detail_level
-) {
+void ParticleSystem::do_generate_renderables(batcher::RenderQueue* render_queue,
+                                             const Camera* camera,
+                                             const Viewport*,
+                                             const DetailLevel detail_level) {
     _S_UNUSED(detail_level);
 
     if(!is_visible()) {
@@ -134,7 +131,7 @@ void ParticleSystem::do_generate_renderables(
     new_renderable.index_element_count = 0;
     new_renderable.vertex_range_count = vertex_ranges_.size();
     new_renderable.vertex_ranges = vertex_ranges_.data();
-    new_renderable.vertex_data = vertex_data_;    
+    new_renderable.vertex_data = vertex_data_;
     new_renderable.is_visible = true;
     new_renderable.material = script_->material().get();
     new_renderable.center = transformed_aabb().center();
@@ -142,7 +139,8 @@ void ParticleSystem::do_generate_renderables(
     render_queue->insert_renderable(std::move(new_renderable));
 }
 
-void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3& right) {
+void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
+                                         const smlt::Vec3& right) {
     vertex_data_->resize(particle_count_ * 4);
     vertex_data_->move_to_start();
 
@@ -153,16 +151,18 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
     }
 
     uint8_t* pos_ptr = vertex_data_->data();
-    uint8_t* dif_ptr = pos_ptr + vertex_data_->vertex_specification().diffuse_offset(false);
-    uint8_t* uv_ptr = pos_ptr + vertex_data_->vertex_specification().texcoord0_offset(false);
+    uint8_t* dif_ptr =
+        pos_ptr + vertex_data_->vertex_specification().diffuse_offset(false);
+    uint8_t* uv_ptr =
+        pos_ptr + vertex_data_->vertex_specification().texcoord0_offset(false);
 
     auto stride = vertex_data_->vertex_specification().stride();
 
     for(auto j = 0u; j < particle_count_; ++j) {
         auto& p = particles_[j];
 
-        Vec3* pos = (Vec3*) pos_ptr;
-        float* uv = (float*) uv_ptr;
+        Vec3* pos = (Vec3*)pos_ptr;
+        float* uv = (float*)uv_ptr;
 
 #ifdef __DREAMCAST__
         uint8_t* dif = dif_ptr;
@@ -176,7 +176,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
 #define BIDX 0
 #define AIDX 3
 #else
-        float* dif = (float*) dif_ptr;
+        float* dif = (float*)dif_ptr;
         float a = p.color.a;
         float r = p.color.r;
         float g = p.color.g;
@@ -188,10 +188,8 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
 #define AIDX 3
 #endif
 
-        *(pos) =
-            p.position
-            + right * p.dimensions.x * -0.5f
-            + up * p.dimensions.y * -0.5f;
+        *(pos) = p.position + right * p.dimensions.x * -0.5f +
+                 up * p.dimensions.y * -0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -205,14 +203,12 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         dif_ptr += stride;
         uv_ptr += stride;
 
-        pos = (Vec3*) pos_ptr;
-        dif = (decltype(dif)) dif_ptr;
-        uv = (float*) uv_ptr;
+        pos = (Vec3*)pos_ptr;
+        dif = (decltype(dif))dif_ptr;
+        uv = (float*)uv_ptr;
 
-        *(pos) =
-            p.position
-            + right * p.dimensions.x * +0.5f
-            + up * p.dimensions.y * -0.5f;
+        *(pos) = p.position + right * p.dimensions.x * +0.5f +
+                 up * p.dimensions.y * -0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -226,14 +222,12 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         dif_ptr += stride;
         uv_ptr += stride;
 
-        pos = (Vec3*) pos_ptr;
-        dif = (decltype(dif)) dif_ptr;
-        uv = (float*) uv_ptr;
+        pos = (Vec3*)pos_ptr;
+        dif = (decltype(dif))dif_ptr;
+        uv = (float*)uv_ptr;
 
-        *(pos) =
-            p.position
-            + right * p.dimensions.x * -0.5f
-            + up * p.dimensions.y * +0.5f;
+        *(pos) = p.position + right * p.dimensions.x * -0.5f +
+                 up * p.dimensions.y * +0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -247,14 +241,12 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up, const smlt::Vec3&
         dif_ptr += stride;
         uv_ptr += stride;
 
-        pos = (Vec3*) pos_ptr;
-        dif = (decltype(dif)) dif_ptr;
-        uv = (float*) uv_ptr;
+        pos = (Vec3*)pos_ptr;
+        dif = (decltype(dif))dif_ptr;
+        uv = (float*)uv_ptr;
 
-        *(pos) =
-            p.position
-            + right * p.dimensions.x * +0.5f
-            + up * p.dimensions.y * +0.5f;
+        *(pos) = p.position + right * p.dimensions.x * +0.5f +
+                 up * p.dimensions.y * +0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -324,7 +316,8 @@ void ParticleSystem::on_update(float dt) {
 
         update_emitter(i, dt);
 
-        /* FIXME: This always means the first emitter gets all the particles ! */
+        /* FIXME: This always means the first emitter gets all the particles !
+         */
         auto max_can_emit = particles_.size() - particle_count_;
         emit_particles(i, dt, max_can_emit);
 
@@ -333,26 +326,36 @@ void ParticleSystem::on_update(float dt) {
         update_active_state(i, dt);
     }
 
-    /* If we are set to destroy on completion, then we do so even if we're invisible */
-    if(!particle_count_ && !script_->has_repeating_emitters() && !has_active_emitters()) {
-        // If the particles are gone, and we don't have repeating emitters and all the emitters are inactive
-        // Then destroy the particle system if that's what we've been told to do
+    /* If we are set to destroy on completion, then we do so even if we're
+     * invisible */
+    if(!particle_count_ && !script_->has_repeating_emitters() &&
+       !has_active_emitters()) {
+        // If the particles are gone, and we don't have repeating emitters and
+        // all the emitters are inactive Then destroy the particle system if
+        // that's what we've been told to do
         if(destroy_on_completion()) {
             destroy();
         }
     }
 }
 
-bool ParticleSystem::on_create(void* params) {
-    ParticleSystemParams* args = (ParticleSystemParams*) params;
-    script_ = args->script;
+bool ParticleSystem::on_create(Params params) {
+    if(!clean_params<ParticleSystem>(params)) {
+        return false;
+    }
+
+    auto maybe_script = params.get<ParticleScriptPtr>("script");
+    if(!maybe_script) {
+        return false;
+    }
+
+    script_ = maybe_script.value();
 
     // Initialize the emitter states
     for(auto i = 0u; i < script_->emitter_count(); ++i) {
         auto emitter = script_->emitter(i);
         emitter_states_[i].current_duration = random_.float_in_range(
-            emitter->duration_range.first, emitter->duration_range.second
-            );
+            emitter->duration_range.first, emitter->duration_range.second);
 
         emitter_states_[i].emission_accumulator = 0.0f;
     }
@@ -367,21 +370,26 @@ void ParticleSystem::update_active_state(uint16_t e, float dt) {
     if(state.is_active) {
         state.time_active += dt;
 
-        if(state.current_duration > smlt::EPSILON && state.time_active >= state.current_duration) {
+        if(state.current_duration > smlt::EPSILON &&
+           state.time_active >= state.current_duration) {
             state.is_active = false;
-            state.repeat_delay = random_.float_in_range(emitter->repeat_delay_range.first, emitter->repeat_delay_range.second);
+            state.repeat_delay =
+                random_.float_in_range(emitter->repeat_delay_range.first,
+                                       emitter->repeat_delay_range.second);
             state.time_inactive = 0;
         }
     } else {
         state.time_inactive += dt;
 
-        if(state.repeat_delay > smlt::EPSILON && state.time_inactive >= state.repeat_delay) {
+        if(state.repeat_delay > smlt::EPSILON &&
+           state.time_inactive >= state.repeat_delay) {
             state.is_active = true;
             state.repeat_delay = 0;
             state.time_active = 0;
 
             // Reset the length of this round of emission
-            state.current_duration = random_.float_in_range(emitter->duration_range.first, emitter->duration_range.second);
+            state.current_duration = random_.float_in_range(
+                emitter->duration_range.first, emitter->duration_range.second);
             state.emission_accumulator = 0;
         }
     }
@@ -391,7 +399,7 @@ void ParticleSystem::update_emitter(uint16_t e, float dt) {
     auto& state = emitter_states_[e];
 
     if(state.is_active) {
-        state.emission_accumulator += dt; //Buffer time
+        state.emission_accumulator += dt; // Buffer time
     }
 }
 
@@ -404,20 +412,22 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
     }
 
     if(!max) {
-        return; //Do nothing
+        return; // Do nothing
     }
 
     auto& state = emitter_states_[e];
     auto emitter = script_->emitter(e);
 
     /* FIXME: Add smlt::fast_inverse() and use that */
-    float decrement = smlt::fast_divide(1.0f, float(emitter->emission_rate)); //Work out how often to emit per second
+    float decrement = smlt::fast_divide(
+        1.0f,
+        float(emitter->emission_rate)); // Work out how often to emit per second
 
     auto scale = transform->scale_factor();
 
     uint32_t to_emit = max;
     while(state.emission_accumulator >= decrement) {
-        //EMIT THE PARTICLE!
+        // EMIT THE PARTICLE!
         Particle p;
         if(emitter->type == PARTICLE_EMITTER_POINT) {
             p.position = transform->position() + emitter->relative_position;
@@ -435,29 +445,39 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
 
         Vec3 dir = emitter->direction;
         if(emitter->angle.to_float() != 0) {
-            Radians ang(emitter->angle); //Convert from degrees to radians
-            ang *= random_.float_in_range(-1, 1); //Multiply by a random unit float
+            Radians ang(emitter->angle); // Convert from degrees to radians
+            ang *= random_.float_in_range(-1,
+                                          1); // Multiply by a random unit float
             dir = dir.random_deviant(ang).normalized();
         }
 
-        p.velocity = dir * random_.float_in_range(emitter->velocity_range.first, emitter->velocity_range.second) * scale;
+        p.velocity = dir *
+                     random_.float_in_range(emitter->velocity_range.first,
+                                            emitter->velocity_range.second) *
+                     scale;
 
-        //We have to rotate the velocity by the system, because if the particle system is attached to something (e.g. the back of a spaceship)
-        //when that entity rotates we want the velocity to stay pointing relative to the entity
+        // We have to rotate the velocity by the system, because if the particle
+        // system is attached to something (e.g. the back of a spaceship) when
+        // that entity rotates we want the velocity to stay pointing relative to
+        // the entity
         auto rot = transform->orientation();
 
         p.velocity *= rot;
 
-        p.lifetime = p.ttl = random_.float_in_range(emitter->ttl_range.first, emitter->ttl_range.second);
+        p.lifetime = p.ttl = random_.float_in_range(emitter->ttl_range.first,
+                                                    emitter->ttl_range.second);
         p.color = random_.choice(emitter->colors);
-        p.initial_dimensions = p.dimensions = smlt::Vec2(script_->particle_width() * scale.x, script_->particle_height() * scale.y);
+        p.initial_dimensions = p.dimensions =
+            smlt::Vec2(script_->particle_width() * scale.x,
+                       script_->particle_height() * scale.y);
 
-        //FIXME: Initialize other properties
+        // FIXME: Initialize other properties
         particles_[particle_count_++] = p;
 
         assert(particle_count_ <= particles_.size());
 
-        state.emission_accumulator -= decrement; //Decrement the accumulator while we can
+        state.emission_accumulator -=
+            decrement; // Decrement the accumulator while we can
         to_emit--;
         if(!to_emit) {
             break;
@@ -465,4 +485,4 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
     }
 }
 
-}
+} // namespace smlt

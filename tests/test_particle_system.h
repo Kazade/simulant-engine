@@ -56,9 +56,8 @@ public:
             ParticleScript::BuiltIns::FIRE
         );
 
-        script->add_manipulator(
-            std::make_shared<DirectionManipulator>(script.get(), smlt::Vec3::NEGATIVE_Y)
-        );
+        script->add_manipulator(std::make_shared<DirectionManipulator>(
+            script.get(), smlt::Vec3::down()));
 
         ParticleSystemPtr system = scene->create_child<ParticleSystem>(script);
         system->update(0.1f);

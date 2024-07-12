@@ -3,9 +3,9 @@
  *     This file is part of Simulant.
  *
  *     Simulant is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Lesser General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  *
  *     Simulant is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,45 +23,12 @@
 #include "../interfaces.h"
 #include "../meshes/mesh.h"
 #include "../sound.h"
-
+#include "geoms/geom_culler_opts.h"
 #include "stage_node.h"
 
 namespace smlt {
 
-
 class GeomCuller;
-
-
-enum GeomCullerType {
-    GEOM_CULLER_TYPE_OCTREE,
-    GEOM_CULLER_TYPE_QUADTREE
-};
-
-struct GeomCullerOptions {
-    GeomCullerType type = GEOM_CULLER_TYPE_OCTREE;
-    uint8_t octree_max_depth = 4;
-    uint8_t quadtree_max_depth = 4;
-};
-
-struct GeomParams {
-    MeshPtr mesh;
-    Vec3 position = Vec3();
-    Quaternion rotation = Quaternion();
-    Vec3 scale = Vec3(1);
-    GeomCullerOptions options = GeomCullerOptions();
-
-    GeomParams(
-        const MeshPtr& mesh,
-        const Vec3& pos=Vec3(),
-        const Quaternion& rot=Quaternion(),
-        const Vec3& scale=Vec3(1),
-        const GeomCullerOptions& opts=GeomCullerOptions()):
-        mesh(mesh),
-        position(pos),
-        rotation(rot),
-        scale(scale),
-        options(opts) {}
-};
 
 /**
  * @brief The Geom class
@@ -74,27 +41,35 @@ struct GeomParams {
  *
  * Also unlike an actor, a mesh is a requirement.
  */
-class Geom :
+class Geom:
     public StageNode,
     public virtual Boundable,
     public HasMutableRenderPriority,
-    public ChainNameable<Geom>  {
+    public ChainNameable<Geom> {
 
 public:
-    struct Meta {
-        typedef GeomParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_GEOM;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_GEOM, "geom");
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "mesh", MeshPtr, no_value,
+                              "The base mesh associated with this geom");
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "options", GeomCullerOptions,
+                              GeomCullerOptions(),
+                              "The options to use when creating the culler");
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "position", FloatArray, Vec3(),
+                              "The position of the geom");
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "orientation", FloatArray, Quaternion(),
+                              "The orientation of the geom");
+    S_DEFINE_STAGE_NODE_PARAM(Geom, "scale", FloatArray, Vec3(1),
+                              "The scale of the geom");
 
     Geom(Scene* owner);
 
     const AABB& aabb() const override;
 
     void do_generate_renderables(batcher::RenderQueue* render_queue,
-        const Camera*, const Viewport* viewport, const DetailLevel detail_level
-    ) override;
+                                 const Camera*, const Viewport* viewport,
+                                 const DetailLevel detail_level) override;
 
-    bool on_create(void *params) override;
+    bool on_create(Params params) override;
 
 private:
     std::shared_ptr<GeomCuller> culler_;
@@ -103,8 +78,6 @@ private:
 
 public:
     Property<decltype(&Geom::culler_)> culler = {this, &Geom::culler_};
-
 };
 
-}
-
+} // namespace smlt

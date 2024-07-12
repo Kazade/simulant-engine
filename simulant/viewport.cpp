@@ -30,15 +30,13 @@
 
 namespace smlt {
 
-Viewport::Viewport():
+Viewport::Viewport() :
     x_(0),
     y_(0),
     width_(1),
     height_(1),
     type_(VIEWPORT_TYPE_CUSTOM),
-    color_(smlt::Color::BLACK) {
-
-}
+    color_(smlt::Color::black()) {}
 
 Viewport::Viewport(ViewportType type, const Color& color):
     x_(0),

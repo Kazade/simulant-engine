@@ -1,8 +1,9 @@
 #pragma once
 
-#include <map>
-#include "widget.h"
 #include "../../keycodes.h"
+#include "simulant/nodes/stage_node.h"
+#include "ui_config.h"
+#include "widget.h"
 
 namespace smlt {
 
@@ -27,9 +28,9 @@ struct SoftKeyPressedEvent {
     }
 };
 
-typedef sig::signal<void (SoftKeyPressedEvent&)> KeyboardKeyPressedSignal;
-typedef sig::signal<void (const unicode&)> KeyboardDoneSignal;
-typedef sig::signal<void ()> KeyboardCancelledSignal;
+typedef sig::signal<void(SoftKeyPressedEvent&)> KeyboardKeyPressedSignal;
+typedef sig::signal<void(const unicode&)> KeyboardDoneSignal;
+typedef sig::signal<void()> KeyboardCancelledSignal;
 
 enum KeyboardMode {
     KEYBOARD_MODE_UPPERCASE,
@@ -41,35 +42,23 @@ enum KeyboardMode {
 
 class KeyboardPanel;
 
-struct KeyboardParams : public WidgetParams {
-    KeyboardMode mode = KEYBOARD_MODE_UPPERCASE;
-    unicode initial_text = "";
-
-    KeyboardParams(
-        KeyboardMode mode=KEYBOARD_MODE_UPPERCASE,
-        const unicode& initial_text="",
-        const UIConfig& theme=UIConfig(),
-        WidgetStylePtr shared_style=WidgetStylePtr()
-    ):
-        WidgetParams(theme, shared_style),
-        mode(mode), initial_text(initial_text) {}
-};
-
 /* A keyboard is combined of a TextInput and a KeyboardPanel */
-class Keyboard:
-    public Widget {
+class Keyboard: public Widget {
 
     DEFINE_SIGNAL(KeyboardKeyPressedSignal, signal_key_pressed);
     DEFINE_SIGNAL(KeyboardDoneSignal, signal_done);
     DEFINE_SIGNAL(KeyboardCancelledSignal, signal_cancelled);
-public:
-    struct Meta {
-        typedef ui::KeyboardParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_KEYBOARD;
-    };
 
-    using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
+public:
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_KEYBOARD, "keyboard");
+
+    S_DEFINE_STAGE_NODE_PARAM(Keyboard, "mode", int,
+                              int(KEYBOARD_MODE_UPPERCASE),
+                              "The mode of the keyboard");
+    S_DEFINE_CORE_WIDGET_PROPERTIES(Keyboard);
+
     using Widget::clean_up;
+    using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
 
     Keyboard(Scene* owner);
     ~Keyboard();
@@ -105,8 +94,9 @@ public:
     TextEntry* entry() {
         return entry_;
     }
+
 private:
-    bool on_create(void *params) override;
+    bool on_create(Params params) override;
     void on_transformation_change_attempted() override;
 
     UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
@@ -124,7 +114,6 @@ private:
     const unicode& calc_text() const override;
 };
 
-}
+} // namespace ui
 
-
-}
+} // namespace smlt

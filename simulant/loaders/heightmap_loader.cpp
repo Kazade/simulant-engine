@@ -250,7 +250,7 @@ smlt::Color color_for_vertex(const smlt::Vec3& point, const smlt::Vec3& normal, 
 
     // If the average angle > 90 degrees, then we are white
     if(v > 3.142f / 2.0f) {
-        return smlt::Color::WHITE;
+        return smlt::Color::white();
     } else {
         v /= (3.142f / 2.0f);
     }
@@ -392,7 +392,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
             mesh->vertex_data->position(pos);
             mesh->vertex_data->normal(Vec3(0, 1, 0));
 
-            mesh->vertex_data->diffuse(smlt::Color::WHITE);
+            mesh->vertex_data->diffuse(smlt::Color::white());
 
             // First texture coordinate takes into account texture_repeat setting
             mesh->vertex_data->tex_coord0(

@@ -1,41 +1,24 @@
 #pragma once
 
 #include "../../generic/managed.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/utils/params.h"
 #include "widget.h"
 
 namespace smlt {
 namespace ui {
 
-struct ButtonParams : public WidgetParams {
-    unicode text;
-    Px width = Px(-1);
-    Px height = Rem(1.5f);
-
-    ButtonParams(
-        const unicode& text,
-        const Px& width=-1,
-        const Px& height=-1,
-        const UIConfig& theme=UIConfig(),
-        WidgetStylePtr shared_style=WidgetStylePtr()
-    ):
-        WidgetParams(theme, shared_style),
-        text(text),
-        width(width),
-        height(height) {}
-};
-
-class Button:
-    public Widget {
+class Button: public Widget {
 
 public:
-    struct Meta {
-        typedef ui::ButtonParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_BUTTON;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_BUTTON, "button");
+    S_DEFINE_STAGE_NODE_PARAM(Button, "text", std::string, no_value,
+                              "The text to display in the button");
+    S_DEFINE_CORE_WIDGET_PROPERTIES(Button);
 
-    Button(Scene *owner);
-    bool on_create(void* params) override;
+    Button(Scene* owner);
+    bool on_create(Params params) override;
 };
 
-}
-}
+} // namespace ui
+} // namespace smlt

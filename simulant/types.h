@@ -83,6 +83,10 @@ private:
     float value_;
 };
 
+typedef std::vector<int> IntArray;
+typedef std::vector<float> FloatArray;
+typedef std::vector<bool> BoolArray;
+
 enum VertexAttribute {
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_2F,

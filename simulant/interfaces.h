@@ -31,7 +31,9 @@ public:
     virtual uint16_t width() const = 0;
     virtual uint16_t height() const = 0;
 
-    virtual void set_clear_every_frame(uint32_t clear_flags=BUFFER_CLEAR_ALL, const smlt::Color& color=smlt::Color::BLACK) {
+    virtual void
+        set_clear_every_frame(uint32_t clear_flags = BUFFER_CLEAR_ALL,
+                              const smlt::Color& color = smlt::Color::black()) {
         clear_flags_ = clear_flags;
         clear_color_ = color;
     }
@@ -40,7 +42,7 @@ public:
 
 private:
     uint32_t clear_flags_ = BUFFER_CLEAR_ALL;
-    smlt::Color clear_color_ = smlt::Color::BLACK;
+    smlt::Color clear_color_ = smlt::Color::black();
 };
 
 }

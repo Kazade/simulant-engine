@@ -4,20 +4,13 @@
 
 #include "../generic/identifiable.h"
 
-#include "stage_node.h"
+#include "../generic/containers/contiguous_map.h"
+#include "../generic/manual_object.h"
 #include "../interfaces.h"
 #include "../sound.h"
-#include "../generic/manual_object.h"
-#include "../generic/containers/contiguous_map.h"
+#include "stage_node.h"
 
 namespace smlt {
-
-struct MeshInstancerParams {
-    MeshPtr mesh;
-
-    MeshInstancerParams(const MeshPtr& mesh):
-        mesh(mesh) {}
-};
 
 typedef std::size_t MeshInstanceID;
 
@@ -48,10 +41,9 @@ class MeshInstancer:
     public ChainNameable<MeshInstancer> {
 
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_MESH_INSTANCER;
-        typedef MeshInstancerParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_MESH_INSTANCER, "mesh_instancer");
+    S_DEFINE_STAGE_NODE_PARAM(MeshInstancer, "mesh", MeshPtr, no_value,
+                              "The base mesh associated with this instancer");
 
     MeshInstancer(Scene* owner);
     virtual ~MeshInstancer();
@@ -67,8 +59,7 @@ public:
      */
     MeshInstanceID create_mesh_instance(
         const smlt::Vec3& position,
-        const smlt::Quaternion& rotation=smlt::Quaternion()
-    );
+        const smlt::Quaternion& rotation = smlt::Quaternion());
 
     /**
      * @brief destroy_mesh_instance
@@ -93,8 +84,8 @@ public:
     bool hide_mesh_instance(MeshInstanceID mid);
 
     void do_generate_renderables(batcher::RenderQueue* render_queue,
-        const Camera*camera, const Viewport* viewport, const DetailLevel
-    detail_level) override;
+                                 const Camera* camera, const Viewport* viewport,
+                                 const DetailLevel detail_level) override;
 
 private:
     MeshPtr mesh_;
@@ -104,7 +95,7 @@ private:
 
     void recalc_aabb();
 
-    bool on_create(void* params) override;
+    bool on_create(Params params) override;
 
     void on_transformation_changed() override;
 
@@ -125,4 +116,4 @@ private:
     std::unordered_map<uint32_t, MeshInstance> instances_;
 };
 
-}
+} // namespace smlt

@@ -266,25 +266,25 @@ struct UIConfig {
     Color scrollbar_foreground_color_ = foreground_color_;
 
     UInt4 label_padding_ = { Px(4), Px(4), Px(4), Px(4) };
-    PackedColor4444 label_background_color_ = Color::NONE;
-    PackedColor4444 label_foreground_color_ = Color::NONE;
-    PackedColor4444 label_border_color_ = Color::NONE;
+    PackedColor4444 label_background_color_ = Color::none();
+    PackedColor4444 label_foreground_color_ = Color::none();
+    PackedColor4444 label_border_color_ = Color::none();
     PackedColor4444 label_text_color_ = text_color_;
 
     UInt4 button_padding_ = { Px(30), Px(30), Px(20), Px(20) };
     PackedColor4444 button_background_color_ = highlight_color_;
-    PackedColor4444 button_foreground_color_ = Color::NONE;
+    PackedColor4444 button_foreground_color_ = Color::none();
     PackedColor4444 button_text_color_ = text_color_;
-    PackedColor4444 button_border_color_ = Color::NONE;
+    PackedColor4444 button_border_color_ = Color::none();
 
     Px button_border_width_ = Px(0);
     Px button_border_radius_ = Px(4);
 
     UInt4 image_padding_ = {Px(), Px(), Px(), Px()};
     Px image_border_width_ = Px(0);
-    PackedColor4444 image_background_color_ = smlt::Color::WHITE;
-    PackedColor4444 image_foreground_color_ = smlt::Color::NONE;
-    PackedColor4444 image_text_color_ = smlt::Color::NONE;
+    PackedColor4444 image_background_color_ = smlt::Color::white();
+    PackedColor4444 image_foreground_color_ = smlt::Color::none();
+    PackedColor4444 image_text_color_ = smlt::Color::none();
 
     PackedColor4444 progress_bar_foreground_color_ = highlight_color_;
     PackedColor4444 progress_bar_background_color_ = background_color_;

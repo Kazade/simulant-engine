@@ -3,9 +3,9 @@
  *     This file is part of Simulant.
  *
  *     Simulant is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Lesser General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  *
  *     Simulant is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,40 +19,19 @@
 #ifndef LIGHT_H_INCLUDED
 #define LIGHT_H_INCLUDED
 
-#include "../generic/managed.h"
 #include "../generic/identifiable.h"
+#include "../generic/managed.h"
 #include "../generic/manual_object.h"
 #include "../types.h"
 
+#include "simulant/utils/params.h"
 #include "stage_node.h"
 
 namespace smlt {
 
 extern const Color DEFAULT_LIGHT_COLOR;
 
-struct LightParams {
-    Vec3 position_or_direction;
-    Color color;
-
-    LightParams(const Vec3& p, const Color& color):
-        position_or_direction(p),
-        color(color) {}
-};
-
-struct PointLightParams : public LightParams {
-    PointLightParams(const Vec3& position=Vec3(), const Color& color=DEFAULT_LIGHT_COLOR):
-        LightParams(position, color) {}
-};
-
-struct DirectionalLightParams : public LightParams {
-    DirectionalLightParams(const Vec3& direction=Vec3(1, -0.5, 0), const Color& color=DEFAULT_LIGHT_COLOR):
-        LightParams(direction, color) {}
-};
-
-
-class Light :
-    public ContainerNode,
-    public ChainNameable<Light> {
+class Light: public ContainerNode, public ChainNameable<Light> {
 
 public:
     typedef std::shared_ptr<Light> ptr;
@@ -97,28 +76,45 @@ public:
         specular_ = color;
     }
 
-    LightType light_type() const { return type_; }
-    const smlt::Color& ambient() const { return ambient_; }
-    const smlt::Color& diffuse() const { return diffuse_; }
-    const smlt::Color& specular() const { return specular_; }
+    LightType light_type() const {
+        return type_;
+    }
+    const smlt::Color& ambient() const {
+        return ambient_;
+    }
+    const smlt::Color& diffuse() const {
+        return diffuse_;
+    }
+    const smlt::Color& specular() const {
+        return specular_;
+    }
 
     /** Returns the owner stage's global ambient value. */
     smlt::Color global_ambient() const;
 
-    void set_attenuation(float range, float constant, float linear, float quadratic);
+    void set_attenuation(float range, float constant, float linear,
+                         float quadratic);
     void set_attenuation_from_range(float range);
 
-    float range() const { return range_; }
-    float constant_attenuation() const { return const_attenuation_; }
-    float linear_attenuation() const { return linear_attenuation_; }
-    float quadratic_attenuation() const { return quadratic_attenuation_; }
+    float range() const {
+        return range_;
+    }
+    float constant_attenuation() const {
+        return const_attenuation_;
+    }
+    float linear_attenuation() const {
+        return linear_attenuation_;
+    }
+    float quadratic_attenuation() const {
+        return quadratic_attenuation_;
+    }
 
     const AABB& aabb() const override {
         return bounds_;
     }
 
 protected:
-    bool on_create(void* params) override;
+    bool on_create(Params params) override;
 
 private:
     LightType type_;
@@ -134,53 +130,58 @@ private:
     float quadratic_attenuation_;
 };
 
-
-class PointLight : public Light {
+class PointLight: public Light {
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_POINT_LIGHT;
-        typedef PointLightParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_POINT_LIGHT, "point_light");
+    S_DEFINE_STAGE_NODE_PARAM(PointLight, "position", FloatArray, Vec3(),
+                              "The position of the light");
 
-    PointLight(Scene* owner):
+    PointLight(Scene* owner) :
         Light(owner, STAGE_NODE_TYPE_POINT_LIGHT) {}
 
 private:
-    bool on_create(void* params) override {
-        if(!Light::on_create(params)) {
+    bool on_create(Params params) override {
+        if(!clean_params<PointLight>(params)) {
             return false;
         }
 
-        PointLightParams* args = (PointLightParams*) params;
+        if(!Light::on_create(params)) {
+            return false;
+        }
 
         set_type(LIGHT_TYPE_POINT);
-        transform->set_position(args->position_or_direction);
+        transform->set_position(
+            params.get<FloatArray>("position").value_or(Vec3()));
         return true;
     }
 };
 
-class DirectionalLight : public Light {
+class DirectionalLight: public Light {
 public:
-    struct Meta {
-        const static StageNodeType node_type = STAGE_NODE_TYPE_DIRECTIONAL_LIGHT;
-        typedef DirectionalLightParams params_type;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_DIRECTIONAL_LIGHT,
+                             "directional_light");
+    S_DEFINE_STAGE_NODE_PARAM(DirectionalLight, "direction", FloatArray,
+                              Vec3(1, -0.5, 0),
+                              "The direction the light is pointing");
 
-    DirectionalLight(Scene* owner):
+    DirectionalLight(Scene* owner) :
         Light(owner, STAGE_NODE_TYPE_DIRECTIONAL_LIGHT) {}
 
-    bool on_create(void* params) override {
+    bool on_create(Params params) override {
+        if(!clean_params<DirectionalLight>(params)) {
+            return false;
+        }
+
         if(!Light::on_create(params)) {
             return false;
         }
 
-        DirectionalLightParams* args = (DirectionalLightParams*) params;
-
         set_type(LIGHT_TYPE_DIRECTIONAL);
-        set_direction(args->position_or_direction);
+        auto direction = params.get<FloatArray>("direction");
+        set_direction(direction.value_or(Vec3(1, -0.5, 0)));
         return true;
     }
 };
 
-}
+} // namespace smlt
 #endif
