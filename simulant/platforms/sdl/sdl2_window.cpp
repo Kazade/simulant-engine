@@ -389,7 +389,7 @@ std::shared_ptr<SoundDriver>
 bool SDL2Window::_init_window() {
     /* Load the game controller mappings */
     auto controller_db =
-        app->vfs->locate_file("assets/simulant/other/gamecontrollerdb.txt");
+        app->vfs->locate_file("assets/other/gamecontrollerdb.txt");
 
     if(controller_db) {
         auto rw_ops = SDL_RWFromFile(controller_db.value().str().c_str(), "r");
