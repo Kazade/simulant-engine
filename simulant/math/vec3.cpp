@@ -6,22 +6,6 @@
 
 namespace smlt {
 
-const Vec3 Vec3::NEGATIVE_X = Vec3(-1, 0, 0);
-const Vec3 Vec3::POSITIVE_X = Vec3(1, 0, 0);
-const Vec3 Vec3::NEGATIVE_Y = Vec3(0, -1, 0);
-const Vec3 Vec3::POSITIVE_Y = Vec3(0, 1, 0);
-const Vec3 Vec3::POSITIVE_Z = Vec3(0, 0, 1);
-const Vec3 Vec3::NEGATIVE_Z = Vec3(0, 0, -1);
-
-const Vec3 Vec3::BACK = Vec3::POSITIVE_Z;       //Shorthand for writing Vec3(0, 0, 1)
-const Vec3 Vec3::DOWN = Vec3::NEGATIVE_Y;       //Shorthand for writing Vec3(0, -1, 0)
-const Vec3 Vec3::FORWARD = Vec3::NEGATIVE_Z;    //Shorthand for writing Vec3(0, 0, -1)
-const Vec3 Vec3::LEFT = Vec3::NEGATIVE_X;       //Shorthand for writing Vec3(-1, 0, 0)
-const Vec3 Vec3::ONE = Vec3(1, 1, 1);           //Shorthand for writing Vec3(1, 1, 1)
-const Vec3 Vec3::RIGHT = Vec3::POSITIVE_X;      //Shorthand for writing Vec3(1, 0, 0)
-const Vec3 Vec3::UP = Vec3::POSITIVE_Y;         //Shorthand for writing Vec3(0, 1, 0)
-const Vec3 Vec3::ZERO = Vec3();                 //Shorthand for writing Vec3(0, 0, 0)
-
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec) {
     stream << "(" << vec.x << "," << vec.y << "," << vec.z << ")";
     return stream;
@@ -79,9 +63,9 @@ Quaternion Vec3::rotation_to(const Vec3 &dir) const {
     if(d >= 1.0f) {
        return Quaternion();
     } else if(d < (EPSILON - 1.0f)) {
-       Vec3 axis = Vec3::POSITIVE_X.cross(*this);
-       if(fast_abs(axis.length_squared()) < EPSILON) {
-           axis = Vec3::POSITIVE_Y.cross(*this);
+        Vec3 axis = Vec3::right().cross(*this);
+        if(fast_abs(axis.length_squared()) < EPSILON) {
+            axis = Vec3::up().cross(*this);
        }
        axis.normalize();
        return smlt::Quaternion(axis, smlt::Radians(smlt::PI));

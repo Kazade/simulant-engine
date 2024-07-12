@@ -4,9 +4,9 @@
 //     This file is part of Simulant.
 //
 //     Simulant is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU Lesser General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
+//     it under the terms of the GNU Lesser General Public License as published
+//     by the Free Software Foundation, either version 3 of the License, or (at
+//     your option) any later version.
 //
 //     Simulant is distributed in the hope that it will be useful,
 //     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,21 +19,19 @@
 
 #include "actor.h"
 
-#include "../nodes/debug.h"
-#include "../stage.h"
 #include "../animation.h"
-#include "../renderers/renderer.h"
 #include "../assets/meshes/rig.h"
+#include "../nodes/debug.h"
+#include "../renderers/renderer.h"
 #include "../scenes/scene.h"
+#include "../stage.h"
 
-#define DEBUG_ANIMATION 0  /* If enabled, will show debug animation overlay */
+#define DEBUG_ANIMATION 0 /* If enabled, will show debug animation overlay */
 
 namespace smlt {
 
-Actor::Actor(Scene* owner):
-    StageNode(owner, STAGE_NODE_TYPE_ACTOR) {
-
-}
+Actor::Actor(Scene* owner) :
+    StageNode(owner, STAGE_NODE_TYPE_ACTOR) {}
 
 Actor::~Actor() {
     mesh_skeleton_added_.disconnect();
@@ -44,20 +42,28 @@ Actor::~Actor() {
 bool Actor::has_multiple_meshes() const {
     /* Returns true if there are any meshes beyond DETAIL_LEVEL_NEAREST */
 
-    if(meshes_[DETAIL_LEVEL_NEAR]) return true;
-    if(meshes_[DETAIL_LEVEL_MID]) return true;
-    if(meshes_[DETAIL_LEVEL_FAR]) return true;
-    if(meshes_[DETAIL_LEVEL_FARTHEST]) return true;
+    if(meshes_[DETAIL_LEVEL_NEAR]) {
+        return true;
+    }
+    if(meshes_[DETAIL_LEVEL_MID]) {
+        return true;
+    }
+    if(meshes_[DETAIL_LEVEL_FAR]) {
+        return true;
+    }
+    if(meshes_[DETAIL_LEVEL_FARTHEST]) {
+        return true;
+    }
 
     return false;
 }
 
 void Actor::set_mesh(const MeshPtr& mesh, DetailLevel detail_level) {
-    /* Do nothing if we don't have a base mesh. You need at least a base mesh at all times */
+    /* Do nothing if we don't have a base mesh. You need at least a base mesh at
+     * all times */
     if(detail_level != DETAIL_LEVEL_NEAREST && !has_any_mesh()) {
-        S_ERROR(
-            "Attempted to set a mesh detail level before setting DETAIL_LEVEL_NEAREST"
-        );
+        S_ERROR("Attempted to set a mesh detail level before setting "
+                "DETAIL_LEVEL_NEAREST");
         return;
     }
 
@@ -76,9 +82,8 @@ void Actor::set_mesh(const MeshPtr& mesh, DetailLevel detail_level) {
 
     if(!mesh) {
         if(detail_level == DETAIL_LEVEL_NEAREST && has_multiple_meshes()) {
-            S_ERROR(
-                "Attempted to clear the mesh at DETAIL_LEVEL_NEAREST while there were multiple meshes"
-            );
+            S_ERROR("Attempted to clear the mesh at DETAIL_LEVEL_NEAREST while "
+                    "there were multiple meshes");
             return;
         }
 
@@ -90,26 +95,28 @@ void Actor::set_mesh(const MeshPtr& mesh, DetailLevel detail_level) {
         return;
     }
 
-    //Increment the ref-count on this mesh
+    // Increment the ref-count on this mesh
     meshes_[detail_level] = mesh;
 
     /* Only the nearest detail level is animated */
     has_animated_mesh_ = meshes_[DETAIL_LEVEL_NEAREST]->is_animated();
 
-    /* FIXME: This logic should also happen if the associated Mesh has set_animation_enabled called */
+    /* FIXME: This logic should also happen if the associated Mesh has
+     * set_animation_enabled called */
     if(detail_level == DETAIL_LEVEL_NEAREST && has_animated_mesh_) {
         using namespace std::placeholders;
 
-        interpolated_vertex_data_ = std::make_shared<VertexData>(meshes_[DETAIL_LEVEL_NEAREST]->vertex_data->vertex_specification());
+        interpolated_vertex_data_ = std::make_shared<VertexData>(
+            meshes_[DETAIL_LEVEL_NEAREST]->vertex_data->vertex_specification());
         animation_state_ = std::make_shared<KeyFrameAnimationState>(
             meshes_[detail_level].get(),
-            std::bind(&Actor::refresh_animation_state, this, _1, _2, _3)
-        );
+            std::bind(&Actor::refresh_animation_state, this, _1, _2, _3));
 
         animation_state_->play_first_animation();
 
         /* Make sure we update the vertex data immediately */
-        refresh_animation_state(animation_state_->current_frame(), animation_state_->next_frame(), 0);
+        refresh_animation_state(animation_state_->current_frame(),
+                                animation_state_->next_frame(), 0);
     }
 
     /* Update the rig if a skeleton is added to the mesh, or, if it
@@ -117,9 +124,9 @@ void Actor::set_mesh(const MeshPtr& mesh, DetailLevel detail_level) {
     if(detail_level == DETAIL_LEVEL_NEAREST) {
         mesh_skeleton_added_.disconnect();
 
-        mesh_skeleton_added_ = meshes_[DETAIL_LEVEL_NEAREST]->signal_skeleton_added().connect(
-            std::bind(&Actor::add_rig, this, std::placeholders::_1)
-        );
+        mesh_skeleton_added_ =
+            meshes_[DETAIL_LEVEL_NEAREST]->signal_skeleton_added().connect(
+                std::bind(&Actor::add_rig, this, std::placeholders::_1));
 
         if(meshes_[DETAIL_LEVEL_NEAREST]->has_skeleton()) {
             add_rig(meshes_[DETAIL_LEVEL_NEAREST]->skeleton);
@@ -143,7 +150,8 @@ void Actor::on_update(float dt) {
     }
 }
 
-void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp) {
+void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
+                                    float interp) {
     MeshPtr base_mesh = meshes_[DETAIL_LEVEL_NEAREST];
 
     assert(base_mesh && base_mesh->is_animated());
@@ -159,10 +167,11 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
     debug->transform->sync(transform);
 #endif
 
-    base_mesh->animated_frame_data_->prepare_unpack(
-        current_frame, next_frame, interp, rig_.get()
+    base_mesh->animated_frame_data_->prepare_unpack(current_frame, next_frame,
+                                                    interp, rig_.get()
 #if DEBUG_ANIMATION
-        , debug
+                                                                ,
+                                                    debug
 #endif
     );
 
@@ -179,8 +188,7 @@ void Actor::add_rig(const Skeleton* skeleton) {
     rig_.reset(new Rig(skeleton));
 }
 
-
-const AABB &Actor::aabb() const {
+const AABB& Actor::aabb() const {
     /*
         FIXME: Should return the superset of all mesh
         AABBs *not* only the base mesh.
@@ -200,7 +208,7 @@ AssetID Actor::mesh_id(DetailLevel detail_level) const {
     return (mesh) ? mesh->id() : AssetID(0);
 }
 
-const MeshPtr &Actor::best_mesh(DetailLevel detail_level) const {
+const MeshPtr& Actor::best_mesh(DetailLevel detail_level) const {
     return find_mesh(detail_level);
 }
 
@@ -221,7 +229,9 @@ bool Actor::has_mesh(DetailLevel detail_level) const {
     return bool(meshes_[detail_level].get());
 }
 
-void Actor::do_generate_renderables(batcher::RenderQueue* render_queue, const Camera* camera, const Viewport*, const DetailLevel detail_level) {
+void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
+                                    const Camera* camera, const Viewport*,
+                                    const DetailLevel detail_level) {
     _S_UNUSED(camera);
 
     auto mesh = find_mesh(detail_level);
@@ -245,20 +255,18 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue, const Ca
          * the current rig will be used
          */
         mesh->animated_frame_data_->unpack_frame(
-            animation_state->current_frame(),
-            animation_state->next_frame(),
-            animation_state->interp(),
-            rig_.get(),
+            animation_state->current_frame(), animation_state->next_frame(),
+            animation_state->interp(), rig_.get(),
             interpolated_vertex_data_.get()
-    #if DEBUG_ANIMATION
-            , debug
-    #endif
+#if DEBUG_ANIMATION
+                ,
+            debug
+#endif
         );
     }
 
-    auto vdata = (has_animated_mesh()) ?
-        interpolated_vertex_data_.get() :
-        mesh->vertex_data.get();
+    auto vdata = (has_animated_mesh()) ? interpolated_vertex_data_.get()
+                                       : mesh->vertex_data.get();
 
     int i = mesh->submesh_count();
     for(auto submesh: mesh->each_submesh()) {
@@ -269,10 +277,13 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue, const Ca
         new_renderable.arrangement = submesh->arrangement();
         new_renderable.vertex_data = vdata;
         new_renderable.index_data = submesh->index_data.get();
-        new_renderable.index_element_count = (new_renderable.index_data) ? new_renderable.index_data->count() : 0;
+        new_renderable.index_element_count =
+            (new_renderable.index_data) ? new_renderable.index_data->count()
+                                        : 0;
         new_renderable.vertex_ranges = submesh->vertex_ranges();
         new_renderable.vertex_range_count = submesh->vertex_range_count();
-        new_renderable.material = submesh->material_at_slot(material_slot_, true).get();
+        new_renderable.material =
+            submesh->material_at_slot(material_slot_, true).get();
         new_renderable.center = transformed_aabb().center();
         /* We include the submesh order in the precedence so that overlapping
          * submeshes can be tie-broken when their distance is the same.
@@ -285,13 +296,17 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue, const Ca
     }
 }
 
-bool Actor::on_create(void *params) {
-    ActorParams* args = (ActorParams*) params;
-    if(!args->mesh) {
+bool Actor::on_create(Params params) {
+    if(!clean_params<Actor>(params)) {
         return false;
     }
 
-    set_mesh(args->mesh);
+    auto mesh = params.get<MeshPtr>("mesh");
+    if(!mesh) {
+        return false;
+    }
+
+    set_mesh(mesh.value());
     return true;
 }
 
@@ -308,4 +323,4 @@ void Actor::recalc_effective_meshes() {
     }
 }
 
-}
+} // namespace smlt

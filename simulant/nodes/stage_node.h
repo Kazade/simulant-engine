@@ -1,34 +1,47 @@
 #pragma once
 
+#include <functional>
 #include <queue>
 
+#include "../coroutines/helpers.h"
+#include "../generic/data_carrier.h"
+#include "../generic/manual_object.h"
+#include "../interfaces/boundable.h"
+#include "../interfaces/has_auto_id.h"
 #include "../interfaces/nameable.h"
 #include "../interfaces/printable.h"
-#include "../interfaces/updateable.h"
-#include "../interfaces/boundable.h"
 #include "../interfaces/transform.h"
-#include "../interfaces/has_auto_id.h"
-#include "../generic/data_carrier.h"
+#include "../interfaces/updateable.h"
 #include "../shadows.h"
-#include "../generic/manual_object.h"
-#include "../coroutines/helpers.h"
 #include "../sound.h"
 
-#include "iterators/sibling_iterator.h"
+#include "iterators/ancestor_iterator.h"
 #include "iterators/child_iterator.h"
 #include "iterators/descendent_iterator.h"
-#include "iterators/ancestor_iterator.h"
+#include "iterators/sibling_iterator.h"
 
+#include "../texture.h"
 #include "builtins.h"
+#include "simulant/generic/any/any.h"
+#include "simulant/generic/managed.h"
+#include "simulant/utils/params.h"
 
 namespace smlt {
 
 class RenderableFactory;
 class Seconds;
 class Scene;
+class GeomCullerOptions;
+class TextureFlags;
 
-typedef sig::signal<void (AABB)> BoundsUpdatedSignal;
-typedef sig::signal<void ()> CleanedUpSignal;
+namespace ui {
+struct UIConfig;
+struct WidgetStyle;
+typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
+} // namespace ui
+
+typedef sig::signal<void(AABB)> BoundsUpdatedSignal;
+typedef sig::signal<void()> CleanedUpSignal;
 
 /* Used for multiple levels of detail when rendering stage nodes */
 
@@ -40,7 +53,6 @@ enum DetailLevel {
     DETAIL_LEVEL_FARTHEST,
     DETAIL_LEVEL_MAX
 };
-
 
 /* Must be implemented as follows for each node type
  *
@@ -75,6 +87,314 @@ T* child_factory(F& factory, StageNode* parent, Args&&... args) {
 template<typename F, typename T, typename... Args>
 T* mixin_factory(F& factory, StageNode* base, Args&&... args);
 
+} // namespace impl
+
+enum NodeParamType {
+    NODE_PARAM_TYPE_FLOAT,
+    NODE_PARAM_TYPE_FLOAT_ARRAY,
+    NODE_PARAM_TYPE_INT,
+    NODE_PARAM_TYPE_INT_ARRAY,
+    NODE_PARAM_TYPE_BOOL,
+    NODE_PARAM_TYPE_BOOL_ARRAY,
+    NODE_PARAM_TYPE_STRING,
+    NODE_PARAM_TYPE_MESH_PTR,
+    NODE_PARAM_TYPE_TEXTURE_PTR,
+    NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR,
+    // FIXME: Ideally these wouldn't exist and instead
+    // widgets would take base types as arguments
+    NODE_PARAM_TYPE_UI_CONFIG,
+    NODE_PARAM_TYPE_WIDGET_STYLE_PTR,
+    NODE_PARAM_TYPE_GEOM_CULLER_OPTS,
+    NODE_PARAM_TYPE_TEXTURE_FLAGS,
+};
+
+template<typename T>
+struct type_to_node_param_type;
+
+template<>
+struct type_to_node_param_type<float> {
+    static const NodeParamType value = NODE_PARAM_TYPE_FLOAT;
+};
+
+template<>
+struct type_to_node_param_type<FloatArray> {
+    static const NodeParamType value = NODE_PARAM_TYPE_FLOAT_ARRAY;
+};
+
+template<>
+struct type_to_node_param_type<int> {
+    static const NodeParamType value = NODE_PARAM_TYPE_INT;
+};
+
+template<>
+struct type_to_node_param_type<IntArray> {
+    static const NodeParamType value = NODE_PARAM_TYPE_INT_ARRAY;
+};
+
+template<>
+struct type_to_node_param_type<bool> {
+    static const NodeParamType value = NODE_PARAM_TYPE_BOOL;
+};
+
+template<>
+struct type_to_node_param_type<BoolArray> {
+    static const NodeParamType value = NODE_PARAM_TYPE_BOOL_ARRAY;
+};
+
+template<>
+struct type_to_node_param_type<std::string> {
+    static const NodeParamType value = NODE_PARAM_TYPE_STRING;
+};
+
+template<>
+struct type_to_node_param_type<MeshPtr> {
+    static const NodeParamType value = NODE_PARAM_TYPE_MESH_PTR;
+};
+
+template<>
+struct type_to_node_param_type<TexturePtr> {
+    static const NodeParamType value = NODE_PARAM_TYPE_TEXTURE_PTR;
+};
+
+template<>
+struct type_to_node_param_type<ParticleScriptPtr> {
+    static const NodeParamType value = NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR;
+};
+
+template<>
+struct type_to_node_param_type<ui::UIConfig> {
+    static const NodeParamType value = NODE_PARAM_TYPE_UI_CONFIG;
+};
+
+template<>
+struct type_to_node_param_type<ui::WidgetStylePtr> {
+    static const NodeParamType value = NODE_PARAM_TYPE_WIDGET_STYLE_PTR;
+};
+
+template<>
+struct type_to_node_param_type<GeomCullerOptions> {
+    static const NodeParamType value = NODE_PARAM_TYPE_GEOM_CULLER_OPTS;
+};
+
+template<>
+struct type_to_node_param_type<TextureFlags> {
+    static const NodeParamType value = NODE_PARAM_TYPE_TEXTURE_FLAGS;
+};
+
+template<NodeParamType T>
+struct node_param_type_to_type;
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_FLOAT> {
+    typedef float type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_FLOAT_ARRAY> {
+    typedef FloatArray type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_INT> {
+    typedef int type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_INT_ARRAY> {
+    typedef IntArray type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_BOOL> {
+    typedef bool type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_BOOL_ARRAY> {
+    typedef BoolArray type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_STRING> {
+    typedef std::string type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_MESH_PTR> {
+    typedef MeshPtr type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_TEXTURE_PTR> {
+    typedef TexturePtr type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR> {
+    typedef ParticleScriptPtr type;
+};
+
+constexpr bool has_spaces(const char* s) {
+    return *s && (*s == ' ' || has_spaces(s + 1));
+}
+
+class NodeParam {
+public:
+    NodeParam(int order, const char* name, NodeParamType type,
+              optional<ParamValue> default_value, const char* desc) :
+        order_(order),
+        name_(name),
+        type_(type),
+        default_value_(default_value),
+        desc_(desc) {}
+
+    bool operator<(const NodeParam& rhs) const {
+        return order_ < rhs.order_;
+    }
+
+    const char* name() const {
+        return name_;
+    }
+
+    NodeParamType type() const {
+        return type_;
+    }
+
+    const char* description() const {
+        return desc_;
+    }
+
+    optional<ParamValue> default_value() const {
+        return default_value_;
+    }
+
+private:
+    int order_;
+    const char* name_;
+    NodeParamType type_;
+    optional<ParamValue> default_value_;
+    const char* desc_;
+};
+
+template<typename T>
+std::set<NodeParam>& get_node_params() {
+    static std::set<NodeParam> properties;
+    return properties;
+}
+
+template<typename T, typename C>
+class TypedNodeParam {
+public:
+    typedef T type;
+
+    template<typename F>
+    TypedNodeParam(int order, const char* name, const F& fallback,
+                   const char* desc) :
+        param_(NodeParam(order, name, type_to_node_param_type<T>::value,
+                         to_param(fallback), desc)) {
+
+        get_node_params<C>().insert(param_);
+    }
+
+    const NodeParam& param() const {
+        return param_;
+    }
+
+private:
+    template<typename F>
+    optional<ParamValue> to_param(const F& fallback) {
+        /* We abuse the default coersion rules of Params */
+        Params tmp;
+        tmp.set("value", fallback);
+        return tmp.raw("value");
+    }
+
+    optional<ParamValue> to_param(const OptionalInit&) {
+        return no_value;
+    }
+
+    optional<ParamValue> to_param(const std::nullptr_t&) {
+        return no_value;
+    }
+
+    NodeParam param_;
+};
+
+/**
+    Defines a new parameter for a stage node:
+
+    - name: this is the name of the parameter, it should be a valid variable
+            name, ideally in snake-case format.
+    - type: this is the type of the parameter, e.g. float, int, TexturePtr etc.
+    - fallback: if provided this will be the default value for the parameter, if
+                the parameter is required, you should pass no_value
+    - desc: A short description < 64 chars
+*/
+#define __S_GEN_PARAM(param, line) param##line
+#define _S_GEN_PARAM(param, line) __S_GEN_PARAM(param, line)
+
+#define _S_DEFINE_STAGE_NODE_PARAM(line, klass, name, type, fallback, desc)    \
+    static_assert(!has_spaces(name), "Param name must not have spaces");       \
+    static_assert(std::is_same<type, int>::value ||                            \
+                  std::is_same<type, IntArray>::value ||                       \
+                  std::is_same<type, float>::value ||                          \
+                  std::is_same<type, FloatArray>::value ||                     \
+                  std::is_same<type, ParticleScriptPtr>::value ||              \
+                  std::is_same<type, MeshPtr>::value ||                        \
+                  std::is_same<type, GeomCullerOptions>::value ||              \
+                  std::is_same<type, std::string>::value ||                    \
+                  std::is_same<type, TextureFlags>::value ||                   \
+                  std::is_same<type, TexturePtr>::value ||                     \
+                  std::is_same<type, ui::UIConfig>::value ||                   \
+                  std::is_same<type, ui::WidgetStylePtr>::value);              \
+    static inline auto _S_GEN_PARAM(param_, line) =                            \
+        TypedNodeParam<type, klass>(line, name, fallback, desc)
+
+#define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc)           \
+    _S_DEFINE_STAGE_NODE_PARAM(__LINE__, klass, name, type, fallback, desc)
+
+/* We need to coerce const char* into the correct string class */
+template<typename T>
+void params_set(Params& params, const NodeParam& p, T x) {
+    params.set(p.name(), x);
+}
+
+inline void params_set(Params& params, const NodeParam& p, const char* x) {
+    params.set(p.name(), std::string(x));
+}
+
+/* Simple coercion via copy constructor */
+template<typename Source, typename Dest>
+optional<Dest> do_coerce(const any& in) {
+    try {
+        Source s = any_cast<Source>(in);
+        return (Dest)s;
+    } catch(bad_any_cast&) {
+        return no_value;
+    }
+}
+
+template<typename T>
+void params_unpack(Params& params, std::set<NodeParam>::iterator it,
+                   std::set<NodeParam>::iterator end, T x) {
+    if(it == end) {
+        return;
+    }
+
+    params_set(params, *it, x);
+}
+
+template<typename T, typename... Args>
+void params_unpack(Params& params, std::set<NodeParam>::iterator it,
+                   std::set<NodeParam>::iterator end, T x, Args&&... args) {
+    if(it == end) {
+        S_WARN("Ignoring additional unknown parameters");
+        return;
+    }
+
+    params_set(params, *it, x);
+
+    params_unpack(params, ++it, end, std::forward<Args>(args)...);
 }
 
 class StageNode:
@@ -88,7 +408,9 @@ class StageNode:
     public TransformListener {
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
-    DEFINE_SIGNAL(CleanedUpSignal, signal_cleaned_up); // Fired when the node is cleaned up later, following destroy
+    DEFINE_SIGNAL(CleanedUpSignal,
+                  signal_cleaned_up); // Fired when the node is cleaned up
+                                      // later, following destroy
 
 private:
     /* Heirarchy */
@@ -102,7 +424,8 @@ private:
     StageNode* first_child_ = nullptr;
     StageNode* last_child_ = nullptr;
 
-    virtual void on_parent_set(StageNode* oldp, StageNode* newp, TransformRetainMode transform_retain) {
+    virtual void on_parent_set(StageNode* oldp, StageNode* newp,
+                               TransformRetainMode transform_retain) {
         _S_UNUSED(oldp);
 
         if(newp) {
@@ -115,7 +438,8 @@ private:
     }
 
 public:
-    std::vector<StageNode*> find_descendents_by_types(std::initializer_list<StageNodeType> type_list) const;
+    std::vector<StageNode*> find_descendents_by_types(
+        std::initializer_list<StageNodeType> type_list) const;
 
     StageNode* find_descendent_with_id(StageNodeID id) {
         for(auto& it: each_descendent()) {
@@ -194,27 +518,47 @@ public:
 
     void set_parent(
         StageNode* new_parent,
-        TransformRetainMode transform_retain=TRANSFORM_RETAIN_MODE_LOSE
-    );
+        TransformRetainMode transform_retain = TRANSFORM_RETAIN_MODE_LOSE);
 
     template<typename T, typename... Args>
     T* create_child(Args&&... args) {
-        return impl::child_factory<decltype(owner_), T, Args...>(owner_, this, std::forward<Args>(args)...);
+        Params params;
+
+        auto node_params = get_node_params<T>();
+        params_unpack(params, node_params.begin(), node_params.end(),
+                      std::forward<Args>(args)...);
+
+        return impl::child_factory<decltype(owner_), T>(
+            owner_, this, std::forward<const Params&>(params));
+    }
+
+    template<typename T>
+    T* create_child() {
+        Params args;
+        return impl::child_factory<decltype(owner_), T>(
+            owner_, this, std::forward<const Params&>(args));
+    }
+
+    template<typename T>
+    T* create_child(Params args) {
+        return impl::child_factory<decltype(owner_), T>(
+            owner_, this, std::forward<Params>(args));
     }
 
     void adopt_children(StageNode* node) {
         node->set_parent(this);
     }
 
-    template<typename... Args>
-    void adopt_children(StageNode* node, Args... args) {
+    template<typename... Params>
+    void adopt_children(StageNode* node, Params... args) {
         node->set_parent(this);
         adopt_children(args...);
     }
 
     template<typename T, typename... Args>
-    T* create_mixin(Args&& ... args) {
-        return impl::mixin_factory<decltype(owner_), T, Args...>(owner_, this, std::forward<Args>(args)...);
+    T* create_mixin(Args&&... args) {
+        return impl::mixin_factory<decltype(owner_), T, Args...>(
+            owner_, this, std::forward<Args>(args)...);
     }
 
     StageNode* find_mixin(const std::string& name) const;
@@ -255,11 +599,9 @@ public:
 
     /** Populates the render queue with a list of renderables to send to be
      *  rendered by the render pipelines */
-    void generate_renderables(
-        batcher::RenderQueue* render_queue,
-        const Camera*, const Viewport* viewport,
-        const DetailLevel detail_level
-    );
+    void generate_renderables(batcher::RenderQueue* render_queue, const Camera*,
+                              const Viewport* viewport,
+                              const DetailLevel detail_level);
 
     void update(float dt) override final;
     void late_update(float dt) override final;
@@ -269,7 +611,7 @@ public:
      *  dynamic_cast on the entire subtree. Use for testing
      *  *only*. */
     template<typename T>
-    size_t count_nodes_by_type(bool include_destroyed=false) const {
+    size_t count_nodes_by_type(bool include_destroyed = false) const {
         size_t ret = 0;
         for(auto& node: each_descendent()) {
             if(node.is_destroyed() && !include_destroyed) {
@@ -288,11 +630,19 @@ public:
     }
 
 protected:
-    virtual bool on_create(void* params) = 0;
-    virtual bool on_destroy() override { return true; }
-    virtual void on_update(float dt) override { _S_UNUSED(dt); }
-    virtual void on_fixed_update(float step) override { _S_UNUSED(step); }
-    virtual void on_late_update(float dt) override { _S_UNUSED(dt); }
+    virtual bool on_create(Params params) = 0;
+    virtual bool on_destroy() override {
+        return true;
+    }
+    virtual void on_update(float dt) override {
+        _S_UNUSED(dt);
+    }
+    virtual void on_fixed_update(float step) override {
+        _S_UNUSED(step);
+    }
+    virtual void on_late_update(float dt) override {
+        _S_UNUSED(dt);
+    }
 
     void on_transformation_changed() override {
         mark_transformed_aabb_dirty();
@@ -306,13 +656,34 @@ protected:
 
     void on_transformation_change_attempted() override {}
 
+protected:
+    template<typename N>
+    bool clean_params(Params& params) {
+        Params cleaned;
+        for(auto param: get_node_params<N>()) {
+            auto name = param.name();
+            bool passed = params.contains(name);
+            if(!passed && !param.default_value()) {
+                // No default and not provided
+                return false;
+            } else if(passed) {
+                cleaned.set(name, params.raw(name).value());
+            } else {
+                cleaned.set(name, param.default_value().value());
+            }
+        }
+
+        params = cleaned;
+        return true;
+    }
+
 private:
     friend class StageNodeManager;
 
     Transform transform_;
 
     // NVI idiom
-    bool _create(void* params) {
+    bool _create(const Params& params) {
         return on_create(params);
     }
 
@@ -323,11 +694,10 @@ private:
     }
 
     /* Return a list of renderables to pass into the render queue */
-    virtual void do_generate_renderables(
-        batcher::RenderQueue* render_queue,
-        const Camera*, const Viewport* viewport,
-        const DetailLevel detail_level
-    ) {
+    virtual void do_generate_renderables(batcher::RenderQueue* render_queue,
+                                         const Camera*,
+                                         const Viewport* viewport,
+                                         const DetailLevel detail_level) {
         _S_UNUSED(render_queue);
         _S_UNUSED(viewport);
         _S_UNUSED(detail_level);
@@ -362,7 +732,7 @@ public:
     class SiblingIteratorPair {
         friend class StageNode;
 
-        SiblingIteratorPair(const StageNode* root):
+        SiblingIteratorPair(const StageNode* root) :
             root_(root) {}
 
         const StageNode* root_;
@@ -374,9 +744,8 @@ public:
             }
 
             return SiblingIterator<false>(
-                root_,
-                (root_->next_sibling()) ? root_->next_sibling() : root_->parent_->first_child()
-            );
+                root_, (root_->next_sibling()) ? root_->next_sibling()
+                                               : root_->parent_->first_child());
         }
 
         SiblingIterator<false> end() {
@@ -387,7 +756,7 @@ public:
     class ChildIteratorPair {
         friend class StageNode;
 
-        ChildIteratorPair(const StageNode* root):
+        ChildIteratorPair(const StageNode* root) :
             root_(root) {}
 
         const StageNode* root_;
@@ -405,7 +774,7 @@ public:
     class DescendentIteratorPair {
         friend class StageNode;
 
-        DescendentIteratorPair(const StageNode* root):
+        DescendentIteratorPair(const StageNode* root) :
             root_(root) {}
 
         const StageNode* root_;
@@ -423,7 +792,7 @@ public:
     class AncestorIteratorPair {
         friend class StageNode;
 
-        AncestorIteratorPair(const StageNode* root):
+        AncestorIteratorPair(const StageNode* root) :
             root_(root) {}
 
         const StageNode* root_;
@@ -482,11 +851,14 @@ public:
 
     bool is_visible() const;
 
-    bool is_intended_visible() const { return is_visible_; }
+    bool is_intended_visible() const {
+        return is_visible_;
+    }
     void set_visible(bool visible);
 
-    Property<generic::DataCarrier StageNode::*> data = { this, &StageNode::data_ };
-    Property<Scene* StageNode::*> scene = { this, &StageNode::owner_ };
+    Property<generic::DataCarrier StageNode::*> data = {this,
+                                                        &StageNode::data_};
+    Property<Scene * StageNode::*> scene = {this, &StageNode::owner_};
 
     smlt::Promise<void> destroy_after(const Seconds& seconds);
 
@@ -499,17 +871,23 @@ public:
         return AABB::ZERO;
     }
 
-    /* Control shading on the stage node (behaviour depends on the type of node) */
-    ShadowCast shadow_cast() const { return shadow_cast_; }
+    /* Control shading on the stage node (behaviour depends on the type of node)
+     */
+    ShadowCast shadow_cast() const {
+        return shadow_cast_;
+    }
     void set_shadow_cast(ShadowCast cast) {
         shadow_cast_ = cast;
     }
 
-    ShadowReceive shadow_receive() const { return shadow_receive_; }
-    void set_shadow_receive(ShadowReceive receive) { shadow_receive_ = receive; }
+    ShadowReceive shadow_receive() const {
+        return shadow_receive_;
+    }
+    void set_shadow_receive(ShadowReceive receive) {
+        shadow_receive_ = receive;
+    }
 
     StageNode* find_descendent_with_name(const std::string& name);
-
 
     void set_cullable(bool v);
     bool is_cullable() const;
@@ -517,12 +895,17 @@ public:
     void set_precedence(int16_t precedence);
 
     int16_t precedence() const;
+
 protected:
-    // Faster than properties, useful for subclasses where a clean API isn't as important
-    Scene* get_scene() const { return owner_; }
+    // Faster than properties, useful for subclasses where a clean API isn't as
+    // important
+    Scene* get_scene() const {
+        return owner_;
+    }
 
     void recalc_bounds_if_necessary() const;
     void mark_transformed_aabb_dirty();
+
 private:
     friend class Layer;
 
@@ -548,13 +931,16 @@ private:
     ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;
     ShadowReceive shadow_receive_ = SHADOW_RECEIVE_ALWAYS;
 
-    /* Whether or not this node should be culled by the partitioner (e.g. when offscreen) */
+    /* Whether or not this node should be culled by the partitioner (e.g. when
+     * offscreen) */
     bool cullable_ = true;
 
-    /* Passed to coroutines and used to detect when the object has been destroyed */
+    /* Passed to coroutines and used to detect when the object has been
+     * destroyed */
     std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
 
     int16_t precedence_ = 0;
+
 public:
     Transform* get_transform() const {
         return &base_->transform_;
@@ -563,11 +949,10 @@ public:
     S_DEFINE_PROPERTY(transform, &StageNode::get_transform);
 };
 
-
 class StageNodeVisitorBFS {
 public:
     template<typename Func>
-    StageNodeVisitorBFS(StageNode* start, Func&& callback):
+    StageNodeVisitorBFS(StageNode* start, Func&& callback) :
         callback_(callback) {
 
         queue_.push(start);
@@ -587,18 +972,18 @@ public:
     }
 
 private:
-    std::function<void (StageNode*)> callback_;
+    std::function<void(StageNode*)> callback_;
     std::queue<StageNode*> queue_;
 };
 
-
-class ContainerNode : public StageNode {
+class ContainerNode: public StageNode {
 public:
-    ContainerNode(Scene* scene, StageNodeType node_type):
+    ContainerNode(Scene* scene, StageNodeType node_type) :
         StageNode(scene, node_type) {}
 
     /* Containers don't directly have renderables, but their children do */
-    void do_generate_renderables(batcher::RenderQueue*, const Camera*, const Viewport*, const DetailLevel) override {}
+    void do_generate_renderables(batcher::RenderQueue*, const Camera*,
+                                 const Viewport*, const DetailLevel) override {}
 
     virtual ~ContainerNode() {}
 };
@@ -625,19 +1010,23 @@ T* mixin_factory(F& factory, StageNode* base, Args&&... args) {
     return node;
 }
 
-}
+} // namespace impl
 
 typedef default_init_ptr<StageNode> StageNodePtr;
 
-}
+} // namespace smlt
 
-#include "iterators/sibling_iterator.inc"
+#include "iterators/ancestor_iterator.inc"
 #include "iterators/child_iterator.inc"
 #include "iterators/descendent_iterator.inc"
-#include "iterators/ancestor_iterator.inc"
+#include "iterators/sibling_iterator.inc"
 
-#define S_DEFINE_STAGE_NODE_META(node_type_id, params_type_klass) \
-struct Meta { \
-    const static smlt::StageNodeType node_type = node_type_id; \
-    typedef params_type_klass params_type; \
-}
+#define S_DEFINE_STAGE_NODE_META(node_type_id, alias)                          \
+    struct Meta {                                                              \
+        const static smlt::StageNodeType node_type = node_type_id;             \
+        inline static const char* name = alias;                                \
+    };                                                                         \
+    const char* node_type_name() const {                                       \
+        return Meta::name;                                                     \
+    }                                                                          \
+    struct _unused_ {}

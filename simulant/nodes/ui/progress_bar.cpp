@@ -1,20 +1,16 @@
-#include "ui_manager.h"
 #include "progress_bar.h"
 #include "../../stage.h"
 #include "../../window.h"
+#include "simulant/utils/params.h"
+#include "ui_manager.h"
 
 namespace smlt {
 namespace ui {
 
+ProgressBar::ProgressBar(Scene* owner) :
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR) {}
 
-ProgressBar::ProgressBar(Scene* owner):
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR) {
-
-}
-
-ProgressBar::~ProgressBar() {
-
-}
+ProgressBar::~ProgressBar() {}
 
 void ProgressBar::set_pulse_fraction(float value) {
     pulse_fraction_ = value;
@@ -69,14 +65,17 @@ void ProgressBar::refresh_bar(float dt) {
     }
 }
 
-Widget::WidgetBounds ProgressBar::calculate_foreground_size(const UIDim& content_dimensions) const {
+Widget::WidgetBounds ProgressBar::calculate_foreground_size(
+    const UIDim& content_dimensions) const {
     WidgetBounds result = Widget::calculate_foreground_size(content_dimensions);
 
     if(mode_ == PROGRESS_BAR_MODE_PULSE) {
         result.min.x = Px(pulse_position_ - (pulse_width_ / 2));
         result.max.x = Px(pulse_position_ + (pulse_width_ / 2));
     } else {
-        result.max.x = result.min.x + int(float((result.max.x - result.min.x).value) * fraction_);
+        result.max.x =
+            result.min.x +
+            int(float((result.max.x - result.min.x).value) * fraction_);
     }
     return result;
 }
@@ -126,28 +125,38 @@ void ProgressBar::on_update(float dt) {
     refresh_bar(dt);
 }
 
-bool ProgressBar::on_create(void* params) {
+bool ProgressBar::on_create(Params params) {
+    if(!clean_params<ProgressBar>(params)) {
+        return false;
+    }
+
     if(!Widget::on_create(params)) {
         return true;
     }
 
-    ProgressBarParams* args = (ProgressBarParams*) params;
+    auto sstyle = params.get<WidgetStylePtr>("shared_style");
+    auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
 
-    if(!args->shared_style) {
-        set_background_color(args->theme.progress_bar_background_color_);
-        set_foreground_color(args->theme.progress_bar_foreground_color_);
-        set_border_color(args->theme.progress_bar_border_color_);
-        set_border_width(args->theme.progress_bar_border_width_);
-        set_text_color(args->theme.progress_bar_text_color_);
+    if(!sstyle) {
+        set_background_color(theme.progress_bar_background_color_);
+        set_foreground_color(theme.progress_bar_foreground_color_);
+        set_border_color(theme.progress_bar_border_color_);
+        set_border_width(theme.progress_bar_border_width_);
+        set_text_color(theme.progress_bar_text_color_);
     }
 
-    set_range(args->min, args->max);
-    set_value(args->value);
+    auto min = params.get<float>("min").value_or(0.0f);
+    auto max = params.get<float>("max").value_or(100.0f);
+    auto value = params.get<float>("value").value_or(0.0f);
+    set_range(min, max);
+    set_value(value);
+
+    auto w = params.get<int>("width").value_or(-1);
+    auto h = params.get<int>("height").value_or(-1);
 
     set_resize_mode(RESIZE_MODE_FIXED);
-    resize(args->width, args->height);
+    resize(w, h);
     return true;
 }
-
-}
-}
+} // namespace ui
+} // namespace smlt

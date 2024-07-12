@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simulant/nodes/stage_node.h"
+#include "simulant/utils/params.h"
 #include "widget.h"
 
 namespace smlt {
@@ -10,38 +12,25 @@ enum ProgressBarMode {
     PROGRESS_BAR_MODE_FRACTION
 };
 
-struct ProgressBarParams : public WidgetParams {
-    float min = 0.0f;
-    float max = 100.0f;
-    float value = 0.0f;
-
-    Px width;
-    Px height;
-
-    ProgressBarParams(
-        float min=0.0f, float max=100.0f, float value=0.0f,
-        Px width = Px(250),
-        Px height = Rem(1.5f),
-        const UIConfig& theme=UIConfig(),
-        WidgetStylePtr shared_style=WidgetStylePtr()
-    ):
-        WidgetParams(theme, shared_style),
-        min(min), max(max), value(value), width(width), height(height) {}
-};
-
-class ProgressBar:
-    public Widget {
+class ProgressBar: public Widget {
 
 public:
-    struct Meta {
-        typedef ui::ProgressBarParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR,
+                             "progress_bar");
 
-    using Widget::init; // Pull in init to satisfy Managed<Button>
+    S_DEFINE_STAGE_NODE_PARAM(ProgressBar, "min", float, 0.0f,
+                              "The minimum value of the progress bar");
+    S_DEFINE_STAGE_NODE_PARAM(ProgressBar, "max", float, 100.0f,
+                              "The maximum value of the progress bar");
+    S_DEFINE_STAGE_NODE_PARAM(ProgressBar, "value", float, 0.0f,
+                              "The current value of the progress bar");
+
+    S_DEFINE_CORE_WIDGET_PROPERTIES(ProgressBar);
+
     using Widget::clean_up;
+    using Widget::init; // Pull in init to satisfy Managed<Button>
 
-    ProgressBar(Scene *owner);
+    ProgressBar(Scene* owner);
     virtual ~ProgressBar();
 
     void pulse();
@@ -56,11 +45,14 @@ public:
     float min() const;
     float max() const;
 
-    ProgressBarMode current_mode() const { return mode_; }
+    ProgressBarMode current_mode() const {
+        return mode_;
+    }
 
     void on_update(float dt) override;
+
 private:
-    bool on_create(void *params) override;
+    bool on_create(Params params) override;
 
     ProgressBarMode mode_ = PROGRESS_BAR_MODE_FRACTION;
 
@@ -81,8 +73,9 @@ private:
     void refresh_fraction();
     void refresh_bar(float dt);
 
-    WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const override;
+    WidgetBounds calculate_foreground_size(
+        const UIDim& content_dimensions) const override;
 };
 
-}
-}
+} // namespace ui
+} // namespace smlt

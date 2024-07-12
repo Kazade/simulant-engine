@@ -21,17 +21,22 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "generic/range_value.h"
 #include "math/utils.h"
 
 namespace smlt {
+typedef std::vector<float> FloatArray;
 
 struct Color {
     float r, g, b, a;
 
     Color():
         r(1.0), g(1.0), b(1.0), a(1.0) {}
+
+    Color(const FloatArray& arr) :
+        r(arr[0]), g(arr[1]), b(arr[2]), a(arr[3]) {}
 
     static Color from_bytes(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
         return Color(float(r) / 255.0f, float(g) / 255.0f, float(b) / 255.0f, float(a) / 255.0f);
@@ -57,6 +62,10 @@ struct Color {
 
     Color(float r, float g, float b, float a):
         r(r), g(g), b(b), a(a) {}
+
+    operator FloatArray() const {
+        return {r, g, b, a};
+    }
 
     Color operator*(const float rhs) const {
         return Color(r * rhs, g * rhs, b * rhs, a * rhs);
@@ -173,17 +182,36 @@ struct Color {
         return ((a >> 4) << 12) | ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
     }
 
-    static const Color BLACK;
-    static const Color GREY;
-    static const Color WHITE;
-    static const Color RED;
-    static const Color GREEN;
-    static const Color BLUE;
-    static const Color YELLOW;
-    static const Color PURPLE;
-    static const Color TURQUOISE;
-    static const Color NONE;
-
+    static Color black() {
+        return Color(0, 0, 0, 1);
+    }
+    static Color gray() {
+        return Color(0.5, 0.5, 0.5, 1);
+    }
+    static Color white() {
+        return Color(1, 1, 1, 1);
+    }
+    static Color red() {
+        return Color(1, 0, 0, 1);
+    }
+    static Color green() {
+        return Color(0, 1, 0, 1);
+    }
+    static Color blue() {
+        return Color(0, 0, 1, 1);
+    }
+    static Color yellow() {
+        return Color(1, 1, 0, 1);
+    }
+    static Color purple() {
+        return Color(1, 0, 1, 1);
+    }
+    static Color turquoise() {
+        return Color(0, 1, 1, 1);
+    }
+    static Color none() {
+        return Color(0, 0, 0, 0);
+    }
 };
 
 /* 16bit packed color in ARGB4444 format. This is useful for minimising

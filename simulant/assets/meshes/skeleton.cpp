@@ -150,11 +150,9 @@ void SkeletalFrameUnpacker::unpack_frame(
         for(std::size_t i = 0; i < rig->joint_count(); ++i) {
             auto parent_joint = rig->joint(i)->parent();
             if(parent_joint) {
-                debug->draw_line(
-                    parent_joint->absolute_translation_,
-                    rig->joint(i)->absolute_translation_,
-                    Color::YELLOW, 0.1f, false
-                );
+                debug->draw_line(parent_joint->absolute_translation_,
+                                 rig->joint(i)->absolute_translation_,
+                                 Color::yellow(), 0.1f, false);
             }
         }
     }

@@ -162,7 +162,7 @@ public:
 
     void update_transformation_from_parent();
     void sync(const Transform* other);
-    void look_at(const Vec3& target, const Vec3& up=Vec3::POSITIVE_Y);
+    void look_at(const Vec3& target, const Vec3& up = Vec3::up());
 
 private:
     /* THis is for access to set_parent primarily */

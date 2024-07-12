@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simulant/nodes/stage_node.h"
+#include "simulant/utils/params.h"
 #include "widget.h"
 
 namespace smlt {
@@ -12,7 +14,7 @@ namespace ui {
  *
  *  The text and foreground layers appear as a title of the box,
  *  the background layer will extend to contain the widgets added.
-*/
+ */
 
 enum LayoutDirection {
     LAYOUT_DIRECTION_TOP_TO_BOTTOM,
@@ -24,37 +26,22 @@ enum ChildCleanup {
     CHILD_CLEANUP_RETAIN
 };
 
-struct FrameParams : public WidgetParams {
-    unicode text;
-
-    FrameParams(
-        const unicode& text="",
-        const UIConfig& theme=UIConfig(),
-        WidgetStylePtr shared_style=WidgetStylePtr()
-    ):
-        WidgetParams(theme, shared_style),
-        text(text) {}
-};
-
-class Frame:
-    public Widget,
-    public RefCounted<Frame> {
+class Frame: public Widget, public RefCounted<Frame> {
 
 public:
-    struct Meta {
-        typedef ui::FrameParams params_type;
-        const static StageNodeType node_type = STAGE_NODE_TYPE_WIDGET_FRAME;
-    };
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_FRAME, "frame");
+    S_DEFINE_CORE_WIDGET_PROPERTIES(Frame);
 
-    using Widget::init; // Pull in init to satisfy Managed<Image>
     using Widget::clean_up;
+    using Widget::init; // Pull in init to satisfy Managed<Image>
 
-    Frame(Scene *owner);
+    Frame(Scene* owner);
 
-    bool on_create(void *params) override;
+    bool on_create(Params params) override;
 
     bool pack_child(Widget* widget);
-    bool unpack_child(Widget* widget, ChildCleanup clean_up=CHILD_CLEANUP_DESTROY);
+    bool unpack_child(Widget* widget,
+                      ChildCleanup clean_up = CHILD_CLEANUP_DESTROY);
 
     const std::vector<smlt::ui::Widget*>& packed_children() const;
 
@@ -71,12 +58,14 @@ private:
     LayoutDirection direction_ = LAYOUT_DIRECTION_TOP_TO_BOTTOM;
     Px space_between_;
 
-    virtual WidgetBounds calculate_foreground_size(const UIDim& content_dimensions) const override;
-    virtual UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
+    virtual WidgetBounds calculate_foreground_size(
+        const UIDim& content_dimensions) const override;
+    virtual UIDim calculate_content_dimensions(Px text_width,
+                                               Px text_height) override;
 
     virtual void finalize_build() override;
 };
 
-}
+} // namespace ui
 
-}
+} // namespace smlt

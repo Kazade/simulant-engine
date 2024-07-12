@@ -1,21 +1,19 @@
 #include "mesh_instancer.h"
-#include "../stage.h"
 #include "../meshes/mesh.h"
+#include "../stage.h"
+#include "simulant/types.h"
+#include "simulant/utils/params.h"
 
 namespace smlt {
 
 uint32_t MeshInstancer::id_counter_ = 0;
 
-MeshInstancer::MeshInstancer(Scene *owner):
-    StageNode(owner, STAGE_NODE_TYPE_MESH_INSTANCER) {
+MeshInstancer::MeshInstancer(Scene* owner) :
+    StageNode(owner, STAGE_NODE_TYPE_MESH_INSTANCER) {}
 
-}
+MeshInstancer::~MeshInstancer() {}
 
-MeshInstancer::~MeshInstancer() {
-
-}
-
-const AABB &MeshInstancer::aabb() const {
+const AABB& MeshInstancer::aabb() const {
     return aabb_;
 }
 
@@ -35,7 +33,8 @@ MeshPtr MeshInstancer::mesh() const {
     return mesh_;
 }
 
-MeshInstanceID MeshInstancer::create_mesh_instance(const Vec3 &position, const Quaternion &rotation) {
+MeshInstanceID MeshInstancer::create_mesh_instance(const Vec3& position,
+                                                   const Quaternion& rotation) {
     MeshInstance i;
     i.id = ++MeshInstancer::id_counter_;
     i.transformation = Mat4::as_transform(position, rotation, Vec3(1));
@@ -94,9 +93,12 @@ void MeshInstancer::recalc_aabb() {
     std::swap(aabb_, new_aabb);
 }
 
-bool MeshInstancer::on_create(void* params) {
-    MeshInstancerParams* args = (MeshInstancerParams*) params;
-    set_mesh(args->mesh);
+bool MeshInstancer::on_create(Params params) {
+    if(!clean_params<MeshInstancer>(params)) {
+        return false;
+    }
+
+    set_mesh(params.get<MeshPtr>("mesh").value_or(MeshPtr()));
     return true;
 }
 
@@ -104,17 +106,18 @@ void MeshInstancer::on_transformation_changed() {
     StageNode::on_transformation_changed();
 
     /* When the transformation changes, we need
-         * to update all instances */
+     * to update all instances */
 
     for(auto& instance: instances_) {
-        instance.second.abs_transformation = (
-            transform->world_space_matrix() * instance.second.transformation
-        );
+        instance.second.abs_transformation =
+            (transform->world_space_matrix() * instance.second.transformation);
     }
 }
 
 void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
-        const Camera* camera, const Viewport*, const DetailLevel detail_level) {
+                                            const Camera* camera,
+                                            const Viewport*,
+                                            const DetailLevel detail_level) {
 
     /* No instances or mesh, no renderables */
     if(instances_.empty() || !mesh_) {
@@ -122,7 +125,7 @@ void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
     }
 
     _S_UNUSED(camera);
-    _S_UNUSED(detail_level);  // FIXME: Support detail levels like actors?
+    _S_UNUSED(detail_level); // FIXME: Support detail levels like actors?
 
     for(auto submesh: mesh_->each_submesh()) {
         Renderable new_renderable;
@@ -131,16 +134,20 @@ void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
         new_renderable.arrangement = submesh->arrangement();
         new_renderable.vertex_data = mesh_->vertex_data.get();
         new_renderable.index_data = submesh->index_data.get();
-        new_renderable.index_element_count = (new_renderable.index_data) ? new_renderable.index_data->count() : 0;
+        new_renderable.index_element_count =
+            (new_renderable.index_data) ? new_renderable.index_data->count()
+                                        : 0;
         new_renderable.vertex_ranges = submesh->vertex_ranges();
         new_renderable.vertex_range_count = submesh->vertex_range_count();
 
         // FIXME: Support material slots like actors?
-        new_renderable.material = submesh->material_at_slot(MATERIAL_SLOT0, true).get();
+        new_renderable.material =
+            submesh->material_at_slot(MATERIAL_SLOT0, true).get();
 
         for(auto& mesh_instance: instances_) {
-            auto to_insert = new_renderable;  // Create a copy
-            to_insert.final_transformation = mesh_instance.second.abs_transformation;
+            auto to_insert = new_renderable; // Create a copy
+            to_insert.final_transformation =
+                mesh_instance.second.abs_transformation;
             to_insert.is_visible = mesh_instance.second.is_visible;
             to_insert.center = mesh_instance.second.aabb.center();
             render_queue->insert_renderable(std::move(to_insert));
@@ -148,7 +155,7 @@ void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
     }
 }
 
-void MeshInstancer::MeshInstance::recalc_aabb(smlt::MeshPtr mesh) {    
+void MeshInstancer::MeshInstance::recalc_aabb(smlt::MeshPtr mesh) {
     /* Calculate the AABB for this instance for performance later */
     if(!mesh) {
         aabb = AABB();
@@ -165,5 +172,4 @@ void MeshInstancer::MeshInstance::recalc_aabb(smlt::MeshPtr mesh) {
     aabb = AABB(corners.data(), corners.size());
 }
 
-}
-
+} // namespace smlt

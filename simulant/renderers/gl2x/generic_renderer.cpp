@@ -115,18 +115,18 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass,
     auto amb_loc = program->locate_uniform(LIGHT_AMBIENT_PROPERTY, true);
     if(amb_loc > -1) {
         program->set_uniform_color(amb_loc,
-                                   (light) ? light->ambient() : Color::NONE);
+                                   (light) ? light->ambient() : Color::none());
     }
 
     auto diff_loc = program->locate_uniform(LIGHT_DIFFUSE_PROPERTY, true);
     if(diff_loc > -1) {
-        auto diffuse = (light) ? light->diffuse() : smlt::Color::NONE;
+        auto diffuse = (light) ? light->diffuse() : smlt::Color::none();
         program->set_uniform_color(diff_loc, diffuse);
     }
 
     auto spec_loc = program->locate_uniform(LIGHT_SPECULAR_PROPERTY, true);
     if(spec_loc > -1) {
-        auto specular = (light) ? light->specular() : smlt::Color::NONE;
+        auto specular = (light) ? light->specular() : smlt::Color::none();
         program->set_uniform_color(spec_loc, specular);
     }
 
