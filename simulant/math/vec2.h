@@ -32,6 +32,14 @@ public:
         return Vec2(0.0f, -1.0f);
     }
 
+    static Vec2 zero() {
+        return Vec2(0, 0);
+    }
+
+    static Vec2 one() {
+        return Vec2(1, 1);
+    }
+
     float x;
     float y;
 

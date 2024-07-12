@@ -55,6 +55,14 @@ public:
         return Vec3(0.0f, 0.0f, 1.0f);
     }
 
+    static Vec3 zero() {
+        return Vec3(0, 0, 0);
+    }
+
+    static Vec3 one() {
+        return Vec3(1, 1, 1);
+    }
+
     float x;
     float y;
     float z;

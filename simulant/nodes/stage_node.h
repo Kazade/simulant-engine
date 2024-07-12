@@ -348,7 +348,7 @@ private:
                   std::is_same<type, smlt::ui::UIConfig>::value ||             \
                   std::is_same<type, smlt::ui::WidgetStylePtr>::value);        \
     static inline auto _S_GEN_PARAM(param_, line) =                            \
-        TypedNodeParam<type, klass>(line, name, fallback, desc)
+        smlt::TypedNodeParam<type, klass>(line, name, fallback, desc)
 
 #define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc)           \
     _S_DEFINE_STAGE_NODE_PARAM(__LINE__, klass, name, type, fallback, desc)
