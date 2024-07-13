@@ -24,6 +24,7 @@
 #include "builtins.h"
 #include "simulant/generic/any/any.h"
 #include "simulant/generic/managed.h"
+#include "simulant/nodes/stage_node_pool.h"
 #include "simulant/utils/params.h"
 
 namespace smlt {
@@ -100,6 +101,7 @@ enum NodeParamType {
     NODE_PARAM_TYPE_MESH_PTR,
     NODE_PARAM_TYPE_TEXTURE_PTR,
     NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR,
+    NODE_PARAM_TYPE_STAGE_NODE_PTR,
     // FIXME: Ideally these wouldn't exist and instead
     // widgets would take base types as arguments
     NODE_PARAM_TYPE_UI_CONFIG,
@@ -181,6 +183,11 @@ struct type_to_node_param_type<TextureFlags> {
     static const NodeParamType value = NODE_PARAM_TYPE_TEXTURE_FLAGS;
 };
 
+template<>
+struct type_to_node_param_type<StageNode*> {
+    static const NodeParamType value = NODE_PARAM_TYPE_STAGE_NODE_PTR;
+};
+
 template<NodeParamType T>
 struct node_param_type_to_type;
 
@@ -232,6 +239,11 @@ struct node_param_type_to_type<NODE_PARAM_TYPE_TEXTURE_PTR> {
 template<>
 struct node_param_type_to_type<NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR> {
     typedef ParticleScriptPtr type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_STAGE_NODE_PTR> {
+    typedef StageNode* type;
 };
 
 constexpr bool has_spaces(const char* s) {
