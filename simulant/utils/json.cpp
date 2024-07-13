@@ -1,5 +1,6 @@
 #include "json.h"
 #include "../logging.h"
+#include <cstddef>
 #include <istream>
 #include <sstream>
 
@@ -348,51 +349,43 @@ bool JSONNode::is_null() const {
 }
 
 static optional<std::size_t> parse_array(_json_impl::IStreamPtr stream) {
-    std::size_t count = 0;
-
-    skip_whitespace(stream);
-    auto p = stream->tellg();
-
+    int nested_counter = 0;
+    std::size_t entries = 0;
+    char last_non_whitespace = 0;
+    bool in_quotes = false;
     while(!stream->eof()) {
-        skip_whitespace(stream);
-        auto p2 = find_comma_or_closing_bracket(stream);
         auto c = stream->get();
+        if(c == '"') {
+            in_quotes = !in_quotes;
+        }
 
-        if(c == ',') {
-            ++count;
-        } else {
-            assert(c == ']');
+        if(in_quotes) {
+            continue;
+        }
 
-            /* If we found the closing ] just after the opening one, then
-             * this is an empty array */
-            bool empty = (p2 - p) == 0;
-
-            /* We just do this final check to make sure we didn't double
-             * count things... */
-            auto end = stream->tellg();
-            do {
-                unget(stream);
-                unget(stream);
-                c = stream->get(); // Moves forward one, so we move back twice
-                                   // each loop
-            } while(WHITESPACE.find(c) != std::string::npos);
-
-            stream->seekg(end, std::ios::beg);
-
-            if(c == ',') {
-                S_WARN("Found trailing comma in JSON array");
-                return count;
-            } else {
-                if(!empty) {
-                    ++count;
-                }
-
-                return count;
+        if(c == ']' && nested_counter == 0) {
+            if(last_non_whitespace && last_non_whitespace != ',') {
+                entries++;
             }
+            break;
+        } else if(c == '[' || c == '{') {
+            nested_counter++;
+        } else if(c == ']' || c == '}') {
+            nested_counter--;
+        } else if(c == ',' && nested_counter == 0) {
+            ++entries;
+        }
+
+        if(WHITESPACE.find(c) == std::string::npos) {
+            last_non_whitespace = c;
         }
     }
 
-    return optional<std::size_t>();
+    if(last_non_whitespace == ',') {
+        S_WARN("Found trailing comma in JSON array");
+    }
+
+    return entries;
 }
 
 /* Parse an object node and return its size if the parse is successful */
