@@ -24,7 +24,6 @@
 #include "builtins.h"
 #include "simulant/generic/any/any.h"
 #include "simulant/generic/managed.h"
-#include "simulant/nodes/stage_node_pool.h"
 #include "simulant/utils/params.h"
 
 namespace smlt {
@@ -32,9 +31,9 @@ namespace smlt {
 class RenderableFactory;
 class Seconds;
 class Scene;
-class GeomCullerOptions;
-class TextureFlags;
-
+struct GeomCullerOptions;
+struct TextureFlags;
+class StageNode;
 namespace ui {
 struct UIConfig;
 struct WidgetStyle;
