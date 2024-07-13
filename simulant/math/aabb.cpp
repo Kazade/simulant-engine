@@ -5,8 +5,6 @@
 
 namespace smlt {
 
-const AABB AABB::ZERO = AABB();
-
 AABB::AABB(const Vec3 &center, float width) {
     center_ = center;
     extents_ = Vec3(width * 0.5f, width * 0.5f, width * 0.5f);
