@@ -392,9 +392,7 @@ bool SDL2Window::_init_window() {
         app->vfs->locate_file("assets/other/gamecontrollerdb.txt");
 
     if(controller_db) {
-        auto rw_ops = SDL_RWFromFile(controller_db.value().str().c_str(), "r");
-        int ret = SDL_GameControllerAddMappingsFromRW(rw_ops, 1);
-        SDL_RWclose(rw_ops);
+        int ret = SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile(controller_db.value().str().c_str(), "rb"), 1);
 
         if(ret < 0) {
             S_WARN("Unable to load controller mappings!");
