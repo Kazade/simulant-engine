@@ -346,6 +346,7 @@ private:
                   std::is_same<type, smlt::TextureFlags>::value ||             \
                   std::is_same<type, smlt::TexturePtr>::value ||               \
                   std::is_same<type, smlt::ui::UIConfig>::value ||             \
+                  std::is_same<type, smlt::StageNode*>::value ||               \
                   std::is_same<type, smlt::ui::WidgetStylePtr>::value);        \
     static inline auto _S_GEN_PARAM(param_, line) =                            \
         smlt::TypedNodeParam<type, klass>(line, name, fallback, desc)
