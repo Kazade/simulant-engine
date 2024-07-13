@@ -670,7 +670,6 @@ simulant/generic/cloneable.h
 simulant/generic/containers/heap_array.h
 simulant/generic/creator.h
 simulant/generic/data_carrier.h
-simulant/generic/default_init_ptr.h
 simulant/generic/generic_tree.cpp
 simulant/generic/generic_tree.h
 simulant/generic/identifiable.h

@@ -33,10 +33,6 @@ public:
      * on the target, but movement will stop */
     void set_following_enabled(bool v);
 
-    const AABB& aabb() const override {
-        return AABB::ZERO;
-    }
-
 private:
     StageNode* target_ = nullptr;
 

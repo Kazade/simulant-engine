@@ -869,7 +869,8 @@ public:
 
     /* Default implementation, assume nodes have no volume unless they do */
     const AABB& aabb() const override {
-        return AABB::ZERO;
+        static auto zero = AABB::zero();
+        return zero;
     }
 
     /* Control shading on the stage node (behaviour depends on the type of node)
@@ -1013,7 +1014,7 @@ T* mixin_factory(F& factory, StageNode* base, Args&&... args) {
 
 } // namespace impl
 
-typedef default_init_ptr<StageNode> StageNodePtr;
+typedef StageNode* StageNodePtr;
 
 } // namespace smlt
 

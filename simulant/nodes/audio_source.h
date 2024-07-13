@@ -39,10 +39,6 @@ public:
 
     void update_source(float dt);
 
-    const AABB& aabb() const {
-        return AABB::ZERO;
-    }
-
 protected:
     SoundDriver* _sound_driver() const;
 
