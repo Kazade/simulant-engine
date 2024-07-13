@@ -5,7 +5,6 @@
 #include <unordered_set>
 #include <memory>
 
-#include "default_init_ptr.h"
 #include "../core/stage_node_id.h"
 
 #include "../logging.h"
@@ -163,13 +162,11 @@ struct ToSharedPtr {
 };
 
 template<typename T>
-struct ToDefaultInitPtr {
-    static default_init_ptr<T> convert(const std::shared_ptr<T>& ptr) {
+struct ToRawPtr {
+    static T* convert(const std::shared_ptr<T>& ptr) {
         return ptr.get();
     }
 };
-
-
 }
 
 template<typename IDType, typename ObjectType, bool RefCounted>
@@ -178,14 +175,14 @@ class ObjectManager;
 template<typename IDType, typename ObjectType>
 class ObjectManager<IDType, ObjectType, false>:
     public _object_manager_impl::ObjectManagerBase<
-        IDType, ObjectType, default_init_ptr<ObjectType>,
-        _object_manager_impl::ToDefaultInitPtr<ObjectType>
-    > {
+        IDType, ObjectType, ObjectType*,
+        _object_manager_impl::ToRawPtr<ObjectType>> {
 
 public:
     typedef typename _object_manager_impl::ObjectManagerBase<
-        IDType, ObjectType, default_init_ptr<ObjectType>, _object_manager_impl::ToDefaultInitPtr<ObjectType>
-    > parent_class;
+        IDType, ObjectType, ObjectType*,
+        _object_manager_impl::ToRawPtr<ObjectType>>
+        parent_class;
 
     typedef typename parent_class::ObjectTypePtr ObjectTypePtr;
     typedef typename parent_class::object_type object_type;

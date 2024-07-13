@@ -47,8 +47,6 @@
 #include "core/stage_node_id.h"
 #include "core/asset_id.h"
 
-#include "generic/default_init_ptr.h"
-
 #include "utils/unicode.h"
 #include "material_constants.h"
 
@@ -436,37 +434,33 @@ typedef std::weak_ptr<Font> FontRef;
 typedef std::shared_ptr<Font> FontPtr;
 
 class Actor;
-typedef default_init_ptr<Actor> ActorPtr;
+typedef Actor* ActorPtr;
 
 class Geom;
-typedef default_init_ptr<Geom> GeomPtr;
+typedef Geom* GeomPtr;
 
 class MeshInstancer;
-typedef default_init_ptr<MeshInstancer> MeshInstancerPtr;
+typedef MeshInstancer* MeshInstancerPtr;
 
 class ParticleSystem;
-typedef default_init_ptr<ParticleSystem> ParticleSystemPtr;
+typedef ParticleSystem* ParticleSystemPtr;
 
 class Sprite;
-typedef default_init_ptr<Sprite> SpritePtr;
+typedef Sprite* SpritePtr;
 
 class Light;
-typedef default_init_ptr<Light> LightPtr;
+typedef Light* LightPtr;
 
 class Camera;
 class CameraProxy;
 
-typedef default_init_ptr<Camera> CameraPtr;
+typedef Camera* CameraPtr;
 
 class Viewport;
-
-class Background;
-typedef default_init_ptr<Background> BackgroundPtr;
-
 class Window;
 
 class Stage;
-typedef default_init_ptr<Stage> StagePtr;
+typedef Stage* StagePtr;
 
 namespace ui {
 
@@ -476,8 +470,7 @@ class Button;
 class Label;
 class TextEntry;
 
-typedef default_init_ptr<Widget> WidgetPtr;
-
+typedef Widget* WidgetPtr;
 }
 
 class AssetManager;
@@ -487,7 +480,7 @@ class Compositor;
 typedef std::shared_ptr<Compositor> CompositorPtr;
 
 class Layer;
-typedef default_init_ptr<Layer> LayerPtr;
+typedef Layer* LayerPtr;
 
 class Frustum;
 class Window;
@@ -497,7 +490,7 @@ class GPUProgram;
 typedef std::shared_ptr<GPUProgram> GPUProgramPtr;
 
 class Skybox;
-typedef default_init_ptr<Skybox> SkyboxPtr;
+typedef Skybox* SkyboxPtr;
 
 typedef uint32_t GPUProgramID;
 

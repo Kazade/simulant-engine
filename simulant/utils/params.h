@@ -15,6 +15,9 @@
 #include <vector>
 
 namespace smlt {
+
+class StageNode;
+
 namespace ui {
 struct WidgetStyle;
 typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
@@ -26,7 +29,7 @@ typedef std::vector<ParamKey> ParamKeys;
 typedef std::variant<float, FloatArray, int, IntArray, bool, BoolArray,
                      std::string, TexturePtr, MeshPtr, ParticleScriptPtr,
                      ui::UIConfig, ui::WidgetStylePtr, GeomCullerOptions,
-                     TextureFlags>
+                     TextureFlags, StageNode*>
     ParamValue;
 
 /*

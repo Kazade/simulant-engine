@@ -28,10 +28,6 @@ public:
 
     void on_late_update(float dt) override;
 
-    const AABB& aabb() const override {
-        return AABB::ZERO;
-    }
-
 private:
     bool on_create(Params params) override {
         if(!clean_params<FlyController>(params)) {

@@ -24,6 +24,7 @@
 #include "builtins.h"
 #include "simulant/generic/any/any.h"
 #include "simulant/generic/managed.h"
+#include "simulant/nodes/stage_node_pool.h"
 #include "simulant/utils/params.h"
 
 namespace smlt {
@@ -100,6 +101,7 @@ enum NodeParamType {
     NODE_PARAM_TYPE_MESH_PTR,
     NODE_PARAM_TYPE_TEXTURE_PTR,
     NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR,
+    NODE_PARAM_TYPE_STAGE_NODE_PTR,
     // FIXME: Ideally these wouldn't exist and instead
     // widgets would take base types as arguments
     NODE_PARAM_TYPE_UI_CONFIG,
@@ -181,6 +183,11 @@ struct type_to_node_param_type<TextureFlags> {
     static const NodeParamType value = NODE_PARAM_TYPE_TEXTURE_FLAGS;
 };
 
+template<>
+struct type_to_node_param_type<StageNode*> {
+    static const NodeParamType value = NODE_PARAM_TYPE_STAGE_NODE_PTR;
+};
+
 template<NodeParamType T>
 struct node_param_type_to_type;
 
@@ -232,6 +239,11 @@ struct node_param_type_to_type<NODE_PARAM_TYPE_TEXTURE_PTR> {
 template<>
 struct node_param_type_to_type<NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR> {
     typedef ParticleScriptPtr type;
+};
+
+template<>
+struct node_param_type_to_type<NODE_PARAM_TYPE_STAGE_NODE_PTR> {
+    typedef StageNode* type;
 };
 
 constexpr bool has_spaces(const char* s) {
@@ -346,6 +358,7 @@ private:
                   std::is_same<type, smlt::TextureFlags>::value ||             \
                   std::is_same<type, smlt::TexturePtr>::value ||               \
                   std::is_same<type, smlt::ui::UIConfig>::value ||             \
+                  std::is_same<type, smlt::StageNode*>::value ||               \
                   std::is_same<type, smlt::ui::WidgetStylePtr>::value);        \
     static inline auto _S_GEN_PARAM(param_, line) =                            \
         smlt::TypedNodeParam<type, klass>(line, name, fallback, desc)
@@ -868,7 +881,8 @@ public:
 
     /* Default implementation, assume nodes have no volume unless they do */
     const AABB& aabb() const override {
-        return AABB::ZERO;
+        static auto zero = AABB::zero();
+        return zero;
     }
 
     /* Control shading on the stage node (behaviour depends on the type of node)
@@ -1012,7 +1026,7 @@ T* mixin_factory(F& factory, StageNode* base, Args&&... args) {
 
 } // namespace impl
 
-typedef default_init_ptr<StageNode> StageNodePtr;
+typedef StageNode* StageNodePtr;
 
 } // namespace smlt
 
