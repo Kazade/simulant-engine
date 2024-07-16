@@ -112,6 +112,17 @@ public:
         return true;
     }
 
+    optional<StageNodeTypeInfo>
+        registered_stage_node_info(const std::string& name) {
+        for(auto& p: registered_nodes_) {
+            if(p.second.name == name) {
+                return p.second;
+            }
+        }
+
+        return no_value;
+    }
+
     template<typename T>
     bool register_stage_node() {
         return register_stage_node(T::Meta::node_type, T::Meta::name, sizeof(T),
