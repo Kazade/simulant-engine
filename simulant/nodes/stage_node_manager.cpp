@@ -42,7 +42,7 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
 
 StageNodeManager::~StageNodeManager() {}
 
-StageNode* StageNodeManager::create_node(const char* node_type_name,
+StageNode* StageNodeManager::create_node(const std::string& node_type_name,
                                          const Params& params) {
     for(auto& node: registered_nodes_) {
         if(node.second.name == node_type_name) {

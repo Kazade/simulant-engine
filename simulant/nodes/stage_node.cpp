@@ -5,6 +5,31 @@
 
 namespace smlt {
 
+StageNode* StageNode::create_mixin(const std::string& node_name,
+                                   const Params& params) {
+
+    if(is_mixin()) {
+        S_WARN("Tried to create nested mixin");
+        return nullptr;
+    }
+
+    auto node_info = scene->registered_stage_node_info(node_name);
+    if(!node_info) {
+        S_ERROR("Unknown stage node type with name: {0}", node_name);
+        return nullptr;
+    }
+
+    if(mixins_.count(node_info->type)) {
+        S_WARN("Tried to create duplicate mixin");
+        return nullptr;
+    }
+
+    auto node = scene->create_node(node_name, params);
+    add_mixin(node);
+
+    return node;
+}
+
 std::vector<StageNode *> StageNode::find_descendents_by_types(std::initializer_list<StageNodeType> type_list) const {
     std::set<StageNodeType> types(type_list);
     std::vector<StageNode*> nodes;

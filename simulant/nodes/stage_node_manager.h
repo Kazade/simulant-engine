@@ -71,7 +71,7 @@ public:
 
     /* Non-template API does the work for easier binding with other languages */
     StageNode* create_node(StageNodeType type, const Params& params);
-    StageNode* create_node(const char* node_type_name, const Params& params);
+    StageNode* create_node(const std::string& name, const Params& params);
 
     template<typename T>
     T* create_node(Params args) {
@@ -110,6 +110,17 @@ public:
         registered_nodes_.insert(std::make_pair(type, info));
         S_DEBUG("Registered new stage node type: {0}", type);
         return true;
+    }
+
+    optional<StageNodeTypeInfo>
+        registered_stage_node_info(const std::string& name) {
+        for(auto& p: registered_nodes_) {
+            if(p.second.name == name) {
+                return p.second;
+            }
+        }
+
+        return no_value;
     }
 
     template<typename T>

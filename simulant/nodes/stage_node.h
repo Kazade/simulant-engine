@@ -573,6 +573,8 @@ public:
             owner_, this, std::forward<Args>(args)...);
     }
 
+    StageNode* create_mixin(const std::string& node_name, const Params& params);
+
     StageNode* find_mixin(const std::string& name) const;
 
     template<typename T>
