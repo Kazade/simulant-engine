@@ -24,8 +24,7 @@ StageNode* StageNode::create_mixin(const std::string& node_name,
         return nullptr;
     }
 
-    auto node = scene->create_node(node_name, params);
-    add_mixin(node);
+    auto node = scene->create_node(node_name, params, this);
 
     return node;
 }
