@@ -14,7 +14,7 @@ public:
                              "static_body");
     S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(StaticBody);
 
-    S_DEFINE_STAGE_NODE_PARAM(StaticBody, "mesh", MeshPtr, no_value,
+    S_DEFINE_STAGE_NODE_PARAM(StaticBody, "mesh", MeshPtr(), no_value,
                               "Source mesh for a mesh collider");
 
     S_DEFINE_STAGE_NODE_PARAM(StaticBody, "density", float, 0.1f,

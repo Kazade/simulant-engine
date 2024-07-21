@@ -23,11 +23,14 @@ bool StaticBody::on_create(Params params) {
     }
 
     if(params.contains("mesh")) {
-        auto material =
-            PhysicsMaterial(params.get<float>("density").value(),
-                            params.get<float>("friction").value(),
-                            params.get<float>("bounciness").value());
-        add_mesh_collider(params.get<MeshPtr>("mesh").value(), material);
+        auto mesh = params.get<MeshPtr>("mesh").value_or(MeshPtr());
+        if(mesh) {
+            auto material = PhysicsMaterial(
+                params.get<float>("density").value_or(0.1f),
+                params.get<float>("friction").value_or(0.2f),
+                params.get<float>("bounciness").value_or(0.00001f));
+            add_mesh_collider(mesh, material);
+        }
     }
 
     return PhysicsBody::on_create(params);
