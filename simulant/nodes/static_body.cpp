@@ -22,6 +22,14 @@ bool StaticBody::on_create(Params params) {
         return false;
     }
 
+    if(params.contains("mesh")) {
+        auto material =
+            PhysicsMaterial(params.get<float>("density").value(),
+                            params.get<float>("friction").value(),
+                            params.get<float>("bounciness").value());
+        add_mesh_collider(params.get<MeshPtr>("mesh").value(), material);
+    }
+
     return PhysicsBody::on_create(params);
 }
 } // namespace smlt

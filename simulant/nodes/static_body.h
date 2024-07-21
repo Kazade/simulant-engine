@@ -14,6 +14,18 @@ public:
                              "static_body");
     S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(StaticBody);
 
+    S_DEFINE_STAGE_NODE_PARAM(StaticBody, "mesh", MeshPtr, no_value,
+                              "Source mesh for a mesh collider");
+
+    S_DEFINE_STAGE_NODE_PARAM(StaticBody, "density", float, 0.1f,
+                              "Density of the static body material");
+
+    S_DEFINE_STAGE_NODE_PARAM(StaticBody, "friction", float, 0.2f,
+                              "Friction of the static body material");
+
+    S_DEFINE_STAGE_NODE_PARAM(StaticBody, "bounciness", float, 0.00001f,
+                              "Bounciness of the static body material");
+
     StaticBody(Scene* owner) :
         PhysicsBody(owner, STAGE_NODE_TYPE_PHYSICS_STATIC_BODY,
                     PHYSICS_BODY_TYPE_STATIC) {}
