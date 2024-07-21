@@ -1,9 +1,9 @@
 #pragma once
 
 #include "../utils/params.h"
+#include "helpers.h"
 #include "stage_node.h"
 #include <functional>
-#include <initializer_list>
 
 namespace smlt {
 
@@ -70,28 +70,41 @@ public:
     }
 
     /* Non-template API does the work for easier binding with other languages */
-    StageNode* create_node(StageNodeType type, const Params& params);
-    StageNode* create_node(const std::string& name, const Params& params);
+    StageNode* create_node(StageNodeType type, const Params& params,
+                           StageNode* base);
+    StageNode* create_node(const std::string& name, const Params& params,
+                           StageNode* base);
+
+    template<typename T, typename... Args>
+    T* _create_node(const WithBase& base, Args&&... args) {
+        Params params;
+
+        auto node_params = get_node_params<T>();
+        params_unpack(params, node_params.begin(), node_params.end(),
+                      std::forward<Args>(args)...);
+
+        return (T*)create_node(T::Meta::node_type, params, base.base);
+    }
+
+    template<typename T, typename... Args>
+    T* _create_node(const WithBase& base, Params args) {
+        return (T*)create_node(T::Meta::node_type, args, base.base);
+    }
+
+    template<typename T, typename... Args>
+    T* create_node(Args&&... args) {
+        return _create_node<T>(WithBase(nullptr), std::forward<Args>(args)...);
+    }
 
     template<typename T>
     T* create_node(Params args) {
-        return (T*)create_node(T::Meta::node_type, args);
+        return (T*)_create_node<T>(WithBase(nullptr), args);
     }
 
     template<typename T>
     T* create_node() {
         Params args;
-        return (T*)create_node(T::Meta::node_type, args);
-    }
-
-    template<typename T, typename... Args>
-    T* create_node(Args&&... args) {
-        Params params;
-
-        auto node_params = get_node_params<T>();
-        params_unpack(params, node_params.begin(), node_params.end(), args...);
-
-        return (T*)create_node(T::Meta::node_type, params);
+        return (T*)_create_node<T>(WithBase(nullptr), args);
     }
 
     bool register_stage_node(StageNodeType type, const char* name,

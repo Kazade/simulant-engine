@@ -43,10 +43,11 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
 StageNodeManager::~StageNodeManager() {}
 
 StageNode* StageNodeManager::create_node(const std::string& node_type_name,
-                                         const Params& params) {
+                                         const Params& params,
+                                         StageNode* base) {
     for(auto& node: registered_nodes_) {
         if(node.second.name == node_type_name) {
-            return create_node(node.first, params);
+            return create_node(node.first, params, base);
         }
     }
     S_ERROR("Unable to find registered node: {0}", node_type_name);
@@ -54,7 +55,8 @@ StageNode* StageNodeManager::create_node(const std::string& node_type_name,
 }
 
 StageNode* StageNodeManager::create_node(StageNodeType type,
-                                         const Params& params) {
+                                         const Params& params,
+                                         StageNode* base) {
     auto info = registered_nodes_.find(type);
     if(info == registered_nodes_.end()) {
         S_ERROR("Unable to find registered node: {0}", type);
@@ -72,6 +74,10 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
         info->second.destructor(node);
         free(node);
         return nullptr;
+    }
+
+    if(base) {
+        base->add_mixin(node);
     }
 
     if(!node->_create(params)) {

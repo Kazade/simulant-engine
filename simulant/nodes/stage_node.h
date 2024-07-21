@@ -20,11 +20,12 @@
 #include "iterators/descendent_iterator.h"
 #include "iterators/sibling_iterator.h"
 
+#include "../generic/any/any.h"
+#include "../generic/managed.h"
 #include "../texture.h"
+#include "../utils/params.h"
 #include "builtins.h"
-#include "simulant/generic/any/any.h"
-#include "simulant/generic/managed.h"
-#include "simulant/utils/params.h"
+#include "helpers.h"
 
 namespace smlt {
 
@@ -384,6 +385,11 @@ optional<Dest> do_coerce(const any& in) {
     } catch(bad_any_cast&) {
         return no_value;
     }
+}
+
+static inline void params_unpack(Params& params, std::set<NodeParam>::iterator,
+                                 std::set<NodeParam>::iterator) {
+    _S_UNUSED(params);
 }
 
 template<typename T>
@@ -1018,10 +1024,8 @@ T* mixin_factory(F& factory, StageNode* base, Args&&... args) {
         return nullptr;
     }
 
-    auto node = factory->template create_node<T>(std::forward<Args>(args)...);
-
-    base->add_mixin(node);
-
+    auto node = factory->template _create_node<T>(WithBase(base),
+                                                  std::forward<Args>(args)...);
     return node;
 }
 

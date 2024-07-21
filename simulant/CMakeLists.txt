@@ -172,7 +172,8 @@ IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
 ELSE()
 ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
-    platforms/evercade/platform.cpp)
+    platforms/evercade/platform.cpp
+    nodes/helpers.h)
 ENDIF()
 
 if(FLTO_SUPPORTED)
