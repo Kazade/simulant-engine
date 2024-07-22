@@ -166,6 +166,11 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
     assert(next_ != this);
     assert(prev_ != this);
 
+    scene->_signal_change(
+        node_path(),
+        (parent_) ? StageNodeWatchController::STAGE_NODE_CHANGE_ATTACHED
+                  : StageNodeWatchController::STAGE_NODE_CHANGE_ATTACHED);
+
     on_parent_set(old_parent, parent_, transform_retain);
 }
 

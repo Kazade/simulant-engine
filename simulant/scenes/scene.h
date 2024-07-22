@@ -48,6 +48,7 @@
 #include "../interfaces/nameable.h"
 #include "../interfaces/updateable.h"
 #include "../nodes/stage_node_manager.h"
+#include "../nodes/stage_node_watch_controller.h"
 #include "../types.h"
 #include "../utils/unicode.h"
 #include "simulant/utils/params.h"
@@ -87,7 +88,10 @@ private:
     smlt::Color ambient_light_;
 };
 
-class Scene: public StageNode, public StageNodeManager {
+class Scene:
+    public StageNode,
+    public StageNodeManager,
+    public StageNodeWatchController {
 
     DEFINE_SIGNAL(SceneOnActivatedSignal, signal_activated);
     DEFINE_SIGNAL(SceneOnDeactivatedSignal, signal_deactivated);

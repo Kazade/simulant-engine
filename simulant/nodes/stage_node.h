@@ -26,6 +26,7 @@
 #include "../utils/params.h"
 #include "builtins.h"
 #include "helpers.h"
+#include "stage_node_path.h"
 
 namespace smlt {
 
@@ -335,12 +336,12 @@ private:
 /**
     Defines a new parameter for a stage node:
 
-    - name: this is the name of the parameter, it should be a valid variable
-            name, ideally in snake-case format.
-    - type: this is the type of the parameter, e.g. float, int, TexturePtr etc.
-    - fallback: if provided this will be the default value for the parameter, if
-                the parameter is required, you should pass no_value
-    - desc: A short description < 64 chars
+ - name: this is the name of the parameter, it should be a valid variable
+         name, ideally in snake-case format.
+ - type: this is the type of the parameter, e.g. float, int, TexturePtr etc.
+ - fallback: if provided this will be the default value for the parameter, if
+             the parameter is required, you should pass no_value
+ - desc: A short description < 64 chars
 */
 #define __S_GEN_PARAM(param, line) param##line
 #define _S_GEN_PARAM(param, line) __S_GEN_PARAM(param, line)
@@ -429,7 +430,6 @@ class StageNode:
     DEFINE_SIGNAL(CleanedUpSignal,
                   signal_cleaned_up); // Fired when the node is cleaned up
                                       // later, following destroy
-
 private:
     /* Heirarchy */
 
@@ -481,6 +481,19 @@ public:
 
     bool is_root() const {
         return !has_parent();
+    }
+
+    StageNodePath node_path() const {
+        std::vector<StageNodeID> parts;
+        auto it = this;
+        while(it) {
+            parts.push_back(it->id());
+            it = it->parent();
+        }
+
+        std::reverse(parts.begin(), parts.end());
+
+        return StageNodePath(parts);
     }
 
     StageNode* first_sibling() {
