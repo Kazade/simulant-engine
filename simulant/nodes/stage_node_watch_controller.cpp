@@ -4,26 +4,31 @@ namespace smlt {
 
 int StageNodeWatchController::id_counter_ = 0;
 
-void StageNodeWatchController::_signal_change(StageNodePath node_path,
+void StageNodeWatchController::_signal_change(StageNodePath old_path,
+                                              StageNodePath new_path,
                                               StageNodeChange change) {
+
+    // if it's an attachment, we need the new path to match against watchers
+    // if it's a detachment, we need to notify watchers of the old path
+    auto path = (change == STAGE_NODE_CHANGE_ATTACHED) ? new_path : old_path;
     for(auto& p: watchers_) {
-        if(p.first == node_path) {
+        if(p.first == path) {
             if(change == STAGE_NODE_CHANGE_ATTACHED) {
                 p.second.func(STAGE_NODE_NOTIFICATION_TARGET_ATTACHED);
             } else {
                 p.second.func(STAGE_NODE_NOTIFICATION_TARGET_DETACHED);
             }
-        } else if(p.first.starts_with(node_path)) {
-            if(change == STAGE_NODE_CHANGE_ATTACHED) {
-                p.second.func(STAGE_NODE_NOTIFICATION_DESCENDENT_ATTACHED);
-            } else {
-                p.second.func(STAGE_NODE_NOTIFICATION_DESCENDENT_DETACHED);
-            }
-        } else if(node_path.starts_with(p.first)) {
+        } else if(p.first.starts_with(path)) {
             if(change == STAGE_NODE_CHANGE_ATTACHED) {
                 p.second.func(STAGE_NODE_NOTIFICATION_ANCESTOR_ATTACHED);
             } else {
                 p.second.func(STAGE_NODE_NOTIFICATION_ANCESTOR_DETACHED);
+            }
+        } else if(path.starts_with(p.first)) {
+            if(change == STAGE_NODE_CHANGE_ATTACHED) {
+                p.second.func(STAGE_NODE_NOTIFICATION_DESCENDENT_ATTACHED);
+            } else {
+                p.second.func(STAGE_NODE_NOTIFICATION_DESCENDENT_DETACHED);
             }
         }
     }

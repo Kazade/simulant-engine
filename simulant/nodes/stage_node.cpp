@@ -130,6 +130,7 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
         return;
     }
 
+    auto old_path = node_path();
     auto old_parent = parent_;
 
     remove_from_parent();
@@ -167,9 +168,9 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
     assert(prev_ != this);
 
     scene->_signal_change(
-        node_path(),
+        old_path, node_path(),
         (parent_) ? StageNodeWatchController::STAGE_NODE_CHANGE_ATTACHED
-                  : StageNodeWatchController::STAGE_NODE_CHANGE_ATTACHED);
+                  : StageNodeWatchController::STAGE_NODE_CHANGE_DETACHED);
 
     on_parent_set(old_parent, parent_, transform_retain);
 }

@@ -73,7 +73,8 @@ private:
             func(func) {}
     };
 
-    void _signal_change(StageNodePath node_path, StageNodeChange change);
+    void _signal_change(StageNodePath old_path, StageNodePath new_path,
+                        StageNodeChange change);
     std::multimap<StageNodePath, WatchEntry> watchers_;
 };
 
