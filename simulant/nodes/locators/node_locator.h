@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../nodes/stage_node.h"
+#include "../../scenes/scene.h"
 #include <cstddef>
 #include <functional>
 
@@ -53,14 +54,21 @@ typedef std::function<StageNode*(StageNode*)> NodeFinder;
 template<typename T>
 class FindResult {
 public:
-    FindResult(const std::tuple<NodeFinder, StageNode*>& finder) :
-        finder_(std::get<0>(finder)), node_(std::get<1>(finder)) {
+    FindResult(const std::tuple<NodeFinder, StageNode*,
+                                StageNodeNotificationList>& finder) :
+        finder_(std::get<0>(finder)),
+        node_(std::get<1>(finder)),
+        notifications_(std::get<2>(finder)) {
+
+        reset_watch();
     }
 
     ~FindResult() {
         if(on_destroy_.is_connected()) {
             on_destroy_.disconnect();
         }
+
+        connection_.disconnect();
     }
 
     bool operator==(const StageNode* other) const {
@@ -115,8 +123,37 @@ public:
     }
 
 private:
+    void reset_watch() {
+        if(connection_) {
+            connection_.disconnect();
+        }
+
+        assert(node_);
+
+        connection_ = node_->scene->watch(
+            node_->node_path(),
+            [=](smlt::StageNodeNotification n, StageNode* node) {
+            // We only care about some notifications
+            if(std::find(notifications_.begin(), notifications_.end(), n) ==
+               notifications_.end()) {
+                return;
+            }
+
+            checked_ = false;
+
+            // The node that changed was this one, so reset
+            // the watch with the new node path
+            if(node == node_) {
+                reset_watch();
+            }
+        });
+    }
+
     std::function<StageNode*(StageNode*)> finder_;
     StageNode* node_ = nullptr;
+
+    StageNodeNotificationList notifications_;
+    StageNodeWatchConnection connection_;
 
     /* Mutable, because these are only populated on first-access and that
      * first access might be const */
@@ -129,21 +166,33 @@ private:
     mutable sig::connection on_destroy_;
 };
 
-std::tuple<NodeFinder, StageNode*> FindAncestor(const char* name,
-                                                StageNode* node);
-std::tuple<NodeFinder, StageNode*> FindDescendent(const char* name,
-                                                  StageNode* node);
+std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>
+    FindAncestor(const char* name, StageNode* node);
+std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>
+    FindDescendent(const char* name, StageNode* node);
 
 template<typename T>
-std::tuple<NodeFinder, StageNode*> FindChild(StageNode* node) {
+std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>
+    FindChild(StageNode* node) {
+    StageNodeNotificationList invalidation_messages = {
+        STAGE_NODE_NOTIFICATION_CHILD_ATTACHED,
+        STAGE_NODE_NOTIFICATION_CHILD_DETACHED,
+        STAGE_NODE_NOTIFICATION_TARGET_ATTACHED,
+        STAGE_NODE_NOTIFICATION_TARGET_DETACHED,
+    };
     return {std::bind(&StageNodeFinders::find_child<T>, std::placeholders::_1),
-            node};
+            node, invalidation_messages};
 }
 
 template<typename T>
-std::tuple<NodeFinder, StageNode*> FindMixin(StageNode* node) {
+std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>
+    FindMixin(StageNode* node) {
+    StageNodeNotificationList invalidation_messages = {
+        STAGE_NODE_NOTIFICATION_TARGET_MIXINS_CHANGED,
+    };
+
     return {std::bind(&StageNodeFinders::find_mixin<T>, std::placeholders::_1),
-            node};
+            node, invalidation_messages};
 }
 
 } // namespace smlt

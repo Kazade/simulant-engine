@@ -294,7 +294,7 @@ public:
     void test_watching() {
         std::vector<smlt::StageNodeNotification> notifications;
         scene->watch(scene->node_path(),
-                     [&](const smlt::StageNodeNotification& n) {
+                     [&](const smlt::StageNodeNotification& n, StageNode*) {
             notifications.push_back(n);
         });
 
@@ -305,9 +305,11 @@ public:
                      smlt::STAGE_NODE_NOTIFICATION_DESCENDENT_ATTACHED);
 
         node->set_parent(nullptr);
-        assert_equal(notifications.size(), 2);
-        assert_equal(notifications.back(),
+        assert_equal(notifications.size(), 3);
+        assert_equal(notifications[1],
                      smlt::STAGE_NODE_NOTIFICATION_DESCENDENT_DETACHED);
+        assert_equal(notifications[2],
+                     smlt::STAGE_NODE_NOTIFICATION_CHILD_DETACHED);
     }
 };
 }

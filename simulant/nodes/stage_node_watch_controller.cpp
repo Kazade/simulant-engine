@@ -4,31 +4,34 @@ namespace smlt {
 
 int StageNodeWatchController::id_counter_ = 0;
 
-void StageNodeWatchController::_signal_change(StageNodePath old_path,
+void StageNodeWatchController::_signal_change(StageNode* node,
+                                              StageNodePath old_path,
                                               StageNodePath new_path,
                                               StageNodeChange change) {
 
     // if it's an attachment, we need the new path to match against watchers
     // if it's a detachment, we need to notify watchers of the old path
-    auto path = (change == STAGE_NODE_CHANGE_ATTACHED) ? new_path : old_path;
     for(auto& p: watchers_) {
-        if(p.first == path) {
-            if(change == STAGE_NODE_CHANGE_ATTACHED) {
-                p.second.func(STAGE_NODE_NOTIFICATION_TARGET_ATTACHED);
-            } else {
-                p.second.func(STAGE_NODE_NOTIFICATION_TARGET_DETACHED);
+        if(old_path == new_path) {
+            assert(change == STAGE_NODE_CHANGE_MIXINS);
+            p.second.func(STAGE_NODE_NOTIFICATION_TARGET_MIXINS_CHANGED, node);
+        } else if(p.first == old_path) {
+            p.second.func(STAGE_NODE_NOTIFICATION_TARGET_DETACHED, node);
+        } else if(p.first.starts_with(old_path)) {
+            p.second.func(STAGE_NODE_NOTIFICATION_ANCESTOR_DETACHED, node);
+        } else if(old_path.starts_with(p.first)) {
+            p.second.func(STAGE_NODE_NOTIFICATION_DESCENDENT_DETACHED, node);
+            if(old_path.length() == p.first.length() + 1) {
+                p.second.func(STAGE_NODE_NOTIFICATION_CHILD_DETACHED, node);
             }
-        } else if(p.first.starts_with(path)) {
-            if(change == STAGE_NODE_CHANGE_ATTACHED) {
-                p.second.func(STAGE_NODE_NOTIFICATION_ANCESTOR_ATTACHED);
-            } else {
-                p.second.func(STAGE_NODE_NOTIFICATION_ANCESTOR_DETACHED);
-            }
-        } else if(path.starts_with(p.first)) {
-            if(change == STAGE_NODE_CHANGE_ATTACHED) {
-                p.second.func(STAGE_NODE_NOTIFICATION_DESCENDENT_ATTACHED);
-            } else {
-                p.second.func(STAGE_NODE_NOTIFICATION_DESCENDENT_DETACHED);
+        } else if(p.first == new_path) {
+            p.second.func(STAGE_NODE_NOTIFICATION_TARGET_ATTACHED, node);
+        } else if(p.first.starts_with(new_path)) {
+            p.second.func(STAGE_NODE_NOTIFICATION_ANCESTOR_ATTACHED, node);
+        } else if(new_path.starts_with(p.first)) {
+            p.second.func(STAGE_NODE_NOTIFICATION_DESCENDENT_ATTACHED, node);
+            if(p.first.length() == new_path.length() + 1) {
+                p.second.func(STAGE_NODE_NOTIFICATION_CHILD_ATTACHED, node);
             }
         }
     }

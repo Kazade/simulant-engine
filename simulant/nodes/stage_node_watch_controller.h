@@ -6,20 +6,33 @@
 
 namespace smlt {
 enum StageNodeNotification {
+    STAGE_NODE_NOTIFICATION_CHILD_ATTACHED,
+    STAGE_NODE_NOTIFICATION_CHILD_DETACHED,
     STAGE_NODE_NOTIFICATION_DESCENDENT_ATTACHED,
     STAGE_NODE_NOTIFICATION_DESCENDENT_DETACHED,
     STAGE_NODE_NOTIFICATION_ANCESTOR_DETACHED,
     STAGE_NODE_NOTIFICATION_ANCESTOR_ATTACHED,
     STAGE_NODE_NOTIFICATION_TARGET_DETACHED,
-    STAGE_NODE_NOTIFICATION_TARGET_ATTACHED
+    STAGE_NODE_NOTIFICATION_TARGET_ATTACHED,
+    STAGE_NODE_NOTIFICATION_TARGET_MIXINS_CHANGED,
 };
 
-typedef std::function<void(StageNodeNotification)> WatchFunc;
+enum StageNodeChange {
+    STAGE_NODE_CHANGE_HEIRARCHY,
+    STAGE_NODE_CHANGE_MIXINS
+};
+
+typedef std::vector<StageNodeNotification> StageNodeNotificationList;
+
+class StageNode;
+
+typedef std::function<void(StageNodeNotification, StageNode*)> WatchFunc;
 
 class StageNodeWatchController;
 
 class StageNodeWatchConnection {
 public:
+    StageNodeWatchConnection() = default;
     bool disconnect();
 
     operator bool() const {
@@ -58,11 +71,6 @@ private:
 
     std::shared_ptr<bool> ref_ = std::make_shared<bool>();
 
-    enum StageNodeChange {
-        STAGE_NODE_CHANGE_ATTACHED,
-        STAGE_NODE_CHANGE_DETACHED
-    };
-
     static int id_counter_;
 
     struct WatchEntry {
@@ -73,8 +81,8 @@ private:
             func(func) {}
     };
 
-    void _signal_change(StageNodePath old_path, StageNodePath new_path,
-                        StageNodeChange change);
+    void _signal_change(StageNode* node, StageNodePath old_path,
+                        StageNodePath new_path, StageNodeChange change);
     std::multimap<StageNodePath, WatchEntry> watchers_;
 };
 

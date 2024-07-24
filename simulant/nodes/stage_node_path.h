@@ -15,6 +15,10 @@ public:
         set_path(path_, std::forward<Parts>(parts)...);
     }
 
+    std::size_t length() const {
+        return path_.size();
+    }
+
     bool starts_with(const StageNodePath& other) const {
         for(std::size_t i = 0; i < other.path_.size(); ++i) {
             if(i >= path_.size()) {
@@ -70,6 +74,8 @@ private:
 
     StageNodePath(const std::vector<StageNodeID>& parts) :
         path_(parts) {}
+
+    void set_path(std::vector<StageNodeID>&) {}
 
     template<typename... Parts>
     void set_path(std::vector<StageNodeID>& fpath, StageNodeID part,
