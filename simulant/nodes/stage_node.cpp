@@ -168,7 +168,7 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
     assert(prev_ != this);
 
     scene->_signal_change(this, old_path, node_path(),
-                          STAGE_NODE_CHANGE_HEIRARCHY);
+                          STAGE_NODE_CHANGE_HIERARCHY);
 
     on_parent_set(old_parent, parent_, transform_retain);
 }

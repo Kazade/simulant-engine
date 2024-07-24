@@ -18,7 +18,7 @@ enum StageNodeNotification {
 };
 
 enum StageNodeChange {
-    STAGE_NODE_CHANGE_HEIRARCHY,
+    STAGE_NODE_CHANGE_HIERARCHY,
     STAGE_NODE_CHANGE_MIXINS
 };
 
