@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <iosfwd>
 
 namespace smlt {
 
@@ -93,5 +94,5 @@ public:
 
 };
 
-
+std::ostream& operator<<(std::ostream& stream, const Mat3& path);
 }

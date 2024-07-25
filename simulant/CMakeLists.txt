@@ -167,7 +167,11 @@ ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
 ELSE()
 ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
     platforms/evercade/platform.cpp
-    nodes/helpers.h)
+    nodes/helpers.h
+    nodes/stage_node_path.h
+    nodes/stage_node_watch_controller.h
+    nodes/stage_node_watch_controller.cpp
+    nodes/stage_node_path.cpp)
 ENDIF()
 
 if(FLTO_SUPPORTED)

@@ -78,6 +78,7 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
 
     if(!node->_create(params)) {
         S_ERROR("Failed to create the node");
+        node->clean_up();
         info->second.destructor(node);
         free(node);
         return nullptr;
