@@ -93,7 +93,7 @@ bool Skybox::on_create(Params params) {
     auto flags = params.get<TextureFlags>("flags").value_or(TextureFlags());
 
     auto maybe_files = discover_files_from_directory(maybe_dir.value());
-    if(maybe_files) {
+    if(maybe_files && maybe_files.value().size() >= 6) {
         auto files = maybe_files.value();
         generate(files.at(SKYBOX_FACE_TOP), files.at(SKYBOX_FACE_BOTTOM),
                  files.at(SKYBOX_FACE_LEFT), files.at(SKYBOX_FACE_RIGHT),

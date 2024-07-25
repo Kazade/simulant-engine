@@ -82,7 +82,9 @@ namespace impl {
 template<typename F, typename T, typename... Args>
 T* child_factory(F& factory, StageNode* parent, Args&&... args) {
     auto node = factory->template create_node<T>(std::forward<Args>(args)...);
-    node->set_parent(parent);
+    if(node) {
+        node->set_parent(parent);
+    }
     return node;
 }
 
