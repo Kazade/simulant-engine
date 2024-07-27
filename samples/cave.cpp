@@ -104,6 +104,8 @@ public:
         sound_ = assets->load_sound("assets/samples/cave/ambient.wav");
         compositor->create_layer(stats_, panel_cam_,
                                  smlt::RENDER_PRIORITY_FOREGROUND);
+
+        debug_ = scene->create_child<Debug>();
     }
 
     void on_update(float dt) override {
@@ -160,11 +162,15 @@ public:
         }
 
         fairyPathTime_ += fairyPathSpeedFactor_ * dt;
+
+        debug_->draw_point(fairyPos, Color::red(), 0.0f, false);
     }
 
 private:
     StagePtr stage_;
     CameraPtr camera_;
+
+    Debug* debug_;
 
     SoundPtr sound_;
     PlayingSoundPtr player_;

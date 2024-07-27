@@ -105,15 +105,7 @@ Vec3 Vec3::transformed_by(const Mat4 &trans) const {
 }
 
 Vec3 Vec3::perpendicular() const {
-    //Lovingly adapted from Ogre
-    static const float square_zero = (float)(1e-06 * 1e-06);
-    Vec3 perp = this->cross(Vec3(1, 0, 0));
-
-    if(perp.length_squared() < square_zero) {
-        //This vector is the X-axis, so use another
-        perp = this->cross(Vec3(0, 1, 0));
-    }
-    return perp.normalized();
+    return (z < x) ? Vec3(y, -x, 0) : Vec3(0, -z, y);
 }
 
 smlt::Vec3 operator-(const smlt::Vec3& vec) {
