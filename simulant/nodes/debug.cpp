@@ -18,8 +18,6 @@
 //
 
 #include "debug.h"
-#include "actor.h"
-
 #include "../application.h"
 #include "../compat.h"
 #include "../macros.h"
@@ -27,6 +25,7 @@
 #include "../time_keeper.h"
 #include "../utils/random.h"
 #include "../window.h"
+#include "camera.h"
 
 namespace smlt {
 
@@ -56,7 +55,7 @@ void Debug::reset() {
     }
 }
 
-void Debug::push_line(SubMeshPtr submesh, const Vec3& start, const Vec3& end,
+void Debug::push_line(SubMeshPtr& submesh, const Vec3& start, const Vec3& end,
                       const Color& color) {
 
     auto p = (end - start).perpendicular().normalized();
@@ -83,20 +82,12 @@ void Debug::push_line(SubMeshPtr submesh, const Vec3& start, const Vec3& end,
     mesh_->vertex_data->diffuse(color);
     mesh_->vertex_data->move_next();
 
-    auto i = c_;
-    submesh->index_data->index(i);
-    submesh->index_data->index(i + 1);
-    submesh->index_data->index(i + 2);
-
-    submesh->index_data->index(i + 1);
-    submesh->index_data->index(i + 3);
-    submesh->index_data->index(i + 2);
-
-    submesh->index_data->done();
+    submesh->add_vertex_range(c_, 4);
 }
 
-void Debug::push_point(SubMeshPtr submesh, const Vec3& position,
-                       const Color& color, float size) {
+void Debug::push_point(SubMeshPtr& submesh, const Vec3& position,
+                       const Color& color, float size, const Vec3& up,
+                       const Vec3& right) {
 
     /* Although this is supposed to be a point, what we actually do is build
      * an axis-aligned box to represent the point. This is because many
@@ -107,84 +98,40 @@ void Debug::push_point(SubMeshPtr submesh, const Vec3& position,
 
     for(int i = -1; i <= 1; i += 2) {
         for(int j = -1; j <= 1; j += 2) {
-            for(int k = -1; k <= 1; k += 2) {
-                mesh_->vertex_data->position(position +
-                                             Vec3(i * hs, j * hs, k * hs));
-                mesh_->vertex_data->diffuse(color);
-                mesh_->vertex_data->move_next();
-            }
+            mesh_->vertex_data->position(position + (right * i * hs) +
+                                         (up * j * hs));
+            mesh_->vertex_data->diffuse(color);
+            mesh_->vertex_data->move_next();
         }
     }
 
-    auto i = c;
-    submesh->index_data->index(i);
-    submesh->index_data->index(i + 1);
-    submesh->index_data->index(i + 2);
-
-    submesh->index_data->index(i);
-    submesh->index_data->index(i + 2);
-    submesh->index_data->index(i + 3);
-
-    submesh->index_data->index(i);
-    submesh->index_data->index(i + 4);
-    submesh->index_data->index(i + 5);
-
-    submesh->index_data->index(i);
-    submesh->index_data->index(i + 5);
-    submesh->index_data->index(i + 1);
-
-    submesh->index_data->index(i + 1);
-    submesh->index_data->index(i + 5);
-    submesh->index_data->index(i + 6);
-
-    submesh->index_data->index(i + 1);
-    submesh->index_data->index(i + 6);
-    submesh->index_data->index(i + 2);
-
-    submesh->index_data->index(i + 2);
-    submesh->index_data->index(i + 6);
-    submesh->index_data->index(i + 7);
-
-    submesh->index_data->index(i + 2);
-    submesh->index_data->index(i + 7);
-    submesh->index_data->index(i + 3);
-
-    submesh->index_data->index(i + 3);
-    submesh->index_data->index(i + 7);
-    submesh->index_data->index(i + 4);
-
-    submesh->index_data->index(i + 3);
-    submesh->index_data->index(i + 4);
-    submesh->index_data->index(i + 0);
-
-    submesh->index_data->index(i + 4);
-    submesh->index_data->index(i + 7);
-    submesh->index_data->index(i + 6);
-
-    submesh->index_data->index(i + 4);
-    submesh->index_data->index(i + 6);
-    submesh->index_data->index(i + 5);
+    submesh->add_vertex_range(c, 4);
 }
 
-void Debug::build_mesh() {
+void Debug::build_mesh(const Camera* camera) {
     mesh_->vertex_data->clear();
-    without_depth_->index_data->clear();
-    with_depth_->index_data->clear();
+    without_depth_->remove_all_vertex_ranges();
+    with_depth_->remove_all_vertex_ranges();
 
+    auto up = camera->transform->up();
     for(auto& element: elements_) {
+        auto forward =
+            (camera->transform->position() - element.points[0]).normalized();
+
+        auto right = forward.cross(up).normalized();
+
         if(element.type == DET_LINE) {
             push_line((element.depth_test) ? with_depth_ : without_depth_,
                       element.points[0], element.points[1], element.color);
 
         } else {
             push_point((element.depth_test) ? with_depth_ : without_depth_,
-                       element.points[0], element.color, element.size);
+                       element.points[0], element.color, element.size, up,
+                       right);
         }
     }
 
     mesh_->vertex_data->done();
-    without_depth_->index_data->done();
-    with_depth_->index_data->done();
 }
 
 void Debug::set_transform(const Mat4& mat) {
@@ -214,11 +161,10 @@ bool Debug::on_init() {
     material_no_depth_->set_depth_test_enabled(false);
     material_no_depth_->set_cull_mode(CULL_MODE_NONE);
 
-    with_depth_ = mesh_->create_submesh(
-        "with_depth", material_, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
-    without_depth_ =
-        mesh_->create_submesh("without_depth", material_no_depth_,
-                              INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    with_depth_ = mesh_->create_submesh("with_depth", material_,
+                                        MESH_ARRANGEMENT_TRIANGLE_STRIP);
+    without_depth_ = mesh_->create_submesh("without_depth", material_no_depth_,
+                                           MESH_ARRANGEMENT_TRIANGLE_STRIP);
 
     return true;
 }
@@ -227,20 +173,23 @@ void Debug::do_generate_renderables(batcher::RenderQueue* render_queue,
                                     const Camera* camera, const Viewport*,
                                     const DetailLevel detail_level) {
 
+    _S_UNUSED(detail_level);
+
     if(elements_.empty()) {
         return;
     }
 
-    build_mesh();
+    build_mesh(camera);
 
     if(mesh_->vertex_data->count() == 0) {
         return;
     }
 
-    _S_UNUSED(camera);
-    _S_UNUSED(detail_level);
-
     for(auto& submesh: mesh_->each_submesh()) {
+        if(submesh->vertex_range_count() == 0) {
+            continue;
+        }
+
         Renderable new_renderable;
 
         // Debug element positions are always absolute
@@ -249,8 +198,8 @@ void Debug::do_generate_renderables(batcher::RenderQueue* render_queue,
         new_renderable.is_visible = is_visible();
         new_renderable.arrangement = submesh->arrangement();
         new_renderable.vertex_data = mesh_->vertex_data.get();
-        new_renderable.index_data = submesh->index_data.get();
-        new_renderable.index_element_count = submesh->index_data->count();
+        new_renderable.index_data = nullptr;
+        new_renderable.index_element_count = 0;
         new_renderable.vertex_ranges = submesh->vertex_ranges();
         new_renderable.vertex_range_count = submesh->vertex_range_count();
         new_renderable.material = submesh->material().get();

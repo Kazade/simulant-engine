@@ -60,13 +60,14 @@ private:
     Mat4 transform_;
 
     void reset();
-    void build_mesh();
+    void build_mesh(const Camera* camera);
 
-    void push_line(SubMeshPtr submesh, const Vec3& start, const Vec3& end,
+    void push_line(SubMeshPtr& submesh, const Vec3& start, const Vec3& end,
                    const Color& color);
 
-    void push_point(SubMeshPtr submesh, const Vec3& position,
-                    const Color& color, float size);
+    void push_point(SubMeshPtr& submesh, const Vec3& position,
+                    const Color& color, float size, const Vec3& up,
+                    const Vec3& right);
 
     enum DebugElementType {
         DET_LINE,

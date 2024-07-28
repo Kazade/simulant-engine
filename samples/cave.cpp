@@ -163,11 +163,11 @@ public:
 
         fairyPathTime_ += fairyPathSpeedFactor_ * dt;
 
+        debug_->set_point_size(1.0f);
         debug_->draw_point(fairyPos, Color::red(), 0.0f, false);
     }
 
 private:
-    StagePtr stage_;
     CameraPtr camera_;
 
     Debug* debug_;
