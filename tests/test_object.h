@@ -300,12 +300,12 @@ public:
 
         auto node = scene->create_child<smlt::Stage>();
 
-        assert_equal(notifications.size(), 1);
+        assert_equal(notifications.size(), 1u);
         assert_equal(notifications.back(),
                      smlt::STAGE_NODE_NOTIFICATION_DESCENDENT_ATTACHED);
 
         node->set_parent(nullptr);
-        assert_equal(notifications.size(), 3);
+        assert_equal(notifications.size(), 3u);
         assert_equal(notifications[1],
                      smlt::STAGE_NODE_NOTIFICATION_DESCENDENT_DETACHED);
         assert_equal(notifications[2],
