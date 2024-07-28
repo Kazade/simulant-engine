@@ -33,15 +33,15 @@ public:
     virtual ~Debug();
 
     void draw_ray(const Vec3& start, const Vec3& dir,
-                  const Color& color = Color::white(), float duration = 0.0f,
-                  bool depth_test = true);
+                  const Color& color = Color::white(),
+                  Seconds duration = Seconds(), bool depth_test = false);
 
     void draw_line(const Vec3& start, const Vec3& end,
-                   const Color& color = Color::white(), float duration = 0.0f,
-                   bool depth_test = true);
+                   const Color& color = Color::white(),
+                   Seconds duration = Seconds(), bool depth_test = false);
 
     void draw_point(const Vec3& position, const Color& color = Color::white(),
-                    float duration = 0.0, bool depth_test = true);
+                    Seconds duration = Seconds(), bool depth_test = false);
 
     bool on_init() override;
 

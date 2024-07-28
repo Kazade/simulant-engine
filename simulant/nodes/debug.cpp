@@ -150,7 +150,6 @@ bool Debug::on_init() {
 
     material_->set_cull_mode(CULL_MODE_NONE);
     material_->set_blend_func(BLEND_NONE);
-
     // Never write to the depth buffer with debug stuff
     material_->set_depth_write_enabled(false);
 
@@ -225,11 +224,11 @@ float Debug::point_size() const {
 }
 
 void Debug::draw_line(const Vec3& start, const Vec3& end, const Color& color,
-                      float duration, bool depth_test) {
+                      Seconds duration, bool depth_test) {
 
     DebugElement element;
     element.color = color;
-    element.duration = duration;
+    element.duration = duration.to_float();
     element.depth_test = depth_test;
     element.points[0] = start;
     element.points[1] = end;
@@ -239,15 +238,15 @@ void Debug::draw_line(const Vec3& start, const Vec3& end, const Color& color,
 }
 
 void Debug::draw_ray(const Vec3& start, const Vec3& dir, const Color& color,
-                     float duration, bool depth_test) {
+                     Seconds duration, bool depth_test) {
     draw_line(start, start + dir, color, duration, depth_test);
 }
 
-void Debug::draw_point(const Vec3& position, const Color& color, float duration,
-                       bool depth_test) {
+void Debug::draw_point(const Vec3& position, const Color& color,
+                       Seconds duration, bool depth_test) {
     DebugElement element;
     element.color = color;
-    element.duration = duration;
+    element.duration = duration.to_float();
     element.depth_test = depth_test;
     element.points[0] = position;
     element.type = DebugElementType::DET_POINT;
