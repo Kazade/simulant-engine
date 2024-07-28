@@ -34,6 +34,8 @@ Debug::Debug(Scene* owner) :
 
     frame_connection_ = get_app()->signal_frame_started().connect(
         std::bind(&Debug::reset, this));
+
+    set_render_priority(RENDER_PRIORITY_ABSOLUTE_FOREGROUND);
 }
 
 Debug::~Debug() {
@@ -56,10 +58,13 @@ void Debug::reset() {
 }
 
 void Debug::push_line(SubMeshPtr& submesh, const Vec3& start, const Vec3& end,
-                      const Color& color) {
+                      const Color& color, const Vec3& camera_pos) {
 
-    auto p = (end - start).perpendicular().normalized();
+    auto dir = (end - start).normalized();
+    auto z = (camera_pos - start).normalized();
+    auto x = dir.cross(z).normalized();
 
+    auto p = x * current_line_width_ * 0.5f;
     Vec3 a = start + p;
     Vec3 b = start - p;
     Vec3 c = end + p;
@@ -98,8 +103,8 @@ void Debug::push_point(SubMeshPtr& submesh, const Vec3& position,
 
     for(int i = -1; i <= 1; i += 2) {
         for(int j = -1; j <= 1; j += 2) {
-            mesh_->vertex_data->position(position + (right * i * hs) +
-                                         (up * j * hs));
+            auto pos = position + (right * i * hs) + (up * j * hs);
+            mesh_->vertex_data->position(pos);
             mesh_->vertex_data->diffuse(color);
             mesh_->vertex_data->move_next();
         }
@@ -122,7 +127,8 @@ void Debug::build_mesh(const Camera* camera) {
 
         if(element.type == DET_LINE) {
             push_line((element.depth_test) ? with_depth_ : without_depth_,
-                      element.points[0], element.points[1], element.color);
+                      element.points[0], element.points[1], element.color,
+                      camera->transform->position());
 
         } else {
             push_point((element.depth_test) ? with_depth_ : without_depth_,
@@ -134,14 +140,6 @@ void Debug::build_mesh(const Camera* camera) {
     mesh_->vertex_data->done();
 }
 
-void Debug::set_transform(const Mat4& mat) {
-    transform_ = mat;
-}
-
-Mat4 Debug::transform() const {
-    return transform_;
-}
-
 bool Debug::on_init() {
     mesh_ =
         scene->assets->create_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
@@ -151,6 +149,7 @@ bool Debug::on_init() {
     material_ = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
 
     material_->set_cull_mode(CULL_MODE_NONE);
+    material_->set_blend_func(BLEND_NONE);
 
     // Never write to the depth buffer with debug stuff
     material_->set_depth_write_enabled(false);
@@ -209,6 +208,14 @@ void Debug::do_generate_renderables(batcher::RenderQueue* render_queue,
     }
 }
 
+void Debug::set_line_width(float size) {
+    current_line_width_ = size;
+}
+
+float Debug::line_width() const {
+    return current_line_width_;
+}
+
 void Debug::set_point_size(float ps) {
     current_point_size_ = ps;
 }
@@ -224,8 +231,8 @@ void Debug::draw_line(const Vec3& start, const Vec3& end, const Color& color,
     element.color = color;
     element.duration = duration;
     element.depth_test = depth_test;
-    element.points[0] = start.transformed_by(transform_);
-    element.points[1] = end.transformed_by(transform_);
+    element.points[0] = start;
+    element.points[1] = end;
     element.size = 0.25f;
     element.type = DebugElementType::DET_LINE;
     elements_.push_back(element);
@@ -242,7 +249,7 @@ void Debug::draw_point(const Vec3& position, const Color& color, float duration,
     element.color = color;
     element.duration = duration;
     element.depth_test = depth_test;
-    element.points[0] = position.transformed_by(transform_);
+    element.points[0] = position;
     element.type = DebugElementType::DET_POINT;
     element.size = current_point_size_;
     elements_.push_back(element);

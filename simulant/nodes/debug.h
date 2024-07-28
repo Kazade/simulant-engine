@@ -46,24 +46,21 @@ public:
     bool on_init() override;
 
     void set_point_size(float ps);
-
     float point_size() const;
 
-    void set_transform(const Mat4& mat);
-    Mat4 transform() const;
+    void set_line_width(float size);
+    float line_width() const;
 
 private:
     void do_generate_renderables(batcher::RenderQueue* render_queue,
                                  const Camera* camera, const Viewport*,
                                  const DetailLevel detail_level) override;
 
-    Mat4 transform_;
-
     void reset();
     void build_mesh(const Camera* camera);
 
     void push_line(SubMeshPtr& submesh, const Vec3& start, const Vec3& end,
-                   const Color& color);
+                   const Color& color, const Vec3& camera_pos);
 
     void push_point(SubMeshPtr& submesh, const Vec3& position,
                     const Color& color, float size, const Vec3& up,
@@ -85,16 +82,18 @@ private:
         float size;           // Diameter for spheres + points
     };
 
-    std::list<DebugElement> elements_;
+    std::vector<DebugElement> elements_;
 
     SubMesh* without_depth_ = nullptr;
     SubMesh* with_depth_ = nullptr;
 
-    MeshPtr mesh_;
+    MeshPtr mesh_ = nullptr;
     ActorPtr actor_ = nullptr;
     MaterialPtr material_;
     MaterialPtr material_no_depth_;
-    float current_point_size_ = 0.001f;
+
+    float current_point_size_ = 0.01f;
+    float current_line_width_ = 0.01f;
 
     sig::Connection frame_connection_;
 

@@ -162,15 +162,12 @@ public:
         }
 
         fairyPathTime_ += fairyPathSpeedFactor_ * dt;
-
-        debug_->set_point_size(1.0f);
-        debug_->draw_point(fairyPos, Color::red(), 0.0f, false);
     }
 
 private:
     CameraPtr camera_;
 
-    Debug* debug_;
+    Debug* debug_ = nullptr;
 
     SoundPtr sound_;
     PlayingSoundPtr player_;
