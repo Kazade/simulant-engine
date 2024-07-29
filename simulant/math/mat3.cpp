@@ -121,4 +121,15 @@ Vec3 Mat3::transform_vector(const Vec3 &v) const {
     return ret;
 }
 
+std::ostream& operator<<(std::ostream& stream, const Mat3& mat) {
+    stream << mat[0] << " " << mat[4] << " " << mat[8] << " " << mat[12]
+           << "\n";
+    stream << mat[1] << " " << mat[5] << " " << mat[9] << " " << mat[13]
+           << "\n";
+    stream << mat[2] << " " << mat[6] << " " << mat[10] << " " << mat[14]
+           << "\n";
+    stream << mat[3] << " " << mat[7] << " " << mat[11] << " " << mat[15]
+           << "\n";
+    return stream;
+}
 }

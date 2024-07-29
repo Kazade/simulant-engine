@@ -278,5 +278,39 @@ private:
     smlt::CameraPtr camera_;
 };
 
+class StageNodePathTests: public smlt::test::SimulantTestCase {
+public:
+    void test_equality() {
+        auto node1 = scene->create_child<smlt::Stage>();
+        auto node2 = scene->create_child<smlt::Stage>();
+        node2->set_parent(node1);
+
+        assert_equal(node1->node_path(), node1->node_path());
+        assert_not_equal(node1->node_path(), node2->node_path());
+        assert_true(node1->node_path() < node2->node_path());
+        assert_true(node2->node_path().starts_with(node1->node_path()));
+    }
+
+    void test_watching() {
+        std::vector<smlt::StageNodeNotification> notifications;
+        scene->watch(scene->node_path(),
+                     [&](const smlt::StageNodeNotification& n, StageNode*) {
+            notifications.push_back(n);
+        });
+
+        auto node = scene->create_child<smlt::Stage>();
+
+        assert_equal(notifications.size(), 1u);
+        assert_equal(notifications.back(),
+                     smlt::STAGE_NODE_NOTIFICATION_DESCENDENT_ATTACHED);
+
+        node->set_parent(nullptr);
+        assert_equal(notifications.size(), 3u);
+        assert_equal(notifications[1],
+                     smlt::STAGE_NODE_NOTIFICATION_DESCENDENT_DETACHED);
+        assert_equal(notifications[2],
+                     smlt::STAGE_NODE_NOTIFICATION_CHILD_DETACHED);
+    }
+};
 }
 #endif // TEST_OBJECT_H

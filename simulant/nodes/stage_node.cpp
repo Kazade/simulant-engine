@@ -130,6 +130,7 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
         return;
     }
 
+    auto old_path = node_path();
     auto old_parent = parent_;
 
     remove_from_parent();
@@ -165,6 +166,9 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
     assert(last_child_ != this);
     assert(next_ != this);
     assert(prev_ != this);
+
+    scene->_signal_change(this, old_path, node_path(),
+                          STAGE_NODE_CHANGE_HIERARCHY);
 
     on_parent_set(old_parent, parent_, transform_retain);
 }
@@ -278,6 +282,8 @@ void StageNode::add_mixin(StageNode* mixin) {
     });
 
     mixins_.insert(std::make_pair(mixin->node_type(), info));
+    auto p = node_path();
+    scene->_signal_change(this, p, p, STAGE_NODE_CHANGE_MIXINS);
 }
 
 bool StageNode::is_visible() const {

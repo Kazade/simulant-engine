@@ -22,6 +22,10 @@ bool StaticBody::on_create(Params params) {
         return false;
     }
 
+    if(!PhysicsBody::on_create(params)) {
+        return false;
+    }
+
     if(params.contains("mesh")) {
         auto mesh = params.get<MeshPtr>("mesh").value_or(MeshPtr());
         if(mesh) {
