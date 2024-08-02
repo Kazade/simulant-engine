@@ -6,6 +6,8 @@
 #elif defined(__PSP__)
 #include <pspsdk.h>
 #include <pspthreadman.h>
+#elif defined(__DREAMCAST__)
+#include <kos.h>
 #else
 #include <time.h>
 #include <unistd.h>
@@ -129,6 +131,8 @@ void sleep(size_t ms) {
     tim.tv_sec = 0;
     tim.tv_nsec = ms * 1000000;
     sceKernelDelayThreadCB(1000000 * tim.tv_sec + (tim.tv_nsec / 1000));
+#elif defined(__DREAMCAST__)
+    thd_sleep(ms);
 #else
     usleep(ms * 1000);
 #endif
