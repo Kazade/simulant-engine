@@ -199,10 +199,11 @@ optional<Path> VirtualFileSystem::locate_file(
 
     auto platform = get_platform();
     std::multimap<std::string, std::string> replacements = {
-        {RENDERER_PLACEHOLDER, window->renderer->name()},
-        {PLATFORM_PLACEHOLDER, platform->name()        },
-        {RENDERER_PLACEHOLDER, ""                      },
-        {PLATFORM_PLACEHOLDER, ""                      },
+        {RENDERER_PLACEHOLDER,
+         (window && window->renderer) ? window->renderer->name() : ""},
+        {PLATFORM_PLACEHOLDER, platform->name()                      },
+        {RENDERER_PLACEHOLDER, ""                                    },
+        {PLATFORM_PLACEHOLDER, ""                                    },
     };
 
     for(auto& p: replacements) {
