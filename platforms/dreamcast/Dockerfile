@@ -6,20 +6,21 @@ MAINTAINER kazade <kazade@gmail.com>
 
 RUN dnf -y update && dnf clean all && dnf -y install automake wget make git hostname diffutils glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel meson openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim && dnf clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
-RUN git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos && BUMP=1
-RUN cd /opt/toolchains/dc/kos && git fetch && git checkout 55f142357f1a6ceaa9f0b0a997bd7c4097b4ae83 && cd -
+RUN git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos
+RUN cd /opt/toolchains/dc/kos && git fetch && git checkout c8aef24a4e9674e77cb8b6854c652cf68e3eac40 && cd -
 RUN git clone --recursive https://github.com/KallistiOS/kos-ports.git /opt/toolchains/dc/kos-ports
 
-RUN cd /opt/toolchains/dc/kos/utils/dc-chain && cp config.mk.testing.sample config.mk 
+RUN cd /opt/toolchains/dc/kos/utils/dc-chain && cp Makefile.default.cfg Makefile.cfg 
 
 # Speed up compilation
-RUN sed -i 's/makejobs=-j2/makejobs=-j8/' /opt/toolchains/dc/kos/utils/dc-chain/config.mk
+RUN sed -i 's/makejobs=2/makejobs=8/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile.cfg
 
 # Disable objc, and obj-c++
-RUN sed -i 's/c,c++,objc,obj-c++/c,c++/' /opt/toolchains/dc/kos/utils/dc-chain/config.mk
+RUN sed -i 's/enable_objc=1/enable_objc=0/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile.cfg
+RUN sed -i 's/enable_objcpp=1/enable_objcpp=0/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile.cfg
 
 # Build the toolchain
-RUN cd /opt/toolchains/dc/kos/utils/dc-chain && sh ./download.sh && sh ./unpack.sh && make
+RUN cd /opt/toolchains/dc/kos/utils/dc-chain && make
 
 # Copy the sample config
 RUN cp /opt/toolchains/dc/kos/doc/environ.sh.sample /opt/toolchains/dc/kos/environ.sh

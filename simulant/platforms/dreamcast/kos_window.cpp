@@ -15,14 +15,11 @@
 
 #include "../../renderers/renderer_config.h"
 
-namespace smlt {
-
-KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS | INIT_NET);
-
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 #define SCREEN_DEPTH 32
 
+namespace smlt {
 
 /* pimpl to avoid exposing implementation */
 struct KOSWindowPrivate {
@@ -531,5 +528,4 @@ void KOSWindow::game_controller_stop_rumble(GameController *controller) {
     }
 }
 
-}
-
+} // namespace smlt
