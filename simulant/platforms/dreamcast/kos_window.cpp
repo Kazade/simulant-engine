@@ -19,8 +19,6 @@
 #define SCREEN_HEIGHT 480
 #define SCREEN_DEPTH 32
 
-KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS | INIT_NET);
-
 namespace smlt {
 
 /* pimpl to avoid exposing implementation */
