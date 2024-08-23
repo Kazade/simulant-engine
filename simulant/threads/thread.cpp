@@ -7,8 +7,11 @@
 #elif defined(__PSP__)
 #include <pspsdk.h>
 #include <pspthreadman.h>
+#elif defined(__DREAMCAST__)
+#include <kos.h>
 #else
 #include <time.h>
+#include <unistd.h>
 #endif
 
 #include "../logging.h"
@@ -131,18 +134,15 @@ void* Thread::thread_runner(void* data) {
 void sleep(size_t ms) {
 #ifdef __WIN32__
     Sleep(ms);
-#else
-    struct timespec tim, tim2;
+#elif defined(__PSP__)
+    struct timespec tim;
     tim.tv_sec = 0;
     tim.tv_nsec = ms * 1000000;
-
-#ifdef __PSP__
-    _S_UNUSED(tim2);
     sceKernelDelayThreadCB(1000000 * tim.tv_sec + (tim.tv_nsec / 1000));
+#elif defined(__DREAMCAST__)
+    thd_sleep(ms);
 #else
-    nanosleep(&tim , &tim2);
-#endif
-
+    usleep(ms * 1000);
 #endif
 }
 

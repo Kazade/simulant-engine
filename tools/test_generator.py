@@ -29,6 +29,11 @@ MAIN_TEMPLATE = """
 #include <memory>
 #include <map>
 
+#ifdef __DREAMCAST__
+#include <kos.h>
+KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS | INIT_NET);
+#endif
+
 #include "simulant/test.h"
 
 %(includes)s
