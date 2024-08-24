@@ -45,6 +45,22 @@ public:
         assert_close(actor->transform->translation().z, 0.0f, 0.0001f);
     }
 
+    void test_child_rotation() {
+        auto parent = scene->create_child<smlt::Stage>();
+        auto child = scene->create_child<smlt::Stage>();
+        child->set_parent(parent);
+        child->transform->translate(smlt::Vec3::up());
+
+        assert_equal(parent->transform->up(), Vec3::up());
+
+        parent->transform->rotate(smlt::Quaternion(
+            smlt::Degrees(90), smlt::Degrees(), smlt::Degrees()));
+
+        assert_equal(parent->transform->up(), Vec3::forward());
+        assert_equal(parent->transform->up(), child->transform->up());
+        assert_equal(child->transform->position(), smlt::Vec3::forward());
+    }
+
     void test_scaling_applies() {
         auto actor = scene->create_child<smlt::Stage>();
         actor->transform->set_scale_factor(smlt::Vec3(2.0, 1.0, 0.5));
