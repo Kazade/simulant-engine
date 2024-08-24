@@ -171,7 +171,9 @@ ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
     nodes/stage_node_path.h
     nodes/stage_node_watch_controller.h
     nodes/stage_node_watch_controller.cpp
-    nodes/stage_node_path.cpp)
+    nodes/stage_node_path.cpp
+    loaders/gltf_loader.h
+    loaders/gltf_loader.cpp)
 ENDIF()
 
 if(FLTO_SUPPORTED)
