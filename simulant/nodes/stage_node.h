@@ -427,7 +427,7 @@ class StageNode:
     public virtual BoundableEntity,
     public virtual TwoPhaseConstructed,
     public TransformListener,
-    public Asset {
+    public Loadable {
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
     DEFINE_SIGNAL(CleanedUpSignal,

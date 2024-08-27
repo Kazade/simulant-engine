@@ -233,7 +233,7 @@ void StageNode::finalize_destroy() {
     }
 }
 
-StageNode::StageNode(smlt::Scene* owner, smlt::StageNodeType node_type):
+StageNode::StageNode(smlt::Scene* owner, smlt::StageNodeType node_type) :
     Identifiable(new_stage_node_id(node_type)),
     owner_(owner),
     node_type_(node_type) {
