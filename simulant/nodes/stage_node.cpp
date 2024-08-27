@@ -5,7 +5,7 @@
 
 namespace smlt {
 
-StageNode* StageNode::load_tree(const Path& path) {
+StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
     auto app = get_app();
     if(!app) {
         return nullptr;
@@ -16,9 +16,19 @@ StageNode* StageNode::load_tree(const Path& path) {
         return nullptr;
     }
 
-    auto new_child = create_child<Stage>();
-    loader->into(new_child);
-    return new_child;
+    LoaderOptions lopts;
+    if(!opts.root_name.empty()) {
+        lopts["root_name"] = opts;
+    }
+
+    if(opts.replace) {
+        loader->into(this, lopts);
+        return this;
+    } else {
+        auto new_child = create_child<Stage>();
+        loader->into(new_child, lopts);
+        return new_child;
+    }
 }
 
 StageNode* StageNode::create_mixin(const std::string& node_name,

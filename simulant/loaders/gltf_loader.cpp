@@ -972,7 +972,27 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         meshes.push_back(mesh);
     }
 
-    auto nodes_it = js["nodes"];
+    if(options.count("root_name")) {
+        auto nodes_it = js["nodes"];
+        auto root_name = smlt::any_cast<std::string>(options.at("root_name"));
+        int i = -1;
+        for(auto& node: nodes_it) {
+            ++i;
+
+            auto it = node.to_iterator();
+            if(it->has_key("name")) {
+                auto name_maybe = it["name"]->to_str();
+                if(name_maybe && name_maybe.value() == root_name) {
+                    spawn_node_recursively(scene, i, js, node_factory, meshes);
+                    return;
+                }
+            }
+        }
+
+        S_ERROR("Unable to locate specified root_name: {0}", root_name);
+        // FIXME: convey error!
+        return;
+    }
 
     auto scene_it = maybe_scene_it.value();
     for(auto& node: scene_it["nodes"]) {
