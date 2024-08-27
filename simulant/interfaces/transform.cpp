@@ -145,7 +145,7 @@ void Transform::update_transformation_from_parent() {
 
         orientation_ = parent_rot * rotation_;
         scale_ = parent_scale * scale_factor_;
-        position_ = parent_pos + (parent_rot * translation_ * parent_scale);
+        position_ = parent_pos + (parent_rot * (translation_ * parent_scale));
     }
 
     absolute_transformation_is_dirty_ = true;
