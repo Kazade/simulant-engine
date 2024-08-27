@@ -474,10 +474,12 @@ TextureFilter calculate_filter(int magFilter, int minFilter) {
     }
 }
 
-smlt::TexturePtr load_texture(Scene* scene, JSONIterator& js,
+smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
                               JSONIterator& texture, int texture_id) {
 
     _S_UNUSED(texture_id);
+
+    auto& scene = node->scene;
 
     int sampler_id = texture["sampler"]->to_int().value_or(-1);
     int source_id = texture["source"]->to_int().value_or(-1);
@@ -553,7 +555,8 @@ static void approximate_pbr_material(MaterialPtr& mat, float metallic,
     mat->set_emission(emissive);
 }
 
-static smlt::MaterialPtr create_default_material(Scene* scene) {
+static smlt::MaterialPtr create_default_material(StageNode* node) {
+    auto& scene = node->scene;
     auto base_color = smlt::Color::white();
     auto mat = scene->assets->clone_default_material();
     mat->set_name("Default");
@@ -564,12 +567,14 @@ static smlt::MaterialPtr create_default_material(Scene* scene) {
     return mat;
 }
 
-smlt::MaterialPtr load_material(Scene* scene, JSONIterator& js,
+smlt::MaterialPtr load_material(StageNode* node, JSONIterator& js,
                                 JSONIterator& material, int material_id,
                                 const std::vector<smlt::TexturePtr>& textures) {
 
     _S_UNUSED(material_id);
     _S_UNUSED(js);
+
+    auto& scene = node->scene;
 
     auto base_texture_id =
         material["pbrMetallicRoughness"]["baseColorTexture"]["index"]
@@ -632,11 +637,13 @@ smlt::MaterialPtr load_material(Scene* scene, JSONIterator& js,
     return ret;
 }
 
-smlt::MeshPtr load_mesh(Scene* scene, JSONIterator& js, JSONIterator& mesh,
+smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
                         int mesh_id,
                         const std::vector<smlt::MaterialPtr>& materials,
                         std::vector<std::vector<uint8_t>>& buffers) {
     _S_UNUSED(mesh_id);
+
+    auto& scene = node->scene;
 
     /* This is the most complicated part of the loader. A GLTF file has a
        heirarchy of: mesh -> accessor -> bufferView -> buffer */
@@ -906,7 +913,7 @@ StageNode* spawn_node_recursively(StageNode* parent, int node_id,
 }
 
 void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
-    auto scene = loadable_to<Scene>(resource);
+    auto scene = loadable_to<StageNode>(resource);
     auto js = json_read(this->data_);
 
     if(!check_gltf_version(js)) {

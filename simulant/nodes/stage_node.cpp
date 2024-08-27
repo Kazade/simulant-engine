@@ -5,6 +5,22 @@
 
 namespace smlt {
 
+StageNode* StageNode::load_tree(const Path& path) {
+    auto app = get_app();
+    if(!app) {
+        return nullptr;
+    }
+
+    auto loader = app->loader_for("gltf", path);
+    if(!loader) {
+        return nullptr;
+    }
+
+    auto new_child = create_child<Stage>();
+    loader->into(new_child);
+    return new_child;
+}
+
 StageNode* StageNode::create_mixin(const std::string& node_name,
                                    const Params& params) {
 

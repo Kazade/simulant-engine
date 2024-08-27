@@ -426,7 +426,8 @@ class StageNode:
     public Updateable,
     public virtual BoundableEntity,
     public virtual TwoPhaseConstructed,
-    public TransformListener {
+    public TransformListener,
+    public Asset {
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
     DEFINE_SIGNAL(CleanedUpSignal,
@@ -663,6 +664,11 @@ public:
     bool is_part_of_active_pipeline() const {
         return active_pipeline_count_ > 0;
     }
+
+    /** Loads a subtree from a .gltf file. The resulting child
+     *  will be a Stage*. The result will be nullptr if there is a
+     *  problem loading the tree */
+    StageNode* load_tree(const Path& path);
 
 protected:
     virtual bool on_create(Params params) = 0;
