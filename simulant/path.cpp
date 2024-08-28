@@ -10,6 +10,21 @@ std::ostream& operator<<(std::ostream& os, const Path& p) {
     return os;
 }
 
+Path Path::system_temp_dir() {
+#ifdef WIN32
+    TCHAR temp_path_buffer[MAX_PATH];
+    GetTempPath(MAX_PATH, temp_path_buffer);
+    return std::string(temp_path_buffer);
+#elif __DREAMCAST__
+    /* KallistiOS mounts a ram disk at /ram. Given that
+     * we have no writeable memory on the DC (aside the VMU)
+     * this is the best we got */
+    return "/ram";
+#else
+    return "/tmp";
+#endif
+}
+
 Path Path::parent() const {
     return kfs::path::dir_name(path_);
 }
