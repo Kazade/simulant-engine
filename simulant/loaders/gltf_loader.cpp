@@ -1,6 +1,7 @@
 #include "gltf_loader.h"
 
 #include "../generic/raii.h"
+#include "../utils/base64.h"
 #include "../vfs.h"
 
 namespace smlt {
@@ -300,11 +301,25 @@ static auto
     }
 
     if((int)buffers.size() <= buffer_id) {
-        auto istream = smlt::get_app()->vfs->read_file(uri);
-        auto data =
-            std::vector<uint8_t>(std::istreambuf_iterator<char>(*istream),
-                                 std::istreambuf_iterator<char>());
-        buffers.push_back(data);
+
+        const char* b64_marker = "data:application/octet-stream;base64,";
+        if(uri.find(b64_marker) == 0) {
+            auto data = uri.substr(strlen(b64_marker));
+            auto decoded = smlt::base64_decode(data);
+            if(!decoded) {
+                S_ERROR("Failed to decode base64 data");
+                return BufferInfo();
+            }
+
+            buffers.push_back(
+                std::vector<uint8_t>(decoded->begin(), decoded->end()));
+        } else {
+            auto istream = smlt::get_app()->vfs->read_file(uri);
+            auto data =
+                std::vector<uint8_t>(std::istreambuf_iterator<char>(*istream),
+                                     std::istreambuf_iterator<char>());
+            buffers.push_back(data);
+        }
     }
 
     uint8_t* buffer_data = &buffers[buffer_id][0];

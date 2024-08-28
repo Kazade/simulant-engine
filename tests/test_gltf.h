@@ -92,7 +92,7 @@ public:
 
         auto node = scene->load_tree(test_file);
 
-        assert_equal(node->name(), "test");
+        assert_equal(node->child_at(0)->name(), "test");
     }
 };
 

@@ -578,7 +578,7 @@ JSONIterator JSONIterator::operator[](const std::size_t i) const {
         }
     }
 
-    S_WARN("Accessed invalid JSON node with index: {0}", i);
+    S_DEBUG("Accessed invalid JSON node with index: {0}", i);
     return JSONIterator();
 }
 
@@ -660,7 +660,7 @@ JSONIterator JSONIterator::operator[](const std::string& key) const {
 
         return JSONIterator(stream_, skip_whitespace(stream_));
     }
-    S_WARN("Accessed invalid JSON node with key: {0}", key);
+    S_DEBUG("Accessed invalid JSON node with key: {0}", key);
     return JSONIterator();
 }
 
