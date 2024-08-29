@@ -11,7 +11,7 @@ std::ostream& operator<<(std::ostream& os, const Path& p) {
 }
 
 Path Path::system_temp_dir() {
-#ifdef WIN32
+#ifdef __WIN32__
     TCHAR temp_path_buffer[MAX_PATH];
     GetTempPath(MAX_PATH, temp_path_buffer);
     return std::string(temp_path_buffer);
