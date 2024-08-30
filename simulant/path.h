@@ -14,6 +14,8 @@ public:
     Path(const std::string& path):
         path_(path) {}
 
+    static Path system_temp_dir();
+
     /** Returns the parent path of this one. If this is a path to a
      *  directory, it'll return the parent directory. If it's a path
      *  to a file (e.g. name() is not empty) then it will return the

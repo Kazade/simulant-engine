@@ -5,6 +5,32 @@
 
 namespace smlt {
 
+StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
+    auto app = get_app();
+    if(!app) {
+        return nullptr;
+    }
+
+    auto loader = app->loader_for("gltf", path);
+    if(!loader) {
+        return nullptr;
+    }
+
+    LoaderOptions lopts;
+    if(!opts.root_name.empty()) {
+        lopts["root_name"] = opts;
+    }
+
+    if(opts.replace) {
+        loader->into(this, lopts);
+        return this;
+    } else {
+        auto new_child = create_child<Stage>();
+        loader->into(new_child, lopts);
+        return new_child;
+    }
+}
+
 StageNode* StageNode::create_mixin(const std::string& node_name,
                                    const Params& params) {
 
@@ -217,7 +243,7 @@ void StageNode::finalize_destroy() {
     }
 }
 
-StageNode::StageNode(smlt::Scene* owner, smlt::StageNodeType node_type):
+StageNode::StageNode(smlt::Scene* owner, smlt::StageNodeType node_type) :
     Identifiable(new_stage_node_id(node_type)),
     owner_(owner),
     node_type_(node_type) {
