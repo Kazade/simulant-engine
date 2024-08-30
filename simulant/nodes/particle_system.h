@@ -26,7 +26,6 @@ typedef sig::signal<void(ParticleSystem*, AssetID, AssetID)>
 
 class ParticleSystem:
     public StageNode,
-    public Loadable,
     public HasMutableRenderPriority,
     public ChainNameable<ParticleSystem> {
 

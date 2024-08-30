@@ -418,6 +418,13 @@ void params_unpack(Params& params, std::set<NodeParam>::iterator it,
     params_unpack(params, ++it, end, std::forward<Args>(args)...);
 }
 
+/* Optional parameters when loading a subtree from
+ * a GLTF  */
+struct TreeLoadOptions {
+    bool replace = false;  // Replace the node with the loaded tree
+    std::string root_name; // The name of the root node in the GLTF
+};
+
 class StageNode:
     public generic::Identifiable<StageNodeID>,
     public DestroyableObject,
@@ -426,7 +433,8 @@ class StageNode:
     public Updateable,
     public virtual BoundableEntity,
     public virtual TwoPhaseConstructed,
-    public TransformListener {
+    public TransformListener,
+    public Loadable {
 
     DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
     DEFINE_SIGNAL(CleanedUpSignal,
@@ -663,6 +671,12 @@ public:
     bool is_part_of_active_pipeline() const {
         return active_pipeline_count_ > 0;
     }
+
+    /** Loads a subtree from a .gltf file. The resulting child
+     *  will be a Stage*. The result will be nullptr if there is a
+     *  problem loading the tree */
+    StageNode* load_tree(const Path& path,
+                         const TreeLoadOptions& opts = TreeLoadOptions());
 
 protected:
     virtual bool on_create(Params params) = 0;
