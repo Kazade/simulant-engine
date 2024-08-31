@@ -55,7 +55,7 @@ class InputState;
                                                                                \
     private:                                                                   \
         type v;                                                                \
-    }(name)
+    } name
 
 STRONG_TYPEDEF(MouseID, int8_t);
 STRONG_TYPEDEF(KeyboardID, int8_t);

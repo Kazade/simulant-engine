@@ -6,8 +6,13 @@
 
 #include <cstdint>
 
+#if !defined(RND_U32)
 #define RND_U32 uint32_t
+#endif
+
+#if !defined(RND_U64)
 #define RND_U64 uint64_t
+#endif
 
 #include "_rnd.h"
 

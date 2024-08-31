@@ -4,6 +4,8 @@
 #include <utility>
 #include <cstdint>
 
+#include "../macros.h"
+
 namespace smlt {
 
 enum OptionalInit {
@@ -113,7 +115,7 @@ public:
     }
 
 private:
-    uint8_t data_[sizeof(T)] __attribute__((aligned(8)));
+    uint8_t _S_ALIGN(8) data_[sizeof(T)];
     bool has_value_ = false;
 
     T* value_ptr() const {

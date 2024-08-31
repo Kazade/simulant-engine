@@ -6,7 +6,12 @@
 #elif defined(__PSP__)
 #include <GL/gl.h>
 #else
-#include "../glad/glad/glad.h"
+    #include "../glad/glad/glad.h"
+
+    #if defined(_MSC_VER) && defined(APIENTRY)
+    #undef APIENTRY
+    #endif
+
 #endif
 
 #include "gl1x_render_group_impl.h"

@@ -2,8 +2,10 @@
 
 #ifdef __PSP__
 #include <pspthreadman.h>
-#elif defined(__DREAMAST__)
+#elif defined(__DREAMCAST__)
 #include <kos/thread.h>
+#elif defined(_MSC_VER)
+#include <windows.h>
 #else
 #include <pthread.h>
 #endif
@@ -23,6 +25,10 @@
 #include "../compat.h"
 #include "../errors.h"
 #include "../macros.h"
+
+#if defined(_MSC_VER)
+#include "mutex.h"
+#endif
 
 namespace smlt {
 namespace thread {
@@ -111,7 +117,14 @@ public:
         if(!thread_) {
             FATAL_ERROR(ERROR_CODE_THREAD_SPAWN_FAILED, "Unable to create thread");
         }
+#elif defined(_MSC_VER)
+        thread_ = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&Thread::thread_runner, (LPVOID)func, 0, NULL);
+
+        if (!thread_) {
+            FATAL_ERROR(ERROR_CODE_THREAD_SPAWN_FAILED, "Unable to create thread");
+        }
 #else
+        // ... (the rest of the code remains the same)
         auto ret = pthread_create(&thread_, NULL, &Thread::thread_runner, func);
         if(ret) {
             FATAL_ERROR(ERROR_CODE_THREAD_SPAWN_FAILED, "Unable to create thread");
@@ -135,7 +148,7 @@ public:
          * to an unsigned int without losing information. On the Dreamcast
          * this is a kthread_t* but pointers are 32 bit, so that's "ok".
          */
-#if !defined(__DREAMCAST__) && !defined(__APPLE__) && !defined(__PSP__)
+#if !defined(__DREAMCAST__) && !defined(__APPLE__) && !defined(__PSP__) && !defined(_MSC_VER)
         static_assert(std::is_convertible<pthread_t, ThreadID>::value, "pthread_t is not convertible");
 #endif
         return (ThreadID) thread_;

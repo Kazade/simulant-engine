@@ -8,13 +8,19 @@
 #include "../utils/sh4_math.h"
 #endif
 
+#if defined(_MSC_VER)
+#include "degrees.h"
+#endif
+
 namespace smlt {
 
 struct Quaternion;
 struct Vec3;
 struct Vec4;
 struct Plane;
+#if !defined(_MSC_VER)
 struct Degrees;
+#endif
 
 enum FrustumPlane {
     FRUSTUM_PLANE_LEFT = 0,

@@ -7,6 +7,11 @@
 #include "../window.h"
 #include "simulant/math/mat4.h"
 
+#if defined(_MSC_VER)
+#undef near
+#undef far
+#endif
+
 namespace smlt {
 
 Camera::Camera(Scene* owner) :

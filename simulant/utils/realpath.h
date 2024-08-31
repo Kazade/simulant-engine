@@ -11,6 +11,12 @@ I am placing this in the public domain for anyone to use or modify
 #include <errno.h>
 #include <sys/stat.h>
 
+#if defined(_MSC_VER)
+#if !defined(PATH_MAX)
+#define PATH_MAX MAX_PATH
+#endif
+#endif
+
 inline char *realpath(const char *path, char resolved_path[PATH_MAX])
 {
   char *return_path = 0;

@@ -68,7 +68,7 @@ public:
         sound_data_ = stream;
 
         stream->seekg(0, std::ios_base::end);
-        int end = stream->tellg();
+        int end = (int)stream->tellg();
         stream->seekg(0, std::ios_base::beg);
         stream_length_ = end;
     }

@@ -277,7 +277,7 @@ public:
      */
     optional<std::size_t> submesh_index(const SubMeshPtr& submesh) const;
 
-    uint32_t submesh_count() const { return submeshes_.size(); }
+    std::size_t submesh_count() const { return submeshes_.size(); }
     bool has_submesh(const std::string& name) const;
     SubMeshPtr find_submesh(const std::string& name) const;
     SubMeshPtr find_submesh_with_material(const MaterialPtr& mat) const;

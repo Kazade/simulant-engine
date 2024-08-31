@@ -89,7 +89,7 @@ TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
 
     result.width = header.width;
     result.height = header.height;
-    result.format = lookup[(compressed << 2) | (twiddled << 1) | mipmapped];
+    result.format = lookup[(TextureFormat)(compressed << 2) | (TextureFormat)(twiddled << 1) | (TextureFormat)mipmapped];
 
     if(result.format == TEXTURE_FORMAT_INVALID) {
         S_ERROR("Unsupported .dtex texture format");

@@ -92,7 +92,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 extern "C" {
 
 void *__stack_chk_guard = (void *)0x69420A55;
-
+#if !defined(__WIN32__) && !defined(_MSC_VER)
 __attribute__((weak,noreturn)) void __stack_chk_fail(void) {
 
 #ifdef __DREAMCAST__
@@ -107,6 +107,9 @@ __attribute__((weak,noreturn)) void __stack_chk_fail(void) {
 #endif
     abort();
 }
+#else
+void __stack_chk_fail(void) {}
+#endif
 
 }
 

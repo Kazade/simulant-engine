@@ -1,4 +1,7 @@
 #define WINVER 0x0600
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#endif
 
 #include <algorithm>
 #include <cassert>
@@ -28,9 +31,23 @@
 #include <unistd.h>
 #include <utime.h>
 #elif defined(__WIN32__)
+  
+#if defined(_MSC_VER)
+    #include <direct.h>
+
+#if !defined S_ISDIR
+    #define S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
+#endif
+
+#if !defined S_ISREG
+    #define S_ISREG(m) (((m) & _S_IFREG) == _S_IFREG)
+#endif
+
+#endif // _MSC_VER
+
 #include "realpath.h"
-#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <userenv.h>
 #include <windows.h>
 #else

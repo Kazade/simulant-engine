@@ -24,6 +24,9 @@
 #include <cassert>
 #include <climits>
 #include <cstdlib>
+#if defined(_MSC_VER)
+#include <cwctype>
+#endif
 
 #include "utf8.h"
 #include "unicode.h"

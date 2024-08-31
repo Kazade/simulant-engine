@@ -30,7 +30,11 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
     }
 
     it->second.destructor(node);
+#if !defined(_MSC_VER)
     free(node_data_it->second.alloc_base);
+#else
+    _aligned_free(node_data_it->second.alloc_base);
+#endif
     all_nodes_.erase(node_data_it);
     S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
     return true;

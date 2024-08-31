@@ -367,7 +367,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
                         submesh->index_data->index(frame_data->vertices_.size());
                     }
 
-                    seen_vertices.insert(std::make_pair(key, frame_data->vertices_.size()));
+                    seen_vertices.insert(std::make_pair(key, static_cast<uint16_t>(frame_data->vertices_.size())));
                     frame_data->vertices_.push_back(vert);
                 }
             }
