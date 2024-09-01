@@ -7,6 +7,30 @@ namespace {
 
 using namespace smlt;
 
+class DegreesTest: public smlt::test::TestCase {
+public:
+    void test_user_literal() {
+        smlt::Deg deg = 360.0_deg;
+        assert_equal(deg.to_float(), 360.0f);
+    }
+
+    void test_comparisons() {
+        smlt::Deg deg = 45.0_deg;
+
+        assert_true(deg < 46);
+        assert_true(deg <= 45);
+        assert_true(deg < 45.5f);
+        assert_true(deg <= 45.0f);
+
+        assert_true(deg > 40);
+        assert_true(deg >= 45);
+
+        smlt::Rad rad = deg;
+
+        assert_true(deg == rad);
+    }
+};
+
 class MathTest : public smlt::test::TestCase {
 public:
 

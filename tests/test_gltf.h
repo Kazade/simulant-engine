@@ -5,6 +5,8 @@
 
 namespace {
 
+using namespace smlt;
+
 const std::string GLTF_FILE = R"(
 {
   "scene": 0,

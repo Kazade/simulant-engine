@@ -2,6 +2,10 @@
 #include "radians.h"
 #include "utils.h"
 
+smlt::Degrees operator""_deg(long double v) {
+    return smlt::Degrees(float(v));
+}
+
 namespace smlt {
 
 Degrees::Degrees(const Radians &rhs):

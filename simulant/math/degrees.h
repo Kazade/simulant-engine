@@ -18,7 +18,7 @@ public:
     Degrees():
         value_(0) {}
 
-    explicit Degrees(float value):
+    explicit Degrees(float value) :
         value_(value) {}
 
     Degrees(const Radians& rhs);
@@ -38,19 +38,39 @@ public:
         return *this;
     }
 
-    bool operator<(const Degrees& d) {
+    template<typename T>
+    bool operator<(T value) const {
+        return value_ < value;
+    }
+
+    template<typename T>
+    bool operator<=(T value) const {
+        return value_ <= value;
+    }
+
+    template<typename T>
+    bool operator>(T value) const {
+        return value_ > value;
+    }
+
+    template<typename T>
+    bool operator>=(T value) const {
+        return value_ >= value;
+    }
+
+    bool operator<(const Degrees& d) const {
         return value_ < d.value_;
     }
 
-    bool operator<=(const Degrees& d) {
+    bool operator<=(const Degrees& d) const {
         return value_ <= d.value_;
     }
 
-    bool operator>(const Degrees& d) {
+    bool operator>(const Degrees& d) const {
         return value_ > d.value_;
     }
 
-    bool operator>=(const Degrees& d) {
+    bool operator>=(const Degrees& d) const {
         return value_ >= d.value_;
     }
 
@@ -95,5 +115,6 @@ public:
 Degrees lerp_angle(Degrees a, Degrees b, float t);
 
 typedef Degrees Deg;
-
 }
+
+smlt::Degrees operator""_deg(long double v);

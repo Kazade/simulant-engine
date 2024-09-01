@@ -17,13 +17,33 @@ public:
 
     Radians(const Degrees& rhs);
 
+    template<typename T>
+    bool operator<(T value) const {
+        return value_ < value;
+    }
+
+    template<typename T>
+    bool operator<=(T value) const {
+        return value_ <= value;
+    }
+
+    template<typename T>
+    bool operator>(T value) const {
+        return value_ > value;
+    }
+
+    template<typename T>
+    bool operator>=(T value) const {
+        return value_ >= value;
+    }
+
     float to_float() const {
         return value_;
     }
 
     Degrees to_degrees() const;
 
-    Radians operator*(float scalar) {
+    Radians operator*(float scalar) const {
         return Radians(to_float() * scalar);
     }
 
@@ -37,3 +57,5 @@ Radians lerp_angle(Radians a, Radians b, float t);
 
 typedef Radians Rad;
 }
+
+smlt::Radians operator""_rad(long double v);
