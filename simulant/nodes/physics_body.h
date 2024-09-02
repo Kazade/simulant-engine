@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../types.h"
+#include "physics/material.h"
 #include "simulant/utils/params.h"
 #include "stage_node.h"
 
@@ -17,39 +18,12 @@
 
 namespace smlt {
 
+namespace _impl {
+struct BounceData;
+}
+
 class StageNode;
 class PhysicsService;
-
-struct PhysicsMaterial {
-    PhysicsMaterial() = default;
-    PhysicsMaterial(float density, float friction, float bounciness) :
-        density(density), friction(friction), bounciness(bounciness) {}
-
-    float density = 0.0f;
-    float friction = 0.0f;
-    float bounciness = 0.0f;
-
-    static const PhysicsMaterial WOOD;
-    static const PhysicsMaterial RUBBER;
-    static const PhysicsMaterial IRON;
-    static const PhysicsMaterial STONE;
-
-    static const PhysicsMaterial WOOD_25;
-    static const PhysicsMaterial WOOD_50;
-    static const PhysicsMaterial WOOD_75;
-
-    static const PhysicsMaterial RUBBER_25;
-    static const PhysicsMaterial RUBBER_50;
-    static const PhysicsMaterial RUBBER_75;
-
-    static const PhysicsMaterial IRON_25;
-    static const PhysicsMaterial IRON_50;
-    static const PhysicsMaterial IRON_75;
-
-    static const PhysicsMaterial STONE_25;
-    static const PhysicsMaterial STONE_50;
-    static const PhysicsMaterial STONE_75;
-};
 
 class PhysicsBody;
 
@@ -132,14 +106,16 @@ public:
 
 protected:
     friend class PhysicsService;
+    friend class _PhysicsData;
 
-    void clear_simulation_cache();
     PhysicsService* get_simulation() const;
 
     bool on_create(Params params) override;
     bool on_destroy() override;
 
     void on_transformation_changed() override;
+
+    std::unique_ptr<_impl::BounceData> bounce_;
 
 private:
     friend class ContactListener;
@@ -148,8 +124,6 @@ private:
 
     std::pair<Vec3, Quaternion> last_state_;
     void on_update(float dt) override;
-
-    mutable PhysicsService* simulation_ = nullptr;
 
     PhysicsBodyType type_;
     std::set<CollisionListener*> listeners_;

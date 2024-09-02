@@ -1,12 +1,13 @@
-#include <set>
-#include "bounce/bounce.h"
-#include "bounce/collision/shapes/mesh_shape.h"
 #include "physics.h"
-#include "../time_keeper.h"
-#include "../nodes/physics_body.h"
-#include "../utils/mesh/triangulate.h"
 #include "../meshes/mesh.h"
 #include "../nodes/joints.h"
+#include "../nodes/physics/private.h"
+#include "../nodes/physics_body.h"
+#include "../time_keeper.h"
+#include "../utils/mesh/triangulate.h"
+#include "bounce/bounce.h"
+#include "bounce/collision/shapes/mesh_shape.h"
+#include <set>
 
 /* Need for bounce */
 void b3BeginProfileScope(const char* name) {
@@ -25,20 +26,6 @@ class PrivateContactListener;
 class PrivateContactFilter;
 class b3MeshGenerator;
 
-struct FixtureData {
-    b3Fixture* fixture = nullptr;
-    PhysicsMaterial material;
-    std::string name;
-    uint16_t kind = 0;
-    std::shared_ptr<b3MeshGenerator> mesh;
-};
-
-struct BodyData {
-    b3Body* body = nullptr;
-    std::vector<std::shared_ptr<b3Hull>> hulls;
-    std::vector<FixtureData> fixtures;
-};
-
 
 struct _PhysicsData {
     ContactFilter* filter_ = nullptr;
@@ -49,17 +36,11 @@ struct _PhysicsData {
     std::shared_ptr<b3World> scene_;
     std::shared_ptr<ContactListener> contact_listener_;
 
-    std::shared_ptr<PrivateContactFilter> contact_filter_;    
+    std::shared_ptr<PrivateContactFilter> contact_filter_;
 
-    std::unordered_map<PhysicsBody*, BodyData> bodies_;
-
-    const FixtureData* find_fixture(PhysicsBody* body, const b3Fixture* b3fixture) const {
-        auto b = bodies_.find(body);
-        if(b == bodies_.end()) {
-            return nullptr;
-        }
-
-        for(auto& f: b->second.fixtures) {
+    const _impl::FixtureData* find_fixture(PhysicsBody* body,
+                                           const b3Fixture* b3fixture) const {
+        for(auto& f: body->bounce_->fixtures) {
             if(f.fixture == b3fixture) {
                 return &f;
             }
@@ -68,17 +49,8 @@ struct _PhysicsData {
         return nullptr;
     }
 
-    BodyData* get_body(const PhysicsBody* body) {
-        auto it = bodies_.find(const_cast<PhysicsBody*>(body));
-        if(it == bodies_.end()) {
-            return nullptr;
-        }
-        return &it->second;
-    }
-
     b3Body* get_b3body(const PhysicsBody* body) {
-        auto b = get_body(body);
-        return (b) ? b->body : nullptr;
+        return body->bounce_->body;
     }
 };
 
@@ -135,18 +107,16 @@ public:
         PhysicsBody* bodyA = (PhysicsBody*) fixtureA->GetUserData();
         PhysicsBody* bodyB = (PhysicsBody*) fixtureB->GetUserData();
 
-        if(simulation_->body_exists(bodyA) && simulation_->body_exists(bodyB)) {
-            auto coll_pair = build_collision_pair(contact);
-            auto& collA = coll_pair.first;
-            auto& collB = coll_pair.second;
+        auto coll_pair = build_collision_pair(contact);
+        auto& collA = coll_pair.first;
+        auto& collB = coll_pair.second;
 
-            bodyA->contact_started(collA);
-            bodyB->contact_started(collB);
+        bodyA->contact_started(collA);
+        bodyB->contact_started(collB);
 
-            // FIXME: Populate contact points
+        // FIXME: Populate contact points
 
-            active_contacts_.insert(contact);
-        }
+        active_contacts_.insert(contact);
     }
 
     void EndContact(b3Contact* contact) {
@@ -161,19 +131,14 @@ public:
         PhysicsBody* bodyA = (PhysicsBody*) fixtureA->GetUserData();
         PhysicsBody* bodyB = (PhysicsBody*) fixtureB->GetUserData();
 
-        if(simulation_->body_exists(bodyA) && simulation_->body_exists(bodyB)) {
-            auto coll_pair = build_collision_pair(contact);
-            auto& collA = coll_pair.first;
-            auto& collB = coll_pair.second;
+        auto coll_pair = build_collision_pair(contact);
+        auto& collA = coll_pair.first;
+        auto& collB = coll_pair.second;
 
-            bodyA->contact_finished(collA);
-            bodyB->contact_finished(collB);
+        bodyA->contact_finished(collA);
+        bodyB->contact_finished(collB);
 
-            active_contacts_.erase(contact);
-        } else {
-            // If they don't exist but we still find the contact, then that's a problem!
-            assert(!active_contacts_.count(contact));
-        }
+        active_contacts_.erase(contact);
     }
 
     void PreSolve(b3Contact* contact) {
@@ -289,10 +254,6 @@ Fixture::Fixture(PhysicsService* sim, b3Fixture* fixture) {
     kind_ = sim->pimpl_->find_fixture(body_, fixture)->kind;
 }
 
-bool PhysicsService::body_exists(const PhysicsBody* body) const {
-    return pimpl_->bodies_.count((PhysicsBody*) body);
-}
-
 const ContactFilter* PhysicsService::contact_filter() const {
     if(!pimpl_->filter_) {
         return nullptr;
@@ -340,24 +301,16 @@ void PhysicsService::register_body(PhysicsBody* body, const Vec3& pos, const Qua
     def.position = b3Vec3(pos.x, pos.y, pos.z);
     def.orientation = b3Quat(rot.x, rot.y, rot.z, rot.w);
 
-    BodyData data;
-    data.body = pimpl_->scene_->CreateBody(def);
-
-    pimpl_->bodies_.insert(std::make_pair(body, data));
+    body->bounce_->body = pimpl_->scene_->CreateBody(def);
 }
 
 void PhysicsService::unregister_body(PhysicsBody* body) {
-    auto& body_data = pimpl_->bodies_.at(body);
-    pimpl_->scene_->DestroyBody(body_data.body);
-    pimpl_->bodies_.erase(body);
+    pimpl_->scene_->DestroyBody(body->bounce_->body);
 }
 
 void PhysicsService::init_sphere_joint(SphereJoint *joint, const ReactiveBody *a, const ReactiveBody *b, const Vec3 &a_off, const Vec3 &b_off) {
-    auto b3a_it = pimpl_->bodies_.find((PhysicsBody*) a);
-    auto b3b_it = pimpl_->bodies_.find((PhysicsBody*) b);
-
-    auto b3a = (b3a_it != pimpl_->bodies_.end()) ? b3a_it->second.body : nullptr;
-    auto b3b = (b3b_it != pimpl_->bodies_.end()) ? b3b_it->second.body : nullptr;
+    auto b3a = a->bounce_->body;
+    auto b3b = b->bounce_->body;
 
     if(!b3a || !b3b) {
         S_WARN("Couldn't create sphere joint as body was missing");
@@ -387,18 +340,6 @@ void PhysicsService::release_sphere_joint(SphereJoint *joint) {
 void PhysicsService::add_box_collider(PhysicsBody* self, const Vec3& size,
                                       const PhysicsMaterial &properties, uint16_t kind, const Vec3 &offset, const Quaternion &rotation
 ) {
-
-    assert(pimpl_);
-    assert(pimpl_->bodies_.find(self) != pimpl_->bodies_.end());
-
-    auto it = pimpl_->bodies_.find(self);
-    if(it == pimpl_->bodies_.end()) {
-        S_ERROR("Attempted to add collider to unregistered body");
-        return;
-    }
-
-    BodyData& data = it->second;
-
     b3Vec3 p(offset.x, offset.y, offset.z);
     b3Quat q(rotation.x, rotation.y, rotation.z, rotation.w);
     b3Transform tx(p, q);
@@ -412,7 +353,7 @@ void PhysicsService::add_box_collider(PhysicsBody* self, const Vec3& size,
     );
 
     def->Transform(tx, s);
-    data.hulls.push_back(def);
+    self->bounce_->hulls.push_back(def);
 
     b3HullShape hsdef;
     hsdef.m_hull = def.get();
@@ -424,21 +365,19 @@ void PhysicsService::add_box_collider(PhysicsBody* self, const Vec3& size,
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    FixtureData fdata;
-    fdata.fixture = data.body->CreateFixture(sdef);
+    _impl::FixtureData fdata;
+    fdata.fixture = self->bounce_->body->CreateFixture(sdef);
     fdata.fixture->SetUserData(self);
     fdata.material = properties;
     fdata.kind = kind;
 
-    data.fixtures.push_back(fdata);
+    self->bounce_->fixtures.push_back(fdata);
 }
 
 void PhysicsService::add_sphere_collider(
     PhysicsBody* self,
     const float diameter, const PhysicsMaterial& properties, uint16_t kind, const Vec3& offset
 ) {
-    BodyData& data = pimpl_->bodies_.at(self);
-
     b3SphereShape sphere;
     sphere.m_center = b3Vec3(offset.x, offset.y, offset.z);
     sphere.m_radius = diameter * 0.5f;
@@ -449,13 +388,13 @@ void PhysicsService::add_sphere_collider(
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    FixtureData fdata;
-    fdata.fixture = data.body->CreateFixture(sdef);
+    _impl::FixtureData fdata;
+    fdata.fixture = self->bounce_->body->CreateFixture(sdef);
     fdata.fixture->SetUserData(self);
     fdata.material = properties;
     fdata.kind = kind;
 
-    data.fixtures.push_back(fdata);
+    self->bounce_->fixtures.push_back(fdata);
 }
 
 void PhysicsService::add_triangle_collider(
@@ -463,8 +402,6 @@ void PhysicsService::add_triangle_collider(
     const smlt::Vec3& v1, const smlt::Vec3& v2, const smlt::Vec3& v3,
     const PhysicsMaterial& properties, uint16_t kind
 ) {
-    BodyData& data = pimpl_->bodies_.at(self);
-
     b3Vec3 bv1 = b3Vec3(v1.x, v1.y, v1.z);
     b3Vec3 bv2 = b3Vec3(v2.x, v2.y, v2.z);
     b3Vec3 bv3 = b3Vec3(v3.x, v3.y, v3.z);
@@ -478,20 +415,19 @@ void PhysicsService::add_triangle_collider(
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    FixtureData fdata;
-    fdata.fixture = data.body->CreateFixture(sdef);
+    _impl::FixtureData fdata;
+    fdata.fixture = self->bounce_->body->CreateFixture(sdef);
     fdata.fixture->SetUserData(self);
     fdata.material = properties;
     fdata.kind = kind;
 
-    data.fixtures.push_back(fdata);
+    self->bounce_->fixtures.push_back(fdata);
 }
 
 void PhysicsService::add_capsule_collider(PhysicsBody* self, const Vec3& v0,
                                           const Vec3& v1, const float diameter,
                                           const PhysicsMaterial& properties,
                                           uint16_t kind) {
-    BodyData& data = pimpl_->bodies_.at(self);
 
     b3CapsuleShape capsule;
     capsule.m_vertex1 = b3Vec3(v0.x, v0.y, v0.z);
@@ -504,18 +440,16 @@ void PhysicsService::add_capsule_collider(PhysicsBody* self, const Vec3& v0,
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    FixtureData fdata;
-    fdata.fixture = data.body->CreateFixture(sdef);
+    _impl::FixtureData fdata;
+    fdata.fixture = self->bounce_->body->CreateFixture(sdef);
     fdata.fixture->SetUserData(self);
     fdata.material = properties;
     fdata.kind = kind;
 
-    data.fixtures.push_back(fdata);
+    self->bounce_->fixtures.push_back(fdata);
 }
 
 void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, const PhysicsMaterial& properties, uint16_t kind, const Vec3& offset, const Quaternion& rotation) {
-    BodyData& data = pimpl_->bodies_.at(self);
-
     auto bmesh = std::make_shared<b3MeshGenerator>();
 
     std::vector<utils::Triangle> triangles;
@@ -561,24 +495,20 @@ void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, c
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    FixtureData fdata;
-    fdata.fixture = data.body->CreateFixture(sdef);
+    _impl::FixtureData fdata;
+    fdata.fixture = self->bounce_->body->CreateFixture(sdef);
     fdata.fixture->SetUserData(self);
     fdata.material = properties;
     fdata.kind = kind;
     fdata.mesh = bmesh;
 
-    data.fixtures.push_back(fdata);
+    self->bounce_->fixtures.push_back(fdata);
 }
 
 void PhysicsService::on_fixed_update(float step) {
     uint32_t velocity_iterations = 8;
     uint32_t position_iterations = 2;
     pimpl_->scene_->Step(step, velocity_iterations, position_iterations);
-}
-
-void* PhysicsService::private_body(const PhysicsBody* body) const {
-    return pimpl_->get_b3body(body);
 }
 
 void PhysicsService::set_gravity(const Vec3& gravity) {
@@ -600,9 +530,7 @@ PhysicsService::PhysicsService():
 }
 
 PhysicsService::~PhysicsService() {
-    for(auto& pair: pimpl_->bodies_) {
-        pair.first->clear_simulation_cache();
-    }
+    // FIXME: Wipe all the bounce_ pointers on all physics objects
 }
 
 smlt::optional<RayCastResult> PhysicsService::ray_cast(const Vec3& start, const Vec3& direction, float max_distance) {

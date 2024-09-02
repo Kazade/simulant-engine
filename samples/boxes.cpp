@@ -50,7 +50,8 @@ public:
         // Make the ground a staticbody
         auto c = create_child<smlt::StaticBody>();
         c->adopt_children(ground_); // FIXME: Convert to mixin
-        c->add_box_collider(ground_->aabb().dimensions(), PhysicsMaterial::STONE);
+        c->add_box_collider(ground_->aabb().dimensions(),
+                            PhysicsMaterial::stone());
 
         srand(time(nullptr));
     }
@@ -66,7 +67,8 @@ public:
         );
 
         auto controller = create_child<smlt::DynamicBody>(pos);
-        controller->add_box_collider(box->aabb().dimensions(), PhysicsMaterial::WOOD);
+        controller->add_box_collider(box->aabb().dimensions(),
+                                     PhysicsMaterial::wood());
 
         box->set_parent(controller);
         controller->transform->set_position(pos);

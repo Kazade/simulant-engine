@@ -41,7 +41,8 @@ public:
         auto controller = scene->create_child<smlt::DynamicBody>();
         assert_equal(controller->mass(), 1.0f);
 
-        controller->add_box_collider(smlt::Vec3(10.0f), smlt::PhysicsMaterial::IRON);
+        controller->add_box_collider(smlt::Vec3(10.0f),
+                                     smlt::PhysicsMaterial::iron());
         assert_true(controller->mass() > 1.0f);
 
         controller->set_mass(100.0f);

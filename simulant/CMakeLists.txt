@@ -181,7 +181,9 @@ ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
     loaders/gltf_loader.h
     loaders/gltf_loader.cpp
     utils/base64.h
-    utils/base64.cpp)
+    utils/base64.cpp
+    nodes/physics/private.h
+    nodes/physics/material.h)
 ENDIF()
 
 if(FLTO_SUPPORTED)

@@ -5,49 +5,12 @@
 #include "../services/physics.h"
 #include "../time_keeper.h"
 #include "bounce/bounce.h"
+#include "physics/private.h"
 #include "simulant/math/quaternion.h"
 #include "stage_node.h"
+#include <memory>
 
 namespace smlt {
-
-// FIXME: Calculate these values from real-world values!
-const PhysicsMaterial PhysicsMaterial::WOOD(0.005, 0.4, 0.2);
-const PhysicsMaterial PhysicsMaterial::RUBBER(0.001, 0.3, 0.8);
-const PhysicsMaterial PhysicsMaterial::IRON(0.1, 0.2, 0.00001);
-const PhysicsMaterial PhysicsMaterial::STONE(0.1, 0.8, 0.00001);
-
-const static auto& w = PhysicsMaterial::WOOD;
-const static auto& r = PhysicsMaterial::RUBBER;
-const static auto& i = PhysicsMaterial::IRON;
-const static auto& s = PhysicsMaterial::STONE;
-
-const PhysicsMaterial PhysicsMaterial::WOOD_25(w.density * 0.25f, w.friction,
-                                               w.bounciness);
-const PhysicsMaterial PhysicsMaterial::WOOD_50(w.density * 0.50f, w.friction,
-                                               w.bounciness);
-const PhysicsMaterial PhysicsMaterial::WOOD_75(w.density * 0.75f, w.friction,
-                                               w.bounciness);
-
-const PhysicsMaterial PhysicsMaterial::RUBBER_25(r.density * 0.25f, r.friction,
-                                                 r.bounciness);
-const PhysicsMaterial PhysicsMaterial::RUBBER_50(r.density * 0.50f, r.friction,
-                                                 r.bounciness);
-const PhysicsMaterial PhysicsMaterial::RUBBER_75(r.density * 0.75f, r.friction,
-                                                 r.bounciness);
-
-const PhysicsMaterial PhysicsMaterial::IRON_25(i.density * 0.25f, i.friction,
-                                               i.bounciness);
-const PhysicsMaterial PhysicsMaterial::IRON_50(i.density * 0.50f, i.friction,
-                                               i.bounciness);
-const PhysicsMaterial PhysicsMaterial::IRON_75(i.density * 0.75f, i.friction,
-                                               i.bounciness);
-
-const PhysicsMaterial PhysicsMaterial::STONE_25(s.density * 0.25f, s.friction,
-                                                s.bounciness);
-const PhysicsMaterial PhysicsMaterial::STONE_50(s.density * 0.50f, s.friction,
-                                                s.bounciness);
-const PhysicsMaterial PhysicsMaterial::STONE_75(s.density * 0.75f, s.friction,
-                                                s.bounciness);
 
 PhysicsBody::PhysicsBody(Scene* owner, StageNodeType node_type,
                          PhysicsBodyType type) :
@@ -119,12 +82,11 @@ void PhysicsBody::unregister_collision_listener(CollisionListener* listener) {
 }
 
 Vec3 PhysicsBody::position() const {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return {};
     }
 
-    b3Body* b = (b3Body*)sim->private_body(this);
+    b3Body* b = bounce_->body;
     if(b) {
         auto vec = b->GetTransform().translation;
         return Vec3(vec.x, vec.y, vec.z);
@@ -134,12 +96,11 @@ Vec3 PhysicsBody::position() const {
 }
 
 Quaternion PhysicsBody::orientation() const {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return {};
     }
 
-    b3Body* b = (b3Body*)sim->private_body(this);
+    b3Body* b = bounce_->body;
     if(b) {
         auto vec = b->GetTransform().rotation;
         return Quaternion(vec.v.x, vec.v.y, vec.v.z, vec.s);
@@ -149,9 +110,8 @@ Quaternion PhysicsBody::orientation() const {
 }
 
 void PhysicsBody::set_position(const Vec3& position) {
-    auto sim = get_simulation();
-    if(sim) {
-        b3Body* b = (b3Body*)sim->private_body(this);
+    if(bounce_) {
+        b3Body* b = bounce_->body;
         if(b) {
             b3Vec3 p(position.x, position.y, position.z);
             b->SetTransform(p, b->GetTransform().rotation);
@@ -160,9 +120,8 @@ void PhysicsBody::set_position(const Vec3& position) {
 }
 
 void PhysicsBody::set_orientation(const Quaternion& rotation) {
-    auto sim = get_simulation();
-    if(sim) {
-        b3Body* b = (b3Body*)sim->private_body(this);
+    if(bounce_) {
+        b3Body* b = bounce_->body;
         if(b) {
             b3Quat q;
             q.v.x = rotation.x;
@@ -172,10 +131,6 @@ void PhysicsBody::set_orientation(const Quaternion& rotation) {
             b->SetTransform(b->GetPosition(), q.GetRotationMatrix());
         }
     }
-}
-
-void PhysicsBody::clear_simulation_cache() {
-    simulation_ = nullptr;
 }
 
 void PhysicsBody::contact_started(const Collision& collision) {
@@ -191,14 +146,7 @@ void PhysicsBody::contact_finished(const Collision& collision) {
 }
 
 PhysicsService* PhysicsBody::get_simulation() const {
-    /* Caches the PhysicsService for perf */
-    if(!simulation_) {
-        /* FIXME: If the physics service is destroyed, we need
-         * to wipe this out for every physics body */
-        simulation_ = scene->find_service<PhysicsService>();
-    }
-
-    return simulation_;
+    return scene->find_service<PhysicsService>();
 }
 
 bool PhysicsBody::on_create(Params params) {
@@ -207,9 +155,11 @@ bool PhysicsBody::on_create(Params params) {
         params.get<FloatArray>("orientation").value_or(Quaternion());
     auto sim = get_simulation();
     if(sim) {
+        bounce_ = std::make_unique<_impl::BounceData>();
+
         sim->register_body(this, initial_pos, initial_rot);
     } else {
-        S_WARN("PhysicsBody added without an active PhysicsService");
+        S_ERROR("PhysicsBody added without an active PhysicsService");
     }
 
     /* FIXME: These should probably be create arguments for *all* stage nodes,
@@ -228,6 +178,8 @@ bool PhysicsBody::on_destroy() {
         sim->unregister_body(this);
     }
 
+    bounce_.reset();
+
     return true;
 }
 
@@ -236,15 +188,14 @@ void PhysicsBody::on_transformation_changed() {
 
     // Ignore any signals that we've caused by us setting
     // the transform
-    if(updating_body_) {
+    if(updating_body_ || !bounce_) {
         return;
     }
 
     // If we're here, then the user called set_position or something
     // so we need to update the rigid body to where it was intended
 
-    auto sim = get_simulation();
-    b3Body* b = (b3Body*)sim->private_body(this);
+    b3Body* b = bounce_->body;
     if(b) {
         auto o = transform->orientation();
         auto pos = transform->position();

@@ -71,7 +71,6 @@ public:
     );
 
     void set_gravity(const Vec3& gravity);
-    bool body_exists(const PhysicsBody* body) const;
 
     const ContactFilter* contact_filter() const;
     void set_contact_filter(ContactFilter* filter);
@@ -87,11 +86,6 @@ private:
     std::shared_ptr<PhysicsData> pimpl_;
 
     /* Accessible to PhysicsBody */
-
-    /* Return the internal representaiton of a PhysicsBody. This
-     * is a void* to avoid leaking the implementation */
-    void* private_body(const PhysicsBody* body) const;
-
     void register_body(PhysicsBody* body, const Vec3& pos, const Quaternion& rot);
     void unregister_body(PhysicsBody* body);
 

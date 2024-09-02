@@ -64,7 +64,7 @@ public:
     void test_box_collider_addition() {
         auto body = scene->create_child<DynamicBody>();
 
-        body->add_box_collider(Vec3(2, 2, 1), PhysicsMaterial::WOOD);
+        body->add_box_collider(Vec3(2, 2, 1), PhysicsMaterial::wood());
 
         auto hit = physics->ray_cast(Vec3(0, 2, 0), Vec3(0, -1, 0), 2);
 
@@ -82,7 +82,8 @@ public:
         assert_true(hit);
 
         // Check that the local offset is respected
-        body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD, 0, Vec3(5, 0, 0));
+        body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood(), 0,
+                               Vec3(5, 0, 0));
         hit = physics->ray_cast(Vec3(5.0, 2, 0), Vec3(0, -1, 0), 2);
         assert_true(hit);
         assert_close(1.5f, hit->distance, 0.0001f);
@@ -90,12 +91,8 @@ public:
 
     void test_capsule_collider_addition() {
         auto body = scene->create_child<DynamicBody>();
-        body->add_capsule_collider(
-            Vec3(0),
-            Vec3(2),
-            2.0f,
-            PhysicsMaterial::WOOD
-        );
+        body->add_capsule_collider(Vec3(0), Vec3(2), 2.0f,
+                                   PhysicsMaterial::wood());
 
         auto hit = physics->ray_cast(Vec3(-2, 0, 0), Vec3(1, 0, 0), 2);
         assert_true(hit);
@@ -104,7 +101,7 @@ public:
 
     void test_sphere_collider_addition() {
         auto body = scene->create_child<DynamicBody>();
-        body->add_sphere_collider(2.0, PhysicsMaterial::WOOD);
+        body->add_sphere_collider(2.0, PhysicsMaterial::wood());
 
         auto hit = physics->ray_cast(Vec3(0, 2, 0), Vec3(0, -1, 0), 2);
 
@@ -139,13 +136,13 @@ public:
         // Create body A
         uint16_t kind_a = 1;
         auto body = scene->create_child<StaticBody>();
-        body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD, kind_a);
+        body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood(), kind_a);
         body->register_collision_listener(&listener); // Register the listener
 
         // Create overlapping body B!
         uint16_t kind_b = 2;
         auto body2 = scene->create_child<DynamicBody>();
-        body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD, kind_b);
+        body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood(), kind_b);
 
         class ContactFilter1 : public smlt::ContactFilter {
         public:
@@ -196,7 +193,7 @@ public:
         auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         mesh->create_submesh_as_box("mesh", scene->assets->create_material(), 1.0, 1.0, 1.0);
         auto body = scene->create_child<StaticBody>();
-        body->add_mesh_collider(mesh, PhysicsMaterial::WOOD);
+        body->add_mesh_collider(mesh, PhysicsMaterial::wood());
 
         auto hit = physics->ray_cast(Vec3(0, 2, 0), Vec3(0.0, -1, 0), 2);
 
@@ -213,12 +210,12 @@ public:
 
         // Create body A
         auto body = scene->create_child<StaticBody>();
-        body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
+        body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood());
         body->register_collision_listener(&listener); // Register the listener
 
         // Create overlapping body B!
         auto body2 = scene->create_child<DynamicBody>();
-        body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
+        body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood());
 
         // Run physics
         physics->fixed_update(1.0f / 60.0f);
@@ -258,11 +255,11 @@ public:
         Listener listener(&enter_called, nullptr, &leave_called);
 
         auto body = scene->create_child<StaticBody>();
-        body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
+        body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood());
         body->register_collision_listener(&listener);
 
         auto body2 = scene->create_child<DynamicBody>();
-        body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
+        body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood());
 
         physics->fixed_update(1.0f / 60.0f);
 
@@ -282,7 +279,7 @@ public:
     void test_add_mesh_collider() {
         auto mesh = scene->assets->create_mesh_as_cube_with_submesh_per_face(10.0f);
         auto body = scene->create_child<StaticBody>();
-        body->add_mesh_collider(mesh, PhysicsMaterial::WOOD);
+        body->add_mesh_collider(mesh, PhysicsMaterial::wood());
     }
 
     void test_collision_listener_stay() {
@@ -293,12 +290,12 @@ public:
         Listener listener(nullptr, &stay_count, nullptr);
 
         auto body = scene->create_child<StaticBody>();
-        body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
+        body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood());
         body->register_collision_listener(&listener);
 
         auto actor2 = scene->create_child<smlt::Stage>();
         auto body2 = scene->create_child<DynamicBody>();
-        body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::WOOD);
+        body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood());
 
         assert_false(stay_count);
 

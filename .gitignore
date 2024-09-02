@@ -28,7 +28,10 @@ dbuild
 pbuild
 abuild
 wbuild
+ps2build
 builda
 dcnative
 evbuild
+deps*
+gradle
 
