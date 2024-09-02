@@ -1,8 +1,8 @@
 #include "reactive_body.h"
-#include "../services/physics.h"
+#include "../../services/physics.h"
 #include "bounce/bounce.h"
 #include "joints.h"
-#include "physics/private.h"
+#include "private.h"
 
 namespace smlt {
 

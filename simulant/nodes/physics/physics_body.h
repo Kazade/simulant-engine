@@ -4,10 +4,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../types.h"
-#include "physics/material.h"
+#include "../../types.h"
+#include "../stage_node.h"
+#include "material.h"
 #include "simulant/utils/params.h"
-#include "stage_node.h"
 
 #define S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(klass)                           \
     TypedNodeParam<FloatArray, klass> param_10000 = {                          \

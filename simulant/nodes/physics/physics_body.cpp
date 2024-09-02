@@ -1,13 +1,13 @@
 #include "physics_body.h"
-#include "../application.h"
-#include "../generic/raii.h"
-#include "../scenes/scene.h"
-#include "../services/physics.h"
-#include "../time_keeper.h"
+#include "../../application.h"
+#include "../../generic/raii.h"
+#include "../../scenes/scene.h"
+#include "../../services/physics.h"
+#include "../../time_keeper.h"
+#include "../stage_node.h"
 #include "bounce/bounce.h"
-#include "physics/private.h"
+#include "private.h"
 #include "simulant/math/quaternion.h"
-#include "stage_node.h"
 #include <memory>
 
 namespace smlt {

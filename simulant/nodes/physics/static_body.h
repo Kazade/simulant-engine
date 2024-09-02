@@ -1,9 +1,9 @@
 #pragma once
 
+#include "../stage_node.h"
 #include "physics_body.h"
-#include "stage_node.h"
 
-#include "../scenes/scene.h"
+#include "../../scenes/scene.h"
 
 namespace smlt {
 
