@@ -118,7 +118,7 @@ void PhysicsBody::unregister_collision_listener(CollisionListener* listener) {
     listeners_.erase(listener);
 }
 
-Vec3 PhysicsBody::simulated_position() const {
+Vec3 PhysicsBody::position() const {
     auto sim = get_simulation();
     if(!sim) {
         return {};
@@ -133,7 +133,7 @@ Vec3 PhysicsBody::simulated_position() const {
     return {};
 }
 
-Quaternion PhysicsBody::simulated_rotation() const {
+Quaternion PhysicsBody::orientation() const {
     auto sim = get_simulation();
     if(!sim) {
         return {};
@@ -148,7 +148,7 @@ Quaternion PhysicsBody::simulated_rotation() const {
     return {};
 }
 
-void PhysicsBody::set_simulated_position(const Vec3& position) {
+void PhysicsBody::set_position(const Vec3& position) {
     auto sim = get_simulation();
     if(sim) {
         b3Body* b = (b3Body*)sim->private_body(this);
@@ -159,7 +159,7 @@ void PhysicsBody::set_simulated_position(const Vec3& position) {
     }
 }
 
-void PhysicsBody::set_simulated_rotation(const Quaternion& rotation) {
+void PhysicsBody::set_orientation(const Quaternion& rotation) {
     auto sim = get_simulation();
     if(sim) {
         b3Body* b = (b3Body*)sim->private_body(this);
@@ -266,7 +266,7 @@ void PhysicsBody::on_update(float dt) {
         auto prev_state =
             last_state_; // This is set by the signal connected in Body::Body()
         auto next_state =
-            std::make_pair(simulated_position(), simulated_rotation());
+            std::make_pair(position(), orientation());
 
         // Prevent a divide by zero.
         float r = get_app()->time_keeper->fixed_step_remainder();
@@ -278,8 +278,8 @@ void PhysicsBody::on_update(float dt) {
         transform->set_position(new_pos);
         transform->set_orientation(new_rot);
     } else {
-        transform->set_position(simulated_position());
-        transform->set_orientation(simulated_rotation());
+        transform->set_position(position());
+        transform->set_orientation(orientation());
     }
 }
 

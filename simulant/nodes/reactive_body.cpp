@@ -275,17 +275,17 @@ void ReactiveBody::set_angular_velocity(const Vec3 &vel) {
 }
 
 Vec3 ReactiveBody::forward() {
-    Quaternion rot = simulated_rotation();
+    Quaternion rot = orientation();
     return Vec3::forward() * rot;
 }
 
 Vec3 ReactiveBody::right() {
-    Quaternion rot = simulated_rotation();
+    Quaternion rot = orientation();
     return Vec3::right() * rot;
 }
 
 Vec3 ReactiveBody::up() {
-    Quaternion rot = simulated_rotation();
+    Quaternion rot = orientation();
     return Vec3::up() * rot;
 }
 

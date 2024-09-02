@@ -124,11 +124,11 @@ public:
         return type_;
     }
 
-    Vec3 simulated_position() const;
-    Quaternion simulated_rotation() const;
+    Vec3 position() const;
+    Quaternion orientation() const;
 
-    void set_simulated_position(const Vec3& position);
-    void set_simulated_rotation(const Quaternion& rotation);
+    void set_position(const Vec3& position);
+    void set_orientation(const Quaternion& rotation);
 
 protected:
     friend class PhysicsService;
