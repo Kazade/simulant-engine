@@ -6,6 +6,7 @@
 
 #include "../../types.h"
 #include "../stage_node.h"
+#include "contact_list.h"
 #include "material.h"
 #include "simulant/utils/params.h"
 
@@ -106,6 +107,7 @@ public:
 
 protected:
     friend class PhysicsService;
+    friend class ContactListIterator;
     friend class _PhysicsData;
 
     PhysicsService* get_simulation() const;
@@ -130,6 +132,13 @@ private:
 
     void contact_started(const Collision& collision);
     void contact_finished(const Collision& collision);
+
+    ContactList contact_list_ = ContactList(this);
+
+public:
+    ContactList& contacts() {
+        return contact_list_;
+    }
 };
 
 class CollisionListener {

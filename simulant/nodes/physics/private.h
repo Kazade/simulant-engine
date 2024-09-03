@@ -24,10 +24,14 @@ struct FixtureData {
     std::shared_ptr<b3MeshGenerator> mesh;
 };
 
+struct BounceFixtureData {
+    b3Fixture* fixture = nullptr;
+};
+
 struct BounceData {
     b3Body* body = nullptr;
     std::vector<std::shared_ptr<b3Hull>> hulls;
-    std::vector<FixtureData> fixtures;
+    std::vector<std::shared_ptr<FixtureData>> fixtures;
 };
 
 } // namespace _impl

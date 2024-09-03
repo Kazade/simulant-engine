@@ -183,7 +183,11 @@ ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
     utils/base64.h
     utils/base64.cpp
     nodes/physics/private.h
-    nodes/physics/material.h)
+    nodes/physics/material.h
+    nodes/physics/contact_list.h
+    nodes/physics/fixture.h
+    nodes/physics/fixture.cpp
+    nodes/physics/contact_list.cpp)
 ENDIF()
 
 if(FLTO_SUPPORTED)

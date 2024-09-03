@@ -222,6 +222,19 @@ public:
         assert_true(enter_called);
         assert_false(leave_called);
 
+        // Check the contacts exist
+        int i = 0;
+        for(auto contact: body->contacts()) {
+            assert_equal(contact.fixtures[0].body(), body);
+            assert_equal(contact.fixtures[1].body(), body2);
+            ++i;
+        }
+
+        assert_equal(i, 1);
+
+        assert_equal(body->contacts()[0]->fixtures[0].body(), body);
+        assert_equal(body->contacts()[0]->fixtures[1].body(), body2);
+
         enter_called = false; // Reset
 
         // Shouldn't call again!
@@ -235,6 +248,9 @@ public:
         physics->fixed_update(1.0f / 60.0f);
         assert_false(enter_called);
         assert_true(leave_called);
+
+        assert_equal(body->contacts().count(), 0u);
+        assert_equal(body2->contacts().count(), 0u);
 
         // Move back, should now call
         body2->transform->set_translation(Vec3(0, 0, 0));

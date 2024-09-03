@@ -38,17 +38,6 @@ struct _PhysicsData {
 
     std::shared_ptr<PrivateContactFilter> contact_filter_;
 
-    const _impl::FixtureData* find_fixture(PhysicsBody* body,
-                                           const b3Fixture* b3fixture) const {
-        for(auto& f: body->bounce_->fixtures) {
-            if(f.fixture == b3fixture) {
-                return &f;
-            }
-        }
-
-        return nullptr;
-    }
-
     b3Body* get_b3body(const PhysicsBody* body) {
         return body->bounce_->body;
     }
@@ -68,8 +57,8 @@ public:
             return true;
         }
 
-        Fixture a(simulation_, fixtureA);
-        Fixture b(simulation_, fixtureB);
+        Fixture a((_impl::FixtureData*)fixtureA->GetUserData());
+        Fixture b((_impl::FixtureData*)fixtureB->GetUserData());
 
         return filter->should_collide(&a, &b);
     }
@@ -81,8 +70,8 @@ public:
             return true;
         }
 
-        Fixture a(simulation_, fixtureA);
-        Fixture b(simulation_, fixtureB);
+        Fixture a((_impl::FixtureData*)fixtureA->GetUserData());
+        Fixture b((_impl::FixtureData*)fixtureB->GetUserData());
 
         return filter->should_respond(&a, &b);
     }
@@ -104,8 +93,8 @@ public:
         b3Fixture* fixtureA = contact->GetFixtureA();
         b3Fixture* fixtureB = contact->GetFixtureB();
 
-        PhysicsBody* bodyA = (PhysicsBody*) fixtureA->GetUserData();
-        PhysicsBody* bodyB = (PhysicsBody*) fixtureB->GetUserData();
+        PhysicsBody* bodyA = (PhysicsBody*)fixtureA->GetBody()->GetUserData();
+        PhysicsBody* bodyB = (PhysicsBody*)fixtureB->GetBody()->GetUserData();
 
         auto coll_pair = build_collision_pair(contact);
         auto& collA = coll_pair.first;
@@ -128,8 +117,8 @@ public:
         b3Fixture* fixtureA = contact->GetFixtureA();
         b3Fixture* fixtureB = contact->GetFixtureB();
 
-        PhysicsBody* bodyA = (PhysicsBody*) fixtureA->GetUserData();
-        PhysicsBody* bodyB = (PhysicsBody*) fixtureB->GetUserData();
+        PhysicsBody* bodyA = (PhysicsBody*)fixtureA->GetBody()->GetUserData();
+        PhysicsBody* bodyB = (PhysicsBody*)fixtureB->GetBody()->GetUserData();
 
         auto coll_pair = build_collision_pair(contact);
         auto& collA = coll_pair.first;
@@ -162,13 +151,13 @@ private:
         b3Fixture* fixtureA = contact->GetFixtureA();
         b3Fixture* fixtureB = contact->GetFixtureB();
 
-        PhysicsBody* bodyA = (PhysicsBody*) fixtureA->GetUserData();
-        PhysicsBody* bodyB = (PhysicsBody*) fixtureB->GetUserData();
+        PhysicsBody* bodyA = (PhysicsBody*)fixtureA->GetBody()->GetUserData();
+        PhysicsBody* bodyB = (PhysicsBody*)fixtureB->GetBody()->GetUserData();
 
         Collision collA, collB;
 
-        auto fA = simulation_->pimpl_->find_fixture(bodyA, fixtureA);
-        auto fB = simulation_->pimpl_->find_fixture(bodyB, fixtureB);
+        auto fA = (_impl::FixtureData*)fixtureA->GetUserData();
+        auto fB = (_impl::FixtureData*)fixtureB->GetUserData();
 
         collA.this_body = bodyA;
         collA.this_collider_name = fA->name;
@@ -248,11 +237,6 @@ public:
 
     b3Mesh* get_mesh() const { return mesh_.get(); }
 };
-
-Fixture::Fixture(PhysicsService* sim, b3Fixture* fixture) {
-    body_ = (PhysicsBody*) (fixture->GetBody()->GetUserData());
-    kind_ = sim->pimpl_->find_fixture(body_, fixture)->kind;
-}
 
 const ContactFilter* PhysicsService::contact_filter() const {
     if(!pimpl_->filter_) {
@@ -365,11 +349,11 @@ void PhysicsService::add_box_collider(PhysicsBody* self, const Vec3& size,
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    _impl::FixtureData fdata;
-    fdata.fixture = self->bounce_->body->CreateFixture(sdef);
-    fdata.fixture->SetUserData(self);
-    fdata.material = properties;
-    fdata.kind = kind;
+    auto fdata = std::make_shared<_impl::FixtureData>();
+    fdata->fixture = self->bounce_->body->CreateFixture(sdef);
+    fdata->fixture->SetUserData(fdata.get());
+    fdata->material = properties;
+    fdata->kind = kind;
 
     self->bounce_->fixtures.push_back(fdata);
 }
@@ -388,11 +372,11 @@ void PhysicsService::add_sphere_collider(
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    _impl::FixtureData fdata;
-    fdata.fixture = self->bounce_->body->CreateFixture(sdef);
-    fdata.fixture->SetUserData(self);
-    fdata.material = properties;
-    fdata.kind = kind;
+    auto fdata = std::make_shared<_impl::FixtureData>();
+    fdata->fixture = self->bounce_->body->CreateFixture(sdef);
+    fdata->fixture->SetUserData(fdata.get());
+    fdata->material = properties;
+    fdata->kind = kind;
 
     self->bounce_->fixtures.push_back(fdata);
 }
@@ -415,11 +399,11 @@ void PhysicsService::add_triangle_collider(
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    _impl::FixtureData fdata;
-    fdata.fixture = self->bounce_->body->CreateFixture(sdef);
-    fdata.fixture->SetUserData(self);
-    fdata.material = properties;
-    fdata.kind = kind;
+    auto fdata = std::make_shared<_impl::FixtureData>();
+    fdata->fixture = self->bounce_->body->CreateFixture(sdef);
+    fdata->fixture->SetUserData(fdata.get());
+    fdata->material = properties;
+    fdata->kind = kind;
 
     self->bounce_->fixtures.push_back(fdata);
 }
@@ -440,11 +424,11 @@ void PhysicsService::add_capsule_collider(PhysicsBody* self, const Vec3& v0,
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    _impl::FixtureData fdata;
-    fdata.fixture = self->bounce_->body->CreateFixture(sdef);
-    fdata.fixture->SetUserData(self);
-    fdata.material = properties;
-    fdata.kind = kind;
+    auto fdata = std::make_shared<_impl::FixtureData>();
+    fdata->fixture = self->bounce_->body->CreateFixture(sdef);
+    fdata->fixture->SetUserData(fdata.get());
+    fdata->material = properties;
+    fdata->kind = kind;
 
     self->bounce_->fixtures.push_back(fdata);
 }
@@ -495,12 +479,12 @@ void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, c
     sdef.friction = properties.friction;
     sdef.restitution = properties.bounciness;
 
-    _impl::FixtureData fdata;
-    fdata.fixture = self->bounce_->body->CreateFixture(sdef);
-    fdata.fixture->SetUserData(self);
-    fdata.material = properties;
-    fdata.kind = kind;
-    fdata.mesh = bmesh;
+    auto fdata = std::make_shared<_impl::FixtureData>();
+    fdata->fixture = self->bounce_->body->CreateFixture(sdef);
+    fdata->fixture->SetUserData(fdata.get());
+    fdata->material = properties;
+    fdata->kind = kind;
+    fdata->mesh = bmesh;
 
     self->bounce_->fixtures.push_back(fdata);
 }
