@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../scenes/scene.h"
+#include "../../scenes/scene.h"
+#include "../stage_node.h"
 #include "reactive_body.h"
-#include "simulant/nodes/stage_node.h"
 
 namespace smlt {
 

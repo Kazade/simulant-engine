@@ -1,7 +1,8 @@
 #include "reactive_body.h"
-#include "../services/physics.h"
+#include "../../services/physics.h"
 #include "bounce/bounce.h"
 #include "joints.h"
+#include "private.h"
 
 namespace smlt {
 
@@ -21,22 +22,20 @@ SphereJoint *ReactiveBody::create_sphere_joint(
 }
 
 float ReactiveBody::mass() const {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return 0.0f;
     }
 
-    b3Body* b = (b3Body*) sim->private_body(this);
+    b3Body* b = bounce_->body;
     return b->GetMass();
 }
 
 void ReactiveBody::set_mass(float m) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    b3Body* b = (b3Body*) sim->private_body(this);
+    b3Body* b = bounce_->body;
     b3MassData data;
     b->GetMassData(&data);
 
@@ -45,12 +44,11 @@ void ReactiveBody::set_mass(float m) {
 }
 
 void ReactiveBody::set_center_of_mass(const Vec3 &com) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    b3Body* b = (b3Body*) sim->private_body(this);
+    b3Body* b = bounce_->body;
     b3MassData md;
     b3Vec3 new_center(com.x, com.y, com.z);
 
@@ -69,12 +67,11 @@ void ReactiveBody::set_center_of_mass(const Vec3 &com) {
 }
 
 Vec3 ReactiveBody::center_of_mass() const {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return Vec3();
     }
 
-    b3Body* b = (b3Body*) sim->private_body(this);
+    b3Body* b = bounce_->body;
     b3MassData data;
     b->GetMassData(&data);
 
@@ -83,48 +80,44 @@ Vec3 ReactiveBody::center_of_mass() const {
 }
 
 Vec3 ReactiveBody::absolute_center_of_mass() const {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return Vec3();
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
     b3Vec3 center = b->GetWorldCenter();
     smlt::Vec3 ret(center.x, center.y, center.z);
     return ret;
 }
 
 void ReactiveBody::add_force(const Vec3 &force) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
 
     b3Vec3 v(force.x, force.y, force.z);
     b->ApplyForceToCenter(v, true);
 }
 
 void ReactiveBody::add_force_at_position(const Vec3 &force, const Vec3 &position) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
     b3Vec3 f(force.x, force.y, force.z);
     b3Vec3 p(position.x, position.y, position.z);
     b->ApplyForce(f, p, true);
 }
 
 void ReactiveBody::add_relative_force(const Vec3 &force) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
 
     b3Vec3 v(force.x, force.y, force.z);
     // same as above, but convert the passed force vector to world space
@@ -132,24 +125,22 @@ void ReactiveBody::add_relative_force(const Vec3 &force) {
 }
 
 void ReactiveBody::add_torque(const Vec3 &torque) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
 
     b3Vec3 t(torque.x, torque.y, torque.z);
     b->ApplyTorque(t, true);
 }
 
 void ReactiveBody::add_relative_torque(const Vec3 &torque) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
 
     b3Vec3 t(torque.x, torque.y, torque.z);
     // Convert the vector to world space then apply
@@ -157,81 +148,74 @@ void ReactiveBody::add_relative_torque(const Vec3 &torque) {
 }
 
 void ReactiveBody::add_impulse(const Vec3 &impulse) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
     b3Vec3 v(impulse.x, impulse.y, impulse.z);
     b->ApplyLinearImpulse(v, b->GetPosition(), true);
 }
 
 void ReactiveBody::add_impulse_at_position(const Vec3 &impulse, const Vec3 &position) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
     b3Vec3 i(impulse.x, impulse.y, impulse.z);
     b3Vec3 p(position.x, position.y, position.z);
     b->ApplyLinearImpulse(i, p, true);
 }
 
 void ReactiveBody::set_linear_damping(const float d) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
 
     b3Vec3 v(d, d, d);
     b->SetLinearDamping(v);
 }
 
 void ReactiveBody::set_angular_damping(const Vec3 &d) {
-    auto sim = get_simulation();
-    if(!sim) {
+
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
 
     b3Vec3 v(d.x, d.y, d.z);
     b->SetAngularDamping(v);
 }
 
 void ReactiveBody::set_angular_sleep_tolerance(float x) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
     b->SetAngularSleepTolerance(x);
 }
 
 Vec3 ReactiveBody::linear_velocity() const {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return Vec3();
     }
 
-    auto b = (b3Body*) sim->private_body(this);
-
+    auto b = bounce_->body;
     auto v = b->GetLinearVelocity();
     return Vec3(v.x, v.y, v.z);
 }
 
 Vec3 ReactiveBody::linear_velocity_at(const Vec3 &position) const {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return {};
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
 
     b3Vec3 bv(position.x, position.y, position.z);
     auto direction_to_point = bv - b->GetPosition();
@@ -242,70 +226,65 @@ Vec3 ReactiveBody::linear_velocity_at(const Vec3 &position) const {
 }
 
 void ReactiveBody::set_linear_velocity(const Vec3 &vel) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
     b3Vec3 v(vel.x, vel.y, vel.z);
     b->SetLinearVelocity(v);
 }
 
 Vec3 ReactiveBody::angular_velocity() const {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return Vec3();
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
     auto v = b->GetAngularVelocity();
     return Vec3(v.x, v.y, v.z);
 }
 
 void ReactiveBody::set_angular_velocity(const Vec3 &vel) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
     b3Vec3 v(vel.x, vel.y, vel.z);
     b->SetAngularVelocity(v);
 }
 
 Vec3 ReactiveBody::forward() {
-    Quaternion rot = simulated_rotation();
+    Quaternion rot = orientation();
     return Vec3::forward() * rot;
 }
 
 Vec3 ReactiveBody::right() {
-    Quaternion rot = simulated_rotation();
+    Quaternion rot = orientation();
     return Vec3::right() * rot;
 }
 
 Vec3 ReactiveBody::up() {
-    Quaternion rot = simulated_rotation();
+    Quaternion rot = orientation();
     return Vec3::up() * rot;
 }
 
 bool ReactiveBody::is_awake() const {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return false;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
     return b->IsAwake();
 }
 
 void ReactiveBody::lock_rotation(bool x, bool y, bool z) {
-    auto sim = get_simulation();
-    if(!sim) {
+    if(!bounce_) {
         return;
     }
 
-    auto b = (b3Body*) sim->private_body(this);
+    auto b = bounce_->body;
     b->SetFixedRotation(x, y, z);
 }
 

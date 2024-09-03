@@ -1,5 +1,5 @@
 #include "static_body.h"
-#include "../services/physics.h"
+#include "../../services/physics.h"
 #include "simulant/utils/params.h"
 
 namespace smlt {

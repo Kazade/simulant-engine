@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../scenes/scene.h"
-#include "debug.h"
-#include "locators/node_locator.h"
+#include "../../scenes/scene.h"
+#include "../debug.h"
+#include "../locators/node_locator.h"
+#include "../stage_node.h"
 #include "reactive_body.h"
-#include "stage_node.h"
 
 namespace smlt {
 
