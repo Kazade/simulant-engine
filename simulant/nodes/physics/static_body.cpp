@@ -37,6 +37,6 @@ bool StaticBody::on_create(Params params) {
         }
     }
 
-    return PhysicsBody::on_create(params);
+    return true;
 }
 } // namespace smlt

@@ -155,6 +155,7 @@ bool PhysicsBody::on_create(Params params) {
         params.get<FloatArray>("orientation").value_or(Quaternion());
     auto sim = get_simulation();
     if(sim) {
+        assert(!bounce_);
         bounce_ = std::make_unique<_impl::BounceData>();
 
         sim->register_body(this, initial_pos, initial_rot);
