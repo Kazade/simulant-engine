@@ -7,7 +7,8 @@ namespace smlt {
 
 void DirectionNoiseRandomManipulator::do_manipulate(ParticleSystem *system, Particle *particles, std::size_t particle_count, float dt) const {
     _S_UNUSED(system);
-    static RandomGenerator rgen;
+
+    auto& rgen = RandomGenerator::instance();
 
     Particle* it = particles;
     while(particle_count--) {

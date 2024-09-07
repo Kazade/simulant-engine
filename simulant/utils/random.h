@@ -23,6 +23,15 @@ public:
     RandomGenerator();
     RandomGenerator(uint32_t seed);
 
+    RandomGenerator(const RandomGenerator&) = delete;
+    bool operator=(const RandomGenerator&) = delete;
+
+    /* A default instance seeded on first call */
+    static RandomGenerator& instance() {
+        static RandomGenerator i(time(NULL));
+        return i;
+    }
+
     template<typename T>
     T choice(T* array, std::size_t count) {
         return array[int_in_range(0, count - 1)];

@@ -303,7 +303,7 @@ public:
     friend std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
 
     Vec3 perpendicular() const;
-    Vec3 random_deviant(const Degrees& angle, const Vec3 up=Vec3()) const;
+    Vec3 random_deviant(const Degrees& angle) const;
 
     Vec2 xy() const;
     Vec4 xyzw(float w=1.0f) const;

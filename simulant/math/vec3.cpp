@@ -36,18 +36,26 @@ Vec3 operator/(float lhs, const Vec3& rhs) {
     return result * l;
 }
 
-Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
-    //Lovingly adapted from ogre
-    Vec3 new_up = (up == Vec3()) ? perpendicular() : up;
+Vec3 Vec3::random_deviant(const Degrees& angle) const {
+    auto v = normalized();
+    auto& rgen = RandomGenerator::instance();
 
-    Quaternion q(*this, Radians(RandomGenerator().float_in_range(0, 1) * (PI * 2.0f)));
+    smlt::Radians theta(
+        rgen.float_in_range(-angle.to_float() * smlt::PI_OVER_180,
+                            angle.to_float() * smlt::PI_OVER_180));
 
-    new_up = new_up * q;
+    auto r = smlt::Vec3(1.0f, 0.0f, 0.0f);
+    if(std::abs(v.x) > 0.9f) {
+        r = smlt::Vec3(0.0f, 1.0f, 0.0f);
+    }
 
-    q = Quaternion(new_up, angle);
+    auto w = v.cross(r).normalized();
 
-    return *this * q;
+    float cosTheta = std::cos(theta.to_float());
+    float sinTheta = std::sin(theta.to_float());
 
+    return (v * cosTheta) + (w * sinTheta) +
+           (w * (v.dot(w) * (1.0f - cosTheta)));
 }
 
 Vec2 Vec3::xy() const {

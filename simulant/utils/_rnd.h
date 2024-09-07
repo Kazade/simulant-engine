@@ -16,11 +16,13 @@ Additional Contributors
 #ifndef rnd_h
 #define rnd_h
 
+#include <stdint.h>
+
 #ifndef RND_U32
-    #define RND_U32 unsigned int
+#define RND_U32 uint32_t
 #endif
 #ifndef RND_U64
-    #define RND_U64 unsigned long long
+#define RND_U64 uint64_t
 #endif
 
 typedef struct rnd_pcg_t { RND_U64 state[ 2 ]; } rnd_pcg_t;

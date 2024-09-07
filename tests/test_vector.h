@@ -46,6 +46,25 @@ public:
 
 class Vec3Test : public smlt::test::TestCase {
 public:
+    void test_random_deviant() {
+        auto angle = 10.0_deg;
+        smlt::Vec3 start = smlt::Vec3::up();
+
+        auto v0 = start.random_deviant(angle);
+        auto v1 = start.random_deviant(angle);
+        auto v2 = start.random_deviant(angle);
+
+        assert_not_equal(v0, v1);
+        assert_not_equal(v1, v2);
+
+        assert_true(smlt::Radians(std::acos(v0.dot(start))).to_degrees() <=
+                    angle);
+        assert_true(smlt::Radians(std::acos(v1.dot(start))).to_degrees() <=
+                    angle);
+        assert_true(smlt::Radians(std::acos(v2.dot(start))).to_degrees() <=
+                    angle);
+    }
+
     void test_equals() {
         smlt::Vec3 v1(0, 0, 1);
         smlt::Vec3 v2(0, 0, 0.9999);
