@@ -443,26 +443,29 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
             p.position.z += random_.float_in_range(-hd, hd);
         }
 
-        Vec3 dir = emitter->direction;
-        if(emitter->angle.to_float() != 0) {
-            Radians ang(emitter->angle); // Convert from degrees to radians
-            ang *= random_.float_in_range(-1,
-                                          1); // Multiply by a random unit float
-            dir = dir.random_deviant(ang).normalized();
-        }
-
-        p.velocity = dir *
-                     random_.float_in_range(emitter->velocity_range.first,
-                                            emitter->velocity_range.second) *
-                     scale;
-
         // We have to rotate the velocity by the system, because if the particle
         // system is attached to something (e.g. the back of a spaceship) when
         // that entity rotates we want the velocity to stay pointing relative to
         // the entity
         auto rot = transform->orientation();
 
-        p.velocity *= rot;
+        Vec3 dir = emitter->direction;
+        if(smlt::almost_equal(emitter->angle.to_float(), 360.0f)) {
+            dir = smlt::Vec3(
+                      RandomGenerator::instance().float_in_range(-1.0f, 1.0f),
+                      RandomGenerator::instance().float_in_range(-1.0f, 1.0f),
+                      RandomGenerator::instance().float_in_range(-1.0f, 1.0f))
+                      .normalized();
+        } else if(emitter->angle.to_float() != 0) {
+            Degrees ang(emitter->angle);
+            dir = dir.random_deviant(ang);
+            dir *= rot;
+        }
+
+        p.velocity = dir *
+                     random_.float_in_range(emitter->velocity_range.first,
+                                            emitter->velocity_range.second) *
+                     scale;
 
         p.lifetime = p.ttl = random_.float_in_range(emitter->ttl_range.first,
                                                     emitter->ttl_range.second);

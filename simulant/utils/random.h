@@ -1,27 +1,19 @@
 #pragma once
 
-#include <random>
-#include <vector>
 #include "../types.h"
-
 #include <cstdint>
-
-#if !defined(RND_U32)
-#define RND_U32 uint32_t
-#endif
-
-#if !defined(RND_U64)
-#define RND_U64 uint64_t
-#endif
-
-#include "_rnd.h"
+#include <memory>
+#include <vector>
 
 namespace smlt {
+
+struct _RandomImpl;
 
 class RandomGenerator {
 public:
     RandomGenerator();
     RandomGenerator(uint32_t seed);
+    ~RandomGenerator();
 
     RandomGenerator(const RandomGenerator&) = delete;
     bool operator=(const RandomGenerator&) = delete;
@@ -61,7 +53,7 @@ public:
     smlt::Vec3 direction_3d();
 
 private:
-    rnd_pcg_t rand_;
+    std::unique_ptr<_RandomImpl> impl_;
 };
 
 
