@@ -15,11 +15,14 @@ Contact ContactListIterator::operator*() {
 
     std::size_t i = 0;
     while(contacts) {
-        if(i == contact_index_) {
-            break;
+        if(contacts->contact->IsTouching()) {
+            if(i == contact_index_) {
+                break;
+            }
+            i++;
         }
+
         contacts = contacts->next;
-        i++;
     }
 
     assert(contacts);
@@ -37,8 +40,13 @@ ContactListIterator::ContactListIterator(const ContactList* list) :
     } else {
         bool ok = false;
         for(auto& fx: list_->body_->bounce_->fixtures) {
-            if(fx->fixture->GetContactList()) {
-                ok = true;
+            auto c = fx->fixture->GetContactList();
+            while(c) {
+                if(c->contact->IsTouching()) {
+                    ok = true;
+                    break;
+                }
+                c = c->next;
             }
         }
         if(!ok) {
@@ -56,7 +64,10 @@ ContactListIterator& ContactListIterator::operator++() {
 
     std::size_t contact_count = 0;
     while(contacts) {
-        ++contact_count;
+        if(contacts->contact->IsTouching()) {
+            ++contact_count;
+        }
+
         contacts = contacts->next;
     }
 
@@ -76,7 +87,7 @@ std::size_t ContactList::count() const {
     std::size_t i = 0;
     for(auto c: *this) {
         _S_UNUSED(c);
-        ++i;
+        i++;
     }
 
     return i;
