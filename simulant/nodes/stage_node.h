@@ -423,6 +423,11 @@ void params_unpack(Params& params, std::set<NodeParam>::iterator it,
 struct TreeLoadOptions {
     bool replace = false;  // Replace the node with the loaded tree
     std::string root_name; // The name of the root node in the GLTF
+
+    /* If non-empty, attempt to load textures with this file extension instead
+     * of the one provided by the mesh. Should be the extension excluding the
+     * leading dot. (e.g. "dtex") */
+    std::string override_texture_extension = "";
 };
 
 class StageNode:

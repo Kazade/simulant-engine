@@ -21,6 +21,10 @@ StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
         lopts["root_name"] = opts;
     }
 
+    if(!opts.override_texture_extension.empty()) {
+        lopts["override_texture_extension"] = opts.override_texture_extension;
+    }
+
     if(opts.replace) {
         loader->into(this, lopts);
         return this;

@@ -489,8 +489,9 @@ TextureFilter calculate_filter(int magFilter, int minFilter) {
     }
 }
 
-smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
-                              JSONIterator& texture, int texture_id) {
+static smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
+                                     JSONIterator& texture, int texture_id,
+                                     const std::string& ext = "") {
 
     _S_UNUSED(texture_id);
 
@@ -508,8 +509,11 @@ smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
         return smlt::TexturePtr();
     }
 
-    auto uri = image["uri"]->to_str().value_or("");
-    if(!uri.empty()) {
+    smlt::Path uri = image["uri"]->to_str().value_or("");
+    if(!uri.str().empty()) {
+        if(!ext.empty()) {
+            uri = uri.replace_ext(ext);
+        }
         auto tex = scene->assets->load_texture(uri);
 
         auto wrapS = sampler["wrapS"]->to_int().value_or(10497);
@@ -959,11 +963,16 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
     });
 
+    std::string ext = "";
+    if(options.count("override_texture_extension")) {
+        ext = any_cast<std::string>(options.at("override_texture_extension"));
+    }
+
     int j = 0;
     auto textures_it = js["textures"];
     for(auto& node: textures_it) {
         auto tex_it = node.to_iterator();
-        auto tex = load_texture(scene, js, tex_it, j++);
+        auto tex = load_texture(scene, js, tex_it, j++, ext);
         textures.push_back(tex);
     }
 
