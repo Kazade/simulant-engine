@@ -28,8 +28,9 @@
 #include "../macros.h"
 #include "../texture.h"
 
-#include "batching/renderable.h"
+#include "../meshes/vertex_format.h"
 #include "batching/render_queue.h"
+#include "batching/renderable.h"
 
 namespace smlt {
 
@@ -127,6 +128,14 @@ public:
     void prepare_texture(Texture *texture);
     void prepare_material(Material* material);
 
+    VertexFormat native_vertex_format(VertexFormat hint) {
+        return on_native_vertex_format(hint);
+    }
+
+    bool natively_supports_vertex_format(VertexFormat fmt) {
+        return fmt == native_vertex_format(fmt);
+    }
+
 private:
     friend class Texture;
 
@@ -137,15 +146,20 @@ private:
 
     Window* window_ = nullptr;
 
+    /* Given a VertexFormat return the best matching format supported by
+     * the hardware natively. The returned format should ideally not lose
+     * information (but that may be inevitable in some cases) */
+    virtual VertexFormat on_native_vertex_format(VertexFormat hint) = 0;
+
     /*
      * Called when a texture is created. This should do whatever is necessary to
      * prepare a texture for later upload
      *
-     * It's likely that data will need to also be stored here for prepare_texture
-     * to function
+     * It's likely that data will need to also be stored here for
+     * prepare_texture to function
      *
-     * This will be called when a render group (which uses textures) is created, which
-     * means it can be called from any thread and should be thread-safe.
+     * This will be called when a render group (which uses textures) is created,
+     * which means it can be called from any thread and should be thread-safe.
      */
     virtual void on_texture_register(AssetID tex_id, Texture* texture) {
         _S_UNUSED(tex_id);

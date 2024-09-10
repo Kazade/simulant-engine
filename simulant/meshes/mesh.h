@@ -48,6 +48,7 @@ class Renderer;
 class Rig;
 class Skeleton;
 class Debug;
+class VertexBuffer;
 
 enum MeshAnimationType {
     MESH_ANIMATION_TYPE_NONE,
@@ -117,6 +118,13 @@ public:
     }
 };
 
+/* What should we do after uploading the mesh vertex
+ * data to the GPU */
+enum VertexFreeDataMode {
+    VERTEX_FREE_DATA_MODE_KEEP,
+    VERTEX_FREE_DATA_MODE_DISCARD
+};
+
 class Mesh :
     public virtual Boundable,
     public Asset,
@@ -149,6 +157,27 @@ public:
     Mesh(AssetID id, AssetManager* asset_manager, VertexFormat vertex_format);
 
     virtual ~Mesh();
+
+    /**
+     *  Set the mode to use when uploading vertex data to the GPU.
+     *  If VERTEX_FREE_DATA_MODE_KEEP is used, the vertex data will be kept in
+     * memory after uploading to the GPU. If VERTEX_FREE_DATA_MODE_DISCARD is
+     * used, the vertex data will be deleted after uploading to the GPU.
+     */
+    void set_vertex_free_data_mode(VertexFreeDataMode mode);
+
+    /**
+     *  Get the mode to use when uploading vertex data to the GPU.
+     */
+    VertexFreeDataMode vertex_free_data_mode() const;
+
+    /* Set whether or not to automatically upload the mesh data to a GPU
+     * vertex buffer */
+    void set_auto_upload(bool v = true);
+
+    /* Whether or not to automatically upload the mesh data to a GPU
+     * vertex buffer */
+    bool auto_upload() const;
 
     void reset(VertexDataPtr vertex_data);
     void reset(VertexFormat vertex_format);
@@ -347,6 +376,8 @@ private:
     void submesh_index_data_updated(SubMesh* sm);
     sig::connection done_connection_;
 
+    VertexBuffer* vertex_buffer_ = nullptr;
+
 public:
     /* Returns a nullptr if there is no adjacecy info */
     S_DEFINE_PROPERTY(adjacency_info, &Mesh::adjacency_);
@@ -355,6 +386,9 @@ public:
 
     /* Returns a nullptr if there is no skeleton */
     S_DEFINE_PROPERTY(skeleton, &Mesh::skeleton_);
+
+    /* Returns a nullptr if the mesh hasn't been uploaded to the GPU */
+    S_DEFINE_PROPERTY(vertex_buffer, &Mesh::vertex_buffer_);
 };
 
 }

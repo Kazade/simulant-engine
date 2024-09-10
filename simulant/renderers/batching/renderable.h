@@ -29,6 +29,7 @@
 namespace smlt {
 
 class VertexData;
+class VertexBuffer;
 class IndexData;
 struct VertexRange;
 
@@ -67,6 +68,7 @@ private:
 struct alignas(8) Renderable final {
     MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES;
     const VertexData* vertex_data = nullptr;
+    const VertexBuffer* vertex_buffer = nullptr;
 
     const IndexData* index_data = nullptr;
     std::size_t index_element_count = 0;

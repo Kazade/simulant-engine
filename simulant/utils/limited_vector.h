@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstring>
+#include <iterator>
 
 namespace smlt {
 
@@ -98,9 +99,17 @@ public:
 
     iterator begin() {
         return iterator(data_);
-    }
+    }    
 
     iterator end() {
+        return iterator(data_ + size_);
+    }
+
+    iterator begin() const {
+        return iterator(data_);
+    }
+
+    iterator end() const {
         return iterator(data_ + size_);
     }
 
