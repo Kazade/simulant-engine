@@ -302,7 +302,7 @@ void convert_normal(int16_t* vout, const uint8_t* vin, VertexAttribute type) {
 }
 
 static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
-                             const VertexSpecification& spec) {
+                             const VertexFormat& spec) {
     auto pos_off = spec.position_offset(false);
     auto uv_off = (spec.has_texcoord0())
                       ? spec.texcoord0_offset(false)
@@ -335,7 +335,7 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
 static std::vector<PSPVertex> buffer;
 
 static void zclip_tristrips_and_submit_range(const VertexRange* range,
-                                             const VertexSpecification& spec,
+                                             const VertexFormat& spec,
                                              const uint8_t* data,
                                              std::size_t stride) {
     buffer.clear();
@@ -358,7 +358,7 @@ static void zclip_tristrips_and_submit_range(const VertexRange* range,
 }
 
 static void zclip_triangles_and_submit_range(const VertexRange* range,
-                                             const VertexSpecification& spec,
+                                             const VertexFormat& spec,
                                              const uint8_t* data,
                                              std::size_t stride) {
     buffer.clear();

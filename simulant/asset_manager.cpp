@@ -193,8 +193,8 @@ bool AssetManager::is_base_manager() const {
     } \
     return manager_name.get(id)
 
-
-MeshPtr AssetManager::create_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
+MeshPtr AssetManager::create_mesh(VertexFormat vertex_specification,
+                                  GarbageCollectMethod garbage_collect) {
     NEW_X(Mesh, mesh, mesh_manager_, vertex_specification);
 }
 
@@ -219,7 +219,7 @@ MeshPtr AssetManager::create_mesh_from_submesh(SubMesh* submesh, GarbageCollectM
 
     auto source_vdata = submesh->mesh->vertex_data.get();
 
-    VertexSpecification spec = source_vdata->vertex_specification();
+    VertexFormat spec = source_vdata->vertex_specification();
 
     auto mesh = create_mesh(spec, garbage_collect);
     auto target_vdata = mesh->vertex_data.get();
@@ -255,9 +255,9 @@ MeshPtr AssetManager::create_mesh_from_submesh(SubMesh* submesh, GarbageCollectM
 }
 
 MeshPtr AssetManager::load_mesh(const Path& path,
-    const VertexSpecification& desired_specification,
-    const MeshLoadOptions& options,
-    GarbageCollectMethod garbage_collect) {
+                                const VertexFormat& desired_specification,
+                                const MeshLoadOptions& options,
+                                GarbageCollectMethod garbage_collect) {
 
     //Load the material
     auto mesh = create_mesh(desired_specification, GARBAGE_COLLECT_NEVER);
@@ -285,7 +285,7 @@ MeshPtr AssetManager::create_mesh_from_heightmap(const Path& image_file, const H
         return nullptr;
     }
 
-    auto mesh = create_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+    auto mesh = create_mesh(VertexFormat::DEFAULT, GARBAGE_COLLECT_NEVER);
 
     loader->into(mesh, {
         { "spec", spec},
@@ -297,7 +297,7 @@ MeshPtr AssetManager::create_mesh_from_heightmap(const Path& image_file, const H
 }
 
 MeshPtr AssetManager::create_mesh_from_heightmap(const TexturePtr& texture, const HeightmapSpecification& spec, GarbageCollectMethod garbage_collect) {
-    auto mesh = create_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+    auto mesh = create_mesh(VertexFormat::DEFAULT, GARBAGE_COLLECT_NEVER);
 
     loaders::HeightmapLoader loader(texture);
 
@@ -310,10 +310,7 @@ MeshPtr AssetManager::create_mesh_from_heightmap(const TexturePtr& texture, cons
 }
 
 MeshPtr AssetManager::create_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect) {
-    auto m = create_mesh(
-                VertexSpecification::DEFAULT,
-                GARBAGE_COLLECT_NEVER
-                );
+    auto m = create_mesh(VertexFormat::DEFAULT, GARBAGE_COLLECT_NEVER);
     smlt::procedural::mesh::box(m, width, width, width, smlt::procedural::MESH_STYLE_SUBMESH_PER_FACE);
     mesh_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;

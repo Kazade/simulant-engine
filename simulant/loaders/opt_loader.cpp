@@ -459,7 +459,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         throw std::runtime_error("Couldn't load the OPT file: " + filename_.str());
     }
 
-    VertexSpecification spec;
+    VertexFormat spec;
     spec.position_attribute = VERTEX_ATTRIBUTE_3F;
     spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
     spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;

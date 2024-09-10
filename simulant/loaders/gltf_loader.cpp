@@ -344,7 +344,7 @@ static auto
 
 void process_positions(const BufferInfo& buffer_info, JSONIterator&,
                        JSONIterator&, smlt::MeshPtr& final_mesh,
-                       VertexSpecification& spec) {
+                       VertexFormat& spec) {
 
     auto start = final_mesh->vertex_data->cursor_position();
 
@@ -376,7 +376,7 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
 
 void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
                     JSONIterator& accessors, smlt::MeshPtr& final_mesh,
-                    VertexSpecification& spec) {
+                    VertexFormat& spec) {
 
     _S_UNUSED(accessors);
     _S_UNUSED(js);
@@ -407,7 +407,7 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
 
 void process_normals(const BufferInfo& buffer_info, JSONIterator& js,
                      JSONIterator& accessors, smlt::MeshPtr& final_mesh,
-                     VertexSpecification& spec) {
+                     VertexFormat& spec) {
 
     _S_UNUSED(js);
     _S_UNUSED(accessors);
@@ -437,7 +437,7 @@ void process_normals(const BufferInfo& buffer_info, JSONIterator& js,
 
 void process_texcoord0s(const BufferInfo& buffer_info, JSONIterator& js,
                         JSONIterator& accessors, smlt::MeshPtr& final_mesh,
-                        VertexSpecification& spec) {
+                        VertexFormat& spec) {
 
     _S_UNUSED(js);
     _S_UNUSED(accessors);
@@ -581,6 +581,7 @@ static smlt::MaterialPtr create_default_material(StageNode* node) {
     mat->set_name("Default");
     mat->set_lighting_enabled(true);
     mat->set_textures_enabled(0);
+    mat->set_blend_func(smlt::BLEND_NONE);
     approximate_pbr_material(mat, 0.0f, 0.4f, Color(0, 0, 0, 1), base_color);
     mat->set_cull_mode(smlt::CULL_MODE_BACK_FACE);
     return mat;
@@ -706,7 +707,7 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
         auto diff = process_attribute(primitive["attributes"], "COLOR_0");
         auto tex = process_attribute(primitive["attributes"], "TEXCOORD_0");
 
-        auto spec = VertexSpecification(
+        auto spec = VertexFormat(
             pos, norm, tex, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
             VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
             VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, diff);

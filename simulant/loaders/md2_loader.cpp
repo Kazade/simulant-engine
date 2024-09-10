@@ -223,7 +223,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
 
     assert(mesh && "Tried to load an MD2 file into something that wasn't a mesh");
 
-    VertexSpecification vertex_specification = VertexSpecification::DEFAULT;
+    VertexFormat vertex_specification = VertexFormat::DEFAULT;
 
     // Rebuild the mesh from the loaded data
     mesh->reset(vertex_specification);

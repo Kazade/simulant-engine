@@ -62,7 +62,7 @@ _S_FORCE_INLINE Vec3 unpack_vertex_attribute_vec3_1i(uint32_t p) {
     return ret;
 }
 
-const VertexSpecification VertexSpecification::DEFAULT = VertexSpecification{
+const VertexFormat VertexFormat::DEFAULT = VertexFormat{
     VERTEX_ATTRIBUTE_3F,  // Position
     VERTEX_ATTRIBUTE_3F,
     VERTEX_ATTRIBUTE_2F, // UV
@@ -83,11 +83,11 @@ const VertexSpecification VertexSpecification::DEFAULT = VertexSpecification{
     VERTEX_ATTRIBUTE_NONE
 };
 
-const VertexSpecification VertexSpecification::POSITION_ONLY = VertexSpecification{
+const VertexFormat VertexFormat::POSITION_ONLY = VertexFormat{
     VERTEX_ATTRIBUTE_3F
 };
 
-const VertexSpecification VertexSpecification::POSITION_AND_DIFFUSE = VertexSpecification{
+const VertexFormat VertexFormat::POSITION_AND_DIFFUSE = VertexFormat{
     VERTEX_ATTRIBUTE_3F, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
         VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
         VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
@@ -101,7 +101,7 @@ const VertexSpecification VertexSpecification::POSITION_AND_DIFFUSE = VertexSpec
 #endif
 };
 
-VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec) {
+VertexAttribute attribute_for_type(VertexAttributeType type, const VertexFormat& spec) {
     switch(type) {
         case VERTEX_ATTRIBUTE_TYPE_POSITION: return spec.position_attribute;
         case VERTEX_ATTRIBUTE_TYPE_NORMAL: return spec.normal_attribute;
@@ -121,7 +121,7 @@ VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecifi
     }
 }
 
-VertexData::VertexData(VertexSpecification vertex_specification):
+VertexData::VertexData(VertexFormat vertex_specification):
     cursor_position_(0) {
 
     reset(vertex_specification);
@@ -524,7 +524,7 @@ uint32_t VertexData::move_next() {
     return cursor_position_;
 }
 
-void VertexData::reset(VertexSpecification vertex_specification) {
+void VertexData::reset(VertexFormat vertex_specification) {
     clear();
 
     vertex_specification_ = vertex_specification;

@@ -32,7 +32,7 @@ const std::vector<RenderPriority> RENDER_PRIORITIES = {
     RENDER_PRIORITY_ABSOLUTE_FOREGROUND
 };
 
-VertexSpecification::VertexSpecification(VertexAttribute position, VertexAttribute normal, VertexAttribute texcoord0,
+VertexFormat::VertexFormat(VertexAttribute position, VertexAttribute normal, VertexAttribute texcoord0,
         VertexAttribute texcoord1, VertexAttribute texcoord2, VertexAttribute texcoord3, VertexAttribute texcoord4,
         VertexAttribute texcoord5, VertexAttribute texcoord6, VertexAttribute texcoord7,
         VertexAttribute diffuse, VertexAttribute specular):
@@ -52,7 +52,7 @@ VertexSpecification::VertexSpecification(VertexAttribute position, VertexAttribu
     recalc_stride_and_offsets();
 }
 
-bool VertexSpecification::has_texcoordX(uint8_t which) const {
+bool VertexFormat::has_texcoordX(uint8_t which) const {
     assert(which < 8);
 
     return (which == 0) ? has_texcoord0() :
@@ -65,7 +65,7 @@ bool VertexSpecification::has_texcoordX(uint8_t which) const {
            (which == 7) ? has_texcoord7() : false;
 }
 
-VertexAttribute VertexSpecification::texcoordX_attribute(uint8_t which) const {
+VertexAttribute VertexFormat::texcoordX_attribute(uint8_t which) const {
     assert(which < 8);
 
     switch(which) {
@@ -82,7 +82,7 @@ VertexAttribute VertexSpecification::texcoordX_attribute(uint8_t which) const {
     }
 }
 
-void VertexSpecification::recalc_stride_and_offsets() {
+void VertexFormat::recalc_stride_and_offsets() {
     /* The order here is designed to match the Dreamcast PVR vertex (at least at the start)
      * on the Dreamcast we add 4 bytes of padding at the end of the vertex
      * so that the default vertex arrangement is 32 bytes. */
@@ -104,57 +104,57 @@ void VertexSpecification::recalc_stride_and_offsets() {
     stride_ = round_to_bytes(specular_offset_ + vertex_attribute_size(specular_attribute_), BUFFER_STRIDE_ALIGNMENT);
 }
 
-AttributeOffset VertexSpecification::position_offset(bool check) const {
+AttributeOffset VertexFormat::position_offset(bool check) const {
     if(check && !has_positions()) { return INVALID_ATTRIBUTE_OFFSET; }
     return 0;
 }
 
-AttributeOffset VertexSpecification::normal_offset(bool check) const {
+AttributeOffset VertexFormat::normal_offset(bool check) const {
     if(check && !has_normals()) { return INVALID_ATTRIBUTE_OFFSET; }
     return normal_offset_;
 }
 
-AttributeOffset VertexSpecification::texcoord0_offset(bool check) const {
+AttributeOffset VertexFormat::texcoord0_offset(bool check) const {
     if(check && !has_texcoord0()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord0_offset_;
 }
 
-AttributeOffset VertexSpecification::texcoord1_offset(bool check) const {
+AttributeOffset VertexFormat::texcoord1_offset(bool check) const {
     if(check && !has_texcoord1()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord1_offset_;
 }
 
-AttributeOffset VertexSpecification::texcoord2_offset(bool check) const {
+AttributeOffset VertexFormat::texcoord2_offset(bool check) const {
     if(check && !has_texcoord2()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord2_offset_;
 }
 
-AttributeOffset VertexSpecification::texcoord3_offset(bool check) const {
+AttributeOffset VertexFormat::texcoord3_offset(bool check) const {
     if(check && !has_texcoord3()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord3_offset_;
 }
 
-AttributeOffset VertexSpecification::texcoord4_offset(bool check) const {
+AttributeOffset VertexFormat::texcoord4_offset(bool check) const {
     if(check && !has_texcoord4()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord4_offset_;
 }
 
-AttributeOffset VertexSpecification::texcoord5_offset(bool check) const {
+AttributeOffset VertexFormat::texcoord5_offset(bool check) const {
     if(check && !has_texcoord5()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord5_offset_;
 }
 
-AttributeOffset VertexSpecification::texcoord6_offset(bool check) const {
+AttributeOffset VertexFormat::texcoord6_offset(bool check) const {
     if(check && !has_texcoord6()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord6_offset_;
 }
 
-AttributeOffset VertexSpecification::texcoord7_offset(bool check) const {
+AttributeOffset VertexFormat::texcoord7_offset(bool check) const {
     if(check && !has_texcoord7()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord7_offset_;
 }
 
-AttributeOffset VertexSpecification::texcoordX_offset(uint8_t which, bool check) const {
+AttributeOffset VertexFormat::texcoordX_offset(uint8_t which, bool check) const {
     assert(which < 8);
 
     switch(which) {
@@ -171,17 +171,17 @@ AttributeOffset VertexSpecification::texcoordX_offset(uint8_t which, bool check)
     }
 }
 
-AttributeOffset VertexSpecification::diffuse_offset(bool check) const {
+AttributeOffset VertexFormat::diffuse_offset(bool check) const {
     if(check && !has_diffuse()) { return INVALID_ATTRIBUTE_OFFSET; }
     return diffuse_offset_;
 }
 
-AttributeOffset VertexSpecification::specular_offset(bool check) const {
+AttributeOffset VertexFormat::specular_offset(bool check) const {
     if(check && !has_specular()) { return INVALID_ATTRIBUTE_OFFSET; }
     return specular_offset_;
 }
 
-VertexAttributeProperty::VertexAttributeProperty(VertexSpecification *spec, VertexAttribute VertexSpecification::*attr):
+VertexAttributeProperty::VertexAttributeProperty(VertexFormat *spec, VertexAttribute VertexFormat::*attr):
     spec_(spec),
     attr_(attr) {
 

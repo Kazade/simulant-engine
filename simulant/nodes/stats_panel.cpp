@@ -87,7 +87,7 @@ bool StatsPanel::on_init() {
     graph_material_->set_depth_test_enabled(false);
     graph_material_->set_cull_mode(CULL_MODE_NONE);
     ram_graph_mesh_ =
-        scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        scene->assets->create_mesh(smlt::VertexFormat::DEFAULT);
     ram_graph_ = create_child<Actor>(ram_graph_mesh_);
     ram_graph_->set_cullable(false);
 

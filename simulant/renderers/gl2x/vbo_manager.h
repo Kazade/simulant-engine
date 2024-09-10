@@ -81,7 +81,7 @@ class DedicatedVBO:
     public VBO {
 
 public:
-    DedicatedVBO(uint32_t size, VertexSpecification spec):
+    DedicatedVBO(uint32_t size, VertexFormat spec):
         size_in_bytes_(size),
         spec_(spec),
         type_(GL_ARRAY_BUFFER) {}
@@ -127,7 +127,7 @@ public:
     }
 private:
     uint32_t size_in_bytes_;
-    VertexSpecification spec_;
+    VertexFormat spec_;
     IndexType index_type_;
     GLenum type_;
 
@@ -141,7 +141,7 @@ class SharedVBO:
     public VBO {
 
 public:
-    SharedVBO(VBOSlotSize slot_size, VertexSpecification spec):
+    SharedVBO(VBOSlotSize slot_size, VertexFormat spec):
         slot_size_(slot_size),
         slot_size_in_bytes_(int(slot_size)),
         spec_(spec),
@@ -190,7 +190,7 @@ private:
     VBOSlotSize slot_size_;
     uint32_t slot_size_in_bytes_;
 
-    VertexSpecification spec_;
+    VertexFormat spec_;
     IndexType index_type_;
     GLenum type_;
     std::queue<VBOSlot> free_slots_;
@@ -222,7 +222,7 @@ private:
 
     /* Buffers for renderables which aren't dynamic and are less than 512k */
     std::array<
-        std::unordered_map<VertexSpecification, SharedVBO::ptr>,
+        std::unordered_map<VertexFormat, SharedVBO::ptr>,
         VBO_SLOT_SIZE_COUNT
     > shared_vertex_vbos_;
 

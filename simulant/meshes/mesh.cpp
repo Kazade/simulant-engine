@@ -45,11 +45,9 @@ Mesh::Mesh(
     reset(vertex_data);
 }
 
-Mesh::Mesh(AssetID id,
-    AssetManager *asset_manager,
-    VertexSpecification vertex_specification):
-        Asset(asset_manager),
-        generic::Identifiable<AssetID>(id) {
+Mesh::Mesh(AssetID id, AssetManager* asset_manager,
+           VertexFormat vertex_specification) :
+    Asset(asset_manager), generic::Identifiable<AssetID>(id) {
 
     reset(vertex_specification);
 }
@@ -74,7 +72,7 @@ void Mesh::reset(VertexDataPtr vertex_data) {
     rebuild_aabb();
 }
 
-void Mesh::reset(VertexSpecification vertex_specification) {
+void Mesh::reset(VertexFormat vertex_specification) {
     adjacency_.reset();
     submeshes_.clear();
 

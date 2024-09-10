@@ -102,7 +102,7 @@ bool Widget::on_create(Params params) {
         style_ = shared_style.value();
     }
 
-    VertexSpecification spec = VertexSpecification::DEFAULT;
+    VertexFormat spec = VertexFormat::DEFAULT;
 
     /* We don't need normals or multiple texcoords */
     spec.normal_attribute = VERTEX_ATTRIBUTE_NONE;

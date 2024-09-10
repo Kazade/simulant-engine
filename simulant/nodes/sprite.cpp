@@ -36,7 +36,7 @@ Sprite::Sprite(Scene* owner) :
 bool Sprite::on_create(Params params) {
     _S_UNUSED(params);
 
-    mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+    mesh_ = scene->assets->create_mesh(smlt::VertexFormat::DEFAULT);
     mesh_->create_submesh_as_rectangle(
         "sprite", scene->assets->create_material(), 1.0, 1.0f);
 

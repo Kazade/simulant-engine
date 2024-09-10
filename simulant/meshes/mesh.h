@@ -142,20 +142,16 @@ public:
     );
 
     /**
-     *  Construct a mesh using a VertexSpecification.
+     *  Construct a mesh using a VertexFormat.
      *
      *  This creates a unique VertexData instance for this mesh.
      */
-    Mesh(
-        AssetID id,
-        AssetManager* asset_manager,
-        VertexSpecification vertex_specification
-    );
+    Mesh(AssetID id, AssetManager* asset_manager, VertexFormat vertex_format);
 
     virtual ~Mesh();
 
     void reset(VertexDataPtr vertex_data);
-    void reset(VertexSpecification vertex_specification);
+    void reset(VertexFormat vertex_format);
 
     /* Add a skeleton to this mesh, returns False if
      * the mesh already had a skeleton, otherwise returns true */

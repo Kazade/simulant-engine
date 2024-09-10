@@ -142,7 +142,7 @@ void Debug::build_mesh(const Camera* camera) {
 
 bool Debug::on_init() {
     mesh_ =
-        scene->assets->create_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
+        scene->assets->create_mesh(VertexFormat::POSITION_AND_DIFFUSE);
 
     // Don't GC the material, if there are no debug lines then it won't be
     // attached to the mesh

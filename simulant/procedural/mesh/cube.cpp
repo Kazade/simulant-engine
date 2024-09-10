@@ -25,7 +25,7 @@ namespace procedural {
 namespace mesh {
 
 void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) {
-    mesh->reset(VertexSpecification::DEFAULT);
+    mesh->reset(VertexFormat::DEFAULT);
 
     static const std::map<uint8_t, std::string> SUBMESH_NAMES = {
         {0, "front"},

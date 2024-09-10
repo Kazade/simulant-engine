@@ -8,7 +8,7 @@
 
 namespace smlt {
 
-const static VertexSpecification
+const static VertexFormat
     PS_VERTEX_SPEC(smlt::VERTEX_ATTRIBUTE_3F, // Position
                    smlt::VERTEX_ATTRIBUTE_NONE,
                    smlt::VERTEX_ATTRIBUTE_2F, // Texcoord 0

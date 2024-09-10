@@ -14,7 +14,7 @@ public:
         smlt::Viewport second(smlt::VIEWPORT_TYPE_VERTICAL_SPLIT_RIGHT,
                               smlt::Color::green());
 
-        auto cube = assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto cube = assets->create_mesh(smlt::VertexFormat::standard());
         cube->create_submesh_as_cube("cube", assets->create_material(), 1.0);
         smlt::ActorPtr actor = create_child<smlt::Actor>(cube);
 

@@ -25,35 +25,17 @@
 
 #include <vector>
 
-#include "signals/signal.h"
-#include "generic/managed.h"
-#include "generic/uniquely_identifiable.h"
-#include "generic/notifies_destruction.h"
-
 #include "color.h"
+#include "generic/managed.h"
+#include "generic/notifies_destruction.h"
+#include "generic/uniquely_identifiable.h"
+#include "meshes/vertex_format.h"
+#include "signals/signal.h"
 #include "types.h"
 
 namespace smlt {
 
 class Window;
-
-enum VertexAttributeType {
-    VERTEX_ATTRIBUTE_TYPE_EMPTY = 0,
-    VERTEX_ATTRIBUTE_TYPE_POSITION,
-    VERTEX_ATTRIBUTE_TYPE_NORMAL,
-    VERTEX_ATTRIBUTE_TYPE_TEXCOORD0,
-    VERTEX_ATTRIBUTE_TYPE_TEXCOORD1,
-    VERTEX_ATTRIBUTE_TYPE_TEXCOORD2,
-    VERTEX_ATTRIBUTE_TYPE_TEXCOORD3,
-    VERTEX_ATTRIBUTE_TYPE_TEXCOORD4,
-    VERTEX_ATTRIBUTE_TYPE_TEXCOORD5,
-    VERTEX_ATTRIBUTE_TYPE_TEXCOORD6,
-    VERTEX_ATTRIBUTE_TYPE_TEXCOORD7,
-    VERTEX_ATTRIBUTE_TYPE_DIFFUSE,
-    VERTEX_ATTRIBUTE_TYPE_SPECULAR
-};
-
-VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec);
 
 class VertexData :
     public UniquelyIdentifiable<VertexData>,
@@ -62,13 +44,13 @@ class VertexData :
 public:
     typedef std::shared_ptr<VertexData> ptr;
 
-    VertexData(VertexSpecification vertex_specification);
+    VertexData(VertexFormat vertex_specification);
     virtual ~VertexData();
 
     VertexData(const VertexData& rhs) = delete;
     VertexData& operator=(const VertexData& rhs) = delete;
 
-    void reset(VertexSpecification vertex_specification);
+    void reset(VertexFormat vertex_specification);
 
     /* If release_memory is true, then allocated RAM
      * will be freed. This can be costly which is why it defaults
@@ -211,7 +193,7 @@ public:
 
     void resize(uint32_t size);
 
-    const VertexSpecification& vertex_specification() const { return vertex_specification_; }
+    const VertexFormat& vertex_specification() const { return vertex_specification_; }
 
     /* Clones this VertexData into another. The other data must have the same
      * specification and will be wiped if it contains vertices already.
@@ -224,7 +206,7 @@ public:
     bool clone_into(VertexData& other);
 
 private:
-    VertexSpecification vertex_specification_;
+    VertexFormat vertex_specification_;
     std::vector<uint8_t> data_;
     uint32_t vertex_count_ = 0;
     uint32_t stride_ = 0;

@@ -136,7 +136,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     AssetManager* assets = &mesh->asset_manager();
 
-    mesh->reset(VertexSpecification::DEFAULT);
+    mesh->reset(VertexFormat::DEFAULT);
 
     MS3DHeader header;
     data_->read((char*) &header.id, sizeof(char) * 10);

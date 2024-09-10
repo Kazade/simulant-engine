@@ -187,7 +187,8 @@ ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
     nodes/physics/contact_list.h
     nodes/physics/fixture.h
     nodes/physics/fixture.cpp
-    nodes/physics/contact_list.cpp)
+    nodes/physics/contact_list.cpp
+    meshes/vertex_format.h)
 ENDIF()
 
 if(FLTO_SUPPORTED)

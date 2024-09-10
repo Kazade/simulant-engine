@@ -13,12 +13,12 @@ namespace loaders {
 
 using namespace dcm;
 
-VertexSpecification determine_spec(const FileHeader& header) {
+VertexFormat determine_spec(const FileHeader& header) {
     /* FIXME:
      * - Support short UV format
      * - Support 3UB color format
      */
-    VertexSpecification vspec;
+    VertexFormat vspec;
     vspec.position_attribute = (header.pos_format == POSITION_FORMAT_2F) ?
         VERTEX_ATTRIBUTE_2F : (header.pos_format == POSITION_FORMAT_3F) ?
         VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_4F;

@@ -73,7 +73,7 @@ struct LoadInfo {
     Material* current_material = nullptr;
 
     VertexData* vdata = nullptr;
-    VertexSpecification vspec;
+    VertexFormat vspec;
 
     CullMode cull_mode = CULL_MODE_BACK_FACE;
     std::string overridden_tex_format = "";

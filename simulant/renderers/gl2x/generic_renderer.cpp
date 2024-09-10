@@ -245,7 +245,7 @@ void disable_vertex_attribute(uint8_t i) {
 
 template<typename EnabledMethod, typename OffsetMethod>
 void send_attribute(int32_t loc, VertexAttributeType attr,
-                    const VertexSpecification& vertex_spec,
+                    const VertexFormat& vertex_spec,
                     EnabledMethod exists_on_data_predicate,
                     OffsetMethod offset_func, uint32_t global_offset) {
 
@@ -294,40 +294,40 @@ void GenericRenderer::set_auto_attributes_on_shader(
      * generic. Before this was 100s of lines of boilerplate. Thank god for
      * templates!
      */
-    const VertexSpecification& vertex_spec =
+    const VertexFormat& vertex_spec =
         renderable->vertex_data->vertex_specification();
     auto offset = buffers->vertex_vbo->byte_offset(buffers->vertex_vbo_slot);
 
     send_attribute(program->locate_attribute("s_position", true),
                    VERTEX_ATTRIBUTE_TYPE_POSITION, vertex_spec,
-                   &VertexSpecification::has_positions,
-                   &VertexSpecification::position_offset, offset);
+                   &VertexFormat::has_positions,
+                   &VertexFormat::position_offset, offset);
 
     send_attribute(program->locate_attribute("s_diffuse", true),
                    VERTEX_ATTRIBUTE_TYPE_DIFFUSE, vertex_spec,
-                   &VertexSpecification::has_diffuse,
-                   &VertexSpecification::diffuse_offset, offset);
+                   &VertexFormat::has_diffuse,
+                   &VertexFormat::diffuse_offset, offset);
 
     send_attribute(program->locate_attribute("s_texcoord0", true),
                    VERTEX_ATTRIBUTE_TYPE_TEXCOORD0, vertex_spec,
-                   &VertexSpecification::has_texcoord0,
-                   &VertexSpecification::texcoord0_offset, offset);
+                   &VertexFormat::has_texcoord0,
+                   &VertexFormat::texcoord0_offset, offset);
     send_attribute(program->locate_attribute("s_texcoord1", true),
                    VERTEX_ATTRIBUTE_TYPE_TEXCOORD1, vertex_spec,
-                   &VertexSpecification::has_texcoord1,
-                   &VertexSpecification::texcoord1_offset, offset);
+                   &VertexFormat::has_texcoord1,
+                   &VertexFormat::texcoord1_offset, offset);
     send_attribute(program->locate_attribute("s_texcoord2", true),
                    VERTEX_ATTRIBUTE_TYPE_TEXCOORD2, vertex_spec,
-                   &VertexSpecification::has_texcoord2,
-                   &VertexSpecification::texcoord2_offset, offset);
+                   &VertexFormat::has_texcoord2,
+                   &VertexFormat::texcoord2_offset, offset);
     send_attribute(program->locate_attribute("s_texcoord3", true),
                    VERTEX_ATTRIBUTE_TYPE_TEXCOORD3, vertex_spec,
-                   &VertexSpecification::has_texcoord3,
-                   &VertexSpecification::texcoord3_offset, offset);
+                   &VertexFormat::has_texcoord3,
+                   &VertexFormat::texcoord3_offset, offset);
     send_attribute(program->locate_attribute("s_normal", true),
                    VERTEX_ATTRIBUTE_TYPE_NORMAL, vertex_spec,
-                   &VertexSpecification::has_normals,
-                   &VertexSpecification::normal_offset, offset);
+                   &VertexFormat::has_normals,
+                   &VertexFormat::normal_offset, offset);
 }
 
 void GenericRenderer::set_blending_mode(BlendType type) {

@@ -204,15 +204,15 @@ public:
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     MeshPtr create_mesh(
-        VertexSpecification vertex_specification,
+        VertexFormat vertex_specification,
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     MeshPtr create_mesh(
         VertexDataPtr vertex_data,
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     MeshPtr load_mesh(
         const Path& path,
-        const VertexSpecification& desired_specification =
-            VertexSpecification::DEFAULT,
+        const VertexFormat& desired_specification =
+            VertexFormat::DEFAULT,
         const MeshLoadOptions& options = MeshLoadOptions(),
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
