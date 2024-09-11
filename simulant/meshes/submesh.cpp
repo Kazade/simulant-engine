@@ -150,9 +150,10 @@ void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
         return;
     }
 
-    auto& pos_attr = vdata->vertex_specification().position_attribute;
+    auto& pos_attr =
+        vdata->vertex_specification().attr(VERTEX_ATTR_NAME_POSITION).value();
 
-    if(pos_attr == VERTEX_ATTRIBUTE_2F) {
+    if(pos_attr.arrangement == VERTEX_ATTR_ARRANGEMENT_XY) {
         for(auto& range: vertex_ranges_) {
             for(uint32_t i = range.start; i < range.start + range.count; ++i) {
                 auto pos = vdata->position_at<Vec2>(i);
@@ -162,7 +163,7 @@ void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
                 if(pos->y > maxy) maxy = pos->y;
             }
         }
-    } else if(pos_attr == VERTEX_ATTRIBUTE_3F) {
+    } else if(pos_attr.arrangement == VERTEX_ATTR_ARRANGEMENT_XYZ) {
         for(auto& range: vertex_ranges_) {
             for(uint32_t i = range.start; i < range.start + range.count; ++i) {
                 auto pos = vdata->position_at<Vec3>(i);
@@ -175,7 +176,7 @@ void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
             }
         }
     } else {
-        assert(pos_attr == VERTEX_ATTRIBUTE_4F);
+        assert(pos_attr.arrangement == VERTEX_ATTR_ARRANGEMENT_XYZW);
 
         for(auto& range: vertex_ranges_) {
             for(uint32_t i = range.start; i < range.start + range.count; ++i) {
@@ -216,7 +217,7 @@ void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
     /* Awful switching is for performance
        FIXME: Is there a better way to do this? I guess templated lambda or method
     */
-    if(pos_attr == VERTEX_ATTRIBUTE_2F) {
+    if(pos_attr == VERTEX_ATTR_2F) {
         for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec2>(idx);
             if(pos->x < minx) minx = pos->x;
@@ -224,7 +225,7 @@ void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
             if(pos->x > maxx) maxx = pos->x;
             if(pos->y > maxy) maxy = pos->y;
         }
-    } else if(pos_attr == VERTEX_ATTRIBUTE_3F) {
+    } else if(pos_attr == VERTEX_ATTR_3F) {
         for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec3>(idx);
             if(pos->x < minx) minx = pos->x;
@@ -235,7 +236,7 @@ void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
             if(pos->z > maxz) maxz = pos->z;
         }
     } else {
-        assert(pos_attr == VERTEX_ATTRIBUTE_4F);
+        assert(pos_attr == VERTEX_ATTR_4F);
 
         for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec4>(idx);

@@ -164,20 +164,36 @@ public:
         return count();
     }
 
-    void transform_by(const Mat4& transform) {
+    bool transform_by(const Mat4& transform) {
+        auto pos_attr_maybe =
+            vertex_specification_.attr(VERTEX_ATTR_NAME_POSITION);
+
+        if(!pos_attr_maybe) {
+            return false;
+        }
+
+        auto pos_attr = pos_attr_maybe.value();
+
+        if(pos_attr.arrangement != VERTEX_ATTR_ARRANGEMENT_TWO &&
+           pos_attr.arrangement != VERTEX_ATTR_ARRANGEMENT_THREE &&
+           pos_attr.arrangement != VERTEX_ATTR_ARRANGEMENT_FOUR) {
+            S_ERROR(
+                "Attempted to transform unsupported position attribute type");
+            return false;
+        }
+
         for(auto i = 0u; i < count(); ++i) {
             move_to(i);
 
             Vec4 pos = position_nd_at(i);
             pos = transform * pos;
-            if(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_2F) {
+
+            if(pos_attr.arrangement == VERTEX_ATTR_ARRANGEMENT_TWO) {
                 position(pos.x, pos.y);
-            } else if(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_3F) {
+            } else if(pos_attr.arrangement == VERTEX_ATTR_ARRANGEMENT_THREE) {
                 position(pos.x, pos.y, pos.z);
-            } else if(vertex_specification_.position_attribute == VERTEX_ATTRIBUTE_4F) {
+            } else if(pos_attr.arrangement == VERTEX_ATTR_ARRANGEMENT_FOUR) {
                 position(pos);
-            } else {
-                S_ERROR("Attempted to transform unsupported position attribute type");
             }
         }
     }

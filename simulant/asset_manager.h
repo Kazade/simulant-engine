@@ -211,8 +211,6 @@ public:
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     MeshPtr load_mesh(
         const Path& path,
-        const VertexFormat& desired_specification =
-            VertexFormat::DEFAULT,
         const MeshLoadOptions& options = MeshLoadOptions(),
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
@@ -224,17 +222,17 @@ public:
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     MeshPtr create_mesh_from_heightmap(
-        const Path& image_file,
+        const Path& image_file, const VertexFormat& vertex_format,
         const HeightmapSpecification& spec = HeightmapSpecification(),
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     MeshPtr create_mesh_from_heightmap(
-        const TexturePtr& texture,
+        const TexturePtr& texture, const VertexFormat& vertex_format,
         const HeightmapSpecification& spec = HeightmapSpecification(),
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     MeshPtr create_mesh_as_cube_with_submesh_per_face(
-        float width,
+        float width, const VertexFormat& vertex_format,
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     MaterialPtr create_material_from_texture(
         TexturePtr texture,

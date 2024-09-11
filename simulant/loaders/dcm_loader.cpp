@@ -19,27 +19,68 @@ VertexFormat determine_spec(const FileHeader& header) {
      * - Support 3UB color format
      */
     VertexFormat vspec;
-    vspec.position_attribute = (header.pos_format == POSITION_FORMAT_2F) ?
-        VERTEX_ATTRIBUTE_2F : (header.pos_format == POSITION_FORMAT_3F) ?
-        VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_4F;
-    vspec.texcoord0_attribute = (header.tex0_format == TEX_COORD_FORMAT_2F) ? VERTEX_ATTRIBUTE_2F : VERTEX_ATTRIBUTE_NONE;
-    vspec.texcoord1_attribute = (header.tex1_format == TEX_COORD_FORMAT_2F) ? VERTEX_ATTRIBUTE_2F : VERTEX_ATTRIBUTE_NONE;
-    vspec.diffuse_attribute =
-        (header.color_format == COLOR_FORMAT_4UB)  ? VERTEX_ATTRIBUTE_4UB_RGBA
-        : (header.color_format == COLOR_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F
-                                                   : VERTEX_ATTRIBUTE_4F;
-    vspec.normal_attribute = (header.normal_format == NORMAL_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_NONE;
 
-    /* FIXME: Do something better! */
-#if defined(__ANDROID__) || defined(__LINUX__)
-    if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
-        vspec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+    VertexFormatBuilder builder;
+
+    switch(header.pos_format) {
+        case POSITION_FORMAT_2F:
+            builder =
+                builder.add(VERTEX_ATTR_NAME_POSITION,
+                            VERTEX_ATTR_ARRANGEMENT_XY, VERTEX_ATTR_TYPE_FLOAT);
+            break;
+        case POSITION_FORMAT_3F:
+            builder = builder.add(VERTEX_ATTR_NAME_POSITION,
+                                  VERTEX_ATTR_ARRANGEMENT_XYZ,
+                                  VERTEX_ATTR_TYPE_FLOAT);
+            break;
+        case POSITION_FORMAT_4F:
+            builder = builder.add(VERTEX_ATTR_NAME_POSITION,
+                                  VERTEX_ATTR_ARRANGEMENT_XYZW,
+                                  VERTEX_ATTR_TYPE_FLOAT);
+            break;
     }
-#elif defined(__DREAMCAST__)
-    if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
-        vspec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
+
+    switch(header.tex0_format) {
+        case TEX_COORD_FORMAT_2F:
+            builder =
+                builder.add(VERTEX_ATTR_NAME_TEXCOORD_0,
+                            VERTEX_ATTR_ARRANGEMENT_XY, VERTEX_ATTR_TYPE_FLOAT);
+            break;
     }
-#endif
+
+    switch(header.tex1_format) {
+        case TEX_COORD_FORMAT_2F:
+            builder =
+                builder.add(VERTEX_ATTR_NAME_TEXCOORD_1,
+                            VERTEX_ATTR_ARRANGEMENT_XY, VERTEX_ATTR_TYPE_FLOAT);
+            break;
+    }
+
+    switch(header.color_format) {
+        case COLOR_FORMAT_4UB:
+            builder = builder.add(VERTEX_ATTR_NAME_COLOR,
+                                  VERTEX_ATTR_ARRANGEMENT_RGBA,
+                                  VERTEX_ATTR_TYPE_UNSIGNED_BYTE);
+            break;
+        case COLOR_FORMAT_4F:
+            builder = builder.add(VERTEX_ATTR_NAME_COLOR,
+                                  VERTEX_ATTR_ARRANGEMENT_RGBA,
+                                  VERTEX_ATTR_TYPE_FLOAT);
+            break;
+        case COLOR_FORMAT_3F:
+            builder =
+                builder.add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_RGB,
+                            VERTEX_ATTR_TYPE_FLOAT);
+            break;
+    }
+
+    switch(header.normal_format) {
+        case NORMAL_FORMAT_3F:
+            builder = builder.add(VERTEX_ATTR_NAME_NORMAL,
+                                  VERTEX_ATTR_ARRANGEMENT_XYZ,
+                                  VERTEX_ATTR_TYPE_FLOAT);
+            break;
+    }
 
     return vspec;
 }
@@ -202,42 +243,58 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     auto vdata = mesh->vertex_data.get();
     vdata->move_to_start();
     for(uint32_t i = 0; i < mheader.vertex_count; ++i) {
-        if(spec.position_attribute == VERTEX_ATTRIBUTE_2F) {
+        auto posa = spec.attr(VERTEX_ATTR_NAME_POSITION).value().arrangement;
+
+        auto tex0 = spec.attr(VERTEX_ATTR_NAME_TEXCOORD_0).value().arrangement;
+        auto tex1 = spec.attr(VERTEX_ATTR_NAME_TEXCOORD_1).value().arrangement;
+        auto norm = spec.attr(VERTEX_ATTR_NAME_NORMAL).value().arrangement;
+
+        auto col = spec.attr(VERTEX_ATTR_NAME_COLOR).value().arrangement;
+
+        if(posa == VERTEX_ATTR_ARRANGEMENT_XY) {
             Vec2 v;
             data_->read((char*) &v, sizeof(Vec2));
             vdata->position(v);
-        } else if(spec.position_attribute == VERTEX_ATTRIBUTE_3F) {
+        } else if(posa == VERTEX_ATTR_ARRANGEMENT_XYZ) {
             Vec3 v;
             data_->read((char*) &v, sizeof(Vec3));
             vdata->position(v);
-        } else if(spec.position_attribute == VERTEX_ATTRIBUTE_4F) {
+        } else if(posa == VERTEX_ATTR_ARRANGEMENT_XYZW) {
             Vec4 v;
             data_->read((char*) &v, sizeof(Vec4));
             vdata->position(v);
         }
 
-        if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_2F) {
+        if(tex0 == VERTEX_ATTR_ARRANGEMENT_XY) {
             Vec2 v;
             data_->read((char*) &v, sizeof(Vec2));
             vdata->tex_coord0(v);
         }
 
-        if(fheader.color_format == COLOR_FORMAT_4UB) {
+        if(tex1 == VERTEX_ATTR_ARRANGEMENT_XY) {
+            Vec2 v;
+            data_->read((char*)&v, sizeof(Vec2));
+            vdata->tex_coord1(v);
+        }
+
+        if(col == VERTEX_ATTR_ARRANGEMENT_RGBA &&
+           spec.attr(VERTEX_ATTR_NAME_COLOR).value().type ==
+               VERTEX_ATTR_TYPE_UNSIGNED_BYTE) {
             uint8_t color[4];
             data_->read((char*) &color, sizeof(color));
             vdata->diffuse(smlt::Color::from_bytes(color[0], color[1],
                                                     color[2], color[3]));
-        } else if(fheader.color_format == COLOR_FORMAT_4F) {
+        } else if(col == VERTEX_ATTR_ARRANGEMENT_RGBA) {
             float color[4];
             data_->read((char*) &color, sizeof(color));
             vdata->diffuse(smlt::Color(color[0], color[1], color[2], color[3]));
-        } else if(fheader.color_format == COLOR_FORMAT_3F) {
+        } else if(col == VERTEX_ATTR_ARRANGEMENT_RGB) {
             float color[3];
             data_->read((char*) &color, sizeof(color));
             vdata->diffuse(smlt::Color(color[0], color[1], color[2], 1.0f));
         }
 
-        if(spec.normal_attribute == VERTEX_ATTRIBUTE_3F) {
+        if(norm == VERTEX_ATTR_ARRANGEMENT_XYZ) {
             Vec3 v;
             data_->read((char*) &v, sizeof(Vec3));
             vdata->normal(v);

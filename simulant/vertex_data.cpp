@@ -63,61 +63,61 @@ _S_FORCE_INLINE Vec3 unpack_vertex_attribute_vec3_1i(uint32_t p) {
 }
 
 const VertexFormat VertexFormat::DEFAULT = VertexFormat{
-    VERTEX_ATTRIBUTE_3F,  // Position
-    VERTEX_ATTRIBUTE_3F,
-    VERTEX_ATTRIBUTE_2F, // UV
-    VERTEX_ATTRIBUTE_NONE,
-    VERTEX_ATTRIBUTE_NONE,
-    VERTEX_ATTRIBUTE_NONE,
-    VERTEX_ATTRIBUTE_NONE,
-    VERTEX_ATTRIBUTE_NONE,
-    VERTEX_ATTRIBUTE_NONE,
-    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTR_3F,  // Position
+    VERTEX_ATTR_3F,
+    VERTEX_ATTR_2F, // UV
+    VERTEX_ATTR_NONE,
+    VERTEX_ATTR_NONE,
+    VERTEX_ATTR_NONE,
+    VERTEX_ATTR_NONE,
+    VERTEX_ATTR_NONE,
+    VERTEX_ATTR_NONE,
+    VERTEX_ATTR_NONE,
 #if defined(__PSP__) || defined(__ANDROID__)
-    VERTEX_ATTRIBUTE_4F,
+    VERTEX_ATTR_4F,
 #elif defined(__DREAMCAST__)
-    VERTEX_ATTRIBUTE_4UB_BGRA, // Diffuse
+    VERTEX_ATTR_4UB_BGRA, // Diffuse
 #else
-    VERTEX_ATTRIBUTE_4UB_RGBA, // Diffuse
+    VERTEX_ATTR_4UB_RGBA, // Diffuse
 #endif
-    VERTEX_ATTRIBUTE_NONE
+    VERTEX_ATTR_NONE
 };
 
 const VertexFormat VertexFormat::POSITION_ONLY = VertexFormat{
-    VERTEX_ATTRIBUTE_3F
+    VERTEX_ATTR_3F
 };
 
 const VertexFormat VertexFormat::POSITION_AND_DIFFUSE = VertexFormat{
-    VERTEX_ATTRIBUTE_3F, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
-        VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
-        VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
-        VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTR_3F, VERTEX_ATTR_NONE, VERTEX_ATTR_NONE,
+        VERTEX_ATTR_NONE, VERTEX_ATTR_NONE, VERTEX_ATTR_NONE,
+        VERTEX_ATTR_NONE, VERTEX_ATTR_NONE, VERTEX_ATTR_NONE,
+        VERTEX_ATTR_NONE,
 #if defined(__PSP__) || defined(__ANDROID__)
-        VERTEX_ATTRIBUTE_4F,
+        VERTEX_ATTR_4F,
 #elif defined(__DREAMCAST__)
-        VERTEX_ATTRIBUTE_4UB_BGRA, // Diffuse
+        VERTEX_ATTR_4UB_BGRA, // Diffuse
 #else
-        VERTEX_ATTRIBUTE_4UB_RGBA, // Diffuse
+        VERTEX_ATTR_4UB_RGBA, // Diffuse
 #endif
 };
 
 VertexAttribute attribute_for_type(VertexAttributeType type, const VertexFormat& spec) {
     switch(type) {
-        case VERTEX_ATTRIBUTE_TYPE_POSITION: return spec.position_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_NORMAL: return spec.normal_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD0: return spec.texcoord0_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD1: return spec.texcoord1_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD2: return spec.texcoord2_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD3: return spec.texcoord3_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD4: return spec.texcoord4_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD5: return spec.texcoord5_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD6: return spec.texcoord6_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_TEXCOORD7: return spec.texcoord7_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_DIFFUSE: return spec.diffuse_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return spec.specular_attribute;
+        case VERTEX_ATTR_TYPE_POSITION: return spec.position_attribute;
+        case VERTEX_ATTR_TYPE_NORMAL: return spec.normal_attribute;
+        case VERTEX_ATTR_TYPE_TEXCOORD0: return spec.texcoord0_attribute;
+        case VERTEX_ATTR_TYPE_TEXCOORD1: return spec.texcoord1_attribute;
+        case VERTEX_ATTR_TYPE_TEXCOORD2: return spec.texcoord2_attribute;
+        case VERTEX_ATTR_TYPE_TEXCOORD3: return spec.texcoord3_attribute;
+        case VERTEX_ATTR_TYPE_TEXCOORD4: return spec.texcoord4_attribute;
+        case VERTEX_ATTR_TYPE_TEXCOORD5: return spec.texcoord5_attribute;
+        case VERTEX_ATTR_TYPE_TEXCOORD6: return spec.texcoord6_attribute;
+        case VERTEX_ATTR_TYPE_TEXCOORD7: return spec.texcoord7_attribute;
+        case VERTEX_ATTR_TYPE_DIFFUSE: return spec.diffuse_attribute;
+        case VERTEX_ATTR_TYPE_SPECULAR: return spec.specular_attribute;
     default:
         assert(0 && "Invalid vertex attribute type");
-        return VERTEX_ATTRIBUTE_NONE;
+        return VERTEX_ATTR_NONE;
     }
 }
 
@@ -160,7 +160,7 @@ void VertexData::position_checks() {
 void VertexData::position(float x, float y, float z, float w) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_4F);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_4F);
     float* out = (float*) &data_[cursor_offset()];
     out[0] = x;
     out[1] = y;
@@ -171,15 +171,15 @@ void VertexData::position(float x, float y, float z, float w) {
 void VertexData::position(float x, float y, float z) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_3F ||
-           vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_4F);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_3F ||
+           vertex_specification_.position_attribute_ == VERTEX_ATTR_4F);
 
     float* out = (float*) &data_[cursor_offset()];
     switch(vertex_specification_.position_attribute_) {
-    case VERTEX_ATTRIBUTE_4F:
+    case VERTEX_ATTR_4F:
         out[3] = 1.0f;
         // Fallthrough
-    case VERTEX_ATTRIBUTE_3F:
+    case VERTEX_ATTR_3F:
         out[0] = x;
         out[1] = y;
         out[2] = z;
@@ -192,19 +192,19 @@ void VertexData::position(float x, float y, float z) {
 void VertexData::position(float x, float y) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_2F ||
-           vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_3F ||
-           vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_4F);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_2F ||
+           vertex_specification_.position_attribute_ == VERTEX_ATTR_3F ||
+           vertex_specification_.position_attribute_ == VERTEX_ATTR_4F);
 
     float* out = (float*) &data_[cursor_offset()];
     switch(vertex_specification_.position_attribute_) {
-    case VERTEX_ATTRIBUTE_4F:
+    case VERTEX_ATTR_4F:
         out[3] = 1.0f;
         // fallthrough
-    case VERTEX_ATTRIBUTE_3F:
+    case VERTEX_ATTR_3F:
         out[2] = 0.0f;
         // fallthrough
-    case VERTEX_ATTRIBUTE_2F:
+    case VERTEX_ATTR_2F:
         out[0] = x;
         out[1] = y;
     break;
@@ -227,13 +227,13 @@ void VertexData::position(const Vec4 &pos) {
 
 template<>
 const Vec2* VertexData::position_at<Vec2>(uint32_t idx) const {
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_2F);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_2F);
     return ((Vec2*) &data_[idx * stride_]);
 }
 
 template<>
 const Vec3* VertexData::position_at<Vec3>(uint32_t idx) const {
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_3F);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_3F);
     const uint8_t* v = &data_[0];
     v += (idx * stride_);
     return (const Vec3*) v;
@@ -241,13 +241,13 @@ const Vec3* VertexData::position_at<Vec3>(uint32_t idx) const {
 
 template<>
 const Vec4* VertexData::position_at<Vec4>(uint32_t idx) const {
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTRIBUTE_4F);
+    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_4F);
     return ((Vec4*) &data_[idx * stride_]);
 }
 
 template<>
 const Vec2* VertexData::normal_at<Vec2>(uint32_t idx) const {
-    assert(vertex_specification_.normal_attribute_ == VERTEX_ATTRIBUTE_2F);
+    assert(vertex_specification_.normal_attribute_ == VERTEX_ATTR_2F);
     return ((Vec2*) &data_[(idx * stride_) + vertex_specification_.normal_offset()]);
 }
 
@@ -255,10 +255,10 @@ template<>
 const Vec3* VertexData::normal_at<Vec3>(uint32_t idx) const {
     /* Warning, pointer may not be unique! */
 
-    if(vertex_specification_.normal_attribute_ == VERTEX_ATTRIBUTE_3F) {
+    if(vertex_specification_.normal_attribute_ == VERTEX_ATTR_3F) {
         return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
     } else {
-        assert(vertex_specification_.normal_attribute_ == VERTEX_ATTRIBUTE_PACKED_VEC4_1I);
+        assert(vertex_specification_.normal_attribute_ == VERTEX_ATTR_PACKED_VEC4_1I);
 
         static Vec3 ret; // This is mega nasty, need to rethink the pointer return
         auto data = (uint32_t*) &data_[(idx * stride()) + vertex_specification_.normal_offset()];
@@ -269,10 +269,10 @@ const Vec3* VertexData::normal_at<Vec3>(uint32_t idx) const {
 
 Vec4 VertexData::position_nd_at(uint32_t idx, float defz, float defw) const {
     const auto& attr = vertex_specification_.position_attribute_;
-    if(attr == VERTEX_ATTRIBUTE_2F) {
+    if(attr == VERTEX_ATTR_2F) {
         auto v = *position_at<Vec2>(idx);
         return Vec4(v.x, v.y, defz, defw);
-    } else if(attr == VERTEX_ATTRIBUTE_3F) {
+    } else if(attr == VERTEX_ATTR_3F) {
         auto v = *position_at<Vec3>(idx);
         return Vec4(v.x, v.y, v.z, defw);
     } else {
@@ -289,11 +289,11 @@ void VertexData::normal(float x, float y, float z) {
 
     uint8_t* ptr = (uint8_t*) &data_[cursor_offset() + offset];
 
-    if(vertex_specification_.normal_attribute_ == VERTEX_ATTRIBUTE_3F) {
+    if(vertex_specification_.normal_attribute_ == VERTEX_ATTR_3F) {
         Vec3* out = (Vec3*) ptr;
         *out = Vec3(x, y, z);
     } else  {
-        assert(vertex_specification_.normal_attribute_ == VERTEX_ATTRIBUTE_PACKED_VEC4_1I);
+        assert(vertex_specification_.normal_attribute_ == VERTEX_ATTR_PACKED_VEC4_1I);
         uint32_t* packed = (uint32_t*) ptr;
         *packed = pack_vertex_attribute_vec3_1i(x, y, z);
     }
@@ -356,51 +356,51 @@ void VertexData::tex_coord0(float u, float v, float w, float x) {
 
 template<>
 const Vec2* VertexData::texcoord0_at<Vec2>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_2F);
+    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTR_2F);
     return ((Vec2*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
 }
 
 template<>
 const Vec3* VertexData::texcoord0_at<Vec3>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_3F);
+    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTR_3F);
     return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
 }
 
 template<>
 const Vec4* VertexData::texcoord0_at<Vec4>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTRIBUTE_4F);
+    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTR_4F);
     return ((Vec4*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
 }
 
 template<>
 const Vec2* VertexData::texcoord1_at<Vec2>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTRIBUTE_2F);
+    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTR_2F);
     return ((Vec2*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
 }
 
 template<>
 const Vec3* VertexData::texcoord1_at<Vec3>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTRIBUTE_3F);
+    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTR_3F);
     return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
 }
 
 template<>
 const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTRIBUTE_4F);
+    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTR_4F);
     return ((Vec4*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
 }
 
 template<>
 const Color* VertexData::diffuse_at(const uint32_t idx) const {
-    assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F);
+    assert(vertex_specification_.diffuse_attribute == VERTEX_ATTR_4F);
     return ((Color*) &data_[(idx * stride()) + vertex_specification_.diffuse_offset()]);
 }
 
 template<>
 const uint8_t* VertexData::diffuse_at(const uint32_t idx) const {
     assert(
-        vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
-        vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_BGRA);
+        vertex_specification_.diffuse_attribute == VERTEX_ATTR_4UB_RGBA ||
+        vertex_specification_.diffuse_attribute == VERTEX_ATTR_4UB_BGRA);
     return ((uint8_t*) &data_[(idx * stride()) + vertex_specification_.diffuse_offset()]);
 }
 
@@ -442,8 +442,8 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
 
 void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     assert(
-        vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4UB_BGRA ||
-        vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4UB_RGBA);
+        vertex_specification_.diffuse_attribute_ == VERTEX_ATTR_4UB_BGRA ||
+        vertex_specification_.diffuse_attribute_ == VERTEX_ATTR_4UB_RGBA);
     auto offset = vertex_specification_.diffuse_offset();
 
     if(offset == INVALID_ATTRIBUTE_OFFSET) {
@@ -453,7 +453,7 @@ void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 
     uint8_t* out = (uint8_t*) &data_[cursor_offset() + offset];
 
-    if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4UB_BGRA) {
+    if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTR_4UB_BGRA) {
         out[0] = b;
         out[1] = g;
         out[2] = r;
@@ -467,7 +467,7 @@ void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 }
 
 void VertexData::diffuse(float r, float g, float b, float a) {
-    assert(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4F);
+    assert(vertex_specification_.diffuse_attribute_ == VERTEX_ATTR_4F);
 
     auto offset = vertex_specification_.diffuse_offset();
 
@@ -480,7 +480,7 @@ void VertexData::diffuse(float r, float g, float b, float a) {
 }
 
 void VertexData::diffuse(const Color& color) {
-    if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4F) {
+    if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTR_4F) {
         diffuse(color.r, color.g, color.b, color.a);
     } else {
         const float s = 255.0f;
@@ -555,21 +555,21 @@ bool VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state
     out.move_to(out_idx);
 
     switch(vertex_specification_.position_attribute) {
-        case VERTEX_ATTRIBUTE_2F: {
+        case VERTEX_ATTR_2F: {
             auto source = this->position_at<Vec2>(source_idx);
             auto dest = dest_state.position_at<Vec2>(dest_idx);
             Vec2 final = *source + ((*dest - *source) * interp);
             out.position(final);
         }
         break;
-        case VERTEX_ATTRIBUTE_3F: {
+        case VERTEX_ATTR_3F: {
             auto source = this->position_at<Vec3>(source_idx);
             auto dest = dest_state.position_at<Vec3>(dest_idx);
             Vec3 final = *source + ((*dest - *source) * interp);
             out.position(final);
         }
         break;
-        case VERTEX_ATTRIBUTE_4F: {
+        case VERTEX_ATTR_4F: {
             auto source = this->position_at<Vec4>(source_idx);
             auto dest = dest_state.position_at<Vec4>(dest_idx);
             Vec4 final = *source + ((*dest - *source) * interp);

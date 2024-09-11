@@ -92,9 +92,10 @@ public:
     private:
         friend class LimitedVector;
 
-        iterator(T* ptr): ptr_(ptr) {}
+        iterator(const T* ptr) :
+            ptr_(ptr) {}
 
-        T* ptr_;
+        const T* ptr_;
     };
 
     iterator begin() {

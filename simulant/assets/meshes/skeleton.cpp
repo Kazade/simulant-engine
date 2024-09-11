@@ -165,10 +165,23 @@ void SkeletalFrameUnpacker::unpack_frame(
      * weighting */
     vdata->move_to_start();
 
-    assert(vdata->vertex_specification().position_attribute == VERTEX_ATTRIBUTE_3F);
-    assert(vdata->vertex_specification().normal_attribute == VERTEX_ATTRIBUTE_3F);
-    assert(out->vertex_specification().position_attribute == VERTEX_ATTRIBUTE_3F);
-    assert(out->vertex_specification().normal_attribute == VERTEX_ATTRIBUTE_3F);
+    auto vfmt = vdata->vertex_specification();
+    auto ovfmt = out->vertex_specification();
+
+    assert(vfmt.attr(VERTEX_ATTR_NAME_POSITION));
+    assert(vfmt.attr(VERTEX_ATTR_NAME_NORMAL));
+
+    assert(vfmt.attr(VERTEX_ATTR_NAME_POSITION).value().arrangement ==
+           VERTEX_ATTR_ARRANGEMENT_THREE);
+
+    assert(vfmt.attr(VERTEX_ATTR_NAME_NORMAL).value().arrangement ==
+           VERTEX_ATTR_ARRANGEMENT_THREE);
+
+    assert(ovfmt.attr(VERTEX_ATTR_NAME_POSITION).value().arrangement ==
+           VERTEX_ATTR_ARRANGEMENT_THREE);
+
+    assert(ovfmt.attr(VERTEX_ATTR_NAME_NORMAL).value().arrangement ==
+           VERTEX_ATTR_ARRANGEMENT_THREE);
 
     uint8_t stride = vdata->vertex_specification().stride();
     const uint8_t* vin = (uint8_t*) vdata->position_at<Vec3>(0);

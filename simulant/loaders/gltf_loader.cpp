@@ -348,17 +348,19 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
 
     auto start = final_mesh->vertex_data->cursor_position();
 
+    auto pos = spec.attr(VERTEX_ATTR_NAME_POSITION).value();
+
     for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
-        if(spec.position_attribute == VERTEX_ATTRIBUTE_2F) {
+        if(pos.arrangement == VERTEX_ATTR_ARRANGEMENT_XY) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             final_mesh->vertex_data->position(x, y);
-        } else if(spec.position_attribute == VERTEX_ATTRIBUTE_3F) {
+        } else if(pos.arrangement == VERTEX_ATTR_ARRANGEMENT_XYZ) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             final_mesh->vertex_data->position(x, y, z);
-        } else if(spec.position_attribute == VERTEX_ATTRIBUTE_4F) {
+        } else if(pos.arrangement == VERTEX_ATTR_ARRANGEMENT_XYZW) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
@@ -384,12 +386,12 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
     auto start = final_mesh->vertex_data->cursor_position();
 
     for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
-        if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) {
+        if(spec.diffuse_attribute == VERTEX_ATTR_3F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, 1));
-        } else if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F) {
+        } else if(spec.diffuse_attribute == VERTEX_ATTR_4F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
@@ -415,12 +417,12 @@ void process_normals(const BufferInfo& buffer_info, JSONIterator& js,
     auto start = final_mesh->vertex_data->cursor_position();
 
     for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
-        if(spec.normal_attribute == VERTEX_ATTRIBUTE_3F) {
+        if(spec.normal_attribute == VERTEX_ATTR_3F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             final_mesh->vertex_data->normal(x, y, z);
-        } else if(spec.normal_attribute == VERTEX_ATTRIBUTE_4F) {
+        } else if(spec.normal_attribute == VERTEX_ATTR_4F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
@@ -445,16 +447,16 @@ void process_texcoord0s(const BufferInfo& buffer_info, JSONIterator& js,
     auto start = final_mesh->vertex_data->cursor_position();
 
     for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
-        if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_2F) {
+        if(spec.texcoord0_attribute == VERTEX_ATTR_2F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             final_mesh->vertex_data->tex_coord0(x, y);
-        } else if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_3F) {
+        } else if(spec.texcoord0_attribute == VERTEX_ATTR_3F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             final_mesh->vertex_data->tex_coord0(x, y, z);
-        } else if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_4F) {
+        } else if(spec.texcoord0_attribute == VERTEX_ATTR_4F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
@@ -670,17 +672,17 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
     auto accessors = js["accessors"];
 
     const std::map<TypeKey, VertexAttribute> lookup = {
-        {TypeKey(FLOAT,         "VEC2"), VERTEX_ATTRIBUTE_2F },
-        {TypeKey(FLOAT,         "VEC3"), VERTEX_ATTRIBUTE_3F },
-        {TypeKey(FLOAT,         "VEC4"), VERTEX_ATTRIBUTE_4F },
-        // {TypeKey(FLOAT, "SCALAR"), VERTEX_ATTRIBUTE_1F},
-        {TypeKey(UNSIGNED_BYTE, "VEC4"), VERTEX_ATTRIBUTE_4UB},
+        {TypeKey(FLOAT,         "VEC2"), VERTEX_ATTR_2F },
+        {TypeKey(FLOAT,         "VEC3"), VERTEX_ATTR_3F },
+        {TypeKey(FLOAT,         "VEC4"), VERTEX_ATTR_4F },
+        // {TypeKey(FLOAT, "SCALAR"), VERTEX_ATTR_1F},
+        {TypeKey(UNSIGNED_BYTE, "VEC4"), VERTEX_ATTR_4UB},
     };
 
     auto process_attribute = [&](JSONIterator mesh_attrs,
                                  const char* type) -> VertexAttribute {
         if(!mesh_attrs->has_key(type)) {
-            return smlt::VERTEX_ATTRIBUTE_NONE;
+            return smlt::VERTEX_ATTR_NONE;
         }
 
         auto acc_id = mesh_attrs[type]->to_int().value_or(0);
@@ -694,7 +696,7 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
             return lookup.at(key);
         }
 
-        return smlt::VERTEX_ATTRIBUTE_NONE;
+        return smlt::VERTEX_ATTR_NONE;
     };
 
     smlt::MeshPtr final_mesh;
@@ -708,9 +710,9 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
         auto tex = process_attribute(primitive["attributes"], "TEXCOORD_0");
 
         auto spec = VertexFormat(
-            pos, norm, tex, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
-            VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
-            VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, diff);
+            pos, norm, tex, VERTEX_ATTR_NONE, VERTEX_ATTR_NONE,
+            VERTEX_ATTR_NONE, VERTEX_ATTR_NONE, VERTEX_ATTR_NONE,
+            VERTEX_ATTR_NONE, VERTEX_ATTR_NONE, diff);
 
         if(!final_mesh) {
             final_mesh = scene->assets->create_mesh(spec);

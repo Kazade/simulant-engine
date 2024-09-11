@@ -539,8 +539,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     if(has_positions) {
         enable_vertex_arrays();
         GLCheck(glVertexPointer,
-                (spec.position_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
-                : (spec.position_attribute == VERTEX_ATTRIBUTE_3F) ? 3
+                (spec.position_attribute == VERTEX_ATTR_2F)   ? 2
+                : (spec.position_attribute == VERTEX_ATTR_3F) ? 3
                                                                    : 4,
                 GL_FLOAT, stride,
                 ((const uint8_t*)vertex_data) + spec.position_offset(false));
@@ -553,14 +553,14 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         S_VERBOSE("Enabling colors");
         enable_color_arrays();
         GLCheck(glColorPointer,
-                (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
-                : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3
-                : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F ||
-                   spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA)
+                (spec.diffuse_attribute == VERTEX_ATTR_2F)   ? 2
+                : (spec.diffuse_attribute == VERTEX_ATTR_3F) ? 3
+                : (spec.diffuse_attribute == VERTEX_ATTR_4F ||
+                   spec.diffuse_attribute == VERTEX_ATTR_4UB_RGBA)
                     ? 4
                     : GL_BGRA, // This weirdness is an extension apparently
-                (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
-                 spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_BGRA)
+                (spec.diffuse_attribute == VERTEX_ATTR_4UB_RGBA ||
+                 spec.diffuse_attribute == VERTEX_ATTR_4UB_BGRA)
                     ? GL_UNSIGNED_BYTE
                     : GL_FLOAT,
                 stride,
@@ -573,7 +573,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     if(has_normals) {
         enable_normal_arrays();
 
-        auto type = (spec.normal_attribute == VERTEX_ATTRIBUTE_PACKED_VEC4_1I)
+        auto type = (spec.normal_attribute == VERTEX_ATTR_PACKED_VEC4_1I)
                         ? GL_UNSIGNED_INT_2_10_10_10_REV
                         : GL_FLOAT;
 
@@ -606,8 +606,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
             GLCheck(glClientActiveTexture, GL_TEXTURE0 + i);
 #endif
             GLCheck(glTexCoordPointer,
-                    (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_2F)   ? 2
-                    : (spec.texcoordX_attribute(i) == VERTEX_ATTRIBUTE_3F) ? 3
+                    (spec.texcoordX_attribute(i) == VERTEX_ATTR_2F)   ? 2
+                    : (spec.texcoordX_attribute(i) == VERTEX_ATTR_3F) ? 3
                                                                            : 4,
                     GL_FLOAT, stride, ((const uint8_t*)vertex_data) + offset);
         } else {

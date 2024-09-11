@@ -9,17 +9,17 @@
 namespace smlt {
 
 const static VertexFormat
-    PS_VERTEX_SPEC(smlt::VERTEX_ATTRIBUTE_3F, // Position
-                   smlt::VERTEX_ATTRIBUTE_NONE,
-                   smlt::VERTEX_ATTRIBUTE_2F, // Texcoord 0
-                   smlt::VERTEX_ATTRIBUTE_NONE, smlt::VERTEX_ATTRIBUTE_NONE,
-                   smlt::VERTEX_ATTRIBUTE_NONE, smlt::VERTEX_ATTRIBUTE_NONE,
-                   smlt::VERTEX_ATTRIBUTE_NONE, smlt::VERTEX_ATTRIBUTE_NONE,
-                   smlt::VERTEX_ATTRIBUTE_NONE,
+    PS_VERTEX_SPEC(smlt::VERTEX_ATTR_3F, // Position
+                   smlt::VERTEX_ATTR_NONE,
+                   smlt::VERTEX_ATTR_2F, // Texcoord 0
+                   smlt::VERTEX_ATTR_NONE, smlt::VERTEX_ATTR_NONE,
+                   smlt::VERTEX_ATTR_NONE, smlt::VERTEX_ATTR_NONE,
+                   smlt::VERTEX_ATTR_NONE, smlt::VERTEX_ATTR_NONE,
+                   smlt::VERTEX_ATTR_NONE,
 #ifdef __DREAMCAST__
-                   smlt::VERTEX_ATTRIBUTE_4UB_BGRA // Diffuse
+                   smlt::VERTEX_ATTR_4UB_BGRA // Diffuse
 #else
-                   smlt::VERTEX_ATTRIBUTE_4F // Diffuse
+                   smlt::VERTEX_ATTR_4F // Diffuse
 #endif
     );
 

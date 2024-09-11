@@ -105,8 +105,8 @@ bool Widget::on_create(Params params) {
     VertexFormat spec = VertexFormat::DEFAULT;
 
     /* We don't need normals or multiple texcoords */
-    spec.normal_attribute = VERTEX_ATTRIBUTE_NONE;
-    spec.texcoord1_attribute = VERTEX_ATTRIBUTE_NONE;
+    spec.normal_attribute = VERTEX_ATTR_NONE;
+    spec.texcoord1_attribute = VERTEX_ATTR_NONE;
 
     mesh_ = scene->assets->create_mesh(spec);
     actor_ = scene->create_node<Actor>(mesh_);

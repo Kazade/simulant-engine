@@ -459,12 +459,15 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
         throw std::runtime_error("Couldn't load the OPT file: " + filename_.str());
     }
 
-    VertexFormat spec;
-    spec.position_attribute = VERTEX_ATTRIBUTE_3F;
-    spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
-    spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;
-    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
-    spec.normal_attribute = VERTEX_ATTRIBUTE_3F;
+    VertexFormat spec =
+        VertexFormatBuilder()
+            .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                 VERTEX_ATTR_TYPE_FLOAT)
+            .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+                 VERTEX_ATTR_TYPE_FLOAT)
+            .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                 VERTEX_ATTR_TYPE_FLOAT)
+            .build();
 
     mesh->reset(spec);
 
@@ -555,8 +558,6 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
              */
             mesh->vertex_data->position(pos.x / 33.3f, pos.y / 33.3f, pos.z / 33.3f);
             mesh->vertex_data->tex_coord0(tex_coord);
-            mesh->vertex_data->tex_coord1(tex_coord.x, tex_coord.y);
-            mesh->vertex_data->diffuse(smlt::Color::white());
             mesh->vertex_data->normal(normal.x, normal.y, normal.z);
             mesh->vertex_data->move_next();
 
@@ -566,7 +567,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
 
     mesh->vertex_data->done();
 
-    for(Texture tex: textures) {
+    for(Texture& tex: textures) {
         texture_submesh[tex.name]->index_data->done();
         texture_submesh[tex.name]->reverse_winding();
     }

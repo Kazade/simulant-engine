@@ -30,8 +30,15 @@ AABB::AABB(const VertexData& vertex_data) {
     float maxy = std::numeric_limits<float>::lowest();
     float maxz = std::numeric_limits<float>::lowest();
 
-    const uint8_t* p = vertex_data.data() + vertex_data.vertex_specification().position_offset();
-    bool twod = vertex_data.vertex_specification().position_attribute == VERTEX_ATTRIBUTE_2F;
+    const uint8_t* p =
+        vertex_data.data() + vertex_data.vertex_specification()
+                                 .offset(VERTEX_ATTR_NAME_POSITION)
+                                 .value();
+
+    bool twod = vertex_data.vertex_specification()
+                    .attr(VERTEX_ATTR_NAME_POSITION)
+                    .value()
+                    .arrangement == VERTEX_ATTR_ARRANGEMENT_XY;
 
     for(std::size_t i = 0; i < vertex_data.count(); ++i) {
         float* x = (float*) p;

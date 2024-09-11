@@ -258,21 +258,21 @@ void send_attribute(int32_t loc, VertexAttributeType attr,
         auto attr_size = vertex_attribute_size(attr_for_type);
         auto stride = vertex_spec.stride();
 
-        auto type = (attr_for_type == VERTEX_ATTRIBUTE_4UB_RGBA ||
-                     attr_for_type == VERTEX_ATTRIBUTE_4UB_BGRA)
+        auto type = (attr_for_type == VERTEX_ATTR_4UB_RGBA ||
+                     attr_for_type == VERTEX_ATTR_4UB_BGRA)
                         ? GL_UNSIGNED_BYTE
-                    : (attr_for_type == VERTEX_ATTRIBUTE_PACKED_VEC4_1I)
+                    : (attr_for_type == VERTEX_ATTR_PACKED_VEC4_1I)
                         ? GL_UNSIGNED_INT_2_10_10_10_REV
                         : GL_FLOAT;
 
-        auto size = (attr_for_type == VERTEX_ATTRIBUTE_4UB_BGRA) ? GL_BGRA
-                    : (attr_for_type == VERTEX_ATTRIBUTE_PACKED_VEC4_1I ||
-                       attr_for_type == VERTEX_ATTRIBUTE_4UB_RGBA)
+        auto size = (attr_for_type == VERTEX_ATTR_4UB_BGRA) ? GL_BGRA
+                    : (attr_for_type == VERTEX_ATTR_PACKED_VEC4_1I ||
+                       attr_for_type == VERTEX_ATTR_4UB_RGBA)
                         ? 4
                         : attr_size / sizeof(float);
 
-        auto normalized = (attr_for_type == VERTEX_ATTRIBUTE_4UB_RGBA ||
-                           attr_for_type == VERTEX_ATTRIBUTE_4UB_BGRA)
+        auto normalized = (attr_for_type == VERTEX_ATTR_4UB_RGBA ||
+                           attr_for_type == VERTEX_ATTR_4UB_BGRA)
                               ? GL_TRUE
                               : GL_FALSE;
 
@@ -299,33 +299,33 @@ void GenericRenderer::set_auto_attributes_on_shader(
     auto offset = buffers->vertex_vbo->byte_offset(buffers->vertex_vbo_slot);
 
     send_attribute(program->locate_attribute("s_position", true),
-                   VERTEX_ATTRIBUTE_TYPE_POSITION, vertex_spec,
+                   VERTEX_ATTR_TYPE_POSITION, vertex_spec,
                    &VertexFormat::has_positions,
                    &VertexFormat::position_offset, offset);
 
     send_attribute(program->locate_attribute("s_diffuse", true),
-                   VERTEX_ATTRIBUTE_TYPE_DIFFUSE, vertex_spec,
+                   VERTEX_ATTR_TYPE_DIFFUSE, vertex_spec,
                    &VertexFormat::has_diffuse,
                    &VertexFormat::diffuse_offset, offset);
 
     send_attribute(program->locate_attribute("s_texcoord0", true),
-                   VERTEX_ATTRIBUTE_TYPE_TEXCOORD0, vertex_spec,
+                   VERTEX_ATTR_TYPE_TEXCOORD0, vertex_spec,
                    &VertexFormat::has_texcoord0,
                    &VertexFormat::texcoord0_offset, offset);
     send_attribute(program->locate_attribute("s_texcoord1", true),
-                   VERTEX_ATTRIBUTE_TYPE_TEXCOORD1, vertex_spec,
+                   VERTEX_ATTR_TYPE_TEXCOORD1, vertex_spec,
                    &VertexFormat::has_texcoord1,
                    &VertexFormat::texcoord1_offset, offset);
     send_attribute(program->locate_attribute("s_texcoord2", true),
-                   VERTEX_ATTRIBUTE_TYPE_TEXCOORD2, vertex_spec,
+                   VERTEX_ATTR_TYPE_TEXCOORD2, vertex_spec,
                    &VertexFormat::has_texcoord2,
                    &VertexFormat::texcoord2_offset, offset);
     send_attribute(program->locate_attribute("s_texcoord3", true),
-                   VERTEX_ATTRIBUTE_TYPE_TEXCOORD3, vertex_spec,
+                   VERTEX_ATTR_TYPE_TEXCOORD3, vertex_spec,
                    &VertexFormat::has_texcoord3,
                    &VertexFormat::texcoord3_offset, offset);
     send_attribute(program->locate_attribute("s_normal", true),
-                   VERTEX_ATTRIBUTE_TYPE_NORMAL, vertex_spec,
+                   VERTEX_ATTR_TYPE_NORMAL, vertex_spec,
                    &VertexFormat::has_normals,
                    &VertexFormat::normal_offset, offset);
 }

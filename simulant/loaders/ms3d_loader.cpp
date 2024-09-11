@@ -136,7 +136,16 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     AssetManager* assets = &mesh->asset_manager();
 
-    mesh->reset(VertexFormat::DEFAULT);
+    auto vfmt = VertexFormatBuilder()
+                    .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                         VERTEX_ATTR_TYPE_FLOAT)
+                    .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                         VERTEX_ATTR_TYPE_FLOAT)
+                    .add(VERTEX_ATTR_NAME_TEXCOORD_0,
+                         VERTEX_ATTR_ARRANGEMENT_XY, VERTEX_ATTR_TYPE_FLOAT)
+                    .build();
+
+    mesh->reset(vfmt);
 
     MS3DHeader header;
     data_->read((char*) &header.id, sizeof(char) * 10);

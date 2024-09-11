@@ -78,7 +78,7 @@ VertexAttribute VertexFormat::texcoordX_attribute(uint8_t which) const {
     case 6: return texcoord6_attribute_;
     case 7: return texcoord7_attribute_;
     default:
-        return VERTEX_ATTRIBUTE_NONE;
+        return VERTEX_ATTR_NONE;
     }
 }
 

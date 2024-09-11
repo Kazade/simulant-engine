@@ -238,13 +238,13 @@ struct PSPVertex {
 
 void convert_position(float* vout, const uint8_t* vin, VertexAttribute type) {
     switch(type) {
-        case VERTEX_ATTRIBUTE_2F:
+        case VERTEX_ATTR_2F:
             vout[0] = ((float*)vin)[0];
             vout[1] = ((float*)vin)[1];
             vout[2] = 0.0f;
             break;
-        case VERTEX_ATTRIBUTE_3F:
-        case VERTEX_ATTRIBUTE_4F:
+        case VERTEX_ATTR_3F:
+        case VERTEX_ATTR_4F:
             vout[0] = ((float*)vin)[0];
             vout[1] = ((float*)vin)[1];
             vout[2] = ((float*)vin)[2];
@@ -256,9 +256,9 @@ void convert_position(float* vout, const uint8_t* vin, VertexAttribute type) {
 
 void convert_uv(float* vout, const uint8_t* vin, VertexAttribute type) {
     switch(type) {
-        case VERTEX_ATTRIBUTE_2F:
-        case VERTEX_ATTRIBUTE_3F:
-        case VERTEX_ATTRIBUTE_4F:
+        case VERTEX_ATTR_2F:
+        case VERTEX_ATTR_3F:
+        case VERTEX_ATTR_4F:
             vout[0] = ((float*)vin)[0];
             vout[1] = ((float*)vin)[1];
             break;
@@ -270,16 +270,16 @@ void convert_uv(float* vout, const uint8_t* vin, VertexAttribute type) {
 void convert_color(uint16_t* vout, const uint8_t* vin, VertexAttribute type) {
     const float* v = (const float*)vin;
     switch(type) {
-        case VERTEX_ATTRIBUTE_4F:
+        case VERTEX_ATTR_4F:
             *vout = smlt::Color(v[0], v[1], v[2], v[3]).to_abgr_4444();
             break;
-        case VERTEX_ATTRIBUTE_3F:
+        case VERTEX_ATTR_3F:
             *vout = smlt::Color(v[0], v[1], v[2], 1.0f).to_abgr_4444();
             break;
-        case VERTEX_ATTRIBUTE_4UB_RGBA:
+        case VERTEX_ATTR_4UB_RGBA:
             *vout = smlt::Color::from_bytes(vin[0], vin[1], vin[2], vin[3]).to_abgr_4444();
             break;
-        case VERTEX_ATTRIBUTE_4UB_BGRA:
+        case VERTEX_ATTR_4UB_BGRA:
             *vout = smlt::Color::from_bytes(vin[2], vin[1], vin[0], vin[3]).to_abgr_4444();
             break;
         default:
@@ -291,7 +291,7 @@ void convert_color(uint16_t* vout, const uint8_t* vin, VertexAttribute type) {
 void convert_normal(int16_t* vout, const uint8_t* vin, VertexAttribute type) {
     float* v = (float*)vin;
     switch(type) {
-        case VERTEX_ATTRIBUTE_3F:
+        case VERTEX_ATTR_3F:
             vout[0] = ((float*)v)[0] * 32767.0f;
             vout[1] = ((float*)v)[1] * 32767.0f;
             vout[2] = ((float*)v)[2] * 32767.0f;
