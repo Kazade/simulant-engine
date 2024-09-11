@@ -57,6 +57,17 @@ std::size_t VertexFormat::offset(std::size_t index) const {
     return ret;
 }
 
+std::size_t VertexFormat::attr_count(VertexAttributeName name) const {
+    std::size_t ret = 0;
+    for(auto& attr: attributes) {
+        if(attr.name == name) {
+            ret++;
+        }
+    }
+
+    return ret;
+}
+
 smlt::optional<VertexAttribute>
     VertexFormat::attr(VertexAttributeName name) const {
     for(auto& attr: attributes) {

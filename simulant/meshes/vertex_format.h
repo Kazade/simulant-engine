@@ -74,6 +74,8 @@ public:
         return attributes[index];
     }
 
+    std::size_t attr_count(VertexAttributeName name) const;
+
     smlt::optional<VertexAttribute> attr(VertexAttributeName name) const;
 
     bool operator==(const VertexFormat& rhs) const;
