@@ -8,20 +8,19 @@
 
 namespace smlt {
 
-const static VertexFormat
-    PS_VERTEX_SPEC(smlt::VERTEX_ATTR_3F, // Position
-                   smlt::VERTEX_ATTR_NONE,
-                   smlt::VERTEX_ATTR_2F, // Texcoord 0
-                   smlt::VERTEX_ATTR_NONE, smlt::VERTEX_ATTR_NONE,
-                   smlt::VERTEX_ATTR_NONE, smlt::VERTEX_ATTR_NONE,
-                   smlt::VERTEX_ATTR_NONE, smlt::VERTEX_ATTR_NONE,
-                   smlt::VERTEX_ATTR_NONE,
+const static VertexFormat PS_VERTEX_SPEC =
+    VertexFormatBuilder()
+        .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+             VERTEX_ATTR_TYPE_FLOAT)
+        .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+             VERTEX_ATTR_TYPE_FLOAT)
 #ifdef __DREAMCAST__
-                   smlt::VERTEX_ATTR_4UB_BGRA // Diffuse
+        .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
+             VERTEX_ATTR_TYPE_UNSIGNED_BYTE);
 #else
-                   smlt::VERTEX_ATTR_4F // Diffuse
+        .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_RGBA,
+             VERTEX_ATTR_TYPE_FLOAT);
 #endif
-    );
 
 ParticleSystem::ParticleSystem(Scene* owner) :
     StageNode(owner, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
@@ -151,10 +150,12 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
     }
 
     uint8_t* pos_ptr = vertex_data_->data();
-    uint8_t* dif_ptr =
-        pos_ptr + vertex_data_->vertex_specification().diffuse_offset(false);
-    uint8_t* uv_ptr =
-        pos_ptr + vertex_data_->vertex_specification().texcoord0_offset(false);
+    uint8_t* dif_ptr = pos_ptr + vertex_data_->vertex_specification()
+                                     .offset(VERTEX_ATTR_NAME_COLOR)
+                                     .value();
+    uint8_t* uv_ptr = pos_ptr + vertex_data_->vertex_specification()
+                                    .offset(VERTEX_ATTR_NAME_TEXCOORD_0)
+                                    .value();
 
     auto stride = vertex_data_->vertex_specification().stride();
 

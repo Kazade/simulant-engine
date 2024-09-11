@@ -359,7 +359,7 @@ static bool load_vertex(LoadInfo*, std::string, const std::vector<std::string>& 
 }
 
 static bool load_texcoord(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
-    if(!info->vspec.has_texcoord0()) {
+    if(!info->vspec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
         return true;
     }
 
@@ -371,7 +371,7 @@ static bool load_texcoord(LoadInfo* info, std::string, const std::vector<std::st
 }
 
 static bool load_normal(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
-    if(!info->vspec.has_normals()) {
+    if(!info->vspec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
         return true;
     }
 

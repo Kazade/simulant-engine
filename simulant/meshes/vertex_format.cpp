@@ -2,11 +2,17 @@
 
 namespace smlt {
 
+std::size_t VertexAttribute::component_count() const {
+    if(arrangement == VERTEX_ATTR_ARRANGEMENT_BGRA) {
+        return 4;
+    } else {
+        return (std::size_t)arrangement;
+    }
+}
+
 std::size_t VertexAttribute::calc_size() const {
 
-    std::size_t size =
-        (VERTEX_ATTR_ARRANGEMENT_BGRA) ? 4 : (std::size_t)arrangement;
-
+    std::size_t size = component_count();
     switch(type) {
         case VERTEX_ATTR_TYPE_BYTE:
         case VERTEX_ATTR_TYPE_UNSIGNED_BYTE:

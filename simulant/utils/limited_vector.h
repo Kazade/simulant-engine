@@ -80,10 +80,22 @@ public:
         using pointer           = T*;
         using reference         = T&;
 
-        reference operator*() const { return *ptr_; }
+        reference operator*() {
+            return *ptr_;
+        }
         pointer operator->() { return ptr_; }
 
-        iterator& operator++() { ptr_++; return *this; }
+        reference operator*() const {
+            return *ptr_;
+        }
+        pointer operator->() const {
+            return ptr_;
+        }
+
+        iterator& operator++() {
+            ptr_++;
+            return *this;
+        }
         iterator operator++(int) { iterator tmp = *this; ++(*this); return tmp; }
 
         bool operator== (const iterator& b) { return ptr_ == b.ptr_; }

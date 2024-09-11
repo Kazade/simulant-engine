@@ -36,7 +36,14 @@ Sprite::Sprite(Scene* owner) :
 bool Sprite::on_create(Params params) {
     _S_UNUSED(params);
 
-    mesh_ = scene->assets->create_mesh(smlt::VertexFormat::DEFAULT);
+    mesh_ = scene->assets->create_mesh(
+        VertexFormatBuilder()
+            .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XY,
+                 VERTEX_ATTR_TYPE_FLOAT)
+            .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+                 VERTEX_ATTR_TYPE_FLOAT)
+            .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
+                 VERTEX_ATTR_TYPE_UNSIGNED_BYTE));
     mesh_->create_submesh_as_rectangle(
         "sprite", scene->assets->create_material(), 1.0, 1.0f);
 

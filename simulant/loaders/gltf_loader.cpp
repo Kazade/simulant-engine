@@ -384,21 +384,26 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
     _S_UNUSED(js);
 
     auto start = final_mesh->vertex_data->cursor_position();
+    assert(spec.attr(VERTEX_ATTR_NAME_COLOR));
+
+    auto color_attr = spec.attr(VERTEX_ATTR_NAME_COLOR).value();
+    auto comp_count = color_attr.component_count();
+    if(comp_count != 3 && comp_count != 4) {
+        S_ERROR("Unsupported color attribute type");
+    }
 
     for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
-        if(spec.diffuse_attribute == VERTEX_ATTR_3F) {
+        if(comp_count == 3) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, 1));
-        } else if(spec.diffuse_attribute == VERTEX_ATTR_4F) {
+        } else if(comp_count == 4) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             auto w = *(float*)(buffer_info.data + i + 12);
             final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, w));
-        } else {
-            S_ERROR("Unsupported color attribute type");
         }
 
         final_mesh->vertex_data->move_next();
@@ -415,22 +420,29 @@ void process_normals(const BufferInfo& buffer_info, JSONIterator& js,
     _S_UNUSED(accessors);
 
     auto start = final_mesh->vertex_data->cursor_position();
+    assert(spec.attr(VERTEX_ATTR_NAME_NORMAL));
+
+    auto nattr = spec.attr(VERTEX_ATTR_NAME_NORMAL);
+    auto comp_count = nattr.value().component_count();
+
+    if(comp_count != 3 && comp_count != 4) {
+        S_ERROR("Unsupported normal attribute type");
+        return;
+    }
 
     for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
-        if(spec.normal_attribute == VERTEX_ATTR_3F) {
+        if(comp_count == 3) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             final_mesh->vertex_data->normal(x, y, z);
-        } else if(spec.normal_attribute == VERTEX_ATTR_4F) {
+        } else if(comp_count == 4) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
+            // FIXME: Allow for 4d normals
             final_mesh->vertex_data->normal(x, y, z);
-        } else {
-            S_ERROR("Unsupported normal attribute type");
         }
-
         final_mesh->vertex_data->move_next();
     }
 

@@ -212,12 +212,13 @@ void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
         return;
     }
 
-    auto& pos_attr = vdata->vertex_specification().position_attribute;
+    auto& pos_attr =
+        vdata->vertex_specification().attr(VERTEX_ATTR_NAME_POSITION).value();
 
     /* Awful switching is for performance
        FIXME: Is there a better way to do this? I guess templated lambda or method
     */
-    if(pos_attr == VERTEX_ATTR_2F) {
+    if(pos_attr.component_count() == 2) {
         for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec2>(idx);
             if(pos->x < minx) minx = pos->x;
@@ -225,7 +226,7 @@ void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
             if(pos->x > maxx) maxx = pos->x;
             if(pos->y > maxy) maxy = pos->y;
         }
-    } else if(pos_attr == VERTEX_ATTR_3F) {
+    } else if(pos_attr.component_count() == 3) {
         for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec3>(idx);
             if(pos->x < minx) minx = pos->x;
@@ -236,7 +237,7 @@ void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
             if(pos->z > maxz) maxz = pos->z;
         }
     } else {
-        assert(pos_attr == VERTEX_ATTR_4F);
+        assert(pos_attr.component_count() == 4);
 
         for(auto idx: *index_data_) {
             auto pos = vdata->position_at<Vec4>(idx);

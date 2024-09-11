@@ -55,6 +55,7 @@ struct VertexAttribute {
     VertexAttributeType type;
 
     std::size_t calc_size() const;
+    std::size_t component_count() const;
 };
 
 class VertexFormat {

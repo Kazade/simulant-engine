@@ -141,8 +141,13 @@ void Debug::build_mesh(const Camera* camera) {
 }
 
 bool Debug::on_init() {
-    mesh_ =
-        scene->assets->create_mesh(VertexFormat::POSITION_AND_DIFFUSE);
+    mesh_ = scene->assets->create_mesh(
+        VertexFormatBuilder()
+            .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                 VERTEX_ATTR_TYPE_FLOAT)
+            .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
+                 VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
+            .build());
 
     // Don't GC the material, if there are no debug lines then it won't be
     // attached to the mesh

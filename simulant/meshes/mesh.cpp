@@ -4,9 +4,9 @@
 //     This file is part of Simulant.
 //
 //     Simulant is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU Lesser General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
+//     it under the terms of the GNU Lesser General Public License as published
+//     by the Free Software Foundation, either version 3 of the License, or (at
+//     your option) any later version.
 //
 //     Simulant is distributed in the hope that it will be useful,
 //     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -646,39 +646,65 @@ SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr 
 
     //Build some shared vertex data
     vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    if(spec.has_diffuse()) {
+    if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->diffuse(smlt::Color::white());
     }
-    if(spec.has_texcoord0()) vertex_data->tex_coord0(0.0, 0.0f);
-    if(spec.has_texcoord1()) vertex_data->tex_coord1(0.0, 0.0f);
-    if(spec.has_normals())   vertex_data->normal(0, 0, 1);
+    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
+        vertex_data->tex_coord0(0.0, 0.0f);
+    }
+    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_1)) {
+        vertex_data->tex_coord1(0.0, 0.0f);
+    }
+    if(spec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
+        vertex_data->normal(0, 0, 1);
+    }
     vertex_data->move_next();
 
     vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    if(spec.has_diffuse()) {
+    if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->diffuse(smlt::Color::white());
     }
-    if(spec.has_texcoord0()) vertex_data->tex_coord0(1.0, 0.0f);
-    if(spec.has_texcoord1()) vertex_data->tex_coord1(1.0, 0.0f);
-    if(spec.has_normals())   vertex_data->normal(0, 0, 1);
+    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
+        vertex_data->tex_coord0(1.0, 0.0f);
+    }
+    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_1)) {
+        vertex_data->tex_coord1(1.0, 0.0f);
+    }
+    if(spec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
+        vertex_data->normal(0, 0, 1);
+    }
     vertex_data->move_next();
 
-    vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    if(spec.has_diffuse()) {
+    vertex_data->position(x_offset + (width / 2.0f), y_offset + (height / 2.0f),
+                          z_offset);
+    if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->diffuse(smlt::Color::white());
     }
-    if(spec.has_texcoord0()) vertex_data->tex_coord0(1.0, 1.0f);
-    if(spec.has_texcoord1()) vertex_data->tex_coord1(1.0, 1.0f);
-    if(spec.has_normals())   vertex_data->normal(0, 0, 1);
+    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
+        vertex_data->tex_coord0(1.0, 1.0f);
+    }
+    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_1)) {
+        vertex_data->tex_coord1(1.0, 1.0f);
+    }
+    if(spec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
+        vertex_data->normal(0, 0, 1);
+    }
     vertex_data->move_next();
 
-    vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    if(spec.has_diffuse()) {
+    vertex_data->position(x_offset + (-width / 2.0f),
+                          y_offset + (height / 2.0f), z_offset);
+    if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->diffuse(smlt::Color::white());
     }
-    if(spec.has_texcoord0()) vertex_data->tex_coord0(0.0, 1.0f);
-    if(spec.has_texcoord1()) vertex_data->tex_coord1(0.0, 1.0f);
-    if(spec.has_normals())   vertex_data->normal(0, 0, 1);
+    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
+        vertex_data->tex_coord0(0.0, 1.0f);
+    }
+    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_1)) {
+        vertex_data->tex_coord1(0.0, 1.0f);
+    }
+    if(spec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
+        vertex_data->normal(0, 0, 1);
+    }
     vertex_data->done();
 
     sm->index_data->index(idx_offset + 0);
@@ -723,13 +749,19 @@ void Mesh::set_material(MaterialPtr material) {
 void Mesh::transform_vertices(const smlt::Mat4& transform) {
     vertex_data->move_to_start();
 
+    bool has_positions = vertex_data->vertex_specification().attr_count(
+        VERTEX_ATTR_NAME_POSITION);
+
+    bool has_normals =
+        vertex_data->vertex_specification().attr_count(VERTEX_ATTR_NAME_NORMAL);
+
     for(uint32_t i = 0; i < vertex_data->count(); ++i) {
-        if(vertex_data->vertex_specification().has_positions()) {
+        if(has_positions) {
             auto v = vertex_data->position_at<Vec3>(i);
             vertex_data->position(v->transformed_by(transform));
         }
 
-        if(vertex_data->vertex_specification().has_normals()) {
+        if(has_normals) {
             auto n = vertex_data->normal_at<Vec3>(i);
             vertex_data->normal(n->rotated_by(transform).normalized());
         }
