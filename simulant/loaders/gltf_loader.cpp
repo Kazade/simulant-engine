@@ -262,19 +262,27 @@ struct BufferInfo {
 };
 
 struct TypeKey {
+    std::string attrib = "";
     ComponentType c_type = INVALID;
     std::string a_type = "";
 
-    TypeKey(ComponentType c_type, const std::string& a_type) :
-        c_type(c_type), a_type(a_type) {}
+    TypeKey(const std::string& attrib, ComponentType c_type,
+            const std::string& a_type) :
+        attrib(attrib), c_type(c_type), a_type(a_type) {}
 
     bool operator<(const TypeKey& rhs) const {
-        if(c_type < rhs.c_type) {
+        if(attrib < rhs.attrib) {
             return true;
-        } else if(c_type > rhs.c_type) {
+        } else if(attrib > rhs.attrib) {
             return false;
         } else {
-            return a_type < rhs.a_type;
+            if(c_type < rhs.c_type) {
+                return true;
+            } else if(c_type > rhs.c_type) {
+                return false;
+            } else {
+                return a_type < rhs.a_type;
+            }
         }
     }
 };
@@ -458,17 +466,20 @@ void process_texcoord0s(const BufferInfo& buffer_info, JSONIterator& js,
 
     auto start = final_mesh->vertex_data->cursor_position();
 
+    auto attr = spec.attr(VERTEX_ATTR_NAME_TEXCOORD_0);
+    auto comp_count = attr.value().component_count();
+
     for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
-        if(spec.texcoord0_attribute == VERTEX_ATTR_2F) {
+        if(comp_count == 2) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             final_mesh->vertex_data->tex_coord0(x, y);
-        } else if(spec.texcoord0_attribute == VERTEX_ATTR_3F) {
+        } else if(comp_count == 3) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             final_mesh->vertex_data->tex_coord0(x, y, z);
-        } else if(spec.texcoord0_attribute == VERTEX_ATTR_4F) {
+        } else if(comp_count == 4) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
@@ -683,18 +694,53 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
        heirarchy of: mesh -> accessor -> bufferView -> buffer */
     auto accessors = js["accessors"];
 
-    const std::map<TypeKey, VertexAttribute> lookup = {
-        {TypeKey(FLOAT,         "VEC2"), VERTEX_ATTR_2F },
-        {TypeKey(FLOAT,         "VEC3"), VERTEX_ATTR_3F },
-        {TypeKey(FLOAT,         "VEC4"), VERTEX_ATTR_4F },
-        // {TypeKey(FLOAT, "SCALAR"), VERTEX_ATTR_1F},
-        {TypeKey(UNSIGNED_BYTE, "VEC4"), VERTEX_ATTR_4UB},
+    struct Args {
+        VertexAttributeName name;
+        VertexAttributeType type;
+        VertexAttributeArrangement arrangement;
     };
 
-    auto process_attribute = [&](JSONIterator mesh_attrs,
-                                 const char* type) -> VertexAttribute {
+    const std::map<TypeKey, Args> lookup = {
+        {TypeKey("POSITION",   FLOAT,         "VEC2"),
+         {VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_TYPE_FLOAT,
+          VERTEX_ATTR_ARRANGEMENT_XY}  },
+        {TypeKey("POSITION",   FLOAT,         "VEC3"),
+         {VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_TYPE_FLOAT,
+          VERTEX_ATTR_ARRANGEMENT_XYZ} },
+        {TypeKey("POSITION",   FLOAT,         "VEC4"),
+         {VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_TYPE_FLOAT,
+          VERTEX_ATTR_ARRANGEMENT_XYZW}},
+        {TypeKey("TEXCOORD_0", FLOAT,         "VEC2"),
+         {VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_TYPE_FLOAT,
+          VERTEX_ATTR_ARRANGEMENT_XY}  },
+        {TypeKey("TEXCOORD_0", FLOAT,         "VEC3"),
+         {VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_TYPE_FLOAT,
+          VERTEX_ATTR_ARRANGEMENT_XYZ} },
+        {TypeKey("TEXCOORD_1", FLOAT,         "VEC2"),
+         {VERTEX_ATTR_NAME_TEXCOORD_1, VERTEX_ATTR_TYPE_FLOAT,
+          VERTEX_ATTR_ARRANGEMENT_XY}  },
+        {TypeKey("TEXCOORD_1", FLOAT,         "VEC3"),
+         {VERTEX_ATTR_NAME_TEXCOORD_1, VERTEX_ATTR_TYPE_FLOAT,
+          VERTEX_ATTR_ARRANGEMENT_XYZ} },
+        {TypeKey("COLOR_0",    FLOAT,         "VEC4"),
+         {VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_TYPE_FLOAT,
+          VERTEX_ATTR_ARRANGEMENT_XYZW}},
+        {TypeKey("NORMAL",     FLOAT,         "VEC3"),
+         {VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_TYPE_FLOAT,
+          VERTEX_ATTR_ARRANGEMENT_XYZ} },
+        {TypeKey("NORMAL",     FLOAT,         "VEC4"),
+         {VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_TYPE_FLOAT,
+          VERTEX_ATTR_ARRANGEMENT_XYZW}},
+        // {TypeKey(FLOAT, "SCALAR"), VERTEX_ATTR_1F},
+        {TypeKey("POSITION",   UNSIGNED_BYTE, "VEC4"),
+         {VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_TYPE_UNSIGNED_BYTE,
+          VERTEX_ATTR_ARRANGEMENT_XYZW}},
+    };
+
+    auto process_attribute = [&](VertexFormatBuilder& builder,
+                                 JSONIterator mesh_attrs, const char* type) {
         if(!mesh_attrs->has_key(type)) {
-            return smlt::VERTEX_ATTR_NONE;
+            return;
         }
 
         auto acc_id = mesh_attrs[type]->to_int().value_or(0);
@@ -703,12 +749,13 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
         auto c_type =
             (ComponentType)acc_node["componentType"]->to_int().value_or(5121);
         auto a_type = acc_node["type"]->to_str().value_or("SCALAR");
-        auto key = TypeKey(c_type, a_type);
+        auto key = TypeKey(type, c_type, a_type);
         if(lookup.count(key)) {
-            return lookup.at(key);
+            auto attr = lookup.at(key);
+            builder = builder.add(attr.name, attr.arrangement, attr.type);
+        } else {
+            S_ERROR("Unsupported gltf attribute for {0}", type);
         }
-
-        return smlt::VERTEX_ATTR_NONE;
     };
 
     smlt::MeshPtr final_mesh;
@@ -716,16 +763,14 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
     for(auto& primitive_node: mesh["primitives"]) {
         auto primitive = primitive_node.to_iterator();
 
-        auto pos = process_attribute(primitive["attributes"], "POSITION");
-        auto norm = process_attribute(primitive["attributes"], "NORMAL");
-        auto diff = process_attribute(primitive["attributes"], "COLOR_0");
-        auto tex = process_attribute(primitive["attributes"], "TEXCOORD_0");
+        VertexFormatBuilder builder;
 
-        auto spec = VertexFormat(
-            pos, norm, tex, VERTEX_ATTR_NONE, VERTEX_ATTR_NONE,
-            VERTEX_ATTR_NONE, VERTEX_ATTR_NONE, VERTEX_ATTR_NONE,
-            VERTEX_ATTR_NONE, VERTEX_ATTR_NONE, diff);
+        process_attribute(builder, primitive["attributes"], "POSITION");
+        process_attribute(builder, primitive["attributes"], "NORMAL");
+        process_attribute(builder, primitive["attributes"], "COLOR_0");
+        process_attribute(builder, primitive["attributes"], "TEXCOORD_0");
 
+        auto spec = builder.build();
         if(!final_mesh) {
             final_mesh = scene->assets->create_mesh(spec);
         } else if(final_mesh->vertex_data->vertex_specification() != spec) {

@@ -465,17 +465,18 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
             batch->data->position(smlt::Vec3());
         }
 
-        if(tindex != -1 && info->vspec.has_texcoord0()) {
+        if(tindex != -1 &&
+           info->vspec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
             Vec2 t = TEXCOORDS->at(tindex - 1);
             batch->data->tex_coord0(t);
         }
 
-        if(nindex != -1 && info->vspec.has_normals()) {
+        if(nindex != -1 && info->vspec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
             Vec3 n = NORMALS->at(nindex - 1);
             batch->data->normal(n);
         }
 
-        if(info->vspec.has_diffuse()) {
+        if(info->vspec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
             batch->data->diffuse(diffuse);
         }
 
