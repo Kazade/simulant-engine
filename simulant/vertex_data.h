@@ -36,12 +36,55 @@
 namespace smlt {
 
 class Window;
+class VertexBuffer;
+
+typedef std::shared_ptr<VertexBuffer> VertexBufferPtr;
+
+/* What should we do after uploading the vertex
+ * data to the GPU */
+enum VertexFreeDataMode {
+    VERTEX_FREE_DATA_MODE_KEEP,
+    VERTEX_FREE_DATA_MODE_DISCARD
+};
 
 class VertexData :
     public UniquelyIdentifiable<VertexData>,
     public NotifiesDestruction<VertexData> {
 
+    friend class Renderer;
+
+    VertexFreeDataMode free_data_mode_ = VERTEX_FREE_DATA_MODE_DISCARD;
+    VertexBufferPtr vertex_buffer_;
+    bool vertex_data_dirty_ = false;
+
 public:
+    /** Return the attached vertex buffer, if any */
+    const VertexBufferPtr vertex_buffer() const {
+        return vertex_buffer_;
+    }
+
+    /* Control whether or not to free the vertex data
+     * once it has been uploaded to a vertex buffer */
+    void set_free_data_mode(VertexFreeDataMode mode) {
+        free_data_mode_ = mode;
+    }
+
+    VertexFreeDataMode free_data_mode() const {
+        return free_data_mode_;
+    }
+
+    /** Returns true if the vertex data was changed
+     *  since the last upload to the GPU */
+    bool is_dirty() const {
+        return vertex_data_dirty_;
+    }
+
+    /* Mark the vertex data as requiring upload to the
+     * GPU */
+    void set_dirty(bool dirty) {
+        vertex_data_dirty_ = dirty;
+    }
+
     typedef std::shared_ptr<VertexData> ptr;
 
     VertexData(VertexFormat vertex_specification);
@@ -196,6 +239,8 @@ public:
                 position(pos);
             }
         }
+
+        return true;
     }
 
     bool interp_vertex(uint32_t source_idx, const VertexData& dest_state, uint32_t dest_idx, VertexData& out, uint32_t out_idx, float interp);

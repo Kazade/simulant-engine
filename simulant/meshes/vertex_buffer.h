@@ -1,5 +1,6 @@
 #pragma once
 
+#include "vertex_format.h"
 #include <memory>
 
 /* A VertexBuffer is renderer-specific storage for vertex data.
@@ -28,9 +29,23 @@ class VertexData;
 struct VertexBufferRendererData {};
 
 class VertexBuffer {
-public:
-    VertexBuffer(const VertexData& data,
+private:
+    friend class Renderer;
+
+    VertexBuffer(VertexFormat format,
                  std::shared_ptr<VertexBufferRendererData> renderer_data);
+
+public:
+    VertexFormat format() const {
+        return format_;
+    }
+
+    const VertexBufferRendererData* renderer_data() const {
+        return renderer_data_.get();
+    }
+
+private:
+    VertexFormat format_;
 };
 
 } // namespace smlt

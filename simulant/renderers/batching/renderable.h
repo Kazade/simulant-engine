@@ -67,10 +67,9 @@ private:
 
 struct alignas(8) Renderable final {
     MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES;
-    const VertexData* vertex_data = nullptr;
-    const VertexBuffer* vertex_buffer = nullptr;
+    VertexData* vertex_data = nullptr;
 
-    const IndexData* index_data = nullptr;
+    IndexData* index_data = nullptr;
     std::size_t index_element_count = 0;
 
     const VertexRange* vertex_ranges = nullptr;

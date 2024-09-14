@@ -25,7 +25,15 @@ namespace procedural {
 namespace mesh {
 
 void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) {
-    mesh->reset(VertexFormat::DEFAULT);
+    mesh->reset(VertexFormatBuilder()
+                    .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                         VERTEX_ATTR_TYPE_FLOAT)
+                    .add(VERTEX_ATTR_NAME_TEXCOORD_0,
+                         VERTEX_ATTR_ARRANGEMENT_XY, VERTEX_ATTR_TYPE_FLOAT)
+                    .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
+                         VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
+                    .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                         VERTEX_ATTR_TYPE_FLOAT));
 
     static const std::map<uint8_t, std::string> SUBMESH_NAMES = {
         {0, "front"},

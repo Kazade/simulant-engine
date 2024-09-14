@@ -81,7 +81,7 @@ public:
         using reference         = T&;
 
         reference operator*() {
-            return *ptr_;
+            return const_cast<reference>(*ptr_);
         }
         pointer operator->() { return ptr_; }
 

@@ -596,6 +596,7 @@ void VertexData::resize(uint32_t size) {
 void VertexData::done() {
     signal_update_complete_();
     last_updated_ = TimeKeeper::now_in_us();
+    is_dirty_ = true;
 }
 
 uint64_t VertexData::last_updated() const {

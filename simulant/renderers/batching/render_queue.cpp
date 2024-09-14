@@ -180,6 +180,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
                 } else if(pass_iteration_type == ITERATION_TYPE_N || pass_iteration_type == ITERATION_TYPE_ONCE) {
                     visitor->apply_lights(&lights[0], (uint8_t) renderable->light_count);
                 }
+
                 visitor->visit(renderable, material_pass, i);
             }
 
@@ -200,5 +201,12 @@ std::size_t RenderQueue::group_count(Pass pass_number) const {
     return i;
 }
 
+void RenderQueueVisitor::visit(const Renderable* renderable,
+                               const MaterialPass* pass, Iteration iteration) {
+
+    // FIXME: nasty const cast
+    renderer_->prepare_renderable(const_cast<Renderable*>(renderable));
+    do_visit(renderable, pass, iteration);
+}
 }
 }

@@ -19,6 +19,8 @@
 #include "gl1x_renderer.h"
 
 #include "../../application.h"
+#include "../../meshes/vertex_buffer.h"
+#include "../../meshes/vertex_format.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../stage.h"
@@ -43,7 +45,7 @@ static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
 
 GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer,
                                              CameraPtr camera) :
-    renderer_(renderer), camera_(camera) {}
+    RenderQueueVisitor(renderer), camera_(camera) {}
 
 void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
                                             uint64_t frame_id,
@@ -527,93 +529,32 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     GLCheck(glMatrixMode, GL_PROJECTION);
     GLCheck(glLoadMatrixf, projection.data());
 
-    const auto& spec = renderable->vertex_data->vertex_specification();
+    const auto& buffer = renderable->vertex_data->vertex_buffer();
+    const auto& spec = buffer->format();
     const auto stride = spec.stride();
 
-    renderer_->prepare_to_render(renderable);
-
-    const auto vertex_data = renderable->vertex_data->data();
+    const auto renderer_data =
+        (GL1VertexBufferData*)renderable->vertex_data->renderer_data();
     assert(vertex_data);
 
-    const auto has_positions = spec.has_positions();
-    if(has_positions) {
-        enable_vertex_arrays();
-        GLCheck(glVertexPointer,
-                (spec.position_attribute == VERTEX_ATTR_2F)   ? 2
-                : (spec.position_attribute == VERTEX_ATTR_3F) ? 3
-                                                                   : 4,
-                GL_FLOAT, stride,
-                ((const uint8_t*)vertex_data) + spec.position_offset(false));
-    } else {
-        disable_vertex_arrays();
-    }
+    enable_vertex_arrays();
+    enable_color_arrays();
+    enable_normal_arrays();
+    enable_texcoord_array(0);
 
-    const auto has_diffuse = spec.has_diffuse();
-    if(has_diffuse) {
-        S_VERBOSE("Enabling colors");
-        enable_color_arrays();
-        GLCheck(glColorPointer,
-                (spec.diffuse_attribute == VERTEX_ATTR_2F)   ? 2
-                : (spec.diffuse_attribute == VERTEX_ATTR_3F) ? 3
-                : (spec.diffuse_attribute == VERTEX_ATTR_4F ||
-                   spec.diffuse_attribute == VERTEX_ATTR_4UB_RGBA)
-                    ? 4
-                    : GL_BGRA, // This weirdness is an extension apparently
-                (spec.diffuse_attribute == VERTEX_ATTR_4UB_RGBA ||
-                 spec.diffuse_attribute == VERTEX_ATTR_4UB_BGRA)
-                    ? GL_UNSIGNED_BYTE
-                    : GL_FLOAT,
-                stride,
-                ((const uint8_t*)vertex_data) + spec.diffuse_offset(false));
-    } else {
-        disable_color_arrays();
-    }
-
-    const auto has_normals = spec.has_normals();
-    if(has_normals) {
-        enable_normal_arrays();
-
-        auto type = (spec.normal_attribute == VERTEX_ATTR_PACKED_VEC4_1I)
-                        ? GL_UNSIGNED_INT_2_10_10_10_REV
-                        : GL_FLOAT;
-
-        /*
-         * According to the ARB_vertex_type_2_10_10_10_rev extension,
-         * glNormalPointer should be able to handle
-         * GL_UNSIGNED_INT_2_10_10_10_REV. However Mesa3D throws a
-         * GL_INVALID_OPERATION if you attempt this
-         * (https://gitlab.freedesktop.org/mesa/mesa/issues/2111)
-         *
-         * So, don't try this on the desktop. The DEFAULT vertex specification
-         * only enables this on the Dreamcast so we can hit the GLdc fast
-         * rendering path by matching the PVR vertex size (32 bytes)
-         */
-
-        GLCheck(glNormalPointer, type, stride,
-                ((const uint8_t*)vertex_data) + spec.normal_offset(false));
-    } else {
-        disable_normal_arrays();
-    }
-
-    for(uint8_t i = 0; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
-        bool enabled = spec.has_texcoordX(i);
-
-        if(enabled) {
-            enable_texcoord_array(i);
-            auto offset = spec.texcoordX_offset(i, false);
-
-#if _S_GL_SUPPORTS_MULTITEXTURE
-            GLCheck(glClientActiveTexture, GL_TEXTURE0 + i);
-#endif
-            GLCheck(glTexCoordPointer,
-                    (spec.texcoordX_attribute(i) == VERTEX_ATTR_2F)   ? 2
-                    : (spec.texcoordX_attribute(i) == VERTEX_ATTR_3F) ? 3
-                                                                           : 4,
-                    GL_FLOAT, stride, ((const uint8_t*)vertex_data) + offset);
-        } else {
-            disable_texcoord_array(i);
-        }
-    }
+    GLCheck(glVertexPointer, 3, GL_FLOAT, stride,
+            ((const uint8_t*)vertex_data) +
+                spec.offset(VERTEX_ATTR_NAME_POSITION));
+    GLCheck(glColorPointer, GL_BGRA, GL_UNSIGNED_BYTE, stride,
+            ((const uint8_t*)vertex_data) +
+                spec.offset(VERTEX_ATTR_NAME_COLOR));
+    GLCheck(glNormalPointer, GL_FLOAT, stride,
+            ((const uint8_t*)vertex_data) +
+                spec.offset(VERTEX_ATTR_NAME_NORMAL));
+    GLCheck(glClientActiveTexture, GL_TEXTURE0);
+    GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
+            ((const uint8_t*)vertex_data) +
+                spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0));
 
     auto arrangement = convert_arrangement(renderable->arrangement);
 

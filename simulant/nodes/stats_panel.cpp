@@ -86,8 +86,12 @@ bool StatsPanel::on_init() {
     graph_material_->set_blend_func(BLEND_ALPHA);
     graph_material_->set_depth_test_enabled(false);
     graph_material_->set_cull_mode(CULL_MODE_NONE);
-    ram_graph_mesh_ =
-        scene->assets->create_mesh(smlt::VertexFormat::DEFAULT);
+    ram_graph_mesh_ = scene->assets->create_mesh(
+        VertexFormatBuilder()
+            .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_THREE,
+                 VERTEX_ATTR_TYPE_FLOAT)
+            .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
+                 VERTEX_ATTR_TYPE_UNSIGNED_BYTE));
     ram_graph_ = create_child<Actor>(ram_graph_mesh_);
     ram_graph_->set_cullable(false);
 

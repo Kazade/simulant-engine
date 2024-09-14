@@ -148,20 +148,27 @@ public:
         for(auto& pos: positions_) {
             /* Supply the position and scale */
             vdata->position(pos * diameter);
-            if(spec.has_diffuse()) {
+            if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
                 vdata->diffuse(smlt::Color::white());
             }
 
             auto N = pos.normalized();
             // The normal is the position normalized as we generate around the origin
-            if(spec.has_normals()) vdata->normal(N);
+            if(spec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
+                vdata->normal(N);
+            }
 
             Vec2 uv;
             uv.x = N.x / 2.0f + 0.5f;
             uv.y = N.y / 2.0f + 0.5f;
 
-            if(spec.has_texcoord0()) vdata->tex_coord0(uv);
-            if(spec.has_texcoord1()) vdata->tex_coord1(uv);
+            if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
+                vdata->tex_coord0(uv);
+            }
+
+            if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_1)) {
+                vdata->tex_coord1(uv);
+            }
 
             vdata->move_next();
         }

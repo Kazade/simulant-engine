@@ -31,7 +31,6 @@ public:
     void apply_lights(const LightPtr* lights, const uint8_t count) override;
 
 private:
-    GL1XRenderer* renderer_;
     CameraPtr camera_;
     Color global_ambient_;
 

@@ -809,12 +809,23 @@ void GenericRenderer::init_context() {
     }
 }
 
-void GenericRenderer::prepare_to_render(const Renderable* renderable) {
+struct GL2VertexBufferRendererData: public VertexBufferRendererData {
+    /* Stashed here in prepare_to_render and used later for that renderable */
+    std::shared_ptr<GPUBuffer> buffer_stash;
+};
+
+std::shared_ptr<VertexBuffer>
+    GenericRenderer::prepare_vertex_data(const VertexData* vertex_data) {
+
+    auto vbdata = std::make_shared<GL2VertexBufferRendererData>();
+
     /* Here we allocate VBOs for the renderable if necessary, and then upload
      * any new data */
-    buffer_stash_.reset(
+    vbdata->buffer_stash.reset(
         new GPUBuffer(buffer_manager_->update_and_fetch_buffers(renderable)));
-    buffer_stash_->bind_vbos();
+    vbdata->buffer_stash->bind_vbos();
+
+    return std::make_shared<VertexBuffer>(vbdata);
 }
 
 } // namespace smlt

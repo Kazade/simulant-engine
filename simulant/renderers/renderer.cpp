@@ -19,6 +19,7 @@
 
 #include "renderer.h"
 #include "../texture.h"
+#include "../vertex_data.h"
 
 namespace smlt {
 
@@ -30,6 +31,13 @@ void Renderer::register_texture(AssetID tex_id, Texture* texture) {
 void Renderer::unregister_texture(AssetID texture_id, Texture* texture) {
     texture_registry_.erase(texture_id);
     on_texture_unregister(texture_id, texture);
+}
+
+std::shared_ptr<VertexBuffer> Renderer::vertex_buffer_factory(
+    VertexFormat format,
+    std::shared_ptr<VertexBufferRendererData> renderer_data) {
+    return std::shared_ptr<VertexBuffer>(
+        new VertexBuffer(format, renderer_data));
 }
 
 bool Renderer::texture_format_is_native(TextureFormat fmt) {
@@ -271,6 +279,28 @@ bool Renderer::convert_if_necessary(Texture* tex) {
     }
 
     return true;
+}
+
+void Renderer::on_renderable_prepare(Renderable* renderable) {
+    _S_UNUSED(renderable);
+
+    /* We have some vertex data that hasn't been prepared for the GPU */
+    if(renderable->vertex_data && (!renderable->vertex_data->vertex_buffer() ||
+                                   renderable->vertex_data->is_dirty())) {
+
+        renderable->vertex_data->vertex_buffer_ =
+            prepare_vertex_data(renderable->vertex_data);
+        renderable->vertex_data->set_dirty(false);
+
+        if(renderable->vertex_data->free_data_mode() ==
+           VERTEX_FREE_DATA_MODE_DISCARD) {
+            renderable->vertex_data->clear();
+        }
+    }
+}
+
+void Renderer::prepare_renderable(Renderable* renderable) {
+    on_renderable_prepare(renderable);
 }
 
 void Renderer::prepare_texture(Texture* tex) {

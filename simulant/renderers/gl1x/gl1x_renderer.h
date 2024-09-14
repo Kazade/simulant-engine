@@ -46,9 +46,9 @@ public:
         return "gl1x";
     }
 
-    void prepare_to_render(const Renderable *renderable) override {
-        _S_UNUSED(renderable);
-    }
+private:
+    virtual std::shared_ptr<VertexBuffer>
+        prepare_vertex_data(const VertexData* vertex_data);
 };
 
 }

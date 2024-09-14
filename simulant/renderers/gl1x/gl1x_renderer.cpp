@@ -26,12 +26,14 @@
     #include "../glad/glad/glad.h"
 #endif
 
-#include "../../utils/gl_error.h"
 #include "../../assets/material.h"
 #include "../../material_constants.h"
+#include "../../meshes/vertex_buffer.h"
 #include "../../texture.h"
-#include "gl1x_render_queue_visitor.h"
+#include "../../utils/gl_error.h"
+#include "../../vertex_data.h"
 #include "gl1x_render_group_impl.h"
+#include "gl1x_render_queue_visitor.h"
 
 namespace smlt {
 
@@ -97,6 +99,44 @@ smlt::GL1XRenderer::GL1XRenderer(smlt::Window *window):
     GLRenderer(window) {
 }
 
+struct alignas(32) GL1Vertex {
+    Vec3 xyz;
+    Vec2 uv;
+    uint32_t color;
+    Vec3 n;
+};
+
+static const VertexFormat format =
+    VertexFormatBuilder()
+        .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+             VERTEX_ATTR_TYPE_FLOAT)
+        .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+             VERTEX_ATTR_TYPE_FLOAT)
+        .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
+             VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
+        .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
+             VERTEX_ATTR_TYPE_FLOAT)
+        .build();
+
+struct GL1VertexBufferData: public VertexBufferRendererData {
+    std::vector<GL1Vertex> vertices;
+};
+
+std::shared_ptr<VertexBuffer>
+    GL1XRenderer::prepare_vertex_data(const VertexData* vertex_data) {
+
+    auto vbuffer_data = std::make_shared<GL1VertexBufferData>();
+    vbuffer_data->vertices.resize(vertex_data->count());
+    for(uint32_t i = 0; i < vertex_data->count(); ++i) {
+        // vbuffer_data->vertices[i].xyz = *vertex_data->position_at<Vec3>(i);
+        // vbuffer_data->vertices[i].uv = *vertex_data->texcoord0_at<Vec2>(i);
+        // vbuffer_data->vertices[i].color =
+        // vertex_data->diffuse_at(i)->packed(); vbuffer_data->vertices[i].n =
+        // vertex_data->normal_at<Vec3>(i);
+    }
+
+    return vertex_buffer_factory(format, vbuffer_data);
+}
 }
 
 

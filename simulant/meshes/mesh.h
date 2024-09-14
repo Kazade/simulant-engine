@@ -118,13 +118,6 @@ public:
     }
 };
 
-/* What should we do after uploading the mesh vertex
- * data to the GPU */
-enum VertexFreeDataMode {
-    VERTEX_FREE_DATA_MODE_KEEP,
-    VERTEX_FREE_DATA_MODE_DISCARD
-};
-
 class Mesh :
     public virtual Boundable,
     public Asset,

@@ -79,8 +79,8 @@ void Compositor::clean_destroyed_layers() {
 
 class TraceWriter : public batcher::RenderQueueVisitor {
 public:
-    TraceWriter(std::ostream* out):
-        out_(out) {}
+    TraceWriter(Renderer* renderer, std::ostream* out) :
+        RenderQueueVisitor(renderer), out_(out) {}
 
     void start_traversal(const batcher::RenderQueue&, uint64_t, StageNode*) {}
 
@@ -90,7 +90,8 @@ public:
 
     void change_material_pass(const MaterialPass*, const MaterialPass*) {}
     void apply_lights(const LightPtr*, const uint8_t) {}
-    void visit(const Renderable* r, const MaterialPass*, batcher::Iteration) {
+    void do_visit(const Renderable* r, const MaterialPass*,
+                  batcher::Iteration) override {
         auto line = _F("{0}, {1}, {2}, {3}, {4}\n").format(
             r,
             (group_) ? group_->sort_key.is_blended : false,
@@ -109,8 +110,8 @@ private:
     const batcher::RenderGroup* group_ = nullptr;
 };
 
-void Compositor::dump_render_trace(std::ostream *out) {
-    auto visitor = std::make_shared<TraceWriter>(out);
+void Compositor::dump_render_trace(Renderer* renderer, std::ostream* out) {
+    auto visitor = std::make_shared<TraceWriter>(renderer, out);
 
     std::string headings = "RENDERABLE, BLENDED?, DISTANCE, PRIORITY, Z-ORDER\n";
     out->write(headings.c_str(), headings.size());

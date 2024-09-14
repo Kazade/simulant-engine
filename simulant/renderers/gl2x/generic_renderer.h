@@ -102,9 +102,13 @@ public:
         return (use_es_) ? "gles2x" : "gl2x";
     }
 
-    void prepare_to_render(const Renderable* renderable) override;
+    std::shared_ptr<VertexBuffer>
+        prepare_vertex_data(const VertexData* vertex_data) override;
 
-    bool is_gles() const { return use_es_; }
+    bool is_gles() const {
+        return use_es_;
+    }
+
 private:
     GPUProgramManager program_manager_;
     GPUProgramPtr default_gpu_program_ = 0;
@@ -119,9 +123,6 @@ private:
     void set_auto_attributes_on_shader(GPUProgram *program, const Renderable* buffer, GPUBuffer* buffers);
     void set_blending_mode(BlendType type);
     void send_geometry(const Renderable* renderable, GPUBuffer* buffers);
-
-    /* Stashed here in prepare_to_render and used later for that renderable */
-    std::shared_ptr<GPUBuffer> buffer_stash_;
 
     friend class GL2RenderQueueVisitor;
 };

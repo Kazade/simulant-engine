@@ -102,13 +102,16 @@ bool Widget::on_create(Params params) {
         style_ = shared_style.value();
     }
 
-    VertexFormat spec = VertexFormat::DEFAULT;
+    auto format = VertexFormatBuilder()
+                      .add(VERTEX_ATTR_NAME_POSITION,
+                           VERTEX_ATTR_ARRANGEMENT_XYZ, VERTEX_ATTR_TYPE_FLOAT)
+                      .add(VERTEX_ATTR_NAME_TEXCOORD_0,
+                           VERTEX_ATTR_ARRANGEMENT_XY, VERTEX_ATTR_TYPE_FLOAT)
+                      .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
+                           VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
+                      .build();
 
-    /* We don't need normals or multiple texcoords */
-    spec.normal_attribute = VERTEX_ATTR_NONE;
-    spec.texcoord1_attribute = VERTEX_ATTR_NONE;
-
-    mesh_ = scene->assets->create_mesh(spec);
+    mesh_ = scene->assets->create_mesh(format);
     actor_ = scene->create_node<Actor>(mesh_);
     actor_->set_parent(this);
 

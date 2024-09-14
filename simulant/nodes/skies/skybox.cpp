@@ -111,8 +111,13 @@ void Skybox::generate(const Path& up, const Path& down, const Path& left,
                       const Path& right, const Path& front, const Path& back,
                       const TextureFlags& flags) {
     auto& assets = scene->assets;
-    mesh_ = assets->create_mesh_as_cube_with_submesh_per_face(DEFAULT_SIZE);
-
+    mesh_ = assets->create_mesh_as_cube_with_submesh_per_face(
+        DEFAULT_SIZE,
+        VertexFormatBuilder()
+            .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_THREE,
+                 VERTEX_ATTR_TYPE_FLOAT)
+            .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_TWO,
+                 VERTEX_ATTR_TYPE_FLOAT));
     auto mesh = mesh_;
     mesh->reverse_winding();
 

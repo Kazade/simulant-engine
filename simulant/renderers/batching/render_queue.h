@@ -134,7 +134,15 @@ typedef uint32_t Iteration;
 class RenderQueue;
 
 class RenderQueueVisitor {
+protected:
+    Renderer* renderer() const {
+        return renderer_;
+    }
+
 public:
+    RenderQueueVisitor(Renderer* renderer) :
+        renderer_(renderer) {}
+
     virtual ~RenderQueueVisitor() {}
 
     virtual void start_traversal(const RenderQueue& queue, uint64_t frame_id, StageNode* stage) = 0;
@@ -144,8 +152,15 @@ public:
     virtual void change_material_pass(const MaterialPass* prev, const MaterialPass* next) = 0;
     virtual void apply_lights(const LightPtr* lights, const uint8_t count) = 0;
 
-    virtual void visit(const Renderable*, const MaterialPass*, Iteration) = 0;
+    virtual void visit(const Renderable* renderable, const MaterialPass* pass,
+                       Iteration iteration);
     virtual void end_traversal(const RenderQueue& queue, StageNode* stage) = 0;
+
+private:
+    Renderer* renderer_ = nullptr;
+
+    virtual void do_visit(const Renderable*, const MaterialPass*,
+                          Iteration) = 0;
 };
 
 
