@@ -46,6 +46,7 @@ public:
 
 private:
     VertexFormat format_;
+    std::shared_ptr<VertexBufferRendererData> renderer_data_;
 };
 
 } // namespace smlt
