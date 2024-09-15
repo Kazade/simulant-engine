@@ -55,7 +55,6 @@ public:
     void apply_lights(const LightPtr* lights, const uint8_t count) override;
 
 private:
-    GenericRenderer* renderer_;
     CameraPtr camera_;
     Color global_ambient_;
 
@@ -65,7 +64,9 @@ private:
 
     GL2RenderGroupImpl* current_group_ = nullptr;
 
-    void do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration);
+    void do_visit(const Renderable* renderable,
+                  const MaterialPass* material_pass,
+                  batcher::Iteration iteration) override;
 
     void rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program);
 };
@@ -120,9 +121,11 @@ private:
     void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, const Renderable* renderable, Camera* camera);
     void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Color& global_ambient);
 
-    void set_auto_attributes_on_shader(GPUProgram *program, const Renderable* buffer, GPUBuffer* buffers);
+    void set_auto_attributes_on_shader(GPUProgram* program,
+                                       const Renderable* buffer,
+                                       GPUBuffer* vbuffer);
     void set_blending_mode(BlendType type);
-    void send_geometry(const Renderable* renderable, GPUBuffer* buffers);
+    void send_geometry(const Renderable* renderable, const GPUBuffer* ibuffer);
 
     friend class GL2RenderQueueVisitor;
 

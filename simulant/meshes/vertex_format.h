@@ -284,6 +284,11 @@ public:
 
     bool operator==(const VertexFormat& rhs) const;
     bool operator!=(const VertexFormat& rhs) const;
+
+    static VertexFormat standard();
+    static VertexFormat position_and_color();
+    static VertexFormat position_and_texcoord();
+    static VertexFormat position_only();
 };
 
 class VertexFormatBuilder {

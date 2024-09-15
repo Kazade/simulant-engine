@@ -155,22 +155,23 @@ void VertexData::position(const Vec4 &pos) {
 }
 
 void VertexData::normal(float x, float y, float z) {
-    auto offset = vertex_specification_.normal_offset();
+    auto offset =
+        (int)vertex_specification_.offset(VERTEX_ATTR_NAME_NORMAL).value_or(-1);
 
-    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+    if(offset == -1) {
         return;
     }
 
     uint8_t* ptr = (uint8_t*) &data_[cursor_offset() + offset];
 
-    if(vertex_specification_.normal_attribute_ == VERTEX_ATTR_3F) {
-        Vec3* out = (Vec3*) ptr;
-        *out = Vec3(x, y, z);
-    } else  {
-        assert(vertex_specification_.normal_attribute_ == VERTEX_ATTR_PACKED_VEC4_1I);
-        uint32_t* packed = (uint32_t*) ptr;
-        *packed = pack_vertex_attribute_vec3_1i(x, y, z);
-    }
+    assert(vertex_specification_.attr(VERTEX_ATTR_NAME_NORMAL)
+               ->component_count() == 3);
+
+    assert(vertex_specification_.attr(VERTEX_ATTR_NAME_NORMAL)->type ==
+           VERTEX_ATTR_TYPE_FLOAT);
+
+    Vec3* out = (Vec3*)ptr;
+    *out = Vec3(x, y, z);
 }
 
 void VertexData::normal(const Vec3 &n) {
@@ -178,9 +179,13 @@ void VertexData::normal(const Vec3 &n) {
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v) {
-    auto offset = vertex_specification_.texcoordX_offset(which);
+    auto offset =
+        (int)vertex_specification_
+            .offset(
+                (VertexAttributeName)((int)VERTEX_ATTR_NAME_TEXCOORD_0 + which))
+            .value_or(-1);
 
-    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+    if(offset == -1) {
         return;
     }
 
@@ -190,25 +195,38 @@ void VertexData::tex_coordX(uint8_t which, float u, float v) {
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w) {
-    auto offset = vertex_specification_.texcoordX_offset(which);
+    auto offset =
+        (int)vertex_specification_
+            .offset(
+                (VertexAttributeName)((int)VERTEX_ATTR_NAME_TEXCOORD_0 + which))
+            .value_or(-1);
 
-    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+    if(offset == -1) {
         return;
     }
 
-    Vec3* out = (Vec3*) &data_[cursor_offset() + offset];
-    *out = Vec3(u, v, w);
+    Vec3* out = (Vec3*)&data_[cursor_offset() + offset];
+    out->x = u;
+    out->y = v;
+    out->z = w;
 }
 
 void VertexData::tex_coordX(uint8_t which, float u, float v, float w, float x) {
-    auto offset = vertex_specification_.texcoordX_offset(which);
+    auto offset =
+        (int)vertex_specification_
+            .offset(
+                (VertexAttributeName)((int)VERTEX_ATTR_NAME_TEXCOORD_0 + which))
+            .value_or(-1);
 
-    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+    if(offset == -1) {
         return;
     }
 
-    Vec4* out = (Vec4*) &data_[cursor_offset() + offset];
-    *out = Vec4(u, v, w, x);
+    Vec4* out = (Vec4*)&data_[cursor_offset() + offset];
+    out->x = u;
+    out->y = v;
+    out->z = w;
+    out->w = x;
 }
 
 void VertexData::push_back() {
@@ -226,56 +244,6 @@ void VertexData::tex_coord0(float u, float v, float w) {
 
 void VertexData::tex_coord0(float u, float v, float w, float x) {
     tex_coordX(0, u, v, w, x);
-}
-
-template<>
-const Vec2* VertexData::texcoord0_at<Vec2>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTR_2F);
-    return ((Vec2*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
-}
-
-template<>
-const Vec3* VertexData::texcoord0_at<Vec3>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTR_3F);
-    return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
-}
-
-template<>
-const Vec4* VertexData::texcoord0_at<Vec4>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord0_attribute == VERTEX_ATTR_4F);
-    return ((Vec4*) &data_[(idx * stride()) + vertex_specification_.texcoord0_offset()]);
-}
-
-template<>
-const Vec2* VertexData::texcoord1_at<Vec2>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTR_2F);
-    return ((Vec2*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
-}
-
-template<>
-const Vec3* VertexData::texcoord1_at<Vec3>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTR_3F);
-    return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
-}
-
-template<>
-const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const {
-    assert(vertex_specification_.texcoord1_attribute == VERTEX_ATTR_4F);
-    return ((Vec4*) &data_[(idx * stride()) + vertex_specification_.texcoord1_offset()]);
-}
-
-template<>
-const Color* VertexData::diffuse_at(const uint32_t idx) const {
-    assert(vertex_specification_.diffuse_attribute == VERTEX_ATTR_4F);
-    return ((Color*) &data_[(idx * stride()) + vertex_specification_.diffuse_offset()]);
-}
-
-template<>
-const uint8_t* VertexData::diffuse_at(const uint32_t idx) const {
-    assert(
-        vertex_specification_.diffuse_attribute == VERTEX_ATTR_4UB_RGBA ||
-        vertex_specification_.diffuse_attribute == VERTEX_ATTR_4UB_BGRA);
-    return ((uint8_t*) &data_[(idx * stride()) + vertex_specification_.diffuse_offset()]);
 }
 
 void VertexData::tex_coord1(float u, float v) {
@@ -314,20 +282,18 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
     tex_coordX(3, u, v, w, x);
 }
 
-void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-    assert(
-        vertex_specification_.diffuse_attribute_ == VERTEX_ATTR_4UB_BGRA ||
-        vertex_specification_.diffuse_attribute_ == VERTEX_ATTR_4UB_RGBA);
-    auto offset = vertex_specification_.diffuse_offset();
+void VertexData::color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    auto offset =
+        (int)vertex_specification_.offset(VERTEX_ATTR_NAME_COLOR).value_or(-1);
 
-    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+    if(offset == -1) {
         return;
     }
 
-
     uint8_t* out = (uint8_t*) &data_[cursor_offset() + offset];
 
-    if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTR_4UB_BGRA) {
+    if(vertex_specification_.attr(VERTEX_ATTR_NAME_COLOR).value().arrangement ==
+       VERTEX_ATTR_ARRANGEMENT_BGRA) {
         out[0] = b;
         out[1] = g;
         out[2] = r;
@@ -340,12 +306,11 @@ void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     }
 }
 
-void VertexData::diffuse(float r, float g, float b, float a) {
-    assert(vertex_specification_.diffuse_attribute_ == VERTEX_ATTR_4F);
+void VertexData::color(float r, float g, float b, float a) {
+    auto offset =
+        (int)vertex_specification_.offset(VERTEX_ATTR_NAME_COLOR).value_or(-1);
 
-    auto offset = vertex_specification_.diffuse_offset();
-
-    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+    if(offset == -1) {
         return;
     }
 
@@ -353,17 +318,14 @@ void VertexData::diffuse(float r, float g, float b, float a) {
     *out = Vec4(r, g, b, a);
 }
 
-void VertexData::diffuse(const Color& color) {
-    if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTR_4F) {
-        diffuse(color.r, color.g, color.b, color.a);
+void VertexData::color(const Color& c) {
+    if(vertex_specification_.attr(VERTEX_ATTR_NAME_COLOR)->type ==
+       VERTEX_ATTR_TYPE_FLOAT) {
+        color(c.r, c.g, c.b, c.a);
     } else {
         const float s = 255.0f;
-        diffuse(
-            (uint8_t) clamp(color.r * s, 0, 255),
-            (uint8_t) clamp(color.g * s, 0, 255),
-            (uint8_t) clamp(color.b * s, 0, 255),
-            (uint8_t) clamp(color.a * s, 0, 255)
-        );
+        color((uint8_t)clamp(c.r * s, 0, 255), (uint8_t)clamp(c.g * s, 0, 255),
+              (uint8_t)clamp(c.b * s, 0, 255), (uint8_t)clamp(c.a * s, 0, 255));
     }
 }
 
@@ -428,30 +390,26 @@ bool VertexData::interp_vertex(uint32_t source_idx, const VertexData &dest_state
 
     out.move_to(out_idx);
 
-    switch(vertex_specification_.position_attribute) {
-        case VERTEX_ATTR_2F: {
-            auto source = this->position_at<Vec2>(source_idx);
-            auto dest = dest_state.position_at<Vec2>(dest_idx);
-            Vec2 final = *source + ((*dest - *source) * interp);
-            out.position(final);
-        }
-        break;
-        case VERTEX_ATTR_3F: {
-            auto source = this->position_at<Vec3>(source_idx);
-            auto dest = dest_state.position_at<Vec3>(dest_idx);
-            Vec3 final = *source + ((*dest - *source) * interp);
-            out.position(final);
-        }
-        break;
-        case VERTEX_ATTR_4F: {
-            auto source = this->position_at<Vec4>(source_idx);
-            auto dest = dest_state.position_at<Vec4>(dest_idx);
-            Vec4 final = *source + ((*dest - *source) * interp);
-            out.position(final);
-        }
-        break;
-        default:
-            S_WARN("Ignoring unsupported vertex position type");
+    // FIXME: Using Vec4 introduces a per-vertex performance cost if the type
+    // is actually Vec3, or worse Vec2. We should probably use the appropriate
+    // type here.
+    auto source =
+        attr_as<Vec4>(VERTEX_ATTR_NAME_POSITION, source_idx).value_or(Vec4());
+    auto dest =
+        attr_as<Vec4>(VERTEX_ATTR_NAME_POSITION, dest_idx).value_or(Vec4());
+    auto final = source + ((dest - source) * interp);
+
+    auto ccount = vertex_specification_.attr(VERTEX_ATTR_NAME_POSITION)
+                      .value()
+                      .component_count();
+    if(ccount == 4) {
+        out.position(final.x, final.y, final.z, final.w);
+    } else if(ccount == 3) {
+        out.position(final.x, final.y, final.z);
+    } else if(ccount == 2) {
+        out.position(final.x, final.y);
+    } else {
+        return false;
     }
 
     //FIXME: Interpolate normals here
@@ -470,7 +428,7 @@ void VertexData::resize(uint32_t size) {
 void VertexData::done() {
     signal_update_complete_();
     last_updated_ = TimeKeeper::now_in_us();
-    is_dirty_ = true;
+    vertex_data_dirty_ = true;
 }
 
 uint64_t VertexData::last_updated() const {

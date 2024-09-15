@@ -34,12 +34,14 @@ public:
         auto crate = app->shared_assets->load_texture("sample_data/crate.png");
         auto mat = app->shared_assets->create_material_from_texture(crate);
 
-        auto box_mesh = app->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
+        auto box_mesh = app->shared_assets->create_mesh(
+            smlt::VertexFormat::standard(), smlt::GARBAGE_COLLECT_NEVER);
         box_mesh->create_submesh_as_cube("cube", mat, 5);
         box_mesh_ = box_mesh;
 
         auto grass = app->shared_assets->load_texture("sample_data/beach_sand.png");
-        auto ground_mesh = app->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto ground_mesh =
+            app->shared_assets->create_mesh(smlt::VertexFormat::standard());
         ground_mesh->create_submesh_as_box(
             "ground", app->shared_assets->create_material_from_texture(grass), 1000, 2.5, 1000
         ); //window->shared_assets->load_mesh("sample_data/playground.obj");

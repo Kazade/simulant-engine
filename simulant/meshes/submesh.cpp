@@ -70,7 +70,7 @@ void SubMesh::remove_all_vertex_ranges() {
     vertex_ranges_.clear();
 }
 
-void SubMesh::set_diffuse(const smlt::Color& color) {
+void SubMesh::set_color(const smlt::Color& color) {
     auto vertex_data = parent_->vertex_data.get();
 
     if(type_ == SUBMESH_TYPE_INDEXED) {

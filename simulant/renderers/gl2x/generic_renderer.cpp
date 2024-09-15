@@ -26,6 +26,7 @@
 #include "../../stage.h"
 #include "../../types.h"
 #include "gpu_program.h"
+#include "simulant/renderers/gl2x/gl2x_vertex_buffer_data.h"
 #include "vbo_manager.h"
 
 #ifdef __ANDROID__
@@ -279,7 +280,7 @@ void send_attribute(int32_t loc, VertexAttributeName attr,
 }
 
 void GenericRenderer::set_auto_attributes_on_shader(
-    GPUProgram* program, const Renderable* renderable, GPUBuffer* buffers) {
+    GPUProgram* program, const Renderable* renderable, GPUBuffer* vbuffer) {
     /*
      *  Binding attributes generically is hard. So we have some template magic
      * in the send_attribute function above that takes the VertexData member
@@ -289,7 +290,7 @@ void GenericRenderer::set_auto_attributes_on_shader(
      */
     const VertexFormat& vertex_spec =
         renderable->vertex_data->vertex_specification();
-    auto offset = buffers->vertex_vbo->byte_offset(buffers->vertex_vbo_slot);
+    auto offset = vbuffer->vbo->byte_offset(vbuffer->vbo_slot);
 
     send_attribute(program->locate_attribute("s_position", true),
                    VERTEX_ATTR_NAME_POSITION, vertex_spec, offset);
@@ -370,7 +371,7 @@ smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(
 
 GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer,
                                              CameraPtr camera) :
-    renderer_(renderer), camera_(camera) {}
+    RenderQueueVisitor(renderer), camera_(camera) {}
 
 void GL2RenderQueueVisitor::visit(const Renderable* renderable,
                                   const MaterialPass* material_pass,
@@ -396,8 +397,9 @@ void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
 
 void GL2RenderQueueVisitor::apply_lights(const LightPtr* lights,
                                          const uint8_t count) {
+    GenericRenderer* rend = (GenericRenderer*)renderer();
     if(count == 1) {
-        renderer_->set_light_uniforms(pass_, program_, lights[0]);
+        rend->set_light_uniforms(pass_, program_, lights[0]);
     } else {
         // FIXME: This should fill out a light array in the shader. Needs a new
         // property defined!
@@ -406,11 +408,13 @@ void GL2RenderQueueVisitor::apply_lights(const LightPtr* lights,
 
 void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
                                                  const MaterialPass* next) {
+
+    GenericRenderer* rend = (GenericRenderer*)renderer();
     pass_ = next;
 
     // Active the new program, if this render group uses a different one
     if(!prev || prev->gpu_program_id() != next->gpu_program_id()) {
-        program_ = this->renderer_->gpu_program(pass_->gpu_program_id()).get();
+        program_ = rend->gpu_program(pass_->gpu_program_id()).get();
         assert(program_);
 
         program_->build();
@@ -479,7 +483,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         }
     }
 
-    if(!renderer_->is_gles()) {
+    if(!rend->is_gles()) {
         if(!prev || prev->point_size() != next->point_size()) {
             glPointSize(next->point_size());
         }
@@ -530,11 +534,11 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     }
 
     if(!prev || prev->blend_func() != next->blend_func()) {
-        renderer_->set_blending_mode(next->blend_func());
+        rend->set_blending_mode(next->blend_func());
     }
 
-    renderer_->set_stage_uniforms(next, program_, global_ambient_);
-    renderer_->set_material_uniforms(next, program_);
+    rend->set_stage_uniforms(next, program_, global_ambient_);
+    rend->set_material_uniforms(next, program_);
 
     for(auto prop: mat->custom_properties()) {
         switch(prop.second.type) {
@@ -647,12 +651,16 @@ void GL2RenderQueueVisitor::do_visit(const Renderable* renderable,
                                      batcher::Iteration iteration) {
     _S_UNUSED(iteration);
 
-    renderer_->set_renderable_uniforms(material_pass, program_, renderable,
-                                       camera_);
-    renderer_->prepare_to_render(renderable);
-    renderer_->set_auto_attributes_on_shader(program_, renderable,
-                                             renderer_->buffer_stash_.get());
-    renderer_->send_geometry(renderable, renderer_->buffer_stash_.get());
+    GenericRenderer* rend = (GenericRenderer*)renderer();
+
+    auto vbuffer_data =
+        (GL2VertexBufferRendererData*)renderable->vertex_data->vertex_buffer()
+            ->renderer_data();
+
+    rend->set_renderable_uniforms(material_pass, program_, renderable, camera_);
+    rend->set_auto_attributes_on_shader(program_, renderable,
+                                        &vbuffer_data->vertex_buffer);
+    rend->send_geometry(renderable, &vbuffer_data->index_buffer);
 }
 
 static GLenum convert_id_type(IndexType type) {
@@ -704,12 +712,12 @@ GPUProgramPtr GenericRenderer::current_gpu_program() const {
 }
 
 void GenericRenderer::send_geometry(const Renderable* renderable,
-                                    GPUBuffer* buffers) {
+                                    const GPUBuffer* ibuffer) {
     auto element_count = renderable->index_element_count;
     auto arrangement = convert_arrangement(renderable->arrangement);
     if(element_count) {
         auto index_type = convert_id_type(renderable->index_data->index_type());
-        auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);
+        auto offset = ibuffer->vbo->byte_offset(ibuffer->vbo_slot);
         GLCheck(glDrawElements, arrangement, element_count, index_type,
                 BUFFER_OFFSET(offset));
         get_app()->stats->increment_polygons_rendered(renderable->arrangement,
@@ -788,23 +796,27 @@ void GenericRenderer::init_context() {
     }
 }
 
-struct GL2VertexBufferRendererData: public VertexBufferRendererData {
-    /* Stashed here in prepare_to_render and used later for that renderable */
-    std::shared_ptr<GPUBuffer> buffer_stash;
-};
 
 std::shared_ptr<VertexBuffer>
     GenericRenderer::prepare_vertex_data(const VertexData* vertex_data) {
 
     auto vbdata = std::make_shared<GL2VertexBufferRendererData>();
 
-    /* Here we allocate VBOs for the renderable if necessary, and then upload
-     * any new data */
-    vbdata->buffer_stash.reset(
-        new GPUBuffer(buffer_manager_->update_and_fetch_buffers(renderable)));
-    vbdata->buffer_stash->bind_vbos();
+    /* FIXME!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     *
+     * - We need to add prepare_index_data to the renderer
+     * - We need to make this upload the *transformed* data to the GPU buffers
+     *   (e.g. in the optimised format, not the native format)
+     * - It *seems* if we change the vertex data, but not the data size that we
+     *   may not actually perform any upload!
 
-    return std::make_shared<VertexBuffer>(vbdata);
+     * Here we allocate VBOs for the renderable if necessary, and then upload
+     * any new data */
+    vbdata->vertex_buffer =
+        buffer_manager_->update_and_fetch_vertex_buffer(*vertex_data);
+    vbdata->vertex_buffer.bind_vbo();
+
+    return vertex_buffer_factory(vertex_data->vertex_specification(), vbdata);
 }
 
 } // namespace smlt

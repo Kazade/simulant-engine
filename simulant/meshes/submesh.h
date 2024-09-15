@@ -95,7 +95,7 @@ public:
 
     /* Goes through the indexes in this submesh and changes the diffuse color of the vertices
      * they point to */
-    void set_diffuse(const Color &color);
+    void set_color(const Color& color);
 
     /*
      * Whether or not this submesh contributes to the adjacency info attached to the mesh

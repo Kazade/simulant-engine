@@ -191,7 +191,8 @@ ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
     meshes/vertex_format.h
     meshes/vertex_buffer.h
     meshes/vertex_format.cpp
-    renderers/gl1x/gl1x_vertex_buffer_data.h)
+    renderers/gl1x/gl1x_vertex_buffer_data.h
+    renderers/gl2x/gl2x_vertex_buffer_data.h)
 ENDIF()
 
 if(FLTO_SUPPORTED)

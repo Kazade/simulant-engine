@@ -32,14 +32,9 @@ class VBO;
 
 struct GPUBuffer {
     /* Slot into the VBO */
-    VBO* vertex_vbo = nullptr;
-    VBO* index_vbo = nullptr;
-
-    VBOSlot vertex_vbo_slot;
-    VBOSlot index_vbo_slot;
-
-    void sync_data_from_renderable(Renderable* renderable);
-    void bind_vbos();
+    VBO* vbo = nullptr;
+    VBOSlot vbo_slot = -1;
+    void bind_vbo();
 };
 
 enum VBOSlotSize {
@@ -207,7 +202,9 @@ private:
 class VBOManager : public RefCounted<VBOManager> {
 public:
     virtual ~VBOManager();
-    GPUBuffer update_and_fetch_buffers(const Renderable* renderable);
+
+    GPUBuffer update_and_fetch_vertex_buffer(const VertexData& vdata);
+    GPUBuffer update_and_fetch_index_buffer(const IndexData& vdata);
 
     uint32_t dedicated_buffer_count() const;
 
