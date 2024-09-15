@@ -57,7 +57,9 @@ void triangulate(MeshPtr mesh, std::vector<Vec3> &vertices, std::vector<Triangle
     // if they use shared vertices we can store the triangle indexes as they are without offsetting into new
     // data. If they don't use shared vertices, we need to append the submesh vertices and offset the indexes.
     for(uint32_t i = 0; i < mesh->vertex_data->count(); ++i) {
-        vertices.push_back(*mesh->vertex_data->position_at<Vec3>(i));
+        vertices.push_back(
+            mesh->vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, i)
+                .value_or(Vec3()));
     }
 
     for(auto submesh: mesh->each_submesh()) {

@@ -101,8 +101,12 @@ void VertexData::position_checks() {
 void VertexData::position(float x, float y, float z, float w) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_4F);
-    float* out = (float*) &data_[cursor_offset()];
+    assert(vertex_specification_.attr(VERTEX_ATTR_NAME_POSITION)
+               ->component_count() == 4);
+    assert(vertex_specification_.attr(VERTEX_ATTR_NAME_POSITION)->type ==
+           VERTEX_ATTR_TYPE_FLOAT);
+
+    float* out = (float*)&data_[cursor_offset()];
     out[0] = x;
     out[1] = y;
     out[2] = z;
@@ -112,46 +116,30 @@ void VertexData::position(float x, float y, float z, float w) {
 void VertexData::position(float x, float y, float z) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_3F ||
-           vertex_specification_.position_attribute_ == VERTEX_ATTR_4F);
+    assert(vertex_specification_.attr(VERTEX_ATTR_NAME_POSITION)
+               ->component_count() == 3);
+    assert(vertex_specification_.attr(VERTEX_ATTR_NAME_POSITION)->type ==
+           VERTEX_ATTR_TYPE_FLOAT);
 
-    float* out = (float*) &data_[cursor_offset()];
-    switch(vertex_specification_.position_attribute_) {
-    case VERTEX_ATTR_4F:
-        out[3] = 1.0f;
-        // Fallthrough
-    case VERTEX_ATTR_3F:
-        out[0] = x;
-        out[1] = y;
-        out[2] = z;
-    break;
-    default:
-        return;
-    }
+    float* out = (float*)&data_[cursor_offset()];
+
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
 }
 
 void VertexData::position(float x, float y) {
     position_checks();
 
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_2F ||
-           vertex_specification_.position_attribute_ == VERTEX_ATTR_3F ||
-           vertex_specification_.position_attribute_ == VERTEX_ATTR_4F);
+    assert(vertex_specification_.attr(VERTEX_ATTR_NAME_POSITION)
+               ->component_count() == 2);
+    assert(vertex_specification_.attr(VERTEX_ATTR_NAME_POSITION)->type ==
+           VERTEX_ATTR_TYPE_FLOAT);
 
-    float* out = (float*) &data_[cursor_offset()];
-    switch(vertex_specification_.position_attribute_) {
-    case VERTEX_ATTR_4F:
-        out[3] = 1.0f;
-        // fallthrough
-    case VERTEX_ATTR_3F:
-        out[2] = 0.0f;
-        // fallthrough
-    case VERTEX_ATTR_2F:
-        out[0] = x;
-        out[1] = y;
-    break;
-    default:
-        return;
-    }
+    float* out = (float*)&data_[cursor_offset()];
+
+    out[0] = x;
+    out[1] = y;
 }
 
 void VertexData::position(const Vec2 &pos) {
@@ -164,61 +152,6 @@ void VertexData::position(const Vec3& pos) {
 
 void VertexData::position(const Vec4 &pos) {
     position(pos.x, pos.y, pos.z, pos.w);
-}
-
-template<>
-const Vec2* VertexData::position_at<Vec2>(uint32_t idx) const {
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_2F);
-    return ((Vec2*) &data_[idx * stride_]);
-}
-
-template<>
-const Vec3* VertexData::position_at<Vec3>(uint32_t idx) const {
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_3F);
-    const uint8_t* v = &data_[0];
-    v += (idx * stride_);
-    return (const Vec3*) v;
-}
-
-template<>
-const Vec4* VertexData::position_at<Vec4>(uint32_t idx) const {
-    assert(vertex_specification_.position_attribute_ == VERTEX_ATTR_4F);
-    return ((Vec4*) &data_[idx * stride_]);
-}
-
-template<>
-const Vec2* VertexData::normal_at<Vec2>(uint32_t idx) const {
-    assert(vertex_specification_.normal_attribute_ == VERTEX_ATTR_2F);
-    return ((Vec2*) &data_[(idx * stride_) + vertex_specification_.normal_offset()]);
-}
-
-template<>
-const Vec3* VertexData::normal_at<Vec3>(uint32_t idx) const {
-    /* Warning, pointer may not be unique! */
-
-    if(vertex_specification_.normal_attribute_ == VERTEX_ATTR_3F) {
-        return ((Vec3*) &data_[(idx * stride()) + vertex_specification_.normal_offset()]);
-    } else {
-        assert(vertex_specification_.normal_attribute_ == VERTEX_ATTR_PACKED_VEC4_1I);
-
-        static Vec3 ret; // This is mega nasty, need to rethink the pointer return
-        auto data = (uint32_t*) &data_[(idx * stride()) + vertex_specification_.normal_offset()];
-        ret = unpack_vertex_attribute_vec3_1i(*data);
-        return &ret;
-    }
-}
-
-Vec4 VertexData::position_nd_at(uint32_t idx, float defz, float defw) const {
-    const auto& attr = vertex_specification_.position_attribute_;
-    if(attr == VERTEX_ATTR_2F) {
-        auto v = *position_at<Vec2>(idx);
-        return Vec4(v.x, v.y, defz, defw);
-    } else if(attr == VERTEX_ATTR_3F) {
-        auto v = *position_at<Vec3>(idx);
-        return Vec4(v.x, v.y, v.z, defw);
-    } else {
-        return *position_at<Vec4>(idx);
-    }
 }
 
 void VertexData::normal(float x, float y, float z) {

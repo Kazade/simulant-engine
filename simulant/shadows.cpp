@@ -88,15 +88,19 @@ void MeshSilhouette::calculate_directional_silhouette() {
         // is part of the silhouette)
         auto d2 = (edge.triangle_count == 2) ? edge.normals[1].dot(light_direction) : -d1;
 
-        auto v1 = vertices->position_at<smlt::Vec3>(edge.indexes[0]);
-        auto v2 = vertices->position_at<smlt::Vec3>(edge.indexes[1]);
+        auto v1 =
+            vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, edge.indexes[0])
+                .value_or(Vec3());
+        auto v2 =
+            vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, edge.indexes[1])
+                .value_or(Vec3());
 
         // If one normal is facing the light and one isn't then
         // store the edge as a silhouette
         if(d1 >= 0 && d2 < 0) {
-            edge_list_.push_back(SilhouetteEdge(*v1, *v2));
+            edge_list_.push_back(SilhouetteEdge(v1, v2));
         } else if(d1 < 0 && d1 >= 0) {
-            edge_list_.push_back(SilhouetteEdge(*v2, *v1));
+            edge_list_.push_back(SilhouetteEdge(v2, v1));
         }
     });
 }
@@ -118,11 +122,15 @@ void MeshSilhouette::calculate_point_silhouette() {
     const float eps = std::numeric_limits<float>::epsilon();
 
     adj->each_edge([&](std::size_t, const EdgeInfo& edge) {
-        auto v1 = vertices->position_at<smlt::Vec3>(edge.indexes[0]);
-        auto v2 = vertices->position_at<smlt::Vec3>(edge.indexes[1]);
+        auto v1 =
+            vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, edge.indexes[0])
+                .value_or(Vec3());
+        auto v2 =
+            vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, edge.indexes[1])
+                .value_or(Vec3());
 
         // Just use one of the edge vertices to determine the light direction
-        auto light_direction = light_position - *v1;
+        auto light_direction = light_position - v1;
 
         auto d1 = edge.normals[0].dot(light_direction);
 
@@ -135,9 +143,9 @@ void MeshSilhouette::calculate_point_silhouette() {
         // If one normal is facing the light and one isn't then
         // store the edge as a silhouette
         if(d1 > eps && d2 <= 0) {
-            edge_list_.push_back(SilhouetteEdge(*v1, *v2));
+            edge_list_.push_back(SilhouetteEdge(v1, v2));
         } else if(d1 <= 0 && d2 > eps) {
-            edge_list_.push_back(SilhouetteEdge(*v2, *v1));
+            edge_list_.push_back(SilhouetteEdge(v2, v1));
         }
     });
 }
