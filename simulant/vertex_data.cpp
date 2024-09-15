@@ -62,65 +62,6 @@ _S_FORCE_INLINE Vec3 unpack_vertex_attribute_vec3_1i(uint32_t p) {
     return ret;
 }
 
-const VertexFormat VertexFormat::DEFAULT = VertexFormat{
-    VERTEX_ATTR_3F,  // Position
-    VERTEX_ATTR_3F,
-    VERTEX_ATTR_2F, // UV
-    VERTEX_ATTR_NONE,
-    VERTEX_ATTR_NONE,
-    VERTEX_ATTR_NONE,
-    VERTEX_ATTR_NONE,
-    VERTEX_ATTR_NONE,
-    VERTEX_ATTR_NONE,
-    VERTEX_ATTR_NONE,
-#if defined(__PSP__) || defined(__ANDROID__)
-    VERTEX_ATTR_4F,
-#elif defined(__DREAMCAST__)
-    VERTEX_ATTR_4UB_BGRA, // Diffuse
-#else
-    VERTEX_ATTR_4UB_RGBA, // Diffuse
-#endif
-    VERTEX_ATTR_NONE
-};
-
-const VertexFormat VertexFormat::POSITION_ONLY = VertexFormat{
-    VERTEX_ATTR_3F
-};
-
-const VertexFormat VertexFormat::POSITION_AND_DIFFUSE = VertexFormat{
-    VERTEX_ATTR_3F, VERTEX_ATTR_NONE, VERTEX_ATTR_NONE,
-        VERTEX_ATTR_NONE, VERTEX_ATTR_NONE, VERTEX_ATTR_NONE,
-        VERTEX_ATTR_NONE, VERTEX_ATTR_NONE, VERTEX_ATTR_NONE,
-        VERTEX_ATTR_NONE,
-#if defined(__PSP__) || defined(__ANDROID__)
-        VERTEX_ATTR_4F,
-#elif defined(__DREAMCAST__)
-        VERTEX_ATTR_4UB_BGRA, // Diffuse
-#else
-        VERTEX_ATTR_4UB_RGBA, // Diffuse
-#endif
-};
-
-VertexAttribute attribute_for_type(VertexAttributeType type, const VertexFormat& spec) {
-    switch(type) {
-        case VERTEX_ATTR_TYPE_POSITION: return spec.position_attribute;
-        case VERTEX_ATTR_TYPE_NORMAL: return spec.normal_attribute;
-        case VERTEX_ATTR_TYPE_TEXCOORD0: return spec.texcoord0_attribute;
-        case VERTEX_ATTR_TYPE_TEXCOORD1: return spec.texcoord1_attribute;
-        case VERTEX_ATTR_TYPE_TEXCOORD2: return spec.texcoord2_attribute;
-        case VERTEX_ATTR_TYPE_TEXCOORD3: return spec.texcoord3_attribute;
-        case VERTEX_ATTR_TYPE_TEXCOORD4: return spec.texcoord4_attribute;
-        case VERTEX_ATTR_TYPE_TEXCOORD5: return spec.texcoord5_attribute;
-        case VERTEX_ATTR_TYPE_TEXCOORD6: return spec.texcoord6_attribute;
-        case VERTEX_ATTR_TYPE_TEXCOORD7: return spec.texcoord7_attribute;
-        case VERTEX_ATTR_TYPE_DIFFUSE: return spec.diffuse_attribute;
-        case VERTEX_ATTR_TYPE_SPECULAR: return spec.specular_attribute;
-    default:
-        assert(0 && "Invalid vertex attribute type");
-        return VERTEX_ATTR_NONE;
-    }
-}
-
 VertexData::VertexData(VertexFormat vertex_specification):
     cursor_position_(0) {
 

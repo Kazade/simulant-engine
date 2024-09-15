@@ -243,7 +243,6 @@ void disable_vertex_attribute(uint8_t i) {
     enabled_vertex_attributes_ ^= v;
 }
 
-template<typename EnabledMethod, typename OffsetMethod>
 void send_attribute(int32_t loc, VertexAttributeName attr,
                     const VertexFormat& vertex_spec, uint32_t global_offset) {
 
@@ -263,7 +262,7 @@ void send_attribute(int32_t loc, VertexAttributeName attr,
                         : (int)vertex_spec.attr(attr).value().arrangement;
 
         auto type = lookup[vertex_spec.attr(attr).value().type];
-
+        auto stride = vertex_spec.stride();
         // auto normalized = (attr_for_type == VERTEX_ATTR_4UB_RGBA ||
         //                    attr_for_type == VERTEX_ATTR_4UB_BGRA)
         //                       ? GL_TRUE
