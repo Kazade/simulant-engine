@@ -49,6 +49,19 @@ public:
 private:
     virtual std::shared_ptr<VertexBuffer>
         prepare_vertex_data(const VertexData* vertex_data);
+
+    VertexFormat on_native_vertex_format(VertexFormat hint) override {
+        return VertexFormatBuilder()
+            .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                 VERTEX_ATTR_TYPE_FLOAT)
+            .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+                 VERTEX_ATTR_TYPE_FLOAT)
+            .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
+                 VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
+            .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                 VERTEX_ATTR_TYPE_FLOAT)
+            .build();
+    }
 };
 
 }

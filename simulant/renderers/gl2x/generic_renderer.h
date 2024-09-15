@@ -125,6 +125,8 @@ private:
     void send_geometry(const Renderable* renderable, GPUBuffer* buffers);
 
     friend class GL2RenderQueueVisitor;
+
+    VertexFormat on_native_vertex_format(VertexFormat hint) override;
 };
 
 }

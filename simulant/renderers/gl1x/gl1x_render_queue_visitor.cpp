@@ -17,6 +17,7 @@
 #include "gl1x_render_group_impl.h"
 #include "gl1x_render_queue_visitor.h"
 #include "gl1x_renderer.h"
+#include "gl1x_vertex_buffer_data.h"
 
 #include "../../application.h"
 #include "../../meshes/vertex_buffer.h"
@@ -533,9 +534,10 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     const auto& spec = buffer->format();
     const auto stride = spec.stride();
 
-    const auto renderer_data =
-        (GL1VertexBufferData*)renderable->vertex_data->renderer_data();
-    assert(vertex_data);
+    const auto renderer_data = (GL1XVertexBufferData*)buffer->renderer_data();
+    assert(renderer_data);
+
+    const auto vertex_data = (const uint8_t*)&renderer_data->vertices[0];
 
     enable_vertex_arrays();
     enable_color_arrays();
@@ -544,17 +546,17 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
 
     GLCheck(glVertexPointer, 3, GL_FLOAT, stride,
             ((const uint8_t*)vertex_data) +
-                spec.offset(VERTEX_ATTR_NAME_POSITION));
+                spec.offset(VERTEX_ATTR_NAME_POSITION).value());
     GLCheck(glColorPointer, GL_BGRA, GL_UNSIGNED_BYTE, stride,
             ((const uint8_t*)vertex_data) +
-                spec.offset(VERTEX_ATTR_NAME_COLOR));
+                spec.offset(VERTEX_ATTR_NAME_COLOR).value());
     GLCheck(glNormalPointer, GL_FLOAT, stride,
             ((const uint8_t*)vertex_data) +
-                spec.offset(VERTEX_ATTR_NAME_NORMAL));
+                spec.offset(VERTEX_ATTR_NAME_NORMAL).value());
     GLCheck(glClientActiveTexture, GL_TEXTURE0);
     GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
             ((const uint8_t*)vertex_data) +
-                spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0));
+                spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value());
 
     auto arrangement = convert_arrangement(renderable->arrangement);
 

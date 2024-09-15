@@ -27,17 +27,15 @@ public:
 #endif
 
         // Meshes
-        cave_mesh_ = app->shared_assets->load_mesh(
-            "assets/samples/cave/cave.dcm", VertexSpecification::DEFAULT, opts);
-        godray_mesh_ =
-            app->shared_assets->load_mesh("assets/samples/cave/godray.obj",
-                                          VertexSpecification::DEFAULT, opts);
-        fairy_mesh_ =
-            app->shared_assets->load_mesh("assets/samples/cave/fairy.obj",
-                                          VertexSpecification::DEFAULT, opts);
+        cave_mesh_ =
+            app->shared_assets->load_mesh("assets/samples/cave/cave.dcm", opts);
+        godray_mesh_ = app->shared_assets->load_mesh(
+            "assets/samples/cave/godray.obj", opts);
+        fairy_mesh_ = app->shared_assets->load_mesh(
+            "assets/samples/cave/fairy.obj", opts);
 
         // Materials + Textures
-        for(auto submesh: cave_mesh_->each_submesh()) {
+        for(auto& submesh: cave_mesh_->each_submesh()) {
             submesh->material()->diffuse_map()->set_texture_filter(
                 TextureFilter::TEXTURE_FILTER_BILINEAR);
         }
