@@ -40,12 +40,16 @@ void AdjacencyInfo::rebuild() {
     }
 
     auto vertices = mesh_->vertex_data.get();
-    auto calculate_normal = [&vertices](uint32_t a, uint32_t b, uint32_t c) -> smlt::Vec3 {
-        auto va = vertices->position_at<smlt::Vec3>(a);
-        auto vb = vertices->position_at<smlt::Vec3>(b);
-        auto vc = vertices->position_at<smlt::Vec3>(c);
-        auto v1 = *vb - *va;
-        auto v2 = *vc - *va;
+    auto calculate_normal = [&vertices](uint32_t a, uint32_t b,
+                                        uint32_t c) -> smlt::Vec3 {
+        auto va = vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, a)
+                      .value_or(Vec3());
+        auto vb = vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, b)
+                      .value_or(Vec3());
+        auto vc = vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, c)
+                      .value_or(Vec3());
+        auto v1 = vb - va;
+        auto v2 = vc - va;
         return v1.cross(v2).normalized();
     };
 
@@ -63,9 +67,15 @@ void AdjacencyInfo::rebuild() {
             assert(b < size);
             assert(c < size);
 
-            auto v1 = to_tuple(*vertices->position_at<smlt::Vec3>(a));
-            auto v2 = to_tuple(*vertices->position_at<smlt::Vec3>(b));
-            auto v3 = to_tuple(*vertices->position_at<smlt::Vec3>(c));
+            auto v1 =
+                to_tuple(vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, a)
+                             .value_or(Vec3()));
+            auto v2 =
+                to_tuple(vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, b)
+                             .value_or(Vec3()));
+            auto v3 =
+                to_tuple(vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, c)
+                             .value_or(Vec3()));
 
             // If this vertex already exist, use the first known index (or insert this as the first known index)
             a = (position_map.count(v1)) ? position_map[v1] : position_map.insert(std::make_pair(v1, a)).first->second;

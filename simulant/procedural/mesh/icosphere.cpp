@@ -149,7 +149,7 @@ public:
             /* Supply the position and scale */
             vdata->position(pos * diameter);
             if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
-                vdata->diffuse(smlt::Color::white());
+                vdata->color(smlt::Color::white());
             }
 
             auto N = pos.normalized();

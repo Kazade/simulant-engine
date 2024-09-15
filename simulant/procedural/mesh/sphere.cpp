@@ -34,7 +34,7 @@ float sa_acos(float fac) {
         return 0.0f;
     }
 
-    return (float)acos(fac);
+    return std::acos(fac);
 }
 
 void generate_uv(const Vec3& pos, float& u, float& v) {
@@ -49,6 +49,8 @@ void generate_uv(const Vec3& pos, float& u, float& v) {
 
         float z = pos.z / len;
         v = 1.0f - sa_acos(z) / PI;
+    } else {
+        u = v = 0.0f;
     }
 }
 
@@ -79,7 +81,7 @@ void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) 
             vdata->position(pos);
             vdata->tex_coord0(u, v);
             vdata->normal(n);
-            vdata->diffuse(smlt::Color::white());
+            vdata->color(smlt::Color::white());
             vdata->move_next();
         }
     }
@@ -89,7 +91,7 @@ void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) 
 
     vdata->position(pos);
     vdata->tex_coord0(u, v);
-    vdata->diffuse(smlt::Color::white());
+    vdata->color(smlt::Color::white());
     vdata->move_next();
 
     pos = Vec3(0, -1 * radius, 0);
@@ -99,7 +101,7 @@ void sphere(SubMeshPtr submesh, float diameter, int32_t slices, int32_t stacks) 
 
     vdata->position(pos);
     vdata->tex_coord0(u, v);
-    vdata->diffuse(smlt::Color::white());
+    vdata->color(smlt::Color::white());
     vdata->move_next();
 
     vdata->done();

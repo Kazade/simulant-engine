@@ -50,12 +50,215 @@ enum VertexAttributeName : uint16_t {
 };
 
 struct VertexAttribute {
+private:
+    template<typename T>
+    struct UnpackID {
+        typedef T type;
+    };
+
+    optional<Vec4> unpack_byte_to_vec4(const uint8_t* ptr,
+                                       bool normalize) const {
+        switch(arrangement) {
+            case VERTEX_ATTR_ARRANGEMENT_BGRA:
+                return (normalize) ? Vec4(ptr[2] / 255.0f, ptr[1] / 255.0f,
+                                          ptr[0] / 255.0f, ptr[3] / 255.0f)
+                                   : Vec4(ptr[2], ptr[1], ptr[0], ptr[3]);
+            case VERTEX_ATTR_ARRANGEMENT_X:
+                return (normalize) ? Vec4(ptr[0] / 255.0f, 0, 0, 1)
+                                   : Vec4(ptr[0], 0, 0, 1);
+
+            case VERTEX_ATTR_ARRANGEMENT_XY:
+                return (normalize)
+                           ? Vec4(ptr[0] / 255.0f, ptr[1] / 255.0f, 0, 1)
+                           : Vec4(ptr[0], ptr[1], 0, 1);
+
+            case VERTEX_ATTR_ARRANGEMENT_XYZ:
+                return (normalize) ? Vec4(ptr[0] / 255.0f, ptr[1] / 255.0f,
+                                          ptr[2] / 255.0f, 1)
+                                   : Vec4(ptr[0], ptr[1], ptr[2], 1);
+            case VERTEX_ATTR_ARRANGEMENT_XYZW:
+                return (normalize) ? Vec4(ptr[0] / 255.0f, ptr[1] / 255.0f,
+                                          ptr[2] / 255.0f, ptr[3] / 255.0f)
+                                   : Vec4(ptr[0], ptr[1], ptr[2], ptr[3]);
+            default:
+                return no_value;
+        }
+    }
+
+    optional<Vec4> unpack_short_to_vec4(const uint8_t* ptr,
+                                        bool normalize) const {
+        switch(arrangement) {
+            case VERTEX_ATTR_ARRANGEMENT_BGRA:
+                return (normalize) ? Vec4(ptr[2] / 65535.0f, ptr[1] / 65535.0f,
+                                          ptr[0] / 65535.0f, ptr[3] / 65535.0f)
+                                   : Vec4(ptr[2], ptr[1], ptr[0], ptr[3]);
+            case VERTEX_ATTR_ARRANGEMENT_X:
+                return (normalize) ? Vec4(ptr[0] / 65535.0f, 0, 0, 1)
+                                   : Vec4(ptr[0], 0, 0, 1);
+
+            case VERTEX_ATTR_ARRANGEMENT_XY:
+                return (normalize)
+                           ? Vec4(ptr[0] / 65535.0f, ptr[1] / 65535.0f, 0, 1)
+                           : Vec4(ptr[0], ptr[1], 0, 1);
+            case VERTEX_ATTR_ARRANGEMENT_XYZ:
+                return (normalize) ? Vec4(ptr[0] / 65535.0f, ptr[1] / 65535.0f,
+                                          ptr[2] / 65535.0f, 1)
+                                   : Vec4(ptr[0], ptr[1], ptr[2], 1);
+            case VERTEX_ATTR_ARRANGEMENT_XYZW:
+                return (normalize) ? Vec4(ptr[0] / 65535.0f, ptr[1] / 65535.0f,
+                                          ptr[2] / 65535.0f, ptr[3] / 65535.0f)
+                                   : Vec4(ptr[0], ptr[1], ptr[2], ptr[3]);
+
+            default:
+                return no_value;
+        }
+    }
+
+    optional<Vec4> unpack_int_to_vec4(const uint8_t* ptr,
+                                      bool normalize) const {
+        switch(arrangement) {
+            case VERTEX_ATTR_ARRANGEMENT_BGRA:
+                return (normalize)
+                           ? Vec4(*reinterpret_cast<const int*>(ptr + 8) /
+                                      65535.0f,
+                                  *reinterpret_cast<const int*>(ptr + 4) /
+                                      65535.0f,
+                                  *reinterpret_cast<const int*>(ptr) / 65535.0f,
+                                  *reinterpret_cast<const int*>(ptr + 12) /
+                                      65535.0f)
+                           : Vec4(*reinterpret_cast<const int*>(ptr + 8),
+                                  *reinterpret_cast<const int*>(ptr + 4),
+                                  *reinterpret_cast<const int*>(ptr),
+                                  *reinterpret_cast<const int*>(ptr + 12));
+            case VERTEX_ATTR_ARRANGEMENT_X:
+                return (normalize)
+                           ? Vec4(*reinterpret_cast<const int*>(ptr) / 65535.0f,
+                                  0, 0, 1)
+                           : Vec4(*reinterpret_cast<const int*>(ptr), 0, 0, 1);
+            case VERTEX_ATTR_ARRANGEMENT_XY:
+                return (normalize)
+                           ? Vec4(*reinterpret_cast<const int*>(ptr) / 65535.0f,
+                                  *reinterpret_cast<const int*>(ptr + 4) /
+                                      65535.0f,
+                                  0, 1)
+                           : Vec4(*reinterpret_cast<const int*>(ptr),
+                                  *reinterpret_cast<const int*>(ptr + 4), 0, 1);
+            case VERTEX_ATTR_ARRANGEMENT_XYZ:
+                return (normalize)
+                           ? Vec4(*reinterpret_cast<const int*>(ptr) / 65535.0f,
+                                  *reinterpret_cast<const int*>(ptr + 4) /
+                                      65535.0f,
+                                  *reinterpret_cast<const int*>(ptr + 8) /
+                                      65535.0f,
+                                  1)
+                           : Vec4(*reinterpret_cast<const int*>(ptr),
+                                  *reinterpret_cast<const int*>(ptr + 4),
+                                  *reinterpret_cast<const int*>(ptr + 8), 1);
+            case VERTEX_ATTR_ARRANGEMENT_RGBA:
+                return (normalize)
+                           ? Vec4(*reinterpret_cast<const int*>(ptr) / 65535.0f,
+                                  *reinterpret_cast<const int*>(ptr + 4) /
+                                      65535.0f,
+                                  *reinterpret_cast<const int*>(ptr + 8) /
+                                      65535.0f,
+                                  *reinterpret_cast<const int*>(ptr + 12) /
+                                      65535.0f)
+                           : Vec4(*reinterpret_cast<const int*>(ptr),
+                                  *reinterpret_cast<const int*>(ptr + 4),
+                                  *reinterpret_cast<const int*>(ptr + 8),
+                                  *reinterpret_cast<const int*>(ptr + 12));
+            default:
+                return no_value;
+        }
+    }
+
+    optional<Vec4> unpack_float_to_vec4(const uint8_t* ptr,
+                                        bool normalize) const {
+        _S_UNUSED(normalize);
+        switch(arrangement) {
+            case VERTEX_ATTR_ARRANGEMENT_BGRA:
+                return Vec4(*reinterpret_cast<const float*>(ptr + 8),
+                            *reinterpret_cast<const float*>(ptr + 4),
+                            *reinterpret_cast<const float*>(ptr),
+                            *reinterpret_cast<const float*>(ptr + 12));
+            case VERTEX_ATTR_ARRANGEMENT_XYZW:
+                return Vec4(*reinterpret_cast<const float*>(ptr),
+                            *reinterpret_cast<const float*>(ptr + 4),
+                            *reinterpret_cast<const float*>(ptr + 8),
+                            *reinterpret_cast<const float*>(ptr + 12));
+            case VERTEX_ATTR_ARRANGEMENT_XYZ:
+                return Vec4(*reinterpret_cast<const float*>(ptr),
+                            *reinterpret_cast<const float*>(ptr + 4),
+                            *reinterpret_cast<const float*>(ptr + 8), 1);
+            case VERTEX_ATTR_ARRANGEMENT_XY:
+                return Vec4(*reinterpret_cast<const float*>(ptr),
+                            *reinterpret_cast<const float*>(ptr + 4), 0, 1);
+            case VERTEX_ATTR_ARRANGEMENT_X:
+                return Vec4(*reinterpret_cast<const float*>(ptr), 0, 0, 1);
+            default:
+                return no_value;
+        }
+    }
+
+    optional<Vec4> unpack(UnpackID<Vec4>, const uint8_t* ptr, bool normalize) {
+        switch(type) {
+            case VERTEX_ATTR_TYPE_UNSIGNED_BYTE:
+            case VERTEX_ATTR_TYPE_BYTE:
+                return unpack_byte_to_vec4(ptr, normalize);
+            case VERTEX_ATTR_TYPE_UNSIGNED_SHORT:
+            case VERTEX_ATTR_TYPE_SHORT:
+                return unpack_short_to_vec4(ptr, normalize);
+            case VERTEX_ATTR_TYPE_FLOAT:
+                return unpack_float_to_vec4(ptr, normalize);
+            case VERTEX_ATTR_TYPE_INT:
+            case VERTEX_ATTR_TYPE_UNSIGNED_INT:
+                return unpack_int_to_vec4(ptr, normalize);
+            default:
+                return no_value;
+        }
+    }
+
+    optional<Vec3> unpack(UnpackID<Vec3>, const uint8_t* ptr, bool normalize) {
+        auto ret = unpack(UnpackID<Vec4>(), ptr, normalize);
+        if(ret) {
+            return ret->xyz();
+        } else {
+            return no_value;
+        }
+    }
+
+    optional<Vec2> unpack(UnpackID<Vec2>, const uint8_t* ptr, bool normalize) {
+        auto ret = unpack(UnpackID<Vec4>(), ptr, normalize);
+        if(ret) {
+            return ret->xy();
+        } else {
+            return no_value;
+        }
+    }
+
+    optional<Color> unpack(UnpackID<Color>, const uint8_t* ptr,
+                           bool normalize) {
+        _S_UNUSED(normalize);
+        auto ret = unpack(UnpackID<Vec4>(), ptr, true);
+        if(ret) {
+            return Color(ret->x, ret->y, ret->z, ret->w);
+        } else {
+            return no_value;
+        }
+    }
+
+public:
     VertexAttributeName name;
     VertexAttributeArrangement arrangement;
     VertexAttributeType type;
 
     std::size_t calc_size() const;
     std::size_t component_count() const;
+
+    template<typename T>
+    optional<T> unpack(const uint8_t* ptr, bool normalize = false) {
+        return unpack(UnpackID<T>(), ptr, normalize);
+    }
 };
 
 class VertexFormat {

@@ -94,7 +94,9 @@ void Frame::finalize_build() {
                 auto& range = sm->vertex_ranges()[i];
                 for(auto idx = range.start; idx < range.start + range.count;
                     ++idx) {
-                    auto vpos = *vdata->position_at<smlt::Vec3>(idx);
+                    auto vpos =
+                        vdata->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx)
+                            .value_or(Vec3());
                     vpos.y += shift.value;
 
                     vdata->move_to(idx);

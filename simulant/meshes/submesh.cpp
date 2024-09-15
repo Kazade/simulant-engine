@@ -76,13 +76,13 @@ void SubMesh::set_diffuse(const smlt::Color& color) {
     if(type_ == SUBMESH_TYPE_INDEXED) {
         for(auto i: *index_data) {
             vertex_data->move_to(i);
-            vertex_data->diffuse(color);
+            vertex_data->color(color);
         };
     } else {
         for(auto& range: vertex_ranges_) {
             for(uint32_t i = range.start; i < range.start + range.count; ++i) {
                 vertex_data->move_to(i);
-                vertex_data->diffuse(color);
+                vertex_data->color(color);
             };
         }
     }
@@ -133,9 +133,6 @@ void SubMesh::mark_changed() {
 }
 
 void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
-    float minx = FLT_MAX, miny = FLT_MAX, minz = FLT_MAX;
-    float maxx = -FLT_MAX, maxy = -FLT_MAX, maxz = -FLT_MAX;
-
     // Store a raw-pointer for performance
     VertexData* vdata = parent_->vertex_data.get();
 
@@ -150,54 +147,16 @@ void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
         return;
     }
 
-    auto& pos_attr =
-        vdata->vertex_specification().attr(VERTEX_ATTR_NAME_POSITION).value();
-
-    if(pos_attr.arrangement == VERTEX_ATTR_ARRANGEMENT_XY) {
-        for(auto& range: vertex_ranges_) {
-            for(uint32_t i = range.start; i < range.start + range.count; ++i) {
-                auto pos = vdata->position_at<Vec2>(i);
-                if(pos->x < minx) minx = pos->x;
-                if(pos->y < miny) miny = pos->y;
-                if(pos->x > maxx) maxx = pos->x;
-                if(pos->y > maxy) maxy = pos->y;
-            }
-        }
-    } else if(pos_attr.arrangement == VERTEX_ATTR_ARRANGEMENT_XYZ) {
-        for(auto& range: vertex_ranges_) {
-            for(uint32_t i = range.start; i < range.start + range.count; ++i) {
-                auto pos = vdata->position_at<Vec3>(i);
-                if(pos->x < minx) minx = pos->x;
-                if(pos->y < miny) miny = pos->y;
-                if(pos->z < minz) minz = pos->z;
-                if(pos->x > maxx) maxx = pos->x;
-                if(pos->y > maxy) maxy = pos->y;
-                if(pos->z > maxz) maxz = pos->z;
-            }
-        }
-    } else {
-        assert(pos_attr.arrangement == VERTEX_ATTR_ARRANGEMENT_XYZW);
-
-        for(auto& range: vertex_ranges_) {
-            for(uint32_t i = range.start; i < range.start + range.count; ++i) {
-                auto pos = vdata->position_at<Vec4>(i);
-                if(pos->x < minx) minx = pos->x;
-                if(pos->y < miny) miny = pos->y;
-                if(pos->z < minz) minz = pos->z;
-                if(pos->x > maxx) maxx = pos->x;
-                if(pos->y > maxy) maxy = pos->y;
-                if(pos->z > maxz) maxz = pos->z;
-            }
+    for(auto& range: vertex_ranges_) {
+        for(uint32_t i = range.start; i < range.start + range.count; ++i) {
+            auto pos = vdata->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, i)
+                           .value_or(Vec3());
+            bounds.encapsulate(pos);
         }
     }
-
-    bounds.set_min_max(Vec3(minx, miny, minz), Vec3(maxx, maxy, maxz));
 }
 
 void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
-    float minx = FLT_MAX, miny = FLT_MAX, minz = FLT_MAX;
-    float maxx = -FLT_MAX, maxy = -FLT_MAX, maxz = -FLT_MAX;
-
     if(!index_data_->count()) {
         bounds = AABB();
         return;
@@ -212,45 +171,11 @@ void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
         return;
     }
 
-    auto& pos_attr =
-        vdata->vertex_specification().attr(VERTEX_ATTR_NAME_POSITION).value();
-
-    /* Awful switching is for performance
-       FIXME: Is there a better way to do this? I guess templated lambda or method
-    */
-    if(pos_attr.component_count() == 2) {
-        for(auto idx: *index_data_) {
-            auto pos = vdata->position_at<Vec2>(idx);
-            if(pos->x < minx) minx = pos->x;
-            if(pos->y < miny) miny = pos->y;
-            if(pos->x > maxx) maxx = pos->x;
-            if(pos->y > maxy) maxy = pos->y;
-        }
-    } else if(pos_attr.component_count() == 3) {
-        for(auto idx: *index_data_) {
-            auto pos = vdata->position_at<Vec3>(idx);
-            if(pos->x < minx) minx = pos->x;
-            if(pos->y < miny) miny = pos->y;
-            if(pos->z < minz) minz = pos->z;
-            if(pos->x > maxx) maxx = pos->x;
-            if(pos->y > maxy) maxy = pos->y;
-            if(pos->z > maxz) maxz = pos->z;
-        }
-    } else {
-        assert(pos_attr.component_count() == 4);
-
-        for(auto idx: *index_data_) {
-            auto pos = vdata->position_at<Vec4>(idx);
-            if(pos->x < minx) minx = pos->x;
-            if(pos->y < miny) miny = pos->y;
-            if(pos->z < minz) minz = pos->z;
-            if(pos->x > maxx) maxx = pos->x;
-            if(pos->y > maxy) maxy = pos->y;
-            if(pos->z > maxz) maxz = pos->z;
-        }
+    for(auto idx: *index_data_) {
+        auto pos = vdata->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx)
+                       .value_or(Vec3());
+        bounds.encapsulate(pos);
     }
-
-    bounds.set_min_max(Vec3(minx, miny, minz), Vec3(maxx, maxy, maxz));
 }
 
 void SubMesh::each_triangle(std::function<void (uint32_t, uint32_t, uint32_t)> cb) {
@@ -347,12 +272,13 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
 
     vd->move_to_start();
     for(uint16_t i = 0; i < vd->count(); ++i) {
-        auto v = vd->normal_at<Vec3>(i); // Get the vertex normal
+        auto v = vd->attr_as<Vec3>(VERTEX_ATTR_NAME_NORMAL, i)
+                     .value_or(Vec3::forward()); // Get the vertex normal
 
         // Work out the component with the largest value
-        float absx = std::fabs(v->x);
-        float absy = std::fabs(v->y);
-        float absz = std::fabs(v->z);
+        float absx = std::fabs(v.x);
+        float absy = std::fabs(v.y);
+        float absz = std::fabs(v.z);
 
         bool x = (absx > absy && absx > absz);
         bool y = (absy > absx && absy > absz);
@@ -362,17 +288,19 @@ void SubMesh::generate_texture_coordinates_cube(uint32_t texture) {
         smlt::Vec3 dir(0, 0, 0);
 
         if(x) {
-            dir.x = (v->x < 0) ? -1 : 1;
+            dir.x = (v.x < 0) ? -1 : 1;
         } else if(y) {
-            dir.y = (v->y < 0) ? -1 : 1;
+            dir.y = (v.y < 0) ? -1 : 1;
         } else {
-            dir.z = (v->z < 0) ? -1 : 1;
+            dir.z = (v.z < 0) ? -1 : 1;
         }
 
         // Create a plane at the origin with the opposite direction
         Plane plane(-dir.x, -dir.y, -dir.z, 0.0f);
 
-        smlt::Vec3 v1 = *vd->position_at<Vec3>(i) - bounds.min();
+        smlt::Vec3 v1 =
+            vd->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, i).value_or(Vec3()) -
+            bounds.min();
 
         // Project the vertex position onto the plane
         smlt::Vec3 final = plane.project(v1);

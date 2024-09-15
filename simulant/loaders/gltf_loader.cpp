@@ -405,13 +405,13 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
-            final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, 1));
+            final_mesh->vertex_data->color(smlt::Color(x, y, z, 1));
         } else if(comp_count == 4) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             auto w = *(float*)(buffer_info.data + i + 12);
-            final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, w));
+            final_mesh->vertex_data->color(smlt::Color(x, y, z, w));
         }
 
         final_mesh->vertex_data->move_next();

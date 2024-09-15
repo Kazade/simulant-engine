@@ -183,21 +183,13 @@ void SkeletalFrameUnpacker::unpack_frame(
     assert(ovfmt.attr(VERTEX_ATTR_NAME_NORMAL).value().arrangement ==
            VERTEX_ATTR_ARRANGEMENT_THREE);
 
-    uint8_t stride = vdata->vertex_specification().stride();
-    const uint8_t* vin = (uint8_t*) vdata->position_at<Vec3>(0);
-    const uint8_t* nin = (uint8_t*) vdata->normal_at<Vec3>(0);
-
-    uint8_t out_stride = out->vertex_specification().stride();
-    uint8_t* vout = (uint8_t*) out->position_at<Vec3>(0);
-    uint8_t* nout = (uint8_t*) out->normal_at<Vec3>(0);
-
-    Vec3 p, n;
-
-    for(std::size_t i = 0; i < vertices_.size(); ++i, vin += stride, nin += stride, vout += out_stride, nout += out_stride) {
+    for(std::size_t i = 0; i < vertices_.size(); ++i) {
         const auto& sv = vertices_[i];
 
-        p = *((Vec3*) vin);
-        n = *((Vec3*) nin);
+        Vec3 p =
+            vdata->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, i).value_or(Vec3());
+        Vec3 n =
+            vdata->attr_as<Vec3>(VERTEX_ATTR_NAME_NORMAL, i).value_or(Vec3());
 
         Vec3 po, no;
         for(auto k = 0; k < MAX_JOINTS_PER_VERTEX; ++k) {
@@ -216,8 +208,9 @@ void SkeletalFrameUnpacker::unpack_frame(
             }
         }
 
-        *((Vec3*) vout) = po;
-        *((Vec3*) nout) = no;
+        out->move_to(i);
+        out->position(po);
+        out->normal(po);
     }
 
     out->done();

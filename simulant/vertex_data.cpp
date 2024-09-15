@@ -84,7 +84,7 @@ void VertexData::clear(bool release_memory) {
 }
 
 void VertexData::position_checks() {
-    if(!vertex_specification_.has_positions()) {
+    if(!vertex_specification_.attr_count(VERTEX_ATTR_NAME_POSITION)) {
         return;
     }
 

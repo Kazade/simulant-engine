@@ -194,12 +194,12 @@ void StatsPanel::rebuild_ram_graph() {
 
         float y = (height / graph_max) * last_sample;
         vdata->position(x, y, 0);
-        vdata->diffuse(color);
+        vdata->color(color);
         vdata->move_next();
         idata->index(idx++);
 
         vdata->position(x, 0, 0);
-        vdata->diffuse(color);
+        vdata->color(color);
         vdata->move_next();
         idata->index(idx++);
 
@@ -219,12 +219,12 @@ void StatsPanel::rebuild_ram_graph() {
 
         y = (height / graph_max) * sample;
         vdata->position(x, 0, 0);
-        vdata->diffuse(color);
+        vdata->color(color);
         vdata->move_next();
         idata->index(idx++);
 
         vdata->position(x, y, 0);
-        vdata->diffuse(color);
+        vdata->color(color);
         vdata->move_next();
         idata->index(idx++);
 

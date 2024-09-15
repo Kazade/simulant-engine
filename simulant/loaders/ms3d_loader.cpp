@@ -397,7 +397,7 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                 vdata->position(vertices[vert_index].xyz);
                 vdata->tex_coord0(triangle.s[i], 1.0f - triangle.t[i]);
                 vdata->normal(triangle.normals[i]);
-                vdata->diffuse(Color::white());
+                vdata->color(Color::white());
                 vdata->move_next();
 
                 int8_t bones[4] = {

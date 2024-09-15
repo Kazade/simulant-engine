@@ -109,35 +109,51 @@ public:
     void done();
     uint64_t last_updated() const;
 
+    /**
+     * @brief attr_at
+     * @param name
+     * @param index
+     * @return Returns a pointer to the specified attribute at the specified
+     * position. If the attribute is not found, or the attribute is not the
+     * correct type, nullptr is returned.
+     */
+    template<typename T>
+    const T* attr_at(VertexAttributeName name, std::size_t index) const;
+
+    /**
+     * @brief attr_at
+     * @param name
+     * @param index
+     * @return Returns a raw pointer to the specified attribute at the specified
+     * position. If the attribute is not found a nullptr is returned.
+     */
+    const uint8_t* attr_at(VertexAttributeName name, std::size_t index) const;
+
+    /**
+     * @brief attr_as
+     * @param name
+     * @param index
+     * @return Returns the specified attribute at the specified position as
+     * the specified type. If the attribute is not found, or the attribute is
+     * is not convertible to T, then an empty optional is returned.
+     */
+    template<typename T>
+    optional<T> attr_as(VertexAttributeName name, std::size_t index) const {
+        auto ret = attr_at(name, index);
+        auto attr_maybe = vertex_specification_.attr(name);
+        if(!ret || !attr_maybe) {
+            return no_value;
+        }
+
+        return attr_maybe->unpack<T>(ret);
+    }
+
     void position(float x, float y, float z, float w);
     void position(float x, float y, float z);
     void position(float x, float y);
     void position(const Vec3& pos);
     void position(const Vec2& pos);
     void position(const Vec4& pos);
-
-    template<typename T>
-    const T* position_at(uint32_t idx) const;
-
-    template<typename T>
-    const T* normal_at(uint32_t idx) const;
-
-    template<typename T>
-    const T* texcoord0_at(uint32_t idx) const;
-
-    template<typename T>
-    const T* texcoord1_at(uint32_t idx) const;
-
-    template<typename T>
-    const T* diffuse_at(const uint32_t index) const;
-
-    /*
-     * Position Non-Dimensional
-     * Returns the position as a Vec4 with the remaining components
-     * set to default (e.g. if your vertices are 2D, this will return
-     * Vec4(x, y, def, def)
-     */
-    Vec4 position_nd_at(uint32_t idx, float defz=0.0f, float defw=1.0f) const;
 
     void normal(float x, float y, float z);
     void normal(const Vec3& n);
@@ -162,12 +178,9 @@ public:
     void tex_coord3(float x, float y, float z, float w);
     void tex_coord3(const Vec2& vec) { tex_coord3(vec.x, vec.y); }
 
-    void diffuse(float r, float g, float b, float a);
-    void diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-    void diffuse(const Color& color);
-
-    void specular(float r, float g, float b, float a);
-    void specular(const Color& color);
+    void color(float r, float g, float b, float a);
+    void color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    void color(const Color& color);
 
     uint32_t count() const { return vertex_count_; }
 
@@ -228,7 +241,7 @@ public:
         for(auto i = 0u; i < count(); ++i) {
             move_to(i);
 
-            Vec4 pos = position_nd_at(i);
+            Vec4 pos = attr_as<Vec4>(VERTEX_ATTR_NAME_POSITION, i).value();
             pos = transform * pos;
 
             if(pos_attr.arrangement == VERTEX_ATTR_ARRANGEMENT_TWO) {
@@ -293,45 +306,6 @@ private:
 };
 
 typedef std::shared_ptr<VertexData> VertexDataPtr;
-
-template<>
-const Vec2* VertexData::position_at<Vec2>(uint32_t idx) const;
-
-template<>
-const Vec3* VertexData::position_at<Vec3>(uint32_t idx) const;
-
-template<>
-const Vec4* VertexData::position_at<Vec4>(uint32_t idx) const;
-
-template<>
-const Vec2* VertexData::normal_at<Vec2>(uint32_t idx) const;
-
-template<>
-const Vec3* VertexData::normal_at<Vec3>(uint32_t idx) const;
-
-template<>
-const Vec2* VertexData::texcoord0_at<Vec2>(uint32_t idx) const;
-
-template<>
-const Vec3* VertexData::texcoord0_at<Vec3>(uint32_t idx) const;
-
-template<>
-const Vec4* VertexData::texcoord0_at<Vec4>(uint32_t idx) const;
-
-template<>
-const Vec2* VertexData::texcoord1_at<Vec2>(uint32_t idx) const;
-
-template<>
-const Vec3* VertexData::texcoord1_at<Vec3>(uint32_t idx) const;
-
-template<>
-const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const;
-
-template<>
-const Color* VertexData::diffuse_at(const uint32_t index) const;
-
-template<>
-const uint8_t* VertexData::diffuse_at(const uint32_t index) const;
 
 typedef uint32_t Index;
 

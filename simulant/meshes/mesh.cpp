@@ -338,7 +338,7 @@ SubMeshPtr Mesh::create_submesh_as_capsule(
             vdata->tex_coord0(new_tex);
             vdata->tex_coord1(new_tex);
             vdata->normal(new_normal);
-            vdata->diffuse(smlt::Color::white());
+            vdata->color(smlt::Color::white());
             vdata->move_next();
 
             // each vertex (except the last) has six indices pointing to it
@@ -381,7 +381,7 @@ SubMeshPtr Mesh::create_submesh_as_capsule(
             vdata->tex_coord0(new_tex);
             vdata->tex_coord1(new_tex);
             vdata->normal(new_normal);
-            vdata->diffuse(smlt::Color::white());
+            vdata->color(smlt::Color::white());
             vdata->move_next();
 
             idata->index(offset + segment_count + 1);
@@ -423,7 +423,7 @@ SubMeshPtr Mesh::create_submesh_as_capsule(
             vdata->tex_coord0(new_tex);
             vdata->tex_coord1(new_tex);
             vdata->normal(new_normal);
-            vdata->diffuse(smlt::Color::white());
+            vdata->color(smlt::Color::white());
             vdata->move_next();
 
             if (ring != ring_count) {
@@ -485,25 +485,25 @@ SubMesh* Mesh::create_submesh_as_box(const std::string& name, MaterialPtr materi
 
         vd->position(ox + -1 * rx, oy + -1 * ry, oz + z * rz);
         vd->tex_coord0(0, 0);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + 1 * rx, oy + -1 * ry, oz + z * rz);
         vd->tex_coord0(1, 0);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + 1 * rx,  oy + 1 * ry, oz + z * rz);
         vd->tex_coord0(1, 1);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + -1 * rx, oy + 1 * ry, oz + z * rz);
         vd->tex_coord0(0, 1);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
@@ -532,25 +532,25 @@ SubMesh* Mesh::create_submesh_as_box(const std::string& name, MaterialPtr materi
 
         vd->position(ox + x * rx, oy + -1 * ry, oz + -1 * rz);
         vd->tex_coord0(0, 0);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + 1 * ry, oz + -1 * rz);
         vd->tex_coord0(1, 0);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + 1 * ry, oz + 1 * rz);
         vd->tex_coord0(1, 1);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + -1 * ry, oz + 1 * rz);
         vd->tex_coord0(0, 1);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
@@ -580,25 +580,25 @@ SubMesh* Mesh::create_submesh_as_box(const std::string& name, MaterialPtr materi
 
         vd->position(ox + 1 * rx, oy + y * ry, oz + -1 * rz);
         vd->tex_coord0(0, 0);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + -1 * rx,  oy + y * ry, oz + -1 * rz);
         vd->tex_coord0(1, 0);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + -1 * rx, oy + y * ry, oz + 1 * rz);
         vd->tex_coord0(1, 1);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + 1 * rx, oy + y * ry, oz + 1 * rz);
         vd->tex_coord0(0, 1);
-        vd->diffuse(smlt::Color::white());
+        vd->color(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
@@ -647,7 +647,7 @@ SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr 
     //Build some shared vertex data
     vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
     if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
-        vertex_data->diffuse(smlt::Color::white());
+        vertex_data->color(smlt::Color::white());
     }
     if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
         vertex_data->tex_coord0(0.0, 0.0f);
@@ -662,7 +662,7 @@ SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr 
 
     vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
     if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
-        vertex_data->diffuse(smlt::Color::white());
+        vertex_data->color(smlt::Color::white());
     }
     if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
         vertex_data->tex_coord0(1.0, 0.0f);
@@ -678,7 +678,7 @@ SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr 
     vertex_data->position(x_offset + (width / 2.0f), y_offset + (height / 2.0f),
                           z_offset);
     if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
-        vertex_data->diffuse(smlt::Color::white());
+        vertex_data->color(smlt::Color::white());
     }
     if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
         vertex_data->tex_coord0(1.0, 1.0f);
@@ -694,7 +694,7 @@ SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr 
     vertex_data->position(x_offset + (-width / 2.0f),
                           y_offset + (height / 2.0f), z_offset);
     if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
-        vertex_data->diffuse(smlt::Color::white());
+        vertex_data->color(smlt::Color::white());
     }
     if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
         vertex_data->tex_coord0(0.0, 1.0f);
@@ -757,13 +757,15 @@ void Mesh::transform_vertices(const smlt::Mat4& transform) {
 
     for(uint32_t i = 0; i < vertex_data->count(); ++i) {
         if(has_positions) {
-            auto v = vertex_data->position_at<Vec3>(i);
-            vertex_data->position(v->transformed_by(transform));
+            auto v = vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, i)
+                         .value_or(Vec3());
+            vertex_data->position(v.transformed_by(transform));
         }
 
         if(has_normals) {
-            auto n = vertex_data->normal_at<Vec3>(i);
-            vertex_data->normal(n->rotated_by(transform).normalized());
+            auto n = vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_NORMAL, i)
+                         .value_or(Vec3());
+            vertex_data->normal(n.rotated_by(transform).normalized());
         }
         vertex_data->move_next();
     }
@@ -774,10 +776,10 @@ SubMeshIteratorPair Mesh::each_submesh() {
     return SubMeshIteratorPair(submeshes_);
 }
 
-void Mesh::set_diffuse(const smlt::Color& color) {
+void Mesh::set_color(const smlt::Color& color) {
     vertex_data->move_to_start();
     for(uint32_t i = 0; i < vertex_data->count(); ++i) {
-        vertex_data->diffuse(color);
+        vertex_data->color(color);
         vertex_data->move_next();
     }
     vertex_data->done();

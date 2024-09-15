@@ -282,16 +282,16 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                VERTEX_ATTR_TYPE_UNSIGNED_BYTE) {
             uint8_t color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Color::from_bytes(color[0], color[1],
-                                                    color[2], color[3]));
+            vdata->color(smlt::Color::from_bytes(color[0], color[1], color[2],
+                                                 color[3]));
         } else if(col == VERTEX_ATTR_ARRANGEMENT_RGBA) {
             float color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Color(color[0], color[1], color[2], color[3]));
+            vdata->color(smlt::Color(color[0], color[1], color[2], color[3]));
         } else if(col == VERTEX_ATTR_ARRANGEMENT_RGB) {
             float color[3];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Color(color[0], color[1], color[2], 1.0f));
+            vdata->color(smlt::Color(color[0], color[1], color[2], 1.0f));
         }
 
         if(norm == VERTEX_ATTR_ARRANGEMENT_XYZ) {

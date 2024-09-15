@@ -90,9 +90,12 @@ optional<float> TerrainData::height_at_xz(const Vec2& xz) const {
     auto idx2 = triangle->index[2];
 
     /* Get the 4 points surrounding the original coordinate */
-    auto v0 = terrain->vertex_data->position_at<Vec3>(idx0);
-    auto v1 = terrain->vertex_data->position_at<Vec3>(idx1);
-    auto v2 = terrain->vertex_data->position_at<Vec3>(idx2);
+    auto v0 =
+        terrain->vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx0);
+    auto v1 =
+        terrain->vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx1);
+    auto v2 =
+        terrain->vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx2);
 
     float high_y = std::max(v0->y, std::max(v1->y, v2->y));
     float low_y = std::min(v0->y, std::min(v1->y, v2->y));
@@ -120,7 +123,8 @@ Vec3 get_vertex_at(MeshPtr terrain, int x, int z) {
     /* Returns the vertex at the specified point */
     TerrainData data = terrain->data->get<TerrainData>("terrain_data");
     int idx = (z * data.x_size) + x;
-    return *terrain->vertex_data->position_at<Vec3>(idx);
+    return terrain->vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx)
+        .value_or(Vec3());
 }
 
 static std::vector<Vec3> _get_surrounding_vertices_from_index(Mesh* terrain, uint32_t i) {
@@ -170,7 +174,9 @@ static std::vector<Vec3> _get_surrounding_vertices_from_index(Mesh* terrain, uin
 
     for(auto& idx: surrounding_indexes) {
         if(idx == -1) continue;
-        surrounding_vertices.push_back(*vertex_data.position_at<Vec3>(idx));
+        surrounding_vertices.push_back(
+            vertex_data.attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx)
+                .value_or(Vec3()));
     }
 
     return surrounding_vertices;
@@ -196,10 +202,11 @@ static void _smooth_terrain_iteration(Mesh* mesh, int width, int height) {
     vertex_data.move_to_start();
 
     for(uint32_t i = 0; i < mesh->vertex_data->count(); ++i) {
-        auto this_pos = vertex_data.position_at<Vec3>(i);
+        auto this_pos = vertex_data.attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, i)
+                            .value_or(Vec3());
         auto vertices = _get_surrounding_vertices_from_index(mesh, i);
 
-        float total_height = this_pos->y;
+        float total_height = this_pos.y;
         for(auto& vert: vertices) {
             total_height += vert.y;
         }
@@ -207,7 +214,7 @@ static void _smooth_terrain_iteration(Mesh* mesh, int width, int height) {
         // http://nic-gamedev.blogspot.co.uk/2013/02/simple-terrain-smoothing.html
 
         float new_height = total_height / float(vertices.size() + 1);
-        vertex_data.position(this_pos->x, new_height, this_pos->z);
+        vertex_data.position(this_pos.x, new_height, this_pos.z);
         vertex_data.move_next();
     }
 }
@@ -298,7 +305,8 @@ std::vector<Vec3> gather_surrounding_points(VertexData* data, int width, int hei
 
     std::vector<Vec3> results;
     for(auto& idx: surrounding_indexes) {
-        results.push_back(*data->position_at<Vec3>(idx));
+        results.push_back(data->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx)
+                              .value_or(Vec3()));
     }
 
     return results;
@@ -392,7 +400,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
             mesh->vertex_data->position(pos);
             mesh->vertex_data->normal(Vec3(0, 1, 0));
 
-            mesh->vertex_data->diffuse(smlt::Color::white());
+            mesh->vertex_data->color(smlt::Color::white());
 
             // First texture coordinate takes into account texture_repeat setting
             mesh->vertex_data->tex_coord0(
@@ -443,11 +451,17 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
             Index idx2 = sm->index_data->at(i+1);
             Index idx3 = sm->index_data->at(i+2);
 
-            auto v1 = vdata->position_at<Vec3>(idx1);
-            auto v2 = vdata->position_at<Vec3>(idx2);
-            auto v3 = vdata->position_at<Vec3>(idx3);
+            auto v1 = vdata->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx1)
+                          .value_or(Vec3());
+            auto v2 = vdata->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx2)
+                          .value_or(Vec3());
+            auto v3 = vdata->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx3)
+                          .value_or(Vec3());
 
-            smlt::Vec3 normal = (*v2 - *v1).normalized().cross((*v3 - *v1).normalized()).normalized();
+            smlt::Vec3 normal = (v2 - v1)
+                                    .normalized()
+                                    .cross((v3 - v1).normalized())
+                                    .normalized();
 
             index_to_normal[idx1] += normal;
             index_to_normal[idx2] += normal;

@@ -477,7 +477,7 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
         }
 
         if(info->vspec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
-            batch->data->diffuse(diffuse);
+            batch->data->color(diffuse);
         }
 
         batch->data->move_next();
