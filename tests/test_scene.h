@@ -245,7 +245,7 @@ public:
     }
 
     void test_geoms_are_freed() {
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(VertexFormat::standard());
 
         auto count = scene->count_nodes_by_type<Geom>();
 

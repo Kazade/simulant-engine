@@ -26,7 +26,7 @@ public:
         window->compositor->create_layer(scene, camera_);
 
         // A bug was reported that this caused a crash (see #219)
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(smlt::VertexFormat::standard());
         mesh->create_submesh_as_cube("cube", scene->assets->create_material(), 50.0f);
 
         auto actor = scene->create_child<smlt::Actor>(mesh);

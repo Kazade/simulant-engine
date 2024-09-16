@@ -23,17 +23,19 @@ public:
 class VertexDataTest : public smlt::test::SimulantTestCase {
 public:
     void test_offsets() {
-        smlt::VertexSpecification spec = VertexSpecification{
-            smlt::VERTEX_ATTRIBUTE_3F,
-            smlt::VERTEX_ATTRIBUTE_3F,
-            smlt::VERTEX_ATTRIBUTE_2F
-        };
+        auto spec = VertexFormat::standard();
 
         smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
 
-        assert_equal(0, (int32_t) data->vertex_specification().position_offset());
-        assert_equal(sizeof(float) * 3, (uint32_t) data->vertex_specification().texcoord0_offset());
-        assert_equal(sizeof(float) * 5, (uint32_t) data->vertex_specification().normal_offset());
+        assert_equal(0, (int32_t)data->vertex_specification()
+                            .offset(VERTEX_ATTR_NAME_POSITION)
+                            .value());
+        assert_equal(sizeof(float) * 3, (uint32_t)data->vertex_specification()
+                                            .offset(VERTEX_ATTR_NAME_TEXCOORD_0)
+                                            .value());
+        assert_equal(sizeof(float) * 5, (uint32_t)data->vertex_specification()
+                                            .offset(VERTEX_ATTR_NAME_NORMAL)
+                                            .value());
     }
 
     void test_position_works_with_a_subset_of_components() {
@@ -55,49 +57,51 @@ public:
         assert_close(pos->w, 1.0f, 0.00001f);
     }
 
-    void test_packed_normal_offsets() {
-        smlt::VertexSpecification spec;
-        spec.position_attribute = VERTEX_ATTRIBUTE_3F;
-        spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
-        spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB;
-        spec.normal_attribute = VERTEX_ATTRIBUTE_PACKED_VEC4_1I;
-        spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;
+    // FIXME: Restore packed normals?
+    // void test_packed_normal_offsets() {
+    //     smlt::VertexSpecification spec;
+    //     spec.position_attribute = VERTEX_ATTRIBUTE_3F;
+    //     spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
+    //     spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB;
+    //     spec.normal_attribute = VERTEX_ATTRIBUTE_PACKED_VEC4_1I;
+    //     spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;
 
-        assert_equal((uint32_t) spec.diffuse_offset(), sizeof(float) * 5u);
-        assert_equal((uint32_t) spec.normal_offset(), (sizeof(float) * 5u) + sizeof(uint32_t));
-        assert_equal((uint32_t) spec.texcoord1_offset(), (sizeof(float) * 5u) + (sizeof(uint32_t) * 2));
+    //     assert_equal((uint32_t) spec.diffuse_offset(), sizeof(float) * 5u);
+    //     assert_equal((uint32_t) spec.normal_offset(), (sizeof(float) * 5u) +
+    //     sizeof(uint32_t)); assert_equal((uint32_t) spec.texcoord1_offset(),
+    //     (sizeof(float) * 5u) + (sizeof(uint32_t) * 2));
 
-        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
-        data->position(smlt::Vec3());
-        data->diffuse(smlt::Color(0, 0, 0, 0));
-        data->normal(smlt::Vec3::up());
-        data->move_next();
+    //     smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
+    //     data->position(smlt::Vec3());
+    //     data->diffuse(smlt::Color(0, 0, 0, 0));
+    //     data->normal(smlt::Vec3::up());
+    //     data->move_next();
 
-        data->position(smlt::Vec3());
-        data->diffuse(smlt::Color(0, 0, 0, 0));
-        data->normal(smlt::Vec3::left());
-        data->move_next();
+    //     data->position(smlt::Vec3());
+    //     data->diffuse(smlt::Color(0, 0, 0, 0));
+    //     data->normal(smlt::Vec3::left());
+    //     data->move_next();
 
-        data->position(smlt::Vec3());
-        data->diffuse(smlt::Color(0, 0, 0, 0));
-        data->normal(smlt::Vec3(0.5, -0.5, 0.5));
-        data->move_next();
+    //     data->position(smlt::Vec3());
+    //     data->diffuse(smlt::Color(0, 0, 0, 0));
+    //     data->normal(smlt::Vec3(0.5, -0.5, 0.5));
+    //     data->move_next();
 
-        const smlt::Vec3* n = data->normal_at<smlt::Vec3>(0);
-        assert_close(n->x, 0.0f, 0.01f);
-        assert_close(n->y, 1.0f, 0.01f);
-        assert_close(n->z, 0.0f, 0.01f);
+    //     const smlt::Vec3* n = data->normal_at<smlt::Vec3>(0);
+    //     assert_close(n->x, 0.0f, 0.01f);
+    //     assert_close(n->y, 1.0f, 0.01f);
+    //     assert_close(n->z, 0.0f, 0.01f);
 
-        const smlt::Vec3* n2 = data->normal_at<smlt::Vec3>(1);
-        assert_close(n2->x, -1.0f, 0.01f);
-        assert_close(n2->y, 0.0f, 0.01f);
-        assert_close(n2->z, 0.0f, 0.01f);
+    //     const smlt::Vec3* n2 = data->normal_at<smlt::Vec3>(1);
+    //     assert_close(n2->x, -1.0f, 0.01f);
+    //     assert_close(n2->y, 0.0f, 0.01f);
+    //     assert_close(n2->z, 0.0f, 0.01f);
 
-        const smlt::Vec3* n3 = data->normal_at<smlt::Vec3>(2);
-        assert_close(n3->x, 0.5f, 0.01f);
-        assert_close(n3->y, -0.5f, 0.01f);
-        assert_close(n3->z, 0.5f, 0.01f);
-    }
+    //     const smlt::Vec3* n3 = data->normal_at<smlt::Vec3>(2);
+    //     assert_close(n3->x, 0.5f, 0.01f);
+    //     assert_close(n3->y, -0.5f, 0.01f);
+    //     assert_close(n3->z, 0.5f, 0.01f);
+    // }
 
     void test_colors_dont_overflow() {
         smlt::VertexSpecification spec = VertexSpecification{

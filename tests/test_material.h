@@ -35,7 +35,8 @@ public:
 
     void test_material_applies_to_mesh() {
         auto mat = application->shared_assets->create_material();
-        auto mesh = application->shared_assets->create_mesh(smlt::VertexSpecification::POSITION_ONLY);
+        auto mesh = application->shared_assets->create_mesh(
+            VertexFormat::position_only());
         smlt::SubMesh* sm = mesh->create_submesh("test", mat);
         this->assert_equal(mat->id(), sm->material()->id());
     }

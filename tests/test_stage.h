@@ -22,7 +22,7 @@ public:
             destroyed_ids.insert(node->id());
         });
 
-        auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto m = scene->assets->create_mesh(smlt::VertexFormat::standard());
         auto a1 = scene->create_child<smlt::Actor>(m);
         auto a2 = scene->create_child<smlt::Actor>(m);
         a2->set_parent(a1);
@@ -99,7 +99,7 @@ public:
     }
 
     void test_stage_node_clean_up_signals() {
-        auto m = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+        auto m = scene->assets->create_mesh(VertexFormat::standard());
         auto actor = scene->create_child<smlt::Actor>(m);
 
         bool cleaned_up = false;

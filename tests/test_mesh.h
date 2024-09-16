@@ -27,7 +27,8 @@ public:
     smlt::MeshPtr generate_test_mesh(smlt::StagePtr stage) {
         _S_UNUSED(stage);
 
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::POSITION_ONLY, GARBAGE_COLLECT_NEVER);
+        auto mesh = scene->assets->create_mesh(VertexFormat::position_only(),
+                                               GARBAGE_COLLECT_NEVER);
         auto& data = mesh->vertex_data;
 
         data->position(-1.0, -1.0, 0.0);
@@ -151,11 +152,11 @@ public:
     }
 
     void test_set_mesh_detail_level() {
-        auto mesh = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(VertexFormat::standard());
         auto actor = scene->create_child<smlt::Actor>(mesh);
 
-        auto m1 = scene->assets->create_mesh(VertexSpecification::DEFAULT);
-        auto m2 = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+        auto m1 = scene->assets->create_mesh(VertexFormat::standard());
+        auto m2 = scene->assets->create_mesh(VertexFormat::standard());
 
         actor->set_mesh(m1);
         actor->set_mesh(m2, DETAIL_LEVEL_MID);
@@ -171,7 +172,7 @@ public:
         /* Check that index_data->done() fires signals without crashing */
         auto index_data = std::make_shared<IndexData>(INDEX_TYPE_16_BIT);
 
-        auto m1 = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+        auto m1 = scene->assets->create_mesh(VertexFormat::standard());
         m1->vertex_data->position(0, 0, 0);
         m1->vertex_data->done();
 
@@ -290,7 +291,7 @@ public:
         auto mat1 = scene->assets->create_material();
         auto mat2 = scene->assets->create_material();
 
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(smlt::VertexFormat::standard());
 
         auto submesh = mesh->create_submesh_as_cube("cube", mat1, 1.0f);
         submesh->set_material_at_slot(MATERIAL_SLOT1, mat2);
@@ -322,7 +323,7 @@ public:
 
     // Skipped, currently fails
     void X_test_cubic_texture_generation() {
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(smlt::VertexFormat::standard());
         mesh->create_submesh_as_box("cubic", scene->assets->create_material(), 10.0f, 10.0f, 10.0f);
         mesh->first_submesh()->generate_texture_coordinates_cube();
 
@@ -366,7 +367,7 @@ public:
     }
 
     void test_mesh_aabb_generated_correctly() {
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(smlt::VertexFormat::standard());
         mesh->create_submesh_as_box(
             "test", scene->assets->default_material(),
             1.0, 1.0, 1.0, smlt::Vec3(-100, 0, 0)
@@ -382,7 +383,7 @@ public:
     }
 
     void test_submesh_aabb_generated_correctly() {
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(smlt::VertexFormat::standard());
         auto submesh = mesh->create_submesh_as_box(
             "test", scene->assets->default_material(),
             1.0, 1.0, 1.0, smlt::Vec3(-100, 0, 0)
@@ -398,7 +399,7 @@ public:
     }
 
     void test_create_submesh_as_capsule() {
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(smlt::VertexFormat::standard());
         mesh->create_submesh_as_capsule(
             "capsule",
             scene->assets->create_material(),
@@ -413,8 +414,10 @@ public:
     }
 
     void test_find_mesh() {
-        auto mesh = scene->assets->create_mesh(VertexSpecification::DEFAULT)->set_name_and_get("Mesh 1");
-        scene->assets->create_mesh(VertexSpecification::DEFAULT)->set_name("Mesh 2");
+        auto mesh = scene->assets->create_mesh(VertexFormat::standard())
+                        ->set_name_and_get("Mesh 1");
+        scene->assets->create_mesh(VertexFormat::standard())
+            ->set_name("Mesh 2");
 
         assert_equal(mesh->id(), scene->assets->find_mesh("Mesh 1")->id());
         assert_is_not_null(scene->assets->find_mesh("Mesh 2").get());

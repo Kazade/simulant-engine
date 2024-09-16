@@ -15,8 +15,7 @@ public:
 
         stage = scene->create_child<smlt::Stage>();
         actor = scene->create_child<smlt::Actor>(
-            scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT)
-        );
+            scene->assets->create_mesh(VertexFormat::standard()));
     }
 
     void tear_down() {
@@ -28,7 +27,7 @@ public:
     void test_origin_bug() {
         // See #241
 
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(VertexFormat::standard());
         mesh->create_submesh_as_sphere("sphere", scene->assets->create_material(), 10, 5, 5);
         auto sphere = scene->create_child<smlt::Actor>(mesh);
         auto follow = scene->create_child<smlt::SmoothFollow>();
@@ -40,7 +39,7 @@ public:
     }
 
     void test_target_reset_on_destroy() {
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(smlt::VertexFormat::standard());
         mesh->create_submesh_as_sphere("sphere", scene->assets->create_material(), 10, 5, 5);
         auto sphere = scene->create_child<smlt::Actor>(mesh);
         auto follow = scene->create_child<smlt::SmoothFollow>();

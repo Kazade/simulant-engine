@@ -190,7 +190,7 @@ public:
     }
 
     void test_mesh_collider_addition() {
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(VertexFormat::standard());
         mesh->create_submesh_as_box("mesh", scene->assets->create_material(), 1.0, 1.0, 1.0);
         auto body = scene->create_child<StaticBody>();
         body->add_mesh_collider(mesh, PhysicsMaterial::wood());

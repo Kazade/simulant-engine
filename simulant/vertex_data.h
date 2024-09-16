@@ -109,16 +109,16 @@ public:
     void done();
     uint64_t last_updated() const;
 
-    /**
-     * @brief attr_at
-     * @param name
-     * @param index
-     * @return Returns a pointer to the specified attribute at the specified
-     * position. If the attribute is not found, or the attribute is not the
-     * correct type, nullptr is returned.
-     */
-    template<typename T>
-    const T* attr_at(VertexAttributeName name, std::size_t index) const;
+    // /**
+    //  * @brief attr_at
+    //  * @param name
+    //  * @param index
+    //  * @return Returns a pointer to the specified attribute at the specified
+    //  * position. If the attribute is not found, or the attribute is not the
+    //  * correct type, nullptr is returned.
+    //  */
+    // template<typename T>
+    // const T* attr_at(VertexAttributeName name, std::size_t index) const;
 
     /**
      * @brief attr_at
@@ -127,7 +127,16 @@ public:
      * @return Returns a raw pointer to the specified attribute at the specified
      * position. If the attribute is not found a nullptr is returned.
      */
-    const uint8_t* attr_at(VertexAttributeName name, std::size_t index) const;
+    const uint8_t* attr_at(VertexAttributeName name, std::size_t index) const {
+        auto offset_maybe = vertex_specification_.offset(name);
+        if(!offset_maybe) {
+            return nullptr;
+        }
+
+        const uint8_t* target = &data_[index * stride_];
+        target += offset_maybe.value_or(0);
+        return target;
+    }
 
     /**
      * @brief attr_as

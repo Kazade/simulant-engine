@@ -13,7 +13,8 @@ class AdjacencyTests : public smlt::test::SimulantTestCase {
 public:
     void test_basic_adjacency_build() {
 
-        auto mesh = application->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh =
+            application->shared_assets->create_mesh(VertexFormat::standard());
         mesh->create_submesh_as_rectangle("rect", application->shared_assets->create_material(), 1.0, 1.0f);
 
         auto adjacency = std::make_shared<AdjacencyInfo>(mesh.get());
@@ -41,13 +42,16 @@ public:
     }
 
     void test_shared_positions_detected() {
-        auto mesh = application->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto mesh =
+            application->shared_assets->create_mesh(VertexFormat::standard());
         mesh->create_submesh_as_rectangle("rect", application->shared_assets->create_material(), 1.0, 1.0f);
 
         // Add another vertex, using the same position as the first
         auto i = mesh->vertex_data->count();
         mesh->vertex_data->move_to_end();
-        mesh->vertex_data->position(*mesh->vertex_data->position_at<smlt::Vec3>(1));
+        mesh->vertex_data->position(
+            mesh->vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, 1)
+                .value());
         mesh->vertex_data->move_next();
 
         // Add another vertex

@@ -71,11 +71,14 @@ void QuadtreeCuller::_compile(const Vec3& pos, const Quaternion& rot, const Vec3
 
         submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
             stash[0] =
-                *data->vertices->attr_at<Vec3>(VERTEX_ATTR_NAME_POSITION, a);
+                data->vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, a)
+                    .value();
             stash[1] =
-                *data->vertices->attr_at<Vec3>(VERTEX_ATTR_NAME_POSITION, b);
+                data->vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, b)
+                    .value();
             stash[2] =
-                *data->vertices->attr_at<Vec3>(VERTEX_ATTR_NAME_POSITION, c);
+                data->vertices->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, c)
+                    .value();
 
             auto node = pimpl_->quadtree->find_destination_for_triangle(stash);
 

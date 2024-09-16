@@ -18,7 +18,8 @@ public:
 
         auto path = "assets/particles/flare.tga";
         auto tex = scene->assets->load_texture(path);
-        auto heightmap = scene->assets->create_mesh_from_heightmap(path, HeightmapSpecification());
+        auto heightmap = scene->assets->create_mesh_from_heightmap(
+            path, VertexFormat::standard(), HeightmapSpecification());
 
         assert_equal(heightmap->data->get<TerrainData>("terrain_data").x_size, tex->width());
         assert_equal(heightmap->data->get<TerrainData>("terrain_data").z_size, tex->height());
@@ -37,7 +38,8 @@ public:
         auto tex = scene->assets->create_texture(64, 64, TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);
         tex->set_data(heightmap_data);
-        auto mesh = scene->assets->create_mesh_from_heightmap(tex, spec);
+        auto mesh = scene->assets->create_mesh_from_heightmap(
+            tex, VertexFormat::standard(), spec);
 
         auto data = mesh->data->get<TerrainData>("terrain_data");
         assert_equal(data.x_size, 64u);
@@ -63,7 +65,8 @@ public:
         auto tex = scene->assets->create_texture(4, 4, TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);
         tex->set_data(heightmap_data, sizeof(heightmap_data));
-        auto mesh = scene->assets->create_mesh_from_heightmap(tex, spec);
+        auto mesh = scene->assets->create_mesh_from_heightmap(
+            tex, VertexFormat::standard(), spec);
 
         auto data = mesh->data->get<TerrainData>("terrain_data");
         assert_equal(data.x_size, 4u);
@@ -116,7 +119,8 @@ public:
         auto tex = scene->assets->create_texture(4, 4, TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);
         tex->set_data(heightmap_data, sizeof(heightmap_data));
-        auto mesh = scene->assets->create_mesh_from_heightmap(tex, spec);
+        auto mesh = scene->assets->create_mesh_from_heightmap(
+            tex, VertexFormat::standard(), spec);
 
         auto data = mesh->data->get<TerrainData>("terrain_data");
 

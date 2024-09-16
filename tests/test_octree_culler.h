@@ -17,7 +17,7 @@ public:
         auto mat1 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
         auto mat2 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
 
-        auto mesh = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(VertexFormat::standard());
         mesh->create_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(-20, -20, -20.0));
         mesh->create_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(20, 20, 20.0));
 
@@ -41,7 +41,7 @@ public:
         auto mat1 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
         auto mat2 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
 
-        auto mesh = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+        auto mesh = scene->assets->create_mesh(VertexFormat::standard());
         mesh->create_submesh_as_box("visible", mat1, 1.0, 1.0, 1.0, Vec3(0, 0, -20.0));
         mesh->create_submesh_as_box("not visible", mat2, 1.0, 1.0, 1.0, Vec3(0, 0, 20.0));
 

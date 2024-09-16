@@ -20,7 +20,8 @@ public:
         smlt::MeshLoadOptions opts;
         opts.cull_mode = smlt::CULL_MODE_FRONT_FACE;
 
-        auto m = application->shared_assets->load_mesh("assets/samples/cube.obj", VertexSpecification::DEFAULT, opts);
+        auto m = application->shared_assets->load_mesh(
+            "assets/samples/cube.obj", opts);
 
         assert_equal(m->submesh_count(), 1u);
         assert_true(m->first_submesh()->material());
@@ -43,7 +44,7 @@ public:
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto spec = smlt::VertexSpecification::DEFAULT;
+        auto spec = VertexFormat::standard();
         spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
 
         auto mesh = application->shared_assets->create_mesh(spec);
@@ -51,14 +52,15 @@ public:
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
-        const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
+        const uint8_t* bytes =
+            mesh->vertex_data->attr_at(VERTEX_ATTR_NAME_COLOR, 0);
 
         assert_equal(bytes[0], 0);   // B
         assert_equal(bytes[1], 0);   // G
         assert_equal(bytes[2], 255); // R
         assert_equal(bytes[3], 255); // A
 
-        bytes = mesh->vertex_data->diffuse_at<uint8_t>(1);
+        bytes = mesh->vertex_data->attr_at(VERTEX_ATTR_NAME_COLOR, 1);
         assert_equal(bytes[0], 0);   // B
         assert_equal(bytes[1], 255); // G
         assert_equal(bytes[2], 0);   // R
@@ -79,20 +81,21 @@ public:
             std::make_shared<std::istringstream>(obj_file)
         );
 
-        auto spec = smlt::VertexSpecification::DEFAULT;
+        auto spec = VertexFormat::standard();
         spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
         auto mesh = application->shared_assets->create_mesh(spec);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
-        const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
+        const uint8_t* bytes =
+            mesh->vertex_data->attr_at(VERTEX_ATTR_NAME_COLOR, 0);
         assert_equal(bytes[0], 255);  // B
         assert_equal(bytes[1], 255);  // G
         assert_equal(bytes[2], 255);  // R
         assert_equal(bytes[3], 255);  // A
 
-        bytes = mesh->vertex_data->diffuse_at<uint8_t>(1);
+        bytes = mesh->vertex_data->attr_at(VERTEX_ATTR_NAME_COLOR, 1);
         assert_equal(bytes[0], 255);  // B
         assert_equal(bytes[1], 255);  // G
         assert_equal(bytes[2], 255);  // R
@@ -110,8 +113,8 @@ public:
         loaders::OBJLoader loader("assets/samples/test.obj",
                                   std::make_shared<std::istringstream>(obj_file));
 
-        auto mesh = application->shared_assets->load_mesh("assets/samples/cube.obj",
-                                                          smlt::VertexSpecification::POSITION_ONLY);
+        auto mesh =
+            application->shared_assets->load_mesh("assets/samples/cube.obj");
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);

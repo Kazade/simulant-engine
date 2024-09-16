@@ -259,6 +259,15 @@ public:
     optional<T> unpack(const uint8_t* ptr, bool normalize = false) {
         return unpack(UnpackID<T>(), ptr, normalize);
     }
+
+    bool operator==(const VertexAttribute& rhs) const {
+        return name == rhs.name && arrangement == rhs.arrangement &&
+               type == rhs.type;
+    }
+
+    bool operator!=(const VertexAttribute& rhs) const {
+        return !(*this == rhs);
+    }
 };
 
 class VertexFormat {
@@ -282,8 +291,18 @@ public:
 
     smlt::optional<VertexAttribute> attr(VertexAttributeName name) const;
 
-    bool operator==(const VertexFormat& rhs) const;
-    bool operator!=(const VertexFormat& rhs) const;
+    bool operator==(const VertexFormat& rhs) const {
+        for(std::size_t i = 0; i < attr_count(); ++i) {
+            if(attr(i) != rhs.attr(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool operator!=(const VertexFormat& rhs) const {
+        return !(*this == rhs);
+    }
 
     static VertexFormat standard();
     static VertexFormat position_and_color();
