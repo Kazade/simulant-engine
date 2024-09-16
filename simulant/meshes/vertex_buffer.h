@@ -33,7 +33,8 @@ private:
     friend class Renderer;
 
     VertexBuffer(VertexFormat format,
-                 std::shared_ptr<VertexBufferRendererData> renderer_data);
+                 std::shared_ptr<VertexBufferRendererData> renderer_data) :
+        format_(format), renderer_data_(renderer_data) {}
 
 public:
     VertexFormat format() const {
