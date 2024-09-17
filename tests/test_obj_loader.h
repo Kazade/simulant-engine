@@ -45,8 +45,6 @@ public:
         );
 
         auto spec = VertexFormat::standard();
-        spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
-
         auto mesh = application->shared_assets->create_mesh(spec);
         loader.into(*mesh);
 
@@ -82,7 +80,6 @@ public:
         );
 
         auto spec = VertexFormat::standard();
-        spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
         auto mesh = application->shared_assets->create_mesh(spec);
         loader.into(*mesh);
 
@@ -120,9 +117,9 @@ public:
         assert_equal(mesh->vertex_data->count(), 3u);
 
         auto spec = mesh->vertex_data->vertex_specification();
-        assert_false(spec.has_diffuse());
-        assert_false(spec.has_normals());
-        assert_false(spec.has_texcoord0());
+        assert_false(spec.attr_count(VERTEX_ATTR_NAME_COLOR));
+        assert_false(spec.attr_count(VERTEX_ATTR_NAME_NORMAL));
+        assert_false(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0));
     }
 };
 

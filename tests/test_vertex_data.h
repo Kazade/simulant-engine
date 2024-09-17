@@ -42,19 +42,19 @@ public:
         /* Position should automatically fill z == 0, and w == 1 if they aren't
          * specified */
 
-        smlt::VertexSpecification spec;
-        spec.position_attribute = VERTEX_ATTRIBUTE_4F;
+        auto spec = VertexFormat::position_only();
 
         smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
 
         data->position(smlt::Vec2(9.0f, 8.0f));
         data->move_next();
 
-        auto pos = data->position_at<smlt::Vec4>(0);
-        assert_close(pos->x, 9.0f, 0.00001f);
-        assert_close(pos->y, 8.0f, 0.00001f);
-        assert_close(pos->z, 0.0f, 0.00001f);
-        assert_close(pos->w, 1.0f, 0.00001f);
+        auto pos =
+            data->attr_as<smlt::Vec4>(VERTEX_ATTR_NAME_POSITION, 0).value();
+        assert_close(pos.x, 9.0f, 0.00001f);
+        assert_close(pos.y, 8.0f, 0.00001f);
+        assert_close(pos.z, 0.0f, 0.00001f);
+        assert_close(pos.w, 1.0f, 0.00001f);
     }
 
     // FIXME: Restore packed normals?
@@ -104,18 +104,15 @@ public:
     // }
 
     void test_colors_dont_overflow() {
-        smlt::VertexSpecification spec = VertexSpecification{
-            smlt::VERTEX_ATTRIBUTE_3F
-        };
-
-        spec.diffuse_attribute = smlt::VERTEX_ATTRIBUTE_4UB;
+        auto spec = VertexFormat::position_and_color();
 
         smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
         data->position(0, 0, 0);
-        data->diffuse(smlt::Color(1.1, 1.1, 1.1, 1.1));
+        data->color(smlt::Color(1.1, 1.1, 1.1, 1.1));
         data->move_next();
 
-        uint8_t* color = &(data->data()[spec.diffuse_offset()]);
+        uint8_t* color =
+            &(data->data()[spec.offset(VERTEX_ATTR_NAME_COLOR).value()]);
 
         assert_equal(color[0], 255);
         assert_equal(color[1], 255);
@@ -124,13 +121,17 @@ public:
     }
 
     void test_moving_cursor() {
-        smlt::VertexSpecification spec = VertexSpecification{
-            smlt::VERTEX_ATTRIBUTE_3F,
-            smlt::VERTEX_ATTRIBUTE_3F,
-            smlt::VERTEX_ATTRIBUTE_2F
-        };
+        auto spec =
+            VertexFormatBuilder()
+                .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .build();
 
-        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
+        auto data = std::make_shared<VertexData>(spec);
         auto stride = data->stride();
 
         data->position(0, 0, 0);
@@ -155,7 +156,7 @@ public:
     }
 
     void test_clone_into() {
-        smlt::VertexSpecification spec = VertexSpecification{smlt::VERTEX_ATTRIBUTE_2F};
+        auto spec = VertexFormat::position_only();
 
         smlt::VertexData source(spec);
 
@@ -172,21 +173,30 @@ public:
         // Clone the data
         assert_true(source.clone_into(dest));
 
+#define POSITION(n) dest.attr_as<Vec2>(VERTEX_ATTR_NAME_POSITION, (n)).value()
         // Check the data is valid
         assert_equal(dest.count(), source.count());
-        assert_equal(smlt::Vec2(0, 0), *dest.position_at<smlt::Vec2>(0));
-        assert_equal(smlt::Vec2(1, 0), *dest.position_at<smlt::Vec2>(1));
-        assert_equal(smlt::Vec2(2, 0), *dest.position_at<smlt::Vec2>(2));
-        assert_equal(smlt::Vec2(3, 0), *dest.position_at<smlt::Vec2>(3));
-        assert_equal(smlt::Vec2(4, 0), *dest.position_at<smlt::Vec2>(4));
+        assert_equal(smlt::Vec2(0, 0), POSITION(0));
+        assert_equal(smlt::Vec2(1, 0), POSITION(1));
+        assert_equal(smlt::Vec2(2, 0), POSITION(2));
+        assert_equal(smlt::Vec2(3, 0), POSITION(3));
+        assert_equal(smlt::Vec2(4, 0), POSITION(4));
         assert_equal(source.stride(), dest.stride());
+#undef POSITION
 
         assert_equal(dest.cursor_position(), 0);
     }
 
     void test_basic_usage() {
-        smlt::VertexSpecification spec = smlt::VertexSpecification::POSITION_AND_DIFFUSE;
-        spec.texcoord0_attribute = smlt::VERTEX_ATTRIBUTE_2F;
+        auto spec =
+            VertexFormatBuilder()
+                .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_RGBA,
+                     VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
+                .build();
 
         smlt::VertexData data(spec);
 

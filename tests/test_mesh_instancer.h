@@ -14,7 +14,8 @@ public:
         smlt::test::SimulantTestCase::set_up();
 
         stage_ = scene->create_child<smlt::Stage>();
-        mesh_ = scene->assets->create_mesh_as_cube_with_submesh_per_face(1.0f);
+        mesh_ = scene->assets->create_mesh_as_cube_with_submesh_per_face(
+            1.0f, VertexFormat::standard());
     }
 
     void test_mesh_instancer_creation() {
@@ -113,7 +114,8 @@ public:
 
     void test_set_mesh_changes_aabb() {
         /* Create a bigger cube */
-        auto mesh2 = scene->assets->create_mesh_as_cube_with_submesh_per_face(2.0f);
+        auto mesh2 = scene->assets->create_mesh_as_cube_with_submesh_per_face(
+            2.0f, VertexFormat::standard());
 
         assert_not_equal(mesh_->aabb(), mesh2->aabb());
 

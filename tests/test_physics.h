@@ -293,7 +293,8 @@ public:
     }
 
     void test_add_mesh_collider() {
-        auto mesh = scene->assets->create_mesh_as_cube_with_submesh_per_face(10.0f);
+        auto mesh = scene->assets->create_mesh_as_cube_with_submesh_per_face(
+            10.0f, VertexFormat::standard());
         auto body = scene->create_child<StaticBody>();
         body->add_mesh_collider(mesh, PhysicsMaterial::wood());
     }

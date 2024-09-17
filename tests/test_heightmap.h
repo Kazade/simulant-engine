@@ -13,7 +13,8 @@ public:
         auto stage = scene->create_child<smlt::Stage>();
 
         /* Invalid path should return NULL */
-        auto test1 = scene->assets->create_mesh_from_heightmap("junk_path", HeightmapSpecification());
+        auto test1 = scene->assets->create_mesh_from_heightmap(
+            "junk_path", VertexFormat::standard(), HeightmapSpecification());
         assert_false(test1);
 
         auto path = "assets/particles/flare.tga";

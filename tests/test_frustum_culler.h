@@ -14,7 +14,9 @@ public:
         test::SimulantTestCase::set_up();
 
         stage_ = scene->create_child<smlt::Stage>();
-        box_ = application->shared_assets->create_mesh_as_cube_with_submesh_per_face(1.0f);
+        box_ = application->shared_assets
+                   ->create_mesh_as_cube_with_submesh_per_face(
+                       1.0f, VertexFormat::standard());
     }
 
     void tear_down() override {

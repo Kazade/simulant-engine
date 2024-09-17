@@ -138,7 +138,7 @@ public:
             result.push_back(queue.renderable(i));
         }
 
-        vbo_manager_->update_and_fetch_buffers(result[0]);
+        vbo_manager_->update_and_fetch_vertex_buffer(*result[0]->vertex_data);
 
         assert_equal(vbo_manager_->dedicated_buffer_count(), 1u);
 

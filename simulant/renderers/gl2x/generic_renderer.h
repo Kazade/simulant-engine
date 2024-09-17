@@ -129,7 +129,9 @@ private:
 
     friend class GL2RenderQueueVisitor;
 
-    VertexFormat on_native_vertex_format(VertexFormat hint) override;
+    VertexFormat on_native_vertex_format(VertexFormat hint) override {
+        return hint;
+    }
 };
 
 }

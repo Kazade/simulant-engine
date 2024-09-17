@@ -246,14 +246,20 @@ public:
 
         auto& data = mesh->vertex_data;
 
-        assert_true(data->vertex_specification().has_positions());
-        assert_true(!data->vertex_specification().has_normals());
-        assert_true(!data->vertex_specification().has_texcoord0());
-        assert_true(!data->vertex_specification().has_texcoord1());
-        assert_true(!data->vertex_specification().has_texcoord2());
-        assert_true(!data->vertex_specification().has_texcoord3());
-        assert_true(!data->vertex_specification().has_diffuse());
-        assert_true(!data->vertex_specification().has_specular());
+        assert_true(
+            data->vertex_specification().attr_count(VERTEX_ATTR_NAME_POSITION));
+        assert_true(
+            !data->vertex_specification().attr_count(VERTEX_ATTR_NAME_NORMAL));
+        assert_true(!data->vertex_specification().attr_count(
+            VERTEX_ATTR_NAME_TEXCOORD_0));
+        assert_true(!data->vertex_specification().attr_count(
+            VERTEX_ATTR_NAME_TEXCOORD_1));
+        assert_true(!data->vertex_specification().attr_count(
+            VERTEX_ATTR_NAME_TEXCOORD_2));
+        assert_true(!data->vertex_specification().attr_count(
+            VERTEX_ATTR_NAME_TEXCOORD_3));
+        assert_true(
+            !data->vertex_specification().attr_count(VERTEX_ATTR_NAME_COLOR));
         assert_equal(4u, data->count());
 
         assert_equal(2u, mesh->submesh_count());
@@ -279,7 +285,8 @@ public:
     }
 
     void test_scene_methods() {
-        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::POSITION_ONLY); //Create a mesh
+        auto mesh = scene->assets->create_mesh(
+            VertexFormat::position_only()); // Create a mesh
         auto actor = scene->create_child<Actor>(mesh);
 
         assert_true(mesh->id() == actor->mesh(DETAIL_LEVEL_NEAREST)->id());
@@ -329,41 +336,45 @@ public:
 
         auto& vd = *mesh->vertex_data.get();
 
+#define TEXCOORD(n) vd.attr_as<Vec2>(VERTEX_ATTR_NAME_TEXCOORD_0, (n)).value()
+
         // Neg Z
-        assert_equal(smlt::Vec2((1.0 / 3.0), 0), *vd.texcoord0_at<smlt::Vec2>(0));
-        assert_equal(smlt::Vec2((2.0 / 3.0), 0), *vd.texcoord0_at<smlt::Vec2>(1));
-        assert_equal(smlt::Vec2((2.0 / 3.0), (1.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(2));
-        assert_equal(smlt::Vec2((1.0 / 3.0), (1.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(3));
+        assert_equal(smlt::Vec2((1.0 / 3.0), 0), TEXCOORD(0));
+        assert_equal(smlt::Vec2((2.0 / 3.0), 0), TEXCOORD(1));
+        assert_equal(smlt::Vec2((2.0 / 3.0), (1.0 / 4.0)), TEXCOORD(2));
+        assert_equal(smlt::Vec2((1.0 / 3.0), (1.0 / 4.0)), TEXCOORD(3));
 
         // Pos Z
-        assert_equal(smlt::Vec2((1.0 / 3.0), (2.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(4));
-        assert_equal(smlt::Vec2((2.0 / 3.0), (2.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(5));
-        assert_equal(smlt::Vec2((2.0 / 3.0), (3.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(6));
-        assert_equal(smlt::Vec2((1.0 / 3.0), (3.0 / 4.0)), *vd.texcoord0_at<smlt::Vec2>(7));
+        assert_equal(smlt::Vec2((1.0 / 3.0), (2.0 / 4.0)), TEXCOORD(4));
+        assert_equal(smlt::Vec2((2.0 / 3.0), (2.0 / 4.0)), TEXCOORD(5));
+        assert_equal(smlt::Vec2((2.0 / 3.0), (3.0 / 4.0)), TEXCOORD(6));
+        assert_equal(smlt::Vec2((1.0 / 3.0), (3.0 / 4.0)), TEXCOORD(7));
 
         // Neg X
-        assert_equal(smlt::Vec2(0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(8));
-        assert_equal(smlt::Vec2(1.0 / 3.0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(9));
-        assert_equal(smlt::Vec2(1.0 / 3.0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(10));
-        assert_equal(smlt::Vec2(0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(11));
+        assert_equal(smlt::Vec2(0, 2.0 / 4.0), TEXCOORD(8));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 2.0 / 4.0), TEXCOORD(9));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 3.0 / 4.0), TEXCOORD(10));
+        assert_equal(smlt::Vec2(0, 3.0 / 4.0), TEXCOORD(11));
 
         // Pos X
-        assert_equal(smlt::Vec2(2.0 / 3.0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(12));
-        assert_equal(smlt::Vec2(3.0 / 3.0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(13));
-        assert_equal(smlt::Vec2(3.0 / 3.0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(14));
-        assert_equal(smlt::Vec2(2.0 / 3.0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(15));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 2.0 / 4.0), TEXCOORD(12));
+        assert_equal(smlt::Vec2(3.0 / 3.0, 2.0 / 4.0), TEXCOORD(13));
+        assert_equal(smlt::Vec2(3.0 / 3.0, 3.0 / 4.0), TEXCOORD(14));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 3.0 / 4.0), TEXCOORD(15));
 
         // Neg Y
-        assert_equal(smlt::Vec2(1.0 / 3.0, 1.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(16));
-        assert_equal(smlt::Vec2(2.0 / 3.0, 1.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(17));
-        assert_equal(smlt::Vec2(2.0 / 3.0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(18));
-        assert_equal(smlt::Vec2(1.0 / 3.0, 2.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(19));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 1.0 / 4.0), TEXCOORD(16));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 1.0 / 4.0), TEXCOORD(17));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 2.0 / 4.0), TEXCOORD(18));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 2.0 / 4.0), TEXCOORD(19));
 
         // Pos Y
-        assert_equal(smlt::Vec2(1.0 / 3.0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(20));
-        assert_equal(smlt::Vec2(2.0 / 3.0, 3.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(21));
-        assert_equal(smlt::Vec2(2.0 / 3.0, 4.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(22));
-        assert_equal(smlt::Vec2(1.0 / 3.0, 4.0 / 4.0), *vd.texcoord0_at<smlt::Vec2>(23));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 3.0 / 4.0), TEXCOORD(20));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 3.0 / 4.0), TEXCOORD(21));
+        assert_equal(smlt::Vec2(2.0 / 3.0, 4.0 / 4.0), TEXCOORD(22));
+        assert_equal(smlt::Vec2(1.0 / 3.0, 4.0 / 4.0), TEXCOORD(23));
+
+#undef TEXCOORD
     }
 
     void test_mesh_aabb_generated_correctly() {
