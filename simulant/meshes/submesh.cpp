@@ -147,11 +147,18 @@ void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
         return;
     }
 
+    bounds = AABB();
+    bool empty = true;
     for(auto& range: vertex_ranges_) {
         for(uint32_t i = range.start; i < range.start + range.count; ++i) {
             auto pos = vdata->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, i)
                            .value_or(Vec3());
-            bounds.encapsulate(pos);
+            if(empty) {
+                bounds.set_min_max(pos, pos);
+                empty = false;
+            } else {
+                bounds.encapsulate(pos);
+            }
         }
     }
 }
@@ -171,10 +178,17 @@ void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
         return;
     }
 
+    bounds = AABB();
+    bool empty = true;
     for(auto idx: *index_data_) {
         auto pos = vdata->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, idx)
                        .value_or(Vec3());
-        bounds.encapsulate(pos);
+        if(empty) {
+            bounds.set_min_max(pos, pos);
+            empty = false;
+        } else {
+            bounds.encapsulate(pos);
+        }
     }
 }
 
