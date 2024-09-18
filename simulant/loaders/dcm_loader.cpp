@@ -18,7 +18,6 @@ VertexFormat determine_spec(const FileHeader& header) {
      * - Support short UV format
      * - Support 3UB color format
      */
-    VertexFormat vspec;
 
     VertexFormatBuilder builder;
 
@@ -82,7 +81,7 @@ VertexFormat determine_spec(const FileHeader& header) {
             break;
     }
 
-    return vspec;
+    return builder.build();
 }
 
 void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
@@ -246,7 +245,6 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         auto posa = spec.attr(VERTEX_ATTR_NAME_POSITION).value().arrangement;
 
         auto tex0 = spec.attr(VERTEX_ATTR_NAME_TEXCOORD_0).value().arrangement;
-        auto tex1 = spec.attr(VERTEX_ATTR_NAME_TEXCOORD_1).value().arrangement;
         auto norm = spec.attr(VERTEX_ATTR_NAME_NORMAL).value().arrangement;
 
         auto col = spec.attr(VERTEX_ATTR_NAME_COLOR).value().arrangement;
@@ -269,12 +267,6 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
             Vec2 v;
             data_->read((char*) &v, sizeof(Vec2));
             vdata->tex_coord0(v);
-        }
-
-        if(tex1 == VERTEX_ATTR_ARRANGEMENT_XY) {
-            Vec2 v;
-            data_->read((char*)&v, sizeof(Vec2));
-            vdata->tex_coord1(v);
         }
 
         if(col == VERTEX_ATTR_ARRANGEMENT_RGBA &&
