@@ -224,16 +224,16 @@ void Sprite::set_render_dimensions(float width, float height) {
 
     // Rebuild the mesh
     mesh_->vertex_data->move_to_start();
-    mesh_->vertex_data->position((-width / 2.0f), (-height / 2.0f), 0);
+    mesh_->vertex_data->position((-width / 2.0f), (-height / 2.0f));
 
     mesh_->vertex_data->move_next();
-    mesh_->vertex_data->position((width / 2.0f), (-height / 2.0f), 0);
+    mesh_->vertex_data->position((width / 2.0f), (-height / 2.0f));
 
     mesh_->vertex_data->move_next();
-    mesh_->vertex_data->position((width / 2.0f), (height / 2.0f), 0);
+    mesh_->vertex_data->position((width / 2.0f), (height / 2.0f));
 
     mesh_->vertex_data->move_next();
-    mesh_->vertex_data->position((-width / 2.0f), (height / 2.0f), 0);
+    mesh_->vertex_data->position((-width / 2.0f), (height / 2.0f));
 
     mesh_->vertex_data->done();
 }

@@ -644,8 +644,25 @@ SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr 
     auto spec = vertex_data->vertex_specification();
     vertex_data->move_to_end();
 
-    //Build some shared vertex data
-    vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
+    bool has_z =
+        spec.attr(VERTEX_ATTR_NAME_POSITION).value().component_count() >= 3;
+    bool has_w =
+        spec.attr(VERTEX_ATTR_NAME_POSITION).value().component_count() >= 4;
+
+#define POSITION(x, y, z, w)                                                   \
+    do {                                                                       \
+        if(has_z && has_w) {                                                   \
+            vertex_data->position(x, y, z, w);                                 \
+        } else if(has_z) {                                                     \
+            vertex_data->position(x, y, z);                                    \
+        } else {                                                               \
+            vertex_data->position(x, y);                                       \
+        }                                                                      \
+    } while(0)
+
+    POSITION(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset,
+             1);
+
     if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->color(smlt::Color::white());
     }
@@ -660,7 +677,9 @@ SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr 
     }
     vertex_data->move_next();
 
-    vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
+    POSITION(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset,
+             1);
+
     if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->color(smlt::Color::white());
     }
@@ -675,8 +694,8 @@ SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr 
     }
     vertex_data->move_next();
 
-    vertex_data->position(x_offset + (width / 2.0f), y_offset + (height / 2.0f),
-                          z_offset);
+    POSITION(x_offset + (width / 2.0f), y_offset + (height / 2.0f), z_offset,
+             1);
     if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->color(smlt::Color::white());
     }
@@ -691,8 +710,8 @@ SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr 
     }
     vertex_data->move_next();
 
-    vertex_data->position(x_offset + (-width / 2.0f),
-                          y_offset + (height / 2.0f), z_offset);
+    POSITION(x_offset + (-width / 2.0f), y_offset + (height / 2.0f), z_offset,
+             1);
     if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->color(smlt::Color::white());
     }

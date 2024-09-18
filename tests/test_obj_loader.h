@@ -53,15 +53,15 @@ public:
         const uint8_t* bytes =
             mesh->vertex_data->attr_at(VERTEX_ATTR_NAME_COLOR, 0);
 
-        assert_equal(bytes[0], 0);   // B
+        assert_equal(bytes[0], 255); // R
         assert_equal(bytes[1], 0);   // G
-        assert_equal(bytes[2], 255); // R
+        assert_equal(bytes[2], 0);   // B
         assert_equal(bytes[3], 255); // A
 
         bytes = mesh->vertex_data->attr_at(VERTEX_ATTR_NAME_COLOR, 1);
-        assert_equal(bytes[0], 0);   // B
+        assert_equal(bytes[0], 0);   // R
         assert_equal(bytes[1], 255); // G
-        assert_equal(bytes[2], 0);   // R
+        assert_equal(bytes[2], 0);   // B
         assert_equal(bytes[3], 255); // A
     }
 
