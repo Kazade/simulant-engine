@@ -373,12 +373,6 @@ GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer,
                                              CameraPtr camera) :
     RenderQueueVisitor(renderer), camera_(camera) {}
 
-void GL2RenderQueueVisitor::visit(const Renderable* renderable,
-                                  const MaterialPass* material_pass,
-                                  batcher::Iteration iteration) {
-    do_visit(renderable, material_pass, iteration);
-}
-
 void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
                                             uint64_t frame_id,
                                             StageNode* stage) {

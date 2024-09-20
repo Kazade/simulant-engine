@@ -73,9 +73,10 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
         return;
     }
 
-    assert(src_renderable.vertex_data && src_renderable.vertex_data->count());
+    assert(src_renderable.vertex_data &&
+           src_renderable.vertex_data->vertex_buffer());
 
-    if(!src_renderable.vertex_data->count()) {
+    if(!src_renderable.vertex_data->vertex_buffer()) {
         S_ERROR("Attempted to add renderable without any vertex data");
         return;
     }

@@ -69,11 +69,6 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
     GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
 }
 
-void GL1RenderQueueVisitor::visit(const Renderable* renderable,
-                                  const MaterialPass* pass,
-                                  batcher::Iteration iteration) {
-    do_visit(renderable, pass, iteration);
-}
 
 void GL1RenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
                                           StageNode* stage) {

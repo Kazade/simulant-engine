@@ -152,8 +152,8 @@ public:
     virtual void change_material_pass(const MaterialPass* prev, const MaterialPass* next) = 0;
     virtual void apply_lights(const LightPtr* lights, const uint8_t count) = 0;
 
-    virtual void visit(const Renderable* renderable, const MaterialPass* pass,
-                       Iteration iteration);
+    void visit(const Renderable* renderable, const MaterialPass* pass,
+               Iteration iteration);
     virtual void end_traversal(const RenderQueue& queue, StageNode* stage) = 0;
 
 private:
