@@ -14,12 +14,8 @@
 
 #endif
 
-#include "gl1x_render_group_impl.h"
-#include "gl1x_render_queue_visitor.h"
-#include "gl1x_renderer.h"
-#include "gl1x_vertex_buffer_data.h"
-
 #include "../../application.h"
+#include "../../core/aligned_vector.h"
 #include "../../meshes/vertex_buffer.h"
 #include "../../meshes/vertex_format.h"
 #include "../../nodes/camera.h"
@@ -27,6 +23,10 @@
 #include "../../stage.h"
 #include "../../utils/gl_error.h"
 #include "../../window.h"
+#include "gl1x_render_group_impl.h"
+#include "gl1x_render_queue_visitor.h"
+#include "gl1x_renderer.h"
+#include "gl1x_vertex_buffer_data.h"
 
 namespace smlt {
 

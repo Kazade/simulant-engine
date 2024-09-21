@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../core/aligned_vector.h"
 #include "../../meshes/vertex_buffer.h"
 #include <vector>
 
@@ -13,7 +14,7 @@ struct alignas(32) GL1Vertex {
 };
 
 struct GL1XVertexBufferData: public VertexBufferRendererData {
-    std::vector<GL1Vertex> vertices;
+    aligned_vector<GL1Vertex, 32> vertices;
 };
 
 } // namespace smlt
