@@ -10,7 +10,7 @@ std::size_t VertexAttribute::component_count() const {
     }
 }
 
-std::size_t VertexAttribute::calc_size() const {
+std::size_t VertexAttribute::stride() const {
 
     std::size_t size = component_count();
     switch(type) {
@@ -38,7 +38,7 @@ std::size_t VertexFormat::stride() const {
                 ret = round_to_multiple(ret, attr.alignment);
             }
 
-            ret += attr.calc_size();
+            ret += attr.stride();
         }
 
         // If the first attribute has an alignment, then the stride must
@@ -48,7 +48,7 @@ std::size_t VertexFormat::stride() const {
         }
     } else {
         for(auto& attr: attributes) {
-            auto size = attr.calc_size();
+            auto size = attr.stride();
             if(size > ret) {
                 ret = size;
             }
@@ -70,7 +70,7 @@ smlt::optional<std::size_t>
                 return ret;
             }
         }
-        ret += attr.calc_size();
+        ret += attr.stride();
     }
 
     // Not found
@@ -87,7 +87,7 @@ std::size_t VertexFormat::offset(std::size_t index) const {
     std::size_t ret = 0;
     for(std::size_t i = 0; i < index; ++i) {
         auto& a = attr(i);
-        ret += a.calc_size();
+        ret += a.stride();
     }
 
     return ret;

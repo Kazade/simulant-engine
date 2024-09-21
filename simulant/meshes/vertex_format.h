@@ -260,7 +260,7 @@ public:
     VertexAttributeType type = VERTEX_ATTR_TYPE_INVALID;
     std::size_t alignment = 0;
 
-    std::size_t calc_size() const;
+    std::size_t stride() const;
     std::size_t component_count() const;
 
     template<typename T>
