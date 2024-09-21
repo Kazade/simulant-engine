@@ -103,7 +103,7 @@ smlt::GL1XRenderer::GL1XRenderer(smlt::Window *window):
 static const VertexFormat format =
     VertexFormatBuilder()
         .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
-             VERTEX_ATTR_TYPE_FLOAT)
+             VERTEX_ATTR_TYPE_FLOAT, 32) // 32-byte aligned
         .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
              VERTEX_ATTR_TYPE_FLOAT)
         .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
@@ -115,21 +115,24 @@ static const VertexFormat format =
 std::shared_ptr<VertexBuffer>
     GL1XRenderer::prepare_vertex_data(const VertexData* vertex_data) {
 
-    std::shared_ptr<GL1XVertexBufferData> data;
+    std::shared_ptr<GL1XVertexBufferData> vbuffer_data;
     VertexBufferPtr vertex_buffer = vertex_data->vertex_buffer();
 
     // If we already have a vertex buffer, then reuse it (save realloc)
     if(vertex_buffer) {
         auto renderer_data = vertex_data->vertex_buffer()->renderer_data();
-        data = std::dynamic_pointer_cast<GL1XVertexBufferData>(renderer_data);
+        vbuffer_data = std::dynamic_pointer_cast<GL1XVertexBufferData>(renderer_data);
     } else {
-        data = std::make_shared<GL1XVertexBufferData>();
-        vertex_buffer = vertex_buffer_factory(format, data);
+        vbuffer_data = std::make_shared<GL1XVertexBufferData>();
+        vertex_buffer = vertex_buffer_factory(format, vbuffer_data);
     }
 
-    auto vbuffer_data = std::make_shared<GL1XVertexBufferData>();
-    vbuffer_data->vertices.resize(vertex_data->count());
-    for(uint32_t i = 0; i < vertex_data->count(); ++i) {
+    auto vertex_count = vertex_data->count();
+
+    assert(vertex_count);
+
+    vbuffer_data->vertices.resize(vertex_count);
+    for(uint32_t i = 0; i < vertex_count; ++i) {
         vbuffer_data->vertices[i].xyz =
             vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, i).value();
         vbuffer_data->vertices[i].uv =
@@ -138,7 +141,10 @@ std::shared_ptr<VertexBuffer>
         vbuffer_data->vertices[i].n =
             vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_NORMAL, i)
                 .value_or(Vec3());
-        vbuffer_data->vertices[i].color = 0xFFFFFFFF;
+        vbuffer_data->vertices[i].color =
+            vertex_data->attr_as<Color>(VERTEX_ATTR_NAME_COLOR, i)
+                .value_or(Color::white())
+                .to_argb_8888();
     }
 
     return vertex_buffer;

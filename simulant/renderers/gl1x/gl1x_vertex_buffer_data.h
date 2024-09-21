@@ -14,7 +14,7 @@ struct alignas(32) GL1Vertex {
 };
 
 struct GL1XVertexBufferData: public VertexBufferRendererData {
-    aligned_vector<GL1Vertex, 32> vertices;
+    std::vector<GL1Vertex> vertices;
 };
 
 } // namespace smlt

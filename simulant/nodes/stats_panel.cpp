@@ -129,12 +129,6 @@ int32_t StatsPanel::get_memory_usage_in_megabytes() {
     return bytes_to_megabytes(get_app()->ram_usage_in_bytes());
 }
 
-#ifndef __DREAMCAST__
-static unsigned int round(unsigned int value, unsigned int multiple) {
-    return ((value - 1u) & ~(multiple - 1u)) + multiple;
-}
-#endif
-
 #define RAM_SAMPLES 25
 
 void StatsPanel::rebuild_ram_graph() {
@@ -157,7 +151,7 @@ void StatsPanel::rebuild_ram_graph() {
 #else
     float max_y =
         *(std::max_element(free_ram_history_.begin(), free_ram_history_.end()));
-    float graph_max = round(max_y, 8.0f);
+    float graph_max = round_to_multiple(max_y, 8.0f);
 #endif
 
     if(almost_equal(graph_max, 0.0f)) {

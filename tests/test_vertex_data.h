@@ -175,6 +175,78 @@ public:
         assert_equal(sizeof(float) * 5 + sizeof(uint32_t),
                      format.offset(VERTEX_ATTR_NAME_NORMAL).value());
     }
+
+    void test_alignment() {
+        VertexFormat format =
+            VertexFormatBuilder()
+                .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                     VERTEX_ATTR_TYPE_FLOAT, 32) // 32 byte alignment
+                .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .build();
+
+        assert_equal(format.stride(), 32u);
+        assert_equal(format.attr(VERTEX_ATTR_NAME_POSITION)->alignment, 32u);
+
+        format =
+            VertexFormatBuilder()
+                .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+                     VERTEX_ATTR_TYPE_FLOAT, 32) // 32 byte alignment
+                .build();
+
+        assert_equal(format.stride(), 32u + (sizeof(float) * 2));
+    }
+
+    void test_separate() {
+        VertexFormat format =
+            VertexFormatBuilder(VERTEX_LAYOUT_SEPARATE)
+                .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .build();
+
+        assert_equal(format.stride(), sizeof(float) * 3);
+        assert_equal(format.offset(VERTEX_ATTR_NAME_POSITION).value(), 0u);
+        assert_equal(format.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value(), 0u);
+    }
+
+    void test_vertex_data_editing() {
+        VertexFormat format =
+            VertexFormatBuilder()
+                .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .build();
+
+        assert_equal(format.stride(), sizeof(float) * 5);
+
+        VertexData data(format);
+        data.resize(4);
+
+        data.position(0, 0, 0);
+        data.move_next();
+
+        data.position(1, 0, 0);
+        data.move_next();
+
+        data.position(2, 0, 0);
+        data.move_next();
+
+        data.position(3, 0, 0);
+        data.move_next();
+        data.done();
+
+        assert_true(data.is_dirty());
+
+        assert_equal(((float*) data.data())[0], 0.0f);
+        assert_equal(((float*) data.data())[5], 1.0f);
+        assert_equal(((float*) data.data())[10], 2.0f);
+        assert_equal(((float*) data.data())[15], 3.0f);
+    }
 };
 }
 

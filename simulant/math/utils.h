@@ -39,6 +39,10 @@ bool almost_gequal(const T& lhs, const T& rhs, const T& epsilon) {
 
 uint32_t next_power_of_two(uint32_t x);
 
+static inline uint32_t round_to_multiple(uint32_t value, uint32_t multiple) {
+    return ((value - 1u) & ~(multiple - 1u)) + multiple;
+}
+
 /* fast_ prefixed versions of functions allow of loss of precision over speed. IT IS IMPORTANT
  THAT THESE ARE USED WHEN COMPILED WITH -O3 -ffast-math or these will be drastically slower */
 static inline float fast_divide(float d, float n) {

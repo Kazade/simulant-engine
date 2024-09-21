@@ -6,8 +6,13 @@
 
 namespace smlt {
 
+enum VertexLayout {
+    VERTEX_LAYOUT_INTERLEAVE,
+    VERTEX_LAYOUT_SEPARATE
+};
+
 enum VertexAttributeArrangement : uint8_t {
-    VERTEX_ATTR_ARRANGEMENT_UNKNOWN = 0,
+    VERTEX_ATTR_ARRANGEMENT_INVALID = 0,
     VERTEX_ATTR_ARRANGEMENT_ONE = 1,
     VERTEX_ATTR_ARRANGEMENT_TWO = 2,
     VERTEX_ATTR_ARRANGEMENT_THREE = 3,
@@ -25,7 +30,8 @@ enum VertexAttributeArrangement : uint8_t {
 };
 
 enum VertexAttributeType : uint8_t {
-    VERTEX_ATTR_TYPE_BYTE = 0,
+    VERTEX_ATTR_TYPE_INVALID = 0,
+    VERTEX_ATTR_TYPE_BYTE,
     VERTEX_ATTR_TYPE_UNSIGNED_BYTE,
     VERTEX_ATTR_TYPE_SHORT,
     VERTEX_ATTR_TYPE_UNSIGNED_SHORT,
@@ -36,6 +42,7 @@ enum VertexAttributeType : uint8_t {
 };
 
 enum VertexAttributeName : uint16_t {
+    VERTEX_ATTR_NAME_INVALID = 0,
     VERTEX_ATTR_NAME_POSITION,
     VERTEX_ATTR_NAME_COLOR,
     VERTEX_ATTR_NAME_NORMAL,
@@ -248,9 +255,10 @@ private:
     }
 
 public:
-    VertexAttributeName name;
-    VertexAttributeArrangement arrangement;
-    VertexAttributeType type;
+    VertexAttributeName name = VERTEX_ATTR_NAME_INVALID;
+    VertexAttributeArrangement arrangement = VERTEX_ATTR_ARRANGEMENT_INVALID;
+    VertexAttributeType type = VERTEX_ATTR_TYPE_INVALID;
+    std::size_t alignment = 0;
 
     std::size_t calc_size() const;
     std::size_t component_count() const;
@@ -271,12 +279,23 @@ public:
 };
 
 class VertexFormat {
+    VertexLayout layout = VERTEX_LAYOUT_INTERLEAVE;
     LimitedVector<VertexAttribute, 16> attributes;
 
     friend class VertexFormatBuilder;
 
 public:
+    VertexFormat(VertexLayout layout = VERTEX_LAYOUT_INTERLEAVE) :
+        layout(layout) {}
+
+    /**
+     * @brief stride
+     * @return In the case of VERTEX_LAYOUT_INTERLEAVE, this returns the stride
+     * of each vertex including alignment. In the case of In the case of
+     * VERTEX_LAYOUT_SEPARATE this returns the largest attribute stride.
+     */
     std::size_t stride() const;
+
     smlt::optional<std::size_t> offset(VertexAttributeName name) const;
     std::size_t offset(std::size_t index) const;
     std::size_t attr_count() const {
@@ -316,13 +335,16 @@ private:
         format_(fmt) {}
 
 public:
-    VertexFormatBuilder() = default;
+    VertexFormatBuilder(VertexLayout layout = VERTEX_LAYOUT_INTERLEAVE) :
+        format_(layout) {}
+
     VertexFormatBuilder add(VertexAttributeName name,
                             VertexAttributeArrangement arrangement,
-                            VertexAttributeType type) {
+                            VertexAttributeType type,
+                            std::size_t alignment = 0) {
 
         VertexFormat fmt = format_;
-        fmt.attributes.push_back({name, arrangement, type});
+        fmt.attributes.push_back({name, arrangement, type, alignment});
         return VertexFormatBuilder(fmt);
     }
 

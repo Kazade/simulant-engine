@@ -31,8 +31,28 @@ std::size_t VertexAttribute::calc_size() const {
 
 std::size_t VertexFormat::stride() const {
     std::size_t ret = 0;
-    for(auto& attr: attributes) {
-        ret += attr.calc_size();
+
+    if(layout == VERTEX_LAYOUT_INTERLEAVE) {
+        for(auto& attr: attributes) {
+            if(attr.alignment) {
+                ret = round_to_multiple(ret, attr.alignment);
+            }
+
+            ret += attr.calc_size();
+        }
+
+        // If the first attribute has an alignment, then the stride must
+        // include the "gap" between this vertex and the next one
+        if(attributes.size() && attributes[0].alignment) {
+            ret = round_to_multiple(ret, attributes[0].alignment);
+        }
+    } else {
+        for(auto& attr: attributes) {
+            auto size = attr.calc_size();
+            if(size > ret) {
+                ret = size;
+            }
+        }
     }
 
     return ret;
@@ -40,10 +60,15 @@ std::size_t VertexFormat::stride() const {
 
 smlt::optional<std::size_t>
     VertexFormat::offset(VertexAttributeName name) const {
+
     std::size_t ret = 0;
     for(auto& attr: attributes) {
         if(attr.name == name) {
-            return ret;
+            if(layout == VERTEX_LAYOUT_SEPARATE) {
+                return 0;
+            } else {
+                return ret;
+            }
         }
         ret += attr.calc_size();
     }
@@ -54,6 +79,11 @@ smlt::optional<std::size_t>
 
 std::size_t VertexFormat::offset(std::size_t index) const {
     assert(index < attributes.size() && "Index out of range");
+
+    if(layout == VERTEX_LAYOUT_SEPARATE) {
+        return 0;
+    }
+
     std::size_t ret = 0;
     for(std::size_t i = 0; i < index; ++i) {
         auto& a = attr(i);
