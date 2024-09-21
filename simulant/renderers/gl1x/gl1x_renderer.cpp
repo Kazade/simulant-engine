@@ -115,17 +115,33 @@ static const VertexFormat format =
 std::shared_ptr<VertexBuffer>
     GL1XRenderer::prepare_vertex_data(const VertexData* vertex_data) {
 
+    std::shared_ptr<GL1XVertexBufferData> data;
+    VertexBufferPtr vertex_buffer = vertex_data->vertex_buffer();
+
+    // If we already have a vertex buffer, then reuse it (save realloc)
+    if(vertex_buffer) {
+        auto renderer_data = vertex_data->vertex_buffer()->renderer_data();
+        data = std::dynamic_pointer_cast<GL1XVertexBufferData>(renderer_data);
+    } else {
+        data = std::make_shared<GL1XVertexBufferData>();
+        vertex_buffer = vertex_buffer_factory(format, data);
+    }
+
     auto vbuffer_data = std::make_shared<GL1XVertexBufferData>();
     vbuffer_data->vertices.resize(vertex_data->count());
     for(uint32_t i = 0; i < vertex_data->count(); ++i) {
-        // vbuffer_data->vertices[i].xyz = *vertex_data->position_at<Vec3>(i);
-        // vbuffer_data->vertices[i].uv = *vertex_data->texcoord0_at<Vec2>(i);
-        // vbuffer_data->vertices[i].color =
-        // vertex_data->diffuse_at(i)->packed(); vbuffer_data->vertices[i].n =
-        // vertex_data->normal_at<Vec3>(i);
+        vbuffer_data->vertices[i].xyz =
+            vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_POSITION, i).value();
+        vbuffer_data->vertices[i].uv =
+            vertex_data->attr_as<Vec2>(VERTEX_ATTR_NAME_TEXCOORD_0, i)
+                .value_or(Vec2());
+        vbuffer_data->vertices[i].n =
+            vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_NORMAL, i)
+                .value_or(Vec3());
+        vbuffer_data->vertices[i].color = 0xFFFFFFFF;
     }
 
-    return vertex_buffer_factory(format, vbuffer_data);
+    return vertex_buffer;
 }
 }
 

@@ -26,7 +26,9 @@ class VertexData;
 /* Private renderer-specific data base class. This is used to
  * store things like VBO ids (in the case of OpenGL 2+) or
  * converted vertex data (in the case of OpenGL 1.x) */
-struct VertexBufferRendererData {};
+struct VertexBufferRendererData {
+    virtual ~VertexBufferRendererData() {}
+};
 
 class VertexBuffer {
 private:
@@ -41,8 +43,8 @@ public:
         return format_;
     }
 
-    const VertexBufferRendererData* renderer_data() const {
-        return renderer_data_.get();
+    const std::shared_ptr<VertexBufferRendererData> renderer_data() const {
+        return renderer_data_;
     }
 
 private:

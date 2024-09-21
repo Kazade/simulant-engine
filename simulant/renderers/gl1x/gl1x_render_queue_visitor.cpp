@@ -529,7 +529,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     const auto& spec = buffer->format();
     const auto stride = spec.stride();
 
-    const auto renderer_data = (GL1XVertexBufferData*)buffer->renderer_data();
+    const auto renderer_data =
+        (GL1XVertexBufferData*)buffer->renderer_data().get();
     assert(renderer_data);
 
     const auto vertex_data = (const uint8_t*)&renderer_data->vertices[0];

@@ -152,6 +152,30 @@ public:
     }
 };
 
+class VertexFormatTest: public smlt::test::TestCase {
+public:
+    void test_offsets() {
+        VertexFormat format =
+            VertexFormatBuilder()
+                .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
+                     VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
+                .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
+                     VERTEX_ATTR_TYPE_FLOAT)
+                .build();
+
+        assert_equal(0u, format.offset(VERTEX_ATTR_NAME_POSITION).value());
+        assert_equal(sizeof(float) * 3,
+                     format.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value());
+        assert_equal(sizeof(float) * 5,
+                     format.offset(VERTEX_ATTR_NAME_COLOR).value());
+        assert_equal(sizeof(float) * 5 + sizeof(uint32_t),
+                     format.offset(VERTEX_ATTR_NAME_NORMAL).value());
+    }
+};
 }
 
 #endif // TEST_VERTEX_DATA_H

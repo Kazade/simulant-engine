@@ -294,6 +294,8 @@ void Renderer::on_renderable_prepare(Renderable* renderable) {
 
         if(renderable->vertex_data->free_data_mode() ==
            VERTEX_FREE_DATA_MODE_DISCARD) {
+
+            assert(renderable->vertex_data->vertex_buffer_);
             renderable->vertex_data->clear();
         }
     }

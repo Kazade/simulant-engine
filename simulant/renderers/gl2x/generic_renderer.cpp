@@ -649,7 +649,8 @@ void GL2RenderQueueVisitor::do_visit(const Renderable* renderable,
 
     auto vbuffer_data =
         (GL2VertexBufferRendererData*)renderable->vertex_data->vertex_buffer()
-            ->renderer_data();
+            ->renderer_data()
+            .get();
 
     rend->set_renderable_uniforms(material_pass, program_, renderable, camera_);
     rend->set_auto_attributes_on_shader(program_, renderable,
