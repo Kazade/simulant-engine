@@ -147,7 +147,8 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 
     /* Enable lighting on the pass appropriately */
     if(next->is_lighting_enabled()) {
-        GLCheck(glEnable, GL_LIGHTING);
+        // GLCheck(glEnable, GL_LIGHTING);
+        GLCheck(glDisable, GL_LIGHTING);
     } else {
         GLCheck(glDisable, GL_LIGHTING);
     }
@@ -503,7 +504,8 @@ static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
 }
 
 static void apply_lighting(GL1Vertex* vertices, uint32_t start, uint32_t count,
-                           const Light* lights, std::size_t light_count) {
+                           const Light* const* lights, std::size_t light_count,
+                           const smlt::Color& global_ambient) {
 
     for(std::size_t l = 0; l < light_count; ++l) {
         const Light* light = lights[l];
@@ -512,7 +514,13 @@ static void apply_lighting(GL1Vertex* vertices, uint32_t start, uint32_t count,
             for(uint32_t i = start; i < start + count; ++i) {
                 GL1Vertex& v = vertices[i];
 
-                // auto color = calculate_vertex_color(v.n, )
+                auto L = -light->direction();
+                auto N = v.n;
+                auto color = calculate_vertex_color(
+                    N, L, v.submitted_color, light->diffuse(), light->ambient(),
+                    light->specular(), global_ambient);
+
+                v.color = color.to_argb_8888();
             }
         } else {
         }
@@ -581,6 +589,12 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         auto index_type =
             convert_index_type(renderable->index_data->index_type());
 
+        apply_lighting(&renderer_data->vertices[0],
+                       renderable->index_data->min_index(),
+                       renderable->index_data->max_index(),
+                       renderable->lights_affecting_this_frame,
+                       renderable->light_count, global_ambient_);
+
         GLCheck(glDrawElements, arrangement, element_count, index_type,
                 (const void*)index_data);
 
@@ -595,6 +609,12 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         auto total = 0;
         for(std::size_t i = 0; i < renderable->vertex_range_count;
             ++i, ++range) {
+
+            apply_lighting(&renderer_data->vertices[0], range->start,
+                           range->count,
+                           renderable->lights_affecting_this_frame,
+                           renderable->light_count, global_ambient_);
+
             GLCheck(glDrawArrays, arrangement, range->start, range->count);
 
             total += range->count;
