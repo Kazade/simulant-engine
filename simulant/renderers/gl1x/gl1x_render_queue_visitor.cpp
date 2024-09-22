@@ -526,7 +526,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     GLCheck(glMatrixMode, GL_PROJECTION);
     GLCheck(glLoadMatrixf, projection.data());
 
-    const auto& buffer = renderable->vertex_data->vertex_buffer();
+    const auto& buffer = renderable->vertex_data->gpu_buffer();
     const auto& spec = buffer->format();
     const auto stride = spec.stride();
 

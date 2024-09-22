@@ -29,6 +29,7 @@
 #include "generic/managed.h"
 #include "generic/notifies_destruction.h"
 #include "generic/uniquely_identifiable.h"
+#include "meshes/index_buffer.h"
 #include "meshes/vertex_format.h"
 #include "signals/signal.h"
 #include "types.h"
@@ -39,52 +40,61 @@ class Window;
 class VertexBuffer;
 
 typedef std::shared_ptr<VertexBuffer> VertexBufferPtr;
+typedef std::shared_ptr<IndexBuffer> IndexBufferPtr;
 
 /* What should we do after uploading the vertex
  * data to the GPU */
-enum VertexFreeDataMode {
-    VERTEX_FREE_DATA_MODE_KEEP,
-    VERTEX_FREE_DATA_MODE_DISCARD
+enum UploadFreeDataMode {
+    UPLOAD_FREE_DATA_MODE_KEEP,
+    UPLOAD_FREE_DATA_MODE_DISCARD
 };
 
-class VertexData :
-    public UniquelyIdentifiable<VertexData>,
-    public NotifiesDestruction<VertexData> {
-
-    friend class Renderer;
-
-    VertexFreeDataMode free_data_mode_ = VERTEX_FREE_DATA_MODE_DISCARD;
-    VertexBufferPtr vertex_buffer_;
-    bool vertex_data_dirty_ = false;
-
+template<typename T>
+class GPUUploadable {
 public:
-    /** Return the attached vertex buffer, if any */
-    const VertexBufferPtr vertex_buffer() const {
-        return vertex_buffer_;
-    }
+    virtual ~GPUUploadable() {}
 
     /* Control whether or not to free the vertex data
      * once it has been uploaded to a vertex buffer */
-    void set_free_data_mode(VertexFreeDataMode mode) {
+    void set_free_data_mode(UploadFreeDataMode mode) {
         free_data_mode_ = mode;
     }
 
-    VertexFreeDataMode free_data_mode() const {
+    UploadFreeDataMode free_data_mode() const {
         return free_data_mode_;
     }
 
     /** Returns true if the vertex data was changed
      *  since the last upload to the GPU */
     bool is_dirty() const {
-        return vertex_data_dirty_;
+        return is_dirty_;
     }
 
     /* Mark the vertex data as requiring upload to the
      * GPU */
     void set_dirty(bool dirty) {
-        vertex_data_dirty_ = dirty;
+        is_dirty_ = dirty;
     }
 
+    /** Return the attached vertex buffer, if any */
+    const std::shared_ptr<T> gpu_buffer() const {
+        return buffer_;
+    }
+
+protected:
+    std::shared_ptr<T> buffer_;
+    bool is_dirty_ = true;
+    UploadFreeDataMode free_data_mode_ = UPLOAD_FREE_DATA_MODE_DISCARD;
+};
+
+class VertexData:
+    public UniquelyIdentifiable<VertexData>,
+    public NotifiesDestruction<VertexData>,
+    public GPUUploadable<VertexBuffer> {
+
+    friend class Renderer;
+
+public:
     typedef std::shared_ptr<VertexData> ptr;
 
     VertexData(VertexFormat vertex_specification);
@@ -358,10 +368,10 @@ private:
     const uint8_t* ptr_;
 };
 
-
 class IndexData:
     public UniquelyIdentifiable<IndexData>,
-    public NotifiesDestruction<IndexData> {
+    public NotifiesDestruction<IndexData>,
+    public GPUUploadable<IndexBuffer> {
 
     friend class IndexDataIterator;
 public:

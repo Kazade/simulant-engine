@@ -116,11 +116,11 @@ std::shared_ptr<VertexBuffer>
     GL1XRenderer::prepare_vertex_data(const VertexData* vertex_data) {
 
     std::shared_ptr<GL1XVertexBufferData> vbuffer_data;
-    VertexBufferPtr vertex_buffer = vertex_data->vertex_buffer();
+    VertexBufferPtr vertex_buffer = vertex_data->gpu_buffer();
 
     // If we already have a vertex buffer, then reuse it (save realloc)
     if(vertex_buffer) {
-        auto renderer_data = vertex_data->vertex_buffer()->renderer_data();
+        auto renderer_data = vertex_buffer->renderer_data();
         vbuffer_data = std::dynamic_pointer_cast<GL1XVertexBufferData>(renderer_data);
     } else {
         vbuffer_data = std::make_shared<GL1XVertexBufferData>();

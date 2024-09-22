@@ -285,17 +285,17 @@ void Renderer::on_renderable_prepare(Renderable* renderable) {
     _S_UNUSED(renderable);
 
     /* We have some vertex data that hasn't been prepared for the GPU */
-    if(renderable->vertex_data && (!renderable->vertex_data->vertex_buffer() ||
+    if(renderable->vertex_data && (!renderable->vertex_data->gpu_buffer() ||
                                    renderable->vertex_data->is_dirty())) {
 
-        renderable->vertex_data->vertex_buffer_ =
+        renderable->vertex_data->buffer_ =
             prepare_vertex_data(renderable->vertex_data);
         renderable->vertex_data->set_dirty(false);
 
         if(renderable->vertex_data->free_data_mode() ==
-           VERTEX_FREE_DATA_MODE_DISCARD) {
+           UPLOAD_FREE_DATA_MODE_DISCARD) {
 
-            assert(renderable->vertex_data->vertex_buffer_);
+            assert(renderable->vertex_data->buffer_);
             renderable->vertex_data->clear();
         }
     }

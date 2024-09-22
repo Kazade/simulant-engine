@@ -428,7 +428,7 @@ void VertexData::resize(uint32_t size) {
 void VertexData::done() {
     signal_update_complete_();
     last_updated_ = TimeKeeper::now_in_us();
-    vertex_data_dirty_ = true;
+    set_dirty(true);
 }
 
 uint64_t VertexData::last_updated() const {
@@ -489,6 +489,7 @@ std::vector<uint32_t> IndexData::all() {
 void IndexData::done() {
     signal_update_complete_();
     last_updated_ = TimeKeeper::now_in_us();
+    set_dirty(true);
 }
 
 uint64_t IndexData::last_updated() const {

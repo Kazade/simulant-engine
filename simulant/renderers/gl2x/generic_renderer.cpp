@@ -648,7 +648,7 @@ void GL2RenderQueueVisitor::do_visit(const Renderable* renderable,
     GenericRenderer* rend = (GenericRenderer*)renderer();
 
     auto vbuffer_data =
-        (GL2VertexBufferRendererData*)renderable->vertex_data->vertex_buffer()
+        (GL2VertexBufferRendererData*)renderable->vertex_data->gpu_buffer()
             ->renderer_data()
             .get();
 

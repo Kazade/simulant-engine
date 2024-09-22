@@ -157,12 +157,12 @@ public:
      * memory after uploading to the GPU. If VERTEX_FREE_DATA_MODE_DISCARD is
      * used, the vertex data will be deleted after uploading to the GPU.
      */
-    void set_vertex_free_data_mode(VertexFreeDataMode mode);
+    void set_vertex_free_data_mode(UploadFreeDataMode mode);
 
     /**
      *  Get the mode to use when uploading vertex data to the GPU.
      */
-    VertexFreeDataMode vertex_free_data_mode() const;
+    UploadFreeDataMode vertex_free_data_mode() const;
 
     /* Set whether or not to automatically upload the mesh data to a GPU
      * vertex buffer */
