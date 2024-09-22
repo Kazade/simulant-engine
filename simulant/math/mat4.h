@@ -95,7 +95,16 @@ public:
     Vec4 operator*(const Vec4& rhs) const;
     Vec3 operator*(const Vec3& rhs) const;
 
-    void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
+    /** Perform an in-place transformation of 3d vectors */
+    void transform_positions(Vec3* positions, std::size_t count,
+                             std::size_t stride = sizeof(Vec3)) const;
+
+    /** Perform an in-place transformation of 4d vectors */
+    void transform_positions(Vec4* positions, std::size_t count,
+                             std::size_t stride = sizeof(Vec4)) const;
+
+    void extract_rotation_and_translation(Quaternion& rotation,
+                                          Vec3& translation) const;
 
     static Mat4 as_rotation_x(const Degrees& angle);
     static Mat4 as_rotation_y(const Degrees& angle);

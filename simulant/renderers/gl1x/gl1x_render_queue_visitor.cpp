@@ -53,7 +53,6 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
     }
 
     global_ambient_ = stage->scene->lighting->ambient_light();
-    GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
 }
 
 
@@ -145,14 +144,6 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             break;
     }
 
-    /* Enable lighting on the pass appropriately */
-    if(next->is_lighting_enabled()) {
-        // GLCheck(glEnable, GL_LIGHTING);
-        GLCheck(glDisable, GL_LIGHTING);
-    } else {
-        GLCheck(glDisable, GL_LIGHTING);
-    }
-
     auto enabled = next->textures_enabled();
 
 #if !_S_GL_SUPPORTS_MULTITEXTURE
@@ -178,7 +169,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 
     ENABLE_TEXTURE(0, diffuse);
     ENABLE_TEXTURE(1, light);
-    ENABLE_TEXTURE(2, normal);
+    // ENABLE_TEXTURE(2, normal);
     ENABLE_TEXTURE(3, specular);
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
@@ -325,68 +316,71 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
                                          const uint8_t count) {
 
-    const LightState disabled_state;
+    // const LightState disabled_state;
 
-    Light* current = nullptr;
+    // Light* current = nullptr;
 
-    if(count) {
-        GLCheck(glMatrixMode, GL_MODELVIEW);
-        GLCheck(glPushMatrix);
+    // if(count) {
+    //     GLCheck(glMatrixMode, GL_MODELVIEW);
+    //     GLCheck(glPushMatrix);
 
-        const Mat4& view = camera_->view_matrix();
+    //     const Mat4& view = camera_->view_matrix();
 
-        GLCheck(glLoadMatrixf, view.data());        
-    }
-    
-    for(uint8_t i = 0; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
-        current = (i < count) ? lights[i] : nullptr;
+    //     GLCheck(glLoadMatrixf, view.data());
+    // }
 
-        smlt::Vec3 pos;
-        LightState state = disabled_state;
+    // for(uint8_t i = 0; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
+    //     current = (i < count) ? lights[i] : nullptr;
 
-        if(current) {
-            pos = (current->light_type()) == LIGHT_TYPE_DIRECTIONAL
-                      ? current->direction()
-                      : current->transform->position();
+    //     smlt::Vec3 pos;
+    //     LightState state = disabled_state;
 
-            state = LightState(
-                true,
-                Vec4(pos,
-                     (current->light_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
-                current->diffuse(), current->ambient(), current->specular(),
-                current->constant_attenuation(), current->linear_attenuation(),
-                current->quadratic_attenuation());
-        }
+    //     if(current) {
+    //         pos = (current->light_type()) == LIGHT_TYPE_DIRECTIONAL
+    //                   ? current->direction()
+    //                   : current->transform->position();
 
-        /* No need to update this light */
-        if(light_states_[i].initialized && light_states_[i] == state) {
-            continue;
-        }
+    //         state = LightState(
+    //             true,
+    //             Vec4(pos,
+    //                  (current->light_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 :
+    //                  1),
+    //             current->diffuse(), current->ambient(), current->specular(),
+    //             current->constant_attenuation(),
+    //             current->linear_attenuation(),
+    //             current->quadratic_attenuation());
+    //     }
 
-        if(state.enabled) {
-            GLCheck(glEnable, GL_LIGHT0 + i);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &state.position.x);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &state.ambient.r);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &state.diffuse.r);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &state.specular.r);
-            GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION,
-                    state.constant_att);
-            GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION,
-                    state.linear_att);
-            GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION,
-                    state.quadratic_att);
+    //     /* No need to update this light */
+    //     if(light_states_[i].initialized && light_states_[i] == state) {
+    //         continue;
+    //     }
 
-        } else {
-            GLCheck(glDisable, GL_LIGHT0 + i);
-        }
+    //     if(state.enabled) {
+    //         GLCheck(glEnable, GL_LIGHT0 + i);
+    //         GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION,
+    //         &state.position.x); GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT,
+    //         &state.ambient.r); GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE,
+    //         &state.diffuse.r); GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR,
+    //         &state.specular.r); GLCheck(glLightf, GL_LIGHT0 + i,
+    //         GL_CONSTANT_ATTENUATION,
+    //                 state.constant_att);
+    //         GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION,
+    //                 state.linear_att);
+    //         GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION,
+    //                 state.quadratic_att);
 
-        light_states_[i] = state;
-        light_states_[i].initialized = true;
-    }
+    //     } else {
+    //         GLCheck(glDisable, GL_LIGHT0 + i);
+    //     }
 
-    if(count) {
-        GLCheck(glPopMatrix);
-    }
+    //     light_states_[i] = state;
+    //     light_states_[i].initialized = true;
+    // }
+
+    // if(count) {
+    //     GLCheck(glPopMatrix);
+    // }
 }
 
 void GL1RenderQueueVisitor::enable_vertex_arrays(bool force) {
@@ -503,26 +497,46 @@ static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
     return ambient_color + diffuse_color;
 }
 
-static void apply_lighting(GL1Vertex* vertices, uint32_t start, uint32_t count,
+static void apply_lighting(bool lighting_enabled, GL1Vertex* vertices,
+                           uint32_t start, uint32_t count,
                            const Light* const* lights, std::size_t light_count,
                            const smlt::Color& global_ambient) {
 
-    for(std::size_t l = 0; l < light_count; ++l) {
-        const Light* light = lights[l];
+    if(lighting_enabled) {
+        for(std::size_t l = 0; l < light_count; ++l) {
+            const Light* light = lights[l];
 
-        if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-            for(uint32_t i = start; i < start + count; ++i) {
-                GL1Vertex& v = vertices[i];
+            if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
+                for(uint32_t i = start; i < start + count; ++i) {
+                    GL1Vertex& v = vertices[i];
 
-                auto L = -light->direction();
-                auto N = v.n;
-                auto color = calculate_vertex_color(
-                    N, L, v.submitted_color, light->diffuse(), light->ambient(),
-                    light->specular(), global_ambient);
+                    auto L = -light->direction();
+                    auto N = v.n;
+                    auto color = calculate_vertex_color(
+                        N, L, v.submitted_color, light->diffuse(),
+                        light->ambient(), light->specular(), global_ambient);
 
-                v.color = color.to_argb_8888();
+                    v.color = color.to_argb_8888();
+                }
+            } else {
+                for(uint32_t i = start; i < start + count; ++i) {
+                    GL1Vertex& v = vertices[i];
+
+                    auto L =
+                        (light->transform->position() - v.xyz).normalized();
+                    auto N = v.n;
+                    auto color = calculate_vertex_color(
+                        N, L, v.submitted_color, light->diffuse(),
+                        light->ambient(), light->specular(), global_ambient);
+
+                    v.color = color.to_argb_8888();
+                }
             }
-        } else {
+        }
+    } else {
+        for(uint32_t i = start; i < start + count; ++i) {
+            GL1Vertex& v = vertices[i];
+            v.color = v.submitted_color.to_argb_8888();
         }
     }
 }
@@ -589,7 +603,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         auto index_type =
             convert_index_type(renderable->index_data->index_type());
 
-        apply_lighting(&renderer_data->vertices[0],
+        apply_lighting(pass_->is_lighting_enabled(),
+                       &renderer_data->vertices[0],
                        renderable->index_data->min_index(),
                        renderable->index_data->max_index(),
                        renderable->lights_affecting_this_frame,
@@ -610,7 +625,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         for(std::size_t i = 0; i < renderable->vertex_range_count;
             ++i, ++range) {
 
-            apply_lighting(&renderer_data->vertices[0], range->start,
+            apply_lighting(pass_->is_lighting_enabled(),
+                           &renderer_data->vertices[0], range->start,
                            range->count,
                            renderable->lights_affecting_this_frame,
                            renderable->light_count, global_ambient_);
