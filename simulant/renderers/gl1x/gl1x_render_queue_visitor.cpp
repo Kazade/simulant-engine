@@ -31,6 +31,7 @@
 namespace smlt {
 
 static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
+                                          const smlt::Color& color,
                                           const smlt::Color& diffuse,
                                           const smlt::Color& ambient,
                                           const smlt::Color& specular,
@@ -39,7 +40,7 @@ static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
     _S_UNUSED(specular);
 
     auto NdotL = N.dot(L);
-    auto diffuse_color = diffuse * NdotL;
+    auto diffuse_color = color * diffuse * NdotL;
     auto ambient_color = ambient * global_ambient;
     return ambient_color + diffuse_color;
 }
