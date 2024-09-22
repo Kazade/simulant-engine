@@ -30,20 +30,6 @@
 
 namespace smlt {
 
-static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
-                                          const smlt::Color& color,
-                                          const smlt::Color& diffuse,
-                                          const smlt::Color& ambient,
-                                          const smlt::Color& specular,
-                                          const smlt::Color& global_ambient) {
-
-    _S_UNUSED(specular);
-
-    auto NdotL = N.dot(L);
-    auto diffuse_color = color * diffuse * NdotL;
-    auto ambient_color = ambient * global_ambient;
-    return ambient_color + diffuse_color;
-}
 
 GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer,
                                              CameraPtr camera) :
@@ -499,6 +485,38 @@ static constexpr GLenum convert_index_type(IndexType type) {
     return (type == INDEX_TYPE_8_BIT)    ? GL_UNSIGNED_BYTE
            : (type == INDEX_TYPE_16_BIT) ? GL_UNSIGNED_SHORT
                                          : GL_UNSIGNED_INT;
+}
+
+static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
+                                          const smlt::Color& color,
+                                          const smlt::Color& diffuse,
+                                          const smlt::Color& ambient,
+                                          const smlt::Color& specular,
+                                          const smlt::Color& global_ambient) {
+
+    _S_UNUSED(specular);
+
+    auto NdotL = N.dot(L);
+    auto diffuse_color = color * diffuse * NdotL;
+    auto ambient_color = ambient * global_ambient;
+    return ambient_color + diffuse_color;
+}
+
+static void apply_lighting(GL1Vertex* vertices, uint32_t start, uint32_t count,
+                           const Light* lights, std::size_t light_count) {
+
+    for(std::size_t l = 0; l < light_count; ++l) {
+        const Light* light = lights[l];
+
+        if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
+            for(uint32_t i = start; i < start + count; ++i) {
+                GL1Vertex& v = vertices[i];
+
+                // auto color = calculate_vertex_color(v.n, )
+            }
+        } else {
+        }
+    }
 }
 
 void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
