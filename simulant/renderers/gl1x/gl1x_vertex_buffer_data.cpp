@@ -1,0 +1,20 @@
+#include "gl1x_vertex_buffer_data.h"
+
+namespace smlt {
+
+const VertexFormat GL1XVertexBufferData::format =
+    VertexFormatBuilder()
+        .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
+             VERTEX_ATTR_TYPE_FLOAT, 32) // 32-byte aligned
+        .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
+             VERTEX_ATTR_TYPE_FLOAT)
+        .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
+             VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
+        .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
+             VERTEX_ATTR_TYPE_FLOAT)
+        // Submitted color
+        .add(VERTEX_ATTR_NAME_GENERIC, VERTEX_ATTR_ARRANGEMENT_XYZW,
+             VERTEX_ATTR_TYPE_FLOAT)
+        .build();
+
+}

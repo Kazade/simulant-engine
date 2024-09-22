@@ -100,18 +100,6 @@ smlt::GL1XRenderer::GL1XRenderer(smlt::Window *window):
     GLRenderer(window) {
 }
 
-static const VertexFormat format =
-    VertexFormatBuilder()
-        .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
-             VERTEX_ATTR_TYPE_FLOAT, 32) // 32-byte aligned
-        .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
-             VERTEX_ATTR_TYPE_FLOAT)
-        .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
-             VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
-        .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
-             VERTEX_ATTR_TYPE_FLOAT)
-        .build();
-
 std::shared_ptr<VertexBuffer>
     GL1XRenderer::prepare_vertex_data(const VertexData* vertex_data) {
 
@@ -124,7 +112,8 @@ std::shared_ptr<VertexBuffer>
         vbuffer_data = std::dynamic_pointer_cast<GL1XVertexBufferData>(renderer_data);
     } else {
         vbuffer_data = std::make_shared<GL1XVertexBufferData>();
-        vertex_buffer = vertex_buffer_factory(format, vbuffer_data);
+        vertex_buffer =
+            vertex_buffer_factory(GL1XVertexBufferData::format, vbuffer_data);
     }
 
     auto vertex_count = vertex_data->count();
@@ -141,10 +130,11 @@ std::shared_ptr<VertexBuffer>
         vbuffer_data->vertices[i].n =
             vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_NORMAL, i)
                 .value_or(Vec3());
-        vbuffer_data->vertices[i].color =
+
+        vbuffer_data->vertices[i].color = 0xFFFFFFFF;
+        vbuffer_data->vertices[i].submitted_color =
             vertex_data->attr_as<Color>(VERTEX_ATTR_NAME_COLOR, i)
-                .value_or(Color::white())
-                .to_argb_8888();
+                .value_or(Color::white());
     }
 
     return vertex_buffer;
