@@ -7,10 +7,17 @@ void GameScene::on_load() {
 
     compositor->create_layer(
         scene, (smlt::Camera*)scene->find_descendent_with_name("Camera"));
+
+    lighting->set_ambient_light(smlt::Color(0.2f, 0.2f, 0.2f, 0.2f));
 }
 
 void GameScene::on_update(float dt) {
     // Update your scene here, called every frame
+
+    auto node = scene->find_descendent_with_name("Cube");
+    auto rot = node->transform->orientation();
+    rot = smlt::Quaternion(0.0_deg, smlt::Deg(dt * 20), 0.0_deg) * rot;
+    node->transform->set_orientation(rot);
 }
 
 void GameScene::on_activate() {
