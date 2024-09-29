@@ -678,6 +678,14 @@ smlt::MaterialPtr load_material(StageNode* node, JSONIterator& js,
     ret->set_textures_enabled(enabled);
     ret->set_lighting_enabled(true);
 
+    auto alpha_mode = material["alphaMode"].is_valid()
+                          ? material["alphaMode"]->to_str().value_or("OPAQUE")
+                          : "OPAQUE";
+
+    // FIXME: If the value is "MASK" we should enable alpha testing
+    ret->set_blend_func((alpha_mode == "OPAQUE") ? smlt::BLEND_NONE
+                                                 : smlt::BLEND_ALPHA);
+
     approximate_pbr_material(ret, metallic, roughness, emissive, color);
     return ret;
 }
