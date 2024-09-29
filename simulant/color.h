@@ -32,8 +32,8 @@ typedef std::vector<float> FloatArray;
 struct Color {
     float r, g, b, a;
 
-    Color():
-        r(1.0), g(1.0), b(1.0), a(1.0) {}
+    Color() :
+        r(0), g(0), b(0), a(0) {}
 
     Color(const FloatArray& arr) :
         r(arr[0]), g(arr[1]), b(arr[2]), a(arr[3]) {}
@@ -60,8 +60,11 @@ struct Color {
         }
     }
 
-    Color(float r, float g, float b, float a):
-        r(r), g(g), b(b), a(a) {}
+    Color(float r, float g, float b, float a) :
+        r(clamp(r, 0.0f, 1.0f)),
+        g(clamp(g, 0.0f, 1.0f)),
+        b(clamp(b, 0.0f, 1.0f)),
+        a(clamp(a, 0.0f, 1.0f)) {}
 
     operator FloatArray() const {
         return {r, g, b, a};
