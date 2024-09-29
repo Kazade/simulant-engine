@@ -130,9 +130,7 @@ std::shared_ptr<VertexBuffer>
         vbuffer_data->vertices[i].n =
             vertex_data->attr_as<Vec3>(VERTEX_ATTR_NAME_NORMAL, i)
                 .value_or(Vec3());
-
-        vbuffer_data->vertices[i].color = 0xFFFFFFFF;
-        vbuffer_data->vertices[i].submitted_color =
+        vbuffer_data->vertices[i].color =
             vertex_data->attr_as<Color>(VERTEX_ATTR_NAME_COLOR, i)
                 .value_or(Color::white());
     }

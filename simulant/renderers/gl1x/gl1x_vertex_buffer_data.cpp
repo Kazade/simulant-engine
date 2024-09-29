@@ -12,9 +12,6 @@ const VertexFormat GL1XVertexBufferData::format =
              VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
         .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
              VERTEX_ATTR_TYPE_FLOAT)
-        // Submitted color
-        .add(VERTEX_ATTR_NAME_GENERIC, VERTEX_ATTR_ARRANGEMENT_XYZW,
-             VERTEX_ATTR_TYPE_FLOAT)
         .build();
 
 }

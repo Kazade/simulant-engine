@@ -491,54 +491,77 @@ static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
 
     _S_UNUSED(specular);
 
-    auto NdotL = N.dot(L);
-    auto diffuse_color = color * diffuse * NdotL;
+    auto NdotL = std::max(N.dot(L), 0.0f);
+    auto diffuse_color = diffuse * NdotL * color;
     auto ambient_color = ambient * global_ambient;
-    return ambient_color + diffuse_color;
+
+    auto result = (color * NdotL) + global_ambient;
+    return result;
 }
 
-static void apply_lighting(bool lighting_enabled, GL1Vertex* vertices,
+static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
+                           bool lighting_enabled, GL1Vertex* vertices,
                            uint32_t start, uint32_t count,
                            const Light* const* lights, std::size_t light_count,
                            const smlt::Color& global_ambient) {
 
-    if(lighting_enabled) {
+    data->colors.resize(start + count);
+
+    if(lighting_enabled && light_count) {
+        data->eye_space_normals.resize(count);
+        data->eye_space_positions.resize(count);
+
+        /* First we need to convert everything to eye-space */
+        for(uint32_t i = 0; i < count; ++i) {
+            GL1Vertex& v = vertices[i];
+
+            data->eye_space_positions[i] = (*model * Vec4(v.xyz, 1)).xyz();
+            data->eye_space_normals[i] = (*model * Vec4(v.n, 0)).xyz();
+        }
+
         for(std::size_t l = 0; l < light_count; ++l) {
             const Light* light = lights[l];
+
+            const Vec3 light_pos = light->transform->position();
 
             if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
                 for(uint32_t i = start; i < start + count; ++i) {
                     GL1Vertex& v = vertices[i];
 
-                    auto L = -light->direction();
-                    auto N = v.n;
+                    auto L = -light_pos.normalized();
+                    auto N = data->eye_space_normals[i - start];
                     auto color = calculate_vertex_color(
-                        N, L, v.submitted_color, light->diffuse(),
-                        light->ambient(), light->specular(), global_ambient);
+                        N, L, v.color, light->diffuse(), light->ambient(),
+                        light->specular(), global_ambient);
 
-                    v.color = color.to_argb_8888();
+                    data->colors[i] = color.to_argb_8888();
                 }
             } else {
                 for(uint32_t i = start; i < start + count; ++i) {
                     GL1Vertex& v = vertices[i];
 
-                    auto L =
-                        (light->transform->position() - v.xyz).normalized();
-                    auto N = v.n;
+                    auto L = (light_pos - data->eye_space_positions[i - start])
+                                 .normalized();
+                    auto N = data->eye_space_normals[i - start].normalized();
                     auto color = calculate_vertex_color(
-                        N, L, v.submitted_color, light->diffuse(),
-                        light->ambient(), light->specular(), global_ambient);
+                        N, L, v.color, light->diffuse(), light->ambient(),
+                        light->specular(), global_ambient);
 
-                    v.color = color.to_argb_8888();
+                    data->colors[i] = color.to_argb_8888();
                 }
             }
         }
     } else {
+        // FIXME: we could remove this copy and potentially just
+        // submit the original color, but that would mean submitting
+        // in floats...
         for(uint32_t i = start; i < start + count; ++i) {
             GL1Vertex& v = vertices[i];
-            v.color = v.submitted_color.to_argb_8888();
+            data->colors[i] = v.color.to_argb_8888();
         }
     }
+
+    GLCheck(glColorPointer, GL_BGRA, GL_UNSIGNED_BYTE, 0, &data->colors[0]);
 }
 
 void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
@@ -577,19 +600,12 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     const auto vertex_data = (const uint8_t*)&renderer_data->vertices[0];
 
     enable_vertex_arrays();
-    enable_color_arrays();
-    enable_normal_arrays();
+    enable_color_arrays(true);
     enable_texcoord_array(0);
 
     GLCheck(glVertexPointer, 3, GL_FLOAT, stride,
             ((const uint8_t*)vertex_data) +
                 spec.offset(VERTEX_ATTR_NAME_POSITION).value());
-    GLCheck(glColorPointer, GL_BGRA, GL_UNSIGNED_BYTE, stride,
-            ((const uint8_t*)vertex_data) +
-                spec.offset(VERTEX_ATTR_NAME_COLOR).value());
-    GLCheck(glNormalPointer, GL_FLOAT, stride,
-            ((const uint8_t*)vertex_data) +
-                spec.offset(VERTEX_ATTR_NAME_NORMAL).value());
     GLCheck(glClientActiveTexture, GL_TEXTURE0);
     GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
             ((const uint8_t*)vertex_data) +
@@ -603,7 +619,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         auto index_type =
             convert_index_type(renderable->index_data->index_type());
 
-        apply_lighting(pass_->is_lighting_enabled(),
+        apply_lighting(renderer_data, &model, pass_->is_lighting_enabled(),
                        &renderer_data->vertices[0],
                        renderable->index_data->min_index(),
                        renderable->index_data->max_index(),
@@ -625,7 +641,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         for(std::size_t i = 0; i < renderable->vertex_range_count;
             ++i, ++range) {
 
-            apply_lighting(pass_->is_lighting_enabled(),
+            apply_lighting(renderer_data, &model, pass_->is_lighting_enabled(),
                            &renderer_data->vertices[0], range->start,
                            range->count,
                            renderable->lights_affecting_this_frame,

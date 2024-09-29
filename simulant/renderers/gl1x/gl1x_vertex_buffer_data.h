@@ -9,20 +9,19 @@ namespace smlt {
 struct alignas(32) GL1Vertex {
     Vec3 xyz;
     Vec2 uv;
-    uint32_t color;
+    Color color;
     Vec3 n;
-
-    /* This is the color submitted by the user, the color above
-     * is the final calculated color after lighting has taken place.
-     *
-     * This is stored as a float to make the lighting calculations easier
-     * and we convert to packed argb at the end
-     */
-    Color submitted_color;
 };
 
 struct GL1XVertexBufferData: public VertexBufferRendererData {
     std::vector<GL1Vertex> vertices;
+
+    /* This is transient data calculated for each renderable
+     * so we can do lighting within the engine instead of
+     * using GL1 lighting */
+    std::vector<Vec3> eye_space_positions;
+    std::vector<Vec3> eye_space_normals;
+    std::vector<uint32_t> colors;
 
     static const VertexFormat format;
 };

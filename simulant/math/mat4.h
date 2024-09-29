@@ -12,6 +12,9 @@
 #include "degrees.h"
 #endif
 
+#include "vec3.h"
+#include "vec4.h"
+
 namespace smlt {
 
 struct Quaternion;
