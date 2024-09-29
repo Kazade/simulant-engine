@@ -7,7 +7,7 @@ MAINTAINER kazade <kazade@gmail.com>
 RUN dnf -y update && dnf clean all && dnf -y install automake wget make git hostname diffutils glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel meson openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim && dnf clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
 RUN git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos
-RUN cd /opt/toolchains/dc/kos && git fetch && git checkout c8aef24a4e9674e77cb8b6854c652cf68e3eac40 && cd -
+RUN cd /opt/toolchains/dc/kos && git fetch && git checkout 52140509f51a9d262ea75353f2eb0f7e18c2ec6b && cd -
 RUN git clone --recursive https://github.com/KallistiOS/kos-ports.git /opt/toolchains/dc/kos-ports
 
 RUN cd /opt/toolchains/dc/kos/utils/dc-chain && cp Makefile.default.cfg Makefile.cfg 
@@ -55,5 +55,5 @@ COPY --from=Build /opt/toolchains /opt/toolchains
 COPY --from=Build /etc/bash.bashrc /etc/bash.bashrc
 COPY --from=Build /root/.bashrc /root/.bashrc
 COPY --from=Build /opt/toolchains/dc/kos/utils/mkdcdisc/build/mkdcdisc /usr/bin/mkdcdisc
-RUN dnf install -y cmake make libpng genisoimage findutils git pkgconf-pkg-config libisofs
+RUN dnf install -y cmake make libpng genisoimage findutils git pkgconf-pkg-config libisofs meson ninja-build
 
