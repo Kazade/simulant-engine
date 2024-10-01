@@ -73,13 +73,13 @@ public:
                 .set("position", Vec3(-12.15f, -0.67f, 0.73f))
                 .set("color", lightCol * 23.0f));
 
-        rock_light->set_attenuation(4.31f, 0.01f, 0.25f, 0.75);
+        rock_light->set_intensity(5.0f);
 
         auto fairy_light = create_child<smlt::PointLight>(
             Params()
                 .set("position", Vec3())
                 .set("color", Color(0.5f, 0.85f, 1, 1) * 10));
-        fairy_light->set_attenuation(5, 0.01f, 0.25f, 0.75f);
+        fairy_light->set_intensity(3.0f);
         fairy_light->set_parent(fairy_actor_);
 
         // BezierPath

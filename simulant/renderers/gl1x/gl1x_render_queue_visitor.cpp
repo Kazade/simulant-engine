@@ -483,19 +483,14 @@ static constexpr GLenum convert_index_type(IndexType type) {
 }
 
 static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
+                                          const float D2, const float I,
                                           const smlt::Color& color,
-                                          const smlt::Color& diffuse,
-                                          const smlt::Color& ambient,
-                                          const smlt::Color& specular,
+                                          const smlt::Color& light_color,
                                           const smlt::Color& global_ambient) {
 
-    _S_UNUSED(specular);
-
     auto NdotL = std::max(N.dot(L), 0.0f);
-    auto diffuse_color = diffuse * NdotL * color;
-    auto ambient_color = ambient * global_ambient;
-
-    auto result = (color * NdotL) + global_ambient;
+    auto att = clamp((1.0f / D2) * I, 0.0f, 1.0f);
+    auto result = (color * NdotL * light_color * att) + global_ambient;
     return result;
 }
 
@@ -531,8 +526,8 @@ static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
                     auto L = -light_pos.normalized();
                     auto N = data->eye_space_normals[i - start];
                     auto color = calculate_vertex_color(
-                        N, L, v.color, light->diffuse(), light->ambient(),
-                        light->specular(), global_ambient);
+                        N, L, 0, light->intensity(), v.color, light->color(),
+                        global_ambient);
 
                     data->colors[i] = color.to_argb_8888();
                 }
@@ -543,9 +538,12 @@ static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
                     auto L = (light_pos - data->eye_space_positions[i - start])
                                  .normalized();
                     auto N = data->eye_space_normals[i - start].normalized();
+
+                    auto D2 = (light_pos - data->eye_space_positions[i - start])
+                                  .length_squared();
                     auto color = calculate_vertex_color(
-                        N, L, v.color, light->diffuse(), light->ambient(),
-                        light->specular(), global_ambient);
+                        N, L, D2, light->intensity(), v.color, light->color(),
+                        global_ambient);
 
                     data->colors[i] = color.to_argb_8888();
                 }

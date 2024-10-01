@@ -113,44 +113,13 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass,
         program->set_uniform_vec4(pos_loc, vec);
     }
 
-    auto amb_loc = program->locate_uniform(LIGHT_AMBIENT_PROPERTY, true);
+    auto amb_loc = program->locate_uniform(LIGHT_COLOR_PROPERTY, true);
     if(amb_loc > -1) {
         program->set_uniform_color(amb_loc,
-                                   (light) ? light->ambient() : Color::none());
+                                   (light) ? light->color() : Color::none());
     }
 
-    auto diff_loc = program->locate_uniform(LIGHT_DIFFUSE_PROPERTY, true);
-    if(diff_loc > -1) {
-        auto diffuse = (light) ? light->diffuse() : smlt::Color::none();
-        program->set_uniform_color(diff_loc, diffuse);
-    }
-
-    auto spec_loc = program->locate_uniform(LIGHT_SPECULAR_PROPERTY, true);
-    if(spec_loc > -1) {
-        auto specular = (light) ? light->specular() : smlt::Color::none();
-        program->set_uniform_color(spec_loc, specular);
-    }
-
-    auto ca_loc =
-        program->locate_uniform(LIGHT_CONSTANT_ATTENUATION_PROPERTY, true);
-    if(ca_loc > -1) {
-        auto att = (light) ? light->constant_attenuation() : 0;
-        program->set_uniform_float(ca_loc, att);
-    }
-
-    auto la_loc =
-        program->locate_uniform(LIGHT_LINEAR_ATTENUATION_PROPERTY, true);
-    if(la_loc > -1) {
-        auto att = (light) ? light->linear_attenuation() : 0;
-        program->set_uniform_float(la_loc, att);
-    }
-
-    auto qa_loc =
-        program->locate_uniform(LIGHT_QUADRATIC_ATTENUATION_PROPERTY, true);
-    if(qa_loc > -1) {
-        auto att = (light) ? light->quadratic_attenuation() : 0;
-        program->set_uniform_float(qa_loc, att);
-    }
+    // FIXME send range and intensity to the shader
 }
 
 void GenericRenderer::set_material_uniforms(const MaterialPass* pass,

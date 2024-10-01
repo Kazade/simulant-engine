@@ -9,35 +9,6 @@ namespace loaders {
 
 const char* GLTFLoader::node_factory_key = "node-factory";
 
-static void approximate_light_intensity(Light* light, const Color& color,
-                                        float intensity, float range,
-                                        bool directional) {
-    if(directional) {
-        /*
-         * Blender uses W/m2 for sun strength, with 1000 being direct sunlight.
-         * GLTF uses lux which is W/m2 * 683
-         * However, anything over 5 W/m2 seems to be brighter than the max
-         * brightness of the material so we cap it out at 10.0f.
-         */
-
-        float max = 683 * 10.0f;
-        float m = std::min(intensity, max) / max;
-        auto c = color * m;
-        c.a = color.a;
-        light->set_diffuse(c);
-        light->set_ambient(c);
-        light->set_specular(c);
-    } else {
-        // FIXME: This is a very rough approximation
-        range = std::sqrt(intensity) / 8;
-        auto c = color;
-        light->set_diffuse(c);
-        light->set_ambient(c);
-        light->set_specular(c);
-        light->set_attenuation_from_range(range);
-    }
-}
-
 static smlt::Vec3 parse_pos(JSONIterator it) {
     return smlt::Vec3(it[0]->to_float().value_or(0.0f),
                       it[1]->to_float().value_or(0.0f),
@@ -141,9 +112,10 @@ StageNode* default_node_factory(StageNode* parent,
                 light = parent->create_child<PointLight>();
             }
 
-            approximate_light_intensity(
-                light, input.light->color, input.light->intensity,
-                input.light->range, input.light->type == "directional");
+            light->set_color(input.light->color);
+            light->set_intensity(input.light->intensity);
+            light->set_range(input.light->range);
+
             ret = light;
 
         } else {
