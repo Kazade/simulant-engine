@@ -69,7 +69,9 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
         return;
     }
 
-    if(!src_renderable.vertex_range_count && !src_renderable.index_element_count) {
+    if((src_renderable.vertex_ranges &&
+        src_renderable.vertex_ranges->empty()) &&
+       !src_renderable.index_element_count) {
         return;
     }
 

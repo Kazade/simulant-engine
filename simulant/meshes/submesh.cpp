@@ -51,25 +51,6 @@ SubmeshType SubMesh::type() const {
     return type_;
 }
 
-bool SubMesh::add_vertex_range(uint32_t start, uint32_t count) {
-    if(type_ != SUBMESH_TYPE_RANGED) {
-        S_ERROR("Attempted to add a range to an indexed submesh");
-        return false;
-    }
-
-    if(!count) {
-        S_DEBUG("Added 0 length vertex range");
-        return false;
-    }
-
-    vertex_ranges_.push_back(VertexRange{start, count});
-    return true;
-}
-
-void SubMesh::remove_all_vertex_ranges() {
-    vertex_ranges_.clear();
-}
-
 void SubMesh::set_color(const smlt::Color& color) {
     auto vertex_data = parent_->vertex_data.get();
 

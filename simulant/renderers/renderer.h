@@ -37,6 +37,7 @@ namespace smlt {
 
 class SubActor;
 class Window;
+class VertexRangeList;
 
 class Renderer:
     public batcher::RenderGroupFactory {
@@ -210,7 +211,9 @@ private:
     virtual void on_post_render() {}
 
     virtual std::shared_ptr<VertexBuffer>
-        prepare_vertex_data(const VertexData* vertex_data) = 0;
+        prepare_vertex_data(const VertexData* vertex_data,
+                            const IndexData* index_data,
+                            const VertexRangeList* ranges) = 0;
 
     mutable thread::Mutex texture_registry_mutex_;
     std::unordered_map<AssetID, Texture*> texture_registry_;

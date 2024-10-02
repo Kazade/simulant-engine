@@ -688,12 +688,12 @@ void GenericRenderer::send_geometry(const Renderable* renderable,
                                                       element_count);
     } else {
         assert(renderable->vertex_ranges);
-        assert(renderable->vertex_range_count);
+        assert(renderable->vertex_ranges->size());
 
-        auto range = renderable->vertex_ranges;
         auto total = 0;
-        for(std::size_t i = 0; i < renderable->vertex_range_count;
-            ++i, ++range) {
+        for(std::size_t i = 0; i < renderable->vertex_ranges->size(); ++i) {
+            auto range = renderable->vertex_ranges->at(i);
+
             GLCheck(glDrawArrays, arrangement, range->start, range->count);
 
             total += range->count;
@@ -760,9 +760,10 @@ void GenericRenderer::init_context() {
     }
 }
 
-
 std::shared_ptr<VertexBuffer>
-    GenericRenderer::prepare_vertex_data(const VertexData* vertex_data) {
+    GenericRenderer::prepare_vertex_data(const VertexData* vertex_data,
+                                         const IndexData* index_data,
+                                         const VertexRangeList* ranges) {
 
     auto vbdata = std::make_shared<GL2VertexBufferRendererData>();
 

@@ -87,7 +87,7 @@ void Debug::push_line(SubMeshPtr& submesh, const Vec3& start, const Vec3& end,
     mesh_->vertex_data->color(color);
     mesh_->vertex_data->move_next();
 
-    submesh->add_vertex_range(c_, 4);
+    submesh->vertex_ranges->add(c_, 4);
 }
 
 void Debug::push_point(SubMeshPtr& submesh, const Vec3& position,
@@ -110,13 +110,13 @@ void Debug::push_point(SubMeshPtr& submesh, const Vec3& position,
         }
     }
 
-    submesh->add_vertex_range(c, 4);
+    submesh->vertex_ranges->add(c, 4);
 }
 
 void Debug::build_mesh(const Camera* camera) {
     mesh_->vertex_data->clear();
-    without_depth_->remove_all_vertex_ranges();
-    with_depth_->remove_all_vertex_ranges();
+    without_depth_->vertex_ranges->clear();
+    with_depth_->vertex_ranges->clear();
 
     auto up = camera->transform->up();
     for(auto& element: elements_) {
@@ -189,7 +189,7 @@ void Debug::do_generate_renderables(batcher::RenderQueue* render_queue,
     }
 
     for(auto& submesh: mesh_->each_submesh()) {
-        if(submesh->vertex_range_count() == 0) {
+        if(submesh->vertex_ranges->empty()) {
             continue;
         }
 
@@ -203,8 +203,7 @@ void Debug::do_generate_renderables(batcher::RenderQueue* render_queue,
         new_renderable.vertex_data = mesh_->vertex_data.get();
         new_renderable.index_data = nullptr;
         new_renderable.index_element_count = 0;
-        new_renderable.vertex_ranges = submesh->vertex_ranges();
-        new_renderable.vertex_range_count = submesh->vertex_range_count();
+        new_renderable.vertex_ranges = submesh->vertex_ranges.get();
         new_renderable.material = submesh->material().get();
         new_renderable.center = Vec3();
 

@@ -101,7 +101,9 @@ smlt::GL1XRenderer::GL1XRenderer(smlt::Window *window):
 }
 
 std::shared_ptr<VertexBuffer>
-    GL1XRenderer::prepare_vertex_data(const VertexData* vertex_data) {
+    GL1XRenderer::prepare_vertex_data(const VertexData* vertex_data,
+                                      const IndexData* index_data,
+                                      const VertexRangeList* ranges) {
 
     std::shared_ptr<GL1XVertexBufferData> vbuffer_data;
     VertexBufferPtr vertex_buffer = vertex_data->gpu_buffer();

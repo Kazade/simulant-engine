@@ -537,7 +537,7 @@ void Widget::render_text() {
             vdata->move_next();
         }
 
-        sm->add_vertex_range(idx, 4);
+        sm->vertex_ranges->add(idx, 4);
         idx = vdata->count();
     }
 
@@ -553,7 +553,7 @@ void Widget::clear_mesh() {
         if(submesh->type() == smlt::SUBMESH_TYPE_INDEXED) {
             submesh->index_data->clear();
         } else {
-            submesh->remove_all_vertex_ranges();
+            submesh->vertex_ranges->clear();
         }
     }
 }
@@ -628,7 +628,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds,
             mesh_->vertex_data->move_next();
         }
 
-        sm->add_vertex_range(prev_count, points.size());
+        sm->vertex_ranges->add(prev_count, points.size());
     } else {
         mesh_->vertex_data->move_to_end();
         mesh_->vertex_data->position(x_offset + min.x.value,
@@ -664,7 +664,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds,
         mesh_->vertex_data->normal(0, 0, 1);
         mesh_->vertex_data->move_next();
 
-        sm->add_vertex_range(prev_count, 4);
+        sm->vertex_ranges->add(prev_count, 4);
     }
 
     return sm;
@@ -682,13 +682,13 @@ void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image,
 
     auto vertices = mesh_->vertex_data.get();
 
-    if(!submesh->vertex_range_count()) {
+    if(!submesh->vertex_ranges->size()) {
         S_ERROR("Something went wrong with the generation of a widget. Could "
                 "not apply image rect");
         return;
     }
 
-    auto idx = submesh->vertex_ranges()[0].start;
+    auto idx = submesh->vertex_ranges->at(0)->start;
     auto first_idx = idx;
     vertices->move_to(first_idx);
     vertices->tex_coord0(min.x, min.y);

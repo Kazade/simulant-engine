@@ -569,7 +569,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     _S_UNUSED(iteration);
 
     auto element_count = renderable->index_element_count;
-    auto vertex_range_count = renderable->vertex_range_count;
+    auto vertex_range_count =
+        (renderable->vertex_ranges) ? renderable->vertex_ranges->size() : 0;
     // Don't bother doing *anything* if there is nothing to render
     if(!element_count && !vertex_range_count) {
         return;
@@ -632,13 +633,12 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     } else {
         /* Range-based renderable */
         assert(renderable->vertex_ranges);
-        assert(renderable->vertex_range_count);
+        assert(renderable->vertex_ranges ? renderable->vertex_ranges->size()
+                                         : 0);
 
-        auto range = renderable->vertex_ranges;
         auto total = 0;
-        for(std::size_t i = 0; i < renderable->vertex_range_count;
-            ++i, ++range) {
-
+        for(std::size_t i = 0; i < renderable->vertex_ranges->size(); ++i) {
+            auto range = renderable->vertex_ranges->at(i);
             apply_lighting(renderer_data, &model, pass_->is_lighting_enabled(),
                            &renderer_data->vertices[0], range->start,
                            range->count,

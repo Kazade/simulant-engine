@@ -10,6 +10,7 @@
 #include "../generic/managed.h"
 #include "../generic/manual_object.h"
 #include "../interfaces.h"
+#include "../meshes/vertex_ranges.h"
 #include "../renderers/renderer.h"
 #include "../sound.h"
 #include "../types.h"
@@ -115,7 +116,7 @@ private:
     std::size_t particle_count_ = 0;
 
     VertexData* vertex_data_ = nullptr;
-    std::vector<VertexRange> vertex_ranges_;
+    VertexRangeList vertex_ranges_;
 
     bool destroy_on_completion_ = false;
     bool update_when_hidden_ = false;

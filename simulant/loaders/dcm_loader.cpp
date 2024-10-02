@@ -316,7 +316,7 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 data_->read((char*) &range.start, sizeof(uint32_t));
                 data_->read((char*) &range.count, sizeof(uint32_t));
 
-                sm->add_vertex_range(range.start, range.count);
+                sm->vertex_ranges->add(range.start, range.count);
             }
         } else {
             auto type = (fheader.index_size == 1) ?

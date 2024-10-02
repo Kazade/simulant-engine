@@ -128,8 +128,7 @@ void ParticleSystem::do_generate_renderables(batcher::RenderQueue* render_queue,
     new_renderable.final_transformation = Mat4();
     new_renderable.index_data = nullptr;
     new_renderable.index_element_count = 0;
-    new_renderable.vertex_range_count = vertex_ranges_.size();
-    new_renderable.vertex_ranges = vertex_ranges_.data();
+    new_renderable.vertex_ranges = &vertex_ranges_;
     new_renderable.vertex_data = vertex_data_;
     new_renderable.is_visible = true;
     new_renderable.material = script_->material().get();
@@ -143,7 +142,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
     vertex_data_->resize(particle_count_ * 4);
     vertex_data_->move_to_start();
 
-    vertex_ranges_.resize(0);
+    vertex_ranges_.clear();
 
     if(!particle_count_) {
         return;
@@ -262,10 +261,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
         uv_ptr += stride;
 
         /* Add a vertex range for this tri-strip */
-        VertexRange new_range;
-        new_range.start = j * 4;
-        new_range.count = 4;
-        vertex_ranges_.push_back(new_range);
+        vertex_ranges_.add(j * 4, 4);
     }
 
     vertex_data_->done();

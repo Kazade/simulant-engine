@@ -556,7 +556,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
                 }
             }
 
-            sm->add_vertex_range(mesh->vertex_data->count(), batch.data->count());
+            sm->vertex_ranges->add(mesh->vertex_data->count(),
+                                   batch.data->count());
             mesh->vertex_data->extend(*batch.data);
             batch.data.reset();
         } else {
@@ -572,7 +573,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             }
             auto start = mesh->vertex_data->count();
             for(auto range: batch.ranges) {
-                sm->add_vertex_range(start, range);
+                sm->vertex_ranges->add(start, range);
                 start += range;
             }
             mesh->vertex_data->extend(*batch.data);

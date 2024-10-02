@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../interfaces/boundable.h"
-#include "../generic/property.h"
 #include "../generic/managed.h"
+#include "../generic/property.h"
+#include "../interfaces/boundable.h"
 #include "../interfaces/nameable.h"
+#include "vertex_ranges.h"
 
 namespace smlt {
 
@@ -29,14 +30,6 @@ enum SubmeshType {
     SUBMESH_TYPE_RANGED,
 };
 
-struct VertexRange {
-    uint32_t start;
-    uint32_t count;
-};
-
-typedef std::vector<VertexRange> VertexRangeList;
-
-
 class SubMesh:
     public RefCounted<SubMesh>,
     public Nameable {
@@ -61,25 +54,7 @@ public:
 
     SubmeshType type() const;
 
-    /**
-     * @brief Add a vertex range to this submesh. `count` vertices will be rendered
-     * from the `start` index in the mesh vertex data.
-     * @param start
-     * @param count
-     */
-    bool add_vertex_range(uint32_t start, uint32_t count);
     void mark_changed();
-
-    const VertexRange* vertex_ranges() const {
-
-        return vertex_range_count() ? &vertex_ranges_[0] : nullptr;
-    }
-
-    std::size_t vertex_range_count() const {
-        return vertex_ranges_.size();
-    }
-
-    void remove_all_vertex_ranges();
 
     void set_material(const MaterialPtr &material);
     void set_material_at_slot(MaterialSlot var, const MaterialPtr& material);
@@ -160,6 +135,7 @@ private:
 public:
     S_DEFINE_PROPERTY(mesh, &SubMesh::parent_);
     S_DEFINE_PROPERTY(index_data, &SubMesh::index_data_);
+    S_DEFINE_PROPERTY(vertex_ranges, &SubMesh::vertex_ranges_);
 };
 
 }

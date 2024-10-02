@@ -90,8 +90,7 @@ void Frame::finalize_build() {
                 continue;
             }
 
-            for(std::size_t i = 0; i < sm->vertex_range_count(); ++i) {
-                auto& range = sm->vertex_ranges()[i];
+            for(auto& range: *sm->vertex_ranges) {
                 for(auto idx = range.start; idx < range.start + range.count;
                     ++idx) {
                     auto vpos =

@@ -137,8 +137,7 @@ void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
         new_renderable.index_element_count =
             (new_renderable.index_data) ? new_renderable.index_data->count()
                                         : 0;
-        new_renderable.vertex_ranges = submesh->vertex_ranges();
-        new_renderable.vertex_range_count = submesh->vertex_range_count();
+        new_renderable.vertex_ranges = submesh->vertex_ranges.get();
 
         // FIXME: Support material slots like actors?
         new_renderable.material =

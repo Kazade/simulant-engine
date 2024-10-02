@@ -65,6 +65,8 @@ private:
     }
 };
 
+class VertexRangeList;
+
 struct alignas(8) Renderable final {
     MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES;
     VertexData* vertex_data = nullptr;
@@ -72,8 +74,7 @@ struct alignas(8) Renderable final {
     IndexData* index_data = nullptr;
     std::size_t index_element_count = 0;
 
-    const VertexRange* vertex_ranges = nullptr;
-    std::size_t vertex_range_count = 0;
+    VertexRangeList* vertex_ranges = nullptr;
 
     RenderPriority render_priority = RENDER_PRIORITY_MAIN;
     Mat4 final_transformation;
