@@ -204,10 +204,8 @@ public:
         }
     }
 
-    void insert_triangles(
-        const std::vector<utils::Triangle>::iterator first,
-        const std::vector<utils::Triangle>::iterator last
-    ) {
+    void insert_triangles(const std::vector<Triangle>::iterator first,
+                          const std::vector<Triangle>::iterator last) {
 
         b3MeshTriangle btri;
 
@@ -215,7 +213,7 @@ public:
         triangles_.reserve(triangles_.size() + count);
 
         for(auto it = first; it != last; ++it) {
-            utils::Triangle& tri = (*it);
+            Triangle& tri = (*it);
 
             btri.v1 = tri.idx[0];
             btri.v2 = tri.idx[1];
@@ -436,7 +434,7 @@ void PhysicsService::add_capsule_collider(PhysicsBody* self, const Vec3& v0,
 void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, const PhysicsMaterial& properties, uint16_t kind, const Vec3& offset, const Quaternion& rotation) {
     auto bmesh = std::make_shared<b3MeshGenerator>();
 
-    std::vector<utils::Triangle> triangles;
+    std::vector<Triangle> triangles;
 
     bmesh->reserve_vertices(mesh->vertex_data->count());
 
@@ -452,7 +450,7 @@ void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, c
 
     for(auto& submesh: mesh->each_submesh()) {
         submesh->each_triangle([&](uint32_t a, uint32_t b, uint32_t c) {
-            utils::Triangle tri;
+            Triangle tri;
             tri.idx[0] = c;
             tri.idx[1] = b;
             tri.idx[2] = a;

@@ -8,8 +8,6 @@ namespace smlt {
 class IndexData;
 class VertexRangeList;
 
-namespace utils {
-
 struct Triangle {
     uint32_t idx[3];
 };
@@ -33,19 +31,84 @@ public:
         using reference = Triangle&;
 
     private:
-        const TriangleIterable* iterable;
-        Triangle value;
+        friend class TriangleIterable;
 
-        MeshArrangement arrangement;
-        uint32_t idx = 0;
-    }
+        const TriangleIterable* iterable_;
+        Triangle value_;
+
+        MeshArrangement arrangement_;
+
+        // For indexes, this is the literal index into the index
+        // list. For ranges this is the index into the current range
+        uint32_t idx_ = 0;
+
+        // Which range in the range list are we currently iterating?
+        uint32_t range_idx_ = 0;
+
+        // We keep track of how many triangles we've returned, because
+        // for things like quads that changes how we generate the results
+        uint32_t tri_counter_ = 0;
+
+        const IndexData* indexes_ = nullptr;
+        const VertexRangeList* ranges_ = nullptr;
+
+        iterator& update(bool increment);
+
+        iterator(MeshArrangement arrangement, const IndexData* indexes,
+                 const VertexRangeList* ranges) :
+            arrangement_(arrangement), indexes_(indexes), ranges_(ranges) {
+
+            // Initialize the current value without incrementing
+            update(false);
+        }
+
+    public:
+        iterator() = default;
+
+        iterator& operator++();
+
+        iterator operator++(int) {
+            auto v = *this;
+            ++(*this);
+            return v;
+        }
+
+        bool operator==(const iterator& rhs) const {
+            return indexes_ == rhs.indexes_ && ranges_ == rhs.ranges_ &&
+                   range_idx_ == rhs.range_idx_ && idx_ == rhs.idx_;
+        }
+
+        bool operator!=(const iterator& rhs) const {
+            return !(*this == rhs);
+        }
+
+        Triangle& operator*() {
+            return value_;
+        }
+
+        Triangle* operator->() {
+            return &value_;
+        }
+    };
 
     TriangleIterable(MeshArrangement arrangement,
                      const IndexData* indexes = nullptr,
-                     const VertexRangeList* ranges = nullptr);
+                     const VertexRangeList* ranges = nullptr) :
+        arrangement_(arrangement), indexes_(indexes), ranges_(ranges) {
 
-    iterator begin();
-    iterator end();
+        assert(indexes || ranges);
+    }
+
+    iterator begin() {
+        return iterator(arrangement_, indexes_, ranges_);
+    }
+    iterator end() {
+        return iterator();
+    }
+
+private:
+    MeshArrangement arrangement_;
+    const IndexData* indexes_ = nullptr;
+    const VertexRangeList* ranges_ = nullptr;
 };
-}
 }

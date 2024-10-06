@@ -31,6 +31,7 @@
 #include "../../meshes/vertex_buffer.h"
 #include "../../texture.h"
 #include "../../utils/gl_error.h"
+#include "../../utils/mesh/triangulate.h"
 #include "../../vertex_data.h"
 #include "gl1x_render_group_impl.h"
 #include "gl1x_render_queue_visitor.h"
@@ -100,10 +101,9 @@ smlt::GL1XRenderer::GL1XRenderer(smlt::Window *window):
     GLRenderer(window) {
 }
 
-std::shared_ptr<VertexBuffer>
-    GL1XRenderer::prepare_vertex_data(const VertexData* vertex_data,
-                                      const IndexData* index_data,
-                                      const VertexRangeList* ranges) {
+std::shared_ptr<VertexBuffer> GL1XRenderer::prepare_vertex_data(
+    MeshArrangement arrangement, const VertexData* vertex_data,
+    const IndexData* index_data, const VertexRangeList* ranges) {
 
     std::shared_ptr<GL1XVertexBufferData> vbuffer_data;
     VertexBufferPtr vertex_buffer = vertex_data->gpu_buffer();
@@ -138,7 +138,7 @@ std::shared_ptr<VertexBuffer>
     }
 
     // Calculate vertex tangents
-    auto tri_iterator = TriangleIterator(index_data, ranges);
+    auto tri_iterator = TriangleIterable(arrangement, index_data, ranges);
     for(const auto& tri: tri_iterator) {}
 
     return vertex_buffer;

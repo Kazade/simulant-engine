@@ -760,10 +760,9 @@ void GenericRenderer::init_context() {
     }
 }
 
-std::shared_ptr<VertexBuffer>
-    GenericRenderer::prepare_vertex_data(const VertexData* vertex_data,
-                                         const IndexData* index_data,
-                                         const VertexRangeList* ranges) {
+std::shared_ptr<VertexBuffer> GenericRenderer::prepare_vertex_data(
+    MeshArrangement arrangement, const VertexData* vertex_data,
+    const IndexData* index_data, const VertexRangeList* ranges) {
 
     auto vbdata = std::make_shared<GL2VertexBufferRendererData>();
 

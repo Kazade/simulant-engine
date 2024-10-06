@@ -47,10 +47,9 @@ public:
     }
 
 private:
-    virtual std::shared_ptr<VertexBuffer>
-        prepare_vertex_data(const VertexData* vertex_data,
-                            const IndexData* index_data,
-                            const VertexRangeList* ranges) override;
+    virtual std::shared_ptr<VertexBuffer> prepare_vertex_data(
+        MeshArrangement arrangement, const VertexData* vertex_data,
+        const IndexData* index_data, const VertexRangeList* ranges) override;
 
     VertexFormat on_native_vertex_format(VertexFormat hint) override {
         return VertexFormatBuilder()

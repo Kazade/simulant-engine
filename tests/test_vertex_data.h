@@ -3,6 +3,7 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
+#include "simulant/utils/mesh/triangulate.h"
 
 namespace {
 
@@ -17,6 +18,55 @@ public:
 
         data.clear();
         assert_equal(data.count(), 0u);
+    }
+
+    void test_index_data_triangle_iteration() {
+        smlt::IndexData data(smlt::INDEX_TYPE_16_BIT);
+        data.index(0);
+        data.index(1);
+        data.index(2);
+        data.index(0);
+        data.index(3);
+        data.index(4);
+
+        auto iterable = TriangleIterable(MESH_ARRANGEMENT_TRIANGLES, &data);
+        auto it = iterable.begin();
+        assert_true(it->idx[0] == 0);
+        assert_true(it->idx[1] == 1);
+        assert_true(it->idx[2] == 2);
+
+        it++;
+
+        assert_true(it->idx[0] == 0);
+        assert_true(it->idx[1] == 3);
+        assert_true(it->idx[2] == 4);
+
+        it++;
+        assert_true(it == iterable.end());
+
+        iterable = TriangleIterable(MESH_ARRANGEMENT_LINES, &data);
+        it = iterable.begin();
+        assert_true(it == iterable.end());
+
+        iterable = TriangleIterable(MESH_ARRANGEMENT_LINE_STRIP, &data);
+        it = iterable.begin();
+        assert_true(it == iterable.end());
+
+        iterable = TriangleIterable(MESH_ARRANGEMENT_QUADS, &data);
+        it = iterable.begin();
+        assert_true(it->idx[0] == 0);
+        assert_true(it->idx[1] == 1);
+        assert_true(it->idx[2] == 2);
+
+        ++it;
+
+        assert_true(it->idx[0] == 0);
+        assert_true(it->idx[1] == 2);
+        assert_true(it->idx[2] == 0);
+
+        ++it;
+
+        assert_true(it == iterable.end());
     }
 };
 

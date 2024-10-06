@@ -288,9 +288,9 @@ void Renderer::on_renderable_prepare(Renderable* renderable) {
     if(renderable->vertex_data && (!renderable->vertex_data->gpu_buffer() ||
                                    renderable->vertex_data->is_dirty())) {
 
-        renderable->vertex_data->buffer_ =
-            prepare_vertex_data(renderable->vertex_data, renderable->index_data,
-                                renderable->vertex_ranges);
+        renderable->vertex_data->buffer_ = prepare_vertex_data(
+            renderable->arrangement, renderable->vertex_data,
+            renderable->index_data, renderable->vertex_ranges);
         renderable->vertex_data->set_dirty(false);
 
         if(renderable->vertex_data->free_data_mode() ==

@@ -102,10 +102,9 @@ public:
         return (use_es_) ? "gles2x" : "gl2x";
     }
 
-    std::shared_ptr<VertexBuffer>
-        prepare_vertex_data(const VertexData* vertex_data,
-                            const IndexData* index_data,
-                            const VertexRangeList* ranges) override;
+    std::shared_ptr<VertexBuffer> prepare_vertex_data(
+        MeshArrangement arrangement, const VertexData* vertex_data,
+        const IndexData* index_data, const VertexRangeList* ranges) override;
 
     bool is_gles() const {
         return use_es_;
