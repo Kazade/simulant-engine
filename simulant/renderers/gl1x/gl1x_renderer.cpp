@@ -137,6 +137,10 @@ std::shared_ptr<VertexBuffer>
                 .value_or(Color::white());
     }
 
+    // Calculate vertex tangents
+    auto tri_iterator = TriangleIterator(index_data, ranges);
+    for(const auto& tri: tri_iterator) {}
+
     return vertex_buffer;
 }
 }
