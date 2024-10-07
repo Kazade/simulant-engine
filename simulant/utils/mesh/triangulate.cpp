@@ -49,21 +49,11 @@ TriangleIterable::iterator& TriangleIterable::iterator::update(bool increment) {
                 value_.idx[2] = indexes_->at(idx_ + 3);
             }
         } else if(arrangement_ == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
-            if(tri_counter_ == 0) {
-                // First triangle in the strip
-                if(idx_ + 3 >= indexes_->count()) {
-                    // We're at the end
-                    idx_ = 0;
-                    indexes_ = nullptr;
-                    return *this;
-                }
-            } else {
-                if(idx_ + 1 >= indexes_->count()) {
-                    // We're at the end
-                    idx_ = 0;
-                    indexes_ = nullptr;
-                    return *this;
-                }
+            if(idx_ + 3 >= indexes_->count()) {
+                // We're at the end
+                idx_ = 0;
+                indexes_ = nullptr;
+                return *this;
             }
 
             // We only increment one, because the last two

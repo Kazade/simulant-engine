@@ -67,6 +67,29 @@ public:
         ++it;
 
         assert_true(it == iterable.end());
+
+        // Finally tri-strips
+        iterable = TriangleIterable(MESH_ARRANGEMENT_TRIANGLE_STRIP, &data);
+        it = iterable.begin();
+        assert_true(it->idx[0] == 0);
+        assert_true(it->idx[1] == 1);
+        assert_true(it->idx[2] == 2);
+        ++it;
+        assert_true(it->idx[0] == 2);
+        assert_true(it->idx[1] == 1);
+        assert_true(it->idx[2] == 0);
+        ++it;
+        assert_true(it->idx[0] == 2);
+        assert_true(it->idx[1] == 0);
+        assert_true(it->idx[2] == 3);
+        ++it;
+        assert_true(it->idx[0] == 3);
+        assert_true(it->idx[1] == 0);
+        assert_true(it->idx[2] == 4);
+
+        ++it;
+
+        assert_true(it == iterable.end());
     }
 };
 
