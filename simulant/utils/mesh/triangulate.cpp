@@ -97,6 +97,13 @@ TriangleIterable::iterator& TriangleIterable::iterator::update(bool increment) {
             value_.idx[1] = current_range->start + idx_ + 1;
             value_.idx[2] = current_range->start + idx_ + 2;
         } else if(arrangement_ == MESH_ARRANGEMENT_TRIANGLE_FAN) {
+            idx_ += 1 * increment;
+
+            // We wanna start on idx 1 for the first triangle
+            // because vertex 0 is always included
+            if(tri_counter_ == 0) {
+                idx_ = 1;
+            }
 
             if(idx_ + 2 > current_range->count) {
                 idx_ = 1;
@@ -107,14 +114,6 @@ TriangleIterable::iterator& TriangleIterable::iterator::update(bool increment) {
                 }
                 current_range = ranges_->at(++range_idx_);
             }
-
-            // We wanna start on idx 1 for the first triangle
-            // because vertex 0 is always included
-            if(tri_counter_ == 0) {
-                idx_ = 1;
-            }
-
-            idx_ += 1 * increment;
 
             value_.idx[0] = current_range->start;
             value_.idx[1] = current_range->start + idx_;
