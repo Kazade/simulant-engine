@@ -20,6 +20,59 @@ public:
         assert_equal(data.count(), 0u);
     }
 
+    void test_vertex_ranges_triangle_iteration() {
+        VertexRangeList empty;
+
+        // Any empty range should just not iterate
+        assert_true(
+            TriangleIterable(MESH_ARRANGEMENT_TRIANGLES, nullptr, &empty)
+                .begin() ==
+            TriangleIterable(MESH_ARRANGEMENT_TRIANGLES, nullptr, &empty)
+                .end());
+
+        VertexRangeList ranges;
+        ranges.add(0, 8);
+        ranges.add(8, 13);
+
+        auto iterable =
+            TriangleIterable(MESH_ARRANGEMENT_TRIANGLES, nullptr, &ranges);
+
+        auto it = iterable.begin();
+        assert_true(it->idx[0] == 0);
+        assert_true(it->idx[1] == 1);
+        assert_true(it->idx[2] == 2);
+
+        ++it;
+        assert_true(it->idx[0] == 3);
+        assert_true(it->idx[1] == 4);
+        assert_true(it->idx[2] == 5);
+
+        // We should jump to the next range here, there aren't
+        // enough verts left in range 1 to complete a triangle
+        ++it;
+        assert_true(it->idx[0] == 8);
+        assert_true(it->idx[1] == 9);
+        assert_true(it->idx[2] == 10);
+
+        ++it;
+        assert_true(it->idx[0] == 11);
+        assert_true(it->idx[1] == 12);
+        assert_true(it->idx[2] == 13);
+
+        ++it;
+        assert_true(it->idx[0] == 14);
+        assert_true(it->idx[1] == 15);
+        assert_true(it->idx[2] == 16);
+
+        ++it;
+        assert_true(it->idx[0] == 17);
+        assert_true(it->idx[1] == 18);
+        assert_true(it->idx[2] == 19);
+
+        ++it;
+        assert_true(it == iterable.end());
+    }
+
     void test_index_data_triangle_iteration() {
         smlt::IndexData data(smlt::INDEX_TYPE_16_BIT);
         data.index(0);
