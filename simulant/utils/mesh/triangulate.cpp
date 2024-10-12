@@ -119,8 +119,10 @@ TriangleIterable::iterator& TriangleIterable::iterator::update(bool increment) {
             value_.idx[1] = current_range->start + idx_;
             value_.idx[2] = current_range->start + idx_ + 1;
         } else if(arrangement_ == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
-
+            throw std::runtime_error(
+                "Triangle strips with ranges are not supported");
         } else if(arrangement_ == MESH_ARRANGEMENT_QUADS) {
+            throw std::runtime_error("Quads with ranges are not supported");
         }
     } else {
         idx_ = 0;

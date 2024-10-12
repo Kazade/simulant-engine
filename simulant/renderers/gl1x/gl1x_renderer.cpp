@@ -136,35 +136,49 @@ std::shared_ptr<VertexBuffer> GL1XRenderer::prepare_vertex_data(
             vertex_data->attr_as<Color>(VERTEX_ATTR_NAME_COLOR, i)
                 .value_or(Color::white());
         vbuffer_data->vertices[i].t = Vec3();
+        vbuffer_data->vertices[i].b = Vec3();
     }
 
     // Calculate vertex tangents
     auto tri_iterator = TriangleIterable(arrangement, index_data, ranges);
+
+    Vec3 edge1, edge2;
+    Vec2 deltaUV1, deltaUV2;
+    Vec3 tangent, bitangent;
+
     for(const auto& tri: tri_iterator) {
         auto& v0 = vbuffer_data->vertices[tri.idx[0]];
         auto& v1 = vbuffer_data->vertices[tri.idx[1]];
         auto& v2 = vbuffer_data->vertices[tri.idx[2]];
 
-        Vec3 edge1 = v1.xyz - v0.xyz;
-        Vec3 edge2 = v2.xyz - v0.xyz;
+        edge1 = v1.xyz - v0.xyz;
+        edge2 = v2.xyz - v0.xyz;
 
-        Vec2 deltaUV1 = v1.uv - v0.uv;
-        Vec2 deltaUV2 = v2.uv - v0.uv;
+        deltaUV1 = v1.uv - v0.uv;
+        deltaUV2 = v2.uv - v0.uv;
 
         float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
 
-        Vec3 tangent;
         tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
         tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
         tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
 
+        bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+        bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+        bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
         v0.t += tangent;
         v1.t += tangent;
         v2.t += tangent;
+
+        v0.b += bitangent;
+        v1.b += bitangent;
+        v2.b += bitangent;
     }
 
     for(uint32_t i = 0; i < vertex_count; ++i) {
         vbuffer_data->vertices[i].t.normalize();
+        vbuffer_data->vertices[i].b.normalize();
     }
 
     return vertex_buffer;

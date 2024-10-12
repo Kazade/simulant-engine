@@ -10,10 +10,10 @@ struct alignas(32) GL1Vertex {
     Vec3 xyz;
     Vec2 uv;
     Color color;
-    Vec3 n;
 
-    // Tangent
-    Vec3 t;
+    Vec3 n;
+    Vec3 t; // Tangent
+    Vec3 b; // Bitangent
 };
 
 struct GL1XVertexBufferData: public VertexBufferRendererData {
