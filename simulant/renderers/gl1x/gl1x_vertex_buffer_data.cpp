@@ -12,6 +12,7 @@ const VertexFormat GL1XVertexBufferData::format =
              VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
         .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
              VERTEX_ATTR_TYPE_FLOAT)
+        .add(VERTEX_ATTR_NAME_TANGENT, VERTEX_ATTR_ARRANGEMENT_XYZ,
+             VERTEX_ATTR_TYPE_FLOAT)
         .build();
-
 }
