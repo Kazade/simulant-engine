@@ -55,12 +55,7 @@ public:
         iterator& update(bool increment);
 
         iterator(MeshArrangement arrangement, const IndexData* indexes,
-                 const VertexRangeList* ranges) :
-            arrangement_(arrangement), indexes_(indexes), ranges_(ranges) {
-
-            // Initialize the current value without incrementing
-            update(false);
-        }
+                 const VertexRangeList* ranges);
 
     public:
         iterator() = default;

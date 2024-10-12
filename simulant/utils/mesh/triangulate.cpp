@@ -10,18 +10,7 @@ TriangleIterable::iterator& TriangleIterable::iterator::operator++() {
 }
 
 TriangleIterable::iterator& TriangleIterable::iterator::update(bool increment) {
-    if(!indexes_ && !ranges_ ||
-       (indexes_ && indexes_->count() == 0 && !ranges_) ||
-       (ranges_ && ranges_->size() == 0 && !indexes_) ||
-       (indexes_ && ranges_ && ranges_->size() == 0 &&
-        indexes_->count() == 0)) {
-        // We're not iterating over anything
-        ranges_ = nullptr;
-        indexes_ = nullptr;
-        return *this;
-    }
-
-    if(indexes_ && indexes_->count()) {
+    if(indexes_) {
         // We're operating on indexes
         if(arrangement_ == MESH_ARRANGEMENT_TRIANGLES) {
             if(idx_ + 3 >= indexes_->count()) {
@@ -87,7 +76,7 @@ TriangleIterable::iterator& TriangleIterable::iterator::update(bool increment) {
             return *this;
         }
 
-    } else if(ranges_ && ranges_->size()) {
+    } else if(ranges_) {
         // We're operating on ranges
         auto current_range = ranges_->at(range_idx_);
         if(arrangement_ == MESH_ARRANGEMENT_TRIANGLES) {
@@ -134,9 +123,34 @@ TriangleIterable::iterator& TriangleIterable::iterator::update(bool increment) {
 
         } else if(arrangement_ == MESH_ARRANGEMENT_QUADS) {
         }
+    } else {
+        idx_ = 0;
+        range_idx_ = 0;
+        return *this;
     }
 
     ++tri_counter_;
     return *this;
+}
+
+TriangleIterable::iterator::iterator(MeshArrangement arrangement,
+                                     const IndexData* indexes,
+                                     const VertexRangeList* ranges) :
+    arrangement_(arrangement), indexes_(indexes), ranges_(ranges) {
+
+    if(indexes_ && indexes_->count() == 0) {
+        indexes_ = nullptr;
+    }
+
+    if(ranges_ && ranges_->size() == 0) {
+        ranges_ = nullptr;
+    }
+
+    if(!indexes_ && !ranges_) {
+        return;
+    }
+
+    // Initialize the current value without incrementing
+    update(false);
 }
 }
