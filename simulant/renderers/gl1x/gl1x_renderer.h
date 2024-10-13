@@ -47,6 +47,10 @@ public:
     }
 
 private:
+    TexturePtr normalization_cube_map_[6];
+
+    void init_normalization_map();
+
     virtual std::shared_ptr<VertexBuffer> prepare_vertex_data(
         MeshArrangement arrangement, const VertexData* vertex_data,
         const IndexData* index_data, const VertexRangeList* ranges) override;

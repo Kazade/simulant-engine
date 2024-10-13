@@ -497,12 +497,13 @@ static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
 static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
                            bool lighting_enabled, GL1Vertex* vertices,
                            uint32_t start, uint32_t count,
-                           const Light* const* lights, std::size_t light_count,
-                           const smlt::Color& global_ambient) {
+                           const Light* const* light,
+                           const smlt::Color& global_ambient,
+                           TexturePtr normal_map) {
 
     data->colors.resize(start + count);
 
-    if(lighting_enabled && light_count) {
+    if(lighting_enabled && light) {
         data->eye_space_normals.resize(count);
         data->eye_space_positions.resize(count);
 
@@ -514,41 +515,40 @@ static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
             data->eye_space_normals[i] = (*model * Vec4(v.n, 0)).xyz();
         }
 
-        for(std::size_t l = 0; l < light_count; ++l) {
-            const Light* light = lights[l];
+        const Vec3 light_pos = light->transform->position();
 
-            const Vec3 light_pos = light->transform->position();
+        if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
+            for(uint32_t i = start; i < start + count; ++i) {
+                GL1Vertex& v = vertices[i];
 
-            if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-                for(uint32_t i = start; i < start + count; ++i) {
-                    GL1Vertex& v = vertices[i];
+                auto L = -light_pos.normalized();
+                auto N = data->eye_space_normals[i - start];
+                auto color =
+                    calculate_vertex_color(N, L, 0, light->intensity(), v.color,
+                                           light->color(), global_ambient);
 
-                    auto L = -light_pos.normalized();
-                    auto N = data->eye_space_normals[i - start];
-                    auto color = calculate_vertex_color(
-                        N, L, 0, light->intensity(), v.color, light->color(),
-                        global_ambient);
+                data->colors[i] = color.to_argb_8888();
+            }
+        } else {
+            for(uint32_t i = start; i < start + count; ++i) {
+                GL1Vertex& v = vertices[i];
 
-                    data->colors[i] = color.to_argb_8888();
-                }
-            } else {
-                for(uint32_t i = start; i < start + count; ++i) {
-                    GL1Vertex& v = vertices[i];
+                auto L = (light_pos - data->eye_space_positions[i - start])
+                             .normalized();
+                auto N = data->eye_space_normals[i - start].normalized();
 
-                    auto L = (light_pos - data->eye_space_positions[i - start])
-                                 .normalized();
-                    auto N = data->eye_space_normals[i - start].normalized();
+                auto D2 = (light_pos - data->eye_space_positions[i - start])
+                              .length_squared();
+                auto color = calculate_vertex_color(
+                    N, L, D2, light->intensity(), v.color, light->color(),
+                    global_ambient);
 
-                    auto D2 = (light_pos - data->eye_space_positions[i - start])
-                                  .length_squared();
-                    auto color = calculate_vertex_color(
-                        N, L, D2, light->intensity(), v.color, light->color(),
-                        global_ambient);
-
-                    data->colors[i] = color.to_argb_8888();
-                }
+                data->colors[i] = color.to_argb_8888();
             }
         }
+
+        if(normal_map) {}
+
     } else {
         // FIXME: we could remove this copy and potentially just
         // submit the original color, but that would mean submitting
@@ -612,6 +612,10 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
 
     auto arrangement = convert_arrangement(renderable->arrangement);
 
+    // FIXME: This should be lights[iteration] and the compositor should
+    // always pass down all lights
+    Light* light = (renderable->light_count) ? renderable->lights[0] : nullptr;
+
     if(element_count) {
         /* Indexed renderable */
         const auto index_data = renderable->index_data->data();
@@ -621,9 +625,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         apply_lighting(renderer_data, &model, pass_->is_lighting_enabled(),
                        &renderer_data->vertices[0],
                        renderable->index_data->min_index(),
-                       renderable->index_data->max_index(),
-                       renderable->lights_affecting_this_frame,
-                       renderable->light_count, global_ambient_);
+                       renderable->index_data->max_index(), light,
+                       global_ambient_, pass_->normal_map());
 
         GLCheck(glDrawElements, arrangement, element_count, index_type,
                 (const void*)index_data);
@@ -641,9 +644,8 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
             auto range = renderable->vertex_ranges->at(i);
             apply_lighting(renderer_data, &model, pass_->is_lighting_enabled(),
                            &renderer_data->vertices[0], range->start,
-                           range->count,
-                           renderable->lights_affecting_this_frame,
-                           renderable->light_count, global_ambient_);
+                           range->count, light, global_ambient_,
+                           pass_->normal_map());
 
             GLCheck(glDrawArrays, arrangement, range->start, range->count);
 

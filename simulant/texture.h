@@ -110,6 +110,11 @@ enum TextureChannel {
     TEXTURE_CHANNEL_INVERSE_RED,
 };
 
+enum TextureTarget {
+    TEXTURE_TARGET_2D,
+    TEXTURE_TARGET_CUBE_MAP
+};
+
 struct Pixel {
     Pixel() = default;
     Pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a) :
@@ -148,6 +153,10 @@ public:
             uint16_t height,
             TextureFormat format = TEXTURE_FORMAT_RGBA_4UB_8888);
     ~Texture();
+
+    TextureTarget target() const;
+
+    void set_target(TextureTarget target);
 
     TextureFormat format() const;
     void set_format(TextureFormat format);
@@ -337,6 +346,7 @@ private:
     uint16_t width_ = 0;
     uint16_t height_ = 0;
 
+    TextureTarget target_ = TEXTURE_TARGET_2D;
     TextureFormat format_ = TEXTURE_FORMAT_RGBA_4UB_8888;
 
     Path source_;

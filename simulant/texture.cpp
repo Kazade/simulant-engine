@@ -111,6 +111,14 @@ Texture::~Texture() {
     free();
 }
 
+TextureTarget Texture::target() const {
+    return target_;
+}
+
+void Texture::set_target(TextureTarget target) {
+    target_ = target;
+}
+
 TextureFormat Texture::format() const {
     return format_;
 }

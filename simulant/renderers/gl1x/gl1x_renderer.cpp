@@ -91,6 +91,84 @@ void GL1XRenderer::init_context() {
 #ifndef __PSP__
     GLCheck(glHint, GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 #endif
+
+#ifndef __DREAMCAST__
+    // The Dreamcast has a different way of dealing with
+    // normal maps; and it's not exposed through GLdc so we
+    // don't need to waste memory with a normalization cube map
+    // there.
+    init_normalization_map();
+#endif
+}
+
+void GL1XRenderer::init_normalization_map() {
+    int size = 32;
+    float offset = 0.5f;
+    float half_size = ((float)size) * 0.5f;
+
+    for(int i = 0; i < 6; ++i) {
+        normalization_cube_map_[i] = window->shared_assets->create_texture(
+            size, size, TEXTURE_FORMAT_RGB_888);
+
+        // FIXME: We don't yet support cube map textures directly in Simulant
+        // when we do, this should be a single cube map texture, not 6
+        // individual textures
+        normalization_cube_map_[i]->set_auto_upload(false);
+
+        normalization_cube_map_[i]->mutate_data(
+            [](uint8_t* data, uint16_t w, uint16_t h, TextureFormat) {
+            int j = 0;
+            for(int y = 0; y < h; ++y) {
+                for(int x = 0; x < w; ++x) {
+                    Vec3 s;
+                    switch(i) {
+                        case 0:
+                            s = Vec3(half_size, y + offset - half_size,
+                                     -(x + offset - half_size));
+                            break;
+                        case 1:
+                            s = Vec3(-half_size, y + offset - half_size,
+                                     x + offset - half_size);
+                            break;
+                        case 2:
+                            s = Vec3(x + offset - half_size, -half_size,
+                                     y + offset - half_size);
+                            break;
+                        case 3:
+                            s = Vec3(x + offset - half_size, half_size,
+                                     -(y + offset - half_size));
+                            break;
+                        case 4:
+                            s = Vec3(x + offset - half_size,
+                                     y + offset - half_size, half_size);
+                            break;
+                        case 5:
+                            s = Vec3(-(x + offset - half_size),
+                                     y + offset - half_size, -half_size);
+                            break;
+                    }
+
+                    s.normalize();
+                    float r = (s.x + 1.0f) * 0.5f;
+                    float g = (s.y + 1.0f) * 0.5f;
+                    float b = (s.z + 1.0f) * 0.5f;
+
+                    data[j++] = clamp(r, 0, 1) * 255;
+                    data[j++] = clamp(g, 0, 1) * 255;
+                    data[j++] = clamp(b, 0, 1) * 255;
+                }
+            }
+        });
+
+        // FIXME: Support cube map textures properly instead of hacking it in
+        // here!
+        GLuint tex_id;
+        GLCheck(glGenTextures, 1, &tex_id);
+        GLCheck(glBindTextures, GL_TEXTURE_CUBE_MAP, tex_id);
+        GLCheck(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + i, 0,
+                GL_RGBA8, 32, 32, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        normalization_cube_map_[i]->_set_renderer_specific_id(tex_id);
+    }
 }
 
 std::shared_ptr<batcher::RenderQueueVisitor> GL1XRenderer::get_render_queue_visitor(CameraPtr camera) {
