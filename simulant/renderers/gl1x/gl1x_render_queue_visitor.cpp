@@ -68,6 +68,12 @@ void GL1RenderQueueVisitor::change_render_group(
     _S_UNUSED(next);
 }
 
+constexpr GLenum gl_target(TextureTarget target) {
+    return (target == TEXTURE_TARGET_2D)         ? GL_TEXTURE_2D
+           : (target == TEXTURE_TARGET_CUBE_MAP) ? GL_TEXTURE_CUBE_MAP
+                                                 : GL_TEXTURE_2D;
+}
+
 _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex,
                                   const Mat4& mat) {
     if(!tex) {
@@ -84,7 +90,7 @@ _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex,
     GLCheck(glActiveTexture, GL_TEXTURE0 + which);
 #endif
 
-    GLCheck(glBindTexture, GL_TEXTURE_2D, id);
+    GLCheck(glBindTexture, gl_target(tex->target()), id);
     GLCheck(glMatrixMode, GL_TEXTURE);
     GLCheck(glLoadMatrixf, mat.data());
 
@@ -155,15 +161,16 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 
 #define ENABLE_TEXTURE(i, map)                                                 \
     if(_S_GL_MAX_TEXTURE_UNITS > (i)) {                                        \
+        auto tex = next->CAT(map, _map)();                                     \
+        auto target = gl_target(tex->target());                                \
         if(enabled & (1 << (i))) {                                             \
             GLCheck(glActiveTexture, GL_TEXTURE0 + (i));                       \
-            GLCheck(glEnable, GL_TEXTURE_2D);                                  \
-            bind_texture((i), next->CAT(map, _map)(),                          \
-                         next->CAT(map, _map_matrix)());                       \
+            GLCheck(glEnable, target);                                         \
+            bind_texture((i), tex, next->CAT(map, _map_matrix)());             \
         } else {                                                               \
             GLCheck(glActiveTexture, GL_TEXTURE0 + (i));                       \
-            GLCheck(glBindTexture, GL_TEXTURE_2D, 0);                          \
-            GLCheck(glDisable, GL_TEXTURE_2D);                                 \
+            GLCheck(glBindTexture, target, 0);                                 \
+            GLCheck(glDisable, target);                                        \
         }                                                                      \
     }
 
@@ -497,7 +504,7 @@ static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
 static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
                            bool lighting_enabled, GL1Vertex* vertices,
                            uint32_t start, uint32_t count,
-                           const Light* const* light,
+                           const Light* const light,
                            const smlt::Color& global_ambient,
                            TexturePtr normal_map) {
 
@@ -614,7 +621,9 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
 
     // FIXME: This should be lights[iteration] and the compositor should
     // always pass down all lights
-    Light* light = (renderable->light_count) ? renderable->lights[0] : nullptr;
+    Light* light = (renderable->light_count)
+                       ? renderable->lights_affecting_this_frame[0]
+                       : nullptr;
 
     if(element_count) {
         /* Indexed renderable */

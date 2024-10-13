@@ -27,6 +27,32 @@ public:
         assert_false(tex->has_data());
     }
 
+    void test_targets() {
+        TexturePtr tex = application->shared_assets->create_texture(
+            3, 3, TEXTURE_FORMAT_R_1UB_8);
+        assert_equal(tex->target(), TEXTURE_TARGET_2D); // Default to 2D target
+        assert_equal(tex->data_size(), 3u * 3u);
+
+        tex = application->shared_assets->create_texture(
+            3, 3, TEXTURE_FORMAT_R_1UB_8, TEXTURE_TARGET_CUBE_MAP);
+        assert_equal(tex->target(), TEXTURE_TARGET_CUBE_MAP);
+        assert_equal(tex->data_size(),
+                     3u * 3u * 6u); // Cube maps are stored sequentially
+
+        assert_equal(tex->data(TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_X),
+                     tex->data(TEXTURE_DATA_OFFSET_BASE));
+        assert_equal(tex->data(TEXTURE_DATA_OFFSET_CUBE_MAP_NEGATIVE_X),
+                     tex->data(TEXTURE_DATA_OFFSET_BASE) + 3 * 3);
+        assert_equal(tex->data(TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_Y),
+                     tex->data(TEXTURE_DATA_OFFSET_BASE) + ((3 * 3) * 2));
+        assert_equal(tex->data(TEXTURE_DATA_OFFSET_CUBE_MAP_NEGATIVE_Y),
+                     tex->data(TEXTURE_DATA_OFFSET_BASE) + ((3 * 3) * 3));
+        assert_equal(tex->data(TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_Z),
+                     tex->data(TEXTURE_DATA_OFFSET_BASE) + ((3 * 3) * 4));
+        assert_equal(tex->data(TEXTURE_DATA_OFFSET_CUBE_MAP_NEGATIVE_Z),
+                     tex->data(TEXTURE_DATA_OFFSET_BASE) + ((3 * 3) * 5));
+    }
+
     void test_blur() {
         TexturePtr tex = application->shared_assets->create_texture(3, 3, smlt::TEXTURE_FORMAT_R_1UB_8);
         tex->set_auto_upload(false);

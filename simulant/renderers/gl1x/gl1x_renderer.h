@@ -47,7 +47,7 @@ public:
     }
 
 private:
-    TexturePtr normalization_cube_map_[6];
+    TexturePtr normalization_cube_map_;
 
     void init_normalization_map();
 

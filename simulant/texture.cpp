@@ -86,11 +86,13 @@ std::size_t texture_format_channels(TextureFormat format) {
     }
 }
 
-Texture::Texture(AssetID id, AssetManager *asset_manager, uint16_t width, uint16_t height, TextureFormat format):
+Texture::Texture(AssetID id, AssetManager* asset_manager, uint16_t width,
+                 uint16_t height, TextureFormat format, TextureTarget target) :
     Asset(asset_manager),
     generic::Identifiable<AssetID>(id),
     width_(width),
-    height_(height) {
+    height_(height),
+    target_(target) {
 
     S_DEBUG("Creating texture {0}x{1}", width, height);
     S_DEBUG("Setting format to: {0}", format);
@@ -131,7 +133,8 @@ uint16_t Texture::height() const {
     return height_;
 }
 
-std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint16_t height) {   
+std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width,
+                                        uint16_t height, TextureTarget target) {
     auto calc_vq_mipmap_size = [](std::size_t s) -> std::size_t {
         std::size_t ret = 0;
         while(s != 1) {
@@ -169,7 +172,8 @@ std::size_t Texture::required_data_size(TextureFormat fmt, uint16_t width, uint1
             break;
     }
 
-    return texture_format_stride(fmt) * width * height;
+    return texture_format_stride(fmt) * width * height *
+           (target == TEXTURE_TARGET_CUBE_MAP ? 6 : 1);
 }
 
 void Texture::set_format(TextureFormat format) {
@@ -179,7 +183,7 @@ void Texture::set_format(TextureFormat format) {
 
     format_ = format;
 
-    auto byte_size = required_data_size(format, width_, height_);
+    auto byte_size = required_data_size(format, width_, height_, target_);
     resize_data(byte_size);
 }
 
@@ -337,7 +341,7 @@ void Texture::resize(uint16_t width, uint16_t height) {
     width_ = width;
     height_ = height;
 
-    auto data_size = required_data_size(format_, width, height);
+    auto data_size = required_data_size(format_, width, height, target_);
     resize_data(data_size);
 }
 
@@ -577,8 +581,10 @@ void Texture::flush() {
     });
 }
 
-void Texture::mutate_data(Texture::MutationFunc func) {
-    func(&data_[0], width_, height_, format_);
+void Texture::mutate_data(Texture::MutationFunc func,
+                          TextureDataOffset offset) {
+    // Ugly cast, but kinda necessary here
+    func(const_cast<uint8_t*>(data(offset)), width_, height_, format_);
 
     /* A mutation by definition updates the data */
     data_dirty_ = true;
@@ -602,7 +608,7 @@ uint8_t Texture::channels() const {
     return texture_format_channels(format_);
 }
 
-const uint8_t *Texture::data() const {
+const uint8_t* Texture::data(TextureDataOffset offset) const {
     return data_;
 }
 

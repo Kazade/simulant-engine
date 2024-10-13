@@ -100,7 +100,9 @@ MaterialPtr AssetManager::default_material() const {
 
 
 static TexturePtr create_texture_with_color(AssetManager* manager, const Color& c) {
-    auto tex = manager->create_texture(8, 8, TEXTURE_FORMAT_RGB_3UB_888, GARBAGE_COLLECT_NEVER);
+    auto tex =
+        manager->create_texture(8, 8, TEXTURE_FORMAT_RGB_3UB_888,
+                                TEXTURE_TARGET_2D, GARBAGE_COLLECT_NEVER);
 
     const uint8_t r = (uint8_t) (c.r * 255.0f);
     const uint8_t g = (uint8_t) (c.g * 255.0f);
@@ -394,18 +396,25 @@ std::size_t AssetManager::material_count() const {
     return material_manager_.count();
 }
 
-TexturePtr AssetManager::create_texture(uint16_t width, uint16_t height, TextureFormat format, GarbageCollectMethod garbage_collect) {
-    NEW_X(Texture, texture, texture_manager_, width, height, format);
+TexturePtr AssetManager::create_texture(uint16_t width, uint16_t height,
+                                        TextureFormat format,
+                                        TextureTarget target,
+                                        GarbageCollectMethod garbage_collect) {
+    NEW_X(Texture, texture, texture_manager_, width, height, format, target);
 }
 
-TexturePtr AssetManager::load_texture(const Path& path, GarbageCollectMethod garbage_collect) {
-    return load_texture(path, TextureFlags(), garbage_collect);
+TexturePtr AssetManager::load_texture(const Path& path, TextureTarget target,
+                                      GarbageCollectMethod garbage_collect) {
+    return load_texture(path, TextureFlags(), target, garbage_collect);
 }
 
-TexturePtr AssetManager::load_texture(const Path& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
+TexturePtr AssetManager::load_texture(const Path& path, TextureFlags flags,
+                                      TextureTarget target,
+                                      GarbageCollectMethod garbage_collect) {
     //Load the texture
     S_DEBUG("Loading texture from file: {0}", path);
-    smlt::TexturePtr tex = create_texture(8, 8, TEXTURE_FORMAT_RGBA_4UB_8888, garbage_collect);
+    smlt::TexturePtr tex = create_texture(8, 8, TEXTURE_FORMAT_RGBA_4UB_8888,
+                                          target, garbage_collect);
 
     {
         S_DEBUG("Finding loader for: {0}", path);

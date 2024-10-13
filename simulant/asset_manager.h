@@ -109,7 +109,7 @@ public:
 
     /* Texture API */
     TexturePtr load_texture(
-        const Path& filename,
+        const Path& filename, TextureTarget target = TEXTURE_TARGET_2D,
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     void destroy_texture(AssetID id);
     TexturePtr texture(AssetID id);
@@ -195,9 +195,11 @@ public:
     TexturePtr create_texture(
         uint16_t width, uint16_t height,
         TextureFormat format = TEXTURE_FORMAT_RGBA_4UB_8888,
+        TextureTarget target = TEXTURE_TARGET_2D,
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     TexturePtr load_texture(
         const Path& path, TextureFlags flags,
+        TextureTarget target = TEXTURE_TARGET_2D,
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     MaterialPtr create_material(

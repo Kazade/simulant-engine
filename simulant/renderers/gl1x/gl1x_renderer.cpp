@@ -26,6 +26,8 @@
     #include "../glad/glad/glad.h"
 #endif
 
+#include "../../application.h"
+#include "../../asset_manager.h"
 #include "../../assets/material.h"
 #include "../../material_constants.h"
 #include "../../meshes/vertex_buffer.h"
@@ -33,6 +35,8 @@
 #include "../../utils/gl_error.h"
 #include "../../utils/mesh/triangulate.h"
 #include "../../vertex_data.h"
+#include "../../window.h"
+
 #include "gl1x_render_group_impl.h"
 #include "gl1x_render_queue_visitor.h"
 #include "gl1x_vertex_buffer_data.h"
@@ -106,18 +110,13 @@ void GL1XRenderer::init_normalization_map() {
     float offset = 0.5f;
     float half_size = ((float)size) * 0.5f;
 
+    normalization_cube_map_ = get_app()->shared_assets->create_texture(
+        size, size, TEXTURE_FORMAT_RGB_3UB_888, TEXTURE_TARGET_CUBE_MAP);
+
     for(int i = 0; i < 6; ++i) {
-        normalization_cube_map_[i] = window->shared_assets->create_texture(
-            size, size, TEXTURE_FORMAT_RGB_888);
-
-        // FIXME: We don't yet support cube map textures directly in Simulant
-        // when we do, this should be a single cube map texture, not 6
-        // individual textures
-        normalization_cube_map_[i]->set_auto_upload(false);
-
-        normalization_cube_map_[i]->mutate_data(
-            [](uint8_t* data, uint16_t w, uint16_t h, TextureFormat) {
-            int j = 0;
+        normalization_cube_map_->mutate_data(
+            [=](uint8_t* data, uint16_t w, uint16_t h, TextureFormat) {
+            int j = 0;            
             for(int y = 0; y < h; ++y) {
                 for(int x = 0; x < w; ++x) {
                     Vec3 s;
@@ -158,16 +157,17 @@ void GL1XRenderer::init_normalization_map() {
                     data[j++] = clamp(b, 0, 1) * 255;
                 }
             }
-        });
+        }, (TextureDataOffset)(((int)TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_X) +
+                               i));
 
-        // FIXME: Support cube map textures properly instead of hacking it in
-        // here!
-        GLuint tex_id;
-        GLCheck(glGenTextures, 1, &tex_id);
-        GLCheck(glBindTextures, GL_TEXTURE_CUBE_MAP, tex_id);
-        GLCheck(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + i, 0,
-                GL_RGBA8, 32, 32, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        normalization_cube_map_[i]->_set_renderer_specific_id(tex_id);
+        // // FIXME: Support cube map textures properly instead of hacking it in
+        // // here!
+        // GLuint tex_id;
+        // GLCheck(glGenTextures, 1, &tex_id);
+        // GLCheck(glBindTextures, GL_TEXTURE_CUBE_MAP, tex_id);
+        // GLCheck(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + i, 0,
+        //         GL_RGBA8, 32, 32, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        // normalization_cube_map_[i]->_set_renderer_specific_id(tex_id);
     }
 }
 

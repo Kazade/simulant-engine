@@ -115,6 +115,34 @@ enum TextureTarget {
     TEXTURE_TARGET_CUBE_MAP
 };
 
+/*
+ * The data array can store multiple chunks of information
+ * including:
+ *
+ * - base texture data
+ * - mipmap textures
+ * - multiple cube map textures
+ * - palette + index data
+ *
+ * These constants can be passed to data() to return pointers
+ * to the correct location in the buffer.
+ *
+ * FIXME: This maybe should be allowed for set_data too but
+ * that opens a can of worms because data should be provided
+ * all at once.
+ */
+enum TextureDataOffset {
+    TEXTURE_DATA_OFFSET_BASE,
+    TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_X,
+    TEXTURE_DATA_OFFSET_CUBE_MAP_NEGATIVE_X,
+    TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_Y,
+    TEXTURE_DATA_OFFSET_CUBE_MAP_NEGATIVE_Y,
+    TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_Z,
+    TEXTURE_DATA_OFFSET_CUBE_MAP_NEGATIVE_Z,
+    TEXTURE_DATA_OFFSET_MIPMAP_0,
+    TEXTURE_DATA_OFFSET_PALETTE,
+};
+
 struct Pixel {
     Pixel() = default;
     Pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a) :
@@ -151,7 +179,8 @@ public:
 
     Texture(AssetID id, AssetManager* asset_manager, uint16_t width,
             uint16_t height,
-            TextureFormat format = TEXTURE_FORMAT_RGBA_4UB_8888);
+            TextureFormat format = TEXTURE_FORMAT_RGBA_4UB_8888,
+            TextureTarget target = TEXTURE_TARGET_2D);
     ~Texture();
 
     TextureTarget target() const;
@@ -241,7 +270,8 @@ public:
 
     /** Returns the current in-ram data. For paletted texture the data
      *  will be prefixed with the palette. */
-    const uint8_t* data() const;
+    const uint8_t*
+        data(TextureDataOffset offset = TEXTURE_DATA_OFFSET_BASE) const;
 
     /** Returns the size of the currently allocated data
      *  buffer, this will be zero if the data only
@@ -256,7 +286,8 @@ public:
      * will return the size of the index data + plus the size of the palette
      */
     static std::size_t required_data_size(TextureFormat fmt, uint16_t width,
-                                          uint16_t height);
+                                          uint16_t height,
+                                          TextureTarget target);
 
     void set_data(const uint8_t* data, std::size_t size);
     void set_data(const std::vector<uint8_t>& data);
@@ -278,7 +309,8 @@ public:
         MutationFunc;
 
     /** Apply a mutation function to the current texture data */
-    void mutate_data(MutationFunc func);
+    void mutate_data(MutationFunc func,
+                     TextureDataOffset offset = TEXTURE_DATA_OFFSET_BASE);
 
     uint16_t width() const override;
     uint16_t height() const override;
