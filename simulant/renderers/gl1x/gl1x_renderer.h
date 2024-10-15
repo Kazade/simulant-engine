@@ -47,6 +47,8 @@ public:
     }
 
 private:
+    virtual void on_pre_render() override;
+
     TexturePtr normalization_cube_map_;
 
     void init_normalization_map();

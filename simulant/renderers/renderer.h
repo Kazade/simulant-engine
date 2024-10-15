@@ -206,16 +206,17 @@ private:
      */
     virtual void on_renderable_prepare(Renderable* renderable);
 
-    /* Called at the start of pre_render() */
-    virtual void on_pre_render() {}
-    virtual void on_post_render() {}
-
     virtual std::shared_ptr<VertexBuffer> prepare_vertex_data(
         MeshArrangement arrangement, const VertexData* vertex_data,
         const IndexData* index_data, const VertexRangeList* ranges) = 0;
 
     mutable thread::Mutex texture_registry_mutex_;
     std::unordered_map<AssetID, Texture*> texture_registry_;
+
+protected:
+    /* Called at the start of pre_render() */
+    virtual void on_pre_render() {}
+    virtual void on_post_render() {}
 };
 
 }

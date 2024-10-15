@@ -95,13 +95,19 @@ void GL1XRenderer::init_context() {
 #ifndef __PSP__
     GLCheck(glHint, GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 #endif
+}
+
+void GL1XRenderer::on_pre_render() {
+    GLRenderer::on_pre_render();
 
 #ifndef __DREAMCAST__
-    // The Dreamcast has a different way of dealing with
-    // normal maps; and it's not exposed through GLdc so we
-    // don't need to waste memory with a normalization cube map
-    // there.
-    init_normalization_map();
+    if(!normalization_cube_map_) {
+        // The Dreamcast has a different way of dealing with
+        // normal maps; and it's not exposed through GLdc so we
+        // don't need to waste memory with a normalization cube map
+        // there.
+        init_normalization_map();
+    }
 #endif
 }
 
