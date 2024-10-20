@@ -213,7 +213,10 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
     GLint active;
     GLuint target = texture->_renderer_specific_id();
     GLCheck(glGetIntegerv, GL_TEXTURE_BINDING_2D, &active);
-    GLCheck(glBindTexture, GL_TEXTURE_2D, target);
+    GLCheck(glBindTexture,
+            (texture->target() == TEXTURE_TARGET_CUBE_MAP) ? GL_TEXTURE_CUBE_MAP
+                                                           : GL_TEXTURE_2D,
+            target);
 
     /* Only upload data if it's enabled on the texture */
     if(texture->_data_dirty() && texture->auto_upload()) {
@@ -224,7 +227,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
         auto format = convert_format(f);
         auto internal_format = texture_format_to_internal_format(f);
         auto type = convert_type(f);
-        auto data = &texture->data()[0];
+        auto base_data = texture->data(TEXTURE_DATA_OFFSET_BASE);
 
 #if defined(__DREAMCAST__)
         bool hardware_palettes_supported = true;
@@ -288,7 +291,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
 
                 /* We want to use the new data, not what was uploaded by the user. That
                  * data is now stashed in the palette */
-                data = &new_data[0];
+                base_data = &new_data[0];
                 format = internal_format = (texel_size == 4) ? GL_RGBA : GL_RGB;
                 type = (texel_size == 2) ? GL_UNSIGNED_SHORT_5_6_5 : GL_UNSIGNED_BYTE;
             }
@@ -312,7 +315,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                     dst++;
                 }
 
-                data = &new_data[0];
+                base_data = &new_data[0];
                 format = GL_RGBA;
                 type = GL_UNSIGNED_SHORT_4_4_4_4;
             }
@@ -323,27 +326,30 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
              * OES_compressed_paletted_texture extension is available */
 
             if(texture->is_compressed() || (hardware_palettes_supported && paletted)) {
-                GLCheck(glCompressedTexImage2D,
-                    GL_TEXTURE_2D,
-                    0,
-                    format,
-                    texture->width(), texture->height(), 0,
-                    texture->data_size(),
-                    data
-                );
+                GLCheck(glCompressedTexImage2D, GL_TEXTURE_2D, 0, format,
+                        texture->width(), texture->height(), 0,
+                        texture->data_size(), base_data);
 
                 if(texture_format_contains_mipmaps(f)) {
                     texture->_set_has_mipmaps(true);
                 }
+            } else if(texture->target() == TEXTURE_TARGET_CUBE_MAP) {
+                // FIXME: We need to support:
+                //
+                // 1. Paletted cube maps
+                // 2. Mipmapped cube maps
+                // 3. Compressed cube maps
+                for(int i = 0; i < 6; ++i) {
+                    int off = int(TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_X) + i;
+                    GLCheck(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+                            internal_format, texture->width(),
+                            texture->height(), 0, format, type,
+                            texture->data((TextureDataOffset)off));
+                }
             } else {
-                GLCheck(
-                    glTexImage2D,
-                    GL_TEXTURE_2D,
-                    0, internal_format,
-                    texture->width(), texture->height(), 0,
-                    format,
-                    type, data
-                );
+                GLCheck(glTexImage2D, GL_TEXTURE_2D, 0, internal_format,
+                        texture->width(), texture->height(), 0, format, type,
+                        base_data);
 
                 if(texture_format_contains_mipmaps(f)) {
                     S_WARN(
@@ -456,7 +462,11 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
     }
 
     if(active != (GLint) target) {
-        GLCheck(glBindTexture, GL_TEXTURE_2D, active);
+        GLCheck(glBindTexture,
+                (texture->target() == TEXTURE_TARGET_CUBE_MAP)
+                    ? GL_TEXTURE_CUBE_MAP
+                    : GL_TEXTURE_2D,
+                active);
     }
 }
 

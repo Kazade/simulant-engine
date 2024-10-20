@@ -174,10 +174,40 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         }                                                                      \
     }
 
-    ENABLE_TEXTURE(0, diffuse);
-    ENABLE_TEXTURE(1, light);
-    // ENABLE_TEXTURE(2, normal);
-    ENABLE_TEXTURE(3, specular);
+    // If normal mapping is enabled, then do the DOT3 dance
+    if(enabled & (1 << 2)) {
+        // Bind the cube map to texture unit 0
+        glActiveTexture(GL_TEXTURE0);
+        glEnable(GL_TEXTURE_CUBE_MAP);
+        glBindTexture(GL_TEXTURE_CUBE_MAP,
+                      ((GL1XRenderer*)renderer())
+                          ->normalization_cube_map_->_renderer_specific_id());
+
+        ENABLE_TEXTURE(1, normal);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_DOT3_RGB);
+        // between the N (of N.L) which is stored in a normal map texture
+        glTexEnvf(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
+        // with the L (of N.L) which is stored in the previous stage color
+        glTexEnvf(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PREVIOUS);
+
+        ENABLE_TEXTURE(2, diffuse);
+
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+        // the color argument passed down from the previous stage (Stage 1)
+        // with...
+        glTexEnvf(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
+        glTexEnvf(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+        // the texture for this stage with.
+        glTexEnvf(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_TEXTURE);
+        glTexEnvf(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+    } else {
+        ENABLE_TEXTURE(0, diffuse);
+        ENABLE_TEXTURE(1, light);
+        ENABLE_TEXTURE(2, normal);
+        ENABLE_TEXTURE(3, specular);
+    }
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
     if(!prev || prev->point_size() != next->point_size()) {
@@ -511,8 +541,14 @@ static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
     data->colors.resize(start + count);
 
     if(lighting_enabled && light) {
+        Mat3 tbn;
+
         data->eye_space_normals.resize(count);
         data->eye_space_positions.resize(count);
+
+        if(normal_map) {
+            data->tangent_space_light_dirs.resize(count);
+        }
 
         /* First we need to convert everything to eye-space */
         for(uint32_t i = 0; i < count; ++i) {
@@ -535,6 +571,13 @@ static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
                                            light->color(), global_ambient);
 
                 data->colors[i] = color.to_argb_8888();
+
+                if(normal_map) {
+                    tbn = Mat3(v.t, v.b, v.n);
+
+                    auto light_dir = (tbn * L).normalized();
+                    data->tangent_space_light_dirs[i - start] = light_dir;
+                }
             }
         } else {
             for(uint32_t i = start; i < start + count; ++i) {
@@ -551,11 +594,15 @@ static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
                     global_ambient);
 
                 data->colors[i] = color.to_argb_8888();
+
+                if(normal_map) {
+                    tbn = Mat3(v.t, v.b, v.n);
+
+                    auto light_dir = (tbn * L).normalized();
+                    data->tangent_space_light_dirs[i - start] = light_dir;
+                }
             }
         }
-
-        if(normal_map) {}
-
     } else {
         // FIXME: we could remove this copy and potentially just
         // submit the original color, but that would mean submitting
@@ -607,15 +654,38 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
 
     enable_vertex_arrays();
     enable_color_arrays(true);
-    enable_texcoord_array(0);
 
     GLCheck(glVertexPointer, 3, GL_FLOAT, stride,
             ((const uint8_t*)vertex_data) +
                 spec.offset(VERTEX_ATTR_NAME_POSITION).value());
-    GLCheck(glClientActiveTexture, GL_TEXTURE0);
-    GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
-            ((const uint8_t*)vertex_data) +
-                spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value());
+
+    if(pass_->normal_map()) {
+        enable_texcoord_array(0);
+        enable_texcoord_array(1);
+        enable_texcoord_array(2);
+
+        // If normal mapping is enabled, we need to shift the texture coords to
+        // different units
+        GLCheck(glClientActiveTexture, GL_TEXTURE0);
+        GLCheck(glTexCoordPointer, 3, GL_FLOAT, 0,
+                &renderer_data->tangent_space_light_dirs[0]);
+
+        GLCheck(glClientActiveTexture, GL_TEXTURE1);
+        GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
+                ((const uint8_t*)vertex_data) +
+                    spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value());
+
+        GLCheck(glClientActiveTexture, GL_TEXTURE2);
+        GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
+                ((const uint8_t*)vertex_data) +
+                    spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value());
+    } else {
+        enable_texcoord_array(0);
+        GLCheck(glClientActiveTexture, GL_TEXTURE0);
+        GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
+                ((const uint8_t*)vertex_data) +
+                    spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value());
+    }
 
     auto arrangement = convert_arrangement(renderable->arrangement);
 

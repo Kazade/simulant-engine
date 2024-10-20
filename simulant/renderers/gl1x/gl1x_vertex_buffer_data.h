@@ -7,13 +7,13 @@
 namespace smlt {
 
 struct alignas(32) GL1Vertex {
-    Vec3 xyz;
-    Vec2 uv;
-    Color color;
+    Vec3 xyz;    // 12
+    Vec2 uv;     // 8
+    Color color; // 16
 
-    Vec3 n;
-    Vec3 t; // Tangent
-    Vec3 b; // Bitangent
+    Vec3 n; // 12
+    Vec3 t; // 12 Tangent
+    Vec3 b; // 12 Bitangent
 };
 
 struct GL1XVertexBufferData: public VertexBufferRendererData {
@@ -24,6 +24,7 @@ struct GL1XVertexBufferData: public VertexBufferRendererData {
      * using GL1 lighting */
     std::vector<Vec3> eye_space_positions;
     std::vector<Vec3> eye_space_normals;
+    std::vector<Vec3> tangent_space_light_dirs;
     std::vector<uint32_t> colors;
 
     static const VertexFormat format;

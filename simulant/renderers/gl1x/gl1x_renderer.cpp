@@ -165,15 +165,6 @@ void GL1XRenderer::init_normalization_map() {
             }
         }, (TextureDataOffset)(((int)TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_X) +
                                i));
-
-        // // FIXME: Support cube map textures properly instead of hacking it in
-        // // here!
-        // GLuint tex_id;
-        // GLCheck(glGenTextures, 1, &tex_id);
-        // GLCheck(glBindTextures, GL_TEXTURE_CUBE_MAP, tex_id);
-        // GLCheck(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB + i, 0,
-        //         GL_RGBA8, 32, 32, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        // normalization_cube_map_[i]->_set_renderer_specific_id(tex_id);
     }
 }
 
