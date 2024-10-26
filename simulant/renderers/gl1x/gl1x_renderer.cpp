@@ -112,17 +112,19 @@ void GL1XRenderer::on_pre_render() {
 }
 
 void GL1XRenderer::init_normalization_map() {
-    int size = 32;
+    int size = 64;
     float offset = 0.5f;
     float half_size = ((float)size) * 0.5f;
 
     normalization_cube_map_ = get_app()->shared_assets->create_texture(
         size, size, TEXTURE_FORMAT_RGB_3UB_888, TEXTURE_TARGET_CUBE_MAP);
 
+    normalization_cube_map_->set_texture_filter(TEXTURE_FILTER_POINT);
+
     for(int i = 0; i < 6; ++i) {
         normalization_cube_map_->mutate_data(
             [=](uint8_t* data, uint16_t w, uint16_t h, TextureFormat) {
-            int j = 0;            
+            int j = 0;
             for(int y = 0; y < h; ++y) {
                 for(int x = 0; x < w; ++x) {
                     Vec3 s;
@@ -166,6 +168,8 @@ void GL1XRenderer::init_normalization_map() {
         }, (TextureDataOffset)(((int)TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_X) +
                                i));
     }
+
+    normalization_cube_map_->flush();
 }
 
 std::shared_ptr<batcher::RenderQueueVisitor> GL1XRenderer::get_render_queue_visitor(CameraPtr camera) {
@@ -219,7 +223,7 @@ std::shared_ptr<VertexBuffer> GL1XRenderer::prepare_vertex_data(
 
     Vec3 edge1, edge2;
     Vec2 deltaUV1, deltaUV2;
-    Vec3 tangent, bitangent;
+    Vec3 tangent;
 
     for(const auto& tri: tri_iterator) {
         auto& v0 = vbuffer_data->vertices[tri.idx[0]];
@@ -238,22 +242,17 @@ std::shared_ptr<VertexBuffer> GL1XRenderer::prepare_vertex_data(
         tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
         tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
 
-        bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
-        bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
-        bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
-
         v0.t += tangent;
         v1.t += tangent;
         v2.t += tangent;
-
-        v0.b += bitangent;
-        v1.b += bitangent;
-        v2.b += bitangent;
     }
 
     for(uint32_t i = 0; i < vertex_count; ++i) {
-        vbuffer_data->vertices[i].t.normalize();
-        vbuffer_data->vertices[i].b.normalize();
+        auto v = vbuffer_data->vertices[i];
+        v.t.normalize();
+
+        v.b = v.n.cross(v.t);
+        v.b.normalize();
     }
 
     return vertex_buffer;

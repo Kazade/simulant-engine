@@ -210,18 +210,22 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
         return;
     }
 
-    GLint active;
-    GLuint target = texture->_renderer_specific_id();
-    GLCheck(glGetIntegerv, GL_TEXTURE_BINDING_2D, &active);
-    GLCheck(glBindTexture,
-            (texture->target() == TEXTURE_TARGET_CUBE_MAP) ? GL_TEXTURE_CUBE_MAP
-                                                           : GL_TEXTURE_2D,
-            target);
+    GLint active_2d;
+    GLint active_cube_map;
+
+    GLuint tex_object = texture->_renderer_specific_id();
+    auto texture_target = (texture->target() == TEXTURE_TARGET_CUBE_MAP)
+                              ? GL_TEXTURE_CUBE_MAP
+                              : GL_TEXTURE_2D;
+    GLCheck(glGetIntegerv, GL_TEXTURE_BINDING_2D, &active_2d);
+    GLCheck(glGetIntegerv, GL_TEXTURE_BINDING_CUBE_MAP, &active_cube_map);
+    GLCheck(glEnable, texture_target);
+    GLCheck(glBindTexture, texture_target, tex_object);
 
     /* Only upload data if it's enabled on the texture */
     if(texture->_data_dirty() && texture->auto_upload()) {
         // Upload
-        S_DEBUG("Uploading texture data to texture: {0}", +target);
+        S_DEBUG("Uploading texture data to texture: {0}", +tex_object);
 
         auto f = texture->format();
         auto format = convert_format(f);
@@ -326,7 +330,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
              * OES_compressed_paletted_texture extension is available */
 
             if(texture->is_compressed() || (hardware_palettes_supported && paletted)) {
-                GLCheck(glCompressedTexImage2D, GL_TEXTURE_2D, 0, format,
+                GLCheck(glCompressedTexImage2D, texture_target, 0, format,
                         texture->width(), texture->height(), 0,
                         texture->data_size(), base_data);
 
@@ -341,13 +345,13 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 // 3. Compressed cube maps
                 for(int i = 0; i < 6; ++i) {
                     int off = int(TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_X) + i;
+                    auto data = texture->data((TextureDataOffset)off);
                     GLCheck(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
                             internal_format, texture->width(),
-                            texture->height(), 0, format, type,
-                            texture->data((TextureDataOffset)off));
+                            texture->height(), 0, format, type, data);
                 }
             } else {
-                GLCheck(glTexImage2D, GL_TEXTURE_2D, 0, internal_format,
+                GLCheck(glTexImage2D, texture_target, 0, internal_format,
                         texture->width(), texture->height(), 0, format, type,
                         base_data);
 
@@ -374,7 +378,9 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
         }
 
         /* Generate mipmaps if we don't have them already */
-        if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE && !texture->has_mipmaps() && !texture->is_compressed()) {
+        if(texture->mipmap_generation() == MIPMAP_GENERATE_COMPLETE &&
+           !texture->has_mipmaps() && !texture->is_compressed() &&
+           texture->target() != TEXTURE_TARGET_CUBE_MAP) {
 #ifdef __DREAMCAST__
             if(texture->width() == texture->height()) {
 #endif
@@ -388,11 +394,11 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 );
 
                 if(glGenerateMipmap) {
-                    GLCheck(glGenerateMipmap, GL_TEXTURE_2D);
+                    GLCheck(glGenerateMipmap, texture_target);
                     texture->_set_has_mipmaps(true);
                     S_DEBUG("Mipmaps generated");
                 } else if(glGenerateMipmapEXT) {
-                    GLCheck(glGenerateMipmapEXT, GL_TEXTURE_2D);
+                    GLCheck(glGenerateMipmapEXT, texture_target);
                     texture->_set_has_mipmaps(true);
                     S_DEBUG("Mipmaps generated");
                 } else {
@@ -416,28 +422,38 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
             case TEXTURE_FILTER_TRILINEAR: {
                 if(!texture->has_mipmaps()) {
                     // Same as bilinear
-                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                    GLCheck(glTexParameteri, texture_target,
+                            GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    GLCheck(glTexParameteri, texture_target,
+                            GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 } else {
                     // Trilinear
-                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                    GLCheck(glTexParameteri, texture_target,
+                            GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    GLCheck(glTexParameteri, texture_target,
+                            GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
                 }
 
             } break;
             case TEXTURE_FILTER_BILINEAR: {
                 if(texture->has_mipmaps()) {
-                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+                    GLCheck(glTexParameteri, texture_target,
+                            GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    GLCheck(glTexParameteri, texture_target,
+                            GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
                 } else {
-                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                    GLCheck(glTexParameteri, texture_target,
+                            GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    GLCheck(glTexParameteri, texture_target,
+                            GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 }
             } break;
             case TEXTURE_FILTER_POINT:
             default: {
-                GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                GLCheck(glTexParameteri, texture_target, GL_TEXTURE_MAG_FILTER,
+                        GL_NEAREST);
+                GLCheck(glTexParameteri, texture_target, GL_TEXTURE_MIN_FILTER,
+                        GL_NEAREST);
             }
         }
 
@@ -455,19 +471,14 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
         auto wrapu = convert_wrap_mode(texture->wrap_u());
         auto wrapv = convert_wrap_mode(texture->wrap_v());
 
-        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapu);
-        GLCheck(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapv);
+        GLCheck(glTexParameteri, texture_target, GL_TEXTURE_WRAP_S, wrapu);
+        GLCheck(glTexParameteri, texture_target, GL_TEXTURE_WRAP_T, wrapv);
 
         texture->_set_params_clean();
     }
 
-    if(active != (GLint) target) {
-        GLCheck(glBindTexture,
-                (texture->target() == TEXTURE_TARGET_CUBE_MAP)
-                    ? GL_TEXTURE_CUBE_MAP
-                    : GL_TEXTURE_2D,
-                active);
-    }
+    GLCheck(glBindTexture, GL_TEXTURE_2D, active_2d);
+    GLCheck(glBindTexture, GL_TEXTURE_CUBE_MAP, active_cube_map);
 }
 
 bool GLRenderer::texture_format_is_native(TextureFormat fmt) {

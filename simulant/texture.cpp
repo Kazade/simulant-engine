@@ -609,6 +609,7 @@ uint8_t Texture::channels() const {
 }
 
 const uint8_t* Texture::data(TextureDataOffset offset) const {
+    auto cube_map_size = data_size() / 6;
     switch(offset) {
         case TEXTURE_DATA_OFFSET_BASE:
             // FIXME: in the case of paletted data this should
@@ -616,17 +617,17 @@ const uint8_t* Texture::data(TextureDataOffset offset) const {
             // will be a breaking change so needs to be done later
             return data_;
         case TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_X:
-            return data_ + data_size() / 6 * 0;
+            return data_ + cube_map_size * 0;
         case TEXTURE_DATA_OFFSET_CUBE_MAP_NEGATIVE_X:
-            return data_ + data_size() / 6 * 1;
+            return data_ + cube_map_size * 1;
         case TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_Y:
-            return data_ + data_size() / 6 * 2;
+            return data_ + cube_map_size * 2;
         case TEXTURE_DATA_OFFSET_CUBE_MAP_NEGATIVE_Y:
-            return data_ + data_size() / 6 * 3;
+            return data_ + cube_map_size * 3;
         case TEXTURE_DATA_OFFSET_CUBE_MAP_POSITIVE_Z:
-            return data_ + data_size() / 6 * 4;
+            return data_ + cube_map_size * 4;
         case TEXTURE_DATA_OFFSET_CUBE_MAP_NEGATIVE_Z:
-            return data_ + data_size() / 6 * 5;
+            return data_ + cube_map_size * 5;
         default:
             S_ERROR("Offset not implemented");
             return nullptr;

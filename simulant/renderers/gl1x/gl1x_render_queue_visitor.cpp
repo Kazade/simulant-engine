@@ -43,10 +43,10 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
 
     /* Set up default client state before the run. This is necessary
      * so that the boolean flags get correctly set */
-    enable_vertex_arrays(true);
-    enable_color_arrays(true);
-    enable_normal_arrays(true);
-    enable_texcoord_array(0, true);
+    enable_vertex_arrays(false);
+    enable_color_arrays(false);
+    enable_normal_arrays(false);
+    enable_texcoord_array(0, false);
 
     for(auto i = 1u; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
         disable_texcoord_array(i, true);
@@ -69,9 +69,8 @@ void GL1RenderQueueVisitor::change_render_group(
 }
 
 constexpr GLenum gl_target(TextureTarget target) {
-    return (target == TEXTURE_TARGET_2D)         ? GL_TEXTURE_2D
-           : (target == TEXTURE_TARGET_CUBE_MAP) ? GL_TEXTURE_CUBE_MAP
-                                                 : GL_TEXTURE_2D;
+    return (target == TEXTURE_TARGET_CUBE_MAP) ? GL_TEXTURE_CUBE_MAP
+                                               : GL_TEXTURE_2D;
 }
 
 _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex,
@@ -90,7 +89,8 @@ _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex,
     GLCheck(glActiveTexture, GL_TEXTURE0 + which);
 #endif
 
-    GLCheck(glBindTexture, gl_target(tex->target()), id);
+    auto gltarget = gl_target(tex->target());
+    GLCheck(glBindTexture, gltarget, id);
     GLCheck(glMatrixMode, GL_TEXTURE);
     GLCheck(glLoadMatrixf, mat.data());
 
@@ -159,11 +159,11 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 #define CAT_I(a, b) a##b
 #define CAT(a, b) CAT_I(a, b)
 
-#define ENABLE_TEXTURE(i, map)                                                 \
+#define ENABLE_TEXTURE(i, map, force)                                          \
     if(_S_GL_MAX_TEXTURE_UNITS > (i)) {                                        \
         auto tex = next->CAT(map, _map)();                                     \
         auto target = gl_target(tex->target());                                \
-        if(enabled & (1 << (i))) {                                             \
+        if((enabled & (1 << (i))) || force) {                                  \
             GLCheck(glActiveTexture, GL_TEXTURE0 + (i));                       \
             GLCheck(glEnable, target);                                         \
             bind_texture((i), tex, next->CAT(map, _map_matrix)());             \
@@ -177,36 +177,30 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     // If normal mapping is enabled, then do the DOT3 dance
     if(enabled & (1 << 2)) {
         // Bind the cube map to texture unit 0
-        glActiveTexture(GL_TEXTURE0);
-        glEnable(GL_TEXTURE_CUBE_MAP);
-        glBindTexture(GL_TEXTURE_CUBE_MAP,
-                      ((GL1XRenderer*)renderer())
-                          ->normalization_cube_map_->_renderer_specific_id());
+        auto cubemap_id =
+            ((GL1XRenderer*)renderer())
+                ->normalization_cube_map_->_renderer_specific_id();
+        GLCheck(glActiveTexture, GL_TEXTURE0);
+        GLCheck(glEnable, GL_TEXTURE_CUBE_MAP);
+        GLCheck(glBindTexture, GL_TEXTURE_CUBE_MAP, cubemap_id);
 
-        ENABLE_TEXTURE(1, normal);
-        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-        glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_DOT3_RGB);
-        // between the N (of N.L) which is stored in a normal map texture
-        glTexEnvf(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
-        // with the L (of N.L) which is stored in the previous stage color
-        glTexEnvf(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PREVIOUS);
+        GLCheck(glTexEnvi, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        GLCheck(glTexEnvi, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+        GLCheck(glTexEnvi, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
 
-        ENABLE_TEXTURE(2, diffuse);
+        ENABLE_TEXTURE(1, normal, true);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_DOT3_RGB);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_TEXTURE);
 
-        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-        glTexEnvf(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-        // the color argument passed down from the previous stage (Stage 1)
-        // with...
-        glTexEnvf(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
-        glTexEnvf(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-        // the texture for this stage with.
-        glTexEnvf(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_TEXTURE);
-        glTexEnvf(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+        ENABLE_TEXTURE(2, diffuse, true);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
     } else {
-        ENABLE_TEXTURE(0, diffuse);
-        ENABLE_TEXTURE(1, light);
-        ENABLE_TEXTURE(2, normal);
-        ENABLE_TEXTURE(3, specular);
+        ENABLE_TEXTURE(0, diffuse, false);
+        ENABLE_TEXTURE(1, light, false);
+        ENABLE_TEXTURE(2, normal, false);
+        ENABLE_TEXTURE(3, specular, false);
     }
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
@@ -565,7 +559,7 @@ static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
                 GL1Vertex& v = vertices[i];
 
                 auto L = -light_pos.normalized();
-                auto N = data->eye_space_normals[i - start];
+                auto N = data->eye_space_normals[i];
                 auto color =
                     calculate_vertex_color(N, L, 0, light->intensity(), v.color,
                                            light->color(), global_ambient);
@@ -576,19 +570,19 @@ static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
                     tbn = Mat3(v.t, v.b, v.n);
 
                     auto light_dir = (tbn * L).normalized();
-                    data->tangent_space_light_dirs[i - start] = light_dir;
+                    data->tangent_space_light_dirs[i] = light_dir;
                 }
             }
         } else {
             for(uint32_t i = start; i < start + count; ++i) {
                 GL1Vertex& v = vertices[i];
 
-                auto L = (light_pos - data->eye_space_positions[i - start])
-                             .normalized();
-                auto N = data->eye_space_normals[i - start].normalized();
+                auto L =
+                    (light_pos - data->eye_space_positions[i]).normalized();
+                auto N = data->eye_space_normals[i].normalized();
 
-                auto D2 = (light_pos - data->eye_space_positions[i - start])
-                              .length_squared();
+                auto D2 =
+                    (light_pos - data->eye_space_positions[i]).length_squared();
                 auto color = calculate_vertex_color(
                     N, L, D2, light->intensity(), v.color, light->color(),
                     global_ambient);
@@ -596,10 +590,14 @@ static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
                 data->colors[i] = color.to_argb_8888();
 
                 if(normal_map) {
+                    // FIXME: Why not store TBN on the vertex?
+                    // FIXME: Can we compress to save mem?
                     tbn = Mat3(v.t, v.b, v.n);
+                    auto light_dir = (light_pos - v.xyz);
+                    light_dir = light_dir * Mat3(model->inversed());
+                    light_dir = light_dir * tbn;
 
-                    auto light_dir = (tbn * L).normalized();
-                    data->tangent_space_light_dirs[i - start] = light_dir;
+                    data->tangent_space_light_dirs[i] = light_dir;
                 }
             }
         }
@@ -660,21 +658,28 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
                 spec.offset(VERTEX_ATTR_NAME_POSITION).value());
 
     if(pass_->normal_map()) {
-        enable_texcoord_array(0);
-        enable_texcoord_array(1);
-        enable_texcoord_array(2);
+        enable_texcoord_array(0, true);
+        enable_texcoord_array(1, true);
+        enable_texcoord_array(2, true);
+
+        /* Make sure we don't realloc in apply_lighting */
+        renderer_data->tangent_space_light_dirs.reserve(
+            renderer_data->vertices.size());
 
         // If normal mapping is enabled, we need to shift the texture coords to
-        // different units
+        // different units. This is the tex coordinate into the normalization
+        // cube map
         GLCheck(glClientActiveTexture, GL_TEXTURE0);
         GLCheck(glTexCoordPointer, 3, GL_FLOAT, 0,
                 &renderer_data->tangent_space_light_dirs[0]);
 
+        // We duplicate the diffuse UVs into the normal map
         GLCheck(glClientActiveTexture, GL_TEXTURE1);
         GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
                 ((const uint8_t*)vertex_data) +
                     spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value());
 
+        // This is diffuse
         GLCheck(glClientActiveTexture, GL_TEXTURE2);
         GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
                 ((const uint8_t*)vertex_data) +
