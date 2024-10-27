@@ -537,66 +537,53 @@ static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
     if(lighting_enabled && light) {
         Mat3 tbn;
 
-        data->eye_space_normals.resize(count);
-        data->eye_space_positions.resize(count);
+        data->world_space_normals.resize(start + count);
+        data->world_space_positions.resize(start + count);
 
         if(normal_map) {
-            data->tangent_space_light_dirs.resize(count);
+            data->tangent_space_light_dirs.resize(start + count);
         }
 
         /* First we need to convert everything to eye-space */
-        for(uint32_t i = 0; i < count; ++i) {
+        for(uint32_t i = start; i < start + count; ++i) {
             GL1Vertex& v = vertices[i];
 
-            data->eye_space_positions[i] = (*model * Vec4(v.xyz, 1)).xyz();
-            data->eye_space_normals[i] = (*model * Vec4(v.n, 0)).xyz();
+            data->world_space_positions[i] = (*model * Vec4(v.xyz, 1)).xyz();
+            data->world_space_normals[i] =
+                (*model * Vec4(v.n, 0)).xyz().normalized();
         }
 
         const Vec3 light_pos = light->transform->position();
 
         if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-            for(uint32_t i = start; i < start + count; ++i) {
-                GL1Vertex& v = vertices[i];
-
-                auto L = -light_pos.normalized();
-                auto N = data->eye_space_normals[i];
-                auto color =
-                    calculate_vertex_color(N, L, 0, light->intensity(), v.color,
-                                           light->color(), global_ambient);
-
-                data->colors[i] = color.to_argb_8888();
-
-                if(normal_map) {
-                    tbn = Mat3(v.t, v.b, v.n);
-
-                    auto light_dir = (tbn * L).normalized();
-                    data->tangent_space_light_dirs[i] = light_dir;
-                }
-            }
+            assert(0 && "Not Implemented");
         } else {
+            auto inverse_model = Mat3(*model).inversed();
+
             for(uint32_t i = start; i < start + count; ++i) {
                 GL1Vertex& v = vertices[i];
 
-                auto L =
-                    (light_pos - data->eye_space_positions[i]).normalized();
-                auto N = data->eye_space_normals[i].normalized();
+                auto L = (light_pos - data->world_space_positions[i]);
+                auto N = data->world_space_normals[i].normalized();
 
-                auto D2 =
-                    (light_pos - data->eye_space_positions[i]).length_squared();
+                auto D2 = L.length_squared();
                 auto color = calculate_vertex_color(
-                    N, L, D2, light->intensity(), v.color, light->color(),
-                    global_ambient);
+                    N, L.normalized(), D2, light->intensity(), v.color,
+                    light->color(), global_ambient);
 
-                data->colors[i] = color.to_argb_8888();
+                data->colors[i] =
+                    Color::red().to_argb_8888(); // color.to_argb_8888();
 
                 if(normal_map) {
                     // FIXME: Why not store TBN on the vertex?
                     // FIXME: Can we compress to save mem?
-                    tbn = Mat3(v.t, v.b, v.n);
-                    auto light_dir = (light_pos - v.xyz);
-                    light_dir = light_dir * Mat3(model->inversed());
-                    light_dir = light_dir * tbn;
+                    tbn = Mat3(v.t.normalized(), v.b.normalized(),
+                               v.n.normalized())
+                              .inversed();
+                    auto light_dir = L;
 
+                    light_dir = light_dir * inverse_model;
+                    light_dir = light_dir * tbn;
                     data->tangent_space_light_dirs[i] = light_dir;
                 }
             }

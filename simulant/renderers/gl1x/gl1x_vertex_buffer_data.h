@@ -22,8 +22,8 @@ struct GL1XVertexBufferData: public VertexBufferRendererData {
     /* This is transient data calculated for each renderable
      * so we can do lighting within the engine instead of
      * using GL1 lighting */
-    std::vector<Vec3> eye_space_positions;
-    std::vector<Vec3> eye_space_normals;
+    std::vector<Vec3> world_space_positions;
+    std::vector<Vec3> world_space_normals;
     std::vector<Vec3> tangent_space_light_dirs;
     std::vector<uint32_t> colors;
 

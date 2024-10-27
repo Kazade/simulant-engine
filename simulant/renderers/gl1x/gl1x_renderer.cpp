@@ -112,7 +112,7 @@ void GL1XRenderer::on_pre_render() {
 }
 
 void GL1XRenderer::init_normalization_map() {
-    int size = 64;
+    int size = 32;
     float offset = 0.5f;
     float half_size = ((float)size) * 0.5f;
 
