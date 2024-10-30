@@ -108,11 +108,18 @@ void GL1XRenderer::on_pre_render() {
         // there.
         init_normalization_map();
     }
+
+    if(!null_texture_id_) {
+        GLCheck(glGenTextures, 1, &null_texture_id_);
+        GLCheck(glBindTexture, GL_TEXTURE_2D, null_texture_id_);
+        GLCheck(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB,
+                GL_UNSIGNED_BYTE, (void*)NULL);
+    }
 #endif
 }
 
 void GL1XRenderer::init_normalization_map() {
-    int size = 32;
+    int size = 64;
     float offset = 0.5f;
     float half_size = ((float)size) * 0.5f;
 

@@ -30,6 +30,7 @@
 
 namespace smlt {
 
+static GLuint test = 0;
 
 GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer,
                                              CameraPtr camera) :
@@ -195,7 +196,22 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_TEXTURE);
 
         ENABLE_TEXTURE(2, diffuse, true);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
         GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PREVIOUS);
+
+        GLCheck(glActiveTexture, GL_TEXTURE3);
+        GLCheck(glBindTexture, GL_TEXTURE_2D,
+                ((GL1XRenderer*)renderer())->null_texture_id());
+
+        GLCheck(glEnable, GL_TEXTURE_2D);
+
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PRIMARY_COLOR);
+
     } else {
         ENABLE_TEXTURE(0, diffuse, false);
         ENABLE_TEXTURE(1, light, false);
@@ -571,8 +587,7 @@ static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
                     N, L.normalized(), D2, light->intensity(), v.color,
                     light->color(), global_ambient);
 
-                data->colors[i] =
-                    Color::red().to_argb_8888(); // color.to_argb_8888();
+                data->colors[i] = color.to_argb_8888();
 
                 if(normal_map) {
                     // FIXME: Why not store TBN on the vertex?

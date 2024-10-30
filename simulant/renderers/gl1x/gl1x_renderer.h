@@ -69,6 +69,12 @@ private:
                  VERTEX_ATTR_TYPE_FLOAT)
             .build();
     }
+
+    uint32_t null_texture_id_ = 0;
+
+    uint32_t null_texture_id() const {
+        return null_texture_id_;
+    }
 };
 
 }
