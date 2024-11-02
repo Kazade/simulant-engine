@@ -4268,21 +4268,25 @@ static int get_seek_page_info(stb_vorbis *f, ProbedPage *z)
 // start of a packet
 static int go_to_page_before(stb_vorbis *f, unsigned int limit_offset)
 {
-   unsigned int previous_safe, end;
+    uint32 previous_safe, end;
 
-   // now we want to seek back 64K from the limit
-   if (limit_offset >= 65536 && limit_offset-65536 >= f->first_audio_page_offset)
-      previous_safe = limit_offset - 65536;
-   else
-      previous_safe = f->first_audio_page_offset;
+    // now we want to seek back 64K from the limit
+    if(limit_offset >= 65536 &&
+       limit_offset - 65536 >= f->first_audio_page_offset) {
+        previous_safe = limit_offset - 65536;
+    } else {
+        previous_safe = f->first_audio_page_offset;
+    }
 
-   set_file_offset(f, previous_safe);
+    set_file_offset(f, previous_safe);
 
-   while (vorbis_find_page(f, &end, NULL)) {
-      if (end >= limit_offset && stb_vorbis_get_file_offset(f) < limit_offset)
-         return 1;
-      set_file_offset(f, end);
-   }
+    while(vorbis_find_page(f, &end, NULL)) {
+        if(end >= limit_offset &&
+           stb_vorbis_get_file_offset(f) < limit_offset) {
+            return 1;
+        }
+        set_file_offset(f, end);
+    }
 
    return 0;
 }
@@ -4535,7 +4539,7 @@ int stb_vorbis_seek_start(stb_vorbis *f)
 unsigned int stb_vorbis_stream_length_in_samples(stb_vorbis *f)
 {
    unsigned int restore_offset, previous_safe;
-   unsigned int end, last_page_loc;
+   uint32 end, last_page_loc;
 
    if (IS_PUSH_MODE(f)) return error(f, VORBIS_invalid_api_mixing);
    if (!f->total_samples) {
