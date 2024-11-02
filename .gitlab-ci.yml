@@ -36,7 +36,8 @@ pages:
     paths:
       - public
   only:
-    - master
+    - main
+    - next
 
 prepare:linux-x64-gcc:
   stage: prepare
