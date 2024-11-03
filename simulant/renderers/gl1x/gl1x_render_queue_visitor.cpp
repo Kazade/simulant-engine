@@ -177,6 +177,29 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 
     // If normal mapping is enabled, then do the DOT3 dance
     if(enabled & (1 << 2)) {
+#ifdef __DREAMCAST__
+        /* Normal mapping on DC is different, we need to supply the light
+         * direction as the secondary color, and the normal map has to be in a
+         * different format.
+         *
+         * We bind the normal map to texture unit 0, and the diffuse map to
+         * texture unit 1 and we use the special DC-specific GL_SECONDARY_COLOR
+         * constant as the light direction
+         */
+
+        ENABLE_TEXTURE(0, normal, true);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_DOT3_RGB);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_SECONDARY_COLOR);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_TEXTURE);
+
+        ENABLE_TEXTURE(1, diffuse, true);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
+        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PREVIOUS);
+
+#else
         // Bind the cube map to texture unit 0
         auto cubemap_id =
             ((GL1XRenderer*)renderer())
@@ -211,7 +234,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
         GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
         GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PRIMARY_COLOR);
-
+#endif
     } else {
         ENABLE_TEXTURE(0, diffuse, false);
         ENABLE_TEXTURE(1, light, false);
@@ -671,9 +694,15 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         // If normal mapping is enabled, we need to shift the texture coords to
         // different units. This is the tex coordinate into the normalization
         // cube map
+#ifdef __DREAMCAST__
+        // On DC pass the light direction as secondary colours (oargb)
+        GLCheck(glSecondaryColorPointer, 3, GL_FLOAT, 0,
+                &renderer_data->tangent_space_light_dirs[0]);
+#else
         GLCheck(glClientActiveTexture, GL_TEXTURE0);
         GLCheck(glTexCoordPointer, 3, GL_FLOAT, 0,
                 &renderer_data->tangent_space_light_dirs[0]);
+#endif
 
         // We duplicate the diffuse UVs into the normal map
         GLCheck(glClientActiveTexture, GL_TEXTURE1);
