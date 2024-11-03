@@ -439,13 +439,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     }
 
     auto to_quaternion = [](const Vec3& angles) -> Quaternion {
-        /* This is what OGRE does... so it should be right! */
-
-        auto qx = Quaternion(Vec3::right(), Radians(angles.x));
-        auto qy = Quaternion(Vec3::up(), Radians(angles.y));
-        auto qz = Quaternion(Vec3::backward(), Radians(angles.z));
-
-        return qz * qy * qx;
+        return Quaternion(Radians(angles.x), Radians(angles.y),
+                          Radians(angles.z));
     };
 
     Skeleton* skeleton = mesh->skeleton;
