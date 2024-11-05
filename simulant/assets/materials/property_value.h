@@ -77,6 +77,8 @@ namespace _impl {
 template<typename T = void> struct PropertyValue;
 
 struct BasePropertyValue {
+    virtual ~BasePropertyValue() {}
+
     template<typename T>
     T* get() const {
         T* result = nullptr;

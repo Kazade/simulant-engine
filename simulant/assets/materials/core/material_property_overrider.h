@@ -73,10 +73,11 @@ public:
         /* Core property fast-path. If it's a core property, check locally
          * then check the parent without doing a hash lookup on the properties
          * list (which is for non-core properties) */
-        auto mem_ptr = find_core_property(hsh);
+        auto mem_ptr = find_core_property_value(hsh);
         if(mem_ptr) {
-            auto v = &(this->*mem_ptr);
-            auto p = (parent_) ? &(parent_->*mem_ptr) : nullptr;
+            auto v = mem_ptr;
+            auto p =
+                (parent_) ? parent_->find_core_property_value(hsh) : nullptr;
             if(v->has_value()) {
                 out = v->get<T>();
                 return true;
@@ -167,87 +168,75 @@ protected:
         return const_cast<BasePropertyValue*>(static_cast<const MaterialPropertyOverrider*>(this)->find_core_property_value(hsh));
     }
 
-    typedef BasePropertyValue MaterialPropertyOverrider::* PropertyValueMemberPtr;
-
-    PropertyValueMemberPtr find_core_property(const MaterialPropertyNameHash& hsh) const {
+    const BasePropertyValue*
+        find_core_property_value(const MaterialPropertyNameHash& hsh) const {
         switch(hsh) {
             case DIFFUSE_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::diffuse_property_;
+                return &diffuse_property_;
             case AMBIENT_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::ambient_property_;
+                return &ambient_property_;
             case EMISSION_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::emission_property_;
+                return &emission_property_;
             case SPECULAR_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::specular_property_;
+                return &specular_property_;
             case SHININESS_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::shininess_property_;
+                return &shininess_property_;
             case POINT_SIZE_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::point_size_property_;
+                return &point_size_property_;
             case DEPTH_WRITE_ENABLED_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::depth_write_enabled_property_;
+                return &depth_write_enabled_property_;
             case DEPTH_TEST_ENABLED_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::depth_test_enabled_property_;
+                return &depth_test_enabled_property_;
             case DEPTH_FUNC_PROPERTY_HASH:
-                return (PropertyValueMemberPtr)&MaterialPropertyOverrider::
-                    depth_func_property_;
+                return &depth_func_property_;
             case LIGHTING_ENABLED_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::lighting_enabled_property_;
+                return &lighting_enabled_property_;
             case TEXTURES_ENABLED_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::textures_enabled_property_;
+                return &textures_enabled_property_;
             case DIFFUSE_MAP_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::diffuse_map_property_;
+                return &diffuse_map_property_;
             case SPECULAR_MAP_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::specular_map_property_;
+                return &specular_map_property_;
             case LIGHT_MAP_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::light_map_property_;
+                return &light_map_property_;
             case NORMAL_MAP_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::normal_map_property_;
+                return &normal_map_property_;
             case DIFFUSE_MAP_MATRIX_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::diffuse_map_matrix_property_;
+                return &diffuse_map_matrix_property_;
             case SPECULAR_MAP_MATRIX_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::specular_map_matrix_property_;
+                return &specular_map_matrix_property_;
             case LIGHT_MAP_MATRIX_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::light_map_matrix_property_;
+                return &light_map_matrix_property_;
             case NORMAL_MAP_MATRIX_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::normal_map_matrix_property_;
+                return &normal_map_matrix_property_;
             case BLEND_FUNC_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::blend_func_property_;
+                return &blend_func_property_;
             case POLYGON_MODE_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::polygon_mode_property_;
+                return &polygon_mode_property_;
             case SHADE_MODEL_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::shade_model_property_;
+                return &shade_model_property_;
             case COLOR_MATERIAL_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::color_material_property_;
+                return &color_material_property_;
             case CULL_MODE_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::cull_mode_property_;
+                return &cull_mode_property_;
             case FOG_COLOR_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_color_property_;
+                return &fog_color_property_;
             case FOG_DENSITY_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_density_property_;
+                return &fog_density_property_;
             case FOG_START_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_start_property_;
+                return &fog_start_property_;
             case FOG_END_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_end_property_;
+                return &fog_end_property_;
             case FOG_MODE_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_mode_property_;
+                return &fog_mode_property_;
             case ALPHA_FUNC_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::alpha_func_property_;
+                return &alpha_func_property_;
             case ALPHA_THRESHOLD_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::alpha_threshold_property_;
+                return &alpha_threshold_property_;
             default:
                 return nullptr;
         }
     }
-
-    const BasePropertyValue* find_core_property_value(const MaterialPropertyNameHash& hsh) const {
-        auto ptr = find_core_property(hsh);
-        if(!ptr) {
-            return nullptr;
-        }
-
-        return &(this->*ptr);
-    }
-
 
     virtual void on_override(
         MaterialPropertyNameHash hsh,
