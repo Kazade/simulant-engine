@@ -24,6 +24,8 @@ namespace smlt {
 std::shared_ptr<GLThreadCheck> GL_thread;
 
 void GLThreadCheck::check() {
+    // We only do this check in debug builds
+#ifndef NDEBUG
     try {
         if(GL_thread) {
             GL_thread->do_check();
@@ -36,6 +38,7 @@ void GLThreadCheck::check() {
         );
         throw;
     }
+#endif
 }
 
 GLThreadCheck::GLThreadCheck(thread::ThreadID render_thread):
