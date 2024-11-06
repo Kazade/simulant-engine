@@ -73,31 +73,33 @@ public:
         /* Core property fast-path. If it's a core property, check locally
          * then check the parent without doing a hash lookup on the properties
          * list (which is for non-core properties) */
-        auto mem_ptr = find_core_property_value(hsh);
-        if(mem_ptr) {
-            auto v = mem_ptr;
-            auto p =
-                (parent_) ? parent_->find_core_property_value(hsh) : nullptr;
-            if(v->has_value()) {
-                out = v->get<T>();
-                return true;
-            } else if(p && p->has_value()) {
-                out = p->get<T>();
-                return true;
-            } else {
-                return core_material_property_value(hsh, out);
-            }
-        } else {
+
+        auto local_value = find_core_property_value(hsh);
+        if(!local_value) {
+            // Not a core property
             auto it = properties_.find(hsh);
             if(it != properties_.end()) {
                 out = it->second.get<T>();
                 return true;
             } else if(parent_) {
                 return parent_->property_value(hsh, out);
+            } else {
+                return false;
             }
         }
 
-        return false;
+        if(local_value->has_value()) {
+            out = local_value->get<T>();
+            return true;
+        } else if(parent_) {
+            auto parent_value = parent_->property_value(hsh, out);
+            if(parent_value && parent_value->has_value()) {
+                out = parent_value->get<T>();
+                return true;
+            }
+        }
+
+        return core_material_property_value(hsh, out);
     }
 
     /* Helpers for std::string */
