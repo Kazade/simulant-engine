@@ -14,19 +14,23 @@ struct BlockHeader {
     uint16_t refcount = 0;
 };
 
-struct FreeBlock {
-    std::size_t offset;
-    std::size_t size;
+struct Block {
+    std::size_t offset = 0;
+    std::size_t size = 0;
+    std::size_t used = 0;
 
     // Free blocks should be ordered by increasing size
     // so that when allocating we find the smallest
     // available first
-    bool operator<(const FreeBlock& rhs) const {
+    bool operator<(const Block& rhs) const {
         return size < rhs.size;
+    }
+
+    std::size_t remaining() const {
+        return size - used;
     }
 };
 
-typedef uint16_t block_header;
 /*
  * Really basic allocator over a vector that allocates dynamically sized
  * blocks with the specified alignments */
@@ -38,38 +42,53 @@ public:
     uint8_t* allocate(std::size_t size) {
         // We can't iterate the set while manipulating the set
         // so we iterate this instead
-        std::vector<FreeBlock*> free_block_ptrs;
-        for(auto it = free_blocks_.begin(); it != free_blocks_.end(); ++it) {
-            free_block_ptrs.push_back(const_cast<FreeBlock*>(&(*it)));
+        std::vector<Block*> block_ptrs;
+        for(auto it = blocks_.begin(); it != blocks_.end(); ++it) {
+            block_ptrs.push_back(const_cast<Block*>(&(*it)));
         }
 
-        for(auto free_block_ptr: free_block_ptrs) {
-            auto size_header_size = sizeof(block_header);
-            auto target_addr =
-                (data_ + free_block_ptr->offset) + size_header_size;
-            auto alignment_offset = uintptr_t(target_addr) % alignment;
-            auto required_size =
-                (alignment - alignment_offset) + size + size_header_size;
+        for(auto block_ptr: block_ptrs) {
+            auto block_cap = block_ptr->size - block_ptr->used;
+            auto target_addr = (data_ + block_ptr->offset + block_ptr->used);
 
-            if(free_block_ptr->size < required_size) {
-                // Reduce the size of the free block, this might
-                // make it empty
-                auto addr = data_ + free_block_ptr->offset;
-                free_block_ptr = update_size(free_block_ptr, -required_size);
-                free_block_ptr->offset += required_size;
-                block_header* header = reinterpret_cast<block_header*>(addr);
-                *header = required_size;
-                return addr;
+            auto alignment_offset = uintptr_t(target_addr) % alignment;
+            auto required_size = (alignment_offset)
+                                     ? (alignment - alignment_offset) + size
+                                     : size;
+
+            if(block_cap >= required_size) {
+                // Split the block
+                auto new_block = Block{block_ptr->offset + block_ptr->used,
+                                       block_ptr->remaining(), required_size};
+                block_ptr = update_size(block_ptr, -(block_ptr->remaining()));
+
+                // These values should always remain aligned
+                assert(round_to_alignment(new_block.offset) ==
+                       new_block.offset);
+                assert(round_to_alignment(new_block.size) == new_block.size);
+
+                blocks_.insert(new_block);
+
+                remove_zero_sized_free_blocks();
+
+                return data_ + new_block.offset;
             }
         }
 
         // No free blocks? We need to allocate a new block and then update
-        auto additional_bytes = round_to_alignment(sizeof(block_header) + size);
+        auto additional_bytes = round_to_alignment(size);
         uint8_t* new_data = (uint8_t*)smlt::aligned_alloc(
             alignment, allocated_size_ + additional_bytes);
         auto offset = allocated_size_;
         memcpy(new_data, data_, allocated_size_);
         allocated_size_ = allocated_size_ + additional_bytes;
+
+        Block new_block{offset, additional_bytes, size};
+
+        // These values should always remain aligned
+        assert(round_to_alignment(new_block.offset) == new_block.offset);
+        assert(round_to_alignment(new_block.size) == new_block.size);
+        blocks_.insert(new_block);
 
         if(realloc_callback_) {
             // Notify the callback so we can update pointers
@@ -78,14 +97,20 @@ public:
 
         free(data_);
         data_ = new_data;
-        free_blocks_.insert(FreeBlock{offset, additional_bytes});
         return data_ + offset;
     }
 
     void deallocate(const uint8_t* ptr) {
-        auto header = reinterpret_cast<const block_header*>(ptr);
-        FreeBlock new_block{ptr - data_, *header};
-        free_blocks_.insert(new_block);
+        std::size_t offset = (ptr - data_);
+        auto it = std::find_if(blocks_.begin(), blocks_.end(),
+                               [offset](const Block& b) {
+            return b.offset == offset;
+        });
+
+        if(it != blocks_.end()) {
+            const_cast<Block&>(*it).used = 0;
+        }
+
         merge_free_blocks();
     }
 
@@ -97,41 +122,52 @@ public:
     }
 
     std::size_t used() const {
-        return capacity() -
-               std::accumulate(free_blocks_.begin(), free_blocks_.end(), 0,
-                               [](std::size_t n, const FreeBlock& b) {
-            return b.size + n;
+        return capacity() - std::accumulate(blocks_.begin(), blocks_.end(), 0,
+                                            [](std::size_t n, const Block& b) {
+            return (b.size - b.used) + n;
         });
+    }
+
+    std::size_t _block_count() const {
+        return blocks_.size();
+    }
+
+    const Block* _block(std::size_t which) const {
+        return &(*(std::next(blocks_.begin(), which)));
     }
 
 private:
     std::size_t round_to_alignment(std::size_t size) {
-        return ((size + alignment / 2) / alignment) * alignment;
+        return ((size + alignment - 1) / alignment) * alignment;
     }
 
     uint8_t* data_ = nullptr;
     std::size_t allocated_size_ = 0;
-    std::set<FreeBlock> free_blocks_;
+    std::multiset<Block> blocks_;
     void (*realloc_callback_)(uint8_t*, uint8_t*, void*);
     void* user_data_;
 
     /* You can't update the property of a value in a set that will
      * change the order, so we have to remove, copy + change, reinsert */
-    FreeBlock* update_size(const FreeBlock* block, int change) {
-        auto it = std::find_if(free_blocks_.begin(), free_blocks_.end(),
-                               [block](const FreeBlock& b) {
+    Block* update_size(const Block* block, int change) {
+        auto it = std::find_if(blocks_.begin(), blocks_.end(),
+                               [block](const Block& b) {
             return &b == block;
         });
 
-        if(it == free_blocks_.end()) {
+        if(it == blocks_.end()) {
             return nullptr;
         }
 
         auto new_block = *it;
         new_block.size += change;
-        free_blocks_.erase(it);
-        it = free_blocks_.insert(new_block).first;
-        return const_cast<FreeBlock*>(&(*it));
+        blocks_.erase(it);
+
+        // These values should always remain aligned
+        assert(round_to_alignment(new_block.offset) == new_block.offset);
+        assert(round_to_alignment(new_block.size) == new_block.size);
+        it = blocks_.insert(new_block);
+        return const_cast<Block*>(&(*it));
     }
 
     void merge_free_blocks() {
@@ -140,17 +176,21 @@ private:
         // previous block, finally go through and remove zero-sized
         // blocks
         struct Cmp {
-            bool operator()(const FreeBlock* lhs, const FreeBlock* rhs) const {
+            bool operator()(const Block* lhs, const Block* rhs) const {
                 return lhs->offset < rhs->offset;
             }
         };
 
-        std::set<FreeBlock*, Cmp> blocks_by_offset;
-        for(auto& block: free_blocks_) {
-            blocks_by_offset.insert(const_cast<FreeBlock*>(&block));
+        std::set<Block*, Cmp> blocks_by_offset;
+
+        // Gather the free blocks
+        for(auto& block: blocks_) {
+            if(block.used == 0) {
+                blocks_by_offset.insert(const_cast<Block*>(&block));
+            }
         }
 
-        FreeBlock* prev = nullptr;
+        Block* prev = nullptr;
         for(auto block: blocks_by_offset) {
             if(prev && (prev->offset + prev->size) == block->offset) {
                 prev = update_size(prev, block->size);
@@ -164,9 +204,9 @@ private:
     }
 
     void remove_zero_sized_free_blocks() {
-        for(auto it = free_blocks_.begin(); it != free_blocks_.end();) {
+        for(auto it = blocks_.begin(); it != blocks_.end();) {
             if(it->size == 0) {
-                it = free_blocks_.erase(it);
+                it = blocks_.erase(it);
             } else {
                 ++it;
             }
