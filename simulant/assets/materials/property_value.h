@@ -11,7 +11,7 @@
 
 namespace smlt {
 
-enum MaterialPropertyType {
+enum MaterialPropertyType : uint16_t {
     MATERIAL_PROPERTY_TYPE_BOOL,
     MATERIAL_PROPERTY_TYPE_INT,
     MATERIAL_PROPERTY_TYPE_FLOAT,
