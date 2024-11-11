@@ -101,12 +101,12 @@ public:
     }
 
     void deallocate(const uint8_t* ptr) {
-        std::size_t offset = (ptr - data_);
-        auto it = std::find_if(blocks_.begin(), blocks_.end(),
-                               [offset](const Block& b) {
-            return b.offset == offset;
+        auto it =
+            std::find_if(blocks_.begin(), blocks_.end(), [=](const Block& b) {
+            return (data_ + b.offset) == ptr;
         });
 
+        assert(it != blocks_.end());
         if(it != blocks_.end()) {
             const_cast<Block&>(*it).used = 0;
         }
@@ -115,7 +115,10 @@ public:
     }
 
     void set_realloc_callback(void (*callback)(uint8_t*, uint8_t*, void*),
-                              void* user_data);
+                              void* user_data) {
+        realloc_callback_ = callback;
+        user_data_ = user_data;
+    }
 
     std::size_t capacity() const {
         return allocated_size_;
