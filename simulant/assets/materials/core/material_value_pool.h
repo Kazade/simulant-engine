@@ -39,6 +39,10 @@ class DynamicAlignedAllocator {
 public:
     static constexpr int alignment = Alignment;
 
+    ~DynamicAlignedAllocator() {
+        free(data_);
+    }
+
     uint8_t* allocate(std::size_t size) {
         // We can't iterate the set while manipulating the set
         // so we iterate this instead

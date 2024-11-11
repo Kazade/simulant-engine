@@ -14,11 +14,13 @@ public:
     void test_free_blocks() {
         auto allocator = _mat_pool::DynamicAlignedAllocator<16>();
 
-        uint8_t *ptr = nullptr, *s = nullptr, *m = nullptr, *l = nullptr;
+        uint8_t *ptr = nullptr, *s = nullptr, *m = nullptr, *l = nullptr,
+                *xs1 = nullptr, *xs2 = nullptr;
 
         struct Updater {
-            Updater(uint8_t*& ptr, uint8_t*& s, uint8_t*& m, uint8_t*& l) :
-                ptr_(ptr), s_(s), m_(m), l_(l) {}
+            Updater(uint8_t*& ptr, uint8_t*& s, uint8_t*& m, uint8_t*& l,
+                    uint8_t*& xs1, uint8_t*& xs2) :
+                ptr_(ptr), s_(s), m_(m), l_(l), xs1_(xs1), xs2_(xs2) {}
 
             static void update(uint8_t* old_base, uint8_t* new_base,
                                void* _this) {
@@ -27,15 +29,19 @@ public:
                 self->s_ = new_base + (self->s_ - old_base);
                 self->m_ = new_base + (self->m_ - old_base);
                 self->l_ = new_base + (self->l_ - old_base);
+                self->xs1_ = new_base + (self->xs1_ - old_base);
+                self->xs2_ = new_base + (self->xs2_ - old_base);
             }
 
             uint8_t*& ptr_;
             uint8_t*& s_;
             uint8_t*& m_;
             uint8_t*& l_;
+            uint8_t*& xs1_;
+            uint8_t*& xs2_;
         };
 
-        Updater updater(ptr, s, m, l);
+        Updater updater(ptr, s, m, l, xs1, xs2);
 
         allocator.set_realloc_callback(Updater::update, &updater);
 
@@ -73,7 +79,7 @@ public:
         allocator.deallocate(s);
 
         // Should go in the first block
-        auto xs1 = allocator.allocate(8);
+        xs1 = allocator.allocate(8);
 
         // No more blocks than before
         assert_equal(allocator._block_count(), 3u);
@@ -83,11 +89,19 @@ public:
         assert_equal(allocator.used(), 64);
 
         // Requires a new block to stay aligned
-        auto xs2 = allocator.allocate(8);
+        xs2 = allocator.allocate(8);
 
         assert_true(xs2);
         assert_equal(allocator.capacity(), 96);
         assert_equal(allocator.used(), 64 + 8);
+
+        allocator.deallocate(xs1);
+        allocator.deallocate(m);
+        allocator.deallocate(l);
+        allocator.deallocate(xs2);
+
+        assert_equal(allocator.capacity(), 96);
+        assert_equal(allocator.used(), 0);
     }
 };
 
