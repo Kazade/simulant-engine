@@ -12,7 +12,7 @@ using namespace smlt;
 class DynamicAlignedAllocatorTest: public test::SimulantTestCase {
 public:
     void test_free_blocks() {
-        auto allocator = _mat_pool::DynamicAlignedAllocator<16>();
+        auto allocator = DynamicAlignedAllocator<16>();
 
         uint8_t *ptr = nullptr, *s = nullptr, *m = nullptr, *l = nullptr,
                 *xs1 = nullptr, *xs2 = nullptr;
@@ -102,6 +102,18 @@ public:
 
         assert_equal(allocator.capacity(), 96);
         assert_equal(allocator.used(), 0);
+    }
+};
+
+class MaterialValuePoolTest: public test::SimulantTestCase {
+public:
+    void test_basic_usage() {
+        MaterialValuePool pool;
+        auto vec3 = pool.get_or_create_value(Vec3(1, 2, 3));
+        auto color = pool.get_or_create_value(Vec4(1, 1, 1, 1));
+        auto color2 = pool.get_or_create_value(Vec4(1, 1, 1, 1));
+
+        assert_equal(color.get<Vec4>(), color2.get<Vec4>());
     }
 };
 
