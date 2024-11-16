@@ -146,8 +146,6 @@ public:
         auto self = reinterpret_cast<MaterialValuePool*>(user_data);
 
         for(auto& pointer: self->pointers_) {
-            fprintf(stderr, "Updating 0x%x to 0x%x\n", *pointer.data_,
-                    new_data + (*pointer.data_ - old_data));
             *pointer.data_ = new_data + (*pointer.data_ - old_data);
         }
     }
