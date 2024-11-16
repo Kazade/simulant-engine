@@ -95,6 +95,10 @@ public:
     Vec4 operator*(const Vec4& rhs) const;
     Vec3 operator*(const Vec3& rhs) const;
 
+    bool operator==(const Mat4& rhs) const {
+        return std::memcmp(m, rhs.m, sizeof(m)) == 0;
+    }
+
     void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
 
     static Mat4 as_rotation_x(const Degrees& angle);

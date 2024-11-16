@@ -31,7 +31,6 @@ public:
     static constexpr int alignment = Alignment;
 
     ~DynamicAlignedAllocator() {
-        fprintf(stderr, "Freeing 0x%x\n", (uintptr_t)data_);
         free(data_);
     }
 
@@ -87,13 +86,10 @@ public:
         blocks_.insert(new_block);
 
         if(realloc_callback_) {
-            fprintf(stderr, "Realloced %d bytes: 0%x -> 0%x\n",
-                    additional_bytes, (uintptr_t)data_, (uintptr_t)new_data);
             // Notify the callback so we can update pointers
             realloc_callback_(data_, new_data, user_data_);
         }
 
-        fprintf(stderr, "Freeing 0x%x\n", (uintptr_t)data_);
         free(data_);
         data_ = new_data;
         return data_ + offset;

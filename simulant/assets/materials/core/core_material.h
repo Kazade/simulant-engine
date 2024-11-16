@@ -128,7 +128,7 @@ struct CoreMaterial {
     const float fog_density = 1.0f;
     const float fog_start = 100.0f;
     const float fog_end = 1000.0f;
-    const Color fog_color = smlt::Color::white();
+    const Color fog_color = Color::white();
 };
 
 void init_core_material(const CoreMaterial& base);

@@ -87,13 +87,13 @@ public:
     }
 
     template<typename T>
-    T& get() {
-        return *reinterpret_cast<T*>((*data_) + alignment);
+    T* get() {
+        return reinterpret_cast<T*>((*data_) + alignment);
     }
 
     template<typename T>
-    const T& get() const {
-        return *reinterpret_cast<const T*>((*data_) + alignment);
+    const T* get() const {
+        return reinterpret_cast<const T*>((*data_) + alignment);
     }
 
     // Warning: don't call this on a null pointer
@@ -109,25 +109,37 @@ public:
 
         data_.reset();
     }
+
+    operator bool() {
+        return data_ && *data_;
+    }
 };
+
+#define _CHECK_ALIGNMENT(type)                                                 \
+    static_assert((alignment % alignof(type)) == 0 ||                          \
+                      (alignment % alignof(type)) == alignment,                \
+                  "Invalid alignment for type")
 
 class MaterialValuePool {
 public:
     static_assert(sizeof(BlockHeader) <= alignment, "Alignment is too small");
-    // static_assert((alignof(float) % alignment) == 0,
-    //               "Invalid alignment for float");
-    // static_assert((alignof(Vec2) % alignment) == 0,
-    //               "Invalid alignment for Vec2");
-    // static_assert((alignof(Vec3) % alignment) == 0,
-    //               "Invalid alignment for Vec3");
-    // static_assert((alignof(Mat3) % alignment) == 0,
-    //               "Invalid alignment for Mat3");
-    // static_assert((alignof(Mat4) % alignment) == 0,
-    //               "Invalid alignment for Mat4");
+
+    _CHECK_ALIGNMENT(float);
+    _CHECK_ALIGNMENT(Vec2);
+    _CHECK_ALIGNMENT(Vec3);
+    _CHECK_ALIGNMENT(Mat3);
+    _CHECK_ALIGNMENT(Mat4);
 
     template<typename T>
     static void destructor(void* ptr) {
         reinterpret_cast<T*>(ptr)->~T();
+    }
+
+    // FIXME: Eugh, singleton. This should probably at least
+    // be a property of the application.
+    static MaterialValuePool& get() {
+        static MaterialValuePool pool;
+        return pool;
     }
 
     MaterialValuePool() {
@@ -154,7 +166,7 @@ public:
     MaterialPropertyValuePointer get_or_create_value(const T& value) {
         for(auto& pointer: pointers_) {
             if(_impl::material_property_lookup<T>::type == pointer.type() &&
-               pointer.get<T>() == value) {
+               *pointer.get<T>() == value) {
                 return pointer;
             }
         }
