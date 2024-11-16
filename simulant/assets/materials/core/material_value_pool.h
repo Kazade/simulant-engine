@@ -18,15 +18,17 @@ struct BlockHeader {
    which are ref-counted to tell if values are still used and maintain our own
    copies in the pool so we can update pointers if memory shifts around */
 class MaterialPropertyValuePointer {
-    uint8_t* data_ = nullptr;
+    std::shared_ptr<uint8_t*> data_;
 
 public:
     MaterialPropertyValuePointer() = default;
     MaterialPropertyValuePointer(const MaterialPropertyValuePointer& other) {
         data_ = other.data_;
 
-        BlockHeader* header = reinterpret_cast<BlockHeader*>(data_);
-        ++header->refcount;
+        if(data_) {
+            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
+            ++header->refcount;
+        }
     }
 
     MaterialPropertyValuePointer&
@@ -36,45 +38,49 @@ public:
         }
 
         data_ = other.data_;
-        BlockHeader* header = reinterpret_cast<BlockHeader*>(data_);
-        ++header->refcount;
-
+        if(data_) {
+            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
+            ++header->refcount;
+        }
         return *this;
     }
 
     ~MaterialPropertyValuePointer() {
         if(data_) {
-            BlockHeader* header = reinterpret_cast<BlockHeader*>(data_);
+            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
             ++header->refcount;
         }
     }
 
     template<typename T>
     T& get() {
-        return *reinterpret_cast<T*>(data_ + alignment);
+        return *reinterpret_cast<T*>((*data_) + alignment);
     }
 
     template<typename T>
     const T& get() const {
-        return *reinterpret_cast<const T*>(data_ + alignment);
+        return *reinterpret_cast<const T*>((*data_) + alignment);
     }
 
     // Warning: don't call this on a null pointer
     MaterialPropertyType type() const {
-        BlockHeader* header = reinterpret_cast<BlockHeader*>(data_);
+        BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
         return header->type;
     }
 
-    void reset(uint8_t* data) {
+    void reset(std::shared_ptr<uint8_t*> data) {
         if(data_) {
-            BlockHeader* header = reinterpret_cast<BlockHeader*>(data_);
+            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
             --header->refcount;
         }
 
+        fprintf(stderr, "New pointer at 0x%x\n", data);
         data_ = data;
 
-        BlockHeader* header = reinterpret_cast<BlockHeader*>(data);
-        header->refcount++;
+        if(data_) {
+            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
+            header->refcount++;
+        }
     }
 };
 
@@ -108,7 +114,9 @@ public:
         auto self = reinterpret_cast<MaterialValuePool*>(user_data);
 
         for(auto& pointer: self->pointers_) {
-            pointer.data_ = new_data + (pointer.data_ - old_data);
+            fprintf(stderr, "Updating 0x%x to 0x%x\n", *pointer.data_,
+                    new_data + (*pointer.data_ - old_data));
+            *pointer.data_ = new_data + (*pointer.data_ - old_data);
         }
     }
 
@@ -126,12 +134,13 @@ public:
         // 2. Create a new pointer and add it to the list
         // 3. return a copy
 
-        uint8_t* data = allocator_.allocate(alignment + sizeof(T));
-        BlockHeader* header = reinterpret_cast<BlockHeader*>(data);
+        auto data = std::make_shared<uint8_t*>(
+            allocator_.allocate(alignment + sizeof(T)));
+        BlockHeader* header = reinterpret_cast<BlockHeader*>(*data);
         header->refcount = 0;
         header->type = _impl::material_property_lookup<T>::type;
 
-        new(data + alignment) T(value);
+        new(*data + alignment) T(value);
 
         MaterialPropertyValuePointer pointer;
         pointer.reset(data);
