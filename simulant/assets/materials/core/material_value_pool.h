@@ -12,6 +12,7 @@ static constexpr int alignment = 4;
 struct BlockHeader {
     MaterialPropertyType type;
     uint16_t refcount = 0;
+    void (*destructor)(void* ptr);
 };
 
 /* We need to be able to defrag the material value pool, so we return pointers
@@ -20,14 +21,44 @@ struct BlockHeader {
 class MaterialPropertyValuePointer {
     std::shared_ptr<uint8_t*> data_;
 
+    friend class MaterialValuePool;
+
+    MaterialPropertyValuePointer(const std::shared_ptr<uint8_t*>& data) :
+        data_(data) {
+        if(data_ && *data_) {
+            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
+            ++header->refcount;
+        }
+    }
+
+    void increase_refcount() {
+        if(data_ && *data_) {
+            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
+            ++header->refcount;
+        }
+    }
+
+    void decrease_refcount() {
+        if(data_ && *data_) {
+            assert(header->refcount > 0);
+
+            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
+            --header->refcount;
+
+            if(header->refcount == 0) {
+                header->destructor(*data_ + alignment);
+                *data_ = nullptr;
+            }
+        }
+    }
+
 public:
     MaterialPropertyValuePointer() = default;
     MaterialPropertyValuePointer(const MaterialPropertyValuePointer& other) {
         data_ = other.data_;
 
-        if(data_) {
-            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
-            ++header->refcount;
+        if(data_ && *data_) {
+            increase_refcount();
         }
     }
 
@@ -38,17 +69,15 @@ public:
         }
 
         data_ = other.data_;
-        if(data_) {
-            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
-            ++header->refcount;
+        if(data_ && *data_) {
+            increase_refcount();
         }
         return *this;
     }
 
     ~MaterialPropertyValuePointer() {
-        if(data_) {
-            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
-            ++header->refcount;
+        if(data_ && *data_) {
+            decrease_refcount();
         }
     }
 
@@ -68,19 +97,12 @@ public:
         return header->type;
     }
 
-    void reset(std::shared_ptr<uint8_t*> data) {
-        if(data_) {
-            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
-            --header->refcount;
+    void reset() {
+        if(data_ && *data_) {
+            decrease_refcount();
         }
 
-        fprintf(stderr, "New pointer at 0x%x\n", data);
-        data_ = data;
-
-        if(data_) {
-            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
-            header->refcount++;
-        }
+        data_.reset();
     }
 };
 
@@ -97,6 +119,11 @@ public:
                   "Invalid alignment for Mat3");
     static_assert((alignof(Mat4) % alignment) == 0,
                   "Invalid alignment for Mat4");
+
+    template<typename T>
+    static void destructor(void* ptr) {
+        reinterpret_cast<T*>(ptr)->~T();
+    }
 
     MaterialValuePool() {
         allocator_.set_realloc_callback(&MaterialValuePool::realloc_callback,
@@ -139,12 +166,11 @@ public:
         BlockHeader* header = reinterpret_cast<BlockHeader*>(*data);
         header->refcount = 0;
         header->type = _impl::material_property_lookup<T>::type;
+        header->destructor = &MaterialValuePool::destructor<T>;
 
         new(*data + alignment) T(value);
 
-        MaterialPropertyValuePointer pointer;
-        pointer.reset(data);
-
+        MaterialPropertyValuePointer pointer(data);
         pointers_.push_back(pointer);
         return pointer;
     }
