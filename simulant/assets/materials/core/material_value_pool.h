@@ -102,6 +102,15 @@ public:
         return header->type;
     }
 
+    std::size_t refcount() const {
+        if(!data_ || !*data_) {
+            return 0;
+        }
+
+        BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
+        return header->refcount;
+    }
+
     void reset() {
         if(data_ && *data_) {
             decrease_refcount();
@@ -133,6 +142,10 @@ public:
     template<typename T>
     static void destructor(void* ptr) {
         reinterpret_cast<T*>(ptr)->~T();
+
+        // FIXME: Is this the best place to do this? Should it
+        // be at frame end?
+        MaterialValuePool::get().clean_pointers();
     }
 
     // FIXME: Eugh, singleton. This should probably at least
@@ -190,6 +203,15 @@ public:
         MaterialPropertyValuePointer pointer(data);
         pointers_.push_back(pointer);
         return pointer;
+    }
+
+    void clean_pointers() {
+        pointers_.erase(
+            std::remove_if(pointers_.begin(), pointers_.end(),
+                           [](const MaterialPropertyValuePointer& ptr) {
+            return ptr.refcount() == 1;
+        }),
+            pointers_.end());
     }
 
 private:
