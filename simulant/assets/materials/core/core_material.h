@@ -90,49 +90,6 @@ inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
     }
 }
 
-struct CoreMaterial {
-    const Color diffuse = Color(1, 1, 1, 1);
-    const Color ambient = Color(1, 1, 1, 1);
-    const Color emission = Color(0, 0, 0, 1);
-    const Color specular = Color(0, 0, 0, 1);
-
-    const float shininess = 0.0f;
-    const float point_size = 1.0f;
-
-    const bool depth_writes_enabled = true;
-    const bool depth_test_enabled = true;
-
-    const bool lighting_enabled = true;
-    const int32_t textures_enabled = DIFFUSE_MAP_ENABLED | LIGHT_MAP_ENABLED | SPECULAR_MAP_ENABLED | NORMAL_MAP_ENABLED; /* Enable first 4 texture units */
-
-    TexturePtr diffuse_map;
-    TexturePtr light_map;
-    TexturePtr normal_map;
-    TexturePtr specular_map;
-
-    const Mat4 diffuse_map_matrix;
-    const Mat4 specular_map_matrix;
-    const Mat4 light_map_matrix;
-    const Mat4 normal_map_matrix;
-
-    const EnumType blend_func = (EnumType) BLEND_NONE;
-    const EnumType polygon_mode = (EnumType) POLYGON_MODE_FILL;
-    const EnumType shade_model = (EnumType) SHADE_MODEL_SMOOTH;
-    const EnumType color_material = (EnumType) COLOR_MATERIAL_NONE;
-    const EnumType cull_mode = (EnumType) CULL_MODE_NONE;
-    const EnumType depth_func = (EnumType) DEPTH_FUNC_LEQUAL;
-    const EnumType alpha_func = (EnumType) ALPHA_FUNC_NONE;
-    const float alpha_threshold = 1.0f;
-
-    const EnumType fog_mode = (EnumType) FOG_MODE_NONE;
-    const float fog_density = 1.0f;
-    const float fog_start = 100.0f;
-    const float fog_end = 1000.0f;
-    const Color fog_color = Color::white();
-};
-
-void init_core_material(const CoreMaterial& base);
-const CoreMaterial& core_material();
 
 typedef std::vector<std::pair<std::string, MaterialPropertyType>> PropertyList;
 

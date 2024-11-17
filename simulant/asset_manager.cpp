@@ -132,16 +132,6 @@ bool SharedAssetManager::on_init() {
     z_tex_ = create_texture_with_color(this, smlt::Color::from_hex_string("#8080FF"));
     z_tex_->set_name("s_znormal_texture");
 
-    /* Update the core material */
-    CoreMaterial mat;
-
-    mat.diffuse_map = white_tex_;
-    mat.light_map = white_tex_;
-    mat.specular_map = black_tex_;
-    mat.normal_map = z_tex_;
-
-    init_core_material(mat);
-
     S_DEBUG("Finished initializing defaults");
     return true;
 }

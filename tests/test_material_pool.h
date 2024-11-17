@@ -71,8 +71,8 @@ public:
         assert_true(uintptr_t(m) % 16 == 0);
         assert_true(uintptr_t(l) % 16 == 0);
 
-        assert_equal(allocator.capacity(), 80);
-        assert_equal(allocator.used(), 72);
+        assert_equal(allocator.capacity(), 80u);
+        assert_equal(allocator.used(), 72u);
 
         assert_equal(allocator._block_count(), 3u);
 
@@ -85,23 +85,23 @@ public:
         assert_equal(allocator._block_count(), 3u);
 
         assert_true(xs1);
-        assert_equal(allocator.capacity(), 80);
-        assert_equal(allocator.used(), 64);
+        assert_equal(allocator.capacity(), 80u);
+        assert_equal(allocator.used(), 64u);
 
         // Requires a new block to stay aligned
         xs2 = allocator.allocate(8);
 
         assert_true(xs2);
-        assert_equal(allocator.capacity(), 96);
-        assert_equal(allocator.used(), 64 + 8);
+        assert_equal(allocator.capacity(), 96u);
+        assert_equal(allocator.used(), 64 + 8u);
 
         allocator.deallocate(xs1);
         allocator.deallocate(m);
         allocator.deallocate(l);
         allocator.deallocate(xs2);
 
-        assert_equal(allocator.capacity(), 96);
-        assert_equal(allocator.used(), 0);
+        assert_equal(allocator.capacity(), 96u);
+        assert_equal(allocator.used(), 0u);
     }
 };
 
