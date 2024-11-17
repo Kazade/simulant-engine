@@ -149,7 +149,9 @@ public:
 
     ~MaterialValuePool() {
         for(auto& ptr: pointers_) {
-            ptr.data_ = nullptr;
+            if(ptr) {
+                *(ptr.data_) = nullptr;
+            }
         }
     }
 
