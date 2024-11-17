@@ -139,10 +139,14 @@ public:
     _CHECK_ALIGNMENT(Mat3);
     _CHECK_ALIGNMENT(Mat4);
 
+    MaterialValuePool& operator=(const MaterialValuePool&) = delete;
+    MaterialValuePool(const MaterialValuePool&) = delete;
+
     template<typename T>
     static void destructor(void* ptr) {
         void* object = ((uint8_t*)ptr) + alignment;
         reinterpret_cast<T*>(object)->~T();
+        fprintf(stderr, "Destroy 0x%x in block 0x%x\n", object, ptr);
         MaterialValuePool::get().release(ptr);
     }
 
@@ -160,7 +164,14 @@ public:
 
     ~MaterialValuePool() {
         for(auto& ptr: pointers_) {
-            if(ptr) {
+            if(ptr.data_ && *(ptr.data_)) {
+                // Forcibly call the destructor
+                auto header = reinterpret_cast<BlockHeader*>(*(ptr.data_));
+                // We're killing this, all pointers are now invalid
+                header->refcount = 0;
+                header->destructor(*(ptr.data_));
+
+                // Invalidate all pointers pointing at this data
                 *(ptr.data_) = nullptr;
             }
         }
@@ -171,6 +182,8 @@ public:
         auto self = reinterpret_cast<MaterialValuePool*>(user_data);
 
         for(auto& pointer: self->pointers_) {
+            fprintf(stderr, "0x%x -> 0x%x\n", *pointer.data_,
+                    new_data + (*pointer.data_ - old_data));
             *pointer.data_ = new_data + (*pointer.data_ - old_data);
         }
     }
@@ -198,22 +211,20 @@ public:
 
         new(*data + alignment) T(value);
 
+        fprintf(stderr, "Create 0x%x in block 0x%x\n", (*data + alignment),
+                *data);
+
         MaterialPropertyValuePointer pointer(data);
         pointers_.push_back(pointer);
         return pointer;
     }
 
     void release(void* ptr) {
-        for(auto it = pointers_.begin(); it != pointers_.end();) {
-            if(*it->data_ == ptr) {
-                // We can release this pointer
-                assert(it->refcount() == 1);
-                allocator_.deallocate(*it->data_);
-                it = pointers_.erase(it);
-            } else {
-                ++it;
-            }
-        }
+#ifndef NDEBUG
+        auto it = reinterpret_cast<BlockHeader*>(ptr);
+        assert(it->refcount == 0);
+#endif
+        allocator_.deallocate((uint8_t*)ptr);
     }
 
     void clean_pointers() {

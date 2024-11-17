@@ -108,7 +108,7 @@ public:
 class MaterialValuePoolTest: public test::SimulantTestCase {
 public:
     void test_basic_usage() {
-        MaterialValuePool pool;
+        auto& pool = MaterialValuePool::get();
         auto vec3 = pool.get_or_create_value(Vec3(1, 2, 3));
         auto color = pool.get_or_create_value(Vec4(1, 1, 1, 1));
         auto color2 = pool.get_or_create_value(Vec4(1, 1, 1, 1));
@@ -119,6 +119,9 @@ public:
         color.reset();
         assert_equal(color2.refcount(), 2);
         color2.reset();
+        pool.clean_pointers();
+
+        vec3.reset(); // Make sure all pointers are cleaned up
         pool.clean_pointers();
     }
 };
