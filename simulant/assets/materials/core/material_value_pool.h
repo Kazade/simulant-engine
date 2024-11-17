@@ -51,7 +51,7 @@ class MaterialPropertyValuePointer {
             --header->refcount;
 
             if(header->refcount == 0) {
-                header->destructor(*data_ + alignment);
+                header->destructor(*data_);
                 *data_ = nullptr;
             }
         }
@@ -141,11 +141,9 @@ public:
 
     template<typename T>
     static void destructor(void* ptr) {
-        reinterpret_cast<T*>(ptr)->~T();
-
-        // FIXME: Is this the best place to do this? Should it
-        // be at frame end?
-        MaterialValuePool::get().clean_pointers();
+        void* object = ((uint8_t*)ptr) + alignment;
+        reinterpret_cast<T*>(object)->~T();
+        MaterialValuePool::get().release(ptr);
     }
 
     // FIXME: Eugh, singleton. This should probably at least
@@ -203,6 +201,19 @@ public:
         MaterialPropertyValuePointer pointer(data);
         pointers_.push_back(pointer);
         return pointer;
+    }
+
+    void release(void* ptr) {
+        for(auto it = pointers_.begin(); it != pointers_.end();) {
+            if(*it->data_ == ptr) {
+                // We can release this pointer
+                assert(it->refcount() == 1);
+                allocator_.deallocate(*it->data_);
+                it = pointers_.erase(it);
+            } else {
+                ++it;
+            }
+        }
     }
 
     void clean_pointers() {

@@ -114,6 +114,12 @@ public:
         auto color2 = pool.get_or_create_value(Vec4(1, 1, 1, 1));
 
         assert_equal(color.get<Vec4>(), color2.get<Vec4>());
+
+        assert_equal(color.refcount(), 3);
+        color.reset();
+        assert_equal(color2.refcount(), 2);
+        color2.reset();
+        pool.clean_pointers();
     }
 };
 
