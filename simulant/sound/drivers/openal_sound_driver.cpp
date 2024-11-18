@@ -44,23 +44,39 @@ void OpenALSoundDriver::_shutdown() {
 }
 
 std::vector<AudioSourceID> OpenALSoundDriver::generate_sources(uint32_t count) {
+    if(!count) {
+        return {};
+    }
+
     std::vector<AudioSourceID> sources(count, 0);
     ALCheck(alGenSources, (ALuint) count, (ALuint*) &sources[0]);
     return sources;
 }
 
 std::vector<AudioBufferID> OpenALSoundDriver::generate_buffers(uint32_t count) {
+    if(!count) {
+        return {};
+    }
+
     std::vector<AudioBufferID> buffers(count, 0);
     ALCheck(alGenBuffers, (ALuint) count, (ALuint*) &buffers[0]);
     return buffers;
 }
 
 void OpenALSoundDriver::destroy_buffers(const std::vector<AudioBufferID> &buffers) {
-    ALCheck(alDeleteBuffers, (ALuint) buffers.size(), (ALuint*) &buffers[0]);
+    if(buffers.empty()) {
+        return;
+    }
+
+    ALCheck(alDeleteBuffers, (ALuint)buffers.size(), (ALuint*)&buffers[0]);
 }
 
 void OpenALSoundDriver::destroy_sources(const std::vector<AudioSourceID> &sources) {
-    ALCheck(alDeleteSources, (ALuint) sources.size(), (ALuint*) &sources[0]);
+    if(sources.empty()) {
+        return;
+    }
+
+    ALCheck(alDeleteSources, (ALuint)sources.size(), (ALuint*)&sources[0]);
 }
 
 void OpenALSoundDriver::play_source(AudioSourceID source_id) {
@@ -72,10 +88,17 @@ void OpenALSoundDriver::stop_source(AudioSourceID source_id) {
 }
 
 void OpenALSoundDriver::queue_buffers_to_source(AudioSourceID source, uint32_t count, const std::vector<AudioBufferID> &buffers) {
+    if(buffers.empty()) {
+        return;
+    }
     ALCheck(alSourceQueueBuffers, (ALuint) source, (ALuint) count, (ALuint*) &buffers[0]);
 }
 
 std::vector<AudioBufferID> OpenALSoundDriver::unqueue_buffers_from_source(AudioSourceID source, uint32_t count) {
+    if(!count) {
+        return {};
+    }
+
     std::vector<AudioBufferID> buffers(count, 0);
     ALCheck(alSourceUnqueueBuffers, source, count, (ALuint*) &buffers[0]);
     return buffers;
