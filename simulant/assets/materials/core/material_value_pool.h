@@ -146,7 +146,6 @@ public:
     static void destructor(void* ptr) {
         void* object = ((uint8_t*)ptr) + alignment;
         reinterpret_cast<T*>(object)->~T();
-        fprintf(stderr, "Destroy 0x%x in block 0x%x\n", object, ptr);
         MaterialValuePool::get().release(ptr);
     }
 
@@ -182,8 +181,6 @@ public:
         auto self = reinterpret_cast<MaterialValuePool*>(user_data);
 
         for(auto& pointer: self->pointers_) {
-            fprintf(stderr, "0x%x -> 0x%x\n", *pointer.data_,
-                    new_data + (*pointer.data_ - old_data));
             *pointer.data_ = new_data + (*pointer.data_ - old_data);
         }
     }
@@ -210,9 +207,6 @@ public:
         header->destructor = &MaterialValuePool::destructor<T>;
 
         new(*data + alignment) T(value);
-
-        fprintf(stderr, "Create 0x%x in block 0x%x\n", (*data + alignment),
-                *data);
 
         MaterialPropertyValuePointer pointer(data);
         pointers_.push_back(pointer);

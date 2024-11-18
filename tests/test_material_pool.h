@@ -110,8 +110,12 @@ public:
     void test_basic_usage() {
         auto& pool = MaterialValuePool::get();
         auto vec3 = pool.get_or_create_value(Vec3(1, 2, 3));
-        auto color = pool.get_or_create_value(Vec4(1, 1, 1, 1));
-        auto color2 = pool.get_or_create_value(Vec4(1, 1, 1, 1));
+
+        // These numbers need to be quite obscure otherwise the refcounts will
+        // include things created by Simulant itself (as we have a singleton
+        // here.. booo!)
+        auto color = pool.get_or_create_value(Vec4(0.33, 0.33, 0.33, 0.33));
+        auto color2 = pool.get_or_create_value(Vec4(0.33, 0.33, 0.33, 0.33));
 
         assert_equal(color.get<Vec4>(), color2.get<Vec4>());
 

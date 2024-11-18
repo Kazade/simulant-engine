@@ -87,7 +87,6 @@ public:
 
         if(realloc_callback_) {
             // Notify the callback so we can update pointers
-            fprintf(stderr, "Realloc 0x%x -> 0x%x\n", data_, new_data);
             realloc_callback_(data_, new_data, user_data_);
         }
 
