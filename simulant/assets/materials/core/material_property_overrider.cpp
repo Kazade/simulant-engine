@@ -57,12 +57,6 @@ bool MaterialPropertyOverrider::check_existance(const char* property_name) const
 }
 
 bool MaterialPropertyOverrider::clear_override(const unsigned hsh) {
-    auto v = find_core_property_value(hsh);
-    if(v) {
-        v->clear();
-        return true;
-    }
-
     auto it = properties_.find(hsh);
     if(it != properties_.end()) {
         properties_.erase(it);
@@ -75,19 +69,15 @@ bool MaterialPropertyOverrider::clear_override(const unsigned hsh) {
 bool MaterialPropertyOverrider::property_type(const char* property_name, MaterialPropertyType* type) const {
     auto hsh = material_property_hash(property_name);
 
-    if(parent_) {
-        return parent_->property_type(property_name, type);
+    auto it = properties_.find(hsh);
+    if(it != properties_.end()) {
+        *type = it->second.type();
+    } else {
+        return false;
     }
 
-    if(is_core_property(hsh)) {
-        return core_property_type(hsh, type);
-    } else {
-        auto it = properties_.find(hsh);
-        if(it != properties_.end()) {
-            *type = it->second.type;
-        } else {
-            return false;
-        }
+    if(parent_) {
+        return parent_->property_type(property_name, type);
     }
 
     return true;

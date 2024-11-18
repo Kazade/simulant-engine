@@ -80,6 +80,7 @@ Material::Material(AssetID id, AssetManager* asset_manager):
     normal_map.matrix_property_name_hash = NORMAL_MAP_MATRIX_PROPERTY_HASH;
     texture_properties_.insert(std::make_pair(NORMAL_MAP_PROPERTY_HASH, normal_map));
 
+    initialize_core_properties();
     set_pass_count(1);  // Enable a single pass by default otherwise the material is useless
 
     /* Some renderers will need to register additional properties etc.
@@ -88,6 +89,50 @@ Material::Material(AssetID id, AssetManager* asset_manager):
 }
 
 Material::~Material() {}
+
+void Material::initialize_core_properties() {
+    set_property_value(DIFFUSE_PROPERTY_NAME, Color::white());
+    set_property_value(AMBIENT_PROPERTY_NAME, Color::white());
+    set_property_value(EMISSION_PROPERTY_NAME, Color(0, 0, 0, 1));
+    set_property_value(SPECULAR_PROPERTY_NAME, Color(0, 0, 0, 1));
+
+    set_property_value(SHININESS_PROPERTY_NAME, 0.0f);
+    set_property_value(POINT_SIZE_PROPERTY_NAME, 1.0f);
+
+    set_property_value(DEPTH_WRITE_ENABLED_PROPERTY_NAME, true);
+    set_property_value(DEPTH_TEST_ENABLED_PROPERTY_NAME, true);
+    set_property_value(LIGHTING_ENABLED_PROPERTY_NAME, true);
+
+    set_property_value(TEXTURES_ENABLED_PROPERTY_NAME,
+                       DIFFUSE_MAP_ENABLED | LIGHT_MAP_ENABLED |
+                           SPECULAR_MAP_ENABLED | NORMAL_MAP_ENABLED);
+
+    set_property_value(DIFFUSE_MAP_PROPERTY_NAME, TexturePtr());
+    set_property_value(SPECULAR_MAP_PROPERTY_NAME, TexturePtr());
+    set_property_value(LIGHT_MAP_PROPERTY_NAME, TexturePtr());
+    set_property_value(NORMAL_MAP_PROPERTY_NAME, TexturePtr());
+
+    set_property_value(DIFFUSE_MAP_MATRIX_PROPERTY_NAME, Mat4());
+    set_property_value(SPECULAR_MAP_MATRIX_PROPERTY_NAME, Mat4());
+    set_property_value(LIGHT_MAP_MATRIX_PROPERTY_NAME, Mat4());
+    set_property_value(NORMAL_MAP_MATRIX_PROPERTY_NAME, Mat4());
+
+    set_property_value(BLEND_FUNC_PROPERTY_NAME, (EnumType)BLEND_NONE);
+    set_property_value(POLYGON_MODE_PROPERTY_NAME, (EnumType)POLYGON_MODE_FILL);
+    set_property_value(SHADE_MODEL_PROPERTY_NAME, (EnumType)SHADE_MODEL_SMOOTH);
+    set_property_value(COLOR_MATERIAL_PROPERTY_NAME,
+                       (EnumType)COLOR_MATERIAL_NONE);
+    set_property_value(CULL_MODE_PROPERTY_NAME, (EnumType)CULL_MODE_NONE);
+    set_property_value(DEPTH_FUNC_PROPERTY_NAME, (EnumType)DEPTH_FUNC_LEQUAL);
+    set_property_value(ALPHA_FUNC_PROPERTY_NAME, (EnumType)ALPHA_FUNC_NONE);
+    set_property_value(ALPHA_THRESHOLD_PROPERTY_NAME, 1.0f);
+
+    set_property_value(FOG_MODE_PROPERTY_NAME, (EnumType)FOG_MODE_NONE);
+    set_property_value(FOG_DENSITY_PROPERTY_NAME, 1.0f);
+    set_property_value(FOG_START_PROPERTY_NAME, 100.0f);
+    set_property_value(FOG_END_PROPERTY_NAME, 1000.0f);
+    set_property_value(FOG_COLOR_PROPERTY_NAME, Color::white());
+}
 
 bool Material::set_pass_count(uint8_t pass_count) {
     if(pass_count >= MAX_MATERIAL_PASSES) {

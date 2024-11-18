@@ -191,6 +191,8 @@ protected:
     Material(const Material& rhs) = delete;
 
     Material& operator=(const Material& rhs);
+
+    void initialize_core_properties();
 };
 
 

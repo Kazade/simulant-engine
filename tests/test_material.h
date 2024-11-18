@@ -229,23 +229,11 @@ public:
         assert_false(is_core_property("my_property"));
     }
 
-    void test_core_material_property_value() {
-        const float* f;
-        assert_true(core_material_property_value(SHININESS_PROPERTY_NAME, f));
-        assert_equal(*f, 0.0f);
-
-        assert_false(core_material_property_value("bananas", f));
-        assert_false(core_material_property_value("s_diffuse", f));
-    }
-
     void test_overriders() {
         MaterialPropertyOverrider o1;
         MaterialPropertyOverrider o2(&o1);
 
         const float* f;
-        assert_true(o2.property_value(SHININESS_PROPERTY_NAME, f));
-        assert_equal(*f, core_material().shininess);
-
         o1.set_property_value(SHININESS_PROPERTY_NAME, 1.5f);
         assert_true(o2.property_value(SHININESS_PROPERTY_NAME, f));
         assert_equal(*f, 1.5f);
