@@ -269,7 +269,7 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
                                        : mesh->vertex_data.get();
 
     int i = mesh->submesh_count();
-    for(auto submesh: mesh->each_submesh()) {
+    for(auto& submesh: mesh->each_submesh()) {
         Renderable new_renderable;
         new_renderable.final_transformation = transform->world_space_matrix();
         new_renderable.render_priority = render_priority();
