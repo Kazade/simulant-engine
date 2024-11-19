@@ -23,9 +23,10 @@
 
 #include "../../generic/containers/contiguous_map.h"
 
-#include "../../types.h"
-#include "../../threads/shared_mutex.h"
+#include "../../core/aligned_allocator.h"
 #include "../../macros.h"
+#include "../../threads/shared_mutex.h"
+#include "../../types.h"
 
 namespace smlt {
 
@@ -206,7 +207,7 @@ private:
     RenderGroupFactory* render_group_factory_ = nullptr;
     CameraPtr camera_;
 
-    std::vector<Renderable> renderables_;
+    std::vector<Renderable, aligned_allocator<Renderable, 16>> renderables_;
     std::array<SortedRenderables, RENDER_PRIORITY_MAX - RENDER_PRIORITY_MIN> priority_queues_;
 
     void clean_empty_batches();
