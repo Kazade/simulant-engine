@@ -34,9 +34,6 @@ bool AudioSource::on_create(Params params) {
 
     ACTIVE_SOURCES.push_back(this);
 
-    auto app = get_app();
-    driver_ = (app) ? app->sound_driver.get() : nullptr;
-
     return true;
 }
 
@@ -47,9 +44,11 @@ bool AudioSource::on_destroy() {
     ACTIVE_SOURCES.remove(this);
 
     thread::Lock<thread::Mutex> lock(mutex_);
-    if(driver_) {
+    auto driver = get_app() ? get_app()->sound_driver.get() : nullptr;
+
+    if(driver) {
         for(auto& instance: instances_) {
-            driver_->stop_source(instance->source_);
+            driver->stop_source(instance->source_);
         }
     }
 
@@ -144,15 +143,11 @@ void AudioSource::update_source(float dt) {
     }
 }
 
-SoundDriver* AudioSource::_sound_driver() const {
-    return driver_;
-}
-
 uint8_t AudioSource::playing_sound_count() const {
     thread::Lock<thread::Mutex> lock(mutex_);
 
     uint8_t i = 0;
-    for(auto instance: instances_) {
+    for(auto& instance: instances_) {
         if(instance->is_playing()) {
             i++;
         }
