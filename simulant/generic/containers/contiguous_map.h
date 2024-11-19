@@ -271,8 +271,25 @@ public:
         nodes_.reserve(reserve_count);
     }
 
-    ContiguousMultiMap(const ContiguousMultiMap&) = delete;  // Avoid copies for now, slow!
-    ContiguousMultiMap& operator=(const ContiguousMultiMap&) = delete;
+    ContiguousMultiMap(const ContiguousMultiMap& other) {
+        clear();
+        for(auto& it: other) {
+            insert(it.first, it.second);
+        }
+    }
+
+    ContiguousMultiMap& operator=(const ContiguousMultiMap& other) {
+        if(&other == this) {
+            return *this;
+        }
+
+        clear();
+        for(auto& it: other) {
+            insert(it.first, it.second);
+        }
+
+        return *this;
+    }
 
     bool insert(const K& key, V&& element) {
         K k = key; // Copy K to leverage the move of _insert
@@ -289,6 +306,10 @@ public:
         nodes_.clear();
         root_index_ = -1;
         leftmost_index_ = -1;
+    }
+
+    std::size_t count(const K& key) const {
+        return find(key) != end() ? 1 : 0;
     }
 
     void shrink_to_fit() {
@@ -716,6 +737,14 @@ public:
 
     std::size_t size() const {
         return map_.size();
+    }
+
+    std::size_t count(const K& key) const {
+        return find(key) != end() ? 1 : 0;
+    }
+
+    bool insert(const std::pair<K, V>& pair) {
+        return insert(pair.first, pair.second);
     }
 
     bool insert(const K& key, V&& element) {

@@ -23,6 +23,20 @@ public:
         return diff.count();
     }
 
+    void test_copying() {
+        ContiguousMultiMap<int, int> map;
+
+        map.insert(1, 1);
+        map.insert(2, 2);
+        map.insert(3, 3);
+
+        auto other = map;
+        assert_true(other.count(1));
+        assert_true(other.count(2));
+        assert_true(other.count(3));
+        assert_false(other.count(4));
+    }
+
     void test_performance() {
         ContiguousMultiMap<int, int> CMMap;
         std::multimap<int, int> MMap;

@@ -33,7 +33,12 @@ public:
         auto property_value_ptr =
             MaterialValuePool::get().get_or_create_value(value);
 
-        properties_.insert(std::make_pair(hsh, property_value_ptr));
+        if(properties_.count(hsh)) {
+            properties_.at(hsh) = property_value_ptr;
+        } else {
+            properties_.insert(std::make_pair(hsh, property_value_ptr));
+        }
+
         on_override(hsh, name, _impl::material_property_lookup<T>::type);
         return true;
     }
@@ -70,7 +75,7 @@ public:
     template<typename T>
     bool property_value(const MaterialPropertyNameHash hsh, const T*& out) const {
         auto it = properties_.find(hsh);
-        if(it != properties_.end()) {
+        if(it != properties_.end() && it->second) {
             out = it->second.get<T>();
             return true;
         } else if(parent_) {
@@ -123,7 +128,7 @@ protected:
 
     const MaterialPropertyOverrider* parent_ = nullptr;
 
-    std::unordered_map<MaterialPropertyNameHash, MaterialPropertyValuePointer>
+    ContiguousMap<MaterialPropertyNameHash, MaterialPropertyValuePointer>
         properties_;
 };
 

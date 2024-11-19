@@ -44,12 +44,10 @@ static inline bool fetcher(const MaterialPropertyOverrider* const _S_RESTRICT _t
     }
 }
 
-bool MaterialPropertyOverrider::check_existance(const MaterialPropertyNameHash hsh) const {
-    if(is_core_property(hsh)) {
-        return true;
-    }
-
-    return properties_.count(hsh) > 0;
+bool MaterialPropertyOverrider::check_existance(
+    const MaterialPropertyNameHash hsh) const {
+    auto it = properties_.find(hsh);
+    return it != properties_.end() && it->second;
 }
 
 bool MaterialPropertyOverrider::check_existance(const char* property_name) const {
@@ -59,7 +57,8 @@ bool MaterialPropertyOverrider::check_existance(const char* property_name) const
 bool MaterialPropertyOverrider::clear_override(const unsigned hsh) {
     auto it = properties_.find(hsh);
     if(it != properties_.end()) {
-        properties_.erase(it);
+        // FIXME: Erase when contiguous map supports it properties_.erase(it);
+        it->second.reset();
         return true;
     }
 
@@ -70,16 +69,13 @@ bool MaterialPropertyOverrider::property_type(const char* property_name, Materia
     auto hsh = material_property_hash(property_name);
 
     auto it = properties_.find(hsh);
-    if(it != properties_.end()) {
+    if(it != properties_.end() && it->second) {
         *type = it->second.type();
-    } else {
-        return false;
-    }
-
-    if(parent_) {
+        return true;
+    } else if(parent_) {
         return parent_->property_type(property_name, type);
     }
 
-    return true;
+    return false;
 }
 }

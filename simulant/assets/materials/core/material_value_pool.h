@@ -119,7 +119,7 @@ public:
         data_.reset();
     }
 
-    operator bool() {
+    operator bool() const {
         return data_ && *data_;
     }
 };
