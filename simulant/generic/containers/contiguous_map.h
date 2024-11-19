@@ -7,11 +7,13 @@
  *  - Clears without dealloc
  *  - Nodes stored in contiguous memory
  *
- * Internally it's a simple binary search tree that's stored
- * in a vector. Ideally it would be a red-black tree to
- * balance it. FUTURE IMPROVEMENT IF ANYONE WANTS TO PICK IT UP!
+ *  Internally this is a red-black tree stored within a std::vector.
+ *
+ *  TODO:
+ *
+ *   - Add the ability to remove a key. This should mark the space in the
+ *     vector as "free"
  */
-
 
 #include <vector>
 #include <utility>
