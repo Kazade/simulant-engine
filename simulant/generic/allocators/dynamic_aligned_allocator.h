@@ -31,7 +31,7 @@ public:
     static constexpr int alignment = Alignment;
 
     ~DynamicAlignedAllocator() {
-        free(data_);
+        aligned_free(data_);
     }
 
     uint8_t* allocate(std::size_t size) {
@@ -90,7 +90,7 @@ public:
             realloc_callback_(data_, new_data, user_data_);
         }
 
-        free(data_);
+        aligned_free(data_);
         data_ = new_data;
         return data_ + offset;
     }

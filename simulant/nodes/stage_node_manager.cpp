@@ -30,11 +30,8 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
     }
 
     it->second.destructor(node);
-#if !defined(_MSC_VER)
-    free(node_data_it->second.alloc_base);
-#else
-    _aligned_free(node_data_it->second.alloc_base);
-#endif
+    aligned_free(node_data_it->second.alloc_base);
+
     all_nodes_.erase(node_data_it);
     S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
     return true;
@@ -72,7 +69,7 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
     if(!node->init()) {
         S_ERROR("Failed to initialize node");
         info->second.destructor(node);
-        free(node);
+        aligned_free(node);
         return nullptr;
     }
 
@@ -84,7 +81,7 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
         S_ERROR("Failed to create the node");
         node->clean_up();
         info->second.destructor(node);
-        free(node);
+        aligned_free(node);
         return nullptr;
     }
 

@@ -56,7 +56,7 @@ aligned_allocator<T, N>::allocate(size_type n, typename std::allocator<void>::co
 
 template <class T, int N>
 void aligned_allocator<T, N>::deallocate(pointer p, size_type) {
-    free(p);
+    aligned_free(p);
 }
 
 }
