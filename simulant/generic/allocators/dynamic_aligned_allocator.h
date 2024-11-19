@@ -55,7 +55,8 @@ public:
                 // Split the block
                 auto new_block = Block{block_ptr->offset + block_ptr->used,
                                        block_ptr->remaining(), required_size};
-                block_ptr = update_size(block_ptr, -(block_ptr->remaining()));
+                block_ptr =
+                    update_size(block_ptr, -int(block_ptr->remaining()));
 
                 // These values should always remain aligned
                 assert(round_to_alignment(new_block.offset) ==
@@ -192,7 +193,7 @@ private:
         for(auto block: blocks_by_offset) {
             if(prev && (prev->offset + prev->size) == block->offset) {
                 prev = update_size(prev, block->size);
-                block = update_size(block, -block->size);
+                block = update_size(block, -int(block->size));
             } else {
                 prev = block;
             }
