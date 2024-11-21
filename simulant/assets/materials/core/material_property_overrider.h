@@ -26,63 +26,56 @@ public:
     MaterialPropertyOverrider(const MaterialPropertyOverrider* parent):
         parent_(parent) {}
 
-    template<typename T>
-    bool set_property_value(MaterialPropertyNameHash hsh, const char* name, const T& value) {
-        clear_override(hsh);
+protected:
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const float& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const int32_t& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Vec2& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Vec3& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Vec4& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Mat3& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Mat4& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name,
+                                    const TexturePtr& value) = 0;
 
-        auto property_value_ptr =
-            MaterialValuePool::get().get_or_create_value(value);
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                float*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                int32_t*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                Vec2*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                Vec3*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                Vec4*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                Mat3*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                Mat4*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                TexturePtr*& out) const = 0;
 
-        if(properties_.count(hsh)) {
-            properties_.at(hsh) = property_value_ptr;
-        } else {
-            properties_.insert(std::make_pair(hsh, property_value_ptr));
-        }
-
-        on_override(hsh, name, _impl::material_property_lookup<T>::type);
-        return true;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Color& value) {
+        return set_property_value(
+            hsh, name,
+            (const Vec4&)value); // FIXME: dirty cast, add to_vec4() to Color
     }
 
-    template<typename T>
-    bool set_property_value(const char* name, const T& value) {
-        if(!valid_name(name)) {
-            S_WARN("Ignoring invalid property name: {0}", name);
-            return false;
-        }
-
-        if(parent_ && !parent_->check_existance(name)) {
-            S_WARN("Ignoring unknown property override for {0}", name);
-            return false;
-        }
-
-        return set_property_value(material_property_hash(name), name, value);
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                Color*& out) const {
+        return property_value(hsh, (Vec4*&)out); // FIXME: dirty cast
     }
 
-    bool set_property_value(const char* name, const Color& value) {
-        if(!valid_name(name)) {
-            S_WARN("Ignoring invalid property name: {0}", name);
-            return false;
-        }
-
-        if(parent_ && !parent_->check_existance(name)) {
-            S_WARN("Ignoring unknown property override for {0}", name);
-            return false;
-        }
-
-        return set_property_value(material_property_hash(name), name, (const Vec4&) value);
-    }
-
-    template<typename T>
-    bool property_value(const MaterialPropertyNameHash hsh, const T*& out) const {
-        auto it = properties_.find(hsh);
-        if(it != properties_.end() && it->second) {
-            out = it->second.get<T>();
-            return true;
-        } else if(parent_) {
-            return parent_->property_value(hsh, out);
-        }
-        return false;
-    }
+    virtual bool check_existence(MaterialPropertyNameHash hsh) const = 0;
+    virtual bool clear_override(MaterialPropertyNameHash hsh) = 0;
 
     /* Helpers for std::string */
     template<typename T>
@@ -105,31 +98,15 @@ public:
         return clear_override(material_property_hash(name));
     }
 
-    bool property_type(const char* property_name, MaterialPropertyType* type) const;
-
-protected:
-    virtual void on_override(
-        MaterialPropertyNameHash hsh,
-        const char* name,
-        MaterialPropertyType type
-    ) {
-        _S_UNUSED(hsh);
-        _S_UNUSED(name);
-        _S_UNUSED(type);
+    bool check_existance(const char* property_name) const {
+        return check_existence(material_property_hash(property_name));
     }
 
-    virtual void on_clear_override(MaterialPropertyNameHash hsh) { _S_UNUSED(hsh); }
+    virtual bool property_type(const char* property_name,
+                               MaterialPropertyType* type) const = 0;
 
-    /* If we have a parent, then we can't override unless the property has
-     * been defined on the parent - or it's a core property */
-    bool check_existance(const MaterialPropertyNameHash hsh) const;
-    bool check_existance(const char* property_name) const;
-    bool clear_override(const unsigned hsh);
-
+protected:
     const MaterialPropertyOverrider* parent_ = nullptr;
-
-    ContiguousMap<MaterialPropertyNameHash, MaterialPropertyValuePointer>
-        properties_;
 };
 
 }
