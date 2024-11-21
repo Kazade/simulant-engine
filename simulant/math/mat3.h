@@ -92,6 +92,9 @@ public:
         return Mat3(*this) *= rhs;
     }
 
+    bool operator==(const Mat3& rhs) const {
+        return m == rhs.m;
+    }
 };
 
 std::ostream& operator<<(std::ostream& stream, const Mat3& path);

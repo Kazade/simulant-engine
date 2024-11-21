@@ -139,7 +139,9 @@ bool Material::set_pass_count(uint8_t pass_count) {
         return false;
     }
 
-    passes_.resize(pass_count, MaterialPass(this));
+    for(int i = passes_.size(); i < pass_count; ++i) {
+        passes_.push_back(MaterialPass(this, i));
+    }
 
     return true;
 }
@@ -179,8 +181,8 @@ Material &Material::operator=(const Material &rhs) {
 MaterialPass::MaterialPass():
     MaterialObject(nullptr) {}
 
-MaterialPass::MaterialPass(Material *material):
-    MaterialObject(material) {
+MaterialPass::MaterialPass(Material* material, uint8_t pass_number) :
+    MaterialObject(material), pass_number_(pass_number) {
 
     /* If the renderer supports GPU programs, at least specify *something* */
     auto& renderer = get_app()->window->renderer;

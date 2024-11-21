@@ -28,6 +28,8 @@ public:
 
 protected:
     virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const bool& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
                                     const char* name, const float& value) = 0;
     virtual bool set_property_value(MaterialPropertyNameHash hsh,
                                     const char* name, const int32_t& value) = 0;
@@ -46,21 +48,23 @@ protected:
                                     const TexturePtr& value) = 0;
 
     virtual bool property_value(const MaterialPropertyNameHash hsh,
-                                float*& out) const = 0;
+                                const bool*& out) const = 0;
     virtual bool property_value(const MaterialPropertyNameHash hsh,
-                                int32_t*& out) const = 0;
+                                const float*& out) const = 0;
     virtual bool property_value(const MaterialPropertyNameHash hsh,
-                                Vec2*& out) const = 0;
+                                const int32_t*& out) const = 0;
     virtual bool property_value(const MaterialPropertyNameHash hsh,
-                                Vec3*& out) const = 0;
+                                const Vec2*& out) const = 0;
     virtual bool property_value(const MaterialPropertyNameHash hsh,
-                                Vec4*& out) const = 0;
+                                const Vec3*& out) const = 0;
     virtual bool property_value(const MaterialPropertyNameHash hsh,
-                                Mat3*& out) const = 0;
+                                const Vec4*& out) const = 0;
     virtual bool property_value(const MaterialPropertyNameHash hsh,
-                                Mat4*& out) const = 0;
+                                const Mat3*& out) const = 0;
     virtual bool property_value(const MaterialPropertyNameHash hsh,
-                                TexturePtr*& out) const = 0;
+                                const Mat4*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                const TexturePtr*& out) const = 0;
 
     virtual bool set_property_value(MaterialPropertyNameHash hsh,
                                     const char* name, const Color& value) {
@@ -70,17 +74,21 @@ protected:
     }
 
     virtual bool property_value(const MaterialPropertyNameHash hsh,
-                                Color*& out) const {
-        return property_value(hsh, (Vec4*&)out); // FIXME: dirty cast
+                                const Color*& out) const {
+        return property_value(hsh, (const Vec4*&)out); // FIXME: dirty cast
     }
-
-    virtual bool check_existence(MaterialPropertyNameHash hsh) const = 0;
-    virtual bool clear_override(MaterialPropertyNameHash hsh) = 0;
 
     /* Helpers for std::string */
     template<typename T>
     void set_property_value(const std::string& str, const T& v) {
-        set_property_value(str.c_str(), v);
+        MaterialPropertyNameHash hsh = material_property_hash(str.c_str());
+        set_property_value(hsh, str.c_str(), v);
+    }
+
+    template<typename T>
+    void set_property_value(const char* name, const T& v) {
+        MaterialPropertyNameHash hsh = material_property_hash(name);
+        set_property_value(hsh, name, v);
     }
 
     template<typename T>
@@ -95,18 +103,32 @@ protected:
     }
 
     bool clear_override(const char* name) {
-        return clear_override(material_property_hash(name));
+        return on_clear_override(material_property_hash(name));
+    }
+
+    bool clear_override(MaterialPropertyNameHash hsh) {
+        return on_clear_override(hsh);
     }
 
     bool check_existance(const char* property_name) const {
-        return check_existence(material_property_hash(property_name));
+        return on_check_existence(material_property_hash(property_name));
     }
 
     virtual bool property_type(const char* property_name,
                                MaterialPropertyType* type) const = 0;
 
+    virtual bool on_check_existence(MaterialPropertyNameHash hsh) const = 0;
+
 protected:
+    virtual void on_override(MaterialPropertyNameHash hsh, const char* name,
+                             MaterialPropertyType type) {
+        _S_UNUSED(hsh);
+        _S_UNUSED(name);
+        _S_UNUSED(type);
+    }
+
+    virtual bool on_clear_override(MaterialPropertyNameHash hsh) = 0;
     const MaterialPropertyOverrider* parent_ = nullptr;
 };
 
-}
+} // namespace smlt
