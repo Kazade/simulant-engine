@@ -211,6 +211,8 @@ Application::~Application() {
     overlay_scene_->clean_up();
     overlay_scene_.reset();
 
+    material_value_pool->clean_pointers();
+
     if(window_) {
         window_->_clean_up();
         window_.reset();
