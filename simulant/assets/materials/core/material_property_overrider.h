@@ -26,7 +26,7 @@ public:
     MaterialPropertyOverrider(const MaterialPropertyOverrider* parent):
         parent_(parent) {}
 
-protected:
+public:
     virtual bool set_property_value(MaterialPropertyNameHash hsh,
                                     const char* name, const bool& value) = 0;
     virtual bool set_property_value(MaterialPropertyNameHash hsh,

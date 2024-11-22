@@ -26,11 +26,11 @@
 #include "../asset.h"
 #include "../generic/identifiable.h"
 #include "../generic/managed.h"
-#include "../types.h"
 #include "../loadable.h"
-
-#include "materials/material_object.h"
+#include "../types.h"
+#include "../utils/limited_vector.h"
 #include "materials/constants.h"
+#include "materials/material_object.h"
 
 namespace smlt {
 
@@ -47,6 +47,10 @@ class MaterialPass:
 public:
     friend class Material;
 
+    using MaterialPropertyOverrider::property_value;
+    using MaterialPropertyOverrider::set_property_value;
+
+    MaterialPass();
 
     void set_iteration_type(IterationType iteration) {
         iteration_type_ = iteration;
@@ -68,7 +72,6 @@ public:
 
     const Material* material() const;
 
-protected:
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
                             const bool& value) {
         return _set_property_value(hsh, name, value);
@@ -160,8 +163,7 @@ protected:
     bool property_type(const char* property_name,
                        MaterialPropertyType* type) const override;
 
-private:
-    MaterialPass();
+private:    
     MaterialPass(Material* material, uint8_t pass_number);
 
     uint8_t pass_number_;
@@ -234,7 +236,7 @@ public:
 
 private:
     Renderer* renderer_ = nullptr;
-    std::vector<MaterialPass> passes_;
+    LimitedVector<MaterialPass, MAX_MATERIAL_PASSES> passes_;
 
     ContiguousMap<MaterialPropertyNameHash, MaterialPropertyValuePointer>
         values_;
@@ -296,6 +298,10 @@ protected:
     Material& operator=(const Material& rhs);
 
     void initialize_core_properties();
+
+public:
+    using MaterialPropertyOverrider::property_value;
+    using MaterialPropertyOverrider::set_property_value;
 
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
                             const bool& value) {
@@ -392,17 +398,15 @@ protected:
 
         clear_override(hsh);
 
-        auto material = (Material*)parent_;
-        auto& values = material->values_;
         auto property_value_ptr =
             MaterialValuePool::get().get_or_create_value(value);
 
         bool ret = true;
-        if(values.count(hsh)) {
-            values.at(hsh) = property_value_ptr;
+        if(values_.count(hsh)) {
+            values_.at(hsh) = property_value_ptr;
             ret = false;
         } else {
-            values.insert(hsh, property_value_ptr);
+            values_.insert(hsh, property_value_ptr);
         }
 
         on_override(hsh, name, property_value_ptr.type());
@@ -421,14 +425,11 @@ protected:
 
         return false;
     }
-};
 
-// We always just return the type of the parent
-bool MaterialPass::property_type(const char* name,
-                                 MaterialPropertyType* type) const {
-    auto material = (Material*)parent_;
-    return material->property_type(name, type);
-}
+    bool on_check_existence(MaterialPropertyNameHash hsh) const {
+        return values_.count(hsh);
+    }
+};
 
 template<typename T>
 bool MaterialPass::_set_property_value(MaterialPropertyNameHash hsh,
@@ -451,27 +452,6 @@ bool MaterialPass::_set_property_value(MaterialPropertyNameHash hsh,
     on_override(hsh, name, property_value_ptr.type());
 
     return true;
-}
-
-bool MaterialPass::on_check_existence(MaterialPropertyNameHash hsh) const {
-    auto material = (Material*)parent_;
-
-    auto& values = material->values_;
-    return values.count(hsh + (pass_number_ + 1));
-}
-
-bool MaterialPass::on_clear_override(MaterialPropertyNameHash hsh) {
-    auto key = hsh + (pass_number_ + 1);
-
-    auto material = (Material*)parent_;
-
-    auto& values = material->values_;
-    if(values.count(key)) {
-        values.at(key).reset();
-        return true;
-    }
-
-    return false;
 }
 
 template<typename T>

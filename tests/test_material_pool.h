@@ -119,9 +119,9 @@ public:
 
         assert_equal(color.get<Vec4>(), color2.get<Vec4>());
 
-        assert_equal(color.refcount(), 3);
+        assert_equal(color.refcount(), 3u);
         color.reset();
-        assert_equal(color2.refcount(), 2);
+        assert_equal(color2.refcount(), 2u);
         color2.reset();
         pool.clean_pointers();
 

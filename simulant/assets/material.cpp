@@ -143,6 +143,10 @@ bool Material::set_pass_count(uint8_t pass_count) {
         passes_.push_back(MaterialPass(this, i));
     }
 
+    while(passes_.size() > pass_count) {
+        passes_.pop_back();
+    }
+
     return true;
 }
 
@@ -162,15 +166,9 @@ Material &Material::operator=(const Material &rhs) {
     renderer_ = rhs.renderer_;
     texture_properties_ = rhs.texture_properties_;
     custom_properties_ = rhs.custom_properties_;
+    values_ = rhs.values_;
     passes_.clear();
-
-    /* Must set the parent to this material */
-    for(std::size_t i = 0; i < rhs.passes_.size(); ++i) {
-        MaterialPass pass;
-        pass = rhs.passes_[i];
-        pass.parent_ = this;
-        passes_.push_back(std::move(pass));
-    }
+    set_pass_count(rhs.passes_.size());
 
     /* Make sure this material is prepped */
     renderer_->prepare_material(this);
@@ -199,5 +197,31 @@ const Material *MaterialPass::material() const {
     return dynamic_cast<const Material*>(parent_material_object());
 }
 
+bool MaterialPass::on_check_existence(MaterialPropertyNameHash hsh) const {
+    auto material = (Material*)parent_;
 
+    auto& values = material->values_;
+    return values.count(hsh + (pass_number_ + 1));
+}
+
+bool MaterialPass::on_clear_override(MaterialPropertyNameHash hsh) {
+    auto key = hsh + (pass_number_ + 1);
+
+    auto material = (Material*)parent_;
+
+    auto& values = material->values_;
+    if(values.count(key)) {
+        values.at(key).reset();
+        return true;
+    }
+
+    return false;
+}
+
+// We always just return the type of the parent
+bool MaterialPass::property_type(const char* name,
+                                 MaterialPropertyType* type) const {
+    auto material = (Material*)parent_;
+    return material->property_type(name, type);
+}
 }
