@@ -292,7 +292,7 @@ private:
     std::shared_ptr<StatsRecorder> stats_;
     std::shared_ptr<VirtualFileSystem> vfs_;
     std::shared_ptr<SoundDriver> sound_driver_;
-
+    std::shared_ptr<MaterialValuePool> pool_;
     std::vector<LoaderTypePtr> loaders_;
 
     bool initialized_ = false;
@@ -372,6 +372,7 @@ public:
     S_DEFINE_PROPERTY(stats, &Application::stats_);
     S_DEFINE_PROPERTY(vfs, &Application::vfs_);
     S_DEFINE_PROPERTY(sound_driver, &Application::sound_driver_);
+    S_DEFINE_PROPERTY(material_value_pool, &Application::pool_);
 
     /** The overlay is a global scene that is always rendered with the highest
      *  priority over everything. It's used for adding things like FPS counters

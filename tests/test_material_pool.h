@@ -108,14 +108,14 @@ public:
 class MaterialValuePoolTest: public test::SimulantTestCase {
 public:
     void test_basic_usage() {
-        auto& pool = MaterialValuePool::get();
-        auto vec3 = pool.get_or_create_value(Vec3(1, 2, 3));
+        auto& pool = application->material_value_pool;
+        auto vec3 = pool->get_or_create_value(Vec3(1, 2, 3));
 
         // These numbers need to be quite obscure otherwise the refcounts will
         // include things created by Simulant itself (as we have a singleton
         // here.. booo!)
-        auto color = pool.get_or_create_value(Vec4(0.33, 0.33, 0.33, 0.33));
-        auto color2 = pool.get_or_create_value(Vec4(0.33, 0.33, 0.33, 0.33));
+        auto color = pool->get_or_create_value(Vec4(0.33, 0.33, 0.33, 0.33));
+        auto color2 = pool->get_or_create_value(Vec4(0.33, 0.33, 0.33, 0.33));
 
         assert_equal(color.get<Vec4>(), color2.get<Vec4>());
 
@@ -123,10 +123,10 @@ public:
         color.reset();
         assert_equal(color2.refcount(), 2u);
         color2.reset();
-        pool.clean_pointers();
+        pool->clean_pointers();
 
         vec3.reset(); // Make sure all pointers are cleaned up
-        pool.clean_pointers();
+        pool->clean_pointers();
     }
 };
 

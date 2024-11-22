@@ -392,14 +392,15 @@ public:
         return false;
     }
 
+    MaterialValuePool* _get_pool() const;
+
     template<typename T>
     bool _set_property_value(MaterialPropertyNameHash hsh, const char* name,
                              const T& value) {
 
         clear_override(hsh);
 
-        auto property_value_ptr =
-            MaterialValuePool::get().get_or_create_value(value);
+        auto property_value_ptr = _get_pool()->get_or_create_value(value);
 
         bool ret = true;
         if(values_.count(hsh)) {
@@ -440,8 +441,7 @@ bool MaterialPass::_set_property_value(MaterialPropertyNameHash hsh,
     auto key = hsh + (pass_number_ + 1);
     auto material = (Material*)parent_;
     auto& values = material->values_;
-    auto property_value_ptr =
-        MaterialValuePool::get().get_or_create_value(value);
+    auto property_value_ptr = material->_get_pool()->get_or_create_value(value);
 
     if(values.count(key)) {
         values.at(key) = property_value_ptr;

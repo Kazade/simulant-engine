@@ -134,6 +134,10 @@ void Material::initialize_core_properties() {
     set_property_value(FOG_COLOR_PROPERTY_NAME, Color::white());
 }
 
+MaterialValuePool* Material::_get_pool() const {
+    return get_app()->material_value_pool.get();
+}
+
 bool Material::set_pass_count(uint8_t pass_count) {
     if(pass_count >= MAX_MATERIAL_PASSES) {
         return false;

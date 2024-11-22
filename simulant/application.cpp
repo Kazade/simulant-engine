@@ -52,6 +52,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 
 #include "application.h"
 #include "asset_manager.h"
+#include "assets/materials/core/material_value_pool.h"
 #include "assets/sweet16.h"
 #include "compositor.h"
 #include "input/input_manager.h"
@@ -122,11 +123,13 @@ bool Application::profiling_enabled() const {
     return PROFILING;
 }
 
-Application::Application(const AppConfig &config, void* platform_state):
+Application::Application(const AppConfig& config, void* platform_state) :
     platform_state_(platform_state),
     main_thread_id_(thread::this_thread_id()),
-    time_keeper_(TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
+    time_keeper_(
+        TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
     stats_(StatsRecorder::create()),
+    pool_(std::make_shared<MaterialValuePool>()),
     config_(config) {
 
     /* Start off with debug logging, this might change when the window is constructed */

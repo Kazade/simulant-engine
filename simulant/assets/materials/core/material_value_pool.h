@@ -7,16 +7,21 @@
 
 namespace smlt {
 
-/* We have to use a 16 byte alignment, because
+/* We have to use a 32 byte alignment, because
  * the destructor pointer takes up 8-bytes on 64 bit systems.
  * It would be nice not to be so wasteful, but in the grand scheme
  * of things we're saving a tonne of memory by using a flyweight pattern
  * anyway, so we'll still be saving space overall. */
-static constexpr int alignment = 16;
+
+// On 32 bit platforms we can reduce it a bit
+static constexpr int alignment = sizeof(int*) == 4 ? 16 : 32;
+
+class MaterialValuePool;
 
 struct BlockHeader {
     MaterialPropertyType type;
     uint16_t refcount = 0;
+    MaterialValuePool* pool = nullptr;
     void (*destructor)(void* ptr);
 };
 
@@ -144,16 +149,10 @@ public:
 
     template<typename T>
     static void destructor(void* ptr) {
+        BlockHeader* header = reinterpret_cast<BlockHeader*>(ptr);
         void* object = ((uint8_t*)ptr) + alignment;
         reinterpret_cast<T*>(object)->~T();
-        MaterialValuePool::get().release(ptr);
-    }
-
-    // FIXME: Eugh, singleton. This should probably at least
-    // be a property of the application.
-    static MaterialValuePool& get() {
-        static MaterialValuePool pool;
-        return pool;
+        header->pool->release(ptr);
     }
 
     MaterialValuePool() {
@@ -169,6 +168,7 @@ public:
                 // We're killing this, all pointers are now invalid
                 header->refcount = 0;
                 header->destructor(*(ptr.data_));
+                header->pool = nullptr;
 
                 // Invalidate all pointers pointing at this data
                 *(ptr.data_) = nullptr;
@@ -204,6 +204,7 @@ public:
         BlockHeader* header = reinterpret_cast<BlockHeader*>(*data);
         header->refcount = 0;
         header->type = _impl::material_property_lookup<T>::type;
+        header->pool = this;
         header->destructor = &MaterialValuePool::destructor<T>;
 
         new(*data + alignment) T(value);
