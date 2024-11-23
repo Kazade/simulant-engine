@@ -3,17 +3,22 @@
 #include "../constants.h"
 #include "../property_value.h"
 
+#include "../../../utils/hash/fnv1.h"
+
 namespace smlt {
 
 typedef uint32_t MaterialPropertyNameHash;
 
-unsigned constexpr material_property_hash(char const *input) {
-    return *input ?
-        static_cast<unsigned int>(*input) + 33 * material_property_hash(input + 1) :
-        5381;
-}
+// unsigned constexpr material_property_hash(char const *input) {
+//     return *input ?
+//         static_cast<unsigned int>(*input) + 33 * material_property_hash(input
+//         + 1) : 5381;
+// }
 
-constexpr const MaterialPropertyNameHash DIFFUSE_PROPERTY_HASH = material_property_hash(DIFFUSE_PROPERTY_NAME);
+#define material_property_hash(x) smlt::fnv1<uint32_t>::hash(x)
+
+constexpr const MaterialPropertyNameHash DIFFUSE_PROPERTY_HASH =
+    material_property_hash(DIFFUSE_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash AMBIENT_PROPERTY_HASH = material_property_hash(AMBIENT_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash SPECULAR_PROPERTY_HASH = material_property_hash(SPECULAR_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash EMISSION_PROPERTY_HASH = material_property_hash(EMISSION_PROPERTY_NAME);
