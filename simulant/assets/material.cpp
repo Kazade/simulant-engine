@@ -134,12 +134,22 @@ void Material::initialize_core_properties() {
     set_property_value(FOG_COLOR_PROPERTY_NAME, Color::white());
 }
 
+MaterialValuePool* Material::_get_pool() const {
+    return get_app()->material_value_pool.get();
+}
+
 bool Material::set_pass_count(uint8_t pass_count) {
     if(pass_count >= MAX_MATERIAL_PASSES) {
         return false;
     }
 
-    passes_.resize(pass_count, MaterialPass(this));
+    for(int i = passes_.size(); i < pass_count; ++i) {
+        passes_.push_back(MaterialPass(this, i));
+    }
+
+    while(passes_.size() > pass_count) {
+        passes_.pop_back();
+    }
 
     return true;
 }
@@ -160,15 +170,9 @@ Material &Material::operator=(const Material &rhs) {
     renderer_ = rhs.renderer_;
     texture_properties_ = rhs.texture_properties_;
     custom_properties_ = rhs.custom_properties_;
+    values_ = rhs.values_;
     passes_.clear();
-
-    /* Must set the parent to this material */
-    for(std::size_t i = 0; i < rhs.passes_.size(); ++i) {
-        MaterialPass pass;
-        pass = rhs.passes_[i];
-        pass.parent_ = this;
-        passes_.push_back(std::move(pass));
-    }
+    set_pass_count(rhs.passes_.size());
 
     /* Make sure this material is prepped */
     renderer_->prepare_material(this);
@@ -179,8 +183,8 @@ Material &Material::operator=(const Material &rhs) {
 MaterialPass::MaterialPass():
     MaterialObject(nullptr) {}
 
-MaterialPass::MaterialPass(Material *material):
-    MaterialObject(material) {
+MaterialPass::MaterialPass(Material* material, uint8_t pass_number) :
+    MaterialObject(material), pass_number_(pass_number) {
 
     /* If the renderer supports GPU programs, at least specify *something* */
     auto& renderer = get_app()->window->renderer;
@@ -197,5 +201,31 @@ const Material *MaterialPass::material() const {
     return dynamic_cast<const Material*>(parent_material_object());
 }
 
+bool MaterialPass::on_check_existence(MaterialPropertyNameHash hsh) const {
+    auto material = (Material*)parent_;
 
+    auto& values = material->values_;
+    return values.count(hsh + (pass_number_ + 1));
+}
+
+bool MaterialPass::on_clear_override(MaterialPropertyNameHash hsh) {
+    auto key = hsh + (pass_number_ + 1);
+
+    auto material = (Material*)parent_;
+
+    auto& values = material->values_;
+    if(values.count(key)) {
+        values.at(key).reset();
+        return true;
+    }
+
+    return false;
+}
+
+// We always just return the type of the parent
+bool MaterialPass::property_type(const char* name,
+                                 MaterialPropertyType* type) const {
+    auto material = (Material*)parent_;
+    return material->property_type(name, type);
+}
 }

@@ -47,7 +47,10 @@ public:
     }
 
     void clear() {
-        size_ = 0;
+        while(size_ > 0) {
+            data_[size_] = T();
+            --size_;
+        }
     }
 
     std::size_t capacity() const {
@@ -70,6 +73,11 @@ public:
 
         data_[size_++] = std::move(value);
         return true;
+    }
+
+    void pop_back() {
+        data_[size_] = T();
+        --size_;
     }
 
     struct iterator {

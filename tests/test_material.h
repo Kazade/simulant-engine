@@ -230,11 +230,12 @@ public:
     }
 
     void test_overriders() {
-        MaterialPropertyOverrider o1;
-        MaterialPropertyOverrider o2(&o1);
+        auto o1 = application->shared_assets->create_material();
+        o1->set_pass_count(1);
+        auto o2 = *o1->pass(0);
 
         const float* f;
-        o1.set_property_value(SHININESS_PROPERTY_NAME, 1.5f);
+        o1->set_property_value(SHININESS_PROPERTY_NAME, 1.5f);
         assert_true(o2.property_value(SHININESS_PROPERTY_NAME, f));
         assert_equal(*f, 1.5f);
 

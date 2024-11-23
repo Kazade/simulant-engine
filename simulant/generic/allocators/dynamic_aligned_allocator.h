@@ -27,6 +27,7 @@ struct Block {
  * blocks with the specified alignments */
 template<int Alignment>
 class DynamicAlignedAllocator {
+
 public:
     static constexpr int alignment = Alignment;
 
@@ -43,20 +44,36 @@ public:
         }
 
         for(auto block_ptr: block_ptrs) {
-            auto block_cap = block_ptr->size - block_ptr->used;
-            auto target_addr = (data_ + block_ptr->offset + block_ptr->used);
+            auto rounded_used = round_to_alignment(block_ptr->used);
+            auto block_cap = block_ptr->size - rounded_used;
 
-            auto alignment_offset = uintptr_t(target_addr) % alignment;
-            auto required_size = (alignment_offset)
-                                     ? (alignment - alignment_offset) + size
-                                     : size;
+            auto rounded_required_size = round_to_alignment(size);
 
-            if(block_cap >= required_size) {
+            if(block_cap >= rounded_required_size) {
+                // If this block has been used, then the new block will follow
+                // the used portion. If it's not been used, then we'll use it
+                // now and the new block will follow what we use
+
+                auto new_block_offset =
+                    (block_ptr->used)
+                        ? block_ptr->offset + rounded_used
+                        : block_ptr->offset + rounded_required_size;
+
+                auto new_block_size =
+                    (block_ptr->used) ? block_ptr->size - rounded_used
+                                      : block_ptr->size - rounded_required_size;
+
+                auto new_block_used = (block_ptr->used) ? size : 0;
+
+                uint8_t* data = (block_ptr->used) ? data_ + new_block_offset
+                                                  : data_ + block_ptr->offset;
+
                 // Split the block
-                auto new_block = Block{block_ptr->offset + block_ptr->used,
-                                       block_ptr->remaining(), required_size};
-                block_ptr =
-                    update_size(block_ptr, -int(block_ptr->remaining()));
+                auto new_block =
+                    Block{new_block_offset, new_block_size, new_block_used};
+
+                block_ptr = update_size(block_ptr, -int(new_block_size));
+                block_ptr->used = (block_ptr->used) ? block_ptr->used : size;
 
                 // These values should always remain aligned
                 assert(round_to_alignment(new_block.offset) ==
@@ -67,7 +84,7 @@ public:
 
                 remove_zero_sized_free_blocks();
 
-                return data_ + new_block.offset;
+                return data;
             }
         }
 
