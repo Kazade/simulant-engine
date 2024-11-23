@@ -238,7 +238,7 @@ private:
     Renderer* renderer_ = nullptr;
     LimitedVector<MaterialPass, MAX_MATERIAL_PASSES> passes_;
 
-    ContiguousMap<MaterialPropertyNameHash, MaterialPropertyValuePointer>
+    std::unordered_map<MaterialPropertyNameHash, MaterialPropertyValuePointer>
         values_;
 
     std::unordered_map<MaterialPropertyNameHash, TexturePropertyInfo>
@@ -407,7 +407,7 @@ public:
             values_.at(hsh) = property_value_ptr;
             ret = false;
         } else {
-            values_.insert(hsh, property_value_ptr);
+            values_.insert(std::make_pair(hsh, property_value_ptr));
         }
 
         on_override(hsh, name, property_value_ptr.type());
@@ -446,7 +446,7 @@ bool MaterialPass::_set_property_value(MaterialPropertyNameHash hsh,
     if(values.count(key)) {
         values.at(key) = property_value_ptr;
     } else {
-        values.insert(key, property_value_ptr);
+        values.insert(std::make_pair(key, property_value_ptr));
     }
 
     on_override(hsh, name, property_value_ptr.type());
