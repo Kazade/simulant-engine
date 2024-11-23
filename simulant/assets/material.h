@@ -244,7 +244,7 @@ private:
         MaterialPropertyEntry* next = nullptr;
     };
 
-    static constexpr int bucket_count = 32;
+    static constexpr int bucket_count = 16;
     std::array<MaterialPropertyEntry, bucket_count> values_;
     std::list<MaterialPropertyEntry> values_overflow_;
 
