@@ -205,17 +205,27 @@ bool MaterialPass::on_check_existence(MaterialPropertyNameHash hsh) const {
     auto material = (Material*)parent_;
 
     auto& values = material->values_;
-    return values.count(hsh + (pass_number_ + 1));
+    auto it = &values[hsh % Material::bucket_count];
+
+    while(it->hsh != hsh && it->next) {
+        it = it->next;
+    }
+
+    return it->hsh == hsh && it->entries[pass_number_ + 1];
 }
 
 bool MaterialPass::on_clear_override(MaterialPropertyNameHash hsh) {
-    auto key = hsh + (pass_number_ + 1);
-
     auto material = (Material*)parent_;
 
     auto& values = material->values_;
-    if(values.count(key)) {
-        values.at(key).reset();
+
+    auto it = &values[hsh % Material::bucket_count];
+    while(it->hsh != hsh && it->next) {
+        it = it->next;
+    }
+
+    if(it->hsh == hsh && it->entries[pass_number_ + 1]) {
+        it->entries[pass_number_ + 1].reset();
         return true;
     }
 
