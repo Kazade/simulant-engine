@@ -188,7 +188,8 @@ public:
     template<typename T>
     MaterialPropertyValuePointer get_or_create_value(const T& value) {
         for(auto& pointer: pointers_) {
-            if(_impl::material_property_lookup<T>::type == pointer.type() &&
+            if(pointer.refcount() > 0 &&
+               _impl::material_property_lookup<T>::type == pointer.type() &&
                *pointer.get<T>() == value) {
                 return pointer;
             }

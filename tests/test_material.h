@@ -230,7 +230,7 @@ public:
     }
 
     void test_overriders() {
-        auto o1 = Material::create(AssetID(1), nullptr);
+        auto o1 = application->shared_assets->create_material();
         o1->set_pass_count(1);
         auto o2 = *o1->pass(0);
 
