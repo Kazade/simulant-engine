@@ -184,7 +184,7 @@ MaterialPass::MaterialPass():
     MaterialObject(nullptr) {}
 
 MaterialPass::MaterialPass(Material* material, uint8_t pass_number) :
-    MaterialObject(material), pass_number_(pass_number) {
+    MaterialObject(material), pass_number_(pass_number), material_(material) {
 
     /* If the renderer supports GPU programs, at least specify *something* */
     auto& renderer = get_app()->window->renderer;
@@ -195,10 +195,6 @@ MaterialPass::MaterialPass(Material* material, uint8_t pass_number) :
 
 GPUProgramID MaterialPass::gpu_program_id() const {
     return program_->id();
-}
-
-const Material *MaterialPass::material() const {
-    return dynamic_cast<const Material*>(parent_material_object());
 }
 
 bool MaterialPass::on_check_existence(MaterialPropertyNameHash hsh) const {

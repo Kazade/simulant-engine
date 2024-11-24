@@ -70,12 +70,14 @@ public:
                                     const char* name, const Color& value) {
         return set_property_value(
             hsh, name,
-            (const Vec4&)value); // FIXME: dirty cast, add to_vec4() to Color
+            reinterpret_cast<const Vec4&>(
+                value)); // FIXME: dirty cast, add to_vec4() to Color
     }
 
     virtual bool property_value(const MaterialPropertyNameHash hsh,
                                 const Color*& out) const {
-        return property_value(hsh, (const Vec4*&)out); // FIXME: dirty cast
+        return property_value(
+            hsh, reinterpret_cast<const Vec4*&>(out)); // FIXME: dirty cast
     }
 
     /* Helpers for std::string */

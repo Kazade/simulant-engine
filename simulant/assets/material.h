@@ -70,7 +70,9 @@ public:
         return max_iterations_;
     }
 
-    const Material* material() const;
+    const Material* material() const {
+        return material_;
+    }
 
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
                             const bool& value) {
@@ -169,7 +171,7 @@ private:
     uint8_t pass_number_;
     IterationType iteration_type_ = ITERATION_TYPE_ONCE;
     uint8_t max_iterations_ = 1;
-
+    Material* material_ = nullptr;
     GPUProgramPtr program_;
 };
 
