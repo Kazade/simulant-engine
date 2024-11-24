@@ -458,7 +458,7 @@ public:
             it = it->next;
         }
 
-        if(it->entries[0]) {
+        if(it->hsh == hsh && it->entries[0]) {
             *type = it->entries[0].type();
             return true;
         }
@@ -467,7 +467,13 @@ public:
     }
 
     bool on_check_existence(MaterialPropertyNameHash hsh) const {
-        return values_[hsh % bucket_count].entries[0];
+        auto it = &values_[hsh % bucket_count];
+
+        while(it->hsh != hsh && it->next) {
+            it = it->next;
+        }
+
+        return it->hsh == hsh && it->entries[0];
     }
 };
 
@@ -518,14 +524,14 @@ bool MaterialPass::_property_value(const MaterialPropertyNameHash hsh,
         it = it->next;
     }
 
-    if(it->hsh == hsh && it->entries[pass_number_ + 1]) {
-        out = it->entries[pass_number_ + 1].get<T>();
-        return true;
-    }
-
-    if(it->hsh == hsh && it->entries[0]) {
-        out = it->entries[0].get<T>();
-        return true;
+    if(it->hsh == hsh) {
+        if(it->entries[pass_number_ + 1]) {
+            out = it->entries[pass_number_ + 1].get<T>();
+            return true;
+        } else if(it->entries[0]) {
+            out = it->entries[0].get<T>();
+            return true;
+        }
     }
 
     return false;
