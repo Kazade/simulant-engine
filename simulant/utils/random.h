@@ -35,10 +35,21 @@ public:
     }
 
     template<typename T>
-    void shuffle(T* array, std::size_t count);
+    void shuffle(T* array, std::size_t count) {
+        if(count == 0) {
+            return;
+        }
+
+        for(std::size_t i = count - 1; i > 0; i--) {
+            std::size_t j = int_in_range(0, i);
+            std::swap(array[i], array[j]);
+        }
+    }
 
     template<typename T>
-    void shuffle(std::vector<T>& choices);
+    void shuffle(std::vector<T>& choices) {
+        shuffle(choices.data(), choices.size());
+    }
 
     template<typename T>
     std::vector<T> shuffled(const std::vector<T>& choices);

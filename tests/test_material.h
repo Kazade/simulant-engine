@@ -5,6 +5,7 @@
 
 #include "simulant/assets/materials/core/core_material.h"
 #include "simulant/assets/materials/core/material_property_overrider.h"
+#include "simulant/utils/random.h"
 
 namespace {
 
@@ -56,6 +57,117 @@ public:
 
         assert_equal(pass1->diffuse(), smlt::Color::green());
         assert_equal(pass2->diffuse(), smlt::Color::red());
+    }
+
+    void test_material_property_stress_test() {
+        int iterations = 100;
+
+        auto mat = application->shared_assets->create_material();
+        mat->set_pass_count(2);
+        auto p0 = mat->pass(0);
+        auto& r = RandomGenerator::instance();
+
+        struct Expected {
+            std::string name;
+            optional<Color> color;
+            optional<bool> b;
+
+            Expected() = default;
+            Expected(const std::string& name, const optional<Color>& color,
+                     const optional<bool>& b) :
+                name(name), color(color), b(b) {}
+        };
+
+        std::vector<std::string> color_props = {DIFFUSE_PROPERTY_NAME,
+                                                AMBIENT_PROPERTY_NAME,
+                                                SPECULAR_PROPERTY_NAME};
+
+        std::vector<std::string> bool_props = {
+            DEPTH_TEST_ENABLED_PROPERTY_NAME, DEPTH_WRITE_ENABLED_PROPERTY_NAME,
+            LIGHTING_ENABLED_PROPERTY_NAME};
+
+        std::vector<Expected> expected;
+
+        for(int i = 0; i < iterations; ++i) {
+            int type = r.int_in_range(0, 2);
+            switch(type) {
+                case 0: // Color
+                {
+                    auto v = r.point_on_sphere(1.0f);
+                    auto c = Color(v.x, v.y, v.z, 1.0);
+                    auto p = r.choice(color_props);
+
+                    printf("Set %s to %f, %f, %f, %f\n", p.c_str(), c.r, c.g,
+                           c.b, c.a);
+                    p0->set_property_value(p.c_str(), c);
+
+                    optional<Color> ov = c;
+
+                    expected.erase(std::remove_if(expected.begin(),
+                                                  expected.end(),
+                                                  [&](const Expected& e) {
+                        return e.name == p;
+                    }),
+                                   expected.end());
+                    expected.push_back(Expected(p, ov, optional<bool>()));
+                    break;
+                }
+                case 1: // Bool
+                {
+                    auto v = r.int_in_range(0, 1) == 1;
+                    auto p = r.choice(bool_props);
+                    p0->set_property_value(p.c_str(), v);
+                    printf("Set %s to %d\n", p.c_str(), v);
+                    optional<bool> ov = v;
+                    expected.erase(std::remove_if(expected.begin(),
+                                                  expected.end(),
+                                                  [&](const Expected& e) {
+                        return e.name == p;
+                    }),
+                                   expected.end());
+                    expected.push_back(Expected(p, optional<Color>(), ov));
+                    break;
+                }
+                case 2: // Remove random
+                {
+                    r.shuffle(expected);
+                    auto remove_count = r.int_in_range(0, expected.size());
+                    for(int i = 0; i < remove_count; ++i) {
+                        auto& e = expected[expected.size() - i - 1];
+                        printf("Cleared %s\n", e.name.c_str());
+                        p0->clear_override(e.name.c_str());
+                    }
+
+                    expected.resize(expected.size() - remove_count);
+                    break;
+                }
+            }
+
+            for(auto& e: expected) {
+                if(e.color) {
+                    const Color* out;
+                    assert_true(p0->property_value(e.name.c_str(), out));
+                    auto t = e.color.value();
+                    if(t != *out) {
+                        printf(
+                            "Failed: %s -> %f, %f, %f, %f vs %f, %f, %f, %f\n",
+                            e.name.c_str(), out->r, out->g, out->b, out->a, t.r,
+                            t.g, t.b, t.a);
+                    }
+                    assert_equal(t, *out);
+                } else {
+                    const bool* out;
+                    assert_true(p0->property_value(e.name.c_str(), out));
+
+                    bool t = e.b.value();
+                    if(t != *out) {
+                        printf("Failed: %s -> %d vs %d\n", e.name.c_str(), *out,
+                               t);
+                    }
+                    assert_equal(t, *out);
+                }
+            }
+        }
     }
 
     void test_pass_resizing() {

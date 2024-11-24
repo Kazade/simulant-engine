@@ -60,5 +60,4 @@ Vec2 RandomGenerator::direction_2d() {
 Vec3 RandomGenerator::direction_3d() {
     return point_on_sphere(1.0f);
 }
-
 }
