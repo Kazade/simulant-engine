@@ -269,11 +269,20 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
                                        : mesh->vertex_data.get();
 
     int i = mesh->submesh_count();
+
+    if(!is_visible()) {
+        return;
+    }
+
+    auto rp = render_priority();
+    auto mat = transform->world_space_matrix();
+    auto center = transformed_aabb().center();
+
     for(auto& submesh: mesh->each_submesh()) {
         Renderable new_renderable;
-        new_renderable.final_transformation = transform->world_space_matrix();
-        new_renderable.render_priority = render_priority();
-        new_renderable.is_visible = is_visible();
+        new_renderable.final_transformation = mat;
+        new_renderable.render_priority = rp;
+        new_renderable.is_visible = true;
         new_renderable.arrangement = submesh->arrangement();
         new_renderable.vertex_data = vdata;
         new_renderable.index_data = submesh->index_data.get();
@@ -284,7 +293,7 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
         new_renderable.vertex_range_count = submesh->vertex_range_count();
         new_renderable.material =
             submesh->material_at_slot(material_slot_, true).get();
-        new_renderable.center = transformed_aabb().center();
+        new_renderable.center = center;
         /* We include the submesh order in the precedence so that overlapping
          * submeshes can be tie-broken when their distance is the same.
          *
