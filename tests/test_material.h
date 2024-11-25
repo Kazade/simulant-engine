@@ -57,6 +57,11 @@ public:
 
         assert_equal(pass1->diffuse(), smlt::Color::green());
         assert_equal(pass2->diffuse(), smlt::Color::red());
+
+        pass1->clear_override(DIFFUSE_PROPERTY_NAME);
+
+        assert_equal(pass1->diffuse(), smlt::Color::red());
+        assert_equal(pass2->diffuse(), smlt::Color::red());
     }
 
     void test_material_property_stress_test() {

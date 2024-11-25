@@ -171,6 +171,17 @@ Material &Material::operator=(const Material &rhs) {
     texture_properties_ = rhs.texture_properties_;
     custom_properties_ = rhs.custom_properties_;
     values_ = rhs.values_;
+    values_overflow_.clear();
+
+    for(auto& value: values_) {
+        auto it = &value;
+        while(it->next) {
+            values_overflow_.push_back(*(it->next));
+            it->next = &values_overflow_.back();
+
+            it = it->next;
+        }
+    }
     passes_.clear();
     set_pass_count(rhs.passes_.size());
 
