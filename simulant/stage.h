@@ -50,7 +50,8 @@ private:
     }
 
     void do_generate_renderables(batcher::RenderQueue*, const Camera*,
-                                 const Viewport*, DetailLevel) override {}
+                                 const Viewport*, DetailLevel, Light**,
+                                 const std::size_t) override {}
 };
 
 } // namespace smlt

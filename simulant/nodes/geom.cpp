@@ -69,8 +69,12 @@ const AABB& Geom::aabb() const {
 
 void Geom::do_generate_renderables(batcher::RenderQueue* render_queue,
                                    const Camera* camera, const Viewport*,
-                                   const DetailLevel detail_level) {
+                                   const DetailLevel detail_level,
+                                   Light** lights,
+                                   const std::size_t light_count) {
     _S_UNUSED(detail_level);
+    _S_UNUSED(lights);
+    _S_UNUSED(light_count);
 
     culler_->renderables_visible(camera->frustum(), render_queue);
 }

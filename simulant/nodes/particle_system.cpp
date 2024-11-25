@@ -108,7 +108,9 @@ void ParticleSystem::set_update_when_hidden(bool value) {
 void ParticleSystem::do_generate_renderables(batcher::RenderQueue* render_queue,
                                              const Camera* camera,
                                              const Viewport*,
-                                             const DetailLevel detail_level) {
+                                             const DetailLevel detail_level,
+                                             Light** lights,
+                                             const std::size_t light_count) {
     _S_UNUSED(detail_level);
 
     if(!is_visible()) {
@@ -135,6 +137,11 @@ void ParticleSystem::do_generate_renderables(batcher::RenderQueue* render_queue,
     new_renderable.is_visible = true;
     new_renderable.material = script_->material().get();
     new_renderable.center = transformed_aabb().center();
+
+    new_renderable.light_count = light_count;
+    for(std::size_t i = 0; i < light_count; ++i) {
+        new_renderable.lights_affecting_this_frame[i] = lights[i];
+    }
 
     render_queue->insert_renderable(std::move(new_renderable));
 }

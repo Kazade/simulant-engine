@@ -72,7 +72,8 @@ public:
 
     void do_generate_renderables(batcher::RenderQueue* render_queue,
                                  const Camera*, const Viewport* viewport,
-                                 const DetailLevel) override;
+                                 const DetailLevel, Light** lights,
+                                 const std::size_t light_count) override;
 
     ParticleScript* script() const {
         return script_.get();

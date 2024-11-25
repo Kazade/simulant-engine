@@ -47,10 +47,11 @@ namespace batcher {
  * 4. If distance to camera is equal, z order is taken into account
 */
 struct RenderGroupKey {
+    RenderPriority priority = RENDER_PRIORITY_MAIN;
     uint8_t pass = 0; // 1 byte
     bool is_blended = false; // 1 byte
     float distance_to_camera = 0.0f; // 4 bytes
-    int16_t precedence = 0; // 2-bytes to get 8-byte alignment
+    int8_t precedence = 0;           // 1-byte to get 8-byte alignment
 };
 
 
@@ -60,6 +61,12 @@ struct RenderGroup {
     RenderGroupKey sort_key;
 
     bool operator<(const RenderGroup& rhs) const {
+        if(sort_key.priority < rhs.sort_key.priority) {
+            return true;
+        } else if(sort_key.priority > rhs.sort_key.priority) {
+            return false;
+        }
+
         if(sort_key.pass < rhs.sort_key.pass) {
             return true;
         } else if(sort_key.pass > rhs.sort_key.pass) {
@@ -111,7 +118,11 @@ struct RenderGroup {
     }
 };
 
-RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, int16_t precedence);
+RenderGroupKey generate_render_group_key(const RenderPriority priority,
+                                         const uint8_t pass,
+                                         const bool is_blended,
+                                         const float distance_to_camera,
+                                         int16_t precedence);
 
 class RenderGroupFactory {
 public:
@@ -119,14 +130,12 @@ public:
 
     /* Initialize a render group based on the provided arguments
      * Returns the group's sort_key */
-    virtual RenderGroupKey prepare_render_group(
-        RenderGroup* group,
-        const Renderable* renderable,
-        const MaterialPass* material_pass,
-        const uint8_t pass_number,
-        const bool is_blended,
-        const float distance_to_camera
-    ) = 0;
+    virtual RenderGroupKey
+        prepare_render_group(RenderGroup* group, const Renderable* renderable,
+                             const MaterialPass* material_pass,
+                             const RenderPriority priority,
+                             const uint8_t pass_number, const bool is_blended,
+                             const float distance_to_camera) = 0;
 };
 
 typedef uint32_t Pass;
@@ -189,26 +198,24 @@ public:
 
     void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;
 
-    std::size_t queue_count() const { return priority_queues_.size(); }
-    std::size_t group_count(Pass pass_number) const;
-
-    std::size_t renderable_count() const { return renderables_.size(); }
-    Renderable* renderable(const std::size_t i) {
-        return &renderables_[i];
+    std::size_t renderable_count() const {
+        return render_queue_.size();
     }
+
+    Renderable* renderable(std::size_t idx);
+
 private:
     // std::map is ordered, so by using the RenderGroup as the key we
     // minimize GL state changes (e.g. if a RenderGroupImpl orders by AssetID, then ShaderID
     // then we'll see  (TexID(1), ShaderID(1)), (TexID(1), ShaderID(2)) for example meaning the
     // texture doesn't change even if the shader does
-    typedef ContiguousMultiMap<RenderGroup, std::size_t> SortedRenderables;
+    typedef ContiguousMultiMap<RenderGroup, Renderable> SortedRenderables;
 
     StageNode* stage_node_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
     CameraPtr camera_;
 
-    std::vector<Renderable, aligned_allocator<Renderable, 16>> renderables_;
-    std::array<SortedRenderables, RENDER_PRIORITY_MAX - RENDER_PRIORITY_MIN> priority_queues_;
+    SortedRenderables render_queue_;
 
     void clean_empty_batches();
 

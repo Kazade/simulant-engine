@@ -647,9 +647,11 @@ public:
 
     /** Populates the render queue with a list of renderables to send to be
      *  rendered by the render pipelines */
-    void generate_renderables(batcher::RenderQueue* render_queue, const Camera*,
-                              const Viewport* viewport,
-                              const DetailLevel detail_level);
+    std::size_t generate_renderables(batcher::RenderQueue* render_queue,
+                                     const Camera*, const Viewport* viewport,
+                                     const DetailLevel detail_level,
+                                     Light** lights,
+                                     const std::size_t light_count);
 
     void update(float dt) override final;
     void late_update(float dt) override final;
@@ -751,10 +753,14 @@ private:
     virtual void do_generate_renderables(batcher::RenderQueue* render_queue,
                                          const Camera*,
                                          const Viewport* viewport,
-                                         const DetailLevel detail_level) {
+                                         const DetailLevel detail_level,
+                                         Light** lights,
+                                         const std::size_t light_count) {
         _S_UNUSED(render_queue);
         _S_UNUSED(viewport);
         _S_UNUSED(detail_level);
+        _S_UNUSED(lights);
+        _S_UNUSED(light_count);
     }
 
     virtual void finalize_destroy() override final;
@@ -1038,7 +1044,8 @@ public:
 
     /* Containers don't directly have renderables, but their children do */
     void do_generate_renderables(batcher::RenderQueue*, const Camera*,
-                                 const Viewport*, const DetailLevel) override {}
+                                 const Viewport*, const DetailLevel, Light**,
+                                 const std::size_t) override {}
 
     virtual ~ContainerNode() {}
 };

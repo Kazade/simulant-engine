@@ -63,25 +63,25 @@ public:
     }
 
     void test_render_group_key_generation() {
-        batcher::RenderGroup pass0_unblended_100_tex1 = {batcher::generate_render_group_key(
-            0, false, 100.0f, 0
-        )};
+        batcher::RenderGroup pass0_unblended_100_tex1 = {
+            batcher::generate_render_group_key(RENDER_PRIORITY_MAIN, 0, false,
+                                               100.0f, 0)};
 
-        batcher::RenderGroup  pass0_unblended_10_tex1 = {batcher::generate_render_group_key(
-            0, false, 10.0f, 0
-        )};
+        batcher::RenderGroup pass0_unblended_10_tex1 = {
+            batcher::generate_render_group_key(RENDER_PRIORITY_MAIN, 0, false,
+                                               10.0f, 0)};
 
-        batcher::RenderGroup  pass0_blended_100_tex1 = {batcher::generate_render_group_key(
-            0, true, 100.0f, 0
-        )};
+        batcher::RenderGroup pass0_blended_100_tex1 = {
+            batcher::generate_render_group_key(RENDER_PRIORITY_MAIN, 0, true,
+                                               100.0f, 0)};
 
-        batcher::RenderGroup  pass0_blended_10_tex1 = {batcher::generate_render_group_key(
-            0, true, 10.0f, 0
-        )};
+        batcher::RenderGroup pass0_blended_10_tex1 = {
+            batcher::generate_render_group_key(RENDER_PRIORITY_MAIN, 0, true,
+                                               10.0f, 0)};
 
-        batcher::RenderGroup  pass1_blended_10_tex1 = {batcher::generate_render_group_key(
-            1, true, 10.0f, 0
-        )};
+        batcher::RenderGroup pass1_blended_10_tex1 = {
+            batcher::generate_render_group_key(RENDER_PRIORITY_MAIN, 1, true,
+                                               10.0f, 0)};
 
         assert_true(pass0_unblended_100_tex1 < pass0_blended_100_tex1);
         assert_true(pass0_unblended_100_tex1 < pass0_blended_10_tex1);

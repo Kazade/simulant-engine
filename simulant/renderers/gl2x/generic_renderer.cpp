@@ -79,8 +79,9 @@ GenericRenderer::GenericRenderer(Window* window, bool use_es) :
 
 batcher::RenderGroupKey GenericRenderer::prepare_render_group(
     batcher::RenderGroup* group, const Renderable* renderable,
-    const MaterialPass* material_pass, const uint8_t pass_number,
-    const bool is_blended, const float distance_to_camera) {
+    const MaterialPass* material_pass, const RenderPriority priority,
+    const uint8_t pass_number, const bool is_blended,
+    const float distance_to_camera) {
 
     _S_UNUSED(group);
     _S_UNUSED(renderable);
@@ -89,8 +90,9 @@ batcher::RenderGroupKey GenericRenderer::prepare_render_group(
     _S_UNUSED(is_blended);
     _S_UNUSED(distance_to_camera);
 
-    return batcher::generate_render_group_key(
-        pass_number, is_blended, distance_to_camera, renderable->precedence);
+    return batcher::generate_render_group_key(priority, pass_number, is_blended,
+                                              distance_to_camera,
+                                              renderable->precedence);
 }
 
 void GenericRenderer::set_light_uniforms(const MaterialPass* pass,

@@ -231,7 +231,9 @@ bool Actor::has_mesh(DetailLevel detail_level) const {
 
 void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
                                     const Camera* camera, const Viewport*,
-                                    const DetailLevel detail_level) {
+                                    const DetailLevel detail_level,
+                                    Light** lights,
+                                    const std::size_t light_count) {
     _S_UNUSED(camera);
 
     auto mesh = find_mesh(detail_level);
@@ -294,6 +296,12 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
         new_renderable.material =
             submesh->material_at_slot(material_slot_, true).get();
         new_renderable.center = center;
+
+        new_renderable.light_count = light_count;
+        for(auto i = 0u; i < light_count; ++i) {
+            new_renderable.lights_affecting_this_frame[i] = lights[i];
+        }
+
         /* We include the submesh order in the precedence so that overlapping
          * submeshes can be tie-broken when their distance is the same.
          *

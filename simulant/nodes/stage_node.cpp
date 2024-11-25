@@ -215,8 +215,16 @@ StageNode* StageNode::find_mixin(const std::string& name) const {
     return nullptr;
 }
 
-void StageNode::generate_renderables(batcher::RenderQueue* render_queue, const smlt::Camera* camera, const smlt::Viewport *viewport, const DetailLevel detail_level) {
-    do_generate_renderables(render_queue, camera, viewport, detail_level);
+std::size_t StageNode::generate_renderables(batcher::RenderQueue* render_queue,
+                                            const smlt::Camera* camera,
+                                            const smlt::Viewport* viewport,
+                                            const DetailLevel detail_level,
+                                            Light** lights,
+                                            const std::size_t light_count) {
+    auto before = render_queue->renderable_count();
+    do_generate_renderables(render_queue, camera, viewport, detail_level,
+                            lights, light_count);
+    return render_queue->renderable_count() - before;
 }
 
 /* Right this is a bit confusing.

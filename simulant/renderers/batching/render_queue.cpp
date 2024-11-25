@@ -32,9 +32,13 @@
 namespace smlt {
 namespace batcher {
 
-
-RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, int16_t precedence) {
+RenderGroupKey generate_render_group_key(const RenderPriority priority,
+                                         const uint8_t pass,
+                                         const bool is_blended,
+                                         const float distance_to_camera,
+                                         int16_t precedence) {
     RenderGroupKey key;
+    key.priority = priority;
     key.pass = pass;
     key.is_blended = is_blended;
     key.distance_to_camera = distance_to_camera;
@@ -54,7 +58,7 @@ void RenderQueue::reset(StageNode* stage, RenderGroupFactory* factory, CameraPtr
     clear();
 }
 
-void RenderQueue::insert_renderable(Renderable&& src_renderable) {
+void RenderQueue::insert_renderable(Renderable&& renderable) {
     /*
      * Adds a renderable to the correct render groups. This goes through the
      * material passes on the renderable, calculates the render group for each one
@@ -65,34 +69,24 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
     assert(camera_);
     assert(render_group_factory_);
 
-    if(!src_renderable.is_visible) {
+    if(!renderable.is_visible) {
         return;
     }
 
-    if(!src_renderable.vertex_range_count && !src_renderable.index_element_count) {
+    if(!renderable.vertex_range_count && !renderable.index_element_count &&
+       !renderable.vertex_data->count()) {
         return;
     }
 
-    assert(src_renderable.vertex_data && src_renderable.vertex_data->count());
-
-    if(!src_renderable.vertex_data->count()) {
-        S_ERROR("Attempted to add renderable without any vertex data");
-        return;
-    }
-
-    auto idx = renderables_.size();
-    renderables_.push_back(std::move(src_renderable));
-    auto renderable = &renderables_[idx];
-
-    auto material = renderable->material;
+    auto material = renderable.material;
     assert(material);
 
     auto plane =
         Plane(camera_->transform->forward(), camera_->transform->position());
 
-    auto pos = renderable->center;
+    auto pos = renderable.center;
     auto renderable_dist_to_camera = plane.distance_to(pos);
-    auto priority = renderable->render_priority;
+    auto priority = renderable.render_priority;
 
     auto pass_count = material->pass_count();
     for(auto i = 0u; i < pass_count; ++i) {
@@ -102,27 +96,16 @@ void RenderQueue::insert_renderable(Renderable&& src_renderable) {
         bool is_blended = pass->is_blending_enabled();
 
         group.sort_key = render_group_factory_->prepare_render_group(
-            &group,
-            renderable, pass,
-            i, is_blended, renderable_dist_to_camera
-        );
+            &group, &renderable, pass, priority, i, is_blended,
+            renderable_dist_to_camera);
 
-        // Priorities run from -250 to +250, so we need to offset the index
-        auto queue_number = priority + std::abs(RENDER_PRIORITY_MIN);
-        assert(queue_number < (int) priority_queues_.size());
-
-        auto& priority_queue = priority_queues_[queue_number];
-        priority_queue.insert(std::move(group), std::move(idx));
+        render_queue_.insert(group, std::move(renderable));
     }
 }
 
 void RenderQueue::clear() {
     thread::Lock<thread::Mutex> lock(queue_lock_);
-    for(auto& queue: priority_queues_) {
-        queue.clear();
-    }
-
-    renderables_.clear();
+    render_queue_.clear();
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
@@ -130,75 +113,78 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
     visitor->start_traversal(*this, frame_id, stage_node_);
 
-    for(auto& queue: priority_queues_) {
-        IterationType pass_iteration_type = ITERATION_TYPE_ONCE;
-        MaterialPass* material_pass = nullptr, *last_pass = nullptr;
+    IterationType pass_iteration_type = ITERATION_TYPE_ONCE;
+    MaterialPass *material_pass = nullptr, *last_pass = nullptr;
 
-        const RenderGroup* last_group = nullptr;
+    const RenderGroup* last_group = nullptr;
 
-        for(auto& p: queue) {
-            const RenderGroup* current_group = &p.first;
-            const Renderable* renderable = &renderables_[p.second];
+    for(auto& p: render_queue_) {
+        const RenderGroup* current_group = &p.first;
+        const Renderable* renderable = &p.second;
 
-            /* We do this here so that we don't change render group unless something in the
-             * new group is visible */
-            if(!last_group || *current_group != *last_group) {
-                visitor->change_render_group(last_group, current_group);
-            }
-
-            material_pass = renderable->material->pass(current_group->sort_key.pass);
-
-            if(material_pass != last_pass) {
-                pass_iteration_type = material_pass->iteration_type();
-                visitor->change_material_pass(last_pass, material_pass);
-                last_pass = material_pass;
-            }
-
-            uint32_t iterations = 1;
-
-            // Get any lights which are visible and affecting the renderable this frame
-            auto& lights = renderable->lights_affecting_this_frame;
-
-            if(pass_iteration_type == ITERATION_TYPE_N) {
-                iterations = material_pass->max_iterations();
-            } else if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
-                iterations = renderable->light_count;
-            }
-
-            for(Iteration i = 0; i < iterations; ++i) {
-                LightPtr next = nullptr;
-
-                // Pass down the light if necessary, otherwise just pass nullptr
-                if(i < renderable->light_count) {
-                    next = lights[i];
-                } else {
-                    next = nullptr;
-                }
-
-                if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
-                    visitor->apply_lights(&next, 1);
-                } else if(pass_iteration_type == ITERATION_TYPE_N || pass_iteration_type == ITERATION_TYPE_ONCE) {
-                    visitor->apply_lights(&lights[0], (uint8_t) renderable->light_count);
-                }
-                visitor->visit(renderable, material_pass, i);
-            }
-
-            last_group = current_group;
+        /* We do this here so that we don't change render group unless something
+         * in the new group is visible */
+        if(!last_group || *current_group != *last_group) {
+            visitor->change_render_group(last_group, current_group);
         }
+
+        material_pass =
+            renderable->material->pass(current_group->sort_key.pass);
+
+        if(material_pass != last_pass) {
+            pass_iteration_type = material_pass->iteration_type();
+            visitor->change_material_pass(last_pass, material_pass);
+            last_pass = material_pass;
+        }
+
+        uint32_t iterations = 1;
+
+        // Get any lights which are visible and affecting the renderable this
+        // frame
+        auto& lights = renderable->lights_affecting_this_frame;
+
+        if(pass_iteration_type == ITERATION_TYPE_N) {
+            iterations = material_pass->max_iterations();
+        } else if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
+            iterations = renderable->light_count;
+        }
+
+        for(Iteration i = 0; i < iterations; ++i) {
+            LightPtr next = nullptr;
+
+            // Pass down the light if necessary, otherwise just pass nullptr
+            if(i < renderable->light_count) {
+                next = lights[i];
+            } else {
+                next = nullptr;
+            }
+
+            if(pass_iteration_type == ITERATION_TYPE_ONCE_PER_LIGHT) {
+                visitor->apply_lights(&next, 1);
+            } else if(pass_iteration_type == ITERATION_TYPE_N ||
+                      pass_iteration_type == ITERATION_TYPE_ONCE) {
+                visitor->apply_lights(&lights[0],
+                                      (uint8_t)renderable->light_count);
+            }
+            visitor->visit(renderable, material_pass, i);
+        }
+
+        last_group = current_group;
     }
 
     visitor->end_traversal(*this, stage_node_);
 }
 
-std::size_t RenderQueue::group_count(Pass pass_number) const {
-    uint32_t i = 0;
-    auto& queue = priority_queues_.at(pass_number);
-    for(auto it = queue.begin(); it != queue.end(); it = queue.upper_bound(it->first)) {
-        ++i;
+Renderable* RenderQueue::renderable(std::size_t idx) {
+    std::size_t i = 0;
+    for(auto& r: render_queue_) {
+        if(i == idx) {
+            return &r.second;
+        }
+        i++;
     }
 
-    return i;
+    return nullptr;
 }
-
 }
 }

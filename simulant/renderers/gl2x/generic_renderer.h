@@ -79,13 +79,10 @@ public:
     GenericRenderer(Window* window, bool use_es=false);
 
     batcher::RenderGroupKey prepare_render_group(
-        batcher::RenderGroup* group,
-        const Renderable *renderable,
-        const MaterialPass *material_pass,
-        const uint8_t pass_number,
-        const bool is_blended,
-        const float distance_to_camera
-    ) override;
+        batcher::RenderGroup* group, const Renderable* renderable,
+        const MaterialPass* material_pass, const RenderPriority priority,
+        const uint8_t pass_number, const bool is_blended,
+        const float distance_to_camera) override;
 
     void init_context() override;
 

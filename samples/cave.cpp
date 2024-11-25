@@ -60,7 +60,7 @@ public:
         cave_geom_ = create_child<smlt::Actor>(cave_mesh_);
         fairy_actor_ = create_child<smlt::Actor>(fairy_mesh_);
         godray_geom_ = create_child<smlt::Actor>(godray_mesh_);
-        fairy_actor_->set_render_priority(10);
+        fairy_actor_->set_render_priority(RENDER_PRIORITY_FOREGROUND);
 
         // Lights
         lighting->set_ambient_light(smlt::Color(0.25f, 0.25f, 0.25f, 1.0f));

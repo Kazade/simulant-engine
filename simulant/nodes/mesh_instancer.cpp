@@ -117,7 +117,9 @@ void MeshInstancer::on_transformation_changed() {
 void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
                                             const Camera* camera,
                                             const Viewport*,
-                                            const DetailLevel detail_level) {
+                                            const DetailLevel detail_level,
+                                            Light** lights,
+                                            const std::size_t light_count) {
 
     /* No instances or mesh, no renderables */
     if(instances_.empty() || !mesh_) {
@@ -139,6 +141,11 @@ void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
                                         : 0;
         new_renderable.vertex_ranges = submesh->vertex_ranges();
         new_renderable.vertex_range_count = submesh->vertex_range_count();
+
+        new_renderable.light_count = light_count;
+        for(std::size_t i = 0; i < light_count; ++i) {
+            new_renderable.lights_affecting_this_frame[i] = lights[i];
+        }
 
         // FIXME: Support material slots like actors?
         new_renderable.material =

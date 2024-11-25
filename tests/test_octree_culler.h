@@ -52,7 +52,7 @@ public:
         auto geom = scene->create_child<Geom>(mesh);
         geom->culler->renderables_visible(camera->frustum(), &queue);
 
-        std::vector<Renderable*> result;
+        std::vector<Renderable*> result;        
         for(auto i = 0u; i < queue.renderable_count(); ++i) {
             result.push_back(queue.renderable(i));
         }

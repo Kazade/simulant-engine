@@ -131,7 +131,8 @@ public:
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera_);
 
-        actor->generate_renderables(&queue, camera_, &viewport, DETAIL_LEVEL_NEAREST);
+        actor->generate_renderables(&queue, camera_, &viewport,
+                                    DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         std::vector<Renderable*> result;
         for(auto i = 0u; i < queue.renderable_count(); ++i) {

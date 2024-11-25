@@ -32,7 +32,9 @@ public:
     bool on_create(Params) {
         return true;
     }
-    void do_generate_renderables(batcher::RenderQueue *, const Camera *, const Viewport *, const DetailLevel) override {}
+    void do_generate_renderables(batcher::RenderQueue*, const Camera*,
+                                 const Viewport*, const DetailLevel, Light**,
+                                 const std::size_t) override {}
     const AABB& aabb() const {
         static AABB aabb;
         return aabb;

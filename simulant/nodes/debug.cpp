@@ -169,7 +169,9 @@ bool Debug::on_init() {
 
 void Debug::do_generate_renderables(batcher::RenderQueue* render_queue,
                                     const Camera* camera, const Viewport*,
-                                    const DetailLevel detail_level) {
+                                    const DetailLevel detail_level,
+                                    Light** light,
+                                    const std::size_t light_count) {
 
     _S_UNUSED(detail_level);
 

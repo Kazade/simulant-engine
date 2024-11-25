@@ -31,11 +31,10 @@ public:
 
     GL1XRenderer(Window* window);
 
-    batcher::RenderGroupKey prepare_render_group(batcher::RenderGroup* group,
-        const Renderable *renderable,
-        const MaterialPass *material_pass,
-        const uint8_t pass_number,
-        const bool is_blended,
+    batcher::RenderGroupKey prepare_render_group(
+        batcher::RenderGroup* group, const Renderable* renderable,
+        const MaterialPass* material_pass, const RenderPriority priority,
+        const uint8_t pass_number, const bool is_blended,
         const float distance_to_camera) override;
 
     std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera) override;

@@ -306,9 +306,12 @@ public:
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
-        actor1->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
-        actor2->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
-        actor3->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        actor1->generate_renderables(&queue, camera, &viewport,
+                                     DETAIL_LEVEL_NEAREST, nullptr, 0);
+        actor2->generate_renderables(&queue, camera, &viewport,
+                                     DETAIL_LEVEL_NEAREST, nullptr, 0);
+        actor3->generate_renderables(&queue, camera, &viewport,
+                                     DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         std::vector<Renderable> renderables;
         for(auto i = 0u; i < queue.renderable_count(); ++i) {

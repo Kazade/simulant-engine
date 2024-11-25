@@ -91,7 +91,8 @@ private:
     virtual void
         do_generate_renderables(batcher::RenderQueue* render_queue,
                                 const Camera* camera, const Viewport* viewport,
-                                const DetailLevel detail_level) override;
+                                const DetailLevel detail_level, Light** light,
+                                const std::size_t light_count) override;
 
 private:
     friend class ::smlt::Application;

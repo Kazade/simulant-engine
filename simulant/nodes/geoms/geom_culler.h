@@ -39,8 +39,6 @@ public:
     void compile(const Vec3& pos, const Quaternion& rot, const Vec3& scale);
     void renderables_visible(const Frustum& frustum, batcher::RenderQueue* render_queue);
 
-    void each_renderable(EachRenderableCallback cb);
-
     Geom* geom() const { return geom_; }
 protected:
     Geom* geom_ = nullptr;

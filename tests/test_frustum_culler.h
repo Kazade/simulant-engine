@@ -44,7 +44,8 @@ public:
         queue.reset(partitioner, window->renderer.get(), camera);
 
         Viewport viewport;
-        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        partitioner->generate_renderables(&queue, camera, &viewport,
+                                          DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         assert_true(queue.renderable_count() > 0);
     }
@@ -61,14 +62,16 @@ public:
         queue.reset(partitioner, window->renderer.get(), camera);
 
         Viewport viewport;
-        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        partitioner->generate_renderables(&queue, camera, &viewport,
+                                          DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         /* Not visible */
         assert_equal(queue.renderable_count(), 0u);
 
         a1->set_cullable(false);
 
-        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        partitioner->generate_renderables(&queue, camera, &viewport,
+                                          DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         /* Now visible */
         assert_true(queue.renderable_count() > 0);
@@ -93,7 +96,8 @@ public:
         queue.reset(partitioner, window->renderer.get(), camera);
 
         Viewport viewport;
-        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        partitioner->generate_renderables(&queue, camera, &viewport,
+                                          DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         auto all_visible_count = queue.renderable_count();
 
@@ -101,7 +105,8 @@ public:
 
         a2->destroy();
 
-        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        partitioner->generate_renderables(&queue, camera, &viewport,
+                                          DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         assert_true(queue.renderable_count() < all_visible_count);
     }

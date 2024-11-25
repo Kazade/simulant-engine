@@ -249,32 +249,11 @@ static bool build_renderables(
 
     /* Push any renderables for this node */
     auto viewport = pipeline_stage->viewport.get();
-    auto initial = render_queue_->renderable_count();
-    node->generate_renderables(render_queue_, camera, viewport, level);
 
-    // FIXME: Change get_renderables to return the number inserted
-    auto count = render_queue_->renderable_count() - initial;
-
-    for(auto i = initial; i < initial + count; ++i) {
-        auto renderable = render_queue_->renderable(i);
-
-        assert(
-            renderable->arrangement == MESH_ARRANGEMENT_LINES ||
-            renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP ||
-            renderable->arrangement == MESH_ARRANGEMENT_QUADS ||
-            renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES ||
-            renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN ||
-            renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP
-        );
-
-        assert(renderable->material);
-        assert(renderable->vertex_data);
-
-        renderable->light_count = std::min((std::size_t) MAX_LIGHTS_PER_RENDERABLE, lights_visible.size());
-        for(auto i = 0u; i < renderable->light_count; ++i) {
-            renderable->lights_affecting_this_frame[i] = lights_visible[i];
-        }
-    }
+    node->generate_renderables(render_queue_, camera, viewport, level,
+                               lights_visible.data(),
+                               std::min((std::size_t)MAX_LIGHTS_PER_RENDERABLE,
+                                        lights_visible.size()));
 
     return !(node->generates_renderables_for_descendents());
 }

@@ -87,7 +87,8 @@ public:
 
     void do_generate_renderables(batcher::RenderQueue* render_queue,
                                  const Camera* camera, const Viewport* viewport,
-                                 const DetailLevel detail_level) override;
+                                 const DetailLevel detail_level, Light** lights,
+                                 const std::size_t light_count) override;
 
     void use_material_slot(MaterialSlot var) {
         material_slot_ = var;
