@@ -378,7 +378,7 @@ enum BufferClearFlag {
     BUFFER_CLEAR_ALL = BUFFER_CLEAR_COLOR_BUFFER | BUFFER_CLEAR_DEPTH_BUFFER | BUFFER_CLEAR_STENCIL_BUFFER
 };
 
-enum RenderPriority : int8_t {
+enum RenderPriorityPreset : int8_t {
     RENDER_PRIORITY_MIN = -25,
     RENDER_PRIORITY_ABSOLUTE_BACKGROUND = -25,
     RENDER_PRIORITY_BACKGROUND = -10,
@@ -389,6 +389,8 @@ enum RenderPriority : int8_t {
     RENDER_PRIORITY_ABSOLUTE_FOREGROUND = 25,
     RENDER_PRIORITY_MAX = RENDER_PRIORITY_ABSOLUTE_FOREGROUND + 1
 };
+
+typedef int8_t RenderPriority;
 
 extern const std::vector<RenderPriority> RENDER_PRIORITIES;
 
