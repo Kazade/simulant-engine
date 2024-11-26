@@ -36,23 +36,18 @@
 namespace smlt {
 
 batcher::RenderGroupKey PSPRenderer::prepare_render_group(
-    batcher::RenderGroup* group,
-    const Renderable *renderable,
-    const MaterialPass *material_pass,
-    const uint8_t pass_number,
-    const bool is_blended,
+    batcher::RenderGroup* group, const Renderable* renderable,
+    const MaterialPass* material_pass, const RenderPriority priority,
+    const uint8_t pass_number, const bool is_blended,
     const float distance_to_camera) {
 
     _S_UNUSED(renderable);
     _S_UNUSED(material_pass);
     _S_UNUSED(group);
 
-    return batcher::generate_render_group_key(
-        pass_number,
-        is_blended,
-        distance_to_camera,
-        renderable->precedence
-    );
+    return batcher::generate_render_group_key(priority, pass_number, is_blended,
+                                              distance_to_camera,
+                                              renderable->precedence);
 }
 
 #define ALIGN2048(x) ((x + (2047)) & ~2047)
