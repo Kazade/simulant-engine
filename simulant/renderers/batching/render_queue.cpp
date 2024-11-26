@@ -17,17 +17,16 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-
-#include "../../stage.h"
+#include "render_queue.h"
 #include "../../assets/material.h"
 #include "../../nodes/actor.h"
-#include "../../nodes/particle_system.h"
+#include "../../nodes/camera.h"
 #include "../../nodes/geom.h"
 #include "../../nodes/geoms/geom_culler.h"
-#include "../../nodes/camera.h"
-
-#include "render_queue.h"
+#include "../../nodes/particle_system.h"
 #include "../../partitioner.h"
+#include "../../stage.h"
+#include "../../utils/float.h"
 
 namespace smlt {
 namespace batcher {
@@ -37,12 +36,16 @@ RenderGroupKey generate_render_group_key(const RenderPriority priority,
                                          const bool is_blended,
                                          const float distance_to_camera,
                                          int16_t precedence) {
+
+    auto dist = clamp(std::abs(distance_to_camera), 0.0f, Float10::max_value);
     RenderGroupKey key;
-    key.priority = priority;
-    key.pass = pass;
-    key.is_blended = is_blended;
-    key.distance_to_camera = distance_to_camera;
-    key.precedence = precedence;
+    key.s.priority = priority + RENDER_PRIORITY_ABSOLUTE_FOREGROUND;
+    key.s.pass = pass;
+    key.s.is_blended = is_blended;
+    key.s.distance_to_camera =
+        (is_blended) ? float10_from_float(Float10::max_value - dist)->i
+                     : float10_from_float(dist)->i;
+    key.s.precedence = precedence;
     return key;
 }
 
@@ -129,7 +132,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
         }
 
         material_pass =
-            renderable->material->pass(current_group->sort_key.pass);
+            renderable->material->pass(current_group->sort_key.s.pass);
 
         if(material_pass != last_pass) {
             pass_iteration_type = material_pass->iteration_type();

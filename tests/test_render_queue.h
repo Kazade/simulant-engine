@@ -27,17 +27,17 @@ public:
         batcher::RenderGroup key2;
         batcher::RenderGroup key3;
 
-        key1.sort_key.pass = 0;
-        key1.sort_key.is_blended = true;
-        key1.sort_key.distance_to_camera = 739.956055;
+        key1.sort_key.s.pass = 0;
+        key1.sort_key.s.is_blended = true;
+        key1.sort_key.s.distance_to_camera = 739.956055;
 
-        key2.sort_key.pass = 0;
-        key2.sort_key.is_blended = true;
-        key2.sort_key.distance_to_camera = 1523.241211;
+        key2.sort_key.s.pass = 0;
+        key2.sort_key.s.is_blended = true;
+        key2.sort_key.s.distance_to_camera = 1523.241211;
 
-        key3.sort_key.pass = 0;
-        key3.sort_key.is_blended = true;
-        key3.sort_key.distance_to_camera = 1518.375244;
+        key3.sort_key.s.pass = 0;
+        key3.sort_key.s.is_blended = true;
+        key3.sort_key.s.distance_to_camera = 1518.375244;
 
         SortedRenderables queue;
 
