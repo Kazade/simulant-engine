@@ -57,7 +57,7 @@ max-storable float minus the distance to camera)
 
 struct RenderGroupKey {
     union {
-        struct {
+        struct alignas(alignof(uint32_t)) {
             // Min/max priority is -/+ 25, but we store as 0 - 50.
             unsigned priority : 6;
             unsigned pass : 2; // Max material passes is 4
@@ -74,10 +74,13 @@ struct RenderGroupKey {
             // to minimize texture changes, if you have a lot of
             // textures this will lose its value
             unsigned texture : 10;
-        } s;
+        } __attribute__((packed)) s;
         uint32_t i;
     };
 };
+
+static_assert(sizeof(RenderGroupKey::s) == 4,
+              "Render group key has unexpected size");
 
 struct RenderGroup {
     /* A sort key, generated from priority and material properties, this

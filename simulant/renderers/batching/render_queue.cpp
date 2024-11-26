@@ -39,8 +39,9 @@ RenderGroupKey generate_render_group_key(
     texture_id = clamp(texture_id, 0, 1024);
 
     RenderGroupKey key;
-    key.s.priority = priority + RENDER_PRIORITY_ABSOLUTE_FOREGROUND;
-    key.s.pass = pass;
+    key.s.priority =
+        clamp(priority + RENDER_PRIORITY_ABSOLUTE_FOREGROUND, 0, 50);
+    key.s.pass = clamp(pass, 0, MAX_MATERIAL_PASSES);
     key.s.is_blended = is_blended;
     key.s.distance_to_camera =
         (is_blended) ? float10_from_float(Float10::max_value - dist)->i
