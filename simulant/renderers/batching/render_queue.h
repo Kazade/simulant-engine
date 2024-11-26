@@ -97,11 +97,9 @@ struct RenderGroup {
     }
 };
 
-RenderGroupKey generate_render_group_key(const RenderPriority priority,
-                                         const uint8_t pass,
-                                         const bool is_blended,
-                                         const float distance_to_camera,
-                                         int16_t precedence);
+RenderGroupKey generate_render_group_key(
+    const RenderPriority priority, const uint8_t pass, const bool is_blended,
+    const float distance_to_camera, int16_t precedence, uint16_t texture_id);
 
 class RenderGroupFactory {
 public:
@@ -109,12 +107,11 @@ public:
 
     /* Initialize a render group based on the provided arguments
      * Returns the group's sort_key */
-    virtual RenderGroupKey
-        prepare_render_group(RenderGroup* group, const Renderable* renderable,
-                             const MaterialPass* material_pass,
-                             const RenderPriority priority,
-                             const uint8_t pass_number, const bool is_blended,
-                             const float distance_to_camera) = 0;
+    virtual RenderGroupKey prepare_render_group(
+        RenderGroup* group, const Renderable* renderable,
+        const MaterialPass* material_pass, const RenderPriority priority,
+        const uint8_t pass_number, const bool is_blended,
+        const float distance_to_camera, uint16_t texture_id) = 0;
 };
 
 typedef uint32_t Pass;

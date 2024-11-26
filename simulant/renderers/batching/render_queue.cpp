@@ -31,13 +31,13 @@
 namespace smlt {
 namespace batcher {
 
-RenderGroupKey generate_render_group_key(const RenderPriority priority,
-                                         const uint8_t pass,
-                                         const bool is_blended,
-                                         const float distance_to_camera,
-                                         int16_t precedence) {
+RenderGroupKey generate_render_group_key(
+    const RenderPriority priority, const uint8_t pass, const bool is_blended,
+    const float distance_to_camera, int16_t precedence, uint16_t texture_id) {
 
     auto dist = clamp(std::abs(distance_to_camera), 0.0f, Float10::max_value);
+    texture_id = clamp(texture_id, 0, 1024);
+
     RenderGroupKey key;
     key.s.priority = priority + RENDER_PRIORITY_ABSOLUTE_FOREGROUND;
     key.s.pass = pass;
@@ -46,6 +46,7 @@ RenderGroupKey generate_render_group_key(const RenderPriority priority,
         (is_blended) ? float10_from_float(Float10::max_value - dist)->i
                      : float10_from_float(dist)->i;
     key.s.precedence = precedence;
+    key.s.texture = texture_id;
     return key;
 }
 
@@ -100,7 +101,11 @@ void RenderQueue::insert_renderable(Renderable&& renderable) {
 
         group.sort_key = render_group_factory_->prepare_render_group(
             &group, &renderable, pass, priority, i, is_blended,
-            renderable_dist_to_camera);
+            renderable_dist_to_camera,
+            material->diffuse_map()
+                ? clamp(material->diffuse_map()->_renderer_specific_id(), 0,
+                        1024)
+                : 0);
 
         render_queue_.insert(group, std::move(renderable));
     }
