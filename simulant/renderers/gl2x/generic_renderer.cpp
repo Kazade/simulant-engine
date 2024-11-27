@@ -81,7 +81,7 @@ batcher::RenderGroupKey GenericRenderer::prepare_render_group(
     batcher::RenderGroup* group, const Renderable* renderable,
     const MaterialPass* material_pass, const RenderPriority priority,
     const uint8_t pass_number, const bool is_blended,
-    const float distance_to_camera) {
+    const float distance_to_camera, uint16_t texture_id) {
 
     _S_UNUSED(group);
     _S_UNUSED(renderable);
@@ -90,9 +90,9 @@ batcher::RenderGroupKey GenericRenderer::prepare_render_group(
     _S_UNUSED(is_blended);
     _S_UNUSED(distance_to_camera);
 
-    return batcher::generate_render_group_key(priority, pass_number, is_blended,
-                                              distance_to_camera,
-                                              renderable->precedence);
+    return batcher::generate_render_group_key(
+        priority, pass_number, is_blended, distance_to_camera,
+        renderable->precedence, texture_id);
 }
 
 void GenericRenderer::set_light_uniforms(const MaterialPass* pass,
@@ -103,7 +103,7 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass,
     auto pos_loc = program->locate_uniform(LIGHT_POSITION_PROPERTY, true);
     if(pos_loc > -1) {
         auto pos = (light) ? light->transform->position() : Vec3();
-        if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
+        if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
             pos = light->direction();
         }
         auto vec =

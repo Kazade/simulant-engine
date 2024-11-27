@@ -38,22 +38,49 @@ class StageNode;
 
 namespace batcher {
 
-
-/* How render ordering works:
+/* Remember! Render group keys are for *sorting* only. Priority, pass, and
+is_blended are the only values you
+ * can rely on to be accurate, the others are capped or limited in some way. We
+order in the following way:
  *
- * 1. Pass number takes precendence
- * 2. Within a pass, blended objects are rendered first
- * 3. If an object is not blended, objects order by distance to camera least, to most. If blended, most to least
- * 4. If distance to camera is equal, z order is taken into account
+ *  - RenderPriority. This is the highest level ordering, renderables with
+different priorities are basically in different "queues"
+ *  - Pass. This is the material pass number, the lower the pass number, the
+earlier it is rendered
+ *  - is_blended. This is 0 if the object is opaque or 1 if it's translucent.
+This impacts the next value.
+ *  - distance to camera. Stored as an unsigned 10-bit minifloat, with 5
+exponent bits and 5 mantissa bits. If the object is blended, this is the
+max-storable float minus the distance to camera)
+ *  - Precedence. This is a value that allows you to tweak the order of objects
 */
+
 struct RenderGroupKey {
-    RenderPriority priority = RENDER_PRIORITY_MAIN;
-    uint8_t pass = 0; // 1 byte
-    bool is_blended = false; // 1 byte
-    float distance_to_camera = 0.0f; // 4 bytes
-    int8_t precedence = 0;           // 1-byte to get 8-byte alignment
+    union {
+        struct alignas(alignof(uint32_t)) {
+            // Min/max priority is -/+ 25, but we store as 0 - 50.
+            unsigned priority : 6;
+            unsigned pass : 2; // Max material passes is 4
+            unsigned is_blended : 1;
+
+            // Float10 value for the distance to camera. If is_blended is true
+            // then this will be Float10::max_value - value
+            unsigned distance_to_camera : 10;
+
+            // This allows 7 levels of tweaking the
+            unsigned precedence : 3;
+
+            // Texture ID of the base color texture. This is used
+            // to minimize texture changes, if you have a lot of
+            // textures this will lose its value
+            unsigned texture : 10;
+        } __attribute__((packed)) s;
+        uint32_t i;
+    };
 };
 
+static_assert(sizeof(RenderGroupKey::s) == 4,
+              "Render group key has unexpected size");
 
 struct RenderGroup {
     /* A sort key, generated from priority and material properties, this
@@ -61,56 +88,11 @@ struct RenderGroup {
     RenderGroupKey sort_key;
 
     bool operator<(const RenderGroup& rhs) const {
-        if(sort_key.priority < rhs.sort_key.priority) {
-            return true;
-        } else if(sort_key.priority > rhs.sort_key.priority) {
-            return false;
-        }
-
-        if(sort_key.pass < rhs.sort_key.pass) {
-            return true;
-        } else if(sort_key.pass > rhs.sort_key.pass) {
-            return false;
-        }
-
-        if(sort_key.is_blended < rhs.sort_key.is_blended) {
-            return true;
-        } else if(sort_key.is_blended > rhs.sort_key.is_blended) {
-            return false;
-        }
-
-        if(!sort_key.is_blended) {
-            if(sort_key.distance_to_camera < rhs.sort_key.distance_to_camera) {
-                // If the object is opaque, we want to render
-                // front-to-back, so less distance is less
-                return true;
-            } else if(sort_key.distance_to_camera > rhs.sort_key.distance_to_camera) {
-                return false;
-            }
-
-            return sort_key.precedence > rhs.sort_key.precedence;
-        } else {
-            if(rhs.sort_key.distance_to_camera < sort_key.distance_to_camera) {
-                // If the object is translucent, we want to render
-                // back-to-front
-                return true;
-            } else if(rhs.sort_key.distance_to_camera > sort_key.distance_to_camera) {
-                return false;
-            }
-
-            return sort_key.precedence > rhs.sort_key.precedence;
-        }
-
-        return false;
+        return sort_key.i < rhs.sort_key.i;
     }
 
     bool operator==(const RenderGroup& rhs) const  {
-        return (
-            sort_key.pass == rhs.sort_key.pass &&
-            sort_key.is_blended == rhs.sort_key.is_blended &&
-            almost_equal(sort_key.distance_to_camera, rhs.sort_key.distance_to_camera) &&
-            sort_key.precedence == rhs.sort_key.precedence
-        );
+        return sort_key.i == rhs.sort_key.i;
     }
 
     bool operator!=(const RenderGroup& rhs) const {
@@ -118,11 +100,9 @@ struct RenderGroup {
     }
 };
 
-RenderGroupKey generate_render_group_key(const RenderPriority priority,
-                                         const uint8_t pass,
-                                         const bool is_blended,
-                                         const float distance_to_camera,
-                                         int16_t precedence);
+RenderGroupKey generate_render_group_key(
+    const RenderPriority priority, const uint8_t pass, const bool is_blended,
+    const float distance_to_camera, int16_t precedence, uint16_t texture_id);
 
 class RenderGroupFactory {
 public:
@@ -130,12 +110,11 @@ public:
 
     /* Initialize a render group based on the provided arguments
      * Returns the group's sort_key */
-    virtual RenderGroupKey
-        prepare_render_group(RenderGroup* group, const Renderable* renderable,
-                             const MaterialPass* material_pass,
-                             const RenderPriority priority,
-                             const uint8_t pass_number, const bool is_blended,
-                             const float distance_to_camera) = 0;
+    virtual RenderGroupKey prepare_render_group(
+        RenderGroup* group, const Renderable* renderable,
+        const MaterialPass* material_pass, const RenderPriority priority,
+        const uint8_t pass_number, const bool is_blended,
+        const float distance_to_camera, uint16_t texture_id) = 0;
 };
 
 typedef uint32_t Pass;

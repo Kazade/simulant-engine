@@ -1,7 +1,8 @@
 #pragma once
 
-#include "simulant/test.h"
+#include "../simulant/utils/float.h"
 #include "../simulant/utils/string.h"
+#include "simulant/test.h"
 
 namespace {
 
@@ -84,4 +85,15 @@ public:
     }
 };
 
+class FloatTests: public test::TestCase {
+public:
+    void test_float10_conversion() {
+        float a = 1.25f;
+        auto b = float10_from_float(a);
+        auto i = b.value();
+        assert_false(i.f.unused);
+        auto c = float10_to_float(b.value());
+        assert_equal(a, c);
+    }
+};
 }

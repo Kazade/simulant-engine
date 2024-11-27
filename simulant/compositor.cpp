@@ -91,13 +91,13 @@ public:
     void change_material_pass(const MaterialPass*, const MaterialPass*) {}
     void apply_lights(const LightPtr*, const uint8_t) {}
     void visit(const Renderable* r, const MaterialPass*, batcher::Iteration) {
-        auto line = _F("{0}, {1}, {2}, {3}, {4}\n").format(
-            r,
-            (group_) ? group_->sort_key.is_blended : false,
-            (group_) ? group_->sort_key.distance_to_camera : -1.0f,
-            r->render_priority,
-            (group_) ? group_->sort_key.precedence : -1
-        );
+        auto line =
+            _F("{0}, {1}, {2}, {3}, {4}\n")
+                .format(r, (group_) ? group_->sort_key.s.is_blended : false,
+                        (group_) ? group_->sort_key.s.distance_to_camera
+                                 : -1.0f,
+                        r->render_priority,
+                        (group_) ? group_->sort_key.s.precedence : -1);
 
         out_->write(line.c_str(), line.size());
     }

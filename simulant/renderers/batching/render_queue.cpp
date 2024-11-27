@@ -17,32 +17,42 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-
-#include "../../stage.h"
+#include "render_queue.h"
 #include "../../assets/material.h"
 #include "../../nodes/actor.h"
-#include "../../nodes/particle_system.h"
+#include "../../nodes/camera.h"
 #include "../../nodes/geom.h"
 #include "../../nodes/geoms/geom_culler.h"
-#include "../../nodes/camera.h"
-
-#include "render_queue.h"
+#include "../../nodes/particle_system.h"
 #include "../../partitioner.h"
+#include "../../stage.h"
+#include "../../utils/float.h"
 
 namespace smlt {
 namespace batcher {
 
-RenderGroupKey generate_render_group_key(const RenderPriority priority,
-                                         const uint8_t pass,
-                                         const bool is_blended,
-                                         const float distance_to_camera,
-                                         int16_t precedence) {
+/* 10-bit floats lose precision at higher values, so we max out at 1024 units
+ * from the camera just so that things don't get weird up close - far away it
+ * matters less if the blend order isn't exactly right */
+const float blend_max = 1024.0f;
+
+RenderGroupKey generate_render_group_key(
+    const RenderPriority priority, const uint8_t pass, const bool is_blended,
+    const float distance_to_camera, int16_t precedence, uint16_t texture_id) {
+
+    auto dist = clamp(std::abs(distance_to_camera), 0.0f, blend_max);
+    texture_id = clamp(texture_id, 0, 1024);
+
     RenderGroupKey key;
-    key.priority = priority;
-    key.pass = pass;
-    key.is_blended = is_blended;
-    key.distance_to_camera = distance_to_camera;
-    key.precedence = precedence;
+    key.s.priority =
+        clamp(priority + RENDER_PRIORITY_ABSOLUTE_FOREGROUND, 0, 50);
+    key.s.pass = clamp(pass, 0, MAX_MATERIAL_PASSES);
+    key.s.is_blended = is_blended;
+    key.s.distance_to_camera = (is_blended)
+                                   ? float10_from_float(blend_max - dist)->i
+                                   : float10_from_float(dist)->i;
+    key.s.precedence = precedence;
+    key.s.texture = texture_id;
     return key;
 }
 
@@ -97,7 +107,11 @@ void RenderQueue::insert_renderable(Renderable&& renderable) {
 
         group.sort_key = render_group_factory_->prepare_render_group(
             &group, &renderable, pass, priority, i, is_blended,
-            renderable_dist_to_camera);
+            renderable_dist_to_camera,
+            material->diffuse_map()
+                ? clamp(material->diffuse_map()->_renderer_specific_id(), 0,
+                        1024)
+                : 0);
 
         render_queue_.insert(group, std::move(renderable));
     }
@@ -129,7 +143,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
         }
 
         material_pass =
-            renderable->material->pass(current_group->sort_key.pass);
+            renderable->material->pass(current_group->sort_key.s.pass);
 
         if(material_pass != last_pass) {
             pass_iteration_type = material_pass->iteration_type();
