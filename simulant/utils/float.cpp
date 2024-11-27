@@ -1,4 +1,8 @@
 #include "float.h"
+#include <cmath>
+
+#include "../generic/optional.h"
+#include "../logging.h"
 
 namespace smlt {
 
