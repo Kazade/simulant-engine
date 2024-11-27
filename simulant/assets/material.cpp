@@ -175,12 +175,13 @@ Material &Material::operator=(const Material &rhs) {
 
     for(auto& value: values_) {
         auto it = &value;
-        while(it->next) {
-            values_overflow_.push_back(*(it->next));
-            it->next = &values_overflow_.back();
-
+        do {
+            if(it->next) {
+                values_overflow_.push_back(*(it->next));
+                it->next = &values_overflow_.back();
+            }
             it = it->next;
-        }
+        } while(it);
     }
     passes_.clear();
     set_pass_count(rhs.passes_.size());
