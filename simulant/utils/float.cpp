@@ -61,7 +61,7 @@ float float10_to_float(Float10 f) {
     float effective_mantissa = 1.0f + (static_cast<float>(mantissa) / 32.0f);
 
     // Calculate the final float value
-    float result = effective_mantissa * std::powf(2.0f, actual_exponent);
+    float result = effective_mantissa * (float)std::pow(2.0f, actual_exponent);
 
     return result;
 }
