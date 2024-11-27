@@ -55,13 +55,13 @@ float float10_to_float(Float10 f) {
     uint32_t mantissa = f.i & 0x1F;        // 5 bits for mantissa
 
     // Calculate the actual exponent
-    int32_t actualExponent = exponent - 15; // Unbias the exponent
+    int32_t actual_exponent = exponent - 15; // Unbias the exponent
 
     // Calculate the effective mantissa
-    float effectiveMantissa = 1.0f + (static_cast<float>(mantissa) / 32.0f);
+    float effective_mantissa = 1.0f + (static_cast<float>(mantissa) / 32.0f);
 
     // Calculate the final float value
-    float result = effectiveMantissa * std::powf(2.0f, actualExponent);
+    float result = effective_mantissa * std::powf(2.0f, actual_exponent);
 
     return result;
 }
