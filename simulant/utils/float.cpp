@@ -31,12 +31,12 @@ optional<Float10> float10_from_float(float input) {
 
     // Check for overflow/underflow
     if(new_exponent >= 31) {
-        S_ERROR("Exponent overflow");
+        S_ERROR("Exponent overflow: %f -> E:%d\n", input, new_exponent);
         return optional<Float10>();
     }
 
     if(new_exponent < 0) {
-        S_ERROR("Exponent underflow");
+        S_ERROR("Exponent underflow: %f -> E:%d\n", input, new_exponent);
         return optional<Float10>();
     }
 

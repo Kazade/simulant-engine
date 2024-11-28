@@ -31,16 +31,20 @@
 namespace smlt {
 namespace batcher {
 
-/* 10-bit floats lose precision at higher values, so we max out at 1024 units
- * from the camera just so that things don't get weird up close - far away it
- * matters less if the blend order isn't exactly right */
-const float blend_max = 1024.0f;
+const static float f = 512;
+
+static uint16_t pack_distance(float d) {
+    const int depth = 10; // 10 bits
+    const float max = (1 << depth) - 1;
+
+    return clamp(max * (d / f), 0, 1023);
+}
 
 RenderGroupKey generate_render_group_key(
     const RenderPriority priority, const uint8_t pass, const bool is_blended,
     const float distance_to_camera, int16_t precedence, uint16_t texture_id) {
 
-    auto dist = clamp(std::abs(distance_to_camera), 0.0f, blend_max);
+    auto dist = std::abs(distance_to_camera);
     texture_id = clamp(texture_id, 0, 1024);
 
     RenderGroupKey key;
@@ -48,9 +52,8 @@ RenderGroupKey generate_render_group_key(
         clamp(priority + RENDER_PRIORITY_ABSOLUTE_FOREGROUND, 0, 50);
     key.s.pass = clamp(pass, 0, MAX_MATERIAL_PASSES);
     key.s.is_blended = is_blended;
-    key.s.distance_to_camera = (is_blended)
-                                   ? float10_from_float(blend_max - dist)->i
-                                   : float10_from_float(dist)->i;
+    key.s.distance_to_camera =
+        (is_blended) ? 1023 - pack_distance(dist) : pack_distance(dist);
     key.s.precedence = precedence;
     key.s.texture = texture_id;
     return key;

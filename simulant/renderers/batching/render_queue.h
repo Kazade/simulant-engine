@@ -58,22 +58,24 @@ max-storable float minus the distance to camera)
 struct RenderGroupKey {
     union {
         struct alignas(alignof(uint32_t)) {
-            // Min/max priority is -/+ 25, but we store as 0 - 50.
-            unsigned priority : 6;
-            unsigned pass : 2; // Max material passes is 4
-            unsigned is_blended : 1;
+            // Texture ID of the base color texture. This is used
+            // to minimize texture changes, if you have a lot of
+            // textures this will lose its value
+            unsigned texture : 10;
+
+            // This allows 7 levels of tweaking the
+            unsigned precedence : 3;
 
             // Float10 value for the distance to camera. If is_blended is true
             // then this will be Float10::max_value - value
             unsigned distance_to_camera : 10;
 
-            // This allows 7 levels of tweaking the
-            unsigned precedence : 3;
+            unsigned is_blended : 1;
 
-            // Texture ID of the base color texture. This is used
-            // to minimize texture changes, if you have a lot of
-            // textures this will lose its value
-            unsigned texture : 10;
+            unsigned pass : 2; // Max material passes is 4
+
+            // Min/max priority is -/+ 25, but we store as 0 - 50.
+            unsigned priority : 6;
         } __attribute__((packed)) s;
         uint32_t i;
     };
