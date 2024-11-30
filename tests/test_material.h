@@ -102,8 +102,6 @@ public:
                     auto c = Color(v.x, v.y, v.z, 1.0);
                     auto p = r.choice(color_props);
 
-                    printf("Set %s to %f, %f, %f, %f\n", p.c_str(), c.r, c.g,
-                           c.b, c.a);
                     p0->set_property_value(p.c_str(), c);
 
                     optional<Color> ov = c;
@@ -122,7 +120,6 @@ public:
                     auto v = r.int_in_range(0, 1) == 1;
                     auto p = r.choice(bool_props);
                     p0->set_property_value(p.c_str(), v);
-                    printf("Set %s to %d\n", p.c_str(), v);
                     optional<bool> ov = v;
                     expected.erase(std::remove_if(expected.begin(),
                                                   expected.end(),
@@ -139,7 +136,6 @@ public:
                     auto remove_count = r.int_in_range(0, expected.size());
                     for(int i = 0; i < remove_count; ++i) {
                         auto& e = expected[expected.size() - i - 1];
-                        printf("Cleared %s\n", e.name.c_str());
                         p0->clear_override(e.name.c_str());
                     }
 
@@ -153,12 +149,6 @@ public:
                     const Color* out;
                     assert_true(p0->property_value(e.name.c_str(), out));
                     auto t = e.color.value();
-                    if(t != *out) {
-                        printf(
-                            "Failed: %s -> %f, %f, %f, %f vs %f, %f, %f, %f\n",
-                            e.name.c_str(), out->r, out->g, out->b, out->a, t.r,
-                            t.g, t.b, t.a);
-                    }
                     assert_equal(t, *out);
                 } else {
                     const bool* out;

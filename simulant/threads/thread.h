@@ -110,8 +110,7 @@ public:
 #elif defined(__DREAMCAST__)
 
         /* The default stack size is 32k, which is a bit low for us */
-        kthread_attr_t attr = {0};
-        attr.stack_size = 192 * 1024;
+        kthread_attr_t attr = {0, 192 * 1024, NULL, PRIO_DEFAULT, NULL};
 
         thread_ = thd_create_ex(&attr, &Thread::thread_runner, func);
         if(!thread_) {
