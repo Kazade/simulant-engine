@@ -57,9 +57,7 @@ public:
     }
 
     void spawn_box() {
-        boxes_.push_back(create_child<smlt::Actor>(box_mesh_));
-
-        auto box = boxes_.back();
+        auto box = create_child<smlt::Actor>(box_mesh_);
         auto pos = Vec3(
             smlt::RandomGenerator::instance().float_in_range(-20.0f, 20.0f),
             smlt::RandomGenerator::instance().float_in_range(20.0f, 30.0f),
@@ -70,6 +68,7 @@ public:
                                      PhysicsMaterial::wood());
 
         box->set_parent(controller);
+        boxes_.push_back(controller);
         controller->transform->set_position(pos);
     }
 
@@ -87,7 +86,7 @@ public:
     }
 
 private:
-    std::vector<ActorPtr> boxes_;
+    std::vector<StageNodePtr> boxes_;
 
     LayerPtr pipeline_;
     StagePtr stage_;
