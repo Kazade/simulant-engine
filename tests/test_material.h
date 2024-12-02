@@ -165,6 +165,26 @@ public:
         }
     }
 
+    void test_texture_refcounting() {
+        auto tex = application->shared_assets->create_texture(8, 8);
+
+        // There should be 2 references, one internal to the asset manager,
+        // and one from `tex` above
+        assert_equal(tex.use_count(), 2);
+
+        auto mat = application->shared_assets->create_material();
+        mat->set_diffuse_map(tex);
+
+        // There should now be 3 references, one from the material, one from the
+        // asset manager
+        mat.reset();
+        application->run_frame(); // Should gc the material
+
+        // There should now be 2 references, one from the asset manager, and one
+        // from `tex`
+        assert_equal(tex.use_count(), 2);
+    }
+
     void test_pass_resizing() {
         auto mat1 = application->shared_assets->create_material();
 

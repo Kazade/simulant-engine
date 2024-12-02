@@ -550,6 +550,10 @@ bool Application::run_frame() {
         asset_manager_->run_garbage_collection();
     }
 
+    if(material_value_pool) {
+        material_value_pool->clean_pointers();
+    }
+
     /* Don't run the render sequence if we don't have a context, and don't update the resource
      * manager either because that probably needs a context too! */
     {

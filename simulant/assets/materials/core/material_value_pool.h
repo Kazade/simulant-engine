@@ -35,10 +35,8 @@ class MaterialPropertyValuePointer {
 
     MaterialPropertyValuePointer(const std::shared_ptr<uint8_t*>& data) :
         data_(data) {
-        if(data_ && *data_) {
-            BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
-            ++header->refcount;
-        }
+
+        increase_refcount();
     }
 
     void increase_refcount() {
@@ -67,9 +65,7 @@ public:
     MaterialPropertyValuePointer(const MaterialPropertyValuePointer& other) {
         data_ = other.data_;
 
-        if(data_ && *data_) {
-            increase_refcount();
-        }
+        increase_refcount();
     }
 
     MaterialPropertyValuePointer&
@@ -78,17 +74,17 @@ public:
             return *this;
         }
 
+        decrease_refcount();
+
         data_ = other.data_;
-        if(data_ && *data_) {
-            increase_refcount();
-        }
+
+        increase_refcount();
+
         return *this;
     }
 
     ~MaterialPropertyValuePointer() {
-        if(data_ && *data_) {
-            decrease_refcount();
-        }
+        decrease_refcount();
     }
 
     template<typename T>
@@ -117,10 +113,7 @@ public:
     }
 
     void reset() {
-        if(data_ && *data_) {
-            decrease_refcount();
-        }
-
+        decrease_refcount();
         data_.reset();
     }
 
