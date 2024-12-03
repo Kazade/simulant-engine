@@ -90,8 +90,8 @@ IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 ENDIF()
 
 IF(PLATFORM_DREAMCAST)
-    SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mfsrra -mfsca -ffp-contract=fast")
-    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mfsrra -mfsca -ffp-contract=fast")
+    SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mfsrra -mfsca -ffp-contract=fast -matomic-model=soft-imask -ftls-model=local-exec")
+    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mfsrra -mfsca -ffp-contract=fast -matomic-model=soft-imask -ftls-model=local-exec")
 ENDIF()
 
 IF(NOT PLATFORM_PSP)
