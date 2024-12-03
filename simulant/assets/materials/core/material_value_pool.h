@@ -39,14 +39,15 @@ class MaterialPropertyValuePointer {
                                  uint8_t** data) :
         pool_alive_(alive_check), data_(data) {
 
-        fprintf(stderr, "Construct: 0x%x\n", *data_);
+        fprintf(stderr, "Construct: 0x%x (0x%x)\n", *data_, this);
         increase_refcount();
     }
 
     void increase_refcount() {
         if(data_ && !pool_alive_.expired()) {
             BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
-            fprintf(stderr, "Inc: 0x%x to %d\n", *data_, header->refcount + 1);
+            fprintf(stderr, "Inc: 0x%x to %d (0x%x)\n", *data_,
+                    header->refcount + 1, this);
             ++header->refcount;
         }
     }
@@ -55,7 +56,8 @@ class MaterialPropertyValuePointer {
         if(data_ && !pool_alive_.expired()) {
 
             BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
-            fprintf(stderr, "Dec: 0x%x to %d\n", *data_, header->refcount - 1);
+            fprintf(stderr, "Dec: 0x%x to %d (0x%x)\n", *data_,
+                    header->refcount - 1, this);
             assert(header->refcount > 0);
 
             --header->refcount;
@@ -73,7 +75,8 @@ public:
     MaterialPropertyValuePointer(const MaterialPropertyValuePointer& other) :
         pool_alive_(other.pool_alive_), data_(other.data_) {
 
-        fprintf(stderr, "Copy Construct: 0x%x\n", *data_);
+        fprintf(stderr, "Copy Construct: 0x%x (0x%x -> 0x%x)\n",
+                (data_) ? *data_ : 0, &other, this);
         increase_refcount();
     }
 
@@ -83,7 +86,8 @@ public:
             return *this;
         }
 
-        fprintf(stderr, "Copy: 0x%x\n", *data_);
+        fprintf(stderr, "Copy: 0x%x (0x%x -> 0x%x)\n", (data_) ? *data_ : 0,
+                &other, this);
         decrease_refcount();
 
         pool_alive_ = other.pool_alive_;
@@ -96,7 +100,7 @@ public:
 
     ~MaterialPropertyValuePointer() {
         decrease_refcount();
-        fprintf(stderr, "Destruct: 0x%x\n", *data_);
+        fprintf(stderr, "Destruct: 0x%x (0x%x)\n", (data_) ? *data_ : 0, this);
     }
 
     template<typename T>
