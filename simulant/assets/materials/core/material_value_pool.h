@@ -39,15 +39,12 @@ class MaterialPropertyValuePointer {
                                  uint8_t** data) :
         pool_alive_(alive_check), data_(data) {
 
-        fprintf(stderr, "Construct: 0x%x (0x%x)\n", *data_, this);
         increase_refcount();
     }
 
     void increase_refcount() {
         if(data_ && !pool_alive_.expired()) {
             BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
-            fprintf(stderr, "Inc: 0x%x to %d (0x%x)\n", *data_,
-                    header->refcount + 1, this);
             ++header->refcount;
         }
     }
@@ -56,8 +53,6 @@ class MaterialPropertyValuePointer {
         if(data_ && !pool_alive_.expired()) {
 
             BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
-            fprintf(stderr, "Dec: 0x%x to %d (0x%x)\n", *data_,
-                    header->refcount - 1, this);
             assert(header->refcount > 0);
 
             --header->refcount;
@@ -75,8 +70,6 @@ public:
     MaterialPropertyValuePointer(const MaterialPropertyValuePointer& other) :
         pool_alive_(other.pool_alive_), data_(other.data_) {
 
-        fprintf(stderr, "Copy Construct: 0x%x (0x%x -> 0x%x)\n",
-                (data_) ? *data_ : 0, &other, this);
         increase_refcount();
     }
 
@@ -86,8 +79,6 @@ public:
             return *this;
         }
 
-        fprintf(stderr, "Copy: 0x%x (0x%x -> 0x%x)\n", (data_) ? *data_ : 0,
-                &other, this);
         decrease_refcount();
 
         pool_alive_ = other.pool_alive_;
@@ -100,7 +91,6 @@ public:
 
     ~MaterialPropertyValuePointer() {
         decrease_refcount();
-        fprintf(stderr, "Destruct: 0x%x (0x%x)\n", (data_) ? *data_ : 0, this);
     }
 
     template<typename T>
@@ -179,16 +169,25 @@ public:
     void clear() {
         // Wipe the previous alive check, we're killing everything
         alive_check_ = std::make_shared<bool>(true);
-        for(auto& ptr: pointers_) {
+
+        auto ptr = pointers_;
+
+        while(ptr) {
             // Forcibly call the destructor
-            auto header = reinterpret_cast<BlockHeader*>(ptr);
+            auto header = reinterpret_cast<BlockHeader*>(ptr->data);
             // We're killing this, all pointers are now invalid
             header->refcount = 0;
-            header->destructor(ptr);
+            header->destructor(ptr->data);
             header->pool = nullptr;
+            ptr = ptr->next;
         }
 
-        pointers_.clear();
+        auto it = pointers_;
+        while(it) {
+            auto next = it->next;
+            delete it;
+            it = next;
+        }
     }
 
     ~MaterialValuePool() {
@@ -199,19 +198,24 @@ public:
                                  void* user_data) {
         auto self = reinterpret_cast<MaterialValuePool*>(user_data);
 
-        for(auto& pointer: self->pointers_) {
-            pointer = new_data + (pointer - old_data);
+        auto it = self->pointers_;
+        while(it) {
+            it->data = new_data + (it->data - old_data);
+            it = it->next;
         }
     }
 
     template<typename T>
     MaterialPropertyValuePointer get_or_create_value(const T& value) {
-        for(auto& pointer: pointers_) {
-            auto mvp = MaterialPropertyValuePointer(alive_check_, &pointer);
+        auto it = pointers_;
+        while(it) {
+            auto mvp = MaterialPropertyValuePointer(alive_check_, &it->data);
             if(_impl::material_property_lookup<T>::type == mvp.type() &&
                *mvp.get<T>() == value) {
                 return mvp;
             }
+
+            it = it->next;
         }
 
         // Create a new value
@@ -229,9 +233,9 @@ public:
 
         new(data + header_size) T(value);
 
-        pointers_.push_back(data);
+        auto entry = push_entry(data);
 
-        MaterialPropertyValuePointer pointer(alive_check_, &pointers_.back());
+        MaterialPropertyValuePointer pointer(alive_check_, &entry->data);
 
         return pointer;
     }
@@ -241,19 +245,54 @@ public:
         auto it = reinterpret_cast<BlockHeader*>(ptr);
         assert(it->refcount == 0);
 #endif
-        // Remove the pointer from the list
-        pointers_.erase(std::remove_if(pointers_.begin(), pointers_.end(),
-                                       [ptr](const uint8_t* p) {
-            return p == ptr;
-        }),
-                        pointers_.end());
+        remove_entry((uint8_t*)ptr);
 
         // Deallocate the mem
         allocator_.deallocate((uint8_t*)ptr);
     }
 
 private:
-    std::list<uint8_t*> pointers_;
+    struct PointerEntry {
+        uint8_t* data = nullptr;
+        PointerEntry* next = nullptr;
+        PointerEntry* prev = nullptr;
+    };
+
+    PointerEntry* pointers_ = nullptr;
+
+    PointerEntry* push_entry(uint8_t* data) {
+        auto new_entry = new PointerEntry();
+        new_entry->data = data;
+        new_entry->next = pointers_;
+        if(pointers_) {
+            pointers_->prev = new_entry;
+        }
+        pointers_ = new_entry;
+        return new_entry;
+    }
+
+    void remove_entry(uint8_t* data) {
+        auto it = pointers_;
+        while(it) {
+            if(it->data == data) {
+                if(it->prev) {
+                    it->prev->next = it->next;
+                } else {
+                    pointers_ = it->next;
+                }
+
+                if(it->next) {
+                    it->next->prev = it->prev;
+                }
+
+                delete it;
+                return;
+            }
+
+            it = it->next;
+        }
+    }
+
     DynamicAlignedAllocator<alignment> allocator_;
 
     // This is used to populate weak_ptrs on the MaterialPropertyValuePointers
