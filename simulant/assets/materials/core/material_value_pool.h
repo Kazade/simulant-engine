@@ -1,5 +1,6 @@
 #pragma once
 
+#include <list>
 #include <vector>
 
 #include "../../../generic/allocators/dynamic_aligned_allocator.h"
@@ -29,42 +30,50 @@ struct BlockHeader {
    which are ref-counted to tell if values are still used and maintain our own
    copies in the pool so we can update pointers if memory shifts around */
 class MaterialPropertyValuePointer {
-    std::shared_ptr<uint8_t*> data_;
+    std::weak_ptr<bool> pool_alive_;
+    uint8_t** data_ = nullptr;
 
     friend class MaterialValuePool;
 
-    MaterialPropertyValuePointer(const std::shared_ptr<uint8_t*>& data) :
-        data_(data) {
+    MaterialPropertyValuePointer(const std::shared_ptr<bool>& alive_check,
+                                 uint8_t** data) :
+        pool_alive_(alive_check), data_(data) {
 
+        fprintf(stderr, "Construct: 0x%x\n", *data_);
         increase_refcount();
     }
 
     void increase_refcount() {
-        if(data_ && *data_) {
+        if(data_ && !pool_alive_.expired()) {
             BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
+            fprintf(stderr, "Inc: 0x%x to %d\n", *data_, header->refcount + 1);
             ++header->refcount;
         }
     }
 
     void decrease_refcount() {
-        if(data_ && *data_) {
+        if(data_ && !pool_alive_.expired()) {
+
             BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
+            fprintf(stderr, "Dec: 0x%x to %d\n", *data_, header->refcount - 1);
             assert(header->refcount > 0);
 
             --header->refcount;
 
             if(header->refcount == 0) {
                 header->destructor(*data_);
-                *data_ = nullptr;
+                data_ = nullptr;
+                pool_alive_ = std::weak_ptr<bool>();
             }
         }
     }
 
 public:
     MaterialPropertyValuePointer() = default;
-    MaterialPropertyValuePointer(const MaterialPropertyValuePointer& other) {
-        data_ = other.data_;
+    MaterialPropertyValuePointer(const MaterialPropertyValuePointer& other) :
+        pool_alive_(other.pool_alive_), data_(other.data_) {
 
+        fprintf(stderr, "Copy Construct: 0x%x\n", *data_);
         increase_refcount();
     }
 
@@ -74,8 +83,10 @@ public:
             return *this;
         }
 
+        fprintf(stderr, "Copy: 0x%x\n", *data_);
         decrease_refcount();
 
+        pool_alive_ = other.pool_alive_;
         data_ = other.data_;
 
         increase_refcount();
@@ -85,6 +96,7 @@ public:
 
     ~MaterialPropertyValuePointer() {
         decrease_refcount();
+        fprintf(stderr, "Destruct: 0x%x\n", *data_);
     }
 
     template<typename T>
@@ -99,12 +111,18 @@ public:
 
     // Warning: don't call this on a null pointer
     MaterialPropertyType type() const {
+        assert(*this);
+
         BlockHeader* header = reinterpret_cast<BlockHeader*>(*data_);
         return header->type;
     }
 
     std::size_t refcount() const {
-        if(!data_ || !*data_) {
+        if(!data_) {
+            return 0;
+        }
+
+        if(!pool_alive_.lock()) {
             return 0;
         }
 
@@ -114,11 +132,12 @@ public:
 
     void reset() {
         decrease_refcount();
-        data_.reset();
+        data_ = nullptr;
+        pool_alive_ = std::weak_ptr<bool>();
     }
 
     operator bool() const {
-        return data_ && *data_;
+        return data_ && !pool_alive_.expired();
     }
 };
 
@@ -153,20 +172,23 @@ public:
                                         this);
     }
 
-    ~MaterialValuePool() {
+    void clear() {
+        // Wipe the previous alive check, we're killing everything
+        alive_check_ = std::make_shared<bool>(true);
         for(auto& ptr: pointers_) {
-            if(ptr.data_ && *(ptr.data_)) {
-                // Forcibly call the destructor
-                auto header = reinterpret_cast<BlockHeader*>(*(ptr.data_));
-                // We're killing this, all pointers are now invalid
-                header->refcount = 0;
-                header->destructor(*(ptr.data_));
-                header->pool = nullptr;
-
-                // Invalidate all pointers pointing at this data
-                *(ptr.data_) = nullptr;
-            }
+            // Forcibly call the destructor
+            auto header = reinterpret_cast<BlockHeader*>(ptr);
+            // We're killing this, all pointers are now invalid
+            header->refcount = 0;
+            header->destructor(ptr);
+            header->pool = nullptr;
         }
+
+        pointers_.clear();
+    }
+
+    ~MaterialValuePool() {
+        clear();
     }
 
     static void realloc_callback(uint8_t* old_data, uint8_t* new_data,
@@ -174,16 +196,17 @@ public:
         auto self = reinterpret_cast<MaterialValuePool*>(user_data);
 
         for(auto& pointer: self->pointers_) {
-            *pointer.data_ = new_data + (*pointer.data_ - old_data);
+            pointer = new_data + (pointer - old_data);
         }
     }
 
     template<typename T>
     MaterialPropertyValuePointer get_or_create_value(const T& value) {
         for(auto& pointer: pointers_) {
-            if(_impl::material_property_lookup<T>::type == pointer.type() &&
-               *pointer.get<T>() == value) {
-                return pointer;
+            auto mvp = MaterialPropertyValuePointer(alive_check_, &pointer);
+            if(_impl::material_property_lookup<T>::type == mvp.type() &&
+               *mvp.get<T>() == value) {
+                return mvp;
             }
         }
 
@@ -192,18 +215,20 @@ public:
         // 2. Create a new pointer and add it to the list
         // 3. return a copy
 
-        auto data = std::make_shared<uint8_t*>(
-            allocator_.allocate(alignment + sizeof(T)));
-        BlockHeader* header = reinterpret_cast<BlockHeader*>(*data);
+        auto header_size = alignment;
+        auto data = allocator_.allocate(header_size + sizeof(T));
+        BlockHeader* header = reinterpret_cast<BlockHeader*>(data);
         header->refcount = 0;
         header->type = _impl::material_property_lookup<T>::type;
         header->pool = this;
         header->destructor = &MaterialValuePool::destructor<T>;
 
-        new(*data + alignment) T(value);
+        new(data + header_size) T(value);
 
-        MaterialPropertyValuePointer pointer(data);
-        pointers_.push_back(pointer);
+        pointers_.push_back(data);
+
+        MaterialPropertyValuePointer pointer(alive_check_, &pointers_.back());
+
         return pointer;
     }
 
@@ -212,21 +237,25 @@ public:
         auto it = reinterpret_cast<BlockHeader*>(ptr);
         assert(it->refcount == 0);
 #endif
+        // Remove the pointer from the list
+        pointers_.erase(std::remove_if(pointers_.begin(), pointers_.end(),
+                                       [ptr](const uint8_t* p) {
+            return p == ptr;
+        }),
+                        pointers_.end());
+
+        // Deallocate the mem
         allocator_.deallocate((uint8_t*)ptr);
     }
 
-    void clean_pointers() {
-        pointers_.erase(
-            std::remove_if(pointers_.begin(), pointers_.end(),
-                           [](const MaterialPropertyValuePointer& ptr) {
-            return ptr.refcount() == 1;
-        }),
-            pointers_.end());
-    }
-
 private:
-    std::vector<MaterialPropertyValuePointer> pointers_;
+    std::list<uint8_t*> pointers_;
     DynamicAlignedAllocator<alignment> allocator_;
+
+    // This is used to populate weak_ptrs on the MaterialPropertyValuePointers
+    // so that if the pool is destroyed, then those MPVPs get immediately
+    // invalidated
+    std::shared_ptr<bool> alive_check_ = std::make_shared<bool>(true);
 };
 
 } // namespace smlt

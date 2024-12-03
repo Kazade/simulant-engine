@@ -88,7 +88,14 @@ Material::Material(AssetID id, AssetManager* asset_manager):
     renderer_->prepare_material(this);
 }
 
-Material::~Material() {}
+Material::~Material() {
+    values_overflow_.clear();
+    for(auto& entry: values_) {
+        for(auto& value: entry.entries) {
+            value.reset();
+        }
+    }
+}
 
 void Material::initialize_core_properties() {
     set_property_value(DIFFUSE_PROPERTY_NAME, Color::white());

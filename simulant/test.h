@@ -420,7 +420,7 @@ public:
                     output += " ";
                 }
 
-                std::cout << output;
+                std::cout << output << std::flush;
                 auto start = clock::now();
                 test();
                 auto end = clock::now();

@@ -211,8 +211,6 @@ Application::~Application() {
     overlay_scene_->clean_up();
     overlay_scene_.reset();
 
-    material_value_pool->clean_pointers();
-
     if(window_) {
         window_->_clean_up();
         window_.reset();
@@ -548,10 +546,6 @@ bool Application::run_frame() {
     if(asset_manager_) {
         S_VERBOSE("Running GC");
         asset_manager_->run_garbage_collection();
-    }
-
-    if(material_value_pool) {
-        material_value_pool->clean_pointers();
     }
 
     /* Don't run the render sequence if we don't have a context, and don't update the resource

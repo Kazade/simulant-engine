@@ -105,28 +105,38 @@ public:
     }
 };
 
-class MaterialValuePoolTest: public test::SimulantTestCase {
+class MaterialValuePoolTest: public test::TestCase {
 public:
     void test_basic_usage() {
-        auto& pool = application->material_value_pool;
-        auto vec3 = pool->get_or_create_value(Vec3(1, 2, 3));
+        auto pool = MaterialValuePool();
+        auto vec3 = pool.get_or_create_value(Vec3(1, 2, 3));
 
-        // These numbers need to be quite obscure otherwise the refcounts will
-        // include things created by Simulant itself (as we have a singleton
-        // here.. booo!)
-        auto color = pool->get_or_create_value(Vec4(0.33, 0.33, 0.33, 0.33));
-        auto color2 = pool->get_or_create_value(Vec4(0.33, 0.33, 0.33, 0.33));
+        auto color = pool.get_or_create_value(Vec4(0.33, 0.33, 0.33, 0.33));
+        auto color2 = pool.get_or_create_value(Vec4(0.33, 0.33, 0.33, 0.33));
 
         assert_equal(color.get<Vec4>(), color2.get<Vec4>());
 
-        assert_equal(color.refcount(), 3u);
+        assert_equal(color.refcount(), 2u);
         color.reset();
-        assert_equal(color2.refcount(), 2u);
+        assert_equal(color2.refcount(), 1u);
         color2.reset();
-        pool->clean_pointers();
 
         vec3.reset(); // Make sure all pointers are cleaned up
-        pool->clean_pointers();
+    }
+
+    void test_refcounting() {
+        auto pool = MaterialValuePool();
+        auto vec3 = pool.get_or_create_value(Vec3(1, 2, 3));
+        assert_equal(vec3.refcount(), 1u);
+        auto p2 = vec3;
+        assert_equal(vec3.refcount(), 2u);
+        assert_equal(p2.refcount(), 2u);
+
+        vec3.reset();
+        assert_false(vec3);
+        assert_true(p2);
+
+        assert_equal(p2.refcount(), 1u);
     }
 };
 
