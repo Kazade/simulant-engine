@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <list>
 #include <vector>
 
@@ -21,7 +22,7 @@ class MaterialValuePool;
 
 struct BlockHeader {
     MaterialPropertyType type;
-    uint16_t refcount = 0;
+    std::atomic<uint16_t> refcount = 0;
     MaterialValuePool* pool = nullptr;
     void (*destructor)(void* ptr);
 };
