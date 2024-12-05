@@ -248,7 +248,6 @@ private:
 
     static constexpr int bucket_count = 16;
     std::array<MaterialPropertyEntry, bucket_count> values_;
-    std::list<MaterialPropertyEntry> values_overflow_;
 
     std::unordered_map<MaterialPropertyNameHash, TexturePropertyInfo>
         texture_properties_;
@@ -435,11 +434,9 @@ public:
         if(it->hsh == hsh && it->entries[0]) {
             ret = false;
         } else if(it->hsh != hsh) {
-            // We need to use the overflow
-            values_overflow_.push_back(MaterialPropertyEntry());
-            auto& entry = values_overflow_.back();
-            it->next = &entry;
-            it = &entry;
+            auto entry = new MaterialPropertyEntry();
+            it->next = entry;
+            it = entry;
         }
 
         it->entries[0] = property_value_ptr;
@@ -498,11 +495,9 @@ bool MaterialPass::_set_property_value(MaterialPropertyNameHash hsh,
     if(it->hsh == hsh && it->entries[pass_number_ + 1]) {
         ret = false;
     } else if(it->hsh != hsh) {
-        // We need to use the overflow
-        material->values_overflow_.push_back(Material::MaterialPropertyEntry());
-        auto& entry = material->values_overflow_.back();
-        it->next = &entry;
-        it = &entry;
+        auto entry = new Material::MaterialPropertyEntry();
+        it->next = entry;
+        it = entry;
     }
 
     it->entries[pass_number_ + 1] = property_value_ptr;

@@ -89,10 +89,16 @@ Material::Material(AssetID id, AssetManager* asset_manager):
 }
 
 Material::~Material() {
-    values_overflow_.clear();
     for(auto& entry: values_) {
         for(auto& value: entry.entries) {
             value.reset();
+        }
+
+        auto it = entry.next;
+        while(it) {
+            auto n = it->next;
+            delete it;
+            it = n;
         }
     }
 }
@@ -174,22 +180,35 @@ MaterialPass *Material::pass(uint8_t pass) {
 Material &Material::operator=(const Material &rhs) {
     MaterialObject::operator=(rhs);
 
+    // Delete dynamic overflow nodes
+    for(auto& entry: values_) {
+        auto it = entry.next;
+        while(it) {
+            auto n = it->next;
+            delete it;
+            it = n;
+        }
+    }
+
     renderer_ = rhs.renderer_;
     texture_properties_ = rhs.texture_properties_;
     custom_properties_ = rhs.custom_properties_;
-    values_ = rhs.values_;
-    values_overflow_.clear();
 
-    for(auto& value: values_) {
-        auto it = &value;
-        do {
-            if(it->next) {
-                values_overflow_.push_back(*(it->next));
-                it->next = &values_overflow_.back();
-            }
-            it = it->next;
-        } while(it);
+    for(std::size_t i = 0; i < values_.size(); ++i) {
+        // Copy the base array value across
+        values_[i] = MaterialPropertyEntry(rhs.values_[i]);
+
+        // Now iterate the rhs node chain, and create copies
+        // of all the things
+        auto src = rhs.values_[i].next;
+        auto dst = &values_[i];
+        while(src) {
+            dst->next = new MaterialPropertyEntry(*src);
+            dst = dst->next;
+            src = src->next;
+        }
     }
+
     passes_.clear();
     set_pass_count(rhs.passes_.size());
 
