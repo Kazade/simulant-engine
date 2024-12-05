@@ -211,6 +211,8 @@ Application::~Application() {
     overlay_scene_->clean_up();
     overlay_scene_.reset();
 
+    pool_->clear();
+
     if(window_) {
         window_->_clean_up();
         window_.reset();
