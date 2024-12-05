@@ -188,6 +188,8 @@ public:
             delete it;
             it = next;
         }
+
+        pointers_ = nullptr;
     }
 
     ~MaterialValuePool() {
