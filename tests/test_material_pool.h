@@ -138,6 +138,20 @@ public:
 
         assert_equal(p2.refcount(), 1u);
     }
+
+    void test_double_clear() {
+        auto pool = MaterialValuePool();
+        auto a = pool.get_or_create_value(Vec3(1, 2, 3));
+        auto b = pool.get_or_create_value(Vec3(2, 2, 3));
+        auto c = pool.get_or_create_value(Vec3(3, 2, 3));
+
+        pool.clear();
+        pool.clear();
+
+        assert_false(a);
+        assert_false(b);
+        assert_false(c);
+    }
 };
 
 } // namespace

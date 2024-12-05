@@ -170,26 +170,9 @@ public:
         // Wipe the previous alive check, we're killing everything
         alive_check_ = std::make_shared<bool>(true);
 
-        auto ptr = pointers_;
-
-        while(ptr) {
-            // Forcibly call the destructor
-            auto header = reinterpret_cast<BlockHeader*>(ptr->data);
-            // We're killing this, all pointers are now invalid
-            header->refcount = 0;
-            header->destructor(ptr->data);
-            header->pool = nullptr;
-            ptr = ptr->next;
+        while(pointers_) {
+            remove_entry(pointers_->data);
         }
-
-        auto it = pointers_;
-        while(it) {
-            auto next = it->next;
-            delete it;
-            it = next;
-        }
-
-        pointers_ = nullptr;
     }
 
     ~MaterialValuePool() {
