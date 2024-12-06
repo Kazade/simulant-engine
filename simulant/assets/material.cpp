@@ -156,6 +156,13 @@ bool Material::set_pass_count(uint8_t pass_count) {
         return false;
     }
 
+    // If we are reducing the pass count, we need to clear any overrides
+    for(std::size_t i = pass_count; i < passes_.size(); ++i) {
+        for(auto& entry: values_) {
+            passes_[i].clear_override(entry.hsh);
+        }
+    }
+
     for(int i = passes_.size(); i < pass_count; ++i) {
         passes_.push_back(MaterialPass(this, i));
     }
@@ -237,28 +244,15 @@ GPUProgramID MaterialPass::gpu_program_id() const {
 
 bool MaterialPass::on_check_existence(MaterialPropertyNameHash hsh) const {
     auto material = (Material*)parent_;
-
-    auto& values = material->values_;
-    auto it = &values[hsh % Material::bucket_count];
-
-    while(it->hsh != hsh && it->next) {
-        it = it->next;
-    }
-
-    return it->hsh == hsh && it->entries[pass_number_ + 1];
+    auto it = material->find_entry(hsh);
+    return it && it->entries[pass_number_ + 1];
 }
 
 bool MaterialPass::on_clear_override(MaterialPropertyNameHash hsh) {
     auto material = (Material*)parent_;
 
-    auto& values = material->values_;
-
-    auto it = &values[hsh % Material::bucket_count];
-    while(it->hsh != hsh && it->next) {
-        it = it->next;
-    }
-
-    if(it->hsh == hsh && it->entries[pass_number_ + 1]) {
+    auto it = material->find_entry(hsh);
+    if(it->entries[pass_number_ + 1]) {
         it->entries[pass_number_ + 1].reset();
         return true;
     }

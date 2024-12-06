@@ -249,13 +249,51 @@ private:
     static constexpr int bucket_count = 16;
     std::array<MaterialPropertyEntry, bucket_count> values_;
 
+    MaterialPropertyEntry* find_entry(MaterialPropertyNameHash hsh) {
+        auto it = &values_[hsh % Material::bucket_count];
+
+        while(it->hsh != hsh && it->next) {
+            it = it->next;
+        }
+
+        if(it->hsh == hsh) {
+            return it;
+        }
+
+        return nullptr;
+    }
+
+    const MaterialPropertyEntry*
+        find_entry(MaterialPropertyNameHash hsh) const {
+        auto it = &values_[hsh % Material::bucket_count];
+
+        while(it->hsh != hsh && it->next) {
+            it = it->next;
+        }
+
+        if(it->hsh == hsh) {
+            return it;
+        }
+
+        return nullptr;
+    }
+
+    MaterialPropertyEntry*
+        find_entry_or_last_in_bucket(MaterialPropertyNameHash hsh) {
+        auto it = &values_[hsh % Material::bucket_count];
+
+        while(it->hsh != hsh && it->next) {
+            it = it->next;
+        }
+
+        return it;
+    }
+
     std::unordered_map<MaterialPropertyNameHash, TexturePropertyInfo>
         texture_properties_;
 
-    std::unordered_map<
-        MaterialPropertyNameHash,
-        CustomPropertyInfo
-    > custom_properties_;
+    std::unordered_map<MaterialPropertyNameHash, CustomPropertyInfo>
+        custom_properties_;
 
     virtual void on_override(MaterialPropertyNameHash hsh, const char* name,
                              MaterialPropertyType type) override {
@@ -265,7 +303,8 @@ private:
             info.texture_property_name = name;
             info.texture_property_name_hash = hsh;
             info.matrix_property_name = info.texture_property_name + "_matrix";
-            info.matrix_property_name_hash = material_property_hash(info.matrix_property_name.c_str());
+            info.matrix_property_name_hash =
+                material_property_hash(info.matrix_property_name.c_str());
             texture_properties_[info.texture_property_name_hash] = info;
         }
 
@@ -282,14 +321,8 @@ private:
         texture_properties_.erase(hsh);
         custom_properties_.erase(hsh);
 
-        auto it = &values_[hsh % bucket_count];
-
-        while(it->hsh != hsh && it->next) {
-            it = it->next;
-        }
-
-        if(it->hsh == hsh && it->entries[0]) {
-            assert(it->hsh == hsh);
+        auto it = find_entry(hsh);
+        if(it && it->entries[0]) {
             it->entries[0].reset();
             return true;
         }
@@ -399,13 +432,8 @@ public:
     bool _property_value(const MaterialPropertyNameHash hsh,
                          const T*& out) const {
 
-        auto it = &values_[hsh % bucket_count];
-
-        while(it->hsh != hsh && it->next) {
-            it = it->next;
-        }
-
-        if(it->hsh == hsh && it->entries[0]) {
+        auto it = find_entry(hsh);
+        if(it && it->entries[0]) {
             out = it->entries[0].get<T>();
             return true;
         }
@@ -419,28 +447,19 @@ public:
     bool _set_property_value(MaterialPropertyNameHash hsh, const char* name,
                              const T& value) {
 
-        clear_override(hsh);
-
         auto property_value_ptr = _get_pool()->get_or_create_value(value);
-
-        bool ret = true;
-
-        auto it = &values_[hsh % bucket_count];
-
-        while(it->hsh != hsh && it->next) {
-            it = it->next;
-        }
-
-        if(it->hsh == hsh && it->entries[0]) {
-            ret = false;
-        } else if(it->hsh != hsh) {
+        auto it = find_entry_or_last_in_bucket(hsh);
+        bool ret = false;
+        if(it && it->hsh == hsh) {
+            clear_override(hsh);
+            it->entries[0] = property_value_ptr;
+        } else {
             auto entry = new MaterialPropertyEntry();
+            entry->hsh = hsh;
+            entry->entries[0] = property_value_ptr;
             it->next = entry;
-            it = entry;
+            ret = true;
         }
-
-        it->entries[0] = property_value_ptr;
-        it->hsh = hsh;
 
         on_override(hsh, name, property_value_ptr.type());
         return ret;
@@ -449,13 +468,9 @@ public:
     bool property_type(const char* name,
                        MaterialPropertyType* type) const override {
         auto hsh = material_property_hash(name);
-        auto it = &values_[hsh % bucket_count];
 
-        while(it->hsh != hsh && it->next) {
-            it = it->next;
-        }
-
-        if(it->hsh == hsh && it->entries[0]) {
+        auto it = find_entry(hsh);
+        if(it && it->entries[0]) {
             *type = it->entries[0].type();
             return true;
         }
@@ -464,13 +479,8 @@ public:
     }
 
     bool on_check_existence(MaterialPropertyNameHash hsh) const {
-        auto it = &values_[hsh % bucket_count];
-
-        while(it->hsh != hsh && it->next) {
-            it = it->next;
-        }
-
-        return it->hsh == hsh && it->entries[0];
+        auto it = find_entry(hsh);
+        return it && it->entries[0];
     }
 };
 
@@ -481,49 +491,34 @@ bool MaterialPass::_set_property_value(MaterialPropertyNameHash hsh,
     clear_override(hsh);
 
     auto material = (Material*)parent_;
-    auto& values = material->values_;
+    auto it = material->find_entry(hsh);
+
+    if(it == nullptr) {
+        // Material passes should not add entries if the parent material
+        // hasn't added it
+        return false;
+    }
+
     auto property_value_ptr = material->_get_pool()->get_or_create_value(value);
 
-    bool ret = true;
-
-    auto it = &values[hsh % Material::bucket_count];
-
-    while(it->hsh != hsh && it->next) {
-        it = it->next;
-    }
-
-    if(it->hsh == hsh && it->entries[pass_number_ + 1]) {
-        ret = false;
-    } else if(it->hsh != hsh) {
-        auto entry = new Material::MaterialPropertyEntry();
-        it->next = entry;
-        it = entry;
-    }
-
     it->entries[pass_number_ + 1] = property_value_ptr;
-    it->hsh = hsh;
-
     on_override(hsh, name, property_value_ptr.type());
 
-    return ret;
+    return true;
 }
 
 template<typename T>
 bool MaterialPass::_property_value(const MaterialPropertyNameHash hsh,
                                    const T*& out) const {
-    auto& values = material()->values_;
 
-    auto it = &values[hsh % Material::bucket_count];
-
-    while(it->hsh != hsh && it->next) {
-        it = it->next;
-    }
-
-    if(it->hsh == hsh) {
+    auto it = material()->find_entry(hsh);
+    if(it) {
         if(it->entries[pass_number_ + 1]) {
             out = it->entries[pass_number_ + 1].get<T>();
             return true;
-        } else if(it->entries[0]) {
+        }
+
+        if(it->entries[0]) {
             out = it->entries[0].get<T>();
             return true;
         }

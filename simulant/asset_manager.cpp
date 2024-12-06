@@ -171,11 +171,20 @@ bool AssetManager::is_base_manager() const {
 #define DOCONCAT(x, y) x##y
 #define CONCAT(x, y) DOCONCAT(x, y)
 
-#define NEW_X(klass, name, manager_name, ...) \
-    auto result = manager_name.make(this, ##__VA_ARGS__); \
-    manager_name.set_garbage_collection_method(result->id(), garbage_collect); \
-    return result
+template<typename T, typename M, typename... Args>
+auto new_x(T self, M& manager, GarbageCollectMethod garbage_collect,
+           Args... args) -> auto {
+    auto result = manager.make(self, args...);
+    manager.set_garbage_collection_method(result->id(), garbage_collect);
+    return result;
+}
 
+template<typename T, typename M>
+auto new_x(T self, M& manager, GarbageCollectMethod garbage_collect) -> auto {
+    auto result = manager.make(self);
+    manager.set_garbage_collection_method(result->id(), garbage_collect);
+    return result;
+}
 
 #define GET_X(klass, name, manager_name) \
     if(parent_ && !CONCAT(has_, name)(id)) { \
@@ -183,13 +192,13 @@ bool AssetManager::is_base_manager() const {
     } \
     return manager_name.get(id)
 
-
-MeshPtr AssetManager::create_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect) {
-    NEW_X(Mesh, mesh, mesh_manager_, vertex_specification);
+MeshPtr AssetManager::create_mesh(VertexSpecification vertex_specification,
+                                  GarbageCollectMethod garbage_collect) {
+    return new_x(this, mesh_manager_, garbage_collect, vertex_specification);
 }
 
 MeshPtr AssetManager::create_mesh(VertexDataPtr vertex_data, GarbageCollectMethod garbage_collect) {
-    NEW_X(Mesh, mesh, mesh_manager_, vertex_data);
+    return new_x(this, mesh_manager_, garbage_collect, vertex_data);
 }
 
 MeshPtr AssetManager::mesh(AssetID id) {
@@ -326,7 +335,7 @@ std::size_t AssetManager::mesh_count() const {
 }
 
 MaterialPtr AssetManager::create_material(GarbageCollectMethod garbage_collect) {
-    NEW_X(Material, material, material_manager_);
+    return new_x(this, material_manager_, garbage_collect);
 }
 
 void AssetManager::destroy_material(const AssetID& m) {
@@ -377,7 +386,8 @@ std::size_t AssetManager::material_count() const {
 }
 
 TexturePtr AssetManager::create_texture(uint16_t width, uint16_t height, TextureFormat format, GarbageCollectMethod garbage_collect) {
-    NEW_X(Texture, texture, texture_manager_, width, height, format);
+    return new_x(this, texture_manager_, garbage_collect, width, height,
+                 format);
 }
 
 TexturePtr AssetManager::load_texture(const Path& path, GarbageCollectMethod garbage_collect) {

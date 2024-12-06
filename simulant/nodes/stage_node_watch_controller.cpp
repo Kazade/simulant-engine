@@ -11,7 +11,8 @@ void StageNodeWatchController::_signal_change(StageNode* node,
 
     // if it's an attachment, we need the new path to match against watchers
     // if it's a detachment, we need to notify watchers of the old path
-    for(auto& p: watchers_) {
+    auto watchers = watchers_;
+    for(auto& p: watchers) {
         if(old_path == new_path) {
             assert(change == STAGE_NODE_CHANGE_MIXINS);
             p.second.func(STAGE_NODE_NOTIFICATION_TARGET_MIXINS_CHANGED, node);
