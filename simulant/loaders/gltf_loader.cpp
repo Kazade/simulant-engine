@@ -907,7 +907,7 @@ StageNode* spawn_node_recursively(StageNode* parent, int node_id,
 
     if(mesh) {
         // Auto populate the mesh in the params
-        input.params.set("s_mesh", mesh);
+        input.params.set("mesh", mesh);
     }
 
     input.camera = cam;
