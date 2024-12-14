@@ -181,6 +181,13 @@ StageNode* default_node_factory(StageNode* parent,
                         mixin_params.set("mesh", input.mesh);
                     }
 
+                    // FIXME: These inputs should NOT be the relative
+                    // positions, but should instead be absolute. If you
+                    // have a parent node this may not be correct.
+                    mixin_params.set("scale", input.scale);
+                    mixin_params.set("position", input.translation);
+                    mixin_params.set("orientation", input.rotation);
+
                     auto new_mixin =
                         ret->create_mixin(mixin_name, mixin_params);
                     if(!new_mixin) {
@@ -915,6 +922,11 @@ StageNode* spawn_node_recursively(StageNode* parent, int node_id,
     input.translation = parse_pos(node["translation"]);
     input.rotation = parse_quaternion(node["rotation"]);
     // FIXME: Additional properties!
+
+    // FIXME: These should be absolute values, not relative!
+    input.params.set("scale", input.scale);
+    input.params.set("position", input.translation);
+    input.params.set("orientation", input.rotation);
 
     StageNode* new_node = factory(parent, input);
     if(new_node) {

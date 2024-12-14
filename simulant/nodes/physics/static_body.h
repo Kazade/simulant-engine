@@ -32,8 +32,9 @@ public:
 
     void add_mesh_collider(const MeshPtr& mesh,
                            const PhysicsMaterial& properties, uint16_t kind = 0,
-                           const Vec3& offset = Vec3(),
-                           const Quaternion& rotation = Quaternion());
+                           const Vec3& position = Vec3(),
+                           const Quaternion& orientation = Quaternion(),
+                           const Vec3& scale = Vec3(1));
 
     const AABB& aabb() const override {
         static AABB aabb;
