@@ -402,6 +402,12 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
             auto z = *(float*)(buffer_info.data + i + 8);
             auto w = *(float*)(buffer_info.data + i + 12);
             final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, w));
+        } else if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) {
+            auto r = *(uint8_t*)(buffer_info.data + i);
+            auto g = *(uint8_t*)(buffer_info.data + i + 1);
+            auto b = *(uint8_t*)(buffer_info.data + i + 2);
+            auto a = *(uint8_t*)(buffer_info.data + i + 3);
+            final_mesh->vertex_data->diffuse(smlt::Color(r, g, b, a));
         } else {
             S_ERROR("Unsupported color attribute type");
         }
