@@ -186,25 +186,20 @@ private:
 
 #ifndef NDEBUG
 
-#define S_VERBOSE(...)                                                         \
-    smlt::verbose(_F(_S_FIRST(__VA_ARGS__)).format("\n" _S_REST(__VA_ARGS__)), \
-                  __FILE__, __LINE__)
+#define S_VERBOSE(str, ...) \
+    smlt::verbose(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
-#define S_DEBUG(...)                                                           \
-    smlt::debug(_F(_S_FIRST(__VA_ARGS__)).format("\n" _S_REST(__VA_ARGS__)),   \
-                __FILE__, __LINE__)
+#define S_DEBUG(str, ...) \
+    smlt::debug(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
-#define S_INFO(...)                                                            \
-    smlt::info(_F(_S_FIRST(__VA_ARGS__)).format("\n" _S_REST(__VA_ARGS__)),    \
-               __FILE__, __LINE__)
+#define S_INFO(str, ...) \
+    smlt::info(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
-#define S_WARN(...)                                                            \
-    smlt::warn(_F(_S_FIRST(__VA_ARGS__)).format("\n" _S_REST(__VA_ARGS__)),    \
-               __FILE__, __LINE__)
+#define S_WARN(str, ...) \
+    smlt::warn(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
-#define S_ERROR(...)                                                           \
-    smlt::error(_F(_S_FIRST(__VA_ARGS__)).format("\n" _S_REST(__VA_ARGS__)),   \
-                __FILE__, __LINE__)
+#define S_ERROR(str, ...) \
+    smlt::error(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
 #define S_DEBUG_ONCE(str, ...) \
     do { static char _done = 0; if(!_done++) smlt::debug(_F(str).format(__VA_ARGS__)); } while(0)
