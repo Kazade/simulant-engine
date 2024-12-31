@@ -1,6 +1,7 @@
 #include "gltf_loader.h"
 
 #include "../generic/raii.h"
+#include "../time_keeper.h"
 #include "../utils/base64.h"
 #include "../vfs.h"
 
@@ -355,28 +356,49 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
 
     auto start = final_mesh->vertex_data->cursor_position();
 
-    for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
-        if(spec.position_attribute == VERTEX_ATTRIBUTE_2F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            final_mesh->vertex_data->position(x, y);
-        } else if(spec.position_attribute == VERTEX_ATTRIBUTE_3F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
-            final_mesh->vertex_data->position(x, y, z);
-        } else if(spec.position_attribute == VERTEX_ATTRIBUTE_4F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
-            auto w = *(float*)(buffer_info.data + i + 12);
-            final_mesh->vertex_data->position(x, y, z, w);
-        } else {
-            S_ERROR("Unsupported position attribute type");
-        }
+#ifndef NDEBUG
+    auto t0 = smlt::get_app()->time_keeper->now_in_us();
+#endif
 
-        final_mesh->vertex_data->move_next();
+    if(spec.position_attribute == VERTEX_ATTRIBUTE_2F) {
+        uint8_t* src = buffer_info.data;
+        for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+            auto x = *(float*)src;
+            auto y = *(float*)(src + 4);
+            final_mesh->vertex_data->position(x, y);
+            src += buffer_info.stride;
+            final_mesh->vertex_data->move_next();
+        }
+    } else if(spec.position_attribute == VERTEX_ATTRIBUTE_3F) {
+        uint8_t* src = buffer_info.data;
+        for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+            auto x = *(float*)src;
+            auto y = *(float*)(src + 4);
+            auto z = *(float*)(src + 8);
+            final_mesh->vertex_data->position(x, y, z);
+            src += buffer_info.stride;
+            final_mesh->vertex_data->move_next();
+        }
+    } else if(spec.position_attribute == VERTEX_ATTRIBUTE_4F) {
+        uint8_t* src = buffer_info.data;
+        for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+            auto x = *(float*)src;
+            auto y = *(float*)(src + 4);
+            auto z = *(float*)(src + 8);
+            auto w = *(float*)(src + 12);
+            final_mesh->vertex_data->position(x, y, z, w);
+            src += buffer_info.stride;
+            final_mesh->vertex_data->move_next();
+        }
+    } else {
+        S_ERROR("Unsupported position attribute type");
     }
+
+#ifndef NDEBUG
+    auto t1 = smlt::get_app()->time_keeper->now_in_us();
+
+    S_DEBUG("Position loading took {0}us", t1 - t0);
+#endif
 
     final_mesh->vertex_data->move_to(start);
 }
@@ -387,6 +409,10 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
 
     _S_UNUSED(accessors);
     _S_UNUSED(js);
+
+#ifndef NDEBUG
+    auto t0 = smlt::get_app()->time_keeper->now_in_us();
+#endif
 
     auto start = final_mesh->vertex_data->cursor_position();
 
@@ -424,6 +450,12 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
         final_mesh->vertex_data->move_next();
     }
 
+#ifndef NDEBUG
+    auto t1 = smlt::get_app()->time_keeper->now_in_us();
+
+    S_DEBUG("Color loading took {0}us", t1 - t0);
+#endif
+
     final_mesh->vertex_data->move_to(start);
 }
 
@@ -435,6 +467,10 @@ void process_normals(const BufferInfo& buffer_info, JSONIterator& js,
     _S_UNUSED(accessors);
 
     auto start = final_mesh->vertex_data->cursor_position();
+
+#ifndef NDEBUG
+    auto t0 = smlt::get_app()->time_keeper->now_in_us();
+#endif
 
     for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
         if(spec.normal_attribute == VERTEX_ATTRIBUTE_3F) {
@@ -454,6 +490,12 @@ void process_normals(const BufferInfo& buffer_info, JSONIterator& js,
         final_mesh->vertex_data->move_next();
     }
 
+#ifndef NDEBUG
+    auto t1 = smlt::get_app()->time_keeper->now_in_us();
+
+    S_DEBUG("Normal loading took {0}us", t1 - t0);
+#endif
+
     final_mesh->vertex_data->move_to(start);
 }
 
@@ -465,6 +507,10 @@ void process_texcoord0s(const BufferInfo& buffer_info, JSONIterator& js,
     _S_UNUSED(accessors);
 
     auto start = final_mesh->vertex_data->cursor_position();
+
+#ifndef NDEBUG
+    auto t0 = smlt::get_app()->time_keeper->now_in_us();
+#endif
 
     for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
         if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_2F) {
@@ -488,6 +534,12 @@ void process_texcoord0s(const BufferInfo& buffer_info, JSONIterator& js,
 
         final_mesh->vertex_data->move_next();
     }
+
+#ifndef NDEBUG
+    auto t1 = smlt::get_app()->time_keeper->now_in_us();
+
+    S_DEBUG("Texcoord loading took {0}us", t1 - t0);
+#endif
 
     final_mesh->vertex_data->move_to(start);
 }
@@ -707,13 +759,11 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
         {TypeKey(UNSIGNED_SHORT, "VEC4"), VERTEX_ATTRIBUTE_4US},
     };
 
-    auto process_attribute = [&](JSONIterator mesh_attrs,
-                                 const char* type) -> VertexAttribute {
-        if(!mesh_attrs->has_key(type)) {
+    auto process_attribute = [&](int acc_id) -> VertexAttribute {
+        if(acc_id == -1) {
             return smlt::VERTEX_ATTRIBUTE_NONE;
         }
 
-        auto acc_id = mesh_attrs[type]->to_int().value_or(0);
         auto acc_node = accessors[acc_id];
 
         auto c_type =
@@ -727,15 +777,44 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
         return smlt::VERTEX_ATTRIBUTE_NONE;
     };
 
-    smlt::MeshPtr final_mesh;
-    int i = 0;
+    struct MeshPrimitive {
+        MeshPrimitive(const smlt::JSONIterator& attrs) :
+            attrs(attrs) {}
+        const smlt::JSONIterator& attrs;
+        int material_id = -1;
+        int indexes_id = -1;
+
+        int position_id = -1;
+        int normal_id = -1;
+        int color_id = -1;
+        int texcoord_id = -1;
+    };
+
+    std::vector<MeshPrimitive> primitives;
+
     for(auto& primitive_node: mesh["primitives"]) {
         auto primitive = primitive_node.to_iterator();
 
-        auto pos = process_attribute(primitive["attributes"], "POSITION");
-        auto norm = process_attribute(primitive["attributes"], "NORMAL");
-        auto diff = process_attribute(primitive["attributes"], "COLOR_0");
-        auto tex = process_attribute(primitive["attributes"], "TEXCOORD_0");
+        MeshPrimitive mp(primitive["attributes"]);
+        mp.material_id = primitive["material"]->to_int().value_or(-1);
+        mp.position_id =
+            primitive["attributes"]["POSITION"]->to_int().value_or(-1);
+        mp.normal_id = primitive["attributes"]["NORMAL"]->to_int().value_or(-1);
+        mp.color_id = primitive["attributes"]["COLOR_0"]->to_int().value_or(-1);
+        mp.texcoord_id =
+            primitive["attributes"]["TEXCOORD_0"]->to_int().value_or(-1);
+        mp.indexes_id = primitive["indices"]->to_int().value_or(-1);
+
+        primitives.push_back(mp);
+    }
+
+    smlt::MeshPtr final_mesh;
+    int i = 0;
+    for(auto& primitive: primitives) {
+        auto pos = process_attribute(primitive.position_id);
+        auto norm = process_attribute(primitive.normal_id);
+        auto diff = process_attribute(primitive.color_id);
+        auto tex = process_attribute(primitive.texcoord_id);
 
         auto clean_diffuse = [](VertexAttribute attr) -> VertexAttribute {
             if(attr == VERTEX_ATTRIBUTE_4US) {
@@ -764,7 +843,7 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
         }
 
         auto sm_name = _F("Primitives: {0}").format(i++);
-        auto material_id = primitive["material"]->to_int().value_or(-1);
+        auto material_id = primitive.material_id;
         auto material =
             (material_id >= 0) ? materials[material_id] : materials.back();
 
@@ -776,43 +855,34 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
             mode == TRIANGLES ? MESH_ARRANGEMENT_TRIANGLES
                               : MESH_ARRANGEMENT_TRIANGLE_STRIP);
 
-        auto position_id =
-            primitive["attributes"]["POSITION"]->to_int().value_or(-1);
-        auto normal_id =
-            primitive["attributes"]["NORMAL"]->to_int().value_or(-1);
-        auto color_id =
-            primitive["attributes"]["COLOR_0"]->to_int().value_or(-1);
-        auto texcoord_id =
-            primitive["attributes"]["TEXCOORD_0"]->to_int().value_or(-1);
-
         int offset = final_mesh->vertex_data->count();
         final_mesh->vertex_data->move_to(offset);
 
-        if(position_id >= 0) {
-            auto position = accessors[position_id];
+        if(primitive.position_id >= 0) {
+            auto position = accessors[primitive.position_id];
             auto buffer_info = process_buffer(js, position, buffers);
             process_positions(buffer_info, js, accessors, final_mesh, spec);
         }
 
-        if(normal_id >= 0) {
-            auto normal = accessors[normal_id];
+        if(primitive.normal_id >= 0) {
+            auto normal = accessors[primitive.normal_id];
             auto buffer_info = process_buffer(js, normal, buffers);
             process_normals(buffer_info, js, accessors, final_mesh, spec);
         }
 
-        if(color_id >= 0) {
-            auto color = accessors[color_id];
+        if(primitive.color_id >= 0) {
+            auto color = accessors[primitive.color_id];
             auto buffer_info = process_buffer(js, color, buffers);
             process_colors(buffer_info, js, accessors, final_mesh, diff);
         }
 
-        if(texcoord_id >= 0) {
-            auto texcoord0 = accessors[texcoord_id];
+        if(primitive.texcoord_id >= 0) {
+            auto texcoord0 = accessors[primitive.texcoord_id];
             auto buffer_info = process_buffer(js, texcoord0, buffers);
             process_texcoord0s(buffer_info, js, accessors, final_mesh, spec);
         }
 
-        auto indices_id = primitive["indices"]->to_int().value_or(-1);
+        auto indices_id = primitive.indexes_id;
         if(indices_id >= 0) {
             auto indices = accessors[indices_id];
             auto buffer_info = process_buffer(js, indices, buffers);
