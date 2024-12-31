@@ -683,7 +683,10 @@ JSONIterator json_parse(const std::string& data) {
 }
 
 JSONIterator json_read(std::shared_ptr<std::istream> stream) {
-    return JSONIterator(stream, 0);
+    std::string content{std::istreambuf_iterator<char>(*stream),
+                        std::istreambuf_iterator<char>()};
+
+    return json_parse(content);
 }
 
 } // namespace smlt
