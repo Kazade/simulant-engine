@@ -383,7 +383,7 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
 
 void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
                     JSONIterator& accessors, smlt::MeshPtr& final_mesh,
-                    VertexSpecification& spec) {
+                    VertexAttribute attr) {
 
     _S_UNUSED(accessors);
     _S_UNUSED(js);
@@ -391,23 +391,32 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
     auto start = final_mesh->vertex_data->cursor_position();
 
     for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
-        if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) {
+        if(attr == VERTEX_ATTRIBUTE_3F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, 1));
-        } else if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F) {
+        } else if(attr == VERTEX_ATTRIBUTE_4F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             auto w = *(float*)(buffer_info.data + i + 12);
             final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, w));
-        } else if(spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB) {
+        } else if(attr == VERTEX_ATTRIBUTE_4UB) {
             auto r = *(uint8_t*)(buffer_info.data + i);
             auto g = *(uint8_t*)(buffer_info.data + i + 1);
             auto b = *(uint8_t*)(buffer_info.data + i + 2);
             auto a = *(uint8_t*)(buffer_info.data + i + 3);
-            final_mesh->vertex_data->diffuse(smlt::Color(r, g, b, a));
+            final_mesh->vertex_data->diffuse(
+                smlt::Color::from_bytes(r, g, b, a));
+        } else if(attr == VERTEX_ATTRIBUTE_4US) {
+            auto r = *(uint16_t*)(buffer_info.data + i);
+            auto g = *(uint16_t*)(buffer_info.data + i + 2);
+            auto b = *(uint16_t*)(buffer_info.data + i + 4);
+            auto a = *(uint16_t*)(buffer_info.data + i + 6);
+
+            final_mesh->vertex_data->diffuse(
+                smlt::Color::from_bytes(r >> 8, g >> 8, b >> 8, a >> 8));
         } else {
             S_ERROR("Unsupported color attribute type");
         }
@@ -690,11 +699,12 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
     auto accessors = js["accessors"];
 
     const std::map<TypeKey, VertexAttribute> lookup = {
-        {TypeKey(FLOAT,         "VEC2"), VERTEX_ATTRIBUTE_2F },
-        {TypeKey(FLOAT,         "VEC3"), VERTEX_ATTRIBUTE_3F },
-        {TypeKey(FLOAT,         "VEC4"), VERTEX_ATTRIBUTE_4F },
+        {TypeKey(FLOAT,          "VEC2"), VERTEX_ATTRIBUTE_2F },
+        {TypeKey(FLOAT,          "VEC3"), VERTEX_ATTRIBUTE_3F },
+        {TypeKey(FLOAT,          "VEC4"), VERTEX_ATTRIBUTE_4F },
         // {TypeKey(FLOAT, "SCALAR"), VERTEX_ATTRIBUTE_1F},
-        {TypeKey(UNSIGNED_BYTE, "VEC4"), VERTEX_ATTRIBUTE_4UB},
+        {TypeKey(UNSIGNED_BYTE,  "VEC4"), VERTEX_ATTRIBUTE_4UB},
+        {TypeKey(UNSIGNED_SHORT, "VEC4"), VERTEX_ATTRIBUTE_4US},
     };
 
     auto process_attribute = [&](JSONIterator mesh_attrs,
@@ -727,10 +737,18 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
         auto diff = process_attribute(primitive["attributes"], "COLOR_0");
         auto tex = process_attribute(primitive["attributes"], "TEXCOORD_0");
 
+        auto clean_diffuse = [](VertexAttribute attr) -> VertexAttribute {
+            if(attr == VERTEX_ATTRIBUTE_4US) {
+                return VERTEX_ATTRIBUTE_4UB;
+            }
+
+            return attr;
+        };
+
         auto spec = VertexSpecification(
             pos, norm, tex, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
             VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
-            VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, diff);
+            VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, clean_diffuse(diff));
 
         if(!final_mesh) {
             final_mesh = scene->assets->create_mesh(spec);
@@ -785,7 +803,7 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
         if(color_id >= 0) {
             auto color = accessors[color_id];
             auto buffer_info = process_buffer(js, color, buffers);
-            process_colors(buffer_info, js, accessors, final_mesh, spec);
+            process_colors(buffer_info, js, accessors, final_mesh, diff);
         }
 
         if(texcoord_id >= 0) {
