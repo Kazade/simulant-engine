@@ -516,18 +516,18 @@ void process_texcoord0s(const BufferInfo& buffer_info, JSONIterator& js,
         if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_2F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
-            final_mesh->vertex_data->tex_coord0(x, y);
+            final_mesh->vertex_data->tex_coord0(x, -y);
         } else if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_3F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
-            final_mesh->vertex_data->tex_coord0(x, y, z);
+            final_mesh->vertex_data->tex_coord0(x, -y, z);
         } else if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_4F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             auto w = *(float*)(buffer_info.data + i + 12);
-            final_mesh->vertex_data->tex_coord0(x, y, z, w);
+            final_mesh->vertex_data->tex_coord0(x, -y, z, w);
         } else {
             S_ERROR("Unsupported texcoord0 attribute type");
         }
