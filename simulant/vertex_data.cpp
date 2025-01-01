@@ -466,6 +466,19 @@ void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     }
 }
 
+void VertexData::diffuse(float r, float g, float b) {
+    assert(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_3F);
+
+    auto offset = vertex_specification_.diffuse_offset();
+
+    if(offset == INVALID_ATTRIBUTE_OFFSET) {
+        return;
+    }
+
+    Vec3* out = (Vec3*)&data_[cursor_offset() + offset];
+    *out = Vec3(r, g, b);
+}
+
 void VertexData::diffuse(float r, float g, float b, float a) {
     assert(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4F);
 
@@ -482,6 +495,8 @@ void VertexData::diffuse(float r, float g, float b, float a) {
 void VertexData::diffuse(const Color& color) {
     if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4F) {
         diffuse(color.r, color.g, color.b, color.a);
+    } else if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_3F) {
+        diffuse(color.r, color.g, color.b);
     } else {
         const float s = 255.0f;
         diffuse(

@@ -137,6 +137,7 @@ public:
     void tex_coord3(float x, float y, float z, float w);
     void tex_coord3(const Vec2& vec) { tex_coord3(vec.x, vec.y); }
 
+    void diffuse(float r, float g, float b);
     void diffuse(float r, float g, float b, float a);
     void diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     void diffuse(const Color& color);
