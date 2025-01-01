@@ -247,36 +247,33 @@ JSONNodeType JSONNode::type() const {
 }
 
 std::size_t JSONNode::size() const {
-    return size_;
+    if(type_ == JSON_ARRAY) {
+        return value_.array.size();
+    } else if(type_ == JSON_OBJECT) {
+        return value_.object.size();
+    } else {
+        return 1;
+    }
 }
 
 bool JSONNode::has_key(const std::string& key) const {
-    bool found = false;
-    auto cb = [&key, &found](const std::string& item) -> bool {
-        if(key == item) {
-            found = true;
-            return true;
-        }
-
+    if(type_ != JSON_OBJECT) {
         return false;
-    };
-
-    read_keys(cb);
-
-    return found;
+    } else {
+        return value_.object.count(key);
+    }
 }
 
 std::vector<std::string> JSONNode::keys() const {
-    std::vector<std::string> ret;
-
-    auto cb = [&ret](const std::string& item) -> bool {
-        ret.push_back(item);
-        return false;
-    };
-
-    read_keys(cb);
-
-    return ret;
+    if(type_ != JSON_OBJECT) {
+        return {};
+    } else {
+        std::vector<std::string> keys;
+        for(auto& p: value_.object) {
+            keys.push_back(p.first);
+        }
+        return keys;
+    }
 }
 
 bool JSONNode::is_value_type() const {
@@ -288,19 +285,12 @@ optional<int64_t> JSONNode::to_int() const {
         return optional<int64_t>();
     }
 
-    std::string value = read_value_from_stream();
-    int64_t ret;
-    std::stringstream ss;
-
-    ss << value;
-    ss >> ret;
-
-    return optional<int64_t>(ret);
+    return int64_t(std::atof(value_.str));
 }
 
 bool JSONNode::is_float() const {
     if(type_ == JSON_NUMBER) {
-        std::string value = read_value_from_stream();
+        std::string value = value_.str;
         return value.find('.') != std::string::npos;
     }
 
@@ -312,14 +302,7 @@ optional<float> JSONNode::to_float() const {
         return optional<float>();
     }
 
-    std::string value = read_value_from_stream();
-    float ret;
-    std::stringstream ss;
-
-    ss << value;
-    ss >> ret;
-
-    return optional<float>(ret);
+    return std::atof(value_.str);
 }
 
 optional<bool> JSONNode::to_bool() const {
@@ -342,7 +325,6 @@ JSONIterator JSONNode::to_iterator() const {
         it.current_node_ = std::make_shared<JSONNode>(*this);
     }
 
-    it.stream_ = stream_;
     return it;
 }
 
@@ -511,77 +493,11 @@ void JSONIterator::set_invalid(const std::string& message) {
 }
 
 JSONIterator JSONIterator::operator[](const std::size_t i) const {
-    if(!is_valid() || current_node_->type() != JSON_ARRAY) {
+    if(!is_valid() || current_node_->type() != JSON_ARRAY || i >= size()) {
         return JSONIterator();
     }
 
-    stream_->seekg(current_node_->start());
-
-    char c = stream_->get(); // Skip the opening '['
-    assert(c == '[');
-    assert(stream_->good());
-
-    if(c != '[') {
-        return JSONIterator();
-    }
-
-    std::size_t entry = 0;
-    int nest_counter = 0;
-    while(stream_->tellg() != current_node_->end()) {
-        assert(stream_->good());
-        skip_whitespace(stream_);
-        assert(stream_->good());
-
-        auto start = stream_->tellg();
-
-        /* Find the end of this element, skipping commas
-         * inside arrays or objects */
-
-        nest_counter = 0;
-        bool done = false;
-        while(stream_->tellg() != current_node_->end()) {
-            assert(stream_->good());
-            c = stream_->get();
-            assert(stream_->good());
-
-            if(c == '[' || c == '{') {
-                nest_counter++;
-            } else if(c == ']' || c == '}') {
-                nest_counter--;
-            }
-
-            /* We hit the closing ']' so break */
-            if(nest_counter < 0) {
-                done = true;
-                unget(stream_);
-                break;
-            }
-
-            if(!nest_counter) {
-                if(c == ',') {
-                    unget(stream_);
-                    break;
-                }
-            }
-        }
-
-        if(entry == i) {
-            return JSONIterator(stream_, start, /*is_array_item=*/true);
-        } else {
-            if(done) {
-                /* End of the array */
-                break;
-            }
-            char skip = stream_->get();
-            assert(skip == ',');
-            _S_UNUSED(skip);
-
-            ++entry;
-        }
-    }
-
-    S_DEBUG("Accessed invalid JSON node with index: {0}", i);
-    return JSONIterator();
+    return JSONIterator(value_.array[i]);
 }
 
 JSONIterator JSONIterator::begin() const {

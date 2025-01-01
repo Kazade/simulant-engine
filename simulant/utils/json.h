@@ -27,22 +27,11 @@ typedef std::shared_ptr<std::istream> IStreamPtr;
 class JSONIterator;
 
 class JSONNode {
-private:
-    std::string read_value_from_stream() const;
-
 public:
     JSONNode() = default;
-    JSONNode(_json_impl::IStreamPtr stream, std::streampos start,
-             std::streampos end, std::size_t size = 0) :
-        stream_(stream), start_(start), end_(end), size_(size) {}
 
-    std::streampos start() const {
-        return start_;
-    }
-
-    std::streampos end() const {
-        return end_;
-    }
+    JSONNode(JSONNodeType type) :
+        type_(type) {}
 
     JSONNodeType type() const;
 
@@ -130,11 +119,13 @@ public:
 
 private:
     friend class JSONIterator;
-    mutable _json_impl::IStreamPtr stream_;
-    std::streampos start_ = 0;
-    std::streampos end_ = 0;
-    std::size_t size_ = 0;
     JSONNodeType type_ = JSON_NULL;
+
+    union {
+        std::map<std::string, std::shared_ptr<JSONNode>> object;
+        std::vector<std::shared_ptr<JSONNode>> array;
+        std::string str;
+    } value_;
 
     /* Internal function. If this is an object type,
      * will read from start to end and call cb() with
@@ -159,23 +150,16 @@ private:
         current_node_ = invalid_node;
     }
 
-    JSONIterator(_json_impl::IStreamPtr stream, std::streampos pos,
-                 bool is_array_item = false) :
-        stream_(stream), is_array_iterator_(is_array_item) {
+    JSONIterator(std::shared_ptr<JSONNode> node, bool is_array_item = false) :
+        is_array_iterator_(is_array_item) {
 
-        current_node_ = std::make_shared<JSONNode>();
-        current_node_->type_ = JSON_OBJECT;
-        parse_node(*current_node_, stream, pos);
+        current_node_ = node;
     }
 
-    /* mutable as we need to manipulate inside const contexts */
-    mutable _json_impl::IStreamPtr stream_;
     bool is_array_iterator_ = false;
 
     std::shared_ptr<JSONNode> current_node_;
 
-    void parse_node(JSONNode& node, _json_impl::IStreamPtr stream,
-                    std::streampos pos);
     void set_invalid(const std::string& message);
 
     static std::shared_ptr<JSONNode> invalid_node;
@@ -218,8 +202,7 @@ public:
             return true;
         }
 
-        return ((stream_.get() == rhs.stream_.get()) &&
-                (current_node_->start() == rhs.current_node_->start()));
+        return current_node_.get() == rhs.current_node_.get();
     }
 
     bool operator!=(const JSONIterator& rhs) const {
