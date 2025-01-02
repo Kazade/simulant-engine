@@ -3,6 +3,7 @@
 #include <iosfwd>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <variant>
 #include <vector>
@@ -27,6 +28,86 @@ typedef std::shared_ptr<std::istream> IStreamPtr;
 }
 
 class JSONIterator;
+
+template<typename K, typename V>
+class InsertionOrderedDict {
+private:
+public:
+    typedef typename std::pair<K, V> Entry;
+
+    void insert(const std::pair<K, V>& p) {
+        // FIXME: blow on duplicate?
+        entries_.push_back(p);
+    }
+
+    void clear() {
+        entries_.clear();
+    }
+
+    typename std::vector<Entry>::const_iterator begin() const {
+        return entries_.begin();
+    }
+
+    typename std::vector<Entry>::const_iterator end() const {
+        return entries_.end();
+    }
+
+    typename std::vector<Entry>::iterator begin() {
+        return entries_.begin();
+    }
+
+    typename std::vector<Entry>::iterator end() {
+        return entries_.end();
+    }
+
+    V& operator[](const K& key) {
+        for(auto& e: entries_) {
+            if(e.first == key) {
+                return e.second;
+            }
+        }
+
+        entries_.push_back(std::make_pair(key, V()));
+        return entries_.back().second;
+    }
+
+    std::size_t count(const K& key) const {
+        for(auto& e: entries_) {
+            if(e.first == key) {
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
+    V& at(const K& key) {
+        for(auto& e: entries_) {
+            if(e.first == key) {
+                return e.second;
+            }
+        }
+
+        throw std::out_of_range("Key not found");
+    }
+
+    bool has_key(const K& key) const {
+        for(auto& e: entries_) {
+            if(e.first == key) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    std::size_t size() const {
+        return entries_.size();
+    }
+
+private:
+    std::vector<Entry> entries_;
+};
 
 class JSONNode {
 public:
@@ -130,7 +211,8 @@ public:
 
     bool is_float() const;
 
-    typedef std::map<std::string, std::shared_ptr<JSONNode>> ObjectType;
+    typedef InsertionOrderedDict<std::string, std::shared_ptr<JSONNode>>
+        ObjectType;
     typedef std::vector<std::shared_ptr<JSONNode>> ArrayType;
     typedef std::string ValueType;
 
