@@ -287,15 +287,20 @@ struct TypeKey {
     }
 };
 
-static auto
-    process_buffer(JSONIterator& js, JSONIterator accessor,
-                   std::vector<std::vector<uint8_t>>& buffers) -> BufferInfo {
-    auto accessor_component_type =
-        (ComponentType)accessor["componentType"]->to_int().value_or(BYTE);
+struct Accessor {
+    std::string type;
+    ComponentType component_type;
+    int buffer_view_id;
+};
 
-    auto type = accessor["type"]->to_str().value_or("SCALAR");
+static auto process_buffer(JSONIterator& js, const Accessor& accessor,
+                           std::vector<std::vector<uint8_t>>& buffers)
+    -> BufferInfo {
 
-    auto buffer_view_id = accessor["bufferView"]->to_int().value_or(-1);
+    auto accessor_component_type = accessor.component_type;
+    auto type = accessor.type;
+    auto buffer_view_id = accessor.buffer_view_id;
+
     assert(buffer_view_id >= 0);
     auto buffer_view = js["bufferViews"][buffer_view_id];
     auto buffer_id = buffer_view["buffer"]->to_int().value_or(-1);
@@ -351,8 +356,7 @@ static auto
 }
 
 void process_positions(const BufferInfo& buffer_info, JSONIterator&,
-                       JSONIterator&, smlt::MeshPtr& final_mesh,
-                       VertexSpecification& spec) {
+                       smlt::MeshPtr& final_mesh, VertexSpecification& spec) {
 
     auto start = final_mesh->vertex_data->cursor_position();
 
@@ -404,10 +408,8 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
 }
 
 void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
-                    JSONIterator& accessors, smlt::MeshPtr& final_mesh,
-                    VertexAttribute attr) {
+                    smlt::MeshPtr& final_mesh, VertexAttribute attr) {
 
-    _S_UNUSED(accessors);
     _S_UNUSED(js);
 
 #ifndef NDEBUG
@@ -460,11 +462,9 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
 }
 
 void process_normals(const BufferInfo& buffer_info, JSONIterator& js,
-                     JSONIterator& accessors, smlt::MeshPtr& final_mesh,
-                     VertexSpecification& spec) {
+                     smlt::MeshPtr& final_mesh, VertexSpecification& spec) {
 
     _S_UNUSED(js);
-    _S_UNUSED(accessors);
 
     auto start = final_mesh->vertex_data->cursor_position();
 
@@ -500,12 +500,9 @@ void process_normals(const BufferInfo& buffer_info, JSONIterator& js,
 }
 
 void process_texcoord0s(const BufferInfo& buffer_info, JSONIterator& js,
-                        JSONIterator& accessors, smlt::MeshPtr& final_mesh,
-                        VertexSpecification& spec) {
+                        smlt::MeshPtr& final_mesh, VertexSpecification& spec) {
 
     _S_UNUSED(js);
-    _S_UNUSED(accessors);
-
     auto start = final_mesh->vertex_data->cursor_position();
 
 #ifndef NDEBUG
@@ -746,9 +743,33 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
 
     auto& scene = node->scene;
 
+    struct MeshPrimitive {
+        MeshPrimitive(const smlt::JSONIterator& attrs) :
+            attrs(attrs) {}
+        const smlt::JSONIterator& attrs;
+        int material_id = -1;
+        int indexes_id = -1;
+
+        int position_id = -1;
+        int normal_id = -1;
+        int color_id = -1;
+        int texcoord_id = -1;
+    };
+
+    std::vector<MeshPrimitive> primitives;
+    std::vector<Accessor> accessors;
+
     /* This is the most complicated part of the loader. A GLTF file has a
        heirarchy of: mesh -> accessor -> bufferView -> buffer */
-    auto accessors = js["accessors"];
+    for(auto& acc_node: js["accessors"]) {
+        auto acc = acc_node.to_iterator();
+        Accessor accessor;
+        accessor.type = acc["type"]->to_str().value_or("SCALAR");
+        accessor.component_type =
+            (ComponentType)acc["componentType"]->to_int().value_or(5121);
+        accessor.buffer_view_id = acc["bufferView"]->to_int().value_or(-1);
+        accessors.push_back(accessor);
+    }
 
     const std::map<TypeKey, VertexAttribute> lookup = {
         {TypeKey(FLOAT,          "VEC2"), VERTEX_ATTRIBUTE_2F },
@@ -765,32 +786,13 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
         }
 
         auto acc_node = accessors[acc_id];
-
-        auto c_type =
-            (ComponentType)acc_node["componentType"]->to_int().value_or(5121);
-        auto a_type = acc_node["type"]->to_str().value_or("SCALAR");
-        auto key = TypeKey(c_type, a_type);
+        auto key = TypeKey(acc_node.component_type, acc_node.type);
         if(lookup.count(key)) {
             return lookup.at(key);
         }
 
         return smlt::VERTEX_ATTRIBUTE_NONE;
     };
-
-    struct MeshPrimitive {
-        MeshPrimitive(const smlt::JSONIterator& attrs) :
-            attrs(attrs) {}
-        const smlt::JSONIterator& attrs;
-        int material_id = -1;
-        int indexes_id = -1;
-
-        int position_id = -1;
-        int normal_id = -1;
-        int color_id = -1;
-        int texcoord_id = -1;
-    };
-
-    std::vector<MeshPrimitive> primitives;
 
     for(auto& primitive_node: mesh["primitives"]) {
         auto primitive = primitive_node.to_iterator();
@@ -861,25 +863,25 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
         if(primitive.position_id >= 0) {
             auto position = accessors[primitive.position_id];
             auto buffer_info = process_buffer(js, position, buffers);
-            process_positions(buffer_info, js, accessors, final_mesh, spec);
+            process_positions(buffer_info, js, final_mesh, spec);
         }
 
         if(primitive.normal_id >= 0) {
             auto normal = accessors[primitive.normal_id];
             auto buffer_info = process_buffer(js, normal, buffers);
-            process_normals(buffer_info, js, accessors, final_mesh, spec);
+            process_normals(buffer_info, js, final_mesh, spec);
         }
 
         if(primitive.color_id >= 0) {
             auto color = accessors[primitive.color_id];
             auto buffer_info = process_buffer(js, color, buffers);
-            process_colors(buffer_info, js, accessors, final_mesh, diff);
+            process_colors(buffer_info, js, final_mesh, diff);
         }
 
         if(primitive.texcoord_id >= 0) {
             auto texcoord0 = accessors[primitive.texcoord_id];
             auto buffer_info = process_buffer(js, texcoord0, buffers);
-            process_texcoord0s(buffer_info, js, accessors, final_mesh, spec);
+            process_texcoord0s(buffer_info, js, final_mesh, spec);
         }
 
         auto indices_id = primitive.indexes_id;
