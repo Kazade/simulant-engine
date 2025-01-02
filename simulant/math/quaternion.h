@@ -82,11 +82,7 @@ struct Quaternion {
     }
 
     float dot(const Quaternion& rhs) const {
-#ifdef __DREAMCAST__
-        return MATH_fipr(x, y, z, w, rhs.x, rhs.y, rhs.z, rhs.w);
-#else
         return x * rhs.x + y * rhs.y + z * rhs.z + w * rhs.w;
-#endif
     }
 
     void inverse() {

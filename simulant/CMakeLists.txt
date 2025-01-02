@@ -9,6 +9,13 @@ FILE(GLOB_RECURSE TO_REMOVE
     "sound/drivers/*"
 )
 
+FILE(GLOB_RECURSE BOUNCE_FILES FOLLOW_SYMLINKS deps/bounce/src/*.cpp)
+
+# Disable fast math on Physics as it can lead to unpredictable results
+set_source_files_properties(BOUNCE_FILES
+                PROPERTIES
+                COMPILE_FLAGS -fno-fast-math)
+
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/deps/bounce/include)
 
 LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
