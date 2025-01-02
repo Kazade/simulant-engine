@@ -23,6 +23,21 @@ static void unget(_json_impl::IStreamPtr& stream) {
     stream->clear();
 }
 
+static std::string read_value(_json_impl::IStreamPtr& stream) {
+    std::string buffer;
+    while(!stream->eof()) {
+        char c = stream->peek();
+
+        if(c == ',' || c == '}' || c == ']') {
+            return buffer;
+        } else {
+            buffer += stream->get();
+        }
+    }
+
+    return "";
+}
+
 static std::string read_string(_json_impl::IStreamPtr& stream) {
     std::string buffer;
     while(!stream->eof()) {
@@ -155,102 +170,15 @@ static std::streampos
     return std::streampos(-1);
 }
 
-template<typename Func>
-void JSONNode::read_keys(Func&& cb) const {
-    if(type_ != JSON_OBJECT) {
-        S_WARN("read_keys called on non-object node!");
-        return;
-    }
-
-    assert(!stream_->bad());
-    assert(!stream_->fail());
-    assert(!stream_->eof());
-
-    stream_->seekg(start_);
-
-    auto c = stream_->get();
-
-    assert(c == '{');
-    if(c != '{') {
-        S_WARN("Invalid character {0} expected '{'", c);
-        return;
-    }
-
-    while(!stream_->eof()) {
-        if(skip_whitespace(stream_) == -1) {
-            break;
-        }
-
-        assert(stream_->good());
-
-        char c = stream_->get();
-        assert(stream_->good());
-
-        if(c == '"') {
-            std::string key = read_string(stream_);
-            if(cb(key)) {
-                return;
-            }
-            skip_whitespace(stream_);
-            assert(stream_->good());
-
-            c = stream_->get();
-            assert(stream_->good());
-
-            if(c != ':') {
-                S_WARN("Expected ':' found '{0}'", c);
-                return;
-            }
-            skip_whitespace(stream_);
-            assert(stream_->good());
-
-            auto pos = find_comma_or_closing_brace(stream_);
-            if(pos == -1) {
-                S_ERROR("Unable to find command or closing }");
-                return;
-            }
-
-            assert(stream_->good());
-            c = stream_->get(); /* Get the comma or } */
-            assert(stream_->good());
-
-            if(c == '}') {
-                return;
-            }
-        } else if(c == '}') {
-            /* Empty case */
-            return;
-        } else {
-            S_WARN("Unexpected character: {0}", c);
-            return;
-        }
-    }
-}
-
-std::string JSONNode::read_value_from_stream() const {
-    /* Start and end are inclusive. So if the value was a
-     * single character then end-start would == 0.
-     * So we need to add 1 to the length. */
-    auto len = (end_ - start_) + 1;
-    stream_->seekg(start_);
-
-    std::vector<char> buffer(len + 1);
-
-    stream_->read(&buffer[0], len);
-    buffer[len] = '\0';
-
-    return std::string(&buffer[0]);
-}
-
 JSONNodeType JSONNode::type() const {
     return type_;
 }
 
 std::size_t JSONNode::size() const {
     if(type_ == JSON_ARRAY) {
-        return value_.array.size();
+        return std::get<ArrayType>(value_).size();
     } else if(type_ == JSON_OBJECT) {
-        return value_.object.size();
+        return std::get<ObjectType>(value_).size();
     } else {
         return 1;
     }
@@ -260,7 +188,7 @@ bool JSONNode::has_key(const std::string& key) const {
     if(type_ != JSON_OBJECT) {
         return false;
     } else {
-        return value_.object.count(key);
+        return std::get<ObjectType>(value_).count(key);
     }
 }
 
@@ -269,7 +197,7 @@ std::vector<std::string> JSONNode::keys() const {
         return {};
     } else {
         std::vector<std::string> keys;
-        for(auto& p: value_.object) {
+        for(auto& p: std::get<ObjectType>(value_)) {
             keys.push_back(p.first);
         }
         return keys;
@@ -285,12 +213,12 @@ optional<int64_t> JSONNode::to_int() const {
         return optional<int64_t>();
     }
 
-    return int64_t(std::atof(value_.str));
+    return int64_t(std::atof(std::get<std::string>(value_).c_str()));
 }
 
 bool JSONNode::is_float() const {
     if(type_ == JSON_NUMBER) {
-        std::string value = value_.str;
+        std::string value = std::get<std::string>(value_);
         return value.find('.') != std::string::npos;
     }
 
@@ -302,7 +230,7 @@ optional<float> JSONNode::to_float() const {
         return optional<float>();
     }
 
-    return std::atof(value_.str);
+    return std::atof(std::get<std::string>(value_).c_str());
 }
 
 optional<bool> JSONNode::to_bool() const {
@@ -332,48 +260,29 @@ bool JSONNode::is_null() const {
     return type_ == JSON_NULL;
 }
 
-static optional<std::size_t> parse_array(_json_impl::IStreamPtr stream) {
-    int nested_counter = 0;
-    std::size_t entries = 0;
-    char last_non_whitespace = 0;
-    bool in_quotes = false;
+std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream);
+
+std::shared_ptr<JSONNode> parse_array(_json_impl::IStreamPtr stream) {
+    auto node = std::make_shared<JSONNode>(JSON_ARRAY);
+
     while(!stream->eof()) {
+        auto subnode = parse_node(stream);
+        if(subnode) {
+            std::get<JSONNode::ArrayType>(node->value_).push_back(subnode);
+        }
         auto c = stream->get();
-        if(c == '"') {
-            in_quotes = !in_quotes;
-        }
-
-        if(in_quotes) {
-            continue;
-        }
-
-        if(c == ']' && nested_counter == 0) {
-            if(last_non_whitespace && last_non_whitespace != ',') {
-                entries++;
-            }
+        if(c == ']') {
             break;
-        } else if(c == '[' || c == '{') {
-            nested_counter++;
-        } else if(c == ']' || c == '}') {
-            nested_counter--;
-        } else if(c == ',' && nested_counter == 0) {
-            ++entries;
-        }
-
-        if(WHITESPACE.find(c) == std::string::npos) {
-            last_non_whitespace = c;
         }
     }
 
-    if(last_non_whitespace == ',') {
-        S_WARN("Found trailing comma in JSON array");
-    }
-
-    return entries;
+    return node;
 }
 
 /* Parse an object node and return its size if the parse is successful */
-static optional<std::size_t> parse_object(_json_impl::IStreamPtr stream) {
+std::shared_ptr<JSONNode> parse_object(_json_impl::IStreamPtr stream) {
+    auto node = std::make_shared<JSONNode>(JSON_OBJECT);
+
     std::size_t count = 0;
     while(!stream->eof()) {
         if(skip_whitespace(stream) == -1) {
@@ -388,103 +297,79 @@ static optional<std::size_t> parse_object(_json_impl::IStreamPtr stream) {
             c = stream->get();
             if(c != ':') {
                 S_WARN("Expected ':' found '{0}'", c);
-                return optional<std::size_t>();
+                return JSONIterator::invalid_node;
             }
 
             skip_whitespace(stream);
 
-            auto pos = find_comma_or_closing_brace(stream);
-
-            if(pos == -1) {
-                S_ERROR("Couldn't find comma or closing brace");
-                return optional<std::size_t>();
-            } else {
-                c = stream->get();
-                assert(c == ',' || c == '}');
-
-                if(c == '}') {
-                    return optional<std::size_t>(count);
-                }
-            }
+            auto subnode = parse_node(stream);
+            std::get<JSONNode::ObjectType>(node->value_)[key] =
+                (subnode) ? subnode : JSONIterator::invalid_node;
+        } else if(c == ',') {
+            continue;
         } else if(c == '}') {
-            stream->unget();
-            return optional<std::size_t>(count);
+            return node;
         } else {
             S_ERROR("Unexpected character: {0} when parsing object", c);
-            return optional<std::size_t>();
+            return JSONIterator::invalid_node;
         }
     }
 
-    return optional<std::size_t>(count);
+    return std::shared_ptr<JSONNode>();
 }
 
-void JSONIterator::parse_node(JSONNode& node, _json_impl::IStreamPtr stream,
-                              std::streampos pos) {
-    stream->seekg(pos);
-
+std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream) {
     skip_whitespace(stream);
 
-    auto start = stream_->tellg();
-    char c = stream->get();
-
-    std::streampos end;
+    char c = stream->peek();
 
     switch(c) {
         case '{': {
-            node.type_ = JSON_OBJECT;
-            auto v = parse_object(stream);
-            assert(v);
-            if(v) {
-                node.size_ = v.value_or(0);
-                end = stream_->tellg();
-            }
+            stream->get(); // Consume
+            return parse_object(stream);
         } break;
         case '[': {
-            node.type_ = JSON_ARRAY;
-            auto v = parse_array(stream);
-            assert(v);
-            if(v) {
-                node.size_ = v.value_or(0);
-                end = stream_->tellg();
-            }
+            stream->get(); // Consume
+            return parse_array(stream);
         } break;
-        case '"':
-            node.type_ = JSON_STRING;
-            read_string(stream);
-            end = int(stream->tellg()) - 2;
-            start = int(start) + 1;
-            break;
+        case '}':
+        case ']': {
+            return std::shared_ptr<JSONNode>();
+        } break;
+        case '"': {
+            stream->get(); // Consume '"'
+            auto node = std::make_shared<JSONNode>(JSON_STRING);
+            node->value_ = read_string(stream);
+            return node;
+        }
         case 't':
+            stream->get();
             if(check_remainder(stream, "rue")) {
-                node.type_ = JSON_TRUE;
+                return std::make_shared<JSONNode>(JSON_TRUE);
             } else {
-                set_invalid("Error at pos: " + smlt::to_string((int)pos));
+                return JSONIterator::invalid_node;
             }
-            break;
         case 'f':
+            stream->get();
             if(check_remainder(stream, "alse")) {
-                node.type_ = JSON_FALSE;
+                return std::make_shared<JSONNode>(JSON_FALSE);
             } else {
-                set_invalid("Error at pos: " + smlt::to_string((int)pos));
+                return JSONIterator::invalid_node;
             }
-            break;
         case 'n':
+            stream->get();
             if(check_remainder(stream, "ull")) {
-                node.type_ = JSON_NULL;
+                return std::make_shared<JSONNode>(JSON_NULL);
             } else {
-                set_invalid("Error at pos: " + smlt::to_string((int)pos));
+                return JSONIterator::invalid_node;
             }
-            break;
-        default:
+        default: {
             // Number
-            node.type_ = JSON_NUMBER;
-            end = seek_next_of(stream, ",\r\n\t ]}");
-            end = int(end) - 1;
+            auto node = std::make_shared<JSONNode>(JSON_NUMBER);
+            node->value_ = read_value(stream);
+            return node;
+        }
     }
-
-    node.start_ = start;
-    node.end_ = end;
-    node.stream_ = stream;
 }
 
 void JSONIterator::set_invalid(const std::string& message) {
@@ -493,11 +378,13 @@ void JSONIterator::set_invalid(const std::string& message) {
 }
 
 JSONIterator JSONIterator::operator[](const std::size_t i) const {
-    if(!is_valid() || current_node_->type() != JSON_ARRAY || i >= size()) {
+    if(!is_valid() || current_node_->type() != JSON_ARRAY ||
+       i >= current_node_->size()) {
         return JSONIterator();
     }
 
-    return JSONIterator(value_.array[i]);
+    return JSONIterator(
+        std::get<JSONNode::ArrayType>(current_node_->value_)[i]);
 }
 
 JSONIterator JSONIterator::begin() const {
@@ -521,29 +408,6 @@ JSONIterator& JSONIterator::operator++() {
         return *this;
     }
 
-    /* Move to the end of the node */
-    stream_->seekg(current_node_->end());
-
-    /* Find the comma following the item end */
-    auto pos = find_comma_or_closing_bracket(stream_);
-    if(pos == -1) {
-        S_ERROR("Unable to find comma or closing bracket");
-        return *this;
-    }
-    auto c = stream_->get();
-    assert(c == ',' || c == ']');
-
-    if(c == ']') {
-        /* Hit the end of the array, this iterator is
-         * done with */
-        current_node_ = invalid_node;
-        return *this;
-    }
-
-    skip_whitespace(stream_);
-
-    /* Now set this to the next element in the array */
-    (*this) = JSONIterator(stream_, int(stream_->tellg()));
     is_array_iterator_ = true;
     return *this;
 }
@@ -553,33 +417,8 @@ JSONIterator JSONIterator::operator[](const std::string& key) const {
         return JSONIterator();
     }
 
-    bool found = false;
-    auto cb = [&found, &key](const std::string& iterkey) -> bool {
-        if(iterkey == key) {
-            found = true;
-            return true;
-        }
-
-        return false;
-    };
-
-    current_node_->read_keys(cb);
-
-    if(found) {
-        /* If we found the key, then the stream will be positioned
-         * just after the string, before the colon. So we just need to skip
-         * past that */
-        skip_whitespace(stream_);
-        char colon = stream_->get();
-        if(colon != ':') {
-            S_WARN("Unexpected character '{0}'. Expected ':'", colon);
-            return JSONIterator();
-        }
-
-        return JSONIterator(stream_, skip_whitespace(stream_));
-    }
-    S_DEBUG("Accessed invalid JSON node with key: {0}", key);
-    return JSONIterator();
+    return JSONIterator(
+        std::get<JSONNode::ObjectType>(current_node_->value_).at(key));
 }
 
 JSONIterator json_load(const Path& path) {
@@ -595,7 +434,8 @@ JSONIterator json_load(const Path& path) {
 JSONIterator json_parse(const std::string& data) {
     auto ss = std::make_shared<std::stringstream>();
     (*ss) << data;
-    return JSONIterator(ss, 0);
+
+    return parse_node(ss);
 }
 
 JSONIterator json_read(std::shared_ptr<std::istream> stream) {

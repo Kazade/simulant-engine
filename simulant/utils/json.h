@@ -1,8 +1,10 @@
 #pragma once
 
 #include <iosfwd>
+#include <map>
 #include <memory>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "../generic/optional.h"
@@ -31,7 +33,19 @@ public:
     JSONNode() = default;
 
     JSONNode(JSONNodeType type) :
-        type_(type) {}
+        type_(type) {
+
+        switch(type) {
+            case JSON_OBJECT:
+                value_ = ObjectType();
+                break;
+            case JSON_ARRAY:
+                value_ = ArrayType();
+                break;
+            default:
+                value_ = ValueType();
+        }
+    }
 
     JSONNodeType type() const;
 
@@ -88,9 +102,8 @@ public:
             case JSON_ARRAY:
                 return optional<std::string>();
             case JSON_STRING:
-                return optional<std::string>(read_value_from_stream());
             case JSON_NUMBER:
-                return optional<std::string>(read_value_from_stream());
+                return std::get<std::string>(value_);
             case JSON_TRUE:
                 return optional<std::string>("true");
             case JSON_FALSE:
@@ -117,21 +130,20 @@ public:
 
     bool is_float() const;
 
+    typedef std::map<std::string, std::shared_ptr<JSONNode>> ObjectType;
+    typedef std::vector<std::shared_ptr<JSONNode>> ArrayType;
+    typedef std::string ValueType;
+
 private:
     friend class JSONIterator;
     JSONNodeType type_ = JSON_NULL;
 
-    union {
-        std::map<std::string, std::shared_ptr<JSONNode>> object;
-        std::vector<std::shared_ptr<JSONNode>> array;
-        std::string str;
-    } value_;
+    friend std::shared_ptr<JSONNode> parse_array(_json_impl::IStreamPtr stream);
+    friend std::shared_ptr<JSONNode>
+        parse_object(_json_impl::IStreamPtr stream);
+    friend std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream);
 
-    /* Internal function. If this is an object type,
-     * will read from start to end and call cb() with
-     * each key found */
-    template<typename Func>
-    void read_keys(Func&& cb) const;
+    std::variant<ObjectType, ArrayType, ValueType> value_ = ValueType();
 };
 
 class JSONIterator {
@@ -162,9 +174,9 @@ private:
 
     void set_invalid(const std::string& message);
 
+public:
     static std::shared_ptr<JSONNode> invalid_node;
 
-public:
     typedef JSONNode value_type;
     typedef JSONNode* pointer;
     typedef JSONNode reference;
