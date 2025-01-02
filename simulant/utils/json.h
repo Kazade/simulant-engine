@@ -32,8 +32,8 @@ class JSONNode {
 public:
     JSONNode() = default;
 
-    JSONNode(JSONNodeType type) :
-        type_(type) {
+    JSONNode(JSONNodeType type, JSONNode* parent) :
+        type_(type), parent_(parent) {
 
         switch(type) {
             case JSON_OBJECT:
@@ -137,11 +137,14 @@ public:
 private:
     friend class JSONIterator;
     JSONNodeType type_ = JSON_NULL;
+    JSONNode* parent_ = nullptr;
 
-    friend std::shared_ptr<JSONNode> parse_array(_json_impl::IStreamPtr stream);
-    friend std::shared_ptr<JSONNode>
-        parse_object(_json_impl::IStreamPtr stream);
-    friend std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream);
+    friend std::shared_ptr<JSONNode> parse_array(_json_impl::IStreamPtr stream,
+                                                 JSONNode* parent);
+    friend std::shared_ptr<JSONNode> parse_object(_json_impl::IStreamPtr stream,
+                                                  JSONNode* parent);
+    friend std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream,
+                                                JSONNode* parent);
 
     std::variant<ObjectType, ArrayType, ValueType> value_ = ValueType();
 };
@@ -162,8 +165,9 @@ private:
         current_node_ = invalid_node;
     }
 
-    JSONIterator(std::shared_ptr<JSONNode> node, bool is_array_item = false) :
-        is_array_iterator_(is_array_item) {
+    JSONIterator(std::shared_ptr<JSONNode> node) :
+        is_array_iterator_(node->parent_ &&
+                           node->parent_->type_ == JSON_ARRAY) {
 
         current_node_ = node;
     }

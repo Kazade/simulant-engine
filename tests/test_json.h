@@ -281,7 +281,6 @@ public:
         assert_true(it.is_array_iterator());
 
         ++it;
-
         assert_equal(it->to_int().value_or(0), 2);
 
         ++it;

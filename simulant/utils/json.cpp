@@ -85,91 +85,6 @@ static std::streampos skip_whitespace(_json_impl::IStreamPtr& stream) {
     return seek_next_not_of(stream, WHITESPACE);
 }
 
-static std::streampos seek_next_of(_json_impl::IStreamPtr& stream,
-                                   const std::string& chars) {
-    while(!stream->eof()) {
-        auto c = stream->get();
-        if(chars.find(c) != std::string::npos) {
-            unget(stream);
-            assert(stream->good());
-            return stream->tellg();
-        }
-    }
-
-    // FIXME: optional<>
-    return stream->tellg();
-}
-
-static std::streampos
-    find_comma_or_closing_brace(_json_impl::IStreamPtr& stream) {
-    bool in_quotes = false;
-
-    int nested_counter = 0;
-    while(!stream->eof()) {
-        char c = stream->get();
-        if(c == '"') {
-            in_quotes = !in_quotes;
-        } else if(c == '[' || c == '{') {
-            if(!in_quotes) {
-                nested_counter++;
-            }
-        } else if(c == ']') {
-            if(!in_quotes) {
-                nested_counter--;
-            }
-        } else if(c == ',') {
-            if(!in_quotes && nested_counter == 0) {
-                unget(stream);
-                return stream->tellg();
-            }
-        } else if(c == '}') {
-            if(!in_quotes && nested_counter == 0) {
-                unget(stream);
-                return stream->tellg();
-            } else {
-                nested_counter--;
-            }
-        }
-    }
-
-    return std::streampos(-1);
-}
-
-static std::streampos
-    find_comma_or_closing_bracket(_json_impl::IStreamPtr& stream) {
-    bool in_quotes = false;
-
-    int nested_counter = 0;
-    while(!stream->eof()) {
-        char c = stream->get();
-        if(c == '"') {
-            in_quotes = !in_quotes;
-        } else if(c == '[' || c == '{') {
-            if(!in_quotes) {
-                nested_counter++;
-            }
-        } else if(c == '}') {
-            if(!in_quotes) {
-                nested_counter--;
-            }
-        } else if(c == ',') {
-            if(!in_quotes && nested_counter == 0) {
-                unget(stream);
-                return stream->tellg();
-            }
-        } else if(c == ']') {
-            if(!in_quotes && nested_counter == 0) {
-                unget(stream);
-                return stream->tellg();
-            } else {
-                nested_counter--;
-            }
-        }
-    }
-
-    return std::streampos(-1);
-}
-
 JSONNodeType JSONNode::type() const {
     return type_;
 }
@@ -260,13 +175,15 @@ bool JSONNode::is_null() const {
     return type_ == JSON_NULL;
 }
 
-std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream);
+std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream,
+                                     JSONNode* parent);
 
-std::shared_ptr<JSONNode> parse_array(_json_impl::IStreamPtr stream) {
-    auto node = std::make_shared<JSONNode>(JSON_ARRAY);
+std::shared_ptr<JSONNode> parse_array(_json_impl::IStreamPtr stream,
+                                      JSONNode* parent) {
+    auto node = std::make_shared<JSONNode>(JSON_ARRAY, parent);
 
     while(!stream->eof()) {
-        auto subnode = parse_node(stream);
+        auto subnode = parse_node(stream, node.get());
         if(subnode) {
             std::get<JSONNode::ArrayType>(node->value_).push_back(subnode);
         }
@@ -280,8 +197,9 @@ std::shared_ptr<JSONNode> parse_array(_json_impl::IStreamPtr stream) {
 }
 
 /* Parse an object node and return its size if the parse is successful */
-std::shared_ptr<JSONNode> parse_object(_json_impl::IStreamPtr stream) {
-    auto node = std::make_shared<JSONNode>(JSON_OBJECT);
+std::shared_ptr<JSONNode> parse_object(_json_impl::IStreamPtr stream,
+                                       JSONNode* parent) {
+    auto node = std::make_shared<JSONNode>(JSON_OBJECT, parent);
 
     std::size_t count = 0;
     while(!stream->eof()) {
@@ -302,7 +220,7 @@ std::shared_ptr<JSONNode> parse_object(_json_impl::IStreamPtr stream) {
 
             skip_whitespace(stream);
 
-            auto subnode = parse_node(stream);
+            auto subnode = parse_node(stream, node.get());
             std::get<JSONNode::ObjectType>(node->value_)[key] =
                 (subnode) ? subnode : JSONIterator::invalid_node;
         } else if(c == ',') {
@@ -318,7 +236,8 @@ std::shared_ptr<JSONNode> parse_object(_json_impl::IStreamPtr stream) {
     return std::shared_ptr<JSONNode>();
 }
 
-std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream) {
+std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream,
+                                     JSONNode* parent) {
     skip_whitespace(stream);
 
     char c = stream->peek();
@@ -326,11 +245,11 @@ std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream) {
     switch(c) {
         case '{': {
             stream->get(); // Consume
-            return parse_object(stream);
+            return parse_object(stream, parent);
         } break;
         case '[': {
             stream->get(); // Consume
-            return parse_array(stream);
+            return parse_array(stream, parent);
         } break;
         case '}':
         case ']': {
@@ -338,34 +257,34 @@ std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream) {
         } break;
         case '"': {
             stream->get(); // Consume '"'
-            auto node = std::make_shared<JSONNode>(JSON_STRING);
+            auto node = std::make_shared<JSONNode>(JSON_STRING, parent);
             node->value_ = read_string(stream);
             return node;
         }
         case 't':
             stream->get();
             if(check_remainder(stream, "rue")) {
-                return std::make_shared<JSONNode>(JSON_TRUE);
+                return std::make_shared<JSONNode>(JSON_TRUE, parent);
             } else {
                 return JSONIterator::invalid_node;
             }
         case 'f':
             stream->get();
             if(check_remainder(stream, "alse")) {
-                return std::make_shared<JSONNode>(JSON_FALSE);
+                return std::make_shared<JSONNode>(JSON_FALSE, parent);
             } else {
                 return JSONIterator::invalid_node;
             }
         case 'n':
             stream->get();
             if(check_remainder(stream, "ull")) {
-                return std::make_shared<JSONNode>(JSON_NULL);
+                return std::make_shared<JSONNode>(JSON_NULL, parent);
             } else {
                 return JSONIterator::invalid_node;
             }
         default: {
             // Number
-            auto node = std::make_shared<JSONNode>(JSON_NUMBER);
+            auto node = std::make_shared<JSONNode>(JSON_NUMBER, parent);
             node->value_ = read_value(stream);
             return node;
         }
@@ -408,6 +327,32 @@ JSONIterator& JSONIterator::operator++() {
         return *this;
     }
 
+    if(!current_node_->parent_) {
+        return *this;
+    }
+
+    auto current_index = 0;
+    bool found = false;
+    auto& nodes = std::get<JSONNode::ArrayType>(current_node_->parent_->value_);
+    for(auto& node: nodes) {
+        if(node.get() == current_node_.get()) {
+            found = true;
+            break;
+        }
+        ++current_index;
+    }
+
+    if(!found) {
+        current_node_ = invalid_node;
+        return *this;
+    }
+
+    if(current_index == nodes.size() - 1) {
+        current_node_ = invalid_node;
+        return *this;
+    }
+
+    current_node_ = nodes[current_index + 1];
     is_array_iterator_ = true;
     return *this;
 }
@@ -417,8 +362,12 @@ JSONIterator JSONIterator::operator[](const std::string& key) const {
         return JSONIterator();
     }
 
-    return JSONIterator(
-        std::get<JSONNode::ObjectType>(current_node_->value_).at(key));
+    auto& map = std::get<JSONNode::ObjectType>(current_node_->value_);
+    if(!map.count(key)) {
+        return JSONIterator();
+    }
+
+    return JSONIterator(map.at(key));
 }
 
 JSONIterator json_load(const Path& path) {
@@ -435,7 +384,7 @@ JSONIterator json_parse(const std::string& data) {
     auto ss = std::make_shared<std::stringstream>();
     (*ss) << data;
 
-    return parse_node(ss);
+    return parse_node(ss, nullptr);
 }
 
 JSONIterator json_read(std::shared_ptr<std::istream> stream) {
