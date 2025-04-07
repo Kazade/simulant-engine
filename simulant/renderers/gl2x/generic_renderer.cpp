@@ -737,9 +737,8 @@ void GenericRenderer::send_geometry(const Renderable* renderable,
                 BUFFER_OFFSET(offset));
         get_app()->stats->increment_polygons_rendered(renderable->arrangement,
                                                       element_count);
-    } else {
+    } else if(renderable->vertex_range_count) {
         assert(renderable->vertex_ranges);
-        assert(renderable->vertex_range_count);
 
         auto range = renderable->vertex_ranges;
         auto total = 0;
