@@ -34,7 +34,7 @@ bool Geom::on_create(Params params) {
         return false;
     }
 
-    auto mesh_ptr = params.get<MeshPtr>("mesh").value_or(MeshPtr());
+    auto mesh_ptr = params.get<MeshRef>("mesh").value_or(MeshRef()).lock();
     assert(mesh_ptr);
 
     if(!mesh_ptr) {

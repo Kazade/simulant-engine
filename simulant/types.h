@@ -424,9 +424,11 @@ typedef std::weak_ptr<Texture> TextureRef;
 typedef std::shared_ptr<Texture> TexturePtr;
 
 class ParticleScript;
+typedef std::weak_ptr<ParticleScript> ParticleScriptRef;
 typedef std::shared_ptr<ParticleScript> ParticleScriptPtr;
 
 class Binary;
+typedef std::weak_ptr<Binary> BinaryRef;
 typedef std::shared_ptr<Binary> BinaryPtr;
 
 class Sound;

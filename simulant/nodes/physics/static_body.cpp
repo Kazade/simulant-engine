@@ -28,7 +28,7 @@ bool StaticBody::on_create(Params params) {
     }
 
     if(params.contains("mesh")) {
-        auto mesh = params.get<MeshPtr>("mesh").value_or(MeshPtr());
+        auto mesh = params.get<MeshRef>("mesh").value_or(MeshRef()).lock();
         if(mesh) {
             auto material = PhysicsMaterial(
                 params.get<float>("density").value_or(0.1f),

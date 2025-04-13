@@ -351,12 +351,14 @@ bool ParticleSystem::on_create(Params params) {
         return false;
     }
 
-    auto maybe_script = params.get<ParticleScriptPtr>("script");
+    auto maybe_script = params.get<ParticleScriptRef>("script")
+                            .value_or(ParticleScriptRef())
+                            .lock();
     if(!maybe_script) {
         return false;
     }
 
-    script_ = maybe_script.value();
+    script_ = maybe_script;
 
     // Initialize the emitter states
     for(auto i = 0u; i < script_->emitter_count(); ++i) {

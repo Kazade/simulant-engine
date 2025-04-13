@@ -98,7 +98,7 @@ bool MeshInstancer::on_create(Params params) {
         return false;
     }
 
-    set_mesh(params.get<MeshPtr>("mesh").value_or(MeshPtr()));
+    set_mesh(params.get<MeshRef>("mesh").value_or(MeshRef()).lock());
     return true;
 }
 

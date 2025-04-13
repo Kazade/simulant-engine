@@ -318,12 +318,12 @@ bool Actor::on_create(Params params) {
         return false;
     }
 
-    auto mesh = params.get<MeshPtr>("mesh");
-    if(!mesh) {
+    auto mesh = params.get<MeshRef>("mesh");
+    if(!mesh || !mesh->lock()) {
         return false;
     }
 
-    set_mesh(mesh.value());
+    set_mesh(mesh->lock());
     return true;
 }
 

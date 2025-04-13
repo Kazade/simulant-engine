@@ -18,7 +18,9 @@ bool Button::on_create(Params params) {
         return false;
     }
 
-    auto sstyle = params.get<WidgetStylePtr>("shared_style");
+    auto sstyle = params.get<WidgetStyleRef>("shared_style")
+                      .value_or(WidgetStyleRef())
+                      .lock();
     auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
     if(!sstyle) {
         set_padding(theme.button_padding_.left, theme.button_padding_.right,

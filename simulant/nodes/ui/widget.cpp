@@ -89,17 +89,19 @@ void Widget::on_clean_up() {
 }
 
 bool Widget::on_create(Params params) {
-    auto shared_style = params.get<WidgetStylePtr>("shared_style");
+    auto shared_style = params.get<WidgetStyleRef>("shared_style")
+                            .value_or(WidgetStyleRef())
+                            .lock();
     auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
 
-    if(!shared_style || !shared_style.value()) {
+    if(!shared_style) {
         style_ = std::make_shared<WidgetStyle>();
 
         set_foreground_color(theme.foreground_color_);
         set_background_color(theme.background_color_);
         set_text_color(theme.text_color_);
     } else {
-        style_ = shared_style.value();
+        style_ = shared_style;
     }
 
     VertexSpecification spec = VertexSpecification::DEFAULT;

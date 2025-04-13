@@ -130,12 +130,26 @@ public:
         auto mesh1 = generate_test_mesh(stage_);
         auto mesh2 = generate_test_mesh(stage_);
 
+        assert_equal(mesh1.use_count(), 2);
+        assert_equal(mesh2.use_count(), 2);
+
+        assert_equal(scene->assets->mesh_count(), initial + 2);
+
         auto actor = scene->create_child<Actor>(mesh1);
+        assert_equal(mesh1.use_count(), 8);
+
         actor->set_mesh(mesh2);
+
+        assert_equal(mesh1.use_count(), 2);
+
         mesh1.reset();
         mesh2.reset();
 
+        assert_equal(scene->assets->mesh_count(), initial + 2);
+
         scene->assets->run_garbage_collection();
+        application->run_frame();
+
         assert_false(stage_->is_destroyed());
 
         assert_equal(scene->assets->mesh_count(), initial + 1);

@@ -21,14 +21,15 @@ class StageNode;
 namespace ui {
 struct WidgetStyle;
 typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
+typedef std::weak_ptr<WidgetStyle> WidgetStyleRef;
 } // namespace ui
 
 typedef LimitedString<32> ParamKey;
 typedef std::vector<ParamKey> ParamKeys;
 
 typedef std::variant<float, FloatArray, int, IntArray, bool, BoolArray,
-                     std::string, TexturePtr, MeshPtr, ParticleScriptPtr,
-                     ui::UIConfig, ui::WidgetStylePtr, GeomCullerOptions,
+                     std::string, TextureRef, MeshRef, ParticleScriptRef,
+                     ui::UIConfig, ui::WidgetStyleRef, GeomCullerOptions,
                      TextureFlags, StageNode*>
     ParamValue;
 
