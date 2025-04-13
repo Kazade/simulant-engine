@@ -70,7 +70,8 @@ private:
     std::vector<GameControllerInfo> detect_game_controllers();
 
     /* This is for testing mainly. If you set config.desktop.enable_virtual_screen = true */
-    void initialize_virtual_screen(uint16_t width, uint16_t height, ScreenFormat format, uint16_t integer_scale);
+    bool initialize_virtual_screen(uint16_t width, uint16_t height,
+                                   ScreenFormat format, uint16_t integer_scale);
 
     std::vector<SDL_Joystick*> open_joysticks_;
     std::vector<SDL_GameController*> open_controllers_;

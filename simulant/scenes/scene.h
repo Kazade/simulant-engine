@@ -181,6 +181,15 @@ public:
         return stray_nodes_;
     }
 
+    const char* node_type_name() const override {
+        return "Scene";
+    }
+
+    // Scenes don't take parameters (for now...)
+    std::set<NodeParam> node_params() const override {
+        return std::set<NodeParam>();
+    }
+
 protected:
     virtual void on_load() = 0;
     virtual void on_unload() {}

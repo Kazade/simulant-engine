@@ -517,12 +517,13 @@ void SDL2Window::initialize_input_controller(InputState& controller) {
     controller._update_game_controllers(joypads);
 }
 
-void SDL2Window::initialize_virtual_screen(uint16_t width, uint16_t height,
+bool SDL2Window::initialize_virtual_screen(uint16_t width, uint16_t height,
                                            ScreenFormat format,
                                            uint16_t integer_scale) {
     /* Create the virtual screen */
     Screen* screen = _create_screen("virtual", width, height, format, 60);
     screen->_set_integer_scale(integer_scale);
+    return true;
 }
 
 void SDL2Window::destroy_window() {

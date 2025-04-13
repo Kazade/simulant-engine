@@ -26,6 +26,8 @@
 #include "nodes/stage_node.h"
 #include "nodes/stage_node_pool.h"
 
+#ifndef SIMULANT_CUSTOM_WINDOW
+
 #ifdef __DREAMCAST__
 #include "platforms/dreamcast/profiler.h"
 #include "platforms/dreamcast/kos_window.h"
@@ -41,6 +43,8 @@ namespace smlt { typedef AndroidWindow SysWindow; }
 #else
 #include "platforms/sdl/sdl2_window.h"
 namespace smlt { typedef SDL2Window SysWindow; }
+#endif
+
 #endif
 
 #ifdef __linux__
@@ -85,6 +89,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "utils/json.h"
 #include "utils/string.h"
 #include "vfs.h"
+#include "window.h"
 
 #define SIMULANT_PROFILE_KEY "SIMULANT_PROFILE"
 #define SIMULANT_SHOW_CURSOR_KEY "SIMULANT_SHOW_CURSOR"
@@ -251,7 +256,11 @@ std::vector<std::string> Application::generate_potential_codes(const std::string
 }
 
 std::shared_ptr<Window> Application::instantiate_window() {
+#ifdef SIMULANT_CUSTOM_WINDOW
+    return std::shared_ptr<Window>();
+#else
     return SysWindow::create(this);
+#endif
 }
 
 bool Application::construct_window(const AppConfig& config) {
@@ -345,22 +354,14 @@ bool Application::construct_window(const AppConfig& config) {
 
     window_->set_title(config.title.encode());
 
-    /* Is this a desktop window? */
-
-#if defined(__WIN32__) || defined(__APPLE__) || defined(__LINUX__)
-    SDL2Window* desktop = dynamic_cast<SDL2Window*>(window_.get());
-
-    if(desktop) {
-        if(config.desktop.enable_virtual_screen) {
-            desktop->initialize_virtual_screen(
-                config.desktop.virtual_screen_width,
-                config.desktop.virtual_screen_height,
-                config.desktop.virtual_screen_format,
-                config.desktop.virtual_screen_integer_scale
-            );
-        }
+    if(config.desktop.enable_virtual_screen) {
+        window->initialize_virtual_screen(
+            config.desktop.virtual_screen_width,
+            config.desktop.virtual_screen_height,
+            config.desktop.virtual_screen_format,
+            config.desktop.virtual_screen_integer_scale);
     }
-#endif
+
     return true;
 }
 
@@ -819,6 +820,10 @@ void Application::on_render_context_created() {
             Scene(window) {}
 
         void on_load() override {}
+
+        std::set<NodeParam> node_params() const override {
+            return std::set<NodeParam>();
+        }
     };
 
     overlay_scene_.reset(new OverlayScene(window_.get()));

@@ -685,6 +685,8 @@ public:
     StageNode* load_tree(const Path& path,
                          const TreeLoadOptions& opts = TreeLoadOptions());
 
+    virtual std::set<NodeParam> node_params() const = 0;
+
 protected:
     virtual bool on_create(Params params) = 0;
     virtual bool on_destroy() override {
@@ -733,13 +735,25 @@ protected:
         return true;
     }
 
+public:
+    /** Returns the parameters used to construct this node */
+    const Params& create_params() const {
+        return params_;
+    }
+
 private:
     friend class StageNodeManager;
 
     Transform transform_;
 
+    // FIXME: This is potentially quite wasteful outside of the
+    // Simulant Studio editor. We can probably just optimise this
+    // away somehow during game release builds
+    Params params_;
+
     // NVI idiom
     bool _create(const Params& params) {
+        params_ = params;
         return on_create(params);
     }
 
@@ -957,6 +971,8 @@ public:
 
     int16_t precedence() const;
 
+    virtual const char* node_type_name() const = 0;
+
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as
     // important
@@ -1086,7 +1102,12 @@ typedef StageNode* StageNodePtr;
         const static smlt::StageNodeType node_type = node_type_id;             \
         inline static const char* name = alias;                                \
     };                                                                         \
-    const char* node_type_name() const {                                       \
+    const char* node_type_name() const override {                              \
         return Meta::name;                                                     \
     }                                                                          \
+                                                                               \
+    std::set<NodeParam> node_params() const override {                         \
+        return get_node_params<std::decay<decltype(*this)>::type>();           \
+    }                                                                          \
+                                                                               \
     struct _unused_ {}

@@ -158,6 +158,12 @@ public:
 
     void each_screen(std::function<void (std::string, Screen*)> callback);
 
+    virtual bool initialize_virtual_screen(uint16_t width, uint16_t height,
+                                           ScreenFormat format,
+                                           uint16_t integer_scale) {
+        return false;
+    }
+
     /* Private API for Window subclasses (public for testing)
        don't call this directly
     */
