@@ -195,6 +195,203 @@ static constexpr JoystickButton dc_button_to_simulant_button(uint16_t dc_button)
            JOYSTICK_BUTTON_INVALID;
 }
 
+static KeyboardCode scancode_to_keyboard_code(int32_t code) {
+    switch(code) {
+        case KBD_KEY_A:
+            return KEYBOARD_CODE_A;
+        case KBD_KEY_B:
+            return KEYBOARD_CODE_B;
+        case KBD_KEY_C:
+            return KEYBOARD_CODE_C;
+        case KBD_KEY_D:
+            return KEYBOARD_CODE_D;
+        case KBD_KEY_E:
+            return KEYBOARD_CODE_E;
+        case KBD_KEY_F:
+            return KEYBOARD_CODE_F;
+        case KBD_KEY_G:
+            return KEYBOARD_CODE_G;
+        case KBD_KEY_H:
+            return KEYBOARD_CODE_H;
+        case KBD_KEY_I:
+            return KEYBOARD_CODE_I;
+        case KBD_KEY_J:
+            return KEYBOARD_CODE_J;
+        case KBD_KEY_K:
+            return KEYBOARD_CODE_K;
+        case KBD_KEY_L:
+            return KEYBOARD_CODE_L;
+        case KBD_KEY_M:
+            return KEYBOARD_CODE_M;
+        case KBD_KEY_N:
+            return KEYBOARD_CODE_N;
+        case KBD_KEY_O:
+            return KEYBOARD_CODE_O;
+        case KBD_KEY_P:
+            return KEYBOARD_CODE_P;
+        case KBD_KEY_Q:
+            return KEYBOARD_CODE_Q;
+        case KBD_KEY_R:
+            return KEYBOARD_CODE_R;
+        case KBD_KEY_S:
+            return KEYBOARD_CODE_S;
+        case KBD_KEY_T:
+            return KEYBOARD_CODE_T;
+        case KBD_KEY_U:
+            return KEYBOARD_CODE_U;
+        case KBD_KEY_V:
+            return KEYBOARD_CODE_V;
+        case KBD_KEY_W:
+            return KEYBOARD_CODE_W;
+        case KBD_KEY_X:
+            return KEYBOARD_CODE_X;
+        case KBD_KEY_Y:
+            return KEYBOARD_CODE_Y;
+        case KBD_KEY_Z:
+            return KEYBOARD_CODE_Z;
+        case KBD_KEY_1:
+            return KEYBOARD_CODE_1;
+        case KBD_KEY_2:
+            return KEYBOARD_CODE_2;
+        case KBD_KEY_3:
+            return KEYBOARD_CODE_3;
+        case KBD_KEY_4:
+            return KEYBOARD_CODE_4;
+        case KBD_KEY_5:
+            return KEYBOARD_CODE_5;
+        case KBD_KEY_6:
+            return KEYBOARD_CODE_6;
+        case KBD_KEY_7:
+            return KEYBOARD_CODE_7;
+        case KBD_KEY_8:
+            return KEYBOARD_CODE_8;
+        case KBD_KEY_9:
+            return KEYBOARD_CODE_9;
+        case KBD_KEY_0:
+            return KEYBOARD_CODE_0;
+        case KBD_KEY_ENTER:
+            return KEYBOARD_CODE_RETURN;
+        case KBD_KEY_ESCAPE:
+            return KEYBOARD_CODE_ESCAPE;
+        case KBD_KEY_BACKSPACE:
+            return KEYBOARD_CODE_BACKSPACE;
+        case KBD_KEY_TAB:
+            return KEYBOARD_CODE_TAB;
+        case KBD_KEY_SPACE:
+            return KEYBOARD_CODE_SPACE;
+        case KBD_KEY_MINUS:
+            return KEYBOARD_CODE_MINUS;
+        case KBD_KEY_PLUS:
+            return KEYBOARD_CODE_EQUALS;
+        case KBD_KEY_LBRACKET:
+            return KEYBOARD_CODE_LEFTBRACKET;
+        case KBD_KEY_RBRACKET:
+            return KEYBOARD_CODE_RIGHTBRACKET;
+        case KBD_KEY_BACKSLASH:
+            return KEYBOARD_CODE_BACKSLASH;
+        case KBD_KEY_SEMICOLON:
+            return KEYBOARD_CODE_SEMICOLON;
+        case KBD_KEY_QUOTE:
+            return KEYBOARD_CODE_APOSTROPHE;
+        case KBD_KEY_GRAVE:
+            return KEYBOARD_CODE_TILDE;
+        case KBD_KEY_COMMA:
+            return KEYBOARD_CODE_COMMA;
+        case KBD_KEY_PERIOD:
+            return KEYBOARD_CODE_PERIOD;
+        case KBD_KEY_SLASH:
+            return KEYBOARD_CODE_SLASH;
+        case KBD_KEY_CAPSLOCK:
+            return KEYBOARD_CODE_CAPSLOCK;
+        case KBD_KEY_F1:
+            return KEYBOARD_CODE_F1;
+        case KBD_KEY_F2:
+            return KEYBOARD_CODE_F2;
+        case KBD_KEY_F3:
+            return KEYBOARD_CODE_F3;
+        case KBD_KEY_F4:
+            return KEYBOARD_CODE_F4;
+        case KBD_KEY_F5:
+            return KEYBOARD_CODE_F5;
+        case KBD_KEY_F6:
+            return KEYBOARD_CODE_F6;
+        case KBD_KEY_F7:
+            return KEYBOARD_CODE_F7;
+        case KBD_KEY_F8:
+            return KEYBOARD_CODE_F8;
+        case KBD_KEY_F9:
+            return KEYBOARD_CODE_F9;
+        case KBD_KEY_F10:
+            return KEYBOARD_CODE_F10;
+        case KBD_KEY_F11:
+            return KEYBOARD_CODE_F11;
+        case KBD_KEY_F12:
+            return KEYBOARD_CODE_F12;
+        case KBD_KEY_PRINT:
+            return KEYBOARD_CODE_PRINTSCREEN;
+        case KBD_KEY_SCRLOCK:
+            return KEYBOARD_CODE_SCROLLLOCK;
+        case KBD_KEY_PAUSE:
+            return KEYBOARD_CODE_PAUSE;
+        case KBD_KEY_INSERT:
+            return KEYBOARD_CODE_INSERT;
+        case KBD_KEY_HOME:
+            return KEYBOARD_CODE_HOME;
+        case KBD_KEY_PGUP:
+            return KEYBOARD_CODE_PAGEUP;
+        case KBD_KEY_DEL:
+            return KEYBOARD_CODE_DELETE;
+        case KBD_KEY_END:
+            return KEYBOARD_CODE_END;
+        case KBD_KEY_PGDN:
+            return KEYBOARD_CODE_PAGEDOWN;
+        case KBD_KEY_RIGHT:
+            return KEYBOARD_CODE_RIGHT;
+        case KBD_KEY_LEFT:
+            return KEYBOARD_CODE_LEFT;
+        case KBD_KEY_DOWN:
+            return KEYBOARD_CODE_DOWN;
+        case KBD_KEY_UP:
+            return KEYBOARD_CODE_UP;
+        case KBD_KEY_NUMLOCK:
+            return KEYBOARD_CODE_NUMLOCKCLEAR;
+        case KBD_KEY_KP_DIVIDE:
+            return KEYBOARD_CODE_KP_DIVIDE;
+        case KBD_KEY_KP_MULTIPLY:
+            return KEYBOARD_CODE_KP_MULTIPLY;
+        case KBD_KEY_KP_MINUS:
+            return KEYBOARD_CODE_KP_MINUS;
+        case KBD_KEY_KP_PLUS:
+            return KEYBOARD_CODE_KP_PLUS;
+        case KBD_KEY_KP_ENTER:
+            return KEYBOARD_CODE_KP_ENTER;
+        case KBD_KEY_KP_1:
+            return KEYBOARD_CODE_KP_1;
+        case KBD_KEY_KP_2:
+            return KEYBOARD_CODE_KP_2;
+        case KBD_KEY_KP_3:
+            return KEYBOARD_CODE_KP_3;
+        case KBD_KEY_KP_4:
+            return KEYBOARD_CODE_KP_4;
+        case KBD_KEY_KP_5:
+            return KEYBOARD_CODE_KP_5;
+        case KBD_KEY_KP_6:
+            return KEYBOARD_CODE_KP_6;
+        case KBD_KEY_KP_7:
+            return KEYBOARD_CODE_KP_7;
+        case KBD_KEY_KP_8:
+            return KEYBOARD_CODE_KP_8;
+        case KBD_KEY_KP_9:
+            return KEYBOARD_CODE_KP_9;
+        case KBD_KEY_KP_0:
+            return KEYBOARD_CODE_KP_0;
+        case KBD_KEY_KP_PERIOD:
+            return KEYBOARD_CODE_KP_PERIOD;
+        default:
+            return KEYBOARD_CODE_NONE;
+    }
+}
+
 void KOSWindow::check_events() {
     float dt = app->time_keeper->delta_time();
 
@@ -333,17 +530,17 @@ void KOSWindow::check_events() {
                     if(key_state[j] && !previous_key_state_[j]) {
                         // Key down
                         input_state->_handle_key_down(
-                            KeyboardID(i), KeyboardCode(j)
-                        );
-                        on_key_down((KeyboardCode) j, get_modifiers());
+                            KeyboardID(i), scancode_to_keyboard_code(j));
+                        on_key_down(scancode_to_keyboard_code(j),
+                                    get_modifiers());
                     }
                     if(!key_state[j] && previous_key_state_[j]) {
                         // Key up
                         input_state->_handle_key_up(
-                            KeyboardID(i), KeyboardCode(j)
-                        );
+                            KeyboardID(i), scancode_to_keyboard_code(j));
 
-                        on_key_up((KeyboardCode) j, get_modifiers());
+                        on_key_up(scancode_to_keyboard_code(j),
+                                  get_modifiers());
                     }
                 }
 
