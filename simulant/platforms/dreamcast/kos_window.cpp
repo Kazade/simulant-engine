@@ -355,37 +355,37 @@ static KeyboardCode scancode_to_keyboard_code(int32_t code) {
             return KEYBOARD_CODE_UP;
         case KBD_KEY_PAD_NUMLOCK:
             return KEYBOARD_CODE_NUMLOCKCLEAR;
-        case KBD_KEY_KP_DIVIDE:
+        case KBD_KEY_PAD_DIVIDE:
             return KEYBOARD_CODE_KP_DIVIDE;
-        case KBD_KEY_KP_MULTIPLY:
+        case KBD_KEY_PAD_MULTIPLY:
             return KEYBOARD_CODE_KP_MULTIPLY;
-        case KBD_KEY_KP_MINUS:
+        case KBD_KEY_PAD_MINUS:
             return KEYBOARD_CODE_KP_MINUS;
-        case KBD_KEY_KP_PLUS:
+        case KBD_KEY_PAD_PLUS:
             return KEYBOARD_CODE_KP_PLUS;
-        case KBD_KEY_KP_ENTER:
+        case KBD_KEY_PAD_ENTER:
             return KEYBOARD_CODE_KP_ENTER;
-        case KBD_KEY_KP_1:
+        case KBD_KEY_PAD_1:
             return KEYBOARD_CODE_KP_1;
-        case KBD_KEY_KP_2:
+        case KBD_KEY_PAD_2:
             return KEYBOARD_CODE_KP_2;
-        case KBD_KEY_KP_3:
+        case KBD_KEY_PAD_3:
             return KEYBOARD_CODE_KP_3;
-        case KBD_KEY_KP_4:
+        case KBD_KEY_PAD_4:
             return KEYBOARD_CODE_KP_4;
-        case KBD_KEY_KP_5:
+        case KBD_KEY_PAD_5:
             return KEYBOARD_CODE_KP_5;
-        case KBD_KEY_KP_6:
+        case KBD_KEY_PAD_6:
             return KEYBOARD_CODE_KP_6;
-        case KBD_KEY_KP_7:
+        case KBD_KEY_PAD_7:
             return KEYBOARD_CODE_KP_7;
-        case KBD_KEY_KP_8:
+        case KBD_KEY_PAD_8:
             return KEYBOARD_CODE_KP_8;
-        case KBD_KEY_KP_9:
+        case KBD_KEY_PAD_9:
             return KEYBOARD_CODE_KP_9;
-        case KBD_KEY_KP_0:
+        case KBD_KEY_PAD_0:
             return KEYBOARD_CODE_KP_0;
-        case KBD_KEY_KP_PERIOD:
+        case KBD_KEY_PAD_PERIOD:
             return KEYBOARD_CODE_KP_PERIOD;
         default:
             return KEYBOARD_CODE_NONE;
