@@ -293,8 +293,8 @@ static KeyboardCode scancode_to_keyboard_code(int32_t code) {
             return KEYBOARD_CODE_SEMICOLON;
         case KBD_KEY_QUOTE:
             return KEYBOARD_CODE_APOSTROPHE;
-        case KBD_KEY_GRAVE:
-            return KEYBOARD_CODE_TILDE;
+        case KBD_KEY_TILDE:
+            return KEYBOARD_CODE_GRAVE;
         case KBD_KEY_COMMA:
             return KEYBOARD_CODE_COMMA;
         case KBD_KEY_PERIOD:
@@ -343,7 +343,7 @@ static KeyboardCode scancode_to_keyboard_code(int32_t code) {
             return KEYBOARD_CODE_DELETE;
         case KBD_KEY_END:
             return KEYBOARD_CODE_END;
-        case KBD_KEY_PGDN:
+        case KBD_KEY_PGDOWN:
             return KEYBOARD_CODE_PAGEDOWN;
         case KBD_KEY_RIGHT:
             return KEYBOARD_CODE_RIGHT;
@@ -353,7 +353,7 @@ static KeyboardCode scancode_to_keyboard_code(int32_t code) {
             return KEYBOARD_CODE_DOWN;
         case KBD_KEY_UP:
             return KEYBOARD_CODE_UP;
-        case KBD_KEY_NUMLOCK:
+        case KBD_KEY_PAD_NUMLOCK:
             return KEYBOARD_CODE_NUMLOCKCLEAR;
         case KBD_KEY_KP_DIVIDE:
             return KEYBOARD_CODE_KP_DIVIDE;
