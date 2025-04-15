@@ -1106,8 +1106,8 @@ typedef StageNode* StageNodePtr;
         return Meta::name;                                                     \
     }                                                                          \
                                                                                \
-    std::set<NodeParam> node_params() const override {                         \
-        return get_node_params<std::decay<decltype(*this)>::type>();           \
+    std::set<smlt::NodeParam> node_params() const override {                   \
+        return smlt::get_node_params<std::decay<decltype(*this)>::type>();     \
     }                                                                          \
                                                                                \
     struct _unused_ {}
