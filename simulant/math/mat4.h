@@ -32,7 +32,7 @@ enum FrustumPlane {
     FRUSTUM_PLANE_MAX
 };
 
-struct Mat4 {
+struct alignas(32) Mat4 {
 private:
     float m[16];
 
@@ -49,25 +49,9 @@ public:
         const float *m1 = &this->m[0], *m2 = &rhs.m[0];
 
 #ifdef __DREAMCAST__
-        result.m[0] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[0], m2[1], m2[2], m2[3]);
-        result.m[1] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[0], m2[1], m2[2], m2[3]);
-        result.m[2] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[0], m2[1], m2[2], m2[3]);
-        result.m[3] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[0], m2[1], m2[2], m2[3]);
-
-        result.m[4] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[4], m2[5], m2[6], m2[7]);
-        result.m[5] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[4], m2[5], m2[6], m2[7]);
-        result.m[6] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[4], m2[5], m2[6], m2[7]);
-        result.m[7] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[4], m2[5], m2[6], m2[7]);
-
-        result.m[8] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[8], m2[9], m2[10], m2[11]);
-        result.m[9] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[8], m2[9], m2[10], m2[11]);
-        result.m[10] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[8], m2[9], m2[10], m2[11]);
-        result.m[11] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[8], m2[9], m2[10], m2[11]);
-
-        result.m[12] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[12], m2[13], m2[14], m2[15]);
-        result.m[13] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[12], m2[13], m2[14], m2[15]);
-        result.m[14] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[12], m2[13], m2[14], m2[15]);
-        result.m[15] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[12], m2[13], m2[14], m2[15]);
+        MATH_Load_Matrix_Product(reinterpret_cast<const ALL_FLOATS_STRUCT*>(m1),
+                                 reinterpret_cast<const ALL_FLOATS_STRUCT*>(m2));
+        MATH_Store_XMTRX(reinterpret_cast<ALL_FLOATS_STRUCT*>(&result));
 #else
         result.m[0] = m1[0] * m2[0] + m1[4] * m2[1] + m1[8] * m2[2] + m1[12] * m2[3];
         result.m[1] = m1[1] * m2[0] + m1[5] * m2[1] + m1[9] * m2[2] + m1[13] * m2[3];

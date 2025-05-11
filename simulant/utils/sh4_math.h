@@ -1502,7 +1502,7 @@ static inline __attribute__((always_inline)) void MATH_Matrix_Product(ALL_FLOATS
 //    MATH_Matrix_Product(matrix2)
 // as it saves having to do 2 extraneous 'fschg' instructions.
 //
-static inline __attribute__((always_inline)) void MATH_Load_Matrix_Product(ALL_FLOATS_STRUCT * matrix1, ALL_FLOATS_STRUCT * matrix2)
+static inline __attribute__((always_inline)) void MATH_Load_Matrix_Product(const ALL_FLOATS_STRUCT * matrix1, const ALL_FLOATS_STRUCT * matrix2)
 {
   /*
     // This prefetching should help a bit if placed suitably far enough in advance (not here)
@@ -1562,7 +1562,7 @@ static inline __attribute__((always_inline)) void MATH_Load_Matrix_Product(ALL_F
 //------------------------------------------------------------------------------
 
 // Load a matrix from memory into the back bank (XMTRX)
-static inline __attribute__((always_inline)) void MATH_Load_XMTRX(ALL_FLOATS_STRUCT * back_matrix)
+static inline __attribute__((always_inline)) void MATH_Load_XMTRX(const ALL_FLOATS_STRUCT * back_matrix)
 {
   /*
     // This prefetching should help a bit if placed suitably far enough in advance (not here)

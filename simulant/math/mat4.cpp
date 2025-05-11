@@ -42,21 +42,34 @@ Mat4 Mat4::as_rotation(const Quaternion& rhs) {
     return m;
 }
 
-Vec4 Mat4::operator*(const Vec4& v) const {
+
+Vec4 Mat4::operator*(const Vec4 &v) const {
+#ifdef __DREAMCAST__
+    MATH_Load_XMTRX(reinterpret_cast<const ALL_FLOATS_STRUCT*>(this));
+    RETURN_VECTOR_STRUCT ret = MATH_Matrix_Transform(v.x, v.y, v.z, v.w);
+    return Vec4 { ret.z1, ret.z2, ret.z3, ret.z4 };
+#else
     Vec4 ret;
     ret.x = v.x * m[0] + v.y * m[4] + v.z * m[8] + v.w * m[12];
     ret.y = v.x * m[1] + v.y * m[5] + v.z * m[9] + v.w * m[13];
     ret.z = v.x * m[2] + v.y * m[6] + v.z * m[10] + v.w * m[14];
     ret.w = v.x * m[3] + v.y * m[7] + v.z * m[11] + v.w * m[15];
     return ret;
+#endif
 }
 
-Vec3 Mat4::operator*(const Vec3& v) const {
+Vec3 Mat4::operator*(const Vec3 &v) const {
+#ifdef __DREAMCAST__
+    MATH_Load_XMTRX(reinterpret_cast<const ALL_FLOATS_STRUCT*>(this));
+    RETURN_VECTOR_STRUCT ret = MATH_Matrix_Transform(v.x, v.y, v.z, 0.0f);
+    return Vec3 { ret.z1, ret.z2, ret.z3 };
+#else
     Vec3 ret;
     ret.x = m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12];
     ret.y = m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13];
     ret.z = m[2] * v.x + m[6] * v.y + m[10] * v.z + m[14];
     return ret;
+#endif
 }
 
 void Mat4::extract_rotation_and_translation(Quaternion& rotation,
