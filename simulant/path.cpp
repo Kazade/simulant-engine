@@ -84,4 +84,10 @@ bool Path::operator<(const Path &p) const {
     return path_ < p.path_;
 }
 
+namespace path {
+smlt::optional<Path> exe_path() {
+    return Path(kfs::exe_path());
 }
+
+} // namespace path
+} // namespace smlt

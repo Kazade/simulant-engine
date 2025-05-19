@@ -19,8 +19,12 @@
 #ifndef SCENE_MANAGER_H
 #define SCENE_MANAGER_H
 
-#include <unordered_map>
+#ifndef __WIN32__
+#include <dlfcn.h>
+#endif
+
 #include <functional>
+#include <unordered_map>
 
 #include "../threads/future.h"
 
@@ -218,6 +222,56 @@ public:
     ScenePtr active_scene() const;
 
     bool scene_queued_for_activation() const;
+
+    /* Removes the scene factory from the list of factories */
+    void unregister_scene(const std::string& name) {
+        scene_factories_.erase(name);
+    }
+
+#ifndef __WIN32__
+    bool register_scene_from_library(const std::string& name,
+                                     const Path& path) {
+
+        auto p = path.str();
+        void* handle = dlopen(p.c_str(), RTLD_LAZY | RTLD_DEEPBIND);
+        if(!handle) {
+            fprintf(stderr, "Error: %s\n", dlerror());
+            S_ERROR("Unable to find library to register scene");
+            return false;
+        }
+
+        typedef void* (*create_scene)(void* window);
+        typedef void (*destroy_scene)(void* node);
+
+        create_scene constructor = (create_scene)dlsym(handle, "create_scene");
+        destroy_scene destructor =
+            (destroy_scene)dlsym(handle, "destroy_scene");
+
+        auto deleter = [=](Scene* obj) {
+            obj->clean_up();
+            destructor((void*)obj);
+        };
+
+        auto func = [=](Window* window) -> ScenePtr {
+            auto node = (Scene*)constructor((void*)window);
+            return ScenePtr(node, deleter);
+        };
+
+        _store_scene_factory(name, [=](Window* window) -> ScenePtr {
+            auto ret = func(window);
+            if(!ret->init()) {
+                S_ERROR("Failed to initialize the Scene");
+                return ScenePtr();
+            }
+
+            ret->set_name(name);
+            ret->scene_manager_ = this;
+            return ret;
+        });
+
+        return true;
+    }
+#endif
 
     template<typename T, typename... Args>
     void register_scene(const std::string& name, Args&&... args) {

@@ -60,15 +60,20 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
         return nullptr;
     }
 
+    auto construction_data = info->second;
+    auto alignment = construction_data.alignment;
+    auto size = construction_data.size_in_bytes;
+    auto& constructor = construction_data.constructor;
+    auto& destructor = construction_data.destructor;
+
     /* Allocate aligned memory. This is temporary, in future we'll do some
      * chunked allocation depending on the node size */
-    void* mem =
-        smlt::aligned_alloc(info->second.alignment, info->second.size_in_bytes);
-    StageNode* node = info->second.constructor(mem);
+    void* mem = smlt::aligned_alloc(alignment, size);
+    StageNode* node = constructor(mem);
 
     if(!node->init()) {
         S_ERROR("Failed to initialize node");
-        info->second.destructor(node);
+        destructor(node);
         aligned_free(node);
         return nullptr;
     }
