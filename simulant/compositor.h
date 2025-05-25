@@ -156,6 +156,14 @@ public:
         }
     }
 
+    std::list<LayerPtr>::iterator begin() {
+        return layers_.begin();
+    }
+
+    std::list<LayerPtr>::iterator end() {
+        return layers_.end();
+    }
+
 private:
     Compositor* compositor_ = nullptr;
     Scene* scene_ = nullptr;
