@@ -228,7 +228,7 @@ public:
         scene_factories_.erase(name);
     }
 
-#ifndef __WIN32__
+#ifdef __linux__
     bool register_scene_from_library(const std::string& name,
                                      const Path& path) {
 
