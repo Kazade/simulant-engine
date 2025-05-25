@@ -129,7 +129,7 @@ class SceneManager :
                 current_scene_->activate();
             }
 
-            signal_scene_activated_(route, new_scene.get());
+            signal_scene_activated_(route, current_scene_.get());
         }
     }
 
