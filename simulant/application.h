@@ -270,6 +270,18 @@ public:
         return platform_state_;
     }
 
+    float time_scale() const {
+        return time_scale_;
+    }
+
+    void set_time_scale(float t) {
+        if(t < 0.0f) {
+            return;
+        }
+
+        time_scale_ = t;
+    }
+
 protected:
     bool _call_init();
 
@@ -397,6 +409,8 @@ private:
     void on_render_context_created();
 
     void on_render_context_destroyed();
+
+    float time_scale_ = 1.0f;
 };
 
 Application* get_app();

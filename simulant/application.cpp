@@ -498,7 +498,7 @@ bool Application::run_frame() {
     } else {
         // Update timers
         time_keeper_->update();
-        dt = time_keeper_->delta_time();
+        dt = time_keeper_->delta_time() * time_scale_;
     }
 
     S_VERBOSE("Starting frame");

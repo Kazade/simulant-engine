@@ -229,6 +229,7 @@ public:
     }
 
 #ifdef __linux__
+#ifndef __ANDROID__
     bool register_scene_from_library(const std::string& name,
                                      const Path& path) {
 
@@ -271,6 +272,7 @@ public:
 
         return true;
     }
+#endif
 #endif
 
     template<typename T, typename... Args>
