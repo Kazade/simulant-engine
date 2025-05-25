@@ -19,7 +19,7 @@
 #ifndef SCENE_MANAGER_H
 #define SCENE_MANAGER_H
 
-#ifndef __WIN32__
+#ifdef __linux__
 #include <dlfcn.h>
 #endif
 
