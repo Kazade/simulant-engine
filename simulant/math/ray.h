@@ -12,12 +12,10 @@ struct Ray {
 
     Ray() = default;
 
-    Ray(const Vec3& start, const Vec3& dir):
+    Ray(const Vec3& start, const Vec3& dir) :
         start(start),
-        dir(dir) {
-
-        dir_inv = Vec3(1.0f / dir.x, 1.0f / dir.y, 1.0f / dir.z);
-    }
+        dir(dir),
+        dir_inv(Vec3(1.0f / dir.x, 1.0f / dir.y, 1.0f / dir.z)) {}
 
     bool intersects_aabb(const AABB& aabb) const;
 
