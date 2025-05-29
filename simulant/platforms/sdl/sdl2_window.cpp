@@ -84,6 +84,10 @@ void SDL2Window::cursor_position(int32_t& mouse_x, int32_t& mouse_y) {
     SDL_GetMouseState(&mouse_x, &mouse_y);
 }
 
+int32_t SDL2Window::default_sdl_flags() const {
+    return SDL_WINDOW_OPENGL;
+}
+
 int event_filter(void* user_data, SDL_Event* event) {
     /*
      *  This event filter is for Android, e.g. when someone switches task
@@ -769,7 +773,7 @@ bool SDL2Window::_init_window() {
         S_WARN("Unable to load controller mappings!");
     }
 
-    int32_t flags = SDL_WINDOW_OPENGL;
+    int32_t flags = default_window_flags();
 
     if(is_fullscreen()) {
         flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;

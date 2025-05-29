@@ -49,6 +49,8 @@ public:
     void cursor_position(int32_t& mouse_x, int32_t& mouse_y) override;
 
 private:
+    virtual int32_t default_window_flags() const;
+
     bool _init_window() override;
     bool _init_renderer(Renderer* renderer) override;
 
