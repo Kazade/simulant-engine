@@ -226,6 +226,7 @@ public:
     /* Removes the scene factory from the list of factories */
     void unregister_scene(const std::string& name) {
         scene_factories_.erase(name);
+        unload(name);
     }
 
 #ifdef __linux__
@@ -233,33 +234,44 @@ public:
     bool register_scene_from_library(const std::string& name,
                                      const Path& path) {
 
-        auto p = path.str();
-        void* handle = dlopen(p.c_str(), RTLD_LAZY | RTLD_DEEPBIND);
-        if(!handle) {
-            fprintf(stderr, "Error: %s\n", dlerror());
-            S_ERROR("Unable to find library to register scene");
-            return false;
-        }
-
         typedef void* (*create_scene)(void* window);
         typedef void (*destroy_scene)(void* node);
 
-        create_scene constructor = (create_scene)dlsym(handle, "create_scene");
-        destroy_scene destructor =
-            (destroy_scene)dlsym(handle, "destroy_scene");
+        static std::map<std::string, void*> dlopen_handles;
 
-        auto deleter = [=](Scene* obj) {
-            obj->clean_up();
-            destructor((void*)obj);
-        };
+        auto p = path.str();
 
-        auto func = [=](Window* window) -> ScenePtr {
+        _store_scene_factory(name, [this, name, p](Window* window) -> ScenePtr {
+            // We store the open handles, but always close/re-open each time
+            // the scene is instantiated to make sure we have the latest
+            auto it = dlopen_handles.find(p);
+            if(it != dlopen_handles.end()) {
+                dlclose(it->second);
+                dlopen_handles.erase(it);
+            }
+
+            void* handle = dlopen(p.c_str(), RTLD_LAZY);
+            if(!handle) {
+                fprintf(stderr, "Error: %s\n", dlerror());
+                S_ERROR("Unable to find library to register scene");
+                return nullptr;
+            }
+
+            dlopen_handles.insert(std::make_pair(p, handle));
+
+            auto deleter = [handle, p](Scene* obj) {
+                obj->clean_up();
+
+                auto destructor = (destroy_scene)dlsym(handle, "destroy_scene");
+
+                destructor((void*)obj);
+            };
+
+            auto constructor = (create_scene)dlsym(handle, "create_scene");
+
             auto node = (Scene*)constructor((void*)window);
-            return ScenePtr(node, deleter);
-        };
+            auto ret = ScenePtr(node, deleter);
 
-        _store_scene_factory(name, [=](Window* window) -> ScenePtr {
-            auto ret = func(window);
             if(!ret->init()) {
                 S_ERROR("Failed to initialize the Scene");
                 return ScenePtr();
@@ -342,7 +354,7 @@ private:
     void fixed_update(float step);
 
     std::function<void ()> scene_activation_trigger_;
-    std::set<std::string> routes_queued_for_destruction_;
+    std::set<ScenePtr> scenes_queued_for_destruction_;
 };
 
 }

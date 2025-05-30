@@ -35,11 +35,9 @@ SceneManager::~SceneManager() {
 
 void SceneManager::destroy_all() {
     /* Unload all the routes */
-    for(auto route: routes_) {
+    for(auto& route: routes_) {
         route.second->unload();
-
-        auto name = route.first;
-        routes_queued_for_destruction_.insert(name);
+        scenes_queued_for_destruction_.insert(route.second);
     }
 
     current_scene_.reset();
@@ -47,14 +45,7 @@ void SceneManager::destroy_all() {
 
 void SceneManager::clean_destroyed_scenes() {
     /* Destroy any scenes that have been queued */
-    for(auto& name: routes_queued_for_destruction_) {
-        auto it = routes_.find(name);
-        if(it != routes_.end()) {
-            routes_.erase(it);
-        }
-    }
-
-    routes_queued_for_destruction_.clear();
+    scenes_queued_for_destruction_.clear();
 }
 
 void SceneManager::late_update(float dt) {
@@ -136,11 +127,15 @@ void SceneManager::unload(const std::string& route) {
         scene->load_args.clear();
         scene->destroy();
 
+        // Erase from routes so any further get_or_create triggers
+        // the factory function
+        routes_.erase(it);
+
         /* Destroy the scene once it's been unloaded but do
          * it after late_update so that any queued destructions
          * from unload can happen before we destroy the scene
          */
-        routes_queued_for_destruction_.insert(route);
+        scenes_queued_for_destruction_.insert(scene);
         current_scene_ = nullptr;
     }
 }
