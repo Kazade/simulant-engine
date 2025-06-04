@@ -84,7 +84,7 @@ void SDL2Window::cursor_position(int32_t& mouse_x, int32_t& mouse_y) {
     SDL_GetMouseState(&mouse_x, &mouse_y);
 }
 
-int32_t SDL2Window::default_sdl_flags() const {
+int32_t SDL2Window::default_window_flags() const {
     return SDL_WINDOW_OPENGL;
 }
 
