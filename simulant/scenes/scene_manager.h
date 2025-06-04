@@ -250,7 +250,7 @@ public:
                 dlopen_handles.erase(it);
             }
 
-            void* handle = dlopen(p.c_str(), RTLD_LAZY);
+            void* handle = dlopen(p.c_str(), RTLD_LAZY | RTLD_LOCAL);
             if(!handle) {
                 fprintf(stderr, "Error: %s\n", dlerror());
                 S_ERROR("Unable to find library to register scene");

@@ -240,7 +240,10 @@ void Application::preload_default_font() {
         FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");
     }
 
-    fnt->set_name(Font::generate_name(ui.font_family, flags.size, flags.weight, flags.style));
+    smlt::LimitedString<64> n;
+    n = Font::generate_name(ui.font_family, flags.size, flags.weight,
+                            flags.style);
+    fnt->set_name(n);
     fnt->set_garbage_collection_method(smlt::GARBAGE_COLLECT_NEVER);
 }
 

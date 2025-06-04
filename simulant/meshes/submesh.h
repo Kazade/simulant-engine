@@ -43,19 +43,13 @@ class SubMesh:
 
 public:
     /* Indexed submesh constructor */
-    SubMesh(Mesh* parent,
-        const std::string& name,
-        MaterialPtr material,
-        std::shared_ptr<IndexData>& index_data,
-        MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES
-    );
+    SubMesh(Mesh* parent, const std::string& name, MaterialPtr material,
+            std::shared_ptr<IndexData>& index_data,
+            MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES);
 
     /* Ranged submesh constructor */
-    SubMesh(Mesh* parent,
-        const std::string& name,
-        MaterialPtr material,
-        MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES
-    );
+    SubMesh(Mesh* parent, const std::string& name, MaterialPtr material,
+            MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES);
 
     virtual ~SubMesh();
 

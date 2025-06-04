@@ -94,6 +94,7 @@ T* mixin_factory(F& factory, StageNode* base, Args&&... args);
 } // namespace impl
 
 enum NodeParamType {
+    NODE_PARAM_TYPE_INVALID = -1,
     NODE_PARAM_TYPE_FLOAT,
     NODE_PARAM_TYPE_FLOAT_ARRAY,
     NODE_PARAM_TYPE_INT,

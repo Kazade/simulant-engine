@@ -10,12 +10,9 @@
 
 namespace smlt {
 
-SubMesh::SubMesh(
-    Mesh* parent, const std::string& name,
-    MaterialPtr material, MeshArrangement arrangement):
-    parent_(parent),
-    type_(SUBMESH_TYPE_RANGED),
-    arrangement_(arrangement) {
+SubMesh::SubMesh(Mesh* parent, const std::string& name, MaterialPtr material,
+                 MeshArrangement arrangement) :
+    parent_(parent), type_(SUBMESH_TYPE_RANGED), arrangement_(arrangement) {
 
     set_name(name);
 
@@ -23,9 +20,9 @@ SubMesh::SubMesh(
     set_material(material);
 }
 
-SubMesh::SubMesh(
-    Mesh* parent, const std::string& name,
-    MaterialPtr material, std::shared_ptr<IndexData>& index_data, MeshArrangement arrangement):
+SubMesh::SubMesh(Mesh* parent, const std::string& name, MaterialPtr material,
+                 std::shared_ptr<IndexData>& index_data,
+                 MeshArrangement arrangement) :
     parent_(parent),
     type_(SUBMESH_TYPE_INDEXED),
     arrangement_(arrangement),
