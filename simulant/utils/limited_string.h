@@ -44,6 +44,7 @@ public:
     LimitedString& operator=(const LimitedString&) = default;
     LimitedString& operator=(const std::string& rhs) {
         std::strncpy(string_, rhs.c_str(), N);
+        string_[N] = '\0';
         len_ = std::min((std::size_t)rhs.length(), N);
         assert(string_[N] == '\0');
         return *this;
@@ -51,6 +52,7 @@ public:
 
     LimitedString& operator=(const char* rhs) {
         std::strncpy(string_, rhs, N);
+        string_[N] = '\0';
         len_ = std::strlen(string_);
         assert(string_[N] == '\0');
         return *this;
