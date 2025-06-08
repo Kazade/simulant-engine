@@ -12,6 +12,8 @@ namespace smlt {
 template<typename T, std::size_t N>
 class LimitedVector {
 public:
+    LimitedVector() = default;
+
     bool operator==(const LimitedVector& rhs) const {
         return std::memcmp(&data_[0], &rhs.data_[0], sizeof(T) * N) == 0;
     }
@@ -109,7 +111,7 @@ public:
     }
 
 private:
-    T data_[N];
+    T data_[N] = {};
     std::size_t size_ = 0;
 };
 
