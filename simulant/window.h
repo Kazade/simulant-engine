@@ -102,7 +102,7 @@ public:
 
     virtual void check_events() = 0;
 
-    void swap_buffers();
+    virtual void swap_buffers();
 
     uint16_t width() const override { return width_; }
     uint16_t height() const override { return height_; }
@@ -257,6 +257,10 @@ public:
 protected:
     InputState* get_input_state() {
         return input_state_.get();
+    }
+
+    bool initialized() const {
+        return initialized_;
     }
 
 private:
