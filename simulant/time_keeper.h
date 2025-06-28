@@ -24,13 +24,18 @@ public:
 
     static uint64_t now_in_us();
 
-    float delta_time() const { return delta_time_ * time_scale_; }
-    float fixed_step() const { return fixed_step_ * time_scale_; }
+    float delta_time() const {
+        return delta_time_;
+    }
+    float fixed_step() const {
+        return fixed_step_;
+    }
     float fixed_step_remainder() const;
     float total_elapsed_seconds() const { return total_time_; }
 
-    float unscaled_delta_time() const { return delta_time_; }
-    float unscaled_fixed_step() const { return fixed_step_; }
+    float unscaled_delta_time() const {
+        return unscaled_delta_time_;
+    }
 
     float time_scale() const;
 
@@ -48,7 +53,7 @@ public:
     bool use_fixed_step();
 
     void restart() {
-        total_time_ = delta_time_ = accumulator_ = 0.0f;
+        total_time_ = delta_time_ = unscaled_delta_time_ = accumulator_ = 0.0f;
     }
 
 private:
@@ -57,8 +62,9 @@ private:
     float accumulator_ = 0.0f;
     float total_time_ = 0.0f;
     float delta_time_ = 0.0f;
+    float unscaled_delta_time_ = 0.0f;
     float fixed_step_ = 0.0f;
-    thread::Atomic<float> time_scale_;
+    thread::Atomic<float> time_scale_ = 1.0f;
 };
 
 }

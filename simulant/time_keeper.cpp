@@ -44,15 +44,15 @@ void TimeKeeper::update() {
     auto diff = now - last_update_;
     last_update_ = now;
 
-    delta_time_ = float(diff) * 0.000001f;
+    unscaled_delta_time_ = float(diff) * 0.000001f;
+    delta_time_ = unscaled_delta_time_ * time_scale_;
     delta_time_ = std::min(DELTATIME_MAX, delta_time_);
 
-    /* Use timescale on the accumulator, we want fixed updates to slow
-     * relatively (I think?) */
-    accumulator_ += delta_time_ * time_scale_;
+    accumulator_ += delta_time_;
     accumulator_ = std::min(ACCUMULATOR_MAX, accumulator_);
 
-    total_time_ += delta_time_;
+    // FIXME: Should total time be the actual time, or the scaled time?
+    total_time_ += unscaled_delta_time_;
 }
 
 float TimeKeeper::fixed_step_remainder() const {

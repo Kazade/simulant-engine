@@ -445,6 +445,10 @@ void Application::run_update(float dt) {
     frame_counter_time_ += dt;
     frame_counter_frames_++;
 
+    if(!update_enabled()) {
+        return;
+    }
+
     if(frame_counter_time_ >= 1.0f) {
         stats->set_frames_per_second(frame_counter_frames_);
 
@@ -465,6 +469,10 @@ void Application::run_update(float dt) {
 }
 
 void Application::run_fixed_updates() {
+    if(!fixed_update_enabled()) {
+        return;
+    }
+
     while(time_keeper_->use_fixed_step()) {
         float step = time_keeper_->fixed_step();
 
@@ -501,7 +509,7 @@ bool Application::run_frame() {
     } else {
         // Update timers
         time_keeper_->update();
-        dt = time_keeper_->delta_time() * time_scale_;
+        dt = time_keeper_->delta_time();
     }
 
     S_VERBOSE("Starting frame");
@@ -570,7 +578,9 @@ bool Application::run_frame() {
 
             S_PROFILE_SECTION("swap");
             window_->swap_buffers();
-        }
+
+            S_VERBOSE("Buffers swapped");
+        }                
     }
 
     /* We totally ignore the first frame as it can take a while and messes up
@@ -589,6 +599,7 @@ bool Application::run_frame() {
         shutdown();
     }
 
+    S_VERBOSE("Frame finished");
     signal_frame_finished_();
 
     return is_running;
@@ -693,6 +704,10 @@ void Application::start_coroutine(std::function<void ()> func) {
 
 void Application::run_coroutines_and_late_update() {
     update_coroutines();
+
+    if(!late_update_enabled()) {
+        return;
+    }
 
     float dt = time_keeper_->delta_time();
 

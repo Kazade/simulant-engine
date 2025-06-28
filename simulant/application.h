@@ -155,7 +155,18 @@ typedef sig::signal<void (float)> FixedUpdateSignal;
 typedef sig::signal<void (float)> UpdateSignal;
 typedef sig::signal<void (float)> LateUpdateSignal;
 typedef sig::signal<void ()> PostLateUpdateSignal;
-typedef sig::signal<void ()> ShutdownSignal;
+typedef sig::signal<void()> ShutdownSignal;
+
+enum UpdateEnabledFlags {
+    ALL_UPDATES_DISABLED = 0,
+    UPDATE_ENABLED = 0x1,
+    FIXED_UPDATE_ENABLED = 0x2,
+    LATE_UPDATE_ENABLED = 0x4,
+    ALL_UPDATES_ENABLED =
+        UPDATE_ENABLED | FIXED_UPDATE_ENABLED | LATE_UPDATE_ENABLED,
+};
+
+typedef uint32_t UpdateEnabledMask;
 
 class Application {
     friend class Window;
@@ -270,16 +281,22 @@ public:
         return platform_state_;
     }
 
-    float time_scale() const {
-        return time_scale_;
-    }
-
-    void set_time_scale(float t) {
-        if(t < 0.0f) {
-            return;
+    /**
+     * @brief set_updates_enabled
+     * @param mask
+     *
+     * Allow disabling or enabling update, fixed_update, and late_update
+     * conditionally.
+     *
+     * WARNING: This primarily exists for game tools such as editors. Using this
+     * feature in a game may cause issues when editing that game with such
+     * tools.
+     */
+    void set_updates_enabled(UpdateEnabledMask mask = ALL_UPDATES_ENABLED) {
+        if(mask == ALL_UPDATES_DISABLED) {
+            S_INFO("Disabling all updates");
         }
-
-        time_scale_ = t;
+        updates_enabled_ = mask;
     }
 
 protected:
@@ -288,6 +305,19 @@ protected:
     virtual std::shared_ptr<Window> instantiate_window();
 
 private:
+    bool update_enabled() const {
+        return (updates_enabled_ & UPDATE_ENABLED) == UPDATE_ENABLED;
+    }
+
+    bool fixed_update_enabled() const {
+        return (updates_enabled_ & FIXED_UPDATE_ENABLED) ==
+               FIXED_UPDATE_ENABLED;
+    }
+
+    bool late_update_enabled() const {
+        return (updates_enabled_ & LATE_UPDATE_ENABLED) == LATE_UPDATE_ENABLED;
+    }
+
     void* platform_state_ = nullptr;
     friend void cr_run_main(std::function<void ()> func);
     std::function<void ()> cr_synced_function_;
@@ -313,6 +343,8 @@ private:
     float frame_counter_time_ = 0.0f;
     int32_t frame_counter_frames_ = 0;
     float frame_time_in_milliseconds_ = 0.0f;
+
+    UpdateEnabledMask updates_enabled_ = ALL_UPDATES_ENABLED;
 
     void _call_fixed_update(float dt) {
         fixed_update(dt);
@@ -409,8 +441,6 @@ private:
     void on_render_context_created();
 
     void on_render_context_destroyed();
-
-    float time_scale_ = 1.0f;
 };
 
 Application* get_app();
