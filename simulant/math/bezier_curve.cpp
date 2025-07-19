@@ -2,6 +2,18 @@
 
 namespace smlt {
 
+float BezierCurve::length(int segment_count) {
+    float total_length = 0.0f;
+    Vec3 last_point = calc_bezier_point(0.0f);
+    for(int i = 1; i <= segment_count; ++i) {
+        float t = static_cast<float>(i) / segment_count;
+        Vec3 current_point = calc_bezier_point(t);
+        total_length += (current_point - last_point).length();
+        last_point = current_point;
+    }
+    return total_length;
+}
+
 Vec3 BezierCurve::calc_bezier_point(const RangeValue<0, 1> t) const {
 
     // Optimized implementation of the deCasteljau algorithm
