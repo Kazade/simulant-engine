@@ -140,4 +140,16 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target,
     return smlt::optional<Vec3>(std::move(ret));
 }
 
+bool Camera2D::on_create(Params params) {
+    auto ret = Camera::on_create(params);
+    if(!ret) {
+        return false;
+    }
+
+    auto app = smlt::get_app();
+    auto window = app->window.get();
+    set_orthographic_projection(0, window->width(), 0, window->height());
+    return ret;
+}
+
 } // namespace smlt

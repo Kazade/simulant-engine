@@ -86,7 +86,10 @@ private:
     void on_transformation_changed() override;
 };
 
-class Camera2D: public Camera {};
+class Camera2D: public Camera {
+public:
+    bool on_create(Params params) override;
+};
 class Camera3D: public Camera {};
 
 } // namespace smlt
