@@ -97,7 +97,8 @@ public:
                         (group_) ? group_->sort_key.s.distance_to_camera
                                  : -1.0f,
                         r->render_priority,
-                        (group_) ? group_->sort_key.s.precedence : -1);
+                        (group_) ? group_->sort_key.s.precedence : -1,
+                        (group_) ? group_->sort_key.s.texture : 0);
 
         out_->write(line.c_str(), line.size());
     }
@@ -112,11 +113,12 @@ private:
 void Compositor::dump_render_trace(std::ostream *out) {
     auto visitor = std::make_shared<TraceWriter>(out);
 
-    std::string headings = "RENDERABLE, BLENDED?, DISTANCE, PRIORITY, Z-ORDER\n";
+    std::string headings =
+        "RENDERABLE, BLENDED?, DISTANCE, PRIORITY, Z-ORDER, TEXTURE\n";
     out->write(headings.c_str(), headings.size());
 
     sig::Connection conn = signal_layer_render_finished().connect([=](Layer&) {
-        std::string row = ", , , ,\n";
+        std::string row = ", , , , ,\n";
         out->write(row.c_str(), row.size());
 
         render_queue_.traverse(visitor.get(), 0);
