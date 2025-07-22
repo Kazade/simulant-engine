@@ -1197,7 +1197,7 @@ Vec2 Widget::anchor_point() const {
     return anchor_point_;
 }
 
-void Widget::set_opacity(RangeValue<0, 1> alpha) {
+void Widget::set_opacity(NormalizedFloat alpha) {
     if(style_->opacity_ != alpha) {
         style_->opacity_ = alpha;
         rebuild();
@@ -1230,7 +1230,7 @@ void Widget::set_style(std::shared_ptr<WidgetStyle> style) {
     rebuild();
 }
 
-void Widget::set_anchor_point(RangeValue<0, 1> x, RangeValue<0, 1> y) {
+void Widget::set_anchor_point(NormalizedFloat x, NormalizedFloat y) {
     if(anchor_point_.x != (float)x || anchor_point_.y != (float)y) {
         anchor_point_ = smlt::Vec2(x, y);
         anchor_point_dirty_ = true;

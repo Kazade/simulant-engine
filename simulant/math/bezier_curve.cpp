@@ -14,7 +14,7 @@ float BezierCurve::length(int segment_count) {
     return total_length;
 }
 
-Vec3 BezierCurve::calc_bezier_point(const RangeValue<0, 1> t) const {
+Vec3 BezierCurve::calc_bezier_point(const NormalizedFloat t) const {
 
     // Optimized implementation of the deCasteljau algorithm
     const float x = 1.0f - t;
@@ -30,5 +30,4 @@ Vec3 BezierCurve::calc_bezier_point(const RangeValue<0, 1> t) const {
 
     return bezierPoint_;
 }
-
 }

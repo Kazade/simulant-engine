@@ -328,7 +328,7 @@ protected:
 
     InputState* _input_state() const { return input_state_.get(); }
 
-    virtual void game_controller_start_rumble(GameController *controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) {
+    virtual void game_controller_start_rumble(GameController *controller, NormalizedFloat low_rumble, NormalizedFloat high_rumble, const smlt::Seconds& duration) {
         _S_UNUSED(controller);
         _S_UNUSED(low_rumble);
         _S_UNUSED(high_rumble);

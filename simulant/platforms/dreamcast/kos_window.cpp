@@ -653,7 +653,7 @@ void KOSWindow::render_screen(Screen* screen, const uint8_t* data, int row_strid
     S_VERBOSE("Pushed VMU update to queue for device {0}", id);
 }
 
-void KOSWindow::game_controller_start_rumble(GameController* controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) {
+void KOSWindow::game_controller_start_rumble(GameController* controller, NormalizedFloat low_rumble, NormalizedFloat high_rumble, const smlt::Seconds& duration) {
     const uint8_t* pdata = controller->platform_data();
     auto port = pdata[PLATFORM_DATA_PORT];
 

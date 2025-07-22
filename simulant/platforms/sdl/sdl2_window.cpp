@@ -995,8 +995,8 @@ void SDL2Window::render_screen(Screen* screen, const uint8_t* data,
 }
 
 void SDL2Window::game_controller_start_rumble(GameController* controller,
-                                              RangeValue<0, 1> low_rumble,
-                                              RangeValue<0, 1> high_rumble,
+                                              NormalizedFloat low_rumble,
+                                              NormalizedFloat high_rumble,
                                               const Seconds& duration) {
     SDL_GameControllerRumble(
         SDL_GameControllerFromInstanceID(controller->id().to_int8_t()),

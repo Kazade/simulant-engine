@@ -34,8 +34,8 @@ public:
     void set_source_properties(AudioSourceID, const Vec3&, const Vec3&) override {}
 
     void set_source_reference_distance(AudioSourceID id, float dist) override;
-    void set_source_gain(AudioSourceID id, RangeValue<0, 1> value) override;
-    void set_source_pitch(AudioSourceID id, RangeValue<0, 1> value) override;
+    void set_source_gain(AudioSourceID id, NormalizedFloat value) override;
+    void set_source_pitch(AudioSourceID id, NormalizedFloat value) override;
 
 private:
     bool _startup() override;

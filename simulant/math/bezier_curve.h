@@ -21,7 +21,7 @@ public:
 
     // Returns the position and rotation of a point on the curve at a given
     // time. Please note that 't' will be clamped between 0 and 1.
-    Vec3 calc_bezier_point(const RangeValue<0, 1> t) const;
+    Vec3 calc_bezier_point(const NormalizedFloat t) const;
 
     float length(int segment_count = 10);
 

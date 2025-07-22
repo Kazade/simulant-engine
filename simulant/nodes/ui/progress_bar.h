@@ -37,7 +37,7 @@ public:
     void set_pulse_step(Px value);
     void set_pulse_fraction(float value);
 
-    void set_fraction(float fraction);
+    void set_fraction(NormalizedFloat fraction);
     void set_value(float value);
     void set_range(float min, float max);
 

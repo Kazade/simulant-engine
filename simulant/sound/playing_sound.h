@@ -78,8 +78,8 @@ public:
 
     bool is_dead() const { return is_dead_; }
 
-    void set_gain(RangeValue<0, 1> gain);
-    void set_pitch(RangeValue<0, 1> pitch);
+    void set_gain(NormalizedFloat gain);
+    void set_pitch(NormalizedFloat pitch);
     void set_reference_distance(float dist);
 };
 

@@ -167,11 +167,11 @@ void OpenALSoundDriver::set_source_reference_distance(AudioSourceID id, float di
     ALCheck(alSourcef, id, AL_REFERENCE_DISTANCE, dist);
 }
 
-void OpenALSoundDriver::set_source_gain(AudioSourceID id, RangeValue<0, 1> value) {
+void OpenALSoundDriver::set_source_gain(AudioSourceID id, NormalizedFloat value) {
     ALCheck(alSourcef, id, AL_GAIN, (float) value);
 }
 
-void OpenALSoundDriver::set_source_pitch(AudioSourceID id, RangeValue<0, 1> value) {
+void OpenALSoundDriver::set_source_pitch(AudioSourceID id, NormalizedFloat value) {
     ALCheck(alSourcef, id, AL_PITCH, (float) value);
 }
 

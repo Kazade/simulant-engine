@@ -98,13 +98,14 @@ void ProgressBar::set_range(float min, float max) {
 }
 
 void ProgressBar::set_value(float value) {
+    value = smlt::clamp(value, min(), max());
     if(value != this->value()) {
         needs_refresh_ = true;
         value_ = value;
     }
 }
 
-void ProgressBar::set_fraction(float fraction) {
+void ProgressBar::set_fraction(NormalizedFloat fraction) {
     auto value = min() + (max() * fraction);
     set_value(value);
 }
