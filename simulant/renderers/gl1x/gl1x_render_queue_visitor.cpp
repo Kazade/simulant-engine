@@ -72,11 +72,7 @@ void GL1RenderQueueVisitor::change_render_group(
 
 _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex,
                                   const Mat4& mat) {
-    if(!tex) {
-        return false;
-    }
-
-    auto id = tex->_renderer_specific_id();
+    auto id = (tex) ? tex->_renderer_specific_id() : 0;
 
     if(which >= _S_GL_MAX_TEXTURE_UNITS) {
         return false;
