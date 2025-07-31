@@ -120,7 +120,7 @@ void GenericRenderer::set_light_uniforms(const MaterialPass* pass,
                                    (light) ? light->ambient() : Color::none());
     }
 
-    auto diff_loc = program->locate_uniform(LIGHT_DIFFUSE_PROPERTY, true);
+    auto diff_loc = program->locate_uniform(LIGHT_BASE_COLOR_PROPERTY, true);
     if(diff_loc > -1) {
         auto diffuse = (light) ? light->diffuse() : smlt::Color::none();
         program->set_uniform_color(diff_loc, diffuse);
@@ -158,24 +158,29 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
                                             GPUProgram* program) {
     auto mat = pass->material();
 
-    auto amb_loc = program->locate_uniform(AMBIENT_PROPERTY_NAME, true);
-    if(amb_loc > -1) {
-        program->set_uniform_color(AMBIENT_PROPERTY_NAME, pass->ambient());
+    auto r_loc = program->locate_uniform(ROUGHNESS_PROPERTY_NAME, true);
+    if(r_loc > -1) {
+        program->set_uniform_float(r_loc, pass->roughness());
     }
 
-    auto diff_loc = program->locate_uniform(DIFFUSE_PROPERTY_NAME, true);
+    auto m_loc = program->locate_uniform(METALLIC_PROPERTY_NAME, true);
+    if(m_loc > -1) {
+        program->set_uniform_float(m_loc, pass->roughness());
+    }
+
+    auto diff_loc = program->locate_uniform(BASE_COLOR_PROPERTY_NAME, true);
     if(diff_loc > -1) {
-        program->set_uniform_color(DIFFUSE_PROPERTY_NAME, pass->diffuse());
+        program->set_uniform_color(diff_loc, pass->base_color());
     }
 
-    auto spec_loc = program->locate_uniform(SPECULAR_PROPERTY_NAME, true);
+    auto spec_loc = program->locate_uniform(SPECULAR_COLOR_PROPERTY_NAME, true);
     if(spec_loc > -1) {
-        program->set_uniform_color(SPECULAR_PROPERTY_NAME, pass->specular());
+        program->set_uniform_color(spec_loc, pass->specular_color());
     }
 
-    auto shin_loc = program->locate_uniform(SHININESS_PROPERTY_NAME, true);
+    auto shin_loc = program->locate_uniform(SPECULAR_PROPERTY_NAME, true);
     if(shin_loc > -1) {
-        program->set_uniform_float(SHININESS_PROPERTY_NAME, pass->shininess());
+        program->set_uniform_float(shin_loc, pass->specular());
     }
 
     auto ps_loc = program->locate_uniform(POINT_SIZE_PROPERTY_NAME, true);
@@ -466,7 +471,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         // checks the variable exists and also whether there's a texture ID. The
         // question is, should the material have some other type of existence
         // check for texture properties? Is checking the texture_id right for
-        // all situations? If someone uses s_diffuse_map, but doesn't set a
+        // all situations? If someone uses s_base_color_map, but doesn't set a
         // value, surely that should get the default texture?
         auto loc = program_->locate_uniform(
             defined_property.second.texture_property_name, true);

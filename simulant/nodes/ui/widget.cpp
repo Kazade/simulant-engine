@@ -1006,7 +1006,7 @@ void Widget::set_background_image(TexturePtr texture) {
     }
 
     style_->background_image_ = texture;
-    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_base_color_map(
         style_->background_image_);
 
     auto dim = texture->dimensions();
@@ -1044,7 +1044,7 @@ void Widget::set_foreground_image(TexturePtr texture) {
     }
 
     style_->foreground_image_ = texture;
-    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_base_color_map(
         style_->foreground_image_);
 
     auto dim = texture->dimensions();

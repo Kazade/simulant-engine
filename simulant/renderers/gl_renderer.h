@@ -11,7 +11,7 @@ namespace smlt {
 
 constexpr const char* const LIGHT_POSITION_PROPERTY = "s_light_position";
 constexpr const char* const LIGHT_AMBIENT_PROPERTY = "s_light_ambient";
-constexpr const char* const LIGHT_DIFFUSE_PROPERTY = "s_light_diffuse";
+constexpr const char* const LIGHT_BASE_COLOR_PROPERTY = "s_light_diffuse";
 constexpr const char* const LIGHT_SPECULAR_PROPERTY = "s_light_specular";
 constexpr const char* const LIGHT_CONSTANT_ATTENUATION_PROPERTY = "s_light_constant_attenuation";
 constexpr const char* const LIGHT_LINEAR_ATTENUATION_PROPERTY = "s_light_linear_attenuation";

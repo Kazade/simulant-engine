@@ -179,9 +179,9 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         sceGuEnable(GU_TEXTURE_2D);
 
         // We have to keep the filter in sync
-        auto id = next->diffuse_map()->_renderer_specific_id();
+        auto id = next->base_color_map()->_renderer_specific_id();
         auto tex = renderer_->texture_manager_.find_texture(id);
-        tex->filter = next->diffuse_map()->texture_filter();
+        tex->filter = next->base_color_map()->texture_filter();
 
         renderer_->texture_manager_.bind_texture(id);
     } else {

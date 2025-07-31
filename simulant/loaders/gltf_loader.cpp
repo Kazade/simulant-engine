@@ -626,33 +626,31 @@ static smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
     return smlt::TexturePtr();
 }
 
-static void approximate_pbr_material(MaterialPtr& mat, float metallic,
-                                     float roughness, Color emissive,
-                                     Color base_color) {
-    auto ambient = base_color * 0.1f;
-    ambient.a = base_color.a;
+// static void approximate_pbr_material(MaterialPtr& mat, float metallic,
+//                                      float roughness, Color emissive,
+//                                      Color base_color) {
+//     auto ambient = base_color * 0.1f;
+//     ambient.a = base_color.a;
 
-    auto diffuse = base_color;
-    diffuse.a = base_color.a;
+//     auto diffuse = base_color;
+//     diffuse.a = base_color.a;
 
-    auto specular = base_color * metallic;
-    specular.a = base_color.a;
+//     auto specular = base_color * metallic;
+//     specular.a = base_color.a;
 
-    mat->set_shininess(128.0f * (1.0f - roughness));
-    mat->set_ambient(ambient);
-    mat->set_diffuse(diffuse);
-    mat->set_specular(specular);
-    mat->set_emission(emissive);
-}
+//     mat->set_shininess(128.0f * (1.0f - roughness));
+//     mat->set_ambient(ambient);
+//     mat->set_diffuse(diffuse);
+//     mat->set_specular(specular);
+//     mat->set_emission(emissive);
+// }
 
 static smlt::MaterialPtr create_default_material(StageNode* node) {
     auto& scene = node->scene;
-    auto base_color = smlt::Color::white();
     auto mat = scene->assets->clone_default_material();
     mat->set_name("Default");
     mat->set_lighting_enabled(true);
     mat->set_textures_enabled(0);
-    approximate_pbr_material(mat, 0.0f, 0.4f, Color(0, 0, 0, 1), base_color);
     mat->set_cull_mode(smlt::CULL_MODE_BACK_FACE);
     return mat;
 }
@@ -668,6 +666,11 @@ smlt::MaterialPtr load_material(StageNode* node, JSONIterator& js,
 
     auto base_texture_id =
         material["pbrMetallicRoughness"]["baseColorTexture"]["index"]
+            ->to_int()
+            .value_or(-1);
+
+    auto metallic_roughness_texture_id =
+        material["pbrMetallicRoughness"]["metallicRoughnessTexture"]["index"]
             ->to_int()
             .value_or(-1);
 
@@ -693,18 +696,24 @@ smlt::MaterialPtr load_material(StageNode* node, JSONIterator& js,
     smlt::EnabledTextureMask enabled = 0;
     smlt::MaterialPtr ret = scene->assets->clone_default_material();
     if(base_texture_id >= 0) {
-        ret->set_diffuse_map(textures[base_texture_id]);
-        enabled |= smlt::DIFFUSE_MAP_ENABLED;
+        ret->set_base_color_map(textures[base_texture_id]);
+        enabled |= BASE_COLOR_MAP_ENABLED;
+    }
+
+    if(metallic_roughness_texture_id >= 0) {
+        ret->set_metallic_roughness_map(
+            textures[metallic_roughness_texture_id]);
+        enabled |= METALLIC_ROUGHNESS_MAP_ENABLED;
     }
 
     if(normal_texture_id >= 0) {
         ret->set_normal_map(textures[normal_texture_id]);
-        enabled |= smlt::NORMAL_MAP_ENABLED;
+        enabled |= NORMAL_MAP_ENABLED;
     }
 
     if(occ_texture_id >= 0) {
         ret->set_light_map(textures[occ_texture_id]);
-        enabled |= smlt::LIGHT_MAP_ENABLED;
+        enabled |= LIGHT_MAP_ENABLED;
     }
 
     auto base_color = material["pbrMetallicRoughness"]["baseColorFactor"];
@@ -731,7 +740,10 @@ smlt::MaterialPtr load_material(StageNode* node, JSONIterator& js,
     ret->pass(0)->set_blend_func((alpha_mode == "OPAQUE") ? smlt::BLEND_NONE
                                                           : smlt::BLEND_ALPHA);
 
-    approximate_pbr_material(ret, metallic, roughness, emissive, color);
+    ret->set_metallic(metallic);
+    ret->set_roughness(roughness);
+    ret->set_base_color(color);
+
     return ret;
 }
 

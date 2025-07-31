@@ -23,6 +23,7 @@
 #include "../../nodes/light.h"
 #include "../../stage.h"
 #include "../../utils/gl_error.h"
+#include "../../utils/pbr.h"
 #include "../../window.h"
 
 namespace smlt {
@@ -93,18 +94,15 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
                                                  const MaterialPass* next) {
     pass_ = next;
 
-    const auto& diffuse = next->diffuse();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &diffuse.r);
+    auto s = pbr_to_traditional(next->base_color(), next->metallic(),
+                                next->roughness(), next->specular_color(),
+                                next->specular());
 
-    const auto& ambient = next->ambient();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &ambient.r);
-
-    const auto& emission = next->emission();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_EMISSION, &emission.r);
-
-    const auto& specular = next->specular();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &specular.r);
-    GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, next->shininess());
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &s.diffuse.r);
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &s.ambient.r);
+    // GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_EMISSION, &s.emission.r);
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &s.specular.r);
+    GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, s.shininess);
 
     if(next->is_depth_test_enabled()) {
         GLCheck(glEnable, GL_DEPTH_TEST);
@@ -172,10 +170,10 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         }                                                                      \
     }
 
-    ENABLE_TEXTURE(0, diffuse);
+    ENABLE_TEXTURE(0, base_color);
     ENABLE_TEXTURE(1, light);
     ENABLE_TEXTURE(2, normal);
-    ENABLE_TEXTURE(3, specular);
+    ENABLE_TEXTURE(3, metallic_roughness);
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
     if(!prev || prev->point_size() != next->point_size()) {

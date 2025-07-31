@@ -51,12 +51,14 @@ Material::Material(AssetID id, AssetManager* asset_manager):
 
     /* The core material has 4 texture properties by default */
 
-    TexturePropertyInfo diffuse_map;
-    diffuse_map.texture_property_name = DIFFUSE_MAP_PROPERTY_NAME;
-    diffuse_map.texture_property_name_hash = DIFFUSE_MAP_PROPERTY_HASH;
-    diffuse_map.matrix_property_name = DIFFUSE_MAP_MATRIX_PROPERTY_NAME;
-    diffuse_map.matrix_property_name_hash = DIFFUSE_MAP_MATRIX_PROPERTY_HASH;
-    texture_properties_.insert(std::make_pair(DIFFUSE_MAP_PROPERTY_HASH, diffuse_map));
+    TexturePropertyInfo base_color_map;
+    base_color_map.texture_property_name = BASE_COLOR_MAP_PROPERTY_NAME;
+    base_color_map.texture_property_name_hash = BASE_COLOR_MAP_PROPERTY_HASH;
+    base_color_map.matrix_property_name = BASE_COLOR_MAP_MATRIX_PROPERTY_NAME;
+    base_color_map.matrix_property_name_hash =
+        BASE_COLOR_MAP_MATRIX_PROPERTY_HASH;
+    texture_properties_.insert(
+        std::make_pair(BASE_COLOR_MAP_PROPERTY_HASH, base_color_map));
 
     TexturePropertyInfo light_map;
     light_map.texture_property_name = LIGHT_MAP_PROPERTY_NAME;
@@ -65,13 +67,17 @@ Material::Material(AssetID id, AssetManager* asset_manager):
     light_map.matrix_property_name_hash = LIGHT_MAP_MATRIX_PROPERTY_HASH;
     texture_properties_.insert(std::make_pair(LIGHT_MAP_PROPERTY_HASH, light_map));
 
-    TexturePropertyInfo specular_map;
-    specular_map.texture_property_name = SPECULAR_MAP_PROPERTY_NAME;
-    specular_map.texture_property_name_hash = SPECULAR_MAP_PROPERTY_HASH;
-    specular_map.matrix_property_name = SPECULAR_MAP_MATRIX_PROPERTY_NAME;
-    specular_map.matrix_property_name_hash = SPECULAR_MAP_MATRIX_PROPERTY_HASH;
-    texture_properties_.insert(std::make_pair(SPECULAR_MAP_PROPERTY_HASH, specular_map));
-
+    TexturePropertyInfo metallic_roughness_map;
+    metallic_roughness_map.texture_property_name =
+        METALLIC_ROUGHNESS_MAP_PROPERTY_NAME;
+    metallic_roughness_map.texture_property_name_hash =
+        METALLIC_ROUGHNESS_MAP_PROPERTY_HASH;
+    metallic_roughness_map.matrix_property_name =
+        METALLIC_ROUGHNESS_MAP_MATRIX_PROPERTY_NAME;
+    metallic_roughness_map.matrix_property_name_hash =
+        METALLIC_ROUGHNESS_MAP_MATRIX_PROPERTY_HASH;
+    texture_properties_.insert(std::make_pair(
+        METALLIC_ROUGHNESS_MAP_PROPERTY_HASH, metallic_roughness_map));
 
     TexturePropertyInfo normal_map;
     normal_map.texture_property_name = NORMAL_MAP_PROPERTY_NAME;
@@ -104,12 +110,12 @@ Material::~Material() {
 }
 
 void Material::initialize_core_properties() {
-    set_property_value(DIFFUSE_PROPERTY_NAME, Color::white());
-    set_property_value(AMBIENT_PROPERTY_NAME, Color::white());
-    set_property_value(EMISSION_PROPERTY_NAME, Color(0, 0, 0, 1));
-    set_property_value(SPECULAR_PROPERTY_NAME, Color(0, 0, 0, 1));
+    set_property_value(BASE_COLOR_PROPERTY_NAME, Color::white());
+    set_property_value(ROUGHNESS_PROPERTY_NAME, 0.4f);
+    set_property_value(METALLIC_PROPERTY_NAME, 0.0f);
+    set_property_value(SPECULAR_COLOR_PROPERTY_NAME, Color(0, 0, 0, 1));
 
-    set_property_value(SHININESS_PROPERTY_NAME, 0.0f);
+    set_property_value(SPECULAR_PROPERTY_NAME, 0.0f);
     set_property_value(POINT_SIZE_PROPERTY_NAME, 1.0f);
 
     set_property_value(DEPTH_WRITE_ENABLED_PROPERTY_NAME, true);
@@ -117,16 +123,16 @@ void Material::initialize_core_properties() {
     set_property_value(LIGHTING_ENABLED_PROPERTY_NAME, true);
 
     set_property_value(TEXTURES_ENABLED_PROPERTY_NAME,
-                       DIFFUSE_MAP_ENABLED | LIGHT_MAP_ENABLED |
-                           SPECULAR_MAP_ENABLED | NORMAL_MAP_ENABLED);
+                       BASE_COLOR_MAP_ENABLED | LIGHT_MAP_ENABLED |
+                           METALLIC_ROUGHNESS_MAP_ENABLED | NORMAL_MAP_ENABLED);
 
-    set_property_value(DIFFUSE_MAP_PROPERTY_NAME, TexturePtr());
-    set_property_value(SPECULAR_MAP_PROPERTY_NAME, TexturePtr());
+    set_property_value(BASE_COLOR_MAP_PROPERTY_NAME, TexturePtr());
+    set_property_value(METALLIC_ROUGHNESS_MAP_PROPERTY_NAME, TexturePtr());
     set_property_value(LIGHT_MAP_PROPERTY_NAME, TexturePtr());
     set_property_value(NORMAL_MAP_PROPERTY_NAME, TexturePtr());
 
-    set_property_value(DIFFUSE_MAP_MATRIX_PROPERTY_NAME, Mat4());
-    set_property_value(SPECULAR_MAP_MATRIX_PROPERTY_NAME, Mat4());
+    set_property_value(BASE_COLOR_MAP_MATRIX_PROPERTY_NAME, Mat4());
+    set_property_value(METALLIC_ROUGHNESS_MAP_MATRIX_PROPERTY_NAME, Mat4());
     set_property_value(LIGHT_MAP_MATRIX_PROPERTY_NAME, Mat4());
     set_property_value(NORMAL_MAP_MATRIX_PROPERTY_NAME, Mat4());
 

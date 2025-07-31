@@ -283,7 +283,7 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
     assert(page.texture);
 
     page.material = font->asset_manager().load_material(Material::BuiltIns::TEXTURE_ONLY);
-    page.material->set_diffuse_map(page.texture);
+    page.material->set_base_color_map(page.texture);
     page.material->set_cull_mode(CULL_MODE_NONE);
     page.material->set_depth_test_enabled(false);
     page.material->set_blend_func(BLEND_ALPHA);

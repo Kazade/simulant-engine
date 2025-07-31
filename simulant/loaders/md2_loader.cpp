@@ -304,7 +304,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
         }
 
         auto material = asset_manager->clone_default_material();
-        material->set_diffuse_map(tex);
+        material->set_base_color_map(tex);
 
         if(i == 0) {
             submesh->set_material(material);

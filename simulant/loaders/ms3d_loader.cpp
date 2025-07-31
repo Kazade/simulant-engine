@@ -1,12 +1,13 @@
 #include "ms3d_loader.h"
-#include "../vertex_data.h"
-#include "../meshes/mesh.h"
+#include "../application.h"
 #include "../asset_manager.h"
+#include "../assets/meshes/skeleton.h"
+#include "../meshes/mesh.h"
+#include "../platform.h"
+#include "../utils/pbr.h"
+#include "../vertex_data.h"
 #include "../vfs.h"
 #include "../window.h"
-#include "../assets/meshes/skeleton.h"
-#include "../platform.h"
-#include "../application.h"
 
 namespace smlt {
 namespace loaders {
@@ -335,11 +336,14 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         auto& material = materials[group.material_index];
         smlt::MaterialPtr mat = assets->create_material();
 
-        mat->set_ambient(material.ambient);
-        mat->set_diffuse(material.diffuse);
-        mat->set_specular(material.specular);
-        mat->set_emission(material.emissive);
-        mat->set_shininess(material.shininess);
+        auto s = traditional_to_pbr(material.ambient, material.diffuse,
+                                    material.specular, material.shininess);
+
+        mat->set_metallic(s.metallic);
+        mat->set_roughness(s.roughness);
+        mat->set_base_color(s.base_color);
+        mat->set_specular(s.specular);
+        mat->set_specular_color(s.specular_color);
 
         auto texname = kfs::path::norm_path(material.texture);
         if(texname[0] == '.' && texname[1] == '\\') {
@@ -363,10 +367,10 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         if(tex) {
             loaded_textures[texname] = tex;
-            mat->set_diffuse_map(tex);
+            mat->set_base_color_map(tex);
         }
 
-        mat->set_textures_enabled(DIFFUSE_MAP_ENABLED);
+        mat->set_textures_enabled(BASE_COLOR_MAP_ENABLED);
         mat->set_lighting_enabled(true);
 
         SubMeshPtr sm;

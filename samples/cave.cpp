@@ -38,7 +38,7 @@ public:
 
         // Materials + Textures
         for(auto submesh: cave_mesh_->each_submesh()) {
-            submesh->material()->diffuse_map()->set_texture_filter(
+            submesh->material()->base_color_map()->set_texture_filter(
                 TextureFilter::TEXTURE_FILTER_BILINEAR);
         }
 
@@ -47,13 +47,13 @@ public:
         ray_mat->set_lighting_enabled(false);
         ray_mat->pass(0)->set_depth_test_enabled(false);
         ray_mat->pass(0)->set_depth_write_enabled(false);
-        ray_mat->diffuse_map()->set_texture_filter(
+        ray_mat->base_color_map()->set_texture_filter(
             TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         auto fairy_mat = fairy_mesh_->first_submesh()->material();
         fairy_mat->pass(0)->set_blend_func(BlendType::BLEND_ADD);
         fairy_mat->pass(0)->set_lighting_enabled(false);
-        fairy_mat->diffuse_map()->set_texture_filter(
+        fairy_mat->base_color_map()->set_texture_filter(
             TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         // Geoms + Actors
