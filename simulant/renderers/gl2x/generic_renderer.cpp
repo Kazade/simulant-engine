@@ -195,7 +195,9 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
     uint8_t texture_unit = 0;
     for(auto& tex_prop: texture_props) {
         auto& info = tex_prop.second;
+
         auto tloc = program->locate_uniform(info.texture_property_name, true);
+
         if(tloc > -1) {
             // This texture is being used
             program->set_uniform_int(tloc, texture_unit++);

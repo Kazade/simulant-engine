@@ -11,13 +11,13 @@ uniform float s_light_constant_attenuation;
 uniform float s_light_linear_attenuation;
 uniform float s_light_quadratic_attenuation;
 
-uniform sampler2D s_diffuse_map;
+uniform sampler2D s_base_color_map;
 uniform vec4 s_global_ambient;
 uniform vec4 s_material_ambient;
 uniform vec4 s_material_diffuse;
 uniform vec4 s_material_specular;
 uniform float s_material_shininess;
-uniform mat4 s_diffuse_map_matrix;
+uniform mat4 s_base_color_map_matrix;
 
 varying vec4 vertex_position_eye;
 varying vec4 vertex_normal_eye;
@@ -54,7 +54,7 @@ void main() {
     vec4 diff = diffuse_lighting(n_eye, s_eye);
     vec4 spec = specular_lighting(n_eye, s_eye, v_eye);
 
-    vec4 map_diffuse = texture2D(s_diffuse_map, frag_texcoord0.st);
+    vec4 map_diffuse = texture2D(s_base_color_map, frag_texcoord0.st);
 
     float attenuation = 1.0;
 
