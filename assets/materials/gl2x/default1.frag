@@ -14,7 +14,7 @@ uniform float s_light_quadratic_attenuation;
 uniform sampler2D s_base_color_map;
 uniform vec4 s_global_ambient;
 uniform vec4 s_material_ambient;
-uniform vec4 s_material_diffuse;
+uniform vec4 s_material_base_color;
 uniform vec4 s_material_specular;
 uniform float s_material_shininess;
 uniform mat4 s_base_color_map_matrix;
@@ -30,7 +30,7 @@ vec4 ambient_lighting() {
 
 vec4 diffuse_lighting(vec4 N, vec4 L) {
     float term = clamp(dot(N, L), float(0.0), float(1.0));
-    return s_material_diffuse * s_light_diffuse * term;
+    return s_material_base_color * s_light_diffuse * term;
 }
 
 vec4 specular_lighting(vec4 N, vec4 L, vec4 V) {

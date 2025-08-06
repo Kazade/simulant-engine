@@ -312,7 +312,7 @@ void GenericRenderer::set_auto_attributes_on_shader(
                    &VertexSpecification::has_positions,
                    &VertexSpecification::position_offset, offset);
 
-    send_attribute(program->locate_attribute("s_diffuse", true),
+    send_attribute(program->locate_attribute("s_base_color", true),
                    VERTEX_ATTRIBUTE_TYPE_BASE_COLOR, vertex_spec,
                    &VertexSpecification::has_base_color,
                    &VertexSpecification::base_color_offset, offset);
@@ -566,7 +566,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
     renderer_->set_material_uniforms(next, program_);
 
-    for(auto prop: mat->custom_properties()) {
+    for(auto& prop: mat->custom_properties()) {
         switch(prop.second.type) {
             case MATERIAL_PROPERTY_TYPE_INT:
                 const int* i;
