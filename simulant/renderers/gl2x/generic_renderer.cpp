@@ -452,6 +452,16 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         return;
     }
 
+    if(!renderer_->default_texture_) {
+        renderer_->default_texture_ = get_app()->shared_assets->create_texture(
+            1, 1, TEXTURE_FORMAT_RGB_3UB_888);
+        renderer_->default_texture_->set_name("DefaultTexture");
+        renderer_->default_texture_->set_data(
+            std::vector<uint8_t>({255, 255, 255})); // White texture
+        renderer_->default_texture_->set_texture_filter(TEXTURE_FILTER_POINT);
+        renderer_->default_texture_->flush();
+    }
+
     /* First we bind any used texture properties to their associated variables
      */
     uint8_t texture_unit = 0;
@@ -480,7 +490,9 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         if(loc > -1 && (texture_unit + 1u) < _S_GL_MAX_TEXTURE_UNITS) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + texture_unit);
             GLCheck(glBindTexture, GL_TEXTURE_2D,
-                    (tex) ? tex->_renderer_specific_id() : 0);
+                    (tex)
+                        ? tex->_renderer_specific_id()
+                        : renderer_->default_texture_->_renderer_specific_id());
             texture_unit++;
         }
     }

@@ -105,6 +105,9 @@ public:
 private:
     GPUProgramManager program_manager_;
     GPUProgramPtr default_gpu_program_ = 0;
+
+    TexturePtr default_texture_;
+
     bool use_es_ = false;
     std::shared_ptr<VBOManager> buffer_manager_;
 
