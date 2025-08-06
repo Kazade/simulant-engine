@@ -423,19 +423,19 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
-            final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, 1));
+            final_mesh->vertex_data->base_color(smlt::Color(x, y, z, 1));
         } else if(attr == VERTEX_ATTRIBUTE_4F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             auto w = *(float*)(buffer_info.data + i + 12);
-            final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, w));
+            final_mesh->vertex_data->base_color(smlt::Color(x, y, z, w));
         } else if(attr == VERTEX_ATTRIBUTE_4UB) {
             auto r = *(uint8_t*)(buffer_info.data + i);
             auto g = *(uint8_t*)(buffer_info.data + i + 1);
             auto b = *(uint8_t*)(buffer_info.data + i + 2);
             auto a = *(uint8_t*)(buffer_info.data + i + 3);
-            final_mesh->vertex_data->diffuse(
+            final_mesh->vertex_data->base_color(
                 smlt::Color::from_bytes(r, g, b, a));
         } else if(attr == VERTEX_ATTRIBUTE_4US) {
             auto r = *(uint16_t*)(buffer_info.data + i);
@@ -443,7 +443,7 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
             auto b = *(uint16_t*)(buffer_info.data + i + 4);
             auto a = *(uint16_t*)(buffer_info.data + i + 6);
 
-            final_mesh->vertex_data->diffuse(
+            final_mesh->vertex_data->base_color(
                 smlt::Color::from_bytes(r >> 8, g >> 8, b >> 8, a >> 8));
         } else {
             S_ERROR("Unsupported color attribute type");
@@ -625,25 +625,6 @@ static smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
 
     return smlt::TexturePtr();
 }
-
-// static void approximate_pbr_material(MaterialPtr& mat, float metallic,
-//                                      float roughness, Color emissive,
-//                                      Color base_color) {
-//     auto ambient = base_color * 0.1f;
-//     ambient.a = base_color.a;
-
-//     auto diffuse = base_color;
-//     diffuse.a = base_color.a;
-
-//     auto specular = base_color * metallic;
-//     specular.a = base_color.a;
-
-//     mat->set_shininess(128.0f * (1.0f - roughness));
-//     mat->set_ambient(ambient);
-//     mat->set_diffuse(diffuse);
-//     mat->set_specular(specular);
-//     mat->set_emission(emissive);
-// }
 
 static smlt::MaterialPtr create_default_material(StageNode* node) {
     auto& scene = node->scene;

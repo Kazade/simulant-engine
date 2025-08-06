@@ -313,9 +313,9 @@ void GenericRenderer::set_auto_attributes_on_shader(
                    &VertexSpecification::position_offset, offset);
 
     send_attribute(program->locate_attribute("s_diffuse", true),
-                   VERTEX_ATTRIBUTE_TYPE_DIFFUSE, vertex_spec,
-                   &VertexSpecification::has_diffuse,
-                   &VertexSpecification::diffuse_offset, offset);
+                   VERTEX_ATTRIBUTE_TYPE_BASE_COLOR, vertex_spec,
+                   &VertexSpecification::has_base_color,
+                   &VertexSpecification::base_color_offset, offset);
 
     send_attribute(program->locate_attribute("s_texcoord0", true),
                    VERTEX_ATTRIBUTE_TYPE_TEXCOORD0, vertex_spec,

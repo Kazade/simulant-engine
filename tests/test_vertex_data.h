@@ -59,27 +59,27 @@ public:
         smlt::VertexSpecification spec;
         spec.position_attribute = VERTEX_ATTRIBUTE_3F;
         spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
-        spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB;
+        spec.base_color_attribute = VERTEX_ATTRIBUTE_4UB;
         spec.normal_attribute = VERTEX_ATTRIBUTE_PACKED_VEC4_1I;
         spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;
 
-        assert_equal((uint32_t) spec.diffuse_offset(), sizeof(float) * 5u);
+        assert_equal((uint32_t)spec.base_color_offset(), sizeof(float) * 5u);
         assert_equal((uint32_t) spec.normal_offset(), (sizeof(float) * 5u) + sizeof(uint32_t));
         assert_equal((uint32_t) spec.texcoord1_offset(), (sizeof(float) * 5u) + (sizeof(uint32_t) * 2));
 
         smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
         data->position(smlt::Vec3());
-        data->diffuse(smlt::Color(0, 0, 0, 0));
+        data->base_color(smlt::Color(0, 0, 0, 0));
         data->normal(smlt::Vec3::up());
         data->move_next();
 
         data->position(smlt::Vec3());
-        data->diffuse(smlt::Color(0, 0, 0, 0));
+        data->base_color(smlt::Color(0, 0, 0, 0));
         data->normal(smlt::Vec3::left());
         data->move_next();
 
         data->position(smlt::Vec3());
-        data->diffuse(smlt::Color(0, 0, 0, 0));
+        data->base_color(smlt::Color(0, 0, 0, 0));
         data->normal(smlt::Vec3(0.5, -0.5, 0.5));
         data->move_next();
 
@@ -104,14 +104,14 @@ public:
             smlt::VERTEX_ATTRIBUTE_3F
         };
 
-        spec.diffuse_attribute = smlt::VERTEX_ATTRIBUTE_4UB;
+        spec.base_color_attribute = smlt::VERTEX_ATTRIBUTE_4UB;
 
         smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
         data->position(0, 0, 0);
-        data->diffuse(smlt::Color(1.1, 1.1, 1.1, 1.1));
+        data->base_color(smlt::Color(1.1, 1.1, 1.1, 1.1));
         data->move_next();
 
-        uint8_t* color = &(data->data()[spec.diffuse_offset()]);
+        uint8_t* color = &(data->data()[spec.base_color_offset()]);
 
         assert_equal(color[0], 255);
         assert_equal(color[1], 255);

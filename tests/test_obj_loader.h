@@ -44,21 +44,21 @@ public:
         );
 
         auto spec = smlt::VertexSpecification::DEFAULT;
-        spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
+        spec.base_color_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
 
         auto mesh = application->shared_assets->create_mesh(spec);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
-        const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
+        const uint8_t* bytes = mesh->vertex_data->base_color_at<uint8_t>(0);
 
         assert_equal(bytes[0], 0);   // B
         assert_equal(bytes[1], 0);   // G
         assert_equal(bytes[2], 255); // R
         assert_equal(bytes[3], 255); // A
 
-        bytes = mesh->vertex_data->diffuse_at<uint8_t>(1);
+        bytes = mesh->vertex_data->base_color_at<uint8_t>(1);
         assert_equal(bytes[0], 0);   // B
         assert_equal(bytes[1], 255); // G
         assert_equal(bytes[2], 0);   // R
@@ -80,19 +80,19 @@ public:
         );
 
         auto spec = smlt::VertexSpecification::DEFAULT;
-        spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
+        spec.base_color_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
         auto mesh = application->shared_assets->create_mesh(spec);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
-        const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
+        const uint8_t* bytes = mesh->vertex_data->base_color_at<uint8_t>(0);
         assert_equal(bytes[0], 255);  // B
         assert_equal(bytes[1], 255);  // G
         assert_equal(bytes[2], 255);  // R
         assert_equal(bytes[3], 255);  // A
 
-        bytes = mesh->vertex_data->diffuse_at<uint8_t>(1);
+        bytes = mesh->vertex_data->base_color_at<uint8_t>(1);
         assert_equal(bytes[0], 255);  // B
         assert_equal(bytes[1], 255);  // G
         assert_equal(bytes[2], 255);  // R
@@ -117,7 +117,7 @@ public:
         assert_equal(mesh->vertex_data->count(), 3u);
 
         auto spec = mesh->vertex_data->vertex_specification();
-        assert_false(spec.has_diffuse());
+        assert_false(spec.has_base_color());
         assert_false(spec.has_normals());
         assert_false(spec.has_texcoord0());
     }

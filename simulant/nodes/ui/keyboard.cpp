@@ -1196,14 +1196,14 @@ private:
                 mesh_->vertex_data->move_to(idx);
 
                 for(int i = 0; i < 4; ++i) {
-                    mesh_->vertex_data->diffuse(fg_color);
+                    mesh_->vertex_data->base_color(fg_color);
                     mesh_->vertex_data->move_next();
                 }
             }
 
             mesh_->vertex_data->move_to(key->first_vertex_index);
             for(int i = 0; i < 4; ++i) {
-                mesh_->vertex_data->diffuse(highlight_color);
+                mesh_->vertex_data->base_color(highlight_color);
                 mesh_->vertex_data->move_next();
             }
 

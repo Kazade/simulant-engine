@@ -497,8 +497,8 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
             batch->data->normal(n);
         }
 
-        if(info->vspec.has_diffuse()) {
-            batch->data->diffuse(diffuse);
+        if(info->vspec.has_base_color()) {
+            batch->data->base_color(diffuse);
         }
 
         batch->data->move_next();

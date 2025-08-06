@@ -25,7 +25,7 @@ VertexSpecification determine_spec(const FileHeader& header) {
         VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_4F;
     vspec.texcoord0_attribute = (header.tex0_format == TEX_COORD_FORMAT_2F) ? VERTEX_ATTRIBUTE_2F : VERTEX_ATTRIBUTE_NONE;
     vspec.texcoord1_attribute = (header.tex1_format == TEX_COORD_FORMAT_2F) ? VERTEX_ATTRIBUTE_2F : VERTEX_ATTRIBUTE_NONE;
-    vspec.diffuse_attribute =
+    vspec.base_color_attribute =
         (header.color_format == COLOR_FORMAT_4UB)  ? VERTEX_ATTRIBUTE_4UB_RGBA
         : (header.color_format == COLOR_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F
                                                    : VERTEX_ATTRIBUTE_4F;
@@ -233,16 +233,17 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         if(fheader.color_format == COLOR_FORMAT_4UB) {
             uint8_t color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Color::from_bytes(color[0], color[1],
-                                                    color[2], color[3]));
+            vdata->base_color(smlt::Color::from_bytes(color[0], color[1],
+                                                      color[2], color[3]));
         } else if(fheader.color_format == COLOR_FORMAT_4F) {
             float color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Color(color[0], color[1], color[2], color[3]));
+            vdata->base_color(
+                smlt::Color(color[0], color[1], color[2], color[3]));
         } else if(fheader.color_format == COLOR_FORMAT_3F) {
             float color[3];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Color(color[0], color[1], color[2], 1.0f));
+            vdata->base_color(smlt::Color(color[0], color[1], color[2], 1.0f));
         }
 
         if(spec.normal_attribute == VERTEX_ATTRIBUTE_3F) {

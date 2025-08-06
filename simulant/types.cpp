@@ -32,10 +32,13 @@ const std::vector<RenderPriority> RENDER_PRIORITIES = {
     RENDER_PRIORITY_ABSOLUTE_FOREGROUND
 };
 
-VertexSpecification::VertexSpecification(VertexAttribute position, VertexAttribute normal, VertexAttribute texcoord0,
-        VertexAttribute texcoord1, VertexAttribute texcoord2, VertexAttribute texcoord3, VertexAttribute texcoord4,
-        VertexAttribute texcoord5, VertexAttribute texcoord6, VertexAttribute texcoord7,
-        VertexAttribute diffuse, VertexAttribute specular):
+VertexSpecification::VertexSpecification(
+    VertexAttribute position, VertexAttribute normal, VertexAttribute texcoord0,
+    VertexAttribute texcoord1, VertexAttribute texcoord2,
+    VertexAttribute texcoord3, VertexAttribute texcoord4,
+    VertexAttribute texcoord5, VertexAttribute texcoord6,
+    VertexAttribute texcoord7, VertexAttribute diffuse,
+    VertexAttribute specular) :
     position_attribute_(position),
     normal_attribute_(normal),
     texcoord0_attribute_(texcoord0),
@@ -46,7 +49,7 @@ VertexSpecification::VertexSpecification(VertexAttribute position, VertexAttribu
     texcoord5_attribute_(texcoord5),
     texcoord6_attribute_(texcoord6),
     texcoord7_attribute_(texcoord7),
-    diffuse_attribute_(diffuse),
+    base_color_attribute_(diffuse),
     specular_attribute_(specular) {
 
     recalc_stride_and_offsets();
@@ -88,9 +91,11 @@ void VertexSpecification::recalc_stride_and_offsets() {
      * so that the default vertex arrangement is 32 bytes. */
 
     texcoord0_offset_ = position_offset_ + vertex_attribute_size(position_attribute_);
-    diffuse_offset_ = texcoord0_offset_ + vertex_attribute_size(texcoord0_attribute_);
+    base_color_offset_ =
+        texcoord0_offset_ + vertex_attribute_size(texcoord0_attribute_);
 
-    normal_offset_ = diffuse_offset_ + vertex_attribute_size(diffuse_attribute_);
+    normal_offset_ =
+        base_color_offset_ + vertex_attribute_size(base_color_attribute_);
     texcoord1_offset_ = normal_offset_ + vertex_attribute_size(normal_attribute_);
     texcoord2_offset_ = texcoord1_offset_ + vertex_attribute_size(texcoord1_attribute_);
     texcoord3_offset_ = texcoord2_offset_ + vertex_attribute_size(texcoord2_attribute_);
@@ -171,9 +176,11 @@ AttributeOffset VertexSpecification::texcoordX_offset(uint8_t which, bool check)
     }
 }
 
-AttributeOffset VertexSpecification::diffuse_offset(bool check) const {
-    if(check && !has_diffuse()) { return INVALID_ATTRIBUTE_OFFSET; }
-    return diffuse_offset_;
+AttributeOffset VertexSpecification::base_color_offset(bool check) const {
+    if(check && !has_base_color()) {
+        return INVALID_ATTRIBUTE_OFFSET;
+    }
+    return base_color_offset_;
 }
 
 AttributeOffset VertexSpecification::specular_offset(bool check) const {

@@ -528,23 +528,23 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         disable_vertex_arrays();
     }
 
-    const auto has_diffuse = spec.has_diffuse();
-    if(has_diffuse) {
+    const auto has_base_color = spec.has_base_color();
+    if(has_base_color) {
         S_VERBOSE("Enabling colors");
         enable_color_arrays();
         GLCheck(glColorPointer,
-                (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
-                : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3
-                : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F ||
-                   spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA)
+                (spec.base_color_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
+                : (spec.base_color_attribute == VERTEX_ATTRIBUTE_3F) ? 3
+                : (spec.base_color_attribute == VERTEX_ATTRIBUTE_4F ||
+                   spec.base_color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA)
                     ? 4
                     : GL_BGRA, // This weirdness is an extension apparently
-                (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
-                 spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_BGRA)
+                (spec.base_color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
+                 spec.base_color_attribute == VERTEX_ATTRIBUTE_4UB_BGRA)
                     ? GL_UNSIGNED_BYTE
                     : GL_FLOAT,
                 stride,
-                ((const uint8_t*)vertex_data) + spec.diffuse_offset(false));
+                ((const uint8_t*)vertex_data) + spec.base_color_offset(false));
     } else {
         disable_color_arrays();
     }
