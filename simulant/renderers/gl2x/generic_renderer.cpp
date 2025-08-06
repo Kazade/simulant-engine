@@ -44,7 +44,7 @@ namespace smlt {
 /* These are bare minimal shaders so that *something* is displayed, they're only
  * used when the Material is incomplete (no shaders provided) */
 
-const std::string default_vertex_shader = R"(
+static const char* default_vertex_shader = R"(
 #version {0}
 
 attribute vec4 s_position;
@@ -54,7 +54,7 @@ void main(void) {
 
 )";
 
-const std::string default_fragment_shader = R"(
+static const char* default_fragment_shader = R"(
 #version {0}
 
 void main(void) {
