@@ -3,6 +3,7 @@
 #include "../asset_manager.h"
 #include "../meshes/mesh.h"
 #include "../utils/limited_string.h"
+#include "../utils/pbr.h"
 #include "../vertex_data.h"
 #include "../vfs.h"
 #include "dcm.h"
@@ -108,12 +109,16 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         new_mat->set_blend_func(mesh_opts.blending_enabled ? BLEND_ALPHA : BLEND_NONE);
         new_mat->set_base_color(smlt::Color(mat.diffuse, 4));
 
-        // FIXME: RESTORE!
-        S_WARN("DCM loader needs updating for PBR materials");
-        // new_mat->set_ambient(smlt::Color(mat.ambient, 4));
-        // new_mat->set_specular(smlt::Color(mat.specular, 4));
-        // new_mat->set_emission(smlt::Color(mat.emission, 4));
-        // new_mat->set_shininess(mat.shininess * 128.0f);
+        auto s = traditional_to_pbr(
+            smlt::Color(mat.ambient, 4), smlt::Color(mat.specular, 4),
+            smlt::Color(mat.emission, 4), mat.shininess * 128.0f);
+
+        new_mat->set_base_color(s.base_color);
+        new_mat->set_metallic(s.metallic);
+        new_mat->set_roughness(s.roughness);
+        new_mat->set_specular_color(s.specular_color);
+        new_mat->set_specular(s.specular);
+
         new_mat->set_name(
             std::string(mat.data_header.path, sizeof(mat.data_header.path))
                 .c_str());
