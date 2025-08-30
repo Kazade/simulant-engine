@@ -473,7 +473,7 @@ static constexpr GLenum convert_arrangement(MeshArrangement arrangement) {
            : (arrangement == MESH_ARRANGEMENT_TRIANGLES)  ? GL_TRIANGLES
            : (arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP)
                ? GL_TRIANGLE_STRIP
-           : (arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) ? GL_TRIANGLE_STRIP
+           : (arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) ? GL_TRIANGLE_FAN
            : (arrangement == MESH_ARRANGEMENT_QUADS)        ? GL_QUADS
                                                             : GL_TRIANGLES;
 }
