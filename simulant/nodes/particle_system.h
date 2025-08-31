@@ -21,6 +21,11 @@ namespace smlt {
 
 class ParticleSystem;
 
+enum ParticleSystemSpace {
+    PARTICLE_SYSTEM_SPACE_WORLD,
+    PARTICLE_SYSTEM_SPACE_LOCAL
+};
+
 typedef sig::signal<void(ParticleSystem*, AssetID, AssetID)>
     ParticleSystemMaterialChangedSignal;
 
@@ -89,6 +94,14 @@ public:
         return particles_[i];
     }
 
+    void set_space(ParticleSystemSpace space) {
+        space_ = space;
+    }
+
+    ParticleSystemSpace space() const {
+        return space_;
+    }
+
 private:
     bool on_create(Params params) override;
 
@@ -126,6 +139,8 @@ private:
     bool emitters_active_ = true;
 
     RandomGenerator random_;
+
+    ParticleSystemSpace space_ = PARTICLE_SYSTEM_SPACE_WORLD;
 };
 
 } // namespace smlt

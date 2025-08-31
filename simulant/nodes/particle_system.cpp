@@ -157,16 +157,22 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
         return;
     }
 
-    uint8_t* pos_ptr = vertex_data_->data();
-    uint8_t* dif_ptr =
-        pos_ptr + vertex_data_->vertex_specification().diffuse_offset(false);
-    uint8_t* uv_ptr =
-        pos_ptr + vertex_data_->vertex_specification().texcoord0_offset(false);
+    const auto& spec = vertex_data_->vertex_specification();
 
-    auto stride = vertex_data_->vertex_specification().stride();
+    uint8_t* pos_ptr = vertex_data_->data();
+    uint8_t* dif_ptr = pos_ptr + spec.diffuse_offset(false);
+    uint8_t* uv_ptr = pos_ptr + spec.texcoord0_offset(false);
+
+    auto stride = spec.stride();
 
     for(auto j = 0u; j < particle_count_; ++j) {
         auto& p = particles_[j];
+
+        const auto ppos =
+            (space_ == PARTICLE_SYSTEM_SPACE_WORLD)
+                ? p.position
+                : transform->position() +
+                      script_->emitter(p.emitter_index)->relative_position;
 
         Vec3* pos = (Vec3*)pos_ptr;
         float* uv = (float*)uv_ptr;
@@ -195,8 +201,8 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
 #define AIDX 3
 #endif
 
-        *(pos) = p.position + right * p.dimensions.x * -0.5f +
-                 up * p.dimensions.y * -0.5f;
+        *(pos) =
+            ppos + right * p.dimensions.x * -0.5f + up * p.dimensions.y * -0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -214,8 +220,8 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
         dif = (decltype(dif))dif_ptr;
         uv = (float*)uv_ptr;
 
-        *(pos) = p.position + right * p.dimensions.x * +0.5f +
-                 up * p.dimensions.y * -0.5f;
+        *(pos) =
+            ppos + right * p.dimensions.x * +0.5f + up * p.dimensions.y * -0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -233,8 +239,8 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
         dif = (decltype(dif))dif_ptr;
         uv = (float*)uv_ptr;
 
-        *(pos) = p.position + right * p.dimensions.x * -0.5f +
-                 up * p.dimensions.y * +0.5f;
+        *(pos) =
+            ppos + right * p.dimensions.x * -0.5f + up * p.dimensions.y * +0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -252,8 +258,8 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
         dif = (decltype(dif))dif_ptr;
         uv = (float*)uv_ptr;
 
-        *(pos) = p.position + right * p.dimensions.x * +0.5f +
-                 up * p.dimensions.y * +0.5f;
+        *(pos) =
+            ppos + right * p.dimensions.x * +0.5f + up * p.dimensions.y * +0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -438,10 +444,18 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
     while(state.emission_accumulator >= decrement) {
         // EMIT THE PARTICLE!
         Particle p;
+        p.emitter_index = (uint8_t)e;
+
         if(emitter->type == PARTICLE_EMITTER_POINT) {
-            p.position = transform->position() + emitter->relative_position;
+            p.position =
+                (space_ == PARTICLE_SYSTEM_SPACE_WORLD)
+                    ? transform->position() + emitter->relative_position
+                    : Vec3();
         } else {
-            p.position = transform->position() + emitter->relative_position;
+            p.position =
+                (space_ == PARTICLE_SYSTEM_SPACE_WORLD)
+                    ? transform->position() + emitter->relative_position
+                    : Vec3();
 
             float hw = emitter->dimensions.x * 0.5f * scale.x;
             float hh = emitter->dimensions.y * 0.5f * scale.y;
