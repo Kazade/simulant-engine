@@ -223,7 +223,15 @@ Material &Material::operator=(const Material &rhs) {
     }
 
     passes_.clear();
+    for(auto& pass: passes_) {
+        pass.program_.reset();
+    }
+
     set_pass_count(rhs.passes_.size());
+
+    for(std::size_t i = 0; i < rhs.passes_.size(); ++i) {
+        passes_[i].program_ = rhs.passes_[i].program_;
+    }
 
     /* Make sure this material is prepped */
     renderer_->prepare_material(this);

@@ -319,7 +319,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
                                          const uint8_t count) {
 
-    const LightState disabled_state;
+    LightState disabled_state;
 
     Light* current = nullptr;
 
@@ -347,9 +347,8 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
                 true,
                 Vec4(pos,
                      (current->light_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
-                current->diffuse(), current->ambient(), current->specular(),
-                current->constant_attenuation(), current->linear_attenuation(),
-                current->quadratic_attenuation());
+
+                current->color(), current->intensity(), current->range());
         }
 
         /* No need to update this light */
@@ -360,15 +359,22 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
         if(state.enabled) {
             GLCheck(glEnable, GL_LIGHT0 + i);
             GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &state.position.x);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &state.ambient.r);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &state.diffuse.r);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &state.specular.r);
-            GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION,
-                    state.constant_att);
+
+            auto ambient = state.color * state.intensity * 0.1;
+            auto diffuse = state.color * state.intensity;
+            auto specular = state.color * state.intensity * 0.1;
+
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &ambient.r);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &diffuse.r);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &specular.r);
+
+            // Approximate the GLTF lighting formula:
+            // attenuation = max( min( 1.0 - ( current_distance / range )4, 1 ),
+            // 0 ) / current_distance2
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION, 0.1f);
             GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION,
-                    state.linear_att);
-            GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION,
-                    state.quadratic_att);
+                    -1.0f / state.range);
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION, 1.0f);
 
         } else {
             GLCheck(glDisable, GL_LIGHT0 + i);
@@ -471,7 +477,7 @@ static constexpr GLenum convert_arrangement(MeshArrangement arrangement) {
            : (arrangement == MESH_ARRANGEMENT_TRIANGLES)  ? GL_TRIANGLES
            : (arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP)
                ? GL_TRIANGLE_STRIP
-           : (arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) ? GL_TRIANGLE_STRIP
+           : (arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) ? GL_TRIANGLE_FAN
            : (arrangement == MESH_ARRANGEMENT_QUADS)        ? GL_QUADS
                                                             : GL_TRIANGLES;
 }
@@ -528,23 +534,23 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         disable_vertex_arrays();
     }
 
-    const auto has_base_color = spec.has_base_color();
-    if(has_base_color) {
+    const auto has_color = spec.has_color();
+    if(has_color) {
         S_VERBOSE("Enabling colors");
         enable_color_arrays();
         GLCheck(glColorPointer,
-                (spec.base_color_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
-                : (spec.base_color_attribute == VERTEX_ATTRIBUTE_3F) ? 3
-                : (spec.base_color_attribute == VERTEX_ATTRIBUTE_4F ||
-                   spec.base_color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA)
+                (spec.color_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
+                : (spec.color_attribute == VERTEX_ATTRIBUTE_3F) ? 3
+                : (spec.color_attribute == VERTEX_ATTRIBUTE_4F ||
+                   spec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA)
                     ? 4
                     : GL_BGRA, // This weirdness is an extension apparently
-                (spec.base_color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
-                 spec.base_color_attribute == VERTEX_ATTRIBUTE_4UB_BGRA)
+                (spec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
+                 spec.color_attribute == VERTEX_ATTRIBUTE_4UB_BGRA)
                     ? GL_UNSIGNED_BYTE
                     : GL_FLOAT,
                 stride,
-                ((const uint8_t*)vertex_data) + spec.base_color_offset(false));
+                ((const uint8_t*)vertex_data) + spec.color_offset(false));
     } else {
         disable_color_arrays();
     }

@@ -25,7 +25,7 @@ VertexSpecification determine_spec(const FileHeader& header) {
         VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_4F;
     vspec.texcoord0_attribute = (header.tex0_format == TEX_COORD_FORMAT_2F) ? VERTEX_ATTRIBUTE_2F : VERTEX_ATTRIBUTE_NONE;
     vspec.texcoord1_attribute = (header.tex1_format == TEX_COORD_FORMAT_2F) ? VERTEX_ATTRIBUTE_2F : VERTEX_ATTRIBUTE_NONE;
-    vspec.base_color_attribute =
+    vspec.color_attribute =
         (header.color_format == COLOR_FORMAT_4UB)  ? VERTEX_ATTRIBUTE_4UB_RGBA
         : (header.color_format == COLOR_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F
                                                    : VERTEX_ATTRIBUTE_4F;
@@ -33,12 +33,12 @@ VertexSpecification determine_spec(const FileHeader& header) {
 
     /* FIXME: Do something better! */
 #if defined(__ANDROID__) || defined(__LINUX__)
-    if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
-        vspec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+    if(vspec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
+        vspec.color_attribute = VERTEX_ATTRIBUTE_4F;
     }
 #elif defined(__DREAMCAST__)
-    if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
-        vspec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
+    if(vspec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
+        vspec.color_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
     }
 #endif
 
@@ -103,15 +103,14 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         smlt::MaterialPtr new_mat =
             mesh->asset_manager().clone_default_material();
-        new_mat->set_pass_count(1);
+
         new_mat->set_lighting_enabled(true);
         new_mat->set_cull_mode(mesh_opts.cull_mode);
         new_mat->set_blend_func(mesh_opts.blending_enabled ? BLEND_ALPHA : BLEND_NONE);
-        new_mat->set_base_color(smlt::Color(mat.diffuse, 4));
 
         auto s = traditional_to_pbr(
-            smlt::Color(mat.ambient, 4), smlt::Color(mat.specular, 4),
-            smlt::Color(mat.emission, 4), mat.shininess * 128.0f);
+            smlt::Color(mat.ambient, 4), smlt::Color(mat.diffuse, 4),
+            smlt::Color(mat.specular, 4), mat.shininess * 128.0f);
 
         new_mat->set_base_color(s.base_color);
         new_mat->set_metallic(s.metallic);
@@ -233,17 +232,16 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         if(fheader.color_format == COLOR_FORMAT_4UB) {
             uint8_t color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->base_color(smlt::Color::from_bytes(color[0], color[1],
-                                                      color[2], color[3]));
+            vdata->color(smlt::Color::from_bytes(color[0], color[1], color[2],
+                                                 color[3]));
         } else if(fheader.color_format == COLOR_FORMAT_4F) {
             float color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->base_color(
-                smlt::Color(color[0], color[1], color[2], color[3]));
+            vdata->color(smlt::Color(color[0], color[1], color[2], color[3]));
         } else if(fheader.color_format == COLOR_FORMAT_3F) {
             float color[3];
             data_->read((char*) &color, sizeof(color));
-            vdata->base_color(smlt::Color(color[0], color[1], color[2], 1.0f));
+            vdata->color(smlt::Color(color[0], color[1], color[2], 1.0f));
         }
 
         if(spec.normal_attribute == VERTEX_ATTRIBUTE_3F) {

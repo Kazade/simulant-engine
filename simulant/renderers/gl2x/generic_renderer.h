@@ -111,7 +111,8 @@ private:
     bool use_es_ = false;
     std::shared_ptr<VBOManager> buffer_manager_;
 
-    void set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light);
+    void set_light_uniforms(const MaterialPass* pass, GPUProgram* program,
+                            uint8_t light_id, const LightPtr light);
     void set_material_uniforms(const MaterialPass *pass, GPUProgram* program);
     void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, const Renderable* renderable, Camera* camera);
     void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Color& global_ambient);

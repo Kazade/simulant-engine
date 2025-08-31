@@ -73,13 +73,13 @@ void SubMesh::set_base_color(const smlt::Color& color) {
     if(type_ == SUBMESH_TYPE_INDEXED) {
         for(auto i: *index_data) {
             vertex_data->move_to(i);
-            vertex_data->base_color(color);
+            vertex_data->color(color);
         };
     } else {
         for(auto& range: vertex_ranges_) {
             for(uint32_t i = range.start; i < range.start + range.count; ++i) {
                 vertex_data->move_to(i);
-                vertex_data->base_color(color);
+                vertex_data->color(color);
             };
         }
     }

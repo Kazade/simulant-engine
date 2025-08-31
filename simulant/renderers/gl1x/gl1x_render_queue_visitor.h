@@ -65,39 +65,27 @@ private:
         bool initialized = false;
         bool enabled = false;
         Vec4 position;
-        Color diffuse;
-        Color ambient;
-        Color specular;
-        float constant_att = 0;
-        float linear_att = 0;
-        float quadratic_att = 0;
+        Color color;
+        float intensity;
+        float range;
 
         LightState() = default;
-        LightState(bool enabled, Vec4 pos, Color diffuse, Color ambient, Color specular, float constant_att, float linear_att, float quadratic_att):
+        LightState(bool enabled, Vec4 pos, Color color, float intensity,
+                   float range) :
             enabled(enabled),
             position(pos),
-            diffuse(diffuse),
-            ambient(ambient),
-            specular(specular),
-            constant_att(constant_att),
-            linear_att(linear_att),
-            quadratic_att(quadratic_att) {}
+            color(color),
+            intensity(intensity),
+            range(range) {}
 
         bool operator!=(const LightState& rhs) const {
             return !(*this == rhs);
         }
 
         bool operator==(const LightState& rhs) const {
-            return (
-                enabled == rhs.enabled &&
-                position == rhs.position &&
-                diffuse == rhs.diffuse &&
-                ambient == rhs.ambient &&
-                specular == rhs.specular &&
-                constant_att == rhs.constant_att &&
-                linear_att == rhs.linear_att &&
-                quadratic_att == rhs.quadratic_att
-            );
+            return (enabled == rhs.enabled && position == rhs.position &&
+                    color == rhs.color && intensity == rhs.intensity &&
+                    range == rhs.range);
         }
     };
 

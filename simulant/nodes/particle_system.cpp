@@ -159,7 +159,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
 
     uint8_t* pos_ptr = vertex_data_->data();
     uint8_t* dif_ptr =
-        pos_ptr + vertex_data_->vertex_specification().base_color_offset(false);
+        pos_ptr + vertex_data_->vertex_specification().color_offset(false);
     uint8_t* uv_ptr =
         pos_ptr + vertex_data_->vertex_specification().texcoord0_offset(false);
 

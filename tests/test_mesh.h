@@ -265,7 +265,7 @@ public:
         assert_true(!data->vertex_specification().has_texcoord1());
         assert_true(!data->vertex_specification().has_texcoord2());
         assert_true(!data->vertex_specification().has_texcoord3());
-        assert_true(!data->vertex_specification().has_base_color());
+        assert_true(!data->vertex_specification().has_color());
         assert_true(!data->vertex_specification().has_specular());
         assert_equal(4u, data->count());
 

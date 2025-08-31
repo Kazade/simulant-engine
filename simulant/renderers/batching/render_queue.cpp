@@ -112,8 +112,7 @@ void RenderQueue::insert_renderable(Renderable&& renderable) {
             &group, &renderable, pass, priority, i, is_blended,
             renderable_dist_to_camera,
             material->base_color_map()
-                ? clamp(material->base_color_map()->_renderer_specific_id(), 0,
-                        1024)
+                ? material->base_color_map()->_renderer_specific_id()
                 : 0);
 
         render_queue_.insert(group, std::move(renderable));

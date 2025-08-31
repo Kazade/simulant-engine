@@ -148,8 +148,8 @@ public:
         for(auto& pos: positions_) {
             /* Supply the position and scale */
             vdata->position(pos * diameter);
-            if(spec.has_base_color()) {
-                vdata->base_color(smlt::Color::white());
+            if(spec.has_color()) {
+                vdata->color(smlt::Color::white());
             }
 
             auto N = pos.normalized();

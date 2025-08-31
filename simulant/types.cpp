@@ -49,7 +49,7 @@ VertexSpecification::VertexSpecification(
     texcoord5_attribute_(texcoord5),
     texcoord6_attribute_(texcoord6),
     texcoord7_attribute_(texcoord7),
-    base_color_attribute_(diffuse),
+    color_attribute_(diffuse),
     specular_attribute_(specular) {
 
     recalc_stride_and_offsets();
@@ -91,11 +91,10 @@ void VertexSpecification::recalc_stride_and_offsets() {
      * so that the default vertex arrangement is 32 bytes. */
 
     texcoord0_offset_ = position_offset_ + vertex_attribute_size(position_attribute_);
-    base_color_offset_ =
+    color_offset_ =
         texcoord0_offset_ + vertex_attribute_size(texcoord0_attribute_);
 
-    normal_offset_ =
-        base_color_offset_ + vertex_attribute_size(base_color_attribute_);
+    normal_offset_ = color_offset_ + vertex_attribute_size(color_attribute_);
     texcoord1_offset_ = normal_offset_ + vertex_attribute_size(normal_attribute_);
     texcoord2_offset_ = texcoord1_offset_ + vertex_attribute_size(texcoord1_attribute_);
     texcoord3_offset_ = texcoord2_offset_ + vertex_attribute_size(texcoord2_attribute_);
@@ -176,11 +175,11 @@ AttributeOffset VertexSpecification::texcoordX_offset(uint8_t which, bool check)
     }
 }
 
-AttributeOffset VertexSpecification::base_color_offset(bool check) const {
-    if(check && !has_base_color()) {
+AttributeOffset VertexSpecification::color_offset(bool check) const {
+    if(check && !has_color()) {
         return INVALID_ATTRIBUTE_OFFSET;
     }
-    return base_color_offset_;
+    return color_offset_;
 }
 
 AttributeOffset VertexSpecification::specular_offset(bool check) const {

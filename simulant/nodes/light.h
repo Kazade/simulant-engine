@@ -29,8 +29,6 @@
 
 namespace smlt {
 
-extern const Color DEFAULT_LIGHT_COLOR;
-
 class Light: public ContainerNode, public ChainNameable<Light> {
 
 public:
@@ -64,49 +62,28 @@ public:
         transform->set_position(Vec3(-dir.x, -dir.y, -dir.z));
     }
 
-    void set_diffuse(const smlt::Color& color) {
-        diffuse_ = color;
+    void set_intensity(float intensity) {
+        intensity_ = intensity;
     }
 
-    void set_ambient(const smlt::Color& color) {
-        ambient_ = color;
-    }
-
-    void set_specular(const smlt::Color& color) {
-        specular_ = color;
+    void set_color(const smlt::Color& color) {
+        color_ = color;
     }
 
     LightType light_type() const {
         return type_;
     }
-    const smlt::Color& ambient() const {
-        return ambient_;
-    }
-    const smlt::Color& diffuse() const {
-        return diffuse_;
-    }
-    const smlt::Color& specular() const {
-        return specular_;
-    }
 
-    /** Returns the owner stage's global ambient value. */
-    smlt::Color global_ambient() const;
-
-    void set_attenuation(float range, float constant, float linear,
-                         float quadratic);
-    void set_attenuation_from_range(float range);
+    const smlt::Color& color() const {
+        return color_;
+    }
 
     float range() const {
         return range_;
     }
-    float constant_attenuation() const {
-        return const_attenuation_;
-    }
-    float linear_attenuation() const {
-        return linear_attenuation_;
-    }
-    float quadratic_attenuation() const {
-        return quadratic_attenuation_;
+
+    float intensity() const {
+        return intensity_;
     }
 
     const AABB& aabb() const override {
@@ -119,15 +96,10 @@ protected:
 private:
     LightType type_;
 
-    smlt::Color ambient_;
-    smlt::Color diffuse_;
-    smlt::Color specular_;
-
+    smlt::Color color_;
     AABB bounds_;
-    float range_;
-    float const_attenuation_;
-    float linear_attenuation_;
-    float quadratic_attenuation_;
+    float range_ = 100.0f;
+    float intensity_ = 1.0f;
 };
 
 class PointLight: public Light {

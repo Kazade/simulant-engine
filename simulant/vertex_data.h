@@ -49,7 +49,7 @@ enum VertexAttributeType {
     VERTEX_ATTRIBUTE_TYPE_TEXCOORD5,
     VERTEX_ATTRIBUTE_TYPE_TEXCOORD6,
     VERTEX_ATTRIBUTE_TYPE_TEXCOORD7,
-    VERTEX_ATTRIBUTE_TYPE_BASE_COLOR,
+    VERTEX_ATTRIBUTE_TYPE_COLOR,
     VERTEX_ATTRIBUTE_TYPE_SPECULAR
 };
 
@@ -104,7 +104,7 @@ public:
     const T* texcoord1_at(uint32_t idx) const;
 
     template<typename T>
-    const T* base_color_at(const uint32_t index) const;
+    const T* color_at(const uint32_t index) const;
 
     /*
      * Position Non-Dimensional
@@ -137,10 +137,10 @@ public:
     void tex_coord3(float x, float y, float z, float w);
     void tex_coord3(const Vec2& vec) { tex_coord3(vec.x, vec.y); }
 
-    void base_color(float r, float g, float b);
-    void base_color(float r, float g, float b, float a);
-    void base_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-    void base_color(const Color& color);
+    void color(float r, float g, float b);
+    void color(float r, float g, float b, float a);
+    void color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    void color(const Color& color);
 
     void specular(float r, float g, float b, float a);
     void specular(const Color& color);
@@ -286,10 +286,10 @@ template<>
 const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const;
 
 template<>
-const Color* VertexData::base_color_at(const uint32_t index) const;
+const Color* VertexData::color_at(const uint32_t index) const;
 
 template<>
-const uint8_t* VertexData::base_color_at(const uint32_t index) const;
+const uint8_t* VertexData::color_at(const uint32_t index) const;
 
 typedef uint32_t Index;
 

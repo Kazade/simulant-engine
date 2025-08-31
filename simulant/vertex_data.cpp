@@ -113,8 +113,8 @@ VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecifi
         case VERTEX_ATTRIBUTE_TYPE_TEXCOORD5: return spec.texcoord5_attribute;
         case VERTEX_ATTRIBUTE_TYPE_TEXCOORD6: return spec.texcoord6_attribute;
         case VERTEX_ATTRIBUTE_TYPE_TEXCOORD7: return spec.texcoord7_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_BASE_COLOR:
-            return spec.base_color_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_COLOR:
+            return spec.color_attribute;
         case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return spec.specular_attribute;
     default:
         assert(0 && "Invalid vertex attribute type");
@@ -392,20 +392,18 @@ const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const {
 }
 
 template<>
-const Color* VertexData::base_color_at(const uint32_t idx) const {
-    assert(vertex_specification_.base_color_attribute == VERTEX_ATTRIBUTE_4F);
-    return ((Color*)&data_[(idx * stride()) +
-                           vertex_specification_.base_color_offset()]);
+const Color* VertexData::color_at(const uint32_t idx) const {
+    assert(vertex_specification_.color_attribute == VERTEX_ATTRIBUTE_4F);
+    return ((
+        Color*)&data_[(idx * stride()) + vertex_specification_.color_offset()]);
 }
 
 template<>
-const uint8_t* VertexData::base_color_at(const uint32_t idx) const {
-    assert(vertex_specification_.base_color_attribute ==
-               VERTEX_ATTRIBUTE_4UB_RGBA ||
-           vertex_specification_.base_color_attribute ==
-               VERTEX_ATTRIBUTE_4UB_BGRA);
+const uint8_t* VertexData::color_at(const uint32_t idx) const {
+    assert(vertex_specification_.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
+           vertex_specification_.color_attribute == VERTEX_ATTRIBUTE_4UB_BGRA);
     return ((uint8_t*)&data_[(idx * stride()) +
-                             vertex_specification_.base_color_offset()]);
+                             vertex_specification_.color_offset()]);
 }
 
 void VertexData::tex_coord1(float u, float v) {
@@ -444,12 +442,11 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
     tex_coordX(3, u, v, w, x);
 }
 
-void VertexData::base_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-    assert(vertex_specification_.base_color_attribute_ ==
+void VertexData::color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    assert(vertex_specification_.color_attribute_ ==
                VERTEX_ATTRIBUTE_4UB_BGRA ||
-           vertex_specification_.base_color_attribute_ ==
-               VERTEX_ATTRIBUTE_4UB_RGBA);
-    auto offset = vertex_specification_.base_color_offset();
+           vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_4UB_RGBA);
+    auto offset = vertex_specification_.color_offset();
 
     if(offset == INVALID_ATTRIBUTE_OFFSET) {
         return;
@@ -458,8 +455,7 @@ void VertexData::base_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 
     uint8_t* out = (uint8_t*) &data_[cursor_offset() + offset];
 
-    if(vertex_specification_.base_color_attribute_ ==
-       VERTEX_ATTRIBUTE_4UB_BGRA) {
+    if(vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_4UB_BGRA) {
         out[0] = b;
         out[1] = g;
         out[2] = r;
@@ -472,10 +468,10 @@ void VertexData::base_color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     }
 }
 
-void VertexData::base_color(float r, float g, float b) {
-    assert(vertex_specification_.base_color_attribute_ == VERTEX_ATTRIBUTE_3F);
+void VertexData::color(float r, float g, float b) {
+    assert(vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_3F);
 
-    auto offset = vertex_specification_.base_color_offset();
+    auto offset = vertex_specification_.color_offset();
 
     if(offset == INVALID_ATTRIBUTE_OFFSET) {
         return;
@@ -485,10 +481,10 @@ void VertexData::base_color(float r, float g, float b) {
     *out = Vec3(r, g, b);
 }
 
-void VertexData::base_color(float r, float g, float b, float a) {
-    assert(vertex_specification_.base_color_attribute_ == VERTEX_ATTRIBUTE_4F);
+void VertexData::color(float r, float g, float b, float a) {
+    assert(vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_4F);
 
-    auto offset = vertex_specification_.base_color_offset();
+    auto offset = vertex_specification_.color_offset();
 
     if(offset == INVALID_ATTRIBUTE_OFFSET) {
         return;
@@ -498,20 +494,15 @@ void VertexData::base_color(float r, float g, float b, float a) {
     *out = Vec4(r, g, b, a);
 }
 
-void VertexData::base_color(const Color& color) {
-    if(vertex_specification_.base_color_attribute_ == VERTEX_ATTRIBUTE_4F) {
-        base_color(color.r, color.g, color.b, color.a);
-    } else if(vertex_specification_.base_color_attribute_ ==
-              VERTEX_ATTRIBUTE_3F) {
-        base_color(color.r, color.g, color.b);
+void VertexData::color(const Color& c) {
+    if(vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_4F) {
+        color(c.r, c.g, c.b, c.a);
+    } else if(vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_3F) {
+        color(c.r, c.g, c.b);
     } else {
         const float s = 255.0f;
-        base_color(
-            (uint8_t) clamp(color.r * s, 0, 255),
-            (uint8_t) clamp(color.g * s, 0, 255),
-            (uint8_t) clamp(color.b * s, 0, 255),
-            (uint8_t) clamp(color.a * s, 0, 255)
-        );
+        color((uint8_t)clamp(c.r * s, 0, 255), (uint8_t)clamp(c.g * s, 0, 255),
+              (uint8_t)clamp(c.b * s, 0, 255), (uint8_t)clamp(c.a * s, 0, 255));
     }
 }
 
