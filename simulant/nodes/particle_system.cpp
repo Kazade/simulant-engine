@@ -172,7 +172,8 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
             (space_ == PARTICLE_SYSTEM_SPACE_WORLD)
                 ? p.position
                 : transform->position() +
-                      script_->emitter(p.emitter_index)->relative_position;
+                      script_->emitter(p.emitter_index)->relative_position +
+                      p.position;
 
         Vec3* pos = (Vec3*)pos_ptr;
         float* uv = (float*)uv_ptr;
