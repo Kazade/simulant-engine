@@ -17,6 +17,7 @@ StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
     }
 
     LoaderOptions lopts;
+
     if(!opts.root_name.empty()) {
         lopts["root_name"] = opts;
     }

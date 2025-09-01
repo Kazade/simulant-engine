@@ -423,6 +423,10 @@ class Texture;
 typedef std::weak_ptr<Texture> TextureRef;
 typedef std::shared_ptr<Texture> TexturePtr;
 
+class Prefab;
+typedef std::weak_ptr<Prefab> PrefabRef;
+typedef std::shared_ptr<Prefab> PrefabPtr;
+
 class ParticleScript;
 typedef std::weak_ptr<ParticleScript> ParticleScriptRef;
 typedef std::shared_ptr<ParticleScript> ParticleScriptPtr;

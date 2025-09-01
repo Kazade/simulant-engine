@@ -657,6 +657,36 @@ FontPtr AssetManager::create_font_from_family(const std::string& family, const F
     }
 }
 
+PrefabPtr AssetManager::load_prefab(const Path& filename,
+                                    GarbageCollectMethod garbage_collect) {
+
+    return nullptr;
+}
+
+PrefabPtr AssetManager::prefab(AssetID id) {
+    GET_X(Prefab, prefab, prefab_manager_);
+}
+
+const PrefabPtr AssetManager::prefab(AssetID id) const {
+    GET_X(Prefab, prefab, prefab_manager_);
+}
+
+std::size_t AssetManager::prefab_count() const {
+    return prefab_manager_.count();
+}
+
+bool AssetManager::has_prefab(AssetID id) const {
+    return prefab_manager_.contains(id);
+}
+
+PrefabPtr AssetManager::find_prefab(const std::string& name) {
+    return prefab_manager_.find_object(name);
+}
+
+void AssetManager::destroy_prefab(AssetID id) {
+    prefab_manager_.set_garbage_collection_method(id, GARBAGE_COLLECT_PERIODIC);
+}
+
 FontPtr AssetManager::load_font(const Path& filename, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
     auto font = font_manager_.make(this);
     auto font_id = font->id();
