@@ -1,5 +1,6 @@
 #include "gltf_loader.h"
 
+#include "../assets/prefab.h"
 #include "../generic/raii.h"
 #include "../time_keeper.h"
 #include "../utils/base64.h"
@@ -560,13 +561,11 @@ TextureFilter calculate_filter(int magFilter, int minFilter) {
     }
 }
 
-static smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
+static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
                                      JSONIterator& texture, int texture_id,
                                      const std::string& ext = "") {
 
     _S_UNUSED(texture_id);
-
-    auto& scene = node->scene;
 
     int sampler_id = texture["sampler"]->to_int().value_or(-1);
     int source_id = texture["source"]->to_int().value_or(-1);
@@ -585,7 +584,7 @@ static smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
         if(!ext.empty()) {
             uri = uri.replace_ext(ext);
         }
-        auto tex = scene->assets->load_texture(uri);
+        auto tex = assets->load_texture(uri);
 
         auto wrapS = sampler["wrapS"]->to_int().value_or(10497);
         auto wrapT = sampler["wrapT"]->to_int().value_or(10497);
@@ -645,10 +644,9 @@ static void approximate_pbr_material(MaterialPtr& mat, float metallic,
     mat->set_emission(emissive);
 }
 
-static smlt::MaterialPtr create_default_material(StageNode* node) {
-    auto& scene = node->scene;
+static smlt::MaterialPtr create_default_material(AssetManager* assets) {
     auto base_color = smlt::Color::white();
-    auto mat = scene->assets->clone_default_material();
+    auto mat = assets->clone_default_material();
     mat->set_name("Default");
     mat->set_lighting_enabled(true);
     mat->set_textures_enabled(0);
@@ -657,14 +655,12 @@ static smlt::MaterialPtr create_default_material(StageNode* node) {
     return mat;
 }
 
-smlt::MaterialPtr load_material(StageNode* node, JSONIterator& js,
+smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
                                 JSONIterator& material, int material_id,
                                 const std::vector<smlt::TexturePtr>& textures) {
 
     _S_UNUSED(material_id);
     _S_UNUSED(js);
-
-    auto& scene = node->scene;
 
     auto base_texture_id =
         material["pbrMetallicRoughness"]["baseColorTexture"]["index"]
@@ -691,7 +687,7 @@ smlt::MaterialPtr load_material(StageNode* node, JSONIterator& js,
         material["occlusionTexture"]["index"]->to_int().value_or(-1);
 
     smlt::EnabledTextureMask enabled = 0;
-    smlt::MaterialPtr ret = scene->assets->clone_default_material();
+    smlt::MaterialPtr ret = assets->clone_default_material();
     if(base_texture_id >= 0) {
         ret->set_diffuse_map(textures[base_texture_id]);
         enabled |= smlt::DIFFUSE_MAP_ENABLED;
@@ -735,13 +731,11 @@ smlt::MaterialPtr load_material(StageNode* node, JSONIterator& js,
     return ret;
 }
 
-smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
-                        int mesh_id,
+smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
+                        JSONIterator& mesh, int mesh_id,
                         const std::vector<smlt::MaterialPtr>& materials,
                         std::vector<std::vector<uint8_t>>& buffers) {
     _S_UNUSED(mesh_id);
-
-    auto& scene = node->scene;
 
     struct MeshPrimitive {
         MeshPrimitive(const smlt::JSONIterator& attrs) :
@@ -832,7 +826,7 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
             VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, clean_diffuse(diff));
 
         if(!final_mesh) {
-            final_mesh = scene->assets->create_mesh(spec);
+            final_mesh = assets->create_mesh(spec);
         } else if(final_mesh->vertex_data->vertex_specification() != spec) {
             S_ERROR("GLTF mesh contains multiple vertex types which is "
                     "currently unsupported");
@@ -1048,7 +1042,7 @@ StageNode* spawn_node_recursively(StageNode* parent, int node_id,
 }
 
 void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
-    auto scene = loadable_to<StageNode>(resource);
+    auto prefab = loadable_to<Prefab>(resource);
     auto js = json_read(this->data_);
 
     if(!check_gltf_version(js)) {
@@ -1062,9 +1056,6 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         return;
     }
 
-    std::vector<TexturePtr> textures;
-    std::vector<MaterialPtr> materials;
-    std::vector<MeshPtr> meshes;
     std::vector<std::vector<uint8_t>> buffers;
 
     /* We add the containing folder to the front of the search path
@@ -1084,31 +1075,40 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         ext = any_cast<std::string>(options.at("override_texture_extension"));
     }
 
+    std::vector<TexturePtr> textures;
+    std::vector<MaterialPtr> materials;
+    std::vector<MeshPtr> meshes;
+
     int j = 0;
     auto textures_it = js["textures"];
     for(auto& node: textures_it) {
         auto tex_it = node.to_iterator();
-        auto tex = load_texture(scene, js, tex_it, j++, ext);
+        auto tex = load_texture(&prefab->asset_manager(), js, tex_it, j++, ext);
         textures.push_back(tex);
+        prefab->push_texture(tex);
     }
 
     auto materials_it = js["materials"];
     j = 0;
     for(auto& node: materials_it) {
         auto mat_it = node.to_iterator();
-        auto mat = load_material(scene, js, mat_it, j++, textures);
+        auto mat =
+            load_material(&prefab->asset_manager(), js, mat_it, j++, textures);
+        prefab->push_material(mat);
         materials.push_back(mat);
     }
 
     /* Add the default material at the end */
-    auto default_material = create_default_material(scene);
-    materials.push_back(default_material);
+    auto default_material = create_default_material(&prefab->asset_manager());
+    prefab->push_material(default_material);
 
     auto meshes_it = js["meshes"];
     j = 0;
     for(auto& node: meshes_it) {
         auto mesh_it = node.to_iterator();
-        auto mesh = load_mesh(scene, js, mesh_it, j++, materials, buffers);
+        auto mesh = load_mesh(&prefab->asset_manager(), js, mesh_it, j++,
+                              materials, buffers);
+        prefab->push_mesh(mesh);
         meshes.push_back(mesh);
     }
 

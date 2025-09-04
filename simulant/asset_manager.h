@@ -24,7 +24,9 @@
 #include "assets/binary_data.h"
 #include "assets/material.h"
 #include "assets/particle_script.h"
+#include "assets/prefab.h"
 #include "assets/texture_flags.h"
+
 #include "font.h"
 #include "generic/lru_cache.h"
 #include "generic/object_manager.h"
@@ -117,6 +119,10 @@ public:
     bool has_prefab(AssetID id) const;
     PrefabPtr find_prefab(const std::string& name);
     void destroy_prefab(AssetID id);
+
+    PrefabPtr create_prefab(
+        const smlt::StageNode* root,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     /* Texture API */
     TexturePtr load_texture(
@@ -319,6 +325,8 @@ private:
                                                                    method);
         } else if(auto p = dynamic_cast<const Binary*>(resource)) {
             binary_manager_.set_garbage_collection_method(p->id(), method);
+        } else if(auto p = dynamic_cast<const Prefab*>(resource)) {
+            prefab_manager_.set_garbage_collection_method(p->id(), method);
         } else {
             S_ERROR("Unhandled asset type. GC method not set");
         }
