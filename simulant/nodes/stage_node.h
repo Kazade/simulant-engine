@@ -106,6 +106,7 @@ enum NodeParamType {
     NODE_PARAM_TYPE_TEXTURE_PTR,
     NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR,
     NODE_PARAM_TYPE_STAGE_NODE_PTR,
+    NODE_PARAM_TYPE_PREFAB_PTR,
     // FIXME: Ideally these wouldn't exist and instead
     // widgets would take base types as arguments
     NODE_PARAM_TYPE_UI_CONFIG,
@@ -165,6 +166,11 @@ struct type_to_node_param_type<TexturePtr> {
 template<>
 struct type_to_node_param_type<ParticleScriptPtr> {
     static const NodeParamType value = NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR;
+};
+
+template<>
+struct type_to_node_param_type<PrefabPtr> {
+    static const NodeParamType value = NODE_PARAM_TYPE_PREFAB_PTR;
 };
 
 template<>
@@ -357,6 +363,7 @@ private:
                   std::is_same<type, smlt::FloatArray>::value ||               \
                   std::is_same<type, smlt::ParticleScriptPtr>::value ||        \
                   std::is_same<type, smlt::MeshPtr>::value ||                  \
+                  std::is_same<type, smlt::PrefabPtr>::value ||                \
                   std::is_same<type, smlt::GeomCullerOptions>::value ||        \
                   std::is_same<type, std::string>::value ||                    \
                   std::is_same<type, smlt::TextureFlags>::value ||             \

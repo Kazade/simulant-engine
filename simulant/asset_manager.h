@@ -121,7 +121,7 @@ public:
     void destroy_prefab(AssetID id);
 
     PrefabPtr create_prefab(
-        const smlt::StageNode* root,
+        const smlt::StageNode* root = nullptr,
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     /* Texture API */

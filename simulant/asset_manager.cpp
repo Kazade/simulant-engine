@@ -676,10 +676,11 @@ PrefabPtr AssetManager::create_prefab(const smlt::StageNode* root,
         return pn;
     };
 
-    prefab->push_node(create_prefab_node(root));
-
-    for(auto& node: root->each_descendent()) {
-        prefab->push_node(create_prefab_node(&node), node.parent()->id());
+    if(root) {
+        prefab->push_node(create_prefab_node(root));
+        for(auto& node: root->each_descendent()) {
+            prefab->push_node(create_prefab_node(&node), node.parent()->id());
+        }
     }
 
     return prefab;

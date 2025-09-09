@@ -911,57 +911,79 @@ smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
     return final_mesh;
 }
 
-StageNode* spawn_node_recursively(StageNode* parent, int node_id,
-                                  JSONIterator& js,
-                                  GLTFLoader::NodeFactory factory,
-                                  const std::vector<smlt::MeshPtr>& meshes) {
+static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
+                                   JSONIterator& js,
+                                   GLTFLoader::NodeFactory factory,
+                                   const std::vector<smlt::MeshPtr>& meshes) {
     auto nodes = js["nodes"];
     auto node = nodes[node_id];
-    smlt::MeshPtr mesh;
-    if(node->has_key("mesh") && !meshes.empty()) {
-        mesh = meshes[node["mesh"]->to_int().value_or(0)];
-    }
 
-    smlt::optional<GLTFLoader::CameraInfo> cam;
-    if(node->has_key("camera")) {
+    PrefabNode prefab_node;
+
+    auto light_id =
+        node["extensions"]["KHR_lights_punctual"]["light"]->to_int().value_or(
+            -1);
+
+    if(node->has_key("mesh") && !meshes.empty()) {
+        prefab_node.node_type_name = "actor";
+        prefab_node.params.set("mesh",
+                               meshes[node["mesh"]->to_int().value_or(0)]);
+    } else if(node->has_key("camera")) {
         auto camera_id = node["camera"]->to_int().value_or(-1);
         if(camera_id >= 0) {
-            GLTFLoader::CameraInfo c;
+            prefab_node.node_type_name = "camera";
+
             auto cam_node = js["cameras"][camera_id];
             auto persp_node = cam_node["perspective"];
-            c.type = cam_node["type"]->to_str().value_or("perspective");
-            if(c.type == "perspective") {
-                c.aspect =
-                    persp_node["aspectRatio"]->to_float().value_or(1.777f);
-                c.yfov = persp_node["yfov"]->to_float().value_or(60.0f);
-                c.znear = persp_node["znear"]->to_float().value_or(1.0f);
+            auto type = cam_node["type"]->to_str().value_or("perspective");
+            if(type == "perspective") {
+                prefab_node.params.set(
+                    "aspect",
+                    persp_node["aspectRatio"]->to_float().value_or(1.777f));
+                prefab_node.params.set(
+                    "yfov", persp_node["yfov"]->to_float().value_or(60.0f));
+                prefab_node.params.set(
+                    "znear", persp_node["znear"]->to_float().value_or(1.0f));
+
                 if(persp_node["zfar"].is_valid()) {
-                    c.zfar = persp_node["zfar"]->to_float().value_or(1000.0f);
+                    prefab_node.params.set(
+                        "zfar",
+                        persp_node["zfar"]->to_float().value_or(1000.0f));
                 }
             }
-
-            cam = c;
+        }
+    } else if(light_id >= 0) {
+        auto light =
+            js["extensions"]["KHR_lights_punctual"]["lights"][light_id];
+        if(light.is_valid()) {
+            prefab_node.node_type_name = "light";
+            prefab_node.params.set("color", parse_color3(light["color"]));
+            prefab_node.params.set(
+                "intensity", light["intensity"]->to_float().value_or(1.0f));
+            prefab_node.params.set("range",
+                                   light["range"]->to_float().value_or(100.0f));
+            prefab_node.params.set(
+                "type", light["type"]->to_str().value_or("directional"));
         }
     }
-
-    GLTFLoader::NodeFactoryInput input;
 
     if(node["extras"].is_valid()) {
         for(auto& k: node["extras"]->keys()) {
             auto it = node["extras"];
             if(it[k]->is_str()) {
-                input.params.set(k.c_str(), it[k]->to_str().value_or(""));
+                prefab_node.params.set(k.c_str(), it[k]->to_str().value_or(""));
             } else if(it[k]->is_number()) {
                 if(it[k]->is_float()) {
-                    input.params.set(k.c_str(),
-                                     it[k]->to_float().value_or(0.0f));
+                    prefab_node.params.set(k.c_str(),
+                                           it[k]->to_float().value_or(0.0f));
                 } else {
-                    input.params.set(k.c_str(),
-                                     (int)it[k]->to_int().value_or(0));
+                    prefab_node.params.set(k.c_str(),
+                                           (int)it[k]->to_int().value_or(0));
                 }
 
             } else if(it[k]->is_bool()) {
-                input.params.set(k.c_str(), it[k]->to_bool().value_or(false));
+                prefab_node.params.set(k.c_str(),
+                                       it[k]->to_bool().value_or(false));
             } else if(it[k]->is_array()) {
                 std::vector<float> farr;
                 std::vector<int> iarr;
@@ -980,65 +1002,39 @@ StageNode* spawn_node_recursively(StageNode* parent, int node_id,
                 }
 
                 if(farr.size()) {
-                    input.params.set(k.c_str(), farr);
+                    prefab_node.params.set(k.c_str(), farr);
                 } else if(iarr.size()) {
-                    input.params.set(k.c_str(), iarr);
+                    prefab_node.params.set(k.c_str(), iarr);
                 } else if(barr.size()) {
-                    input.params.set(k.c_str(), barr);
+                    prefab_node.params.set(k.c_str(), barr);
                 }
             }
         }
     }
 
-    auto light_id =
-        node["extensions"]["KHR_lights_punctual"]["light"]->to_int().value_or(
-            -1);
+    auto scale = parse_scale(node["scale"]);
+    auto translation = parse_pos(node["translation"]);
+    auto rotation = parse_quaternion(node["rotation"]);
 
-    if(light_id >= 0) {
-        auto light =
-            js["extensions"]["KHR_lights_punctual"]["lights"][light_id];
-        if(light.is_valid()) {
-            GLTFLoader::LightInfo info;
-            info.color = parse_color3(light["color"]);
-            info.intensity = light["intensity"]->to_float().value_or(1.0f);
-            info.range = light["range"]->to_float().value_or(100.0f);
-            info.type = light["type"]->to_str().value_or("directional");
-            input.light = info;
-        }
-    }
-
-    input.name = node["name"]->to_str().value_or("");
-    input.mesh = mesh;
-
-    if(mesh) {
-        // Auto populate the mesh in the params
-        input.params.set("mesh", mesh);
-    }
-
-    input.camera = cam;
-    input.scale = (cam) ? smlt::Vec3(1) : parse_scale(node["scale"]);
-    input.translation = parse_pos(node["translation"]);
-    input.rotation = parse_quaternion(node["rotation"]);
+    prefab_node.name = node["name"]->to_str().value_or("");
     // FIXME: Additional properties!
 
     // FIXME: These should be absolute values, not relative!
-    input.params.set("scale", input.scale);
-    input.params.set("position", input.translation);
-    input.params.set("orientation", input.rotation);
+    prefab_node.params.set("scale", scale);
+    prefab_node.params.set("position", translation);
+    prefab_node.params.set("orientation", rotation);
 
-    StageNode* new_node = factory(parent, input);
-    if(new_node) {
-        new_node->set_name(input.name.str());
+    prefab.push_node(prefab_node, parent);
 
-        if(node->has_key("children")) {
-            for(auto& child: node["children"]) {
-                spawn_node_recursively(new_node, child.to_int().value_or(0), js,
-                                       factory, meshes);
-            }
+    if(node->has_key("children")) {
+        for(auto& child: node["children"]) {
+            spawn_node_recursively(prefab, prefab_node.id,
+                                   child.to_int().value_or(0), js, factory,
+                                   meshes);
         }
     }
 
-    return new_node;
+    return true;
 }
 
 void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
@@ -1101,6 +1097,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     /* Add the default material at the end */
     auto default_material = create_default_material(&prefab->asset_manager());
     prefab->push_material(default_material);
+    materials.push_back(default_material);
 
     auto meshes_it = js["meshes"];
     j = 0;
@@ -1123,7 +1120,8 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
             if(it->has_key("name")) {
                 auto name_maybe = it["name"]->to_str();
                 if(name_maybe && name_maybe.value() == root_name) {
-                    spawn_node_recursively(scene, i, js, node_factory, meshes);
+                    spawn_node_recursively(*prefab, -1, i, js, node_factory,
+                                           meshes);
                     return;
                 }
             }
@@ -1144,7 +1142,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         auto node_id = maybe_id.value();
-        spawn_node_recursively(scene, node_id, js, node_factory, meshes);
+        spawn_node_recursively(*prefab, -1, node_id, js, node_factory, meshes);
     }
 }
 

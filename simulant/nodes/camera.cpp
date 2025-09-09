@@ -141,15 +141,63 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target,
 }
 
 bool Camera2D::on_create(Params params) {
-    auto ret = Camera::on_create(params);
-    if(!ret) {
+    if(!clean_params<Camera2D>(params)) {
         return false;
     }
 
-    auto app = smlt::get_app();
-    auto window = app->window.get();
-    set_orthographic_projection(0, window->width(), 0, window->height());
-    return ret;
+    float xmag = params.get<float>("xmag").value();
+    float ymag = params.get<float>("ymag").value();
+
+    float n = params.get<float>("znear").value_or(-1.0f);
+    float f = params.get<float>("zfar").value_or(1.0f);
+
+    Mat4 proj;
+
+    proj[0] = 2.0f / xmag;
+    proj[5] = 2.0f / ymag;
+    proj[10] = -2.0f / (f - n);
+    proj[12] = -(f + n) / (f - n);
+    proj[15] = 1.0f;
+
+    Params new_params;
+    FloatArray matrix(proj.data(), proj.data() + 16);
+    new_params.set<FloatArray>("projection_matrix", matrix);
+    return Camera::on_create(params);
+}
+
+bool Camera3D::on_create(Params params) {
+    if(!clean_params<Camera2D>(params)) {
+        return false;
+    }
+
+    smlt::Mat4 proj;
+    auto zfar_maybe = params.get<float>("zfar");
+
+    float a = params.get<float>("aspect").value_or(1.0f);
+    float y = params.get<float>("yfov").value_or(60.0f);
+    float n = params.get<float>("znear").value_or(1.0f);
+
+    if(zfar_maybe) {
+        float f = zfar_maybe.value();
+        proj[0] = 1.0f / (a * std::tan(0.5f * y));
+        proj[5] = 1.0f / std::tan(0.5f * y);
+        proj[10] = (n + f) / (n - f);
+        proj[11] = -1.0f;
+        proj[14] = (2.0f * n * f) / (n - f);
+        proj[15] = 0.0f;
+    } else {
+        proj[0] = 1.0f / (a * std::tan(0.5f * y));
+        proj[5] = 1.0f / std::tan(0.5f * y);
+        proj[10] = -1;
+        proj[11] = -1;
+        proj[14] = -2.0f * n;
+        proj[15] = 0.0f;
+    }
+
+    Params new_params;
+    FloatArray matrix(proj.data(), proj.data() + 16);
+    new_params.set<FloatArray>("projection_matrix", matrix);
+    return Camera::on_create(new_params);
 }
 
 } // namespace smlt

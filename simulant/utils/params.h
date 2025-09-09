@@ -29,8 +29,8 @@ typedef std::vector<ParamKey> ParamKeys;
 
 typedef std::variant<float, FloatArray, int, IntArray, bool, BoolArray,
                      std::string, TextureRef, MeshRef, ParticleScriptRef,
-                     ui::UIConfig, ui::WidgetStyleRef, GeomCullerOptions,
-                     TextureFlags, StageNode*>
+                     PrefabRef, ui::UIConfig, ui::WidgetStyleRef,
+                     GeomCullerOptions, TextureFlags, StageNode*>
     ParamValue;
 
 /*

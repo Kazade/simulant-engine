@@ -36,6 +36,7 @@
 #include "../nodes/physics/dynamic_body.h"
 #include "../nodes/physics/kinematic_body.h"
 #include "../nodes/physics/static_body.h"
+#include "../nodes/prefab_instance.h"
 #include "../nodes/skies/skybox.h"
 #include "../nodes/smooth_follow.h"
 #include "../nodes/spherical_billboard.h"
@@ -85,6 +86,8 @@ void Scene::register_builtin_nodes() {
     register_stage_node<Actor>();
     register_stage_node<Geom>();
     register_stage_node<Camera>();
+    register_stage_node<Camera2D>();
+    register_stage_node<Camera3D>();
     register_stage_node<AudioSource>();
     register_stage_node<DirectionalLight>();
     register_stage_node<PointLight>();
@@ -97,6 +100,7 @@ void Scene::register_builtin_nodes() {
     register_stage_node<Skybox>();
     register_stage_node<SmoothFollow>();
     register_stage_node<FlyController>();
+    register_stage_node<PrefabInstance>();
 
     register_stage_node<StaticBody>();
     register_stage_node<DynamicBody>();

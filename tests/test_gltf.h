@@ -94,6 +94,7 @@ public:
 
         auto node = scene->load_tree(test_file);
 
+        assert_true(node->child_count() > 0);
         assert_equal(node->child_at(0)->name(), "test");
     }
 };

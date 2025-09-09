@@ -1,7 +1,8 @@
-#include "../stage.h"
-#include "camera.h"
-#include "../window.h"
 #include "../application.h"
+#include "../nodes/prefab_instance.h"
+#include "../stage.h"
+#include "../window.h"
+#include "camera.h"
 
 namespace smlt {
 
@@ -30,9 +31,9 @@ StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
         loader->into(this, lopts);
         return this;
     } else {
-        auto new_child = create_child<Stage>();
+        auto new_child = scene->assets->create_prefab();
         loader->into(new_child, lopts);
-        return new_child;
+        return create_child<PrefabInstance>(new_child);
     }
 }
 
