@@ -295,8 +295,8 @@ struct Accessor {
 };
 
 static auto process_buffer(JSONIterator& js, const Accessor& accessor,
-                           std::vector<std::vector<uint8_t>>& buffers)
-    -> BufferInfo {
+                           std::vector<std::vector<uint8_t>>& buffers,
+                           std::istream* bin) -> BufferInfo {
 
     auto accessor_component_type = accessor.component_type;
     auto type = accessor.type;
@@ -309,15 +309,28 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
 
     auto buffer = js["buffers"][buffer_id];
     auto uri = buffer["uri"]->to_str().value_or("");
-    if(uri.empty()) {
+    if(uri.empty() && !bin) {
         S_ERROR("Buffer has no uri");
         return BufferInfo();
     }
 
+    auto byte_offset = buffer_view["byteOffset"]->to_int().value_or(0);
+    auto byte_length = buffer_view["byteLength"]->to_int().value_or(0);
+    auto byte_stride = buffer_view["byteStride"]->to_int().value_or(0);
+
     if((int)buffers.size() <= buffer_id) {
 
         const char* b64_marker = "data:application/octet-stream;base64,";
-        if(uri.find(b64_marker) == 0) {
+        if(uri.empty()) {
+            // We need to seek and read from bin
+            auto g = bin->tellg();
+            bin->seekg(byte_offset, std::ios::cur);
+            std::vector<uint8_t> data(byte_length);
+            bin->read((char*)&data[0], byte_length);
+            byte_offset = 0;
+            bin->seekg(g, std::ios::beg);
+            buffers.push_back(std::move(data));
+        } else if(uri.find(b64_marker) == 0) {
             auto data = uri.substr(strlen(b64_marker));
             auto decoded = smlt::base64_decode(data);
             if(!decoded) {
@@ -337,9 +350,6 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
     }
 
     uint8_t* buffer_data = &buffers[buffer_id][0];
-    auto byte_offset = buffer_view["byteOffset"]->to_int().value_or(0);
-    auto byte_length = buffer_view["byteLength"]->to_int().value_or(0);
-    auto byte_stride = buffer_view["byteStride"]->to_int().value_or(0);
 
     auto c_stride = component_size(accessor_component_type);
     auto c_count = component_count(type);
@@ -734,7 +744,8 @@ smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
 smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
                         JSONIterator& mesh, int mesh_id,
                         const std::vector<smlt::MaterialPtr>& materials,
-                        std::vector<std::vector<uint8_t>>& buffers) {
+                        std::vector<std::vector<uint8_t>>& buffers,
+                        std::istream* bin_chunk) {
     _S_UNUSED(mesh_id);
 
     struct MeshPrimitive {
@@ -856,32 +867,33 @@ smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
 
         if(primitive.position_id >= 0) {
             auto position = accessors[primitive.position_id];
-            auto buffer_info = process_buffer(js, position, buffers);
+            auto buffer_info = process_buffer(js, position, buffers, bin_chunk);
             process_positions(buffer_info, js, final_mesh, spec);
         }
 
         if(primitive.normal_id >= 0) {
             auto normal = accessors[primitive.normal_id];
-            auto buffer_info = process_buffer(js, normal, buffers);
+            auto buffer_info = process_buffer(js, normal, buffers, bin_chunk);
             process_normals(buffer_info, js, final_mesh, spec);
         }
 
         if(primitive.color_id >= 0) {
             auto color = accessors[primitive.color_id];
-            auto buffer_info = process_buffer(js, color, buffers);
+            auto buffer_info = process_buffer(js, color, buffers, bin_chunk);
             process_colors(buffer_info, js, final_mesh, diff);
         }
 
         if(primitive.texcoord_id >= 0) {
             auto texcoord0 = accessors[primitive.texcoord_id];
-            auto buffer_info = process_buffer(js, texcoord0, buffers);
+            auto buffer_info =
+                process_buffer(js, texcoord0, buffers, bin_chunk);
             process_texcoord0s(buffer_info, js, final_mesh, spec);
         }
 
         auto indices_id = primitive.indexes_id;
         if(indices_id >= 0) {
             auto indices = accessors[indices_id];
-            auto buffer_info = process_buffer(js, indices, buffers);
+            auto buffer_info = process_buffer(js, indices, buffers, bin_chunk);
             S_VERBOSE("Populating indices");
             for(std::size_t i = 0; i < buffer_info.size;
                 i += buffer_info.stride) {
@@ -1039,6 +1051,44 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
 
 void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     auto prefab = loadable_to<Prefab>(resource);
+    std::shared_ptr<std::istream> bin_chunk;
+
+    uint32_t magic;
+    data_->read((char*)&magic, sizeof(magic));
+    if(magic == 0x46546C67) {
+        // This is a glb file
+        uint32_t file_length;
+        uint32_t version;
+
+        data_->read((char*)&version, sizeof(version));
+
+        if(version != 2) {
+            S_ERROR("Unsupported glTF version: {0}", version);
+            return;
+        }
+
+        data_->read((char*)&file_length, sizeof(file_length));
+
+        uint32_t chunk_length;
+        uint32_t chunk_type;
+        data_->read((char*)&chunk_length, sizeof(chunk_length));
+        data_->read((char*)&chunk_type, sizeof(chunk_type));
+        if(chunk_type != 0x4E4F534A) {
+            S_ERROR("First chunk is not JSON");
+            return;
+        }
+
+        uint32_t here = data_->tellg();
+
+        // Now let's open a second stream and seek to the bin chunk
+        bin_chunk = std::make_shared<std::ifstream>();
+        bin_chunk->rdbuf(data_->rdbuf());
+        bin_chunk->seekg(here + chunk_length, std::ios::beg);
+    } else {
+        // Rewind, bo selecta
+        data_->seekg(0, std::ios::beg);
+    }
+
     auto js = json_read(this->data_);
 
     if(!check_gltf_version(js)) {
@@ -1104,7 +1154,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     for(auto& node: meshes_it) {
         auto mesh_it = node.to_iterator();
         auto mesh = load_mesh(&prefab->asset_manager(), js, mesh_it, j++,
-                              materials, buffers);
+                              materials, buffers, bin_chunk.get());
         prefab->push_mesh(mesh);
         meshes.push_back(mesh);
     }
