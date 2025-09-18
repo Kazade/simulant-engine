@@ -392,7 +392,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
             mesh->vertex_data->position(pos);
             mesh->vertex_data->normal(Vec3(0, 1, 0));
 
-            mesh->vertex_data->diffuse(smlt::Color::white());
+            mesh->vertex_data->color(smlt::Color::white());
 
             // First texture coordinate takes into account texture_repeat setting
             mesh->vertex_data->tex_coord0(

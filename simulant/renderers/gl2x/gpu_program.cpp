@@ -374,7 +374,7 @@ void GPUProgram::build() {
 
     prepare_program();
 
-    for(auto p: shaders_) {
+    for(auto& p: shaders_) {
         compile(p.first); //Compile each shader if necessary
     }
 

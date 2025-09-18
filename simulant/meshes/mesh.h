@@ -289,7 +289,8 @@ public:
     void destroy_submesh(const std::string& name);
 
     void set_material(MaterialPtr material); ///< Apply material to all submeshes
-    void set_diffuse(const smlt::Color& color); ///< Override vertex color on all vertices
+    void set_color(
+        const smlt::Color& color); ///< Override vertex color on all vertices
 
     void reverse_winding(); ///< Reverse the winding of all submeshes
 

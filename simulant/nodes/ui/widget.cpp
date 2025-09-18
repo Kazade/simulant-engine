@@ -532,7 +532,7 @@ void Widget::render_text() {
             auto p = v->xyz + Vec3(global_x_shift, global_y_shift, 0);
             vdata->position(p);
             vdata->tex_coord0(v->uv);
-            vdata->diffuse(c);
+            vdata->color(c);
             vdata->move_next();
         }
 
@@ -567,7 +567,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds,
     auto sm = mesh_->find_submesh(name);
     assert(sm);
 
-    sm->set_diffuse(color);
+    sm->set_base_color(color);
 
     auto min = bounds.min;
     auto max = bounds.max;
@@ -621,7 +621,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds,
         for(auto& p: points) {
             mesh_->vertex_data->move_to_end();
             mesh_->vertex_data->position(p);
-            mesh_->vertex_data->diffuse(color);
+            mesh_->vertex_data->color(color);
             mesh_->vertex_data->tex_coord0(0.0, 0.0f);
             mesh_->vertex_data->normal(0, 0, 1);
             mesh_->vertex_data->move_next();
@@ -632,7 +632,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds,
         mesh_->vertex_data->move_to_end();
         mesh_->vertex_data->position(x_offset + min.x.value,
                                      y_offset + min.y.value, z_offset);
-        mesh_->vertex_data->diffuse(color);
+        mesh_->vertex_data->color(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[0].x : 0.0f,
                                        (uvs) ? uvs[0].y : 0.0f);
         mesh_->vertex_data->normal(0, 0, 1);
@@ -640,7 +640,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds,
 
         mesh_->vertex_data->position(x_offset + max.x.value,
                                      y_offset + min.y.value, z_offset);
-        mesh_->vertex_data->diffuse(color);
+        mesh_->vertex_data->color(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[1].x : 1.0f,
                                        (uvs) ? uvs[1].y : 0.0f);
         mesh_->vertex_data->normal(0, 0, 1);
@@ -648,7 +648,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds,
 
         mesh_->vertex_data->position(x_offset + min.x.value,
                                      y_offset + max.y.value, z_offset);
-        mesh_->vertex_data->diffuse(color);
+        mesh_->vertex_data->color(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[2].x : 0.0f,
                                        (uvs) ? uvs[2].y : 1.0f);
         mesh_->vertex_data->normal(0, 0, 1);
@@ -657,7 +657,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds,
 
         mesh_->vertex_data->position(x_offset + max.x.value,
                                      y_offset + max.y.value, z_offset);
-        mesh_->vertex_data->diffuse(color);
+        mesh_->vertex_data->color(color);
         mesh_->vertex_data->tex_coord0((uvs) ? uvs[3].x : 1.0f,
                                        (uvs) ? uvs[3].y : 1.0f);
         mesh_->vertex_data->normal(0, 0, 1);
@@ -1006,7 +1006,7 @@ void Widget::set_background_image(TexturePtr texture) {
     }
 
     style_->background_image_ = texture;
-    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_base_color_map(
         style_->background_image_);
 
     auto dim = texture->dimensions();
@@ -1044,7 +1044,7 @@ void Widget::set_foreground_image(TexturePtr texture) {
     }
 
     style_->foreground_image_ = texture;
-    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_base_color_map(
         style_->foreground_image_);
 
     auto dim = texture->dimensions();

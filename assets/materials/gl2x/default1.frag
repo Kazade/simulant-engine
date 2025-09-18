@@ -4,69 +4,53 @@
 precision mediump float;
 #endif
 
-uniform vec4 s_light_ambient;
-uniform vec4 s_light_diffuse;
-uniform vec4 s_light_specular;
-uniform float s_light_constant_attenuation;
-uniform float s_light_linear_attenuation;
-uniform float s_light_quadratic_attenuation;
+uniform vec4 s_light_color;
+uniform float s_light_intensity;
+uniform float s_light_range;
+uniform vec4 s_light_position;
 
-uniform sampler2D s_diffuse_map;
+uniform sampler2D s_base_color_map;
 uniform vec4 s_global_ambient;
-uniform vec4 s_material_ambient;
-uniform vec4 s_material_diffuse;
-uniform vec4 s_material_specular;
-uniform float s_material_shininess;
-uniform mat4 s_diffuse_map_matrix;
+uniform vec4 s_material_base_color;
+uniform vec4 s_material_specular_color;
+uniform float s_material_specular;
+uniform mat4 s_base_color_map_matrix;
 
-varying vec4 vertex_position_eye;
-varying vec4 vertex_normal_eye;
-varying vec4 light_position_eye;
 varying vec2 frag_texcoord0;
-
-vec4 ambient_lighting() {
-    return s_material_ambient * s_light_ambient;
-}
-
-vec4 diffuse_lighting(vec4 N, vec4 L) {
-    float term = clamp(dot(N, L), float(0.0), float(1.0));
-    return s_material_diffuse * s_light_diffuse * term;
-}
-
-vec4 specular_lighting(vec4 N, vec4 L, vec4 V) {
-    float term = 0.0;
-    if(dot(N, L) > float(0.0)) {
-        vec4 H = normalize(L + V);
-        term = pow(dot(N, N), s_material_shininess);
-    }
-
-    return s_material_specular * s_light_specular * term;
-}
+varying vec3 frag_position;                       // Fragment position in world space
+varying vec3 frag_normal;                         // Fragment normal in world space
 
 void main() {
-    vec4 light_dir = light_position_eye - (vertex_position_eye * vec4(light_position_eye.w));
-    vec4 n_eye = normalize(vertex_normal_eye);
-    vec4 s_eye = normalize(light_dir);
-    vec4 v_eye = normalize(-vertex_position_eye);
-    vec4 h_eye = normalize(v_eye + s_eye);
-
-    vec4 amb = ambient_lighting();
-    vec4 diff = diffuse_lighting(n_eye, s_eye);
-    vec4 spec = specular_lighting(n_eye, s_eye, v_eye);
-
-    vec4 map_diffuse = texture2D(s_diffuse_map, frag_texcoord0.st);
-
-    float attenuation = 1.0;
-
-    if(light_position_eye.w > 0.0) {
-        float d = length(light_dir);
-        attenuation = 1.0 / (
-            s_light_constant_attenuation +
-            s_light_linear_attenuation * d +
-            s_light_quadratic_attenuation * d * d
-        );
-    }
-
-    gl_FragColor = map_diffuse * (amb + diff + spec) * attenuation;
+    // Normalize the normal vector
+    vec3 normal = normalize(frag_normal);
+    
+    // Calculate light direction
+    vec3 light_direction = normalize(s_light_position.xyz - frag_position);
+    
+    // Calculate distance to the light
+    float distance = length(s_light_position.xyz - frag_position);
+    
+    // Calculate attenuation
+    float attenuation = clamp(1.0 - (distance / s_light_range), 0.0, 1.0);
+    
+    // Sample the base color from the texture
+    vec4 base_color = texture2D(s_base_color_map, frag_texcoord0);
+    base_color *= s_material_base_color; // Combine with material base color
+    
+    // Ambient component
+    vec4 ambient = s_global_ambient * base_color;
+    
+    // Diffuse component
+    float diff = max(dot(normal, light_direction), 0.0);
+    vec4 diffuse = s_light_color * s_light_intensity * diff * base_color * attenuation;
+    
+    // Specular component
+    vec3 view_direction = normalize(-frag_position); // Assuming camera at origin
+    vec3 reflect_direction = reflect(-light_direction, normal);
+    float spec = pow(max(dot(view_direction, reflect_direction), 0.0), s_material_specular);
+    vec4 specular = s_material_specular_color * s_light_color * s_light_intensity * spec * attenuation;
+    
+    // Final color
+    gl_FragColor = ambient + diffuse + specular;
 }
 

@@ -135,8 +135,8 @@ public:
         button->set_foreground_image(t1);
         button->set_background_image(t2);
 
-        assert_equal(button->foreground_material()->diffuse_map(), t1);
-        assert_equal(button->background_material()->diffuse_map(), t2);
+        assert_equal(button->foreground_material()->base_color_map(), t1);
+        assert_equal(button->background_material()->base_color_map(), t2);
     }
 
     void test_render_priority() {

@@ -34,9 +34,13 @@ public:
 
         auto crate =
             app->shared_assets->load_texture("assets/samples/crate.png");
-        auto mat = app->shared_assets->create_material_from_texture(crate);
 
-        auto box_mesh = app->shared_assets->create_mesh(smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
+        auto mat = assets->clone_default_material();
+        mat->set_base_color_map(crate);
+        // mat->set_lighting_enabled(false);
+
+        auto box_mesh = app->shared_assets->create_mesh(
+            smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
         box_mesh->create_submesh_as_cube("cube", mat, 5);
         box_mesh_ = box_mesh;
 
@@ -54,6 +58,10 @@ public:
         auto c = ground_->create_mixin<smlt::StaticBody>();
         c->add_box_collider(ground_->aabb().dimensions(),
                             PhysicsMaterial::stone());
+
+        lighting->set_ambient_light(Color::white() * 0.5f);
+        auto l = create_child<smlt::PointLight>();
+        l->set_intensity(1000);
     }
 
     void spawn_box() {
@@ -134,6 +142,8 @@ int main(int argc, char* argv[]) {
     config.fullscreen = false;
     config.log_level = LOG_LEVEL_DEBUG;
 #endif
+
+    // config.development.force_renderer = "gl1x";
 
     PhysicsDemo app(config);
     return app.run();

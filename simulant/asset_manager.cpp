@@ -361,7 +361,7 @@ MaterialPtr AssetManager::create_material_from_texture(TexturePtr texture, Garba
     auto m = load_material(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
     assert(m);
 
-    m->set_diffuse_map(texture);
+    m->set_base_color_map(texture);
 
     material_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;

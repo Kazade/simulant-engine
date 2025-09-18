@@ -11,35 +11,6 @@ namespace loaders {
 
 const char* GLTFLoader::node_factory_key = "node-factory";
 
-static void approximate_light_intensity(Light* light, const Color& color,
-                                        float intensity, float range,
-                                        bool directional) {
-    if(directional) {
-        /*
-         * Blender uses W/m2 for sun strength, with 1000 being direct sunlight.
-         * GLTF uses lux which is W/m2 * 683
-         * However, anything over 5 W/m2 seems to be brighter than the max
-         * brightness of the material so we cap it out at 10.0f.
-         */
-
-        float max = 683 * 10.0f;
-        float m = std::min(intensity, max) / max;
-        auto c = color * m;
-        c.a = color.a;
-        light->set_diffuse(c);
-        light->set_ambient(c);
-        light->set_specular(c);
-    } else {
-        // FIXME: This is a very rough approximation
-        range = std::sqrt(intensity) / 8;
-        auto c = color;
-        light->set_diffuse(c);
-        light->set_ambient(c);
-        light->set_specular(c);
-        light->set_attenuation_from_range(range);
-    }
-}
-
 static smlt::Vec3 parse_pos(JSONIterator it) {
     return smlt::Vec3(it[0]->to_float().value_or(0.0f),
                       it[1]->to_float().value_or(0.0f),
@@ -143,9 +114,10 @@ StageNode* default_node_factory(StageNode* parent,
                 light = parent->create_child<PointLight>();
             }
 
-            approximate_light_intensity(
-                light, input.light->color, input.light->intensity,
-                input.light->range, input.light->type == "directional");
+            light->set_color(input.light->color);
+            light->set_intensity(input.light->intensity);
+            light->set_range(input.light->range);
+
             ret = light;
 
         } else {
@@ -414,7 +386,7 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
 
     S_DEBUG("Position loading took {0}us", t1 - t0);
 #endif
-    final_mesh->vertex_data->done();
+
     final_mesh->vertex_data->move_to(start);
 }
 
@@ -434,27 +406,26 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
-            final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, 1));
+            final_mesh->vertex_data->color(smlt::Color(x, y, z, 1));
         } else if(attr == VERTEX_ATTRIBUTE_4F) {
             auto x = *(float*)(buffer_info.data + i);
             auto y = *(float*)(buffer_info.data + i + 4);
             auto z = *(float*)(buffer_info.data + i + 8);
             auto w = *(float*)(buffer_info.data + i + 12);
-            final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, w));
+            final_mesh->vertex_data->color(smlt::Color(x, y, z, w));
         } else if(attr == VERTEX_ATTRIBUTE_4UB) {
             auto r = *(uint8_t*)(buffer_info.data + i);
             auto g = *(uint8_t*)(buffer_info.data + i + 1);
             auto b = *(uint8_t*)(buffer_info.data + i + 2);
             auto a = *(uint8_t*)(buffer_info.data + i + 3);
-            final_mesh->vertex_data->diffuse(
-                smlt::Color::from_bytes(r, g, b, a));
+            final_mesh->vertex_data->color(smlt::Color::from_bytes(r, g, b, a));
         } else if(attr == VERTEX_ATTRIBUTE_4US) {
             auto r = *(uint16_t*)(buffer_info.data + i);
             auto g = *(uint16_t*)(buffer_info.data + i + 2);
             auto b = *(uint16_t*)(buffer_info.data + i + 4);
             auto a = *(uint16_t*)(buffer_info.data + i + 6);
 
-            final_mesh->vertex_data->diffuse(
+            final_mesh->vertex_data->color(
                 smlt::Color::from_bytes(r >> 8, g >> 8, b >> 8, a >> 8));
         } else {
             S_ERROR("Unsupported color attribute type");
@@ -635,33 +606,12 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
     return smlt::TexturePtr();
 }
 
-static void approximate_pbr_material(MaterialPtr& mat, float metallic,
-                                     float roughness, Color emissive,
-                                     Color base_color) {
-    auto ambient = base_color * 0.1f;
-    ambient.a = base_color.a;
-
-    auto diffuse = base_color;
-    diffuse.a = base_color.a;
-
-    auto specular = base_color * metallic;
-    specular.a = base_color.a;
-
-    mat->set_shininess(128.0f * (1.0f - roughness));
-    mat->set_ambient(ambient);
-    mat->set_diffuse(diffuse);
-    mat->set_specular(specular);
-    mat->set_emission(emissive);
-}
-
 static smlt::MaterialPtr create_default_material(AssetManager* assets) {
-    auto base_color = smlt::Color::white();
     auto mat = assets->clone_default_material();
     mat->set_name("Default");
     mat->set_lighting_enabled(true);
     mat->set_textures_enabled(0);
-    approximate_pbr_material(mat, 0.0f, 0.4f, Color(0, 0, 0, 1), base_color);
-    mat->set_cull_mode(smlt::CULL_MODE_NONE);
+    mat->set_cull_mode(smlt::CULL_MODE_BACK_FACE);
     return mat;
 }
 
@@ -674,6 +624,11 @@ smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
 
     auto base_texture_id =
         material["pbrMetallicRoughness"]["baseColorTexture"]["index"]
+            ->to_int()
+            .value_or(-1);
+
+    auto metallic_roughness_texture_id =
+        material["pbrMetallicRoughness"]["metallicRoughnessTexture"]["index"]
             ->to_int()
             .value_or(-1);
 
@@ -699,18 +654,24 @@ smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
     smlt::EnabledTextureMask enabled = 0;
     smlt::MaterialPtr ret = assets->clone_default_material();
     if(base_texture_id >= 0) {
-        ret->set_diffuse_map(textures[base_texture_id]);
-        enabled |= smlt::DIFFUSE_MAP_ENABLED;
+        ret->set_base_color_map(textures[base_texture_id]);
+        enabled |= BASE_COLOR_MAP_ENABLED;
+    }
+
+    if(metallic_roughness_texture_id >= 0) {
+        ret->set_metallic_roughness_map(
+            textures[metallic_roughness_texture_id]);
+        enabled |= METALLIC_ROUGHNESS_MAP_ENABLED;
     }
 
     if(normal_texture_id >= 0) {
         ret->set_normal_map(textures[normal_texture_id]);
-        enabled |= smlt::NORMAL_MAP_ENABLED;
+        enabled |= NORMAL_MAP_ENABLED;
     }
 
     if(occ_texture_id >= 0) {
         ret->set_light_map(textures[occ_texture_id]);
-        enabled |= smlt::LIGHT_MAP_ENABLED;
+        enabled |= LIGHT_MAP_ENABLED;
     }
 
     auto base_color = material["pbrMetallicRoughness"]["baseColorFactor"];
@@ -737,7 +698,10 @@ smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
     ret->pass(0)->set_blend_func((alpha_mode == "OPAQUE") ? smlt::BLEND_NONE
                                                           : smlt::BLEND_ALPHA);
 
-    approximate_pbr_material(ret, metallic, roughness, emissive, color);
+    ret->set_metallic(metallic);
+    ret->set_roughness(roughness);
+    ret->set_base_color(color);
+
     return ret;
 }
 
@@ -980,6 +944,8 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
     } else {
         prefab_node.node_type_name = "stage";
     }
+
+    GLTFLoader::NodeFactoryInput input;
 
     if(node["extras"].is_valid()) {
         for(auto& k: node["extras"]->keys()) {

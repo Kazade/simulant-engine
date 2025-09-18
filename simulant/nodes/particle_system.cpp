@@ -160,7 +160,7 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
     const auto& spec = vertex_data_->vertex_specification();
 
     uint8_t* pos_ptr = vertex_data_->data();
-    uint8_t* dif_ptr = pos_ptr + spec.diffuse_offset(false);
+    uint8_t* dif_ptr = pos_ptr + spec.color_offset(false);
     uint8_t* uv_ptr = pos_ptr + spec.texcoord0_offset(false);
 
     auto stride = spec.stride();

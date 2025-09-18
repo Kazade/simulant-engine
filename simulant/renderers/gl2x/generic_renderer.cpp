@@ -44,7 +44,7 @@ namespace smlt {
 /* These are bare minimal shaders so that *something* is displayed, they're only
  * used when the Material is incomplete (no shaders provided) */
 
-const std::string default_vertex_shader = R"(
+static const char* default_vertex_shader = R"(
 #version {0}
 
 attribute vec4 s_position;
@@ -54,7 +54,7 @@ void main(void) {
 
 )";
 
-const std::string default_fragment_shader = R"(
+static const char* default_fragment_shader = R"(
 #version {0}
 
 void main(void) {
@@ -96,61 +96,54 @@ batcher::RenderGroupKey GenericRenderer::prepare_render_group(
 }
 
 void GenericRenderer::set_light_uniforms(const MaterialPass* pass,
-                                         GPUProgram* program,
+                                         GPUProgram* program, uint8_t light_id,
                                          const LightPtr light) {
     _S_UNUSED(pass);
 
-    auto pos_loc = program->locate_uniform(LIGHT_POSITION_PROPERTY, true);
-    if(pos_loc > -1) {
-        auto pos = (light) ? light->transform->position() : Vec3();
-        if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-            pos = light->direction();
-        }
-        auto vec =
-            (light) ? Vec4(pos, (light->light_type() == LIGHT_TYPE_DIRECTIONAL)
+    LimitedVector<std::string, 2> suffixes;
+    suffixes.push_back(_F("[{0}]").format(light_id));
+    if(light_id == 0) {
+        suffixes.push_back("");
+    }
+
+    for(std::size_t i = 0; i < suffixes.size(); ++i) {
+        auto sfx = suffixes[i];
+        auto pos_loc =
+            program->locate_uniform(LIGHT_POSITION_PROPERTY + sfx, true);
+        if(pos_loc > -1) {
+            auto pos = (light) ? light->transform->position() : Vec3();
+            if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
+                pos = light->direction();
+            }
+            auto vec =
+                (light)
+                    ? Vec4(pos, (light->light_type() == LIGHT_TYPE_DIRECTIONAL)
                                     ? 0.0
                                     : 1.0)
                     : Vec4();
-        program->set_uniform_vec4(pos_loc, vec);
-    }
+            program->set_uniform_vec4(pos_loc, vec);
+        }
 
-    auto amb_loc = program->locate_uniform(LIGHT_AMBIENT_PROPERTY, true);
-    if(amb_loc > -1) {
-        program->set_uniform_color(amb_loc,
-                                   (light) ? light->ambient() : Color::none());
-    }
+        auto amb_loc =
+            program->locate_uniform(LIGHT_COLOR_PROPERTY + sfx, true);
+        if(amb_loc > -1) {
+            program->set_uniform_color(amb_loc, (light) ? light->color()
+                                                        : Color::none());
+        }
 
-    auto diff_loc = program->locate_uniform(LIGHT_DIFFUSE_PROPERTY, true);
-    if(diff_loc > -1) {
-        auto diffuse = (light) ? light->diffuse() : smlt::Color::none();
-        program->set_uniform_color(diff_loc, diffuse);
-    }
+        auto intensity_loc =
+            program->locate_uniform(LIGHT_INTENSITY_PROPERTY + sfx, true);
+        if(intensity_loc > -1) {
+            auto att = (light) ? light->intensity() : 0;
+            program->set_uniform_float(intensity_loc, att);
+        }
 
-    auto spec_loc = program->locate_uniform(LIGHT_SPECULAR_PROPERTY, true);
-    if(spec_loc > -1) {
-        auto specular = (light) ? light->specular() : smlt::Color::none();
-        program->set_uniform_color(spec_loc, specular);
-    }
-
-    auto ca_loc =
-        program->locate_uniform(LIGHT_CONSTANT_ATTENUATION_PROPERTY, true);
-    if(ca_loc > -1) {
-        auto att = (light) ? light->constant_attenuation() : 0;
-        program->set_uniform_float(ca_loc, att);
-    }
-
-    auto la_loc =
-        program->locate_uniform(LIGHT_LINEAR_ATTENUATION_PROPERTY, true);
-    if(la_loc > -1) {
-        auto att = (light) ? light->linear_attenuation() : 0;
-        program->set_uniform_float(la_loc, att);
-    }
-
-    auto qa_loc =
-        program->locate_uniform(LIGHT_QUADRATIC_ATTENUATION_PROPERTY, true);
-    if(qa_loc > -1) {
-        auto att = (light) ? light->quadratic_attenuation() : 0;
-        program->set_uniform_float(qa_loc, att);
+        auto range_loc =
+            program->locate_uniform(LIGHT_RANGE_PROPERTY + sfx, true);
+        if(range_loc > -1) {
+            auto att = (light) ? light->range() : 0;
+            program->set_uniform_float(range_loc, att);
+        }
     }
 }
 
@@ -158,24 +151,29 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
                                             GPUProgram* program) {
     auto mat = pass->material();
 
-    auto amb_loc = program->locate_uniform(AMBIENT_PROPERTY_NAME, true);
-    if(amb_loc > -1) {
-        program->set_uniform_color(AMBIENT_PROPERTY_NAME, pass->ambient());
+    auto r_loc = program->locate_uniform(ROUGHNESS_PROPERTY_NAME, true);
+    if(r_loc > -1) {
+        program->set_uniform_float(r_loc, pass->roughness());
     }
 
-    auto diff_loc = program->locate_uniform(DIFFUSE_PROPERTY_NAME, true);
+    auto m_loc = program->locate_uniform(METALLIC_PROPERTY_NAME, true);
+    if(m_loc > -1) {
+        program->set_uniform_float(m_loc, pass->roughness());
+    }
+
+    auto diff_loc = program->locate_uniform(BASE_COLOR_PROPERTY_NAME, true);
     if(diff_loc > -1) {
-        program->set_uniform_color(DIFFUSE_PROPERTY_NAME, pass->diffuse());
+        program->set_uniform_color(diff_loc, pass->base_color());
     }
 
-    auto spec_loc = program->locate_uniform(SPECULAR_PROPERTY_NAME, true);
+    auto spec_loc = program->locate_uniform(SPECULAR_COLOR_PROPERTY_NAME, true);
     if(spec_loc > -1) {
-        program->set_uniform_color(SPECULAR_PROPERTY_NAME, pass->specular());
+        program->set_uniform_color(spec_loc, pass->specular_color());
     }
 
-    auto shin_loc = program->locate_uniform(SHININESS_PROPERTY_NAME, true);
+    auto shin_loc = program->locate_uniform(SPECULAR_PROPERTY_NAME, true);
     if(shin_loc > -1) {
-        program->set_uniform_float(SHININESS_PROPERTY_NAME, pass->shininess());
+        program->set_uniform_float(shin_loc, pass->specular());
     }
 
     auto ps_loc = program->locate_uniform(POINT_SIZE_PROPERTY_NAME, true);
@@ -190,7 +188,9 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
     uint8_t texture_unit = 0;
     for(auto& tex_prop: texture_props) {
         auto& info = tex_prop.second;
+
         auto tloc = program->locate_uniform(info.texture_property_name, true);
+
         if(tloc > -1) {
             // This texture is being used
             program->set_uniform_int(tloc, texture_unit++);
@@ -305,10 +305,10 @@ void GenericRenderer::set_auto_attributes_on_shader(
                    &VertexSpecification::has_positions,
                    &VertexSpecification::position_offset, offset);
 
-    send_attribute(program->locate_attribute("s_diffuse", true),
-                   VERTEX_ATTRIBUTE_TYPE_DIFFUSE, vertex_spec,
-                   &VertexSpecification::has_diffuse,
-                   &VertexSpecification::diffuse_offset, offset);
+    send_attribute(program->locate_attribute("s_color", true),
+                   VERTEX_ATTRIBUTE_TYPE_COLOR, vertex_spec,
+                   &VertexSpecification::has_color,
+                   &VertexSpecification::color_offset, offset);
 
     send_attribute(program->locate_attribute("s_texcoord0", true),
                    VERTEX_ATTRIBUTE_TYPE_TEXCOORD0, vertex_spec,
@@ -419,11 +419,13 @@ void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
 
 void GL2RenderQueueVisitor::apply_lights(const LightPtr* lights,
                                          const uint8_t count) {
-    if(count == 1) {
-        renderer_->set_light_uniforms(pass_, program_, lights[0]);
-    } else {
-        // FIXME: This should fill out a light array in the shader. Needs a new
-        // property defined!
+    for(std::size_t i = 0; i < count; ++i) {
+        renderer_->set_light_uniforms(pass_, program_, i, lights[i]);
+    }
+
+    auto m_loc = program_->locate_uniform(LIGHT_COUNT_PROPERTY, true);
+    if(m_loc > -1) {
+        program_->set_uniform_int(m_loc, count);
     }
 }
 
@@ -445,6 +447,16 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         return;
     }
 
+    if(!renderer_->default_texture_) {
+        renderer_->default_texture_ = get_app()->shared_assets->create_texture(
+            1, 1, TEXTURE_FORMAT_RGB_3UB_888);
+        renderer_->default_texture_->set_name("DefaultTexture");
+        renderer_->default_texture_->set_data(
+            std::vector<uint8_t>({255, 255, 255})); // White texture
+        renderer_->default_texture_->set_texture_filter(TEXTURE_FILTER_POINT);
+        renderer_->default_texture_->flush();
+    }
+
     /* First we bind any used texture properties to their associated variables
      */
     uint8_t texture_unit = 0;
@@ -460,27 +472,22 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 
         const TexturePtr tex = *tex_prop;
 
-        // Do we use this texture property? Then bind the texture appropriately
-        // FIXME: Is this right? The GL1 renderer uses the existence of a
-        // texture_id to decide whether or not to bind a texture to a unit. This
-        // checks the variable exists and also whether there's a texture ID. The
-        // question is, should the material have some other type of existence
-        // check for texture properties? Is checking the texture_id right for
-        // all situations? If someone uses s_diffuse_map, but doesn't set a
-        // value, surely that should get the default texture?
         auto loc = program_->locate_uniform(
             defined_property.second.texture_property_name, true);
         if(loc > -1 && (texture_unit + 1u) < _S_GL_MAX_TEXTURE_UNITS) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + texture_unit);
             GLCheck(glBindTexture, GL_TEXTURE_2D,
-                    (tex) ? tex->_renderer_specific_id() : 0);
+                    (tex)
+                        ? tex->_renderer_specific_id()
+                        : renderer_->default_texture_->_renderer_specific_id());
+            program_->set_uniform_int(loc, texture_unit);
             texture_unit++;
         }
     }
 
     /* Next, we wipe out any unused texture units */
     for(uint8_t i = texture_unit; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
-        GLCheck(glActiveTexture, GL_TEXTURE0 + texture_unit);
+        GLCheck(glActiveTexture, GL_TEXTURE0 + i);
         GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
     }
 
@@ -520,13 +527,13 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             }
         }
 
-        if(!prev || prev->shade_model() != next->shade_model()) {
-            if(next->shade_model() == SHADE_MODEL_SMOOTH) {
-                GLCheck(glShadeModel, GL_SMOOTH);
-            } else {
-                GLCheck(glShadeModel, GL_FLAT);
-            }
-        }
+        // if(!prev || prev->shade_model() != next->shade_model()) {
+        //     if(next->shade_model() == SHADE_MODEL_SMOOTH) {
+        //         GLCheck(glShadeModel, GL_SMOOTH);
+        //     } else {
+        //         GLCheck(glShadeModel, GL_FLAT);
+        //     }
+        // }
     }
 
     if(!prev || prev->cull_mode() != next->cull_mode()) {
@@ -559,7 +566,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
     renderer_->set_material_uniforms(next, program_);
 
-    for(auto prop: mat->custom_properties()) {
+    for(auto& prop: mat->custom_properties()) {
         switch(prop.second.type) {
             case MATERIAL_PROPERTY_TYPE_INT:
                 const int* i;

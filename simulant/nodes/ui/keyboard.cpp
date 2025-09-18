@@ -1050,7 +1050,7 @@ public:
             icon->material->set_blend_func(BLEND_ALPHA);
             icon->material->set_depth_test_enabled(false);
             icon->material->set_cull_mode(CULL_MODE_NONE);
-            icon->material->set_diffuse_map(icon->tex);
+            icon->material->set_base_color_map(icon->tex);
             icon->submesh = mesh_->create_submesh(
                 name, icon->material, MESH_ARRANGEMENT_TRIANGLE_STRIP);
         };
@@ -1196,14 +1196,14 @@ private:
                 mesh_->vertex_data->move_to(idx);
 
                 for(int i = 0; i < 4; ++i) {
-                    mesh_->vertex_data->diffuse(fg_color);
+                    mesh_->vertex_data->color(fg_color);
                     mesh_->vertex_data->move_next();
                 }
             }
 
             mesh_->vertex_data->move_to(key->first_vertex_index);
             for(int i = 0; i < 4; ++i) {
-                mesh_->vertex_data->diffuse(highlight_color);
+                mesh_->vertex_data->color(highlight_color);
                 mesh_->vertex_data->move_next();
             }
 

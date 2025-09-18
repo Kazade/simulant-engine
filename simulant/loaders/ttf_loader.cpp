@@ -119,7 +119,7 @@ namespace loaders {
             texture->flush();
 
             font->pages_[current_page].material = font->asset_manager().load_material(Material::BuiltIns::TEXTURE_ONLY);
-            font->pages_[current_page].material->set_diffuse_map(font->pages_[current_page].texture);
+            font->pages_[current_page].material->set_base_color_map(font->pages_[current_page].texture);
 
             font->pages_[current_page].material->set_blend_func(BLEND_ALPHA);
             font->pages_[current_page].material->set_depth_test_enabled(false);

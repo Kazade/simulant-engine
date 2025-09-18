@@ -3,6 +3,7 @@
 #include "../asset_manager.h"
 #include "../meshes/mesh.h"
 #include "../utils/limited_string.h"
+#include "../utils/pbr.h"
 #include "../vertex_data.h"
 #include "../vfs.h"
 #include "dcm.h"
@@ -24,7 +25,7 @@ VertexSpecification determine_spec(const FileHeader& header) {
         VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_4F;
     vspec.texcoord0_attribute = (header.tex0_format == TEX_COORD_FORMAT_2F) ? VERTEX_ATTRIBUTE_2F : VERTEX_ATTRIBUTE_NONE;
     vspec.texcoord1_attribute = (header.tex1_format == TEX_COORD_FORMAT_2F) ? VERTEX_ATTRIBUTE_2F : VERTEX_ATTRIBUTE_NONE;
-    vspec.diffuse_attribute =
+    vspec.color_attribute =
         (header.color_format == COLOR_FORMAT_4UB)  ? VERTEX_ATTRIBUTE_4UB_RGBA
         : (header.color_format == COLOR_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F
                                                    : VERTEX_ATTRIBUTE_4F;
@@ -32,12 +33,12 @@ VertexSpecification determine_spec(const FileHeader& header) {
 
     /* FIXME: Do something better! */
 #if defined(__ANDROID__) || defined(__LINUX__)
-    if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
-        vspec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+    if(vspec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
+        vspec.color_attribute = VERTEX_ATTRIBUTE_4F;
     }
 #elif defined(__DREAMCAST__)
-    if(vspec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
-        vspec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
+    if(vspec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
+        vspec.color_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
     }
 #endif
 
@@ -95,30 +96,36 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         data_->read((char*) mat.emission, sizeof(mat.emission));
         data_->read((char*) &mat.shininess, sizeof(mat.shininess));
 
-        data_->read((char*) mat.diffuse_map, sizeof(mat.diffuse_map));
+        data_->read((char*) mat.base_color_map, sizeof(mat.base_color_map));
         data_->read((char*) mat.light_map, sizeof(mat.light_map));
         data_->read((char*) mat.normal_map, sizeof(mat.normal_map));
-        data_->read((char*) mat.specular_map, sizeof(mat.specular_map));
+        data_->read((char*) mat.metallic_roughness_map, sizeof(mat.metallic_roughness_map));
 
         smlt::MaterialPtr new_mat =
             mesh->asset_manager().clone_default_material();
-        new_mat->set_pass_count(1);
+
         new_mat->set_lighting_enabled(true);
         new_mat->set_cull_mode(mesh_opts.cull_mode);
         new_mat->set_blend_func(mesh_opts.blending_enabled ? BLEND_ALPHA : BLEND_NONE);
-        new_mat->set_diffuse(smlt::Color(mat.diffuse, 4));
-        new_mat->set_ambient(smlt::Color(mat.ambient, 4));
-        new_mat->set_specular(smlt::Color(mat.specular, 4));
-        new_mat->set_emission(smlt::Color(mat.emission, 4));
-        new_mat->set_shininess(mat.shininess * 128.0f);
+
+        auto s = traditional_to_pbr(
+            smlt::Color(mat.ambient, 4), smlt::Color(mat.diffuse, 4),
+            smlt::Color(mat.specular, 4), mat.shininess * 128.0f);
+
+        new_mat->set_base_color(s.base_color);
+        new_mat->set_metallic(s.metallic);
+        new_mat->set_roughness(s.roughness);
+        new_mat->set_specular_color(s.specular_color);
+        new_mat->set_specular(s.specular);
+
         new_mat->set_name(
             std::string(mat.data_header.path, sizeof(mat.data_header.path))
                 .c_str());
 
         int enabled_textures = 0;
 
-        if(mat.diffuse_map[0]) {
-            Path final = Path(std::string(mat.diffuse_map, 32).c_str());
+        if(mat.base_color_map[0]) {
+            Path final = Path(std::string(mat.base_color_map, 32).c_str());
             if(!mesh_opts.override_texture_extension.empty()) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
@@ -127,15 +134,15 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
-                new_mat->set_diffuse_map(tex);
+                new_mat->set_base_color_map(tex);
                 tex->flush();
             }
 
-            enabled_textures |= DIFFUSE_MAP_ENABLED;
+            enabled_textures |= BASE_COLOR_MAP_ENABLED;
         }
 
-        if(mat.specular_map[0]) {
-            Path final = Path(std::string(mat.specular_map, 32).c_str());
+        if(mat.metallic_roughness_map[0]) {
+            Path final = Path(std::string(mat.metallic_roughness_map, 32).c_str());
             if(!mesh_opts.override_texture_extension.empty()) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
@@ -144,11 +151,11 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
-                new_mat->set_specular_map(tex);
+                new_mat->set_metallic_roughness_map(tex);
                 tex->flush();
             }
 
-            enabled_textures |= SPECULAR_MAP_ENABLED;
+            enabled_textures |= METALLIC_ROUGHNESS_MAP_ENABLED;
         }
 
         if(mat.light_map[0]) {
@@ -225,16 +232,16 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         if(fheader.color_format == COLOR_FORMAT_4UB) {
             uint8_t color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Color::from_bytes(color[0], color[1],
-                                                    color[2], color[3]));
+            vdata->color(smlt::Color::from_bytes(color[0], color[1], color[2],
+                                                 color[3]));
         } else if(fheader.color_format == COLOR_FORMAT_4F) {
             float color[4];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Color(color[0], color[1], color[2], color[3]));
+            vdata->color(smlt::Color(color[0], color[1], color[2], color[3]));
         } else if(fheader.color_format == COLOR_FORMAT_3F) {
             float color[3];
             data_->read((char*) &color, sizeof(color));
-            vdata->diffuse(smlt::Color(color[0], color[1], color[2], 1.0f));
+            vdata->color(smlt::Color(color[0], color[1], color[2], 1.0f));
         }
 
         if(spec.normal_attribute == VERTEX_ATTRIBUTE_3F) {

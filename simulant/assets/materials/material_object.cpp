@@ -14,46 +14,44 @@ MaterialObject::~MaterialObject() {
 
 }
 
-void MaterialObject::set_specular(const Color &color) {
-    set_property_value(SPECULAR_PROPERTY_NAME, (const Vec4&) color);
+void MaterialObject::set_specular_color(const Color& color) {
+    set_property_value(SPECULAR_COLOR_PROPERTY_NAME, (const Vec4&)color);
 }
 
-void MaterialObject::set_ambient(const Color &color) {
-    set_property_value(AMBIENT_PROPERTY_NAME, (const Vec4&) color);
+void MaterialObject::set_base_color(const Color& color) {
+    set_property_value(BASE_COLOR_PROPERTY_NAME, (const Vec4&)color);
 }
 
-void MaterialObject::set_emission(const Color& color) {
-    set_property_value(EMISSION_PROPERTY_NAME, (const Vec4&) color);
+void MaterialObject::set_specular(float specular) {
+    set_property_value(SPECULAR_PROPERTY_NAME, specular);
 }
 
-void MaterialObject::set_diffuse(const Color &color) {
-    set_property_value(DIFFUSE_PROPERTY_NAME, (const Vec4&) color);
-}
-
-void MaterialObject::set_shininess(float shininess) {
-    // OpenGL expects shininess to range between 0 and 128 otherwise it throws
-    // an invalid_value error
-    set_property_value(SHININESS_PROPERTY_NAME, clamp(shininess, 0, 128));
-}
-
-void MaterialObject::set_diffuse_map(TexturePtr texture) {
-    set_property_value(DIFFUSE_MAP_PROPERTY_NAME, texture);
+void MaterialObject::set_base_color_map(TexturePtr texture) {
+    set_property_value(BASE_COLOR_MAP_PROPERTY_NAME, texture);
 }
 
 void MaterialObject::set_light_map(TexturePtr texture) {
     set_property_value(LIGHT_MAP_PROPERTY_NAME, texture);
 }
 
-void MaterialObject::set_specular_map(TexturePtr texture) {
-    set_property_value(SPECULAR_MAP_PROPERTY_NAME, texture);
+void MaterialObject::set_metallic(float metallic) {
+    set_property_value(METALLIC_PROPERTY_NAME, metallic);
+}
+
+void MaterialObject::set_roughness(float roughness) {
+    set_property_value(ROUGHNESS_PROPERTY_NAME, roughness);
+}
+
+void MaterialObject::set_metallic_roughness_map(TexturePtr texture) {
+    set_property_value(METALLIC_ROUGHNESS_MAP_PROPERTY_NAME, texture);
 }
 
 void MaterialObject::set_normal_map(TexturePtr texture) {
     set_property_value(NORMAL_MAP_PROPERTY_NAME, texture);
 }
 
-void MaterialObject::set_diffuse_map_matrix(const Mat4& mat) {
-    set_property_value(DIFFUSE_MAP_MATRIX_PROPERTY_NAME, mat);
+void MaterialObject::set_base_color_map_matrix(const Mat4& mat) {
+    set_property_value(BASE_COLOR_MAP_MATRIX_PROPERTY_NAME, mat);
 }
 
 void MaterialObject::set_light_map_matrix(const Mat4& mat) {
@@ -64,13 +62,13 @@ void MaterialObject::set_normal_map_matrix(const Mat4& mat) {
     set_property_value(NORMAL_MAP_MATRIX_PROPERTY_NAME, mat);
 }
 
-void MaterialObject::set_specular_map_matrix(const Mat4& mat) {
-    set_property_value(SPECULAR_MAP_MATRIX_PROPERTY_NAME, mat);
+void MaterialObject::set_metallic_roughness_map_matrix(const Mat4& mat) {
+    set_property_value(METALLIC_ROUGHNESS_MAP_MATRIX_PROPERTY_NAME, mat);
 }
 
-const TexturePtr& MaterialObject::diffuse_map() const {
+const TexturePtr& MaterialObject::base_color_map() const {
     const TexturePtr* ptr = nullptr;
-    bool ok = property_value(DIFFUSE_MAP_PROPERTY_HASH, ptr);
+    bool ok = property_value(BASE_COLOR_MAP_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
@@ -92,26 +90,26 @@ const TexturePtr& MaterialObject::normal_map() const {
     return *ptr;
 }
 
-const TexturePtr& MaterialObject::specular_map() const {
+const TexturePtr& MaterialObject::metallic_roughness_map() const {
     const TexturePtr* ptr = nullptr;
 #ifndef NDEBUG
-    bool ok = property_value(SPECULAR_MAP_PROPERTY_HASH, ptr);
+    bool ok = property_value(METALLIC_ROUGHNESS_MAP_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
 #else
-    property_value(SPECULAR_MAP_PROPERTY_HASH, ptr);
+    property_value(METALLIC_ROUGHNESS_MAP_PROPERTY_HASH, ptr);
 #endif
     return *ptr;
 }
 
-const Mat4& MaterialObject::diffuse_map_matrix() const {
+const Mat4& MaterialObject::base_color_map_matrix() const {
     const Mat4* ptr = nullptr;
 #ifndef NDEBUG
-    bool ok = property_value(DIFFUSE_MAP_MATRIX_PROPERTY_HASH, ptr);
+    bool ok = property_value(BASE_COLOR_MAP_MATRIX_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
 #else
-    property_value(DIFFUSE_MAP_MATRIX_PROPERTY_HASH, ptr);
+    property_value(BASE_COLOR_MAP_MATRIX_PROPERTY_HASH, ptr);
 #endif
     return *ptr;
 }
@@ -132,51 +130,50 @@ const Mat4& MaterialObject::normal_map_matrix() const {
     return *ptr;
 }
 
-const Mat4& MaterialObject::specular_map_matrix() const {
+const Mat4& MaterialObject::metallic_roughness_map_matrix() const {
     const Mat4* ptr = nullptr;
-    bool ok = property_value(SPECULAR_MAP_MATRIX_PROPERTY_HASH, ptr);
+    bool ok = property_value(METALLIC_ROUGHNESS_MAP_MATRIX_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
 }
 
-
-const Color& MaterialObject::specular() const {
+const Color& MaterialObject::specular_color() const {
     // FIXME: Naughty cast from Vec4& -> Color&
     const Color* ptr = nullptr;
-    bool ok = property_value(SPECULAR_PROPERTY_HASH, ptr);
+    bool ok = property_value(SPECULAR_COLOR_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
 }
 
-const Color& MaterialObject::ambient() const {
+const Color& MaterialObject::base_color() const {
     const Color* ptr = nullptr;
-    bool ok = property_value(AMBIENT_PROPERTY_HASH, ptr);
+    bool ok = property_value(BASE_COLOR_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
 }
 
-const Color& MaterialObject::emission() const {
-    const Color* ptr = nullptr;
-    bool ok = property_value(EMISSION_PROPERTY_HASH, ptr);
-    assert(ok);
-    _S_UNUSED(ok);
-    return *ptr;
-}
-
-const Color& MaterialObject::diffuse() const {
-    const Color* ptr = nullptr;
-    bool ok = property_value(DIFFUSE_PROPERTY_HASH, ptr);
-    assert(ok);
-    _S_UNUSED(ok);
-    return *ptr;
-}
-
-float MaterialObject::shininess() const {
+float MaterialObject::metallic() const {
     const float* ptr = nullptr;
-    bool ok = property_value(SHININESS_PROPERTY_HASH, ptr);
+    bool ok = property_value(METALLIC_PROPERTY_HASH, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
+float MaterialObject::roughness() const {
+    const float* ptr = nullptr;
+    bool ok = property_value(ROUGHNESS_PROPERTY_HASH, ptr);
+    assert(ok);
+    _S_UNUSED(ok);
+    return *ptr;
+}
+
+float MaterialObject::specular() const {
+    const float* ptr = nullptr;
+    bool ok = property_value(SPECULAR_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;
