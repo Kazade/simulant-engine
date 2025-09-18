@@ -10,6 +10,7 @@
 
 #include "../generic/optional.h"
 #include "../path.h"
+#include "formatter.h"
 
 namespace smlt {
 
@@ -177,22 +178,28 @@ public:
      *  - NULL - returns "null"
      */
     optional<std::string> to_str() const {
+        if(type_ == JSON_STRING) {
+            return std::get<std::string>(value_);
+        }
+
+        return no_value;
+    }
+
+    std::string repr() const {
         switch(type_) {
             case JSON_OBJECT:
-                return optional<std::string>();
+                return _F("{{0}...}").format(this->size());
             case JSON_ARRAY:
-                return optional<std::string>();
+                return _F("[{0}...]").format(this->size());
             case JSON_STRING:
             case JSON_NUMBER:
                 return std::get<std::string>(value_);
             case JSON_TRUE:
-                return optional<std::string>("true");
+                return "true";
             case JSON_FALSE:
-                return optional<std::string>("false");
+                return "false";
             case JSON_NULL:
-                return optional<std::string>("null");
-            default:
-                return optional<std::string>();
+                return "null";
         }
     }
 
