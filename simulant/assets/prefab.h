@@ -37,9 +37,6 @@ struct PrefabNode {
     Params params;
 
     LimitedString<Nameable::MAX_NAME_LENGTH> name;
-    Vec3 translation;
-    Quaternion rotation;
-    Vec3 scale;
 };
 
 /**

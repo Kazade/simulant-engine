@@ -13,7 +13,7 @@ public:
     void on_load() override {
         start_service<PhysicsService>();
 
-        camera_ = create_child<smlt::Camera>();
+        camera_ = create_child<smlt::Camera3D>();
         pipeline_ = compositor->create_layer(
             this, camera_
         );

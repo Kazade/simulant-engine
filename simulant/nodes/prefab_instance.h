@@ -74,9 +74,14 @@ private:
 
         if(ret) {
             ret->set_name(input.name);
-            ret->transform->set_translation(input.translation);
-            ret->transform->set_rotation(input.rotation);
-            ret->transform->set_scale_factor(input.scale);
+            ret->transform->set_translation(
+                input.params.get<FloatArray>("translation").value_or(Vec3()));
+            ret->transform->set_rotation(
+                input.params.get<FloatArray>("rotation")
+                    .value_or(Quaternion()));
+            ret->transform->set_scale_factor(
+                input.params.get<FloatArray>("scale_factor")
+                    .value_or(Vec3(1, 1, 1)));
 
             if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
                 light->set_direction(ret->transform->orientation().forward());
@@ -110,9 +115,18 @@ private:
                         // FIXME: These inputs should NOT be the relative
                         // positions, but should instead be absolute. If you
                         // have a parent node this may not be correct.
-                        mixin_params.set("scale", input.scale);
-                        mixin_params.set("position", input.translation);
-                        mixin_params.set("orientation", input.rotation);
+                        mixin_params.set(
+                            "scale_factor",
+                            input.params.get<FloatArray>("scale").value_or(
+                                Vec3(1, 1, 1)));
+                        mixin_params.set(
+                            "position",
+                            input.params.get<FloatArray>("translation")
+                                .value_or(Vec3()));
+                        mixin_params.set(
+                            "orientation",
+                            input.params.get<FloatArray>("rotation")
+                                .value_or(Quaternion()));
 
                         auto new_mixin =
                             ret->create_mixin(mixin_name, mixin_params);

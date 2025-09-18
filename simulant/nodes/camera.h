@@ -73,8 +73,13 @@ public:
                                                   float ratio);
 
     bool on_create(Params params) override {
-        _S_UNUSED(params);
-        return true;
+        if(!clean_params<Camera>(params)) {
+            return false;
+        }
+
+        set_projection_matrix(
+            params.get<FloatArray>("projection_matrix").value());
+        return StageNode::on_create(params);
     }
 
 private:

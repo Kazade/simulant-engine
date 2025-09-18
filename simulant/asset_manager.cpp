@@ -670,9 +670,6 @@ PrefabPtr AssetManager::create_prefab(const smlt::StageNode* root,
         pn.id = node->id();
         pn.node_type_name = node->node_type_name();
         pn.params = node->create_params();
-        pn.translation = node->transform->translation();
-        pn.rotation = node->transform->rotation();
-        pn.scale = node->transform->scale();
         return pn;
     };
 

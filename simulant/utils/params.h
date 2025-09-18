@@ -93,6 +93,22 @@ public:
         return no_value;
     }
 
+    template<typename F>
+    static optional<ParamValue> to_param(const F& fallback) {
+        /* We abuse the default coersion rules of Params */
+        Params tmp;
+        tmp.set("value", fallback);
+        return tmp.raw("value");
+    }
+
+    static optional<ParamValue> to_param(const OptionalInit&) {
+        return no_value;
+    }
+
+    static optional<ParamValue> to_param(const std::nullptr_t&) {
+        return no_value;
+    }
+
 private:
     std::map<ParamKey, ParamValue> dict_;
 

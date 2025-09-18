@@ -84,7 +84,7 @@ public:
     }
 
     bool supports(const smlt::Path& filename) const override {
-        return filename.ext() == ".gltf";
+        return filename.ext() == ".gltf" || filename.ext() == ".glb";
     }
 
     smlt::Loader::ptr

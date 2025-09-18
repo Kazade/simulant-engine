@@ -318,12 +318,12 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
     auto byte_length = buffer_view["byteLength"]->to_int().value_or(0);
     auto byte_stride = buffer_view["byteStride"]->to_int().value_or(0);
 
-    if((int)buffers.size() <= buffer_id) {
+    if((int)buffers.size() <= buffer_id || uri.empty()) {
 
         const char* b64_marker = "data:application/octet-stream;base64,";
         if(uri.empty()) {
             // We need to seek and read from bin
-            auto g = bin->tellg();
+            uint32_t g = bin->tellg();
             bin->seekg(byte_offset, std::ios::cur);
             std::vector<uint8_t> data(byte_length);
             bin->read((char*)&data[0], byte_length);
@@ -414,7 +414,7 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
 
     S_DEBUG("Position loading took {0}us", t1 - t0);
 #endif
-
+    final_mesh->vertex_data->done();
     final_mesh->vertex_data->move_to(start);
 }
 
@@ -661,7 +661,7 @@ static smlt::MaterialPtr create_default_material(AssetManager* assets) {
     mat->set_lighting_enabled(true);
     mat->set_textures_enabled(0);
     approximate_pbr_material(mat, 0.0f, 0.4f, Color(0, 0, 0, 1), base_color);
-    mat->set_cull_mode(smlt::CULL_MODE_BACK_FACE);
+    mat->set_cull_mode(smlt::CULL_MODE_NONE);
     return mat;
 }
 
@@ -977,6 +977,8 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
             prefab_node.params.set(
                 "type", light["type"]->to_str().value_or("directional"));
         }
+    } else {
+        prefab_node.node_type_name = "stage";
     }
 
     if(node["extras"].is_valid()) {
@@ -1081,13 +1083,19 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         uint32_t here = data_->tellg();
 
         // Now let's open a second stream and seek to the bin chunk
-        bin_chunk = std::make_shared<std::ifstream>();
-        bin_chunk->rdbuf(data_->rdbuf());
-        bin_chunk->seekg(here + chunk_length, std::ios::beg);
+        bin_chunk =
+            std::make_shared<std::ifstream>(filename_.str(), std::ios::binary);
+        bin_chunk->seekg(here + chunk_length + (sizeof(uint32_t) * 2),
+                         std::ios::beg);
     } else {
         // Rewind, bo selecta
         data_->seekg(0, std::ios::beg);
     }
+
+    uint32_t t = data_->tellg();
+    char buffer[32];
+    data_->read(buffer, 32);
+    data_->seekg(t, std::ios::beg);
 
     auto js = json_read(this->data_);
 
