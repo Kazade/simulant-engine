@@ -14,7 +14,7 @@ public:
         auto prefab = assets->load_prefab("assets/samples/BoxTextured.gltf");
         prefab_ = create_child<smlt::PrefabInstance>(prefab);
 
-        prefab_->transform->set_position(smlt::Vec3(0, 0, -10));
+        prefab_->transform->set_position(smlt::Vec3(0, 0, -5.0f));
         for(auto& child: prefab_->each_descendent()) {
             smlt::ActorPtr actor = dynamic_cast<smlt::ActorPtr>(&child);
             if(actor) {
@@ -29,14 +29,13 @@ public:
             {"znear",  0.1f                  },
             {"zfar",   100.0f                },
             {"aspect", window->aspect_ratio()},
-            {"yfov",   60.0f                 }
+            {"yfov",   45.0f                 }
         });
 
-        camera->set_perspective_projection(
-            Degrees(45.0), float(window->width()) / float(window->height()),
-            1.0, 1000.0);
+        camera->set_perspective_projection(Degrees(45.0),
+                                           window->aspect_ratio(), 1.0, 1000.0);
 
-        camera->transform->set_position(Vec3(0, 10, 50));
+        // camera->transform->set_position(Vec3(0, 10, 50));
         // camera->set_perspective_projection(
         //     smlt::Deg(60.0f), window->aspect_ratio(), 1.0f, 10000.0f);
         // camera->transform->look_at(prefab_->transform->position());
@@ -84,6 +83,8 @@ int main(int argc, char* argv[]) {
     config.fullscreen = false;
     config.log_level = LOG_LEVEL_DEBUG;
 #endif
+
+    // config.development.force_renderer = "gl1x";
 
     AnimDemo app(config);
     return app.run();

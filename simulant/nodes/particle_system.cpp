@@ -376,7 +376,7 @@ bool ParticleSystem::on_create(Params params) {
         emitter_states_[i].emission_accumulator = 0.0f;
     }
 
-    return true;
+    return StageNode::on_create(params);
 }
 
 void ParticleSystem::update_active_state(uint16_t e, float dt) {

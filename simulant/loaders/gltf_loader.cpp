@@ -9,8 +9,6 @@
 namespace smlt {
 namespace loaders {
 
-const char* GLTFLoader::node_factory_key = "node-factory";
-
 static smlt::Vec3 parse_pos(JSONIterator it) {
     return smlt::Vec3(it[0]->to_float().value_or(0.0f),
                       it[1]->to_float().value_or(0.0f),
@@ -48,145 +46,6 @@ bool check_gltf_version(JSONIterator& js) {
     }
 
     return js["asset"]["version"]->to_str().value_or("0.0") == "2.0";
-}
-
-StageNode* default_node_factory(StageNode* parent,
-                                const GLTFLoader::NodeFactoryInput& input) {
-    StageNode* ret = nullptr;
-    Light* light = nullptr;
-
-    /* If someone specifies the node type in the extras, we create the node by
-     * name*/
-    if(input.params.contains("s_node")) {
-        auto node_name = input.params.get<std::string>("s_node");
-        if(node_name) {
-            auto name = node_name.value();
-            ret =
-                parent->scene->create_node(name.c_str(), input.params, nullptr);
-
-            if(!ret) {
-                S_WARN("Unable to spawn node with name: {0}", name);
-            } else {
-                ret->set_parent(parent);
-            }
-        }
-    }
-
-    // If we don't have a node, fallback to the default behaviour
-    // of spawning actors + stages
-    if(!ret) {
-        if(input.mesh) {
-            S_VERBOSE("Spawning actor");
-            ret = parent->create_child<Actor>(input.mesh);
-        } else if(input.camera) {
-            Camera* cam = parent->create_child<Camera>();
-            if(input.camera->type == "perspective") {
-                smlt::Mat4 proj;
-                float a = input.camera->aspect;
-                float y = input.camera->yfov;
-                float n = input.camera->znear;
-                if(input.camera->zfar) {
-                    float f = input.camera->zfar.value();
-                    proj[0] = 1.0f / (a * std::tan(0.5f * y));
-                    proj[5] = 1.0f / std::tan(0.5f * y);
-                    proj[10] = (n + f) / (n - f);
-                    proj[11] = -1.0f;
-                    proj[14] = (2.0f * n * f) / (n - f);
-                    proj[15] = 0.0f;
-                } else {
-                    proj[0] = 1.0f / (a * std::tan(0.5f * y));
-                    proj[5] = 1.0f / std::tan(0.5f * y);
-                    proj[10] = -1;
-                    proj[11] = -1;
-                    proj[14] = -2.0f * n;
-                    proj[15] = 0.0f;
-                }
-
-                cam->set_projection_matrix(proj);
-            } else {
-                S_ERROR("FIXME: Orthocam");
-            }
-            ret = cam;
-        } else if(input.light) {
-            if(input.light->type == "directional") {
-                light = parent->create_child<DirectionalLight>();
-            } else {
-                light = parent->create_child<PointLight>();
-            }
-
-            light->set_color(input.light->color);
-            light->set_intensity(input.light->intensity);
-            light->set_range(input.light->range);
-
-            ret = light;
-
-        } else {
-            ret = parent->create_child<Stage>();
-        }
-    }
-
-    if(ret) {
-        ret->transform->set_translation(input.translation);
-        ret->transform->set_rotation(input.rotation);
-        ret->transform->set_scale_factor(input.scale);
-
-        if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-            light->set_direction(ret->transform->orientation().forward());
-        }
-
-        if(input.params.contains("s_mixins")) {
-            auto mixins_maybe = input.params.get<std::string>("s_mixins");
-            if(mixins_maybe) {
-                auto mixins = smlt::split(mixins_maybe.value(), ",");
-                for(std::size_t i = 0; i < mixins.size(); ++i) {
-                    auto mixin_name = strip(mixins[i]);
-                    Params mixin_params;
-                    std::string prefix = "s_mixin." + std::to_string(i) + ".";
-                    for(auto arg_name: input.params.arg_names()) {
-                        if(arg_name.str().find(prefix) == 0) {
-                            auto key = arg_name.str().substr(prefix.size());
-                            mixin_params.set(
-                                key.c_str(),
-                                input.params.raw(arg_name.c_str()).value());
-                        }
-                    }
-
-                    if(input.mesh) {
-                        mixin_params.set("mesh", input.mesh);
-                    }
-
-                    // FIXME: These inputs should NOT be the relative
-                    // positions, but should instead be absolute. If you
-                    // have a parent node this may not be correct.
-                    mixin_params.set("scale", input.scale);
-                    mixin_params.set("position", input.translation);
-                    mixin_params.set("orientation", input.rotation);
-
-                    auto new_mixin =
-                        ret->create_mixin(mixin_name, mixin_params);
-                    if(!new_mixin) {
-                        S_ERROR("Failed to create mixin with name {0}",
-                                mixin_name);
-                    }
-                }
-            }
-        }
-    }
-
-    return ret;
-}
-
-GLTFLoader::NodeFactory determine_node_factory(const LoaderOptions& options) {
-    if(options.count(GLTFLoader::node_factory_key)) {
-        try {
-            return any_cast<GLTFLoader::NodeFactory>(
-                options.at(GLTFLoader::node_factory_key));
-        } catch(bad_any_cast& e) {
-            S_WARN("Failed to cast node factory, using default");
-        }
-    }
-
-    return default_node_factory;
 }
 
 optional<JSONIterator> find_scene(JSONIterator& js) {
@@ -611,7 +470,7 @@ static smlt::MaterialPtr create_default_material(AssetManager* assets) {
     mat->set_name("Default");
     mat->set_lighting_enabled(true);
     mat->set_textures_enabled(0);
-    mat->set_cull_mode(smlt::CULL_MODE_BACK_FACE);
+    mat->set_cull_mode(smlt::CULL_MODE_NONE);
     return mat;
 }
 
@@ -889,7 +748,6 @@ smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
 
 static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
                                    JSONIterator& js,
-                                   GLTFLoader::NodeFactory factory,
                                    const std::vector<smlt::MeshPtr>& meshes) {
     auto nodes = js["nodes"];
     auto node = nodes[node_id];
@@ -992,25 +850,41 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
         }
     }
 
-    auto scale = parse_scale(node["scale"]);
-    auto translation = parse_pos(node["translation"]);
-    auto rotation = parse_quaternion(node["rotation"]);
+    auto extract_transform =
+        [](JSONIterator& node) -> std::tuple<Vec3, Quaternion, Vec3> {
+        auto trn = parse_pos(node["translation"]);
+        auto rot = parse_quaternion(node["rotation"]);
+        auto sf = parse_scale(node["scale"]);
+
+        if(node["matrix"]) {
+            auto mat = Mat4();
+            for(int i = 0; i < 16; ++i) {
+                mat[i] = node["matrix"][i]->to_float().value_or(0.0f);
+            }
+
+            mat.extract_rotation_and_translation(rot, trn);
+            sf.x = mat[0];
+            sf.y = mat[5];
+            sf.z = mat[10];
+        }
+
+        return std::make_tuple(trn, rot, sf);
+    };
 
     prefab_node.name = node["name"]->to_str().value_or("");
     // FIXME: Additional properties!
 
-    // FIXME: These should be absolute values, not relative!
-    prefab_node.params.set("scale", scale);
-    prefab_node.params.set("position", translation);
-    prefab_node.params.set("orientation", rotation);
+    auto trn = extract_transform(node);
+    prefab_node.params.set("translation", std::get<0>(trn));
+    prefab_node.params.set("rotation", std::get<1>(trn));
+    prefab_node.params.set("scale_factor", std::get<2>(trn));
 
     prefab.push_node(prefab_node, parent);
 
     if(node->has_key("children")) {
         for(auto& child: node["children"]) {
             spawn_node_recursively(prefab, prefab_node.id,
-                                   child.to_int().value_or(0), js, factory,
-                                   meshes);
+                                   child.to_int().value_or(0), js, meshes);
         }
     }
 
@@ -1069,7 +943,6 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         return;
     }
 
-    auto node_factory = determine_node_factory(options);
     auto maybe_scene_it = find_scene(js);
     if(!maybe_scene_it) {
         S_ERROR("No scene in gltf file");
@@ -1144,8 +1017,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
             if(it->has_key("name")) {
                 auto name_maybe = it["name"]->to_str();
                 if(name_maybe && name_maybe.value() == root_name) {
-                    spawn_node_recursively(*prefab, -1, i, js, node_factory,
-                                           meshes);
+                    spawn_node_recursively(*prefab, -1, i, js, meshes);
                     return;
                 }
             }
@@ -1166,7 +1038,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         auto node_id = maybe_id.value();
-        spawn_node_recursively(*prefab, -1, node_id, js, node_factory, meshes);
+        spawn_node_recursively(*prefab, -1, node_id, js, meshes);
     }
 }
 

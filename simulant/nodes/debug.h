@@ -99,8 +99,11 @@ private:
     sig::Connection frame_connection_;
 
     bool on_create(Params params) override {
-        _S_UNUSED(params);
-        return true;
+        if(!clean_params<Debug>(params)) {
+            return false;
+        }
+
+        return StageNode::on_create(params);
     }
 };
 

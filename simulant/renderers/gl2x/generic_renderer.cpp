@@ -737,6 +737,7 @@ void GenericRenderer::send_geometry(const Renderable* renderable,
                                     GPUBuffer* buffers) {
     auto element_count = renderable->index_element_count;
     auto arrangement = convert_arrangement(renderable->arrangement);
+
     if(element_count) {
         auto index_type = convert_id_type(renderable->index_data->index_type());
         auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);

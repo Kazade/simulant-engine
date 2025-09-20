@@ -31,7 +31,7 @@ public:
         }
 
         build_tree(prefab_ptr);
-        return true;
+        return StageNode::on_create(params);
     }
 
 private:
@@ -74,15 +74,6 @@ private:
 
         if(ret) {
             ret->set_name(input.name);
-            ret->transform->set_translation(
-                input.params.get<FloatArray>("translation").value_or(Vec3()));
-            ret->transform->set_rotation(
-                input.params.get<FloatArray>("rotation")
-                    .value_or(Quaternion()));
-            ret->transform->set_scale_factor(
-                input.params.get<FloatArray>("scale_factor")
-                    .value_or(Vec3(1, 1, 1)));
-
             if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
                 light->set_direction(ret->transform->orientation().forward());
             }
