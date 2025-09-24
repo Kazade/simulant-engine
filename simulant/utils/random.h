@@ -63,6 +63,8 @@ public:
     smlt::Vec2 direction_2d();
     smlt::Vec3 direction_3d();
 
+    int32_t any_int();
+
 private:
     std::unique_ptr<_RandomImpl> impl_;
 };
