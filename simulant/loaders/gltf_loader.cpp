@@ -4,6 +4,7 @@
 #include "../generic/raii.h"
 #include "../time_keeper.h"
 #include "../utils/base64.h"
+#include "../utils/random.h"
 #include "../vfs.h"
 
 namespace smlt {
@@ -28,15 +29,21 @@ static smlt::Color parse_color3(JSONIterator it) {
 }
 
 static smlt::Color parse_color4(JSONIterator it) {
-    return smlt::Color(
-        it[0]->to_float().value_or(1.0f), it[1]->to_float().value_or(1.0f),
-        it[2]->to_float().value_or(1.0f), it[3]->to_float().value_or(1.0f));
+    float r = it[0]->to_float().value_or(1.0f);
+    float g = it[1]->to_float().value_or(1.0f);
+    float b = it[2]->to_float().value_or(1.0f);
+    float a = it[3]->to_float().value_or(1.0f);
+
+    return smlt::Color(r, g, b, a);
 }
 
 static smlt::Quaternion parse_quaternion(JSONIterator it) {
-    return smlt::Quaternion(
-        it[0]->to_float().value_or(0.0f), it[1]->to_float().value_or(0.0f),
-        it[2]->to_float().value_or(0.0f), it[3]->to_float().value_or(1.0f));
+    float x = it[0]->to_float().value_or(0.0f);
+    float y = it[1]->to_float().value_or(0.0f);
+    float z = it[2]->to_float().value_or(0.0f);
+    float w = it[3]->to_float().value_or(1.0f);
+
+    return smlt::Quaternion(x, y, z, w);
 }
 
 bool check_gltf_version(JSONIterator& js) {
@@ -125,9 +132,49 @@ struct Accessor {
     int buffer_view_id;
 };
 
+class BufferArray {
+public:
+    std::vector<uint8_t>& data(std::size_t buffer_id,
+                               std::size_t buffer_view_id) {
+        for(auto& entry: entries_) {
+            if(entry.buffer_id == buffer_id &&
+               entry.buffer_view_id == buffer_view_id) {
+                return entry.data;
+            }
+        }
+
+        Entry new_entry;
+        new_entry.buffer_id = buffer_id;
+        new_entry.buffer_view_id = buffer_view_id;
+        entries_.push_back(new_entry);
+
+        return entries_.back().data;
+    }
+
+    bool contains(std::size_t buffer_id, std::size_t buffer_view_id) {
+        for(auto& entry: entries_) {
+            if(entry.buffer_id == buffer_id &&
+               entry.buffer_view_id == buffer_view_id) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+private:
+    struct Entry {
+        std::size_t buffer_id;
+        std::size_t buffer_view_id;
+        std::vector<uint8_t> data;
+    };
+
+    std::vector<Entry> entries_;
+};
+
 static auto process_buffer(JSONIterator& js, const Accessor& accessor,
-                           std::vector<std::vector<uint8_t>>& buffers,
-                           std::istream* bin) -> BufferInfo {
+                           BufferArray& buffers, std::istream* bin)
+    -> BufferInfo {
 
     auto accessor_component_type = accessor.component_type;
     auto type = accessor.type;
@@ -149,18 +196,18 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
     auto byte_length = buffer_view["byteLength"]->to_int().value_or(0);
     auto byte_stride = buffer_view["byteStride"]->to_int().value_or(0);
 
-    if((int)buffers.size() <= buffer_id || uri.empty()) {
-
+    if(!buffers.contains(buffer_id, buffer_view_id)) {
         const char* b64_marker = "data:application/octet-stream;base64,";
         if(uri.empty()) {
             // We need to seek and read from bin
             uint32_t g = bin->tellg();
+            fprintf(stderr, "Was: %d\n", g);
             bin->seekg(byte_offset, std::ios::cur);
-            std::vector<uint8_t> data(byte_length);
+            auto& data = buffers.data(buffer_id, buffer_view_id);
+            data.resize(byte_length);
             bin->read((char*)&data[0], byte_length);
             byte_offset = 0;
             bin->seekg(g, std::ios::beg);
-            buffers.push_back(std::move(data));
         } else if(uri.find(b64_marker) == 0) {
             auto data = uri.substr(strlen(b64_marker));
             auto decoded = smlt::base64_decode(data);
@@ -169,18 +216,17 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
                 return BufferInfo();
             }
 
-            buffers.push_back(
-                std::vector<uint8_t>(decoded->begin(), decoded->end()));
+            auto& d = buffers.data(buffer_id, buffer_view_id);
+            d.insert(d.begin(), decoded->begin(), decoded->end());
         } else {
             auto istream = smlt::get_app()->vfs->read_file(uri);
-            auto data =
-                std::vector<uint8_t>(std::istreambuf_iterator<char>(*istream),
-                                     std::istreambuf_iterator<char>());
-            buffers.push_back(data);
+            auto& d = buffers.data(buffer_id, buffer_view_id);
+            d.insert(d.begin(), std::istreambuf_iterator<char>(*istream),
+                     std::istreambuf_iterator<char>());
         }
     }
 
-    uint8_t* buffer_data = &buffers[buffer_id][0];
+    uint8_t* buffer_data = &buffers.data(buffer_id, buffer_view_id)[0];
 
     auto c_stride = component_size(accessor_component_type);
     auto c_count = component_count(type);
@@ -205,7 +251,6 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
 #ifndef NDEBUG
     auto t0 = smlt::get_app()->time_keeper->now_in_us();
 #endif
-
     if(spec.position_attribute == VERTEX_ATTRIBUTE_2F) {
         uint8_t* src = buffer_info.data;
         for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
@@ -567,8 +612,7 @@ smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
 smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
                         JSONIterator& mesh, int mesh_id,
                         const std::vector<smlt::MaterialPtr>& materials,
-                        std::vector<std::vector<uint8_t>>& buffers,
-                        std::istream* bin_chunk) {
+                        BufferArray& buffers, std::istream* bin_chunk) {
     _S_UNUSED(mesh_id);
 
     struct MeshPrimitive {
@@ -753,6 +797,7 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
     auto node = nodes[node_id];
 
     PrefabNode prefab_node;
+    prefab_node.id = RandomGenerator::instance().any_int();
 
     auto light_id =
         node["extensions"]["KHR_lights_punctual"]["light"]->to_int().value_or(
@@ -853,7 +898,9 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
     auto extract_transform =
         [](JSONIterator& node) -> std::tuple<Vec3, Quaternion, Vec3> {
         auto trn = parse_pos(node["translation"]);
-        auto rot = parse_quaternion(node["rotation"]);
+        auto rot = (node->has_key("rotation"))
+                       ? parse_quaternion(node["rotation"])
+                       : smlt::Quaternion();
         auto sf = parse_scale(node["scale"]);
 
         if(node["matrix"]) {
@@ -922,20 +969,28 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         uint32_t here = data_->tellg();
 
-        // Now let's open a second stream and seek to the bin chunk
-        bin_chunk =
-            std::make_shared<std::ifstream>(filename_.str(), std::ios::binary);
-        bin_chunk->seekg(here + chunk_length + (sizeof(uint32_t) * 2),
-                         std::ios::beg);
+        uint32_t json_end = here + chunk_length;
+
+        if(json_end < file_length) {
+            // Now let's open a second stream and seek to the bin chunk
+            bin_chunk = std::make_shared<std::ifstream>(filename_.str(),
+                                                        std::ios::binary);
+
+            uint32_t bin_length;
+            uint32_t bin_type;
+            bin_chunk->seekg(json_end);
+            bin_chunk->read((char*)&bin_length, sizeof(uint32_t));
+            bin_chunk->read((char*)&bin_type, sizeof(uint32_t));
+
+            if(bin_type != 0x004E4942) {
+                S_ERROR("Unrecognised chunk: {0}", bin_type);
+                return;
+            }
+        }
     } else {
         // Rewind, bo selecta
         data_->seekg(0, std::ios::beg);
     }
-
-    uint32_t t = data_->tellg();
-    char buffer[32];
-    data_->read(buffer, 32);
-    data_->seekg(t, std::ios::beg);
 
     auto js = json_read(this->data_);
 
@@ -949,7 +1004,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         return;
     }
 
-    std::vector<std::vector<uint8_t>> buffers;
+    BufferArray buffers;
 
     /* We add the containing folder to the front of the search path
        and ensure we always remove it when we're done (if it wasn't there

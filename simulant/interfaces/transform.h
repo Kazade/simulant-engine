@@ -183,11 +183,11 @@ private:
 
     Vec3 position_;
     Quaternion orientation_;
-    Vec3 scale_ = Vec3(1);
+    Vec3 scale_ = Vec3(1, 1, 1);
 
     Vec3 translation_;
     Quaternion rotation_;
-    Vec3 scale_factor_ = Vec3(1);
+    Vec3 scale_factor_ = Vec3(1, 1, 1);
 
     mutable Mat4 absolute_transformation_;
     mutable bool absolute_transformation_is_dirty_ = false;
