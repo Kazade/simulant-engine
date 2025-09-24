@@ -103,22 +103,6 @@ private:
                                     MeshPtr()));
                         }
 
-                        // FIXME: These inputs should NOT be the relative
-                        // positions, but should instead be absolute. If you
-                        // have a parent node this may not be correct.
-                        mixin_params.set(
-                            "scale_factor",
-                            input.params.get<FloatArray>("scale").value_or(
-                                Vec3(1, 1, 1)));
-                        mixin_params.set(
-                            "position",
-                            input.params.get<FloatArray>("translation")
-                                .value_or(Vec3()));
-                        mixin_params.set(
-                            "orientation",
-                            input.params.get<FloatArray>("rotation")
-                                .value_or(Quaternion()));
-
                         auto new_mixin =
                             ret->create_mixin(mixin_name, mixin_params);
                         if(!new_mixin) {
