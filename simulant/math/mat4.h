@@ -154,6 +154,19 @@ public:
         return &m[0];
     }
 
+    void transpose() {
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                (*this)[j * 4 + i] = (*this)[i * 4 + j];
+            }
+        }
+    }
+
+    Mat4 transposed() const {
+        auto cpy = *this;
+        cpy.transpose();
+        return cpy;
+    }
 };
 
 
