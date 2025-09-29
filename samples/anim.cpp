@@ -16,10 +16,10 @@ public:
 
         auto anim_controller = prefab_->find_mixin<AnimationController>();
         if(anim_controller && !anim_controller->animation_names().empty()) {
-            anim_controller->play(anim_controller->animation_names()[0]);
+            anim_controller->play(anim_controller->animation_names()[2]);
         }
 
-        prefab_->transform->set_position(smlt::Vec3(0, -1, -50.0f));
+        prefab_->transform->set_position(smlt::Vec3(0, -1, -5.0f));
 
         auto camera = create_child<smlt::Camera3D>({
             {"znear",  0.1f                  },

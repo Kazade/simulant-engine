@@ -65,7 +65,7 @@ struct AnimationData {
      */
     std::pair<std::size_t, std::size_t> find_times_indices(float t) const {
         if(t < 0.0f) {
-            return std::make_pair(0u, 0u);
+            return std::make_pair(0u, 1u);
         }
 
         for(std::size_t i = 0u; i < times.size(); ++i) {
@@ -75,14 +75,12 @@ struct AnimationData {
             }
         }
 
-        return std::make_pair(times.size() - 1, times.size() - 1);
+        return std::make_pair(times.size() - 2, times.size() - 1);
     }
 
     template<typename T>
     T interpolated_value(AnimationInterpolation i, float t) {
         t = clamp(t, times[0], times.back());
-
-        fprintf(stderr, "T: %f\n", t);
 
         auto indexes = find_times_indices(t);
 

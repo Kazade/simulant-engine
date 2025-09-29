@@ -118,7 +118,8 @@ struct BufferInfo {
         scalars_out.clear();
 
         uint8_t* it = data;
-        for(std::size_t i = 0; i < size; ++i) {
+        auto count = size / stride;
+        for(std::size_t i = 0; i < count; ++i) {
             for(std::size_t j = 0; j < c_count; ++j) {
                 float* thing = reinterpret_cast<float*>(it);
                 scalars_out.push_back(*thing);
@@ -223,7 +224,6 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
         if(uri.empty()) {
             // We need to seek and read from bin
             uint32_t g = bin->tellg();
-            fprintf(stderr, "Was: %d\n", g);
             bin->seekg(byte_offset, std::ios::cur);
             auto& data = buffers.data(buffer_id, buffer_view_id);
             data.resize(byte_length);
