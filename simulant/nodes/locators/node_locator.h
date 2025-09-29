@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../../nodes/stage_node.h"
+#include "../../nodes/stage_node_watch_controller.h"
 #include "../../scenes/scene.h"
+
 #include <cstddef>
 #include <functional>
 
@@ -13,6 +15,17 @@ public:
     static StageNode* find_child(StageNode* organism) {
         for(auto& node: organism->base()->each_child()) {
             if(node.node_type() == T::Meta::node_type) {
+                return &node;
+            }
+        }
+
+        return nullptr;
+    }
+
+    static StageNode* find_descendent_by_id(StageNodeID id,
+                                            StageNode* organism) {
+        for(auto& node: organism->base()->each_descendent()) {
+            if(node.id() == id) {
                 return &node;
             }
         }

@@ -19,6 +19,7 @@
 
 #include "debug.h"
 #include "../application.h"
+#include "../asset_manager.h"
 #include "../compat.h"
 #include "../macros.h"
 #include "../stage.h"

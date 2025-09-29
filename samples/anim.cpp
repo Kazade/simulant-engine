@@ -11,14 +11,14 @@ public:
         smlt::Scene(window) {}
 
     void on_load() override {
-        auto prefab = assets->load_prefab("assets/samples/BoxTextured.gltf");
+        auto prefab = assets->load_prefab("assets/samples/BoxAnimated.gltf");
         prefab_ = create_child<smlt::PrefabInstance>(prefab);
 
         prefab_->transform->set_position(smlt::Vec3(0, 0, -5.0f));
         for(auto& child: prefab_->each_descendent()) {
             smlt::ActorPtr actor = dynamic_cast<smlt::ActorPtr>(&child);
             if(actor) {
-                auto aabb = actor->aabb();
+                auto aabb = actor->transformed_aabb();
                 auto mesh = actor->base_mesh();
 
                 fprintf(stderr, "%s\n", actor->name().c_str());
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
     _S_UNUSED(argv);
 
     smlt::AppConfig config;
-    config.title = "Physics Sample";
+    config.title = "Animation Sample";
 
 #ifdef __DREAMCAST__
     config.width = 640;

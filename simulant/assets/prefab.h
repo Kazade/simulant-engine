@@ -8,6 +8,7 @@
 #include "../generic/identifiable.h"
 #include "../generic/managed.h"
 #include "../interfaces/nameable.h"
+#include "../nodes/animation_controller.h"
 #include "../types.h"
 #include "../utils/params.h"
 
@@ -39,6 +40,13 @@ struct PrefabNode {
     LimitedString<Nameable::MAX_NAME_LENGTH> name;
 };
 
+struct PrefabAnimationChannel {
+    PrefabNode target;
+    AnimationPath path;
+    AnimationInterpolation interpolation;
+    AnimationDataPtr data;
+};
+
 /**
  * @brief The Prefab class
  *
@@ -60,23 +68,7 @@ public:
     Prefab(AssetID id, AssetManager* asset_manager) :
         Asset(asset_manager), generic::Identifiable<AssetID>(id) {}
 
-    void push_node(PrefabNode node, int32_t parent_id = -1) {
-        PrefabKey parent;
-
-        // if there is a parent, find the existing node with the parent id
-        // and build a path to the node
-        if(parent_id != -1) {
-            for(auto& p: nodes_) {
-                if(p.first.path[p.first.path.size() - 1] ==
-                   (uint32_t)parent_id) {
-                    parent = p.first;
-                }
-            }
-        }
-
-        parent.path.push_back(node.id);
-        nodes_.insert(std::make_pair(parent, node));
-    }
+    void push_node(PrefabNode node, int32_t parent_id = -1);
 
     void push_texture(TexturePtr texture) {
         textures_.push_back(texture);
@@ -101,8 +93,53 @@ public:
         }
     }
 
+    bool has_animations() const {
+        return !animations_.empty();
+    }
+
+    std::size_t animation_count() const {
+        std::size_t c = 0;
+        for(auto it = animations_.begin(); it != animations_.end();
+            it = animations_.upper_bound(it->first)) {
+            ++c;
+        }
+        return c;
+    }
+
+    void push_animation_channel(const std::string& animation, PrefabNode node,
+                                AnimationPath path, AnimationInterpolation i,
+                                AnimationDataPtr data) {
+        PrefabAnimationChannel channel;
+        channel.data = data;
+        channel.interpolation = i;
+        channel.path = path;
+        channel.target = node;
+
+        animations_.insert(std::make_pair(animation, channel));
+    }
+
+    template<typename Callback>
+    void each_animation(const Callback& cb) const {
+        std::string anim_name;
+        std::vector<PrefabAnimationChannel> channels;
+        for(auto& animation: animations_) {
+            if(!anim_name.empty() && anim_name != animation.first) {
+                cb(anim_name, channels);
+                channels.clear();
+            } else {
+                anim_name = animation.first;
+                channels.push_back(animation.second);
+            }
+        }
+
+        if(!channels.empty()) {
+            cb(anim_name, channels);
+        }
+    }
+
 private:
     std::multimap<PrefabKey, PrefabNode> nodes_;
+    std::multimap<std::string, PrefabAnimationChannel> animations_;
 
     std::vector<TexturePtr> textures_;
     std::vector<MaterialPtr> materials_;

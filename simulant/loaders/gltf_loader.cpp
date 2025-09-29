@@ -1,5 +1,6 @@
 #include "gltf_loader.h"
 
+#include "../asset_manager.h"
 #include "../assets/prefab.h"
 #include "../generic/raii.h"
 #include "../time_keeper.h"

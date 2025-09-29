@@ -57,14 +57,14 @@
 
 namespace smlt {
 
-Scene::Scene(Window *window):
+Scene::Scene(Window* window) :
     StageNode(this, STAGE_NODE_TYPE_SCENE),
     StageNodeManager(this),
     window_(window),
     input_(window->input.get()),
     app_(window->app),
     compositor_(this, window->compositor),
-    assets_(window->app->shared_assets.get()) {
+    assets_(std::make_unique<AssetManager>(window->app->shared_assets.get())) {
 
     register_builtin_nodes();
 }
