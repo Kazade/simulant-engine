@@ -107,6 +107,27 @@ struct BufferInfo {
     std::size_t stride = 0;
     ComponentType c_type = INVALID;
     std::size_t c_stride = 0;
+    std::size_t c_count = 0;
+
+    bool to_scalars(std::vector<float>& scalars_out) {
+        if(c_type != FLOAT) {
+            S_ERROR("Only float conversion implemented");
+            return false;
+        }
+
+        scalars_out.clear();
+
+        uint8_t* it = data;
+        for(std::size_t i = 0; i < size; ++i) {
+            for(std::size_t j = 0; j < c_count; ++j) {
+                float* thing = reinterpret_cast<float*>(it);
+                scalars_out.push_back(*thing);
+                it += c_stride;
+            }
+        }
+
+        return true;
+    }
 };
 
 struct TypeKey {
@@ -241,6 +262,7 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
         (std::size_t)byte_stride,
         accessor_component_type,
         c_stride,
+        c_count,
     };
 }
 
@@ -610,10 +632,11 @@ smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
     return ret;
 }
 
-smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
-                        JSONIterator& mesh, int mesh_id,
-                        const std::vector<smlt::MaterialPtr>& materials,
-                        BufferArray& buffers, std::istream* bin_chunk) {
+static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
+                               JSONIterator& mesh, int mesh_id,
+                               const std::vector<Accessor>& accessors,
+                               const std::vector<smlt::MaterialPtr>& materials,
+                               BufferArray& buffers, std::istream* bin_chunk) {
     _S_UNUSED(mesh_id);
 
     struct MeshPrimitive {
@@ -630,19 +653,7 @@ smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
     };
 
     std::vector<MeshPrimitive> primitives;
-    std::vector<Accessor> accessors;
 
-    /* This is the most complicated part of the loader. A GLTF file has a
-       heirarchy of: mesh -> accessor -> bufferView -> buffer */
-    for(auto& acc_node: js["accessors"]) {
-        auto acc = acc_node.to_iterator();
-        Accessor accessor;
-        accessor.type = acc["type"]->to_str().value_or("SCALAR");
-        accessor.component_type =
-            (ComponentType)acc["componentType"]->to_int().value_or(5121);
-        accessor.buffer_view_id = acc["bufferView"]->to_int().value_or(-1);
-        accessors.push_back(accessor);
-    }
 
     const std::map<TypeKey, VertexAttribute> lookup = {
         {TypeKey(FLOAT,          "VEC2"), VERTEX_ATTRIBUTE_2F },
@@ -798,7 +809,7 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
     auto node = nodes[node_id];
 
     PrefabNode prefab_node;
-    prefab_node.id = RandomGenerator::instance().any_int();
+    prefab_node.id = node_id;
 
     auto light_id =
         node["extensions"]["KHR_lights_punctual"]["light"]->to_int().value_or(
@@ -1027,6 +1038,19 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     std::vector<TexturePtr> textures;
     std::vector<MaterialPtr> materials;
     std::vector<MeshPtr> meshes;
+    std::vector<Accessor> accessors;
+
+    /* This is the most complicated part of the loader. A GLTF file has a
+       heirarchy of: mesh/animation -> accessor -> bufferView -> buffer */
+    for(auto& acc_node: js["accessors"]) {
+        auto acc = acc_node.to_iterator();
+        Accessor accessor;
+        accessor.type = acc["type"]->to_str().value_or("SCALAR");
+        accessor.component_type =
+            (ComponentType)acc["componentType"]->to_int().value_or(5121);
+        accessor.buffer_view_id = acc["bufferView"]->to_int().value_or(-1);
+        accessors.push_back(accessor);
+    }
 
     int j = 0;
     auto textures_it = js["textures"];
@@ -1057,7 +1081,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     for(auto& node: meshes_it) {
         auto mesh_it = node.to_iterator();
         auto mesh = load_mesh(&prefab->asset_manager(), js, mesh_it, j++,
-                              materials, buffers, bin_chunk.get());
+                              accessors, materials, buffers, bin_chunk.get());
         prefab->push_mesh(mesh);
         meshes.push_back(mesh);
     }
@@ -1095,6 +1119,69 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         auto node_id = maybe_id.value();
         spawn_node_recursively(*prefab, -1, node_id, js, meshes);
+    }
+
+    auto animations_it = js["animations"];
+    for(auto& node: animations_it) {
+        auto node_it = node.to_iterator();
+
+        auto name = node_it["name"]->to_str().value();
+        for(auto& ch_node: node_it["channels"]) {
+            auto ch_node_it = ch_node.to_iterator();
+            auto target = ch_node_it["target"];
+            auto target_node = target["node"]->to_int();
+            if(!target_node) {
+                continue;
+            }
+            auto target_node_id = target_node.value();
+
+            auto path_str = target["path"]->to_str().value_or("translation");
+            auto path = (path_str == "translation") ? ANIMATION_PATH_TRANSLATION
+                        : (path_str == "rotation")  ? ANIMATION_PATH_ROTATION
+                        : (path_str == "scale")     ? ANIMATION_PATH_SCALE
+                                                    : ANIMATION_PATH_WEIGHTS;
+
+            auto prefab_node = prefab->node(target_node_id);
+
+            if(!prefab_node) {
+                continue;
+            }
+
+            auto sampler_id = ch_node_it["sampler"]->to_int();
+            if(!sampler_id) {
+                continue;
+            }
+
+            auto sampler = node_it["samplers"][sampler_id.value()];
+            auto interpolation_name =
+                sampler["interpolation"]->to_str().value_or("LINEAR");
+            auto input_id = sampler["input"]->to_int();
+            auto output_id = sampler["output"]->to_int();
+            if(!input_id || !output_id) {
+                continue;
+            }
+
+            auto interpolation = (interpolation_name == "LINEAR")
+                                     ? ANIMATION_INTERPOLATION_LINEAR
+                                 : (interpolation_name == "STEP")
+                                     ? ANIMATION_INTERPOLATION_STEP
+                                     : ANIMATION_INTERPOLATION_CUBIC_SPLINE;
+
+            auto data = std::make_shared<AnimationData>();
+
+            auto times_buffer = process_buffer(js, accessors[input_id.value()],
+                                               buffers, bin_chunk.get());
+
+            times_buffer.to_scalars(data->times);
+
+            auto output_buffer = process_buffer(
+                js, accessors[output_id.value()], buffers, bin_chunk.get());
+
+            output_buffer.to_scalars(data->output);
+
+            prefab->push_animation_channel(name, prefab_node.value(), path,
+                                           interpolation, data);
+        }
     }
 }
 

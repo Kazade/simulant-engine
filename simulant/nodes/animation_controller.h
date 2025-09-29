@@ -79,11 +79,16 @@ struct AnimationData {
     }
 
     template<typename T>
-    T interpolated_value(AnimationInterpolation i, float t) {        
+    T interpolated_value(AnimationInterpolation i, float t) {
+        t = clamp(t, times[0], times.back());
+
+        fprintf(stderr, "T: %f\n", t);
+
         auto indexes = find_times_indices(t);
 
         auto t0 = *(((const T*)&output[0]) + indexes.first);
         auto t1 = *(((const T*)&output[0]) + indexes.second);
+
         auto nt = (t - times[indexes.first]) /
                   (times[indexes.second] - times[indexes.first]);
 
@@ -137,6 +142,7 @@ public:
         if(index) {
             current_animation_ = index.value();
             time_ = 0.0f;
+            state_ = ANIMATION_STATE_PLAYING;
             return true;
         }
         return false;
@@ -164,7 +170,7 @@ public:
         state_ = ANIMATION_STATE_PLAYING;
     }
 
-    void on_update(float dt) {
+    void on_update(float dt) override {
         if(state_ == ANIMATION_STATE_PAUSED) {
             return;
         }
@@ -203,6 +209,15 @@ public:
 
     void push_animation(const Animation& a) {
         animations_.push_back(a);
+    }
+
+    std::vector<std::string> animation_names() const {
+        std::vector<std::string> ret;
+        for(auto& anim: animations_) {
+            ret.push_back(anim.name.str());
+        }
+
+        return ret;
     }
 
 private:

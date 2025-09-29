@@ -137,6 +137,19 @@ public:
         }
     }
 
+    optional<PrefabNode> node(uint32_t id) const {
+        auto it = std::find_if(
+            nodes_.begin(), nodes_.end(),
+            [=](const std::pair<PrefabKey, PrefabNode>& p) -> bool {
+            return p.second.id == id;
+        });
+        if(it == nodes_.end()) {
+            return no_value;
+        }
+
+        return it->second;
+    }
+
 private:
     std::multimap<PrefabKey, PrefabNode> nodes_;
     std::multimap<std::string, PrefabAnimationChannel> animations_;

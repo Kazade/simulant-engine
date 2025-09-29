@@ -23,6 +23,7 @@
 #include "../compositor.h"
 #include "../layer.h"
 #include "../nodes/actor.h"
+#include "../nodes/animation_controller.h"
 #include "../nodes/audio_source.h"
 #include "../nodes/camera.h"
 #include "../nodes/cylindrical_billboard.h"
@@ -101,6 +102,7 @@ void Scene::register_builtin_nodes() {
     register_stage_node<SmoothFollow>();
     register_stage_node<FlyController>();
     register_stage_node<PrefabInstance>();
+    register_stage_node<AnimationController>();
 
     register_stage_node<StaticBody>();
     register_stage_node<DynamicBody>();

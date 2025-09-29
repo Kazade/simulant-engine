@@ -11,19 +11,15 @@ public:
         smlt::Scene(window) {}
 
     void on_load() override {
-        auto prefab = assets->load_prefab("assets/samples/BoxAnimated.gltf");
+        auto prefab = assets->load_prefab("assets/samples/character-a.glb");
         prefab_ = create_child<smlt::PrefabInstance>(prefab);
 
-        prefab_->transform->set_position(smlt::Vec3(0, 0, -5.0f));
-        for(auto& child: prefab_->each_descendent()) {
-            smlt::ActorPtr actor = dynamic_cast<smlt::ActorPtr>(&child);
-            if(actor) {
-                auto aabb = actor->transformed_aabb();
-                auto mesh = actor->base_mesh();
-
-                fprintf(stderr, "%s\n", actor->name().c_str());
-            }
+        auto anim_controller = prefab_->find_mixin<AnimationController>();
+        if(anim_controller && !anim_controller->animation_names().empty()) {
+            anim_controller->play(anim_controller->animation_names()[0]);
         }
+
+        prefab_->transform->set_position(smlt::Vec3(0, -1, -50.0f));
 
         auto camera = create_child<smlt::Camera3D>({
             {"znear",  0.1f                  },
