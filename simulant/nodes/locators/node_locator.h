@@ -67,6 +67,8 @@ typedef std::function<StageNode*(StageNode*)> NodeFinder;
 template<typename T>
 class FindResult {
 public:
+    FindResult() = default;
+
     FindResult(const std::tuple<NodeFinder, StageNode*,
                                 StageNodeNotificationList>& finder) :
         finder_(std::get<0>(finder)),
@@ -183,6 +185,8 @@ std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>
     FindAncestor(const char* name, StageNode* node);
 std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>
     FindDescendent(const char* name, StageNode* node);
+std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>
+    FindDescendentByID(StageNodeID id, StageNode* behaviour);
 
 template<typename T>
 std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>

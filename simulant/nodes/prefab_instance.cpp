@@ -21,22 +21,22 @@ bool PrefabInstance::on_create(Params params) {
     if(prefab_ptr->has_animations()) {
         auto anims = create_mixin<AnimationController>();
         auto anim_factory =
-            [=](const std::string name,
+            [&](const std::string name,
                 const std::vector<PrefabAnimationChannel>& channels) {
             Animation anim;
             anim.name = name;
             for(auto& ch: channels) {
                 Channel channel;
                 channel.path = ch.path;
-                channel.target = FindDescendent(ch.target.id, this);
+                channel.target = FindDescendentByID(ch.target.id, this);
                 channel.sampler = Sampler();
                 channel.sampler.data = ch.data;
                 channel.sampler.interpolation = ch.interpolation;
                 anim.channels.push_back(channel);
             }
-        };
 
-        anims->push_animation(anim);
+            anims->push_animation(anim);
+        };
 
         prefab_ptr->each_animation(anim_factory);
     }

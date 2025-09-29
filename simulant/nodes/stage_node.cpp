@@ -1,4 +1,5 @@
 #include "../application.h"
+#include "../asset_manager.h"
 #include "../nodes/prefab_instance.h"
 #include "../stage.h"
 #include "../window.h"

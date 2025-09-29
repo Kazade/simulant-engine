@@ -19,11 +19,13 @@
 #include "gl1x_renderer.h"
 
 #include "../../application.h"
+#include "../../meshes/submesh.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../stage.h"
 #include "../../utils/gl_error.h"
 #include "../../utils/pbr.h"
+#include "../../vertex_data.h"
 #include "../../window.h"
 
 namespace smlt {

@@ -19,6 +19,7 @@
 
 #include "stats_panel.h"
 #include "../application.h"
+#include "../asset_manager.h"
 #include "../compositor.h"
 #include "../nodes/actor.h"
 #include "../nodes/camera.h"

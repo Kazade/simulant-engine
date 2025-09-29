@@ -1,4 +1,9 @@
 #include "keyboard.h"
+#include "../../application.h"
+#include "../../asset_manager.h"
+#include "../../event_listener.h"
+#include "../../stage.h"
+#include "../../window.h"
 #include "button.h"
 #include "frame.h"
 #include "label.h"
@@ -9,11 +14,6 @@
 #include "text_entry.h"
 #include "ui_manager.h"
 #include <vector>
-
-#include "../../application.h"
-#include "../../event_listener.h"
-#include "../../stage.h"
-#include "../../window.h"
 
 namespace smlt {
 namespace ui {

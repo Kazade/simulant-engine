@@ -19,6 +19,7 @@
 
 #include "sprite.h"
 #include "../animation.h"
+#include "../asset_manager.h"
 #include "../scenes/scene.h"
 #include "../window.h"
 #include "actor.h"

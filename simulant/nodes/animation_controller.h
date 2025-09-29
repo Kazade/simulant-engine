@@ -79,7 +79,7 @@ struct AnimationData {
     }
 
     template<typename T>
-    T interpolated_value(AnimationInterpolation i, float t) {
+    T interpolated_value(AnimationInterpolation i, float t) {        
         auto indexes = find_times_indices(t);
 
         auto t0 = *(((const T*)&output[0]) + indexes.first);
@@ -88,6 +88,7 @@ struct AnimationData {
                   (times[indexes.second] - times[indexes.first]);
 
         // FIXME: Only linear interpolation atm
+        _S_UNUSED(i);
         return LinearInterpolator(t0, t1).value(nt);
     }
 };

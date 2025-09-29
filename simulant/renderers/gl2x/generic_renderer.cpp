@@ -19,6 +19,7 @@
 
 #include "generic_renderer.h"
 
+#include "../../asset_manager.h"
 #include "../../nodes/actor.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"

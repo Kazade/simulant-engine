@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "../../application.h"
+#include "../../asset_manager.h"
 #include "../../assets/material.h"
 #include "../../stage.h"
 #include "../../window.h"
