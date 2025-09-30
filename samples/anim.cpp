@@ -28,14 +28,6 @@ public:
             {"yfov",   45.0f                 }
         });
 
-        camera->set_perspective_projection(Degrees(45.0),
-                                           window->aspect_ratio(), 1.0, 1000.0);
-
-        // camera->transform->set_position(Vec3(0, 10, 50));
-        // camera->set_perspective_projection(
-        //     smlt::Deg(60.0f), window->aspect_ratio(), 1.0f, 10000.0f);
-        // camera->transform->look_at(prefab_->transform->position());
-
         auto layer = compositor->create_layer(prefab_, camera);
         layer->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
         layer->viewport->set_color(smlt::Color::gray());

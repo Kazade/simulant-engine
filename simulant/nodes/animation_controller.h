@@ -53,6 +53,15 @@ struct AnimationData {
     std::vector<float> times;
     std::vector<float> output;
 
+    float max_time() const {
+        // FIXME: calculate this once
+        return *std::max_element(times.begin(), times.end());
+    }
+
+    float min_time() const {
+        return *std::min_element(times.begin(), times.end());
+    }
+
     /**
      * @brief find_times_indices
      *
@@ -94,18 +103,18 @@ struct AnimationData {
         _S_UNUSED(i);
         return LinearInterpolator(t0, t1).value(nt);
     }
+
+    bool finished(float t) const {
+        return t >= max_time();
+    }
 };
 
 typedef std::shared_ptr<AnimationData> AnimationDataPtr;
 
-struct Sampler {
-    AnimationInterpolation interpolation;
-    AnimationDataPtr data;
-};
-
 struct Channel {
     FindResult<StageNode> target;
-    Sampler sampler;
+    AnimationInterpolation interpolation;
+    AnimationDataPtr data;
     AnimationPath path;
 };
 
@@ -185,19 +194,19 @@ public:
                 continue;
             }
 
-            auto& data = channel.sampler.data;
+            auto& data = channel.data;
 
             if(channel.path == ANIMATION_PATH_TRANSLATION) {
                 auto interp = data->interpolated_value<Vec3>(
-                    channel.sampler.interpolation, time_);
+                    channel.interpolation, time_);
                 channel.target->transform->set_translation(interp);
             } else if(channel.path == ANIMATION_PATH_ROTATION) {
                 auto interp = data->interpolated_value<Quaternion>(
-                    channel.sampler.interpolation, time_);
+                    channel.interpolation, time_);
                 channel.target->transform->set_rotation(interp);
             } else if(channel.path == ANIMATION_PATH_SCALE) {
                 auto interp = data->interpolated_value<Vec3>(
-                    channel.sampler.interpolation, time_);
+                    channel.interpolation, time_);
                 channel.target->transform->set_scale_factor(interp);
             } else if(channel.path == ANIMATION_PATH_WEIGHTS) {
                 S_WARN_ONCE("Animation of weights is not yet implemented");

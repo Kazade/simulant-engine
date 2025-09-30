@@ -29,9 +29,8 @@ bool PrefabInstance::on_create(Params params) {
                 Channel channel;
                 channel.path = ch.path;
                 channel.target = FindDescendentByID(ch.target.id, this);
-                channel.sampler = Sampler();
-                channel.sampler.data = ch.data;
-                channel.sampler.interpolation = ch.interpolation;
+                channel.data = ch.data;
+                channel.interpolation = ch.interpolation;
                 anim.channels.push_back(channel);
             }
 
