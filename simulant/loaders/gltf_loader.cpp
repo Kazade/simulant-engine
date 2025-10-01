@@ -109,8 +109,58 @@ struct BufferInfo {
     std::size_t c_stride = 0;
     std::size_t c_count = 0;
 
-    bool to_scalars(std::vector<float>& scalars_out) {
-        if(c_type != FLOAT) {
+    bool to_typed_array(std::vector<Vec3>& vecs_out) {
+        if(c_type != FLOAT || c_count != 3) {
+            S_ERROR("Only float conversion implemented");
+            return false;
+        }
+
+        vecs_out.clear();
+
+        uint8_t* it = data;
+        auto count = size / stride;
+        for(std::size_t i = 0; i < count; ++i) {
+            float x = *reinterpret_cast<float*>(it);
+            it += c_stride;
+            float y = *reinterpret_cast<float*>(it);
+            it += c_stride;
+            float z = *reinterpret_cast<float*>(it);
+            it += c_stride;
+
+            vecs_out.push_back(Vec3(x, y, z));
+        }
+
+        return true;
+    }
+
+    bool to_typed_array(std::vector<Quaternion>& quats_out) {
+        if(c_type != FLOAT || c_count != 4) {
+            S_ERROR("Only float conversion implemented");
+            return false;
+        }
+
+        quats_out.clear();
+
+        uint8_t* it = data;
+        auto count = size / stride;
+        for(std::size_t i = 0; i < count; ++i) {
+            float x = *reinterpret_cast<float*>(it);
+            it += c_stride;
+            float y = *reinterpret_cast<float*>(it);
+            it += c_stride;
+            float z = *reinterpret_cast<float*>(it);
+            it += c_stride;
+            float w = *reinterpret_cast<float*>(it);
+            it += c_stride;
+
+            quats_out.push_back(Quaternion(x, y, z, w));
+        }
+
+        return true;
+    }
+
+    bool to_typed_array(std::vector<float>& scalars_out) {
+        if(c_type != FLOAT || c_count != 1) {
             S_ERROR("Only float conversion implemented");
             return false;
         }
@@ -1167,17 +1217,45 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
                                      ? ANIMATION_INTERPOLATION_STEP
                                      : ANIMATION_INTERPOLATION_CUBIC_SPLINE;
 
-            auto data = std::make_shared<AnimationData>();
-
+            /* FIXME: This process ends up with data duplicated in memory
+             * (first in the raw data form returned from process_buffer, and
+             * then the typed form)
+             *
+             * Once we've converted to a typed array, the AnimationData
+             * constructor does an inline transformation - clearing the source
+             * vector as it goes. It would be better if process_buffer returned
+             * a vector that could be cleared as we convert it into a typed
+             * array */
             auto times_buffer = process_buffer(js, accessors[input_id.value()],
                                                buffers, bin_chunk.get());
 
-            times_buffer.to_scalars(data->times);
+            std::vector<float> times;
+            times_buffer.to_typed_array(times);
 
             auto output_buffer = process_buffer(
                 js, accessors[output_id.value()], buffers, bin_chunk.get());
 
-            output_buffer.to_scalars(data->output);
+            AnimationDataPtr data;
+
+            if(output_buffer.c_count == 1) {
+                std::vector<float> output;
+                output_buffer.to_typed_array(output);
+                data =
+                    std::make_shared<AnimationData>(times, std::move(output));
+            } else if(output_buffer.c_count == 3) {
+                std::vector<Vec3> output;
+                output_buffer.to_typed_array(output);
+                data =
+                    std::make_shared<AnimationData>(times, std::move(output));
+            } else if(output_buffer.c_count == 4) {
+                std::vector<Quaternion> output;
+                output_buffer.to_typed_array(output);
+                data =
+                    std::make_shared<AnimationData>(times, std::move(output));
+            } else {
+                S_ERROR("Unhandled buffer type");
+                continue;
+            }
 
             prefab->push_animation_channel(name, prefab_node.value(), path,
                                            interpolation, data);

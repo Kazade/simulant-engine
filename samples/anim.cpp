@@ -15,8 +15,14 @@ public:
         prefab_ = create_child<smlt::PrefabInstance>(prefab);
 
         auto anim_controller = prefab_->find_mixin<AnimationController>();
-        if(anim_controller && !anim_controller->animation_names().empty()) {
-            anim_controller->play(anim_controller->animation_names()[2]);
+        auto animations = anim_controller->animation_names();
+        if(anim_controller && !animations.empty()) {
+            anim_controller->play(animations[0]);
+            anim_controller->queue(animations[1]);
+            anim_controller->queue(animations[2]);
+            anim_controller->queue(animations[3]);
+            anim_controller->queue(animations[4]);
+            anim_controller->queue(animations[5]);
         }
 
         prefab_->transform->set_position(smlt::Vec3(0, -1, -5.0f));
@@ -27,6 +33,9 @@ public:
             {"aspect", window->aspect_ratio()},
             {"yfov",   45.0f                 }
         });
+
+        camera->set_perspective_projection(Degrees(45.0),
+                                           window->aspect_ratio(), 1.0, 1000.0);
 
         auto layer = compositor->create_layer(prefab_, camera);
         layer->set_clear_flags(smlt::BUFFER_CLEAR_ALL);

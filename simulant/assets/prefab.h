@@ -125,11 +125,12 @@ public:
         for(auto& animation: animations_) {
             if(!anim_name.empty() && anim_name != animation.first) {
                 cb(anim_name, channels);
-                channels.clear();
+                channels.clear();                
             } else {
-                anim_name = animation.first;
                 channels.push_back(animation.second);
             }
+
+            anim_name = animation.first;
         }
 
         if(!channels.empty()) {

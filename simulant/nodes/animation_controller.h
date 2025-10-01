@@ -49,17 +49,59 @@ private:
     Quaternion t1;
 };
 
-struct AnimationData {
-    std::vector<float> times;
-    std::vector<float> output;
+/* This does a transformation element by element so as not to increase
+ * ram usage. */
+template<typename T>
+inline void transform_to_scalars(std::vector<T>&& input,
+                                 std::vector<float>& output);
+
+template<>
+inline void transform_to_scalars<Vec3>(std::vector<Vec3>&& input,
+                                       std::vector<float>& output) {
+    while(!input.empty()) {
+        output.push_back(input[0].x);
+        output.push_back(input[0].y);
+        output.push_back(input[0].z);
+        input.erase(input.begin());
+    }
+}
+
+template<>
+inline void transform_to_scalars<Quaternion>(std::vector<Quaternion>&& input,
+                                             std::vector<float>& output) {
+    while(!input.empty()) {
+        output.push_back(input[0].x);
+        output.push_back(input[0].y);
+        output.push_back(input[0].z);
+        output.push_back(input[0].w);
+        input.erase(input.begin());
+    }
+}
+
+template<>
+inline void transform_to_scalars<float>(std::vector<float>&& input,
+                                        std::vector<float>& output) {
+    output = std::move(input);
+}
+
+class AnimationData {
+public:
+    template<typename T>
+    AnimationData(const std::vector<float>& times, std::vector<T>&& output) :
+        times_(times) {
+
+        transform_to_scalars<T>(std::move(output), output_);
+
+        max_time_ = *std::max_element(times.begin(), times.end());
+        min_time_ = *std::min_element(times.begin(), times.end());
+    }
 
     float max_time() const {
-        // FIXME: calculate this once
-        return *std::max_element(times.begin(), times.end());
+        return max_time_;
     }
 
     float min_time() const {
-        return *std::min_element(times.begin(), times.end());
+        return min_time_;
     }
 
     /**
@@ -77,27 +119,27 @@ struct AnimationData {
             return std::make_pair(0u, 1u);
         }
 
-        for(std::size_t i = 0u; i < times.size(); ++i) {
-            float time = times[i];
+        for(std::size_t i = 0u; i < times_.size(); ++i) {
+            float time = times_[i];
             if(time > t) {
                 return std::make_pair((i > 0) ? i - 1 : 0, i);
             }
         }
 
-        return std::make_pair(times.size() - 2, times.size() - 1);
+        return std::make_pair(times_.size() - 2, times_.size() - 1);
     }
 
     template<typename T>
     T interpolated_value(AnimationInterpolation i, float t) {
-        t = clamp(t, times[0], times.back());
+        t = clamp(t, times_[0], times_.back());
 
         auto indexes = find_times_indices(t);
 
-        auto t0 = *(((const T*)&output[0]) + indexes.first);
-        auto t1 = *(((const T*)&output[0]) + indexes.second);
+        auto t0 = *(((const T*)&output_[0]) + indexes.first);
+        auto t1 = *(((const T*)&output_[0]) + indexes.second);
 
-        auto nt = (t - times[indexes.first]) /
-                  (times[indexes.second] - times[indexes.first]);
+        auto nt = (t - times_[indexes.first]) /
+                  (times_[indexes.second] - times_[indexes.first]);
 
         // FIXME: Only linear interpolation atm
         _S_UNUSED(i);
@@ -107,6 +149,13 @@ struct AnimationData {
     bool finished(float t) const {
         return t >= max_time();
     }
+
+private:
+    float max_time_ = 0.0f;
+    float min_time_ = 0.0f;
+
+    std::vector<float> times_;
+    std::vector<float> output_;
 };
 
 typedef std::shared_ptr<AnimationData> AnimationDataPtr;
@@ -128,6 +177,8 @@ enum AnimationState {
     ANIMATION_STATE_PLAYING,
 };
 
+#define ANIMATION_LOOP_FOREVER -1
+
 class AnimationController: public StageNode {
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_ANIMATION_CONTROLLER,
@@ -144,23 +195,21 @@ public:
         return true;
     }
 
-    bool play(const std::string& animation) {
+    bool play(const std::string& animation, int32_t loop_count = 1) {
         auto index = find_animation_index(animation);
         if(index) {
             current_animation_ = index.value();
             time_ = 0.0f;
             state_ = ANIMATION_STATE_PLAYING;
+            loop_count_ = (loop_count > 0) ? loop_count - 1 : loop_count;
+            std::queue<std::size_t> empty;
+            std::swap(animation_queue_, empty);
             return true;
         }
         return false;
     }
 
     bool queue(const std::string& name) {
-        if(animation_queue_.empty()) {
-            play(name);
-            return true;
-        }
-
         auto index = find_animation_index(name);
         if(index) {
             animation_queue_.push(index.value());
@@ -189,6 +238,7 @@ public:
         time_ += dt;
 
         auto& anim = animations_[current_animation_];
+        int unfinished = 0;
         for(auto& channel: anim.channels) {
             if(!channel.target) {
                 continue;
@@ -210,6 +260,28 @@ public:
                 channel.target->transform->set_scale_factor(interp);
             } else if(channel.path == ANIMATION_PATH_WEIGHTS) {
                 S_WARN_ONCE("Animation of weights is not yet implemented");
+            }
+
+            unfinished += !channel.data->finished(time_);
+        }
+
+        if(!unfinished) {
+            // We've finished! Either loop, or move onto the next
+            // animation.
+
+            if(loop_count_ > 0) {
+                // Restart
+                time_ = 0.0f;
+                loop_count_--;
+            } else if(loop_count_ == 0) {
+                if(!animation_queue_.empty()) {
+                    // Move to the next animation
+                    current_animation_ = animation_queue_.front();
+                    animation_queue_.pop();
+                    time_ = 0.0f;
+                }
+            } else if(loop_count_ == -1) {
+                time_ = 0.0f;
             }
         }
     }
@@ -246,6 +318,7 @@ private:
     std::queue<std::size_t> animation_queue_;
     AnimationState state_ = ANIMATION_STATE_PLAYING;
     float time_ = 0.0f;
+    int32_t loop_count_ = 1;
 };
 
 } // namespace smlt
