@@ -679,6 +679,14 @@ smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
     ret->set_roughness(roughness);
     ret->set_base_color(color);
 
+    // Look for the unlit extension, if it's there then disable lighting
+    if(material->has_key("extensions")) {
+        auto ext = material["extensions"];
+        if(ext->has_key("KHR_materials_unlit")) {
+            ret->set_lighting_enabled(false);
+        }
+    }
+
     return ret;
 }
 

@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
     config.log_level = LOG_LEVEL_DEBUG;
 #endif
 
-    // config.development.force_renderer = "gl1x";
+    config.development.force_renderer = "gl1x";
 
     AnimDemo app(config);
     return app.run();
