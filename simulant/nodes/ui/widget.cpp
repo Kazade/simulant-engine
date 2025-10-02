@@ -149,7 +149,7 @@ bool Widget::on_create(Params params) {
 
     initialized_ = true;
 
-    return true;
+    return StageNode::on_create(params);
 }
 
 void Widget::set_font(const std::string& family, Rem size, FontWeight weight,

@@ -305,22 +305,22 @@ std::set<NodeParam>& get_node_params() {
         // All stage nodes should be able to handle
         // these things
         properties.insert(
-            NodeParam(10000, "position", NODE_PARAM_TYPE_FLOAT_ARRAY,
+            NodeParam(20000, "position", NODE_PARAM_TYPE_FLOAT_ARRAY,
                       Params::to_param(Vec3()), "Node absolute position"));
         properties.insert(NodeParam(
-            10001, "orientation", NODE_PARAM_TYPE_FLOAT_ARRAY,
+            20001, "orientation", NODE_PARAM_TYPE_FLOAT_ARRAY,
             Params::to_param(Quaternion()), "Node absolute orientation"));
-        properties.insert(NodeParam(10002, "scale", NODE_PARAM_TYPE_FLOAT_ARRAY,
+        properties.insert(NodeParam(20002, "scale", NODE_PARAM_TYPE_FLOAT_ARRAY,
                                     Params::to_param(Vec3(1, 1, 1)),
                                     "Node absolute scale"));
         properties.insert(
-            NodeParam(10003, "translation", NODE_PARAM_TYPE_FLOAT_ARRAY,
+            NodeParam(20003, "translation", NODE_PARAM_TYPE_FLOAT_ARRAY,
                       Params::to_param(Vec3()), "Node relative translation"));
         properties.insert(NodeParam(
-            10004, "rotation", NODE_PARAM_TYPE_FLOAT_ARRAY,
+            20004, "rotation", NODE_PARAM_TYPE_FLOAT_ARRAY,
             Params::to_param(Quaternion()), "Node relative rotation"));
         properties.insert(NodeParam(
-            10005, "scale_factor", NODE_PARAM_TYPE_FLOAT_ARRAY,
+            20005, "scale_factor", NODE_PARAM_TYPE_FLOAT_ARRAY,
             Params::to_param(Vec3(1, 1, 1)), "Node relative scale factor"));
     }
     return properties;

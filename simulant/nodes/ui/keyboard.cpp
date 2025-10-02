@@ -1776,9 +1776,11 @@ void Keyboard::set_font(FontPtr font) {
 }
 
 void Keyboard::on_transformation_change_attempted() {
-    auto ap = anchor_point();
-    main_frame_->set_anchor_point(ap.x, ap.y);
-    main_frame_->rebuild();
+    if(main_frame_) {
+        auto ap = anchor_point();
+        main_frame_->set_anchor_point(ap.x, ap.y);
+        main_frame_->rebuild();
+    }
     Widget::on_transformation_change_attempted();
 }
 
