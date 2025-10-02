@@ -33,21 +33,20 @@ public:
 
 class MathTest : public smlt::test::TestCase {
 public:
-
     void test_lerp_angle() {
         smlt::Degrees a(10);
         smlt::Degrees b(270);
 
-        auto ret = smlt::lerp_angle(a, b, 0.5f);
+        auto ret = smlt::lerp(a, b, 0.5f);
         assert_close(ret.to_float(), -40, 0.0001f);
 
-        ret = smlt::lerp_angle(a, b, 0.0f);
+        ret = smlt::lerp(a, b, 0.0f);
         assert_close(ret.to_float(), a.to_float(), 0.0001f);
 
-        ret = smlt::lerp_angle(a, b, 1.0f);
+        ret = smlt::lerp(a, b, 1.0f);
         assert_true(ret.is_effectively_equal_to(b, 0.0001f));
 
-        ret = smlt::lerp_angle(b, a, 0.5f);
+        ret = smlt::lerp(b, a, 0.5f);
         assert_true(ret.is_effectively_equal_to(smlt::Degrees(320.0f), 0.0001f));
     }
 

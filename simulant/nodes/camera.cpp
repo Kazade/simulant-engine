@@ -162,7 +162,7 @@ bool Camera2D::on_create(Params params) {
     Params new_params;
     FloatArray matrix(proj.data(), proj.data() + 16);
     new_params.set<FloatArray>("projection_matrix", matrix);
-    return Camera::on_create(params);
+    return Camera::on_create(new_params);
 }
 
 bool Camera3D::on_create(Params params) {

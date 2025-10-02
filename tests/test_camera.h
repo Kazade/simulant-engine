@@ -14,7 +14,7 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
         stage_ = scene->create_child<smlt::Stage>();
-        camera_ = scene->create_child<smlt::Camera>();
+        camera_ = scene->create_child<smlt::Camera3D>();
     }
 
     void tear_down() {
@@ -62,7 +62,7 @@ public:
 
     void test_camera_attached_to_parent_moves() {
         auto actor = scene->create_child<smlt::Stage>();
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
 
         auto od = camera->frustum().plane(FRUSTUM_PLANE_NEAR).d;
 

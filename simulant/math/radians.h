@@ -53,8 +53,6 @@ public:
     }
 };
 
-Radians lerp_angle(Radians a, Radians b, float t);
-
 typedef Radians Rad;
 }
 

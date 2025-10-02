@@ -26,7 +26,7 @@ public:
         mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
         mesh_->create_submesh_as_cube("cube", scene->assets->create_material(), 1.0f);
 
-        camera_ = scene->create_child<smlt::Camera>();
+        camera_ = scene->create_child<smlt::Camera3D>();
     }
 
     void test_shared_vertex_vbo() {

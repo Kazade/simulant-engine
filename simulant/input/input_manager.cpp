@@ -587,7 +587,7 @@ bool InputManager::start_text_input(bool force_onscreen) {
 
     /* Build our camera and make it render with the highest priority */
     keyboard_stage_ = active_scene->create_node<Stage>();
-    keyboard_camera_ = active_scene->create_node<Camera>();
+    keyboard_camera_ = active_scene->create_node<Camera2D>();
     keyboard_camera_->set_orthographic_projection(
         0, get_app()->window->width(),
         0, get_app()->window->height(), -1, 1

@@ -112,8 +112,6 @@ public:
     }
 };
 
-Degrees lerp_angle(Degrees a, Degrees b, float t);
-
 typedef Degrees Deg;
 }
 

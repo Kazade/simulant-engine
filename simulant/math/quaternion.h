@@ -2,6 +2,7 @@
 
 #include "degrees.h"
 #include "euler.h"
+#include "lerp.h"
 #include "radians.h"
 #include "utils.h"
 #include "vec3.h"

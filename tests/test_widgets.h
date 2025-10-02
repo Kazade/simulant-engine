@@ -45,7 +45,7 @@ public:
     }
 
     void test_multi_touch_event() {
-        auto camera = scene->create_child<Camera>();
+        auto camera = scene->create_child<Camera2D>();
         camera->set_orthographic_projection(0, window->width(), 0, window->height());
 
         auto viewport = Viewport();
@@ -90,7 +90,7 @@ public:
     }
 
     void test_click_event() {
-        auto camera = scene->create_child<Camera>();
+        auto camera = scene->create_child<Camera2D>();
         camera->set_orthographic_projection(0, window->width(), 0, window->height());
 
         auto viewport = Viewport();

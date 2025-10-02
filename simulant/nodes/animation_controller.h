@@ -35,20 +35,6 @@ private:
     T t1;
 };
 
-template<>
-struct LinearInterpolator<Quaternion> {
-    LinearInterpolator(const Quaternion& t0, const Quaternion& t1) :
-        t0(t0), t1(t1) {}
-
-    Quaternion value(float t) const {
-        return t0.slerp(t1, t);
-    }
-
-private:
-    Quaternion t0;
-    Quaternion t1;
-};
-
 /* This does a transformation element by element so as not to increase
  * ram usage. */
 template<typename T>
@@ -143,7 +129,7 @@ public:
 
         // FIXME: Only linear interpolation atm
         _S_UNUSED(i);
-        return LinearInterpolator(t0, t1).value(nt);
+        return lerp(t0, t1, nt);
     }
 
     bool finished(float t) const {

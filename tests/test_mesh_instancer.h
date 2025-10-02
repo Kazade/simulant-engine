@@ -61,7 +61,7 @@ public:
     void test_spawn_instances_updates_renderables() {
         auto instancer = scene->create_child<MeshInstancer>(mesh_);
 
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
@@ -91,7 +91,7 @@ public:
 
         auto instancer = scene->create_child<MeshInstancer>(mesh_);
 
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
@@ -138,7 +138,7 @@ public:
         auto instancer = scene->create_child<MeshInstancer>(MeshPtr());
         instancer->create_mesh_instance(Vec3());
 
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
@@ -171,7 +171,7 @@ public:
         instancer->transform->set_translation(Vec3(10, 0, 0));
         assert_equal(instancer->transformed_aabb().center(), smlt::Vec3(10, 0, 0));
 
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 

@@ -14,7 +14,7 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        camera_ = scene->create_child<smlt::Camera>();
+        camera_ = scene->create_child<smlt::Camera3D>();
     }
 
     void tear_down() {

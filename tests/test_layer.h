@@ -14,7 +14,7 @@ public:
         SimulantTestCase::set_up();
 
         stage = scene->create_child<smlt::Stage>();
-        camera = scene->create_child<smlt::Camera>();
+        camera = scene->create_child<smlt::Camera3D>();
 
         pipeline = window->compositor->create_layer(stage, camera);
     }
@@ -91,7 +91,7 @@ public:
 
     void test_changing_camera() {
         auto p = window->compositor->create_layer(stage, camera);
-        p = p->set_camera(scene->create_child<smlt::Camera>());
+        p = p->set_camera(scene->create_child<smlt::Camera3D>());
 
         assert_not_equal(p->camera(), camera);
     }
