@@ -3,9 +3,10 @@
 #include <pspgum.h>
 #include <pspkernel.h>
 
+#include "../../utils/pbr.h"
+#include "psp_render_group_impl.h"
 #include "psp_render_queue_visitor.h"
 #include "psp_renderer.h"
-#include "psp_render_group_impl.h"
 
 #include "../../application.h"
 #include "../../nodes/camera.h"
