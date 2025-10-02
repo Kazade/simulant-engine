@@ -59,19 +59,23 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         return;
     }
 
-    const auto& diffuse = next->diffuse();
+    auto s = pbr_to_traditional(next->base_color(), next->metallic(),
+                                next->roughness(), next->specular_color(),
+                                next->specular());
+
+    const auto& diffuse = s.diffuse;
     sceGuMaterial(GU_DIFFUSE,
                   GU_COLOR(diffuse.r, diffuse.g, diffuse.b, diffuse.a));
 
-    const auto& ambient = next->ambient();
+    const auto& ambient = s.ambient;
     sceGuMaterial(GU_AMBIENT,
                   GU_COLOR(ambient.r, ambient.g, ambient.b, ambient.a));
 
-    const auto& specular = next->specular();
+    const auto& specular = s.specular;
     sceGuMaterial(GU_SPECULAR,
                   GU_COLOR(specular.r, specular.g, specular.b, specular.a));
 
-    sceGuSpecular(next->shininess());
+    sceGuSpecular(s.shininess);
 
     switch (next->color_material()) {
     case COLOR_MATERIAL_NONE:
