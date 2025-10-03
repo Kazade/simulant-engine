@@ -217,17 +217,15 @@ void PSPRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
                            &light_pos);
             }
 
-            auto d = light->diffuse();
-            auto a = light->ambient();
-            auto s = light->specular();
+            auto a = light->color() * light->intensity() * 0.1f;
+            auto d = light->color() * light->intensity();
+            auto s = light->color() * light->intensity() * 0.1f;
 
             sceGuLightColor(i, GU_DIFFUSE, d.to_abgr_8888());
             sceGuLightColor(i, GU_AMBIENT, a.to_abgr_8888());
             sceGuLightColor(i, GU_SPECULAR, s.to_abgr_8888());
 
-            sceGuLightAtt(i, light->constant_attenuation(),
-                          light->linear_attenuation(),
-                          light->quadratic_attenuation());
+            sceGuLightAtt(i, 0.1f, -1.0f / light->range(), 1.0f);
         } else {
             sceGuDisable(GU_LIGHT0 + i);
         }
