@@ -310,7 +310,7 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
     auto uv_off = (spec.has_texcoord0())
                       ? spec.texcoord0_offset(false)
                       : 0; // FIXME: 0 assumes not first attribute
-    auto color_off = (spec.has_color()) ? spec.diffuse_offset(false) : 0;
+    auto color_off = (spec.has_color()) ? spec.color_offset(false) : 0;
     auto normal_off = (spec.has_normals()) ? spec.normal_offset(false) : 0;
 
     int i = buffer.size();
