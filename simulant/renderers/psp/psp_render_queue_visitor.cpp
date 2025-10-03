@@ -325,7 +325,7 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
     }
 
     if(color_off) {
-        convert_color(&v->color, it + color_off, spec.diffuse_attribute);
+        convert_color(&v->color, it + color_off, spec.color_attribute);
     }
 
     if(normal_off) {
