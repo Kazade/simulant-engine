@@ -9,6 +9,7 @@
 #include "../../nodes/light.h"
 #include "../../stage.h"
 #include "../../utils/pbr.h"
+#include "../../vertex_data.h"
 #include "../../window.h"
 #include "psp_render_group_impl.h"
 #include "psp_render_queue_visitor.h"
