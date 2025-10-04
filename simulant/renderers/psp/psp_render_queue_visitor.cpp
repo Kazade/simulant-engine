@@ -3,16 +3,16 @@
 #include <pspgum.h>
 #include <pspkernel.h>
 
-#include "../../utils/pbr.h"
-#include "psp_render_group_impl.h"
-#include "psp_render_queue_visitor.h"
-#include "psp_renderer.h"
-
 #include "../../application.h"
+#include "../../meshes/submesh.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../stage.h"
+#include "../../utils/pbr.h"
 #include "../../window.h"
+#include "psp_render_group_impl.h"
+#include "psp_render_queue_visitor.h"
+#include "psp_renderer.h"
 
 namespace smlt {
 
