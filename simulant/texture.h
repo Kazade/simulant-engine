@@ -252,6 +252,10 @@ public:
     void set_data(const uint8_t* data, std::size_t size);
     void set_data(const std::vector<uint8_t>& data);
 
+    /* Equivalent to calling resize() but returns a pointer
+     * to the resized data for writing into */
+    uint8_t* map_data(std::size_t size);
+
     /** Clear the data buffer */
     void free();
 
@@ -337,7 +341,7 @@ private:
     uint16_t width_ = 0;
     uint16_t height_ = 0;
 
-    TextureFormat format_ = TEXTURE_FORMAT_RGBA_4UB_8888;
+    TextureFormat format_ = TEXTURE_FORMAT_INVALID;
 
     Path source_;
 

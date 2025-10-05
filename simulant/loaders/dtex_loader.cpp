@@ -23,9 +23,8 @@ bool DTEXLoaderType::supports(const Path &filename) const {
     return filename.ext() == ".dtex";
 }
 
-TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
-    TextureLoadResult result;
-
+bool DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream,
+                         Texture* result) {
     DTexHeader header;
 
     stream->seekg(0);
@@ -36,16 +35,14 @@ TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     bool compressed = (header.type & (1 << 30)) > 0;
     bool mipmapped = (header.type & (1 << 31)) > 0;
     bool strided = (header.type & (1 << 25)) > 0;
-    uint32_t format = (header.type >> 27) & 0b111;
+    uint32_t dformat = (header.type >> 27) & 0b111;
 
-    if(strided || format > 2) {
-        S_ERROR(
-            "Strided, paletted or bumpmap .dtex textures are currently unsupported. Type: {0}, Format: {1}",
-             header.type, format
-        );
+    if(strided || dformat > 2) {
+        S_ERROR("Strided, paletted or bumpmap .dtex textures are currently "
+                "unsupported. Type: {0}, Format: {1}",
+                header.type, dformat);
 
-        /* FIXME: Failure?!? */
-        return result;
+        return false;
     }
 
     uint32_t COMPRESSED_MASK = 4;
@@ -54,7 +51,7 @@ TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
 
     TextureFormat lookup[8] = {TEXTURE_FORMAT_INVALID};
 
-    switch(format) {
+    switch(dformat) {
         case 0:
             lookup[COMPRESSED_MASK] = TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID;
             lookup[COMPRESSED_MASK | TWIDDLED_MASK] = TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID;
@@ -84,22 +81,19 @@ TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
         break;
         default:
             S_ERROR("Unknown .dtex format");
-            return result; /* FIXME: Failure... */
+            return false;
     }
 
-    result.width = header.width;
-    result.height = header.height;
-    result.format = lookup[(TextureFormat)(compressed << 2) | (TextureFormat)(twiddled << 1) | (TextureFormat)mipmapped];
+    auto format =
+        lookup[(TextureFormat)(compressed << 2) |
+               (TextureFormat)(twiddled << 1) | (TextureFormat)mipmapped];
 
-    if(result.format == TEXTURE_FORMAT_INVALID) {
+    if(format == TEXTURE_FORMAT_INVALID) {
         S_ERROR("Unsupported .dtex texture format");
-        return result; //FIXME: Failure
+        return false; // FIXME: Failure
     }
 
-    result.data.resize(header.size);
-
-    /* Read the data \o/ */
-    stream->read((char*) &result.data[0], header.size);
+    uint8_t* data = nullptr;
 
 #ifndef __DREAMCAST__
     if(compressed && mipmapped) {
@@ -117,31 +111,49 @@ TextureLoadResult DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
             return ret;
         };
 
-        std::size_t base_size = ((header.width / 2) * (header.height / 2));
-        std::size_t offset = calc_vq_mipmap_size(header.width / 2);
-        result.data.insert(result.data.begin() + 2048, result.data.begin() + 2048 + offset, result.data.end());
-        result.data.resize(base_size + 2048);
-        result.data.shrink_to_fit();
-        if(result.format == TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP) {
-            result.format = TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID;
-        } else if(result.format == TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP) {
-            result.format = TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID;
-        } else if(result.format == TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP) {
-            result.format = TEXTURE_FORMAT_RGB_1US_565_VQ_TWID;
+        if(format == TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP) {
+            format = TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID;
+        } else if(format == TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP) {
+            format = TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID;
+        } else if(format == TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP) {
+            format = TEXTURE_FORMAT_RGB_1US_565_VQ_TWID;
         } else {
-            S_ERROR("Unexpected compressed + mipmapped format: {0}", result.format);
+            S_ERROR("Unexpected compressed + mipmapped format: {0}", format);
+            return false;
         }
+
+        std::size_t offset = calc_vq_mipmap_size(header.width / 2);
+        auto final_data_size = header.size - offset;
+        result->set_format(format);
+        result->resize(header.width, header.height);
+
+        data = result->map_data(final_data_size);
+
+        // Read the VQ codebook
+        stream->read((char*)data, 2048);
+
+        // Seek past the mipmaps
+        stream->seekg(offset);
+
+        // Read the rest of the data
+        stream->read((char*)data + 2048, header.size - 2048 - offset);
     }
+#else
+    result->set_format(format);
+    result->resize(header.width, header.height);
+
+    data = result->map_data(header.size);
+
+    stream->read((char*)data, header.size);
 #endif
 
     auto renderer = get_app()->window->renderer.get();
-    if(!renderer->supports_texture_format(result.format)) {
-        return result; // FAILURE!
+    if(!renderer->supports_texture_format(format)) {
+        S_ERROR("Renderer doesn't support the texture format");
+        return false;
     }
 
-    result.channels = texture_format_channels(result.format);
-    return result;
+    return true;
 }
-
 }
 }

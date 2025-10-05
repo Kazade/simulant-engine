@@ -130,27 +130,22 @@ protected:
     std::set<LoaderHint> hints_;
 };
 
-struct TextureLoadResult {
-    uint16_t width;
-    uint16_t height;
-    uint8_t channels;
-    TextureFormat format;
-    std::vector<uint8_t> data;
-};
-
 namespace loaders {
 
 class BaseTextureLoader : public Loader {
 public:
     BaseTextureLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {
+
+        
     }
 
     void into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) override;
 
 private:
     virtual bool format_stored_upside_down() const { return true; }
-    virtual TextureLoadResult do_load(std::shared_ptr<FileIfstream> stream) = 0;
+    virtual bool do_load(std::shared_ptr<FileIfstream> stream,
+                         Texture* result) = 0;
 };
 
 }

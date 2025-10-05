@@ -57,7 +57,7 @@ optional<SkyboxImageDict> discover_files_from_directory(const Path& folder) {
         auto full_path = kfs::path::join(folder.str(), file);
 
         // Make sure this is a supported texture file
-        if(!get_app()->loader_type("texture")->supports(full_path)) {
+        if(!get_app()->loader_for(full_path, LOADER_HINT_TEXTURE)) {
             continue;
         }
 

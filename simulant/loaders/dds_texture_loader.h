@@ -16,7 +16,7 @@ public:
         BaseTextureLoader(filename, data) {}
 
 private:
-    TextureLoadResult do_load(std::shared_ptr<FileIfstream> stream) override;
+    bool do_load(std::shared_ptr<FileIfstream> stream, Texture* tex) override;
 };
 
 class DDSTextureLoaderType : public LoaderType {

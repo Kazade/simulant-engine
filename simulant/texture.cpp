@@ -169,6 +169,10 @@ void Texture::set_format(TextureFormat format) {
         return;
     }
 
+    if(format == TEXTURE_FORMAT_INVALID) {
+        return;
+    }
+
     format_ = format;
 
     auto byte_size = required_data_size(format, width_, height_);
@@ -725,6 +729,12 @@ std::vector<uint8_t> Texture::data_copy() const {
     std::vector<uint8_t> result(data_size());
     std::copy(data_, data_ + data_size_, result.begin());
     return result;
+}
+
+uint8_t* Texture::map_data(std::size_t size) {
+    resize_data(size);
+    data_dirty_ = true;
+    return &data_[0];
 }
 
 void Texture::set_data(const std::vector<uint8_t> &d) {

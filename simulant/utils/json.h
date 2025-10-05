@@ -201,6 +201,8 @@ public:
             case JSON_NULL:
                 return "null";
         }
+
+        return "unknown";
     }
 
     /* Returns the value as an integer if the type is NUMBER */

@@ -37,7 +37,7 @@ public:
 
         auto mat = assets->clone_default_material();
         mat->set_base_color_map(crate);
-        // mat->set_lighting_enabled(false);
+        mat->set_lighting_enabled(false);
 
         auto box_mesh = app->shared_assets->create_mesh(
             smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);

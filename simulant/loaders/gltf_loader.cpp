@@ -575,6 +575,7 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
 
         tex->set_texture_filter(calculate_filter(magFilter, minFilter));
         tex->set_texture_wrap(u, v, TEXTURE_WRAP_REPEAT);
+        tex->flush();
         return tex;
     } else {
         S_ERROR("Only uri textures supported atm");
