@@ -102,8 +102,7 @@ std::size_t component_count(const std::string& type) {
 }
 
 struct BufferInfo {
-    uint8_t* data = nullptr;
-    std::size_t size = 0;
+    std::vector<uint8_t> data;
     std::size_t stride = 0;
     ComponentType c_type = INVALID;
     std::size_t c_stride = 0;
@@ -117,8 +116,8 @@ struct BufferInfo {
 
         vecs_out.clear();
 
-        uint8_t* it = data;
-        auto count = size / stride;
+        uint8_t* it = &data[0];
+        auto count = data.size() / stride;
         for(std::size_t i = 0; i < count; ++i) {
             float x = *reinterpret_cast<float*>(it);
             it += c_stride;
@@ -141,8 +140,8 @@ struct BufferInfo {
 
         quats_out.clear();
 
-        uint8_t* it = data;
-        auto count = size / stride;
+        uint8_t* it = &data[0];
+        auto count = data.size() / stride;
         for(std::size_t i = 0; i < count; ++i) {
             float x = *reinterpret_cast<float*>(it);
             it += c_stride;
@@ -167,8 +166,8 @@ struct BufferInfo {
 
         scalars_out.clear();
 
-        uint8_t* it = data;
-        auto count = size / stride;
+        uint8_t* it = &data[0];
+        auto count = data.size() / stride;
         for(std::size_t i = 0; i < count; ++i) {
             for(std::size_t j = 0; j < c_count; ++j) {
                 float* thing = reinterpret_cast<float*>(it);
@@ -205,49 +204,8 @@ struct Accessor {
     int buffer_view_id;
 };
 
-class BufferArray {
-public:
-    std::vector<uint8_t>& data(std::size_t buffer_id,
-                               std::size_t buffer_view_id) {
-        for(auto& entry: entries_) {
-            if(entry.buffer_id == buffer_id &&
-               entry.buffer_view_id == buffer_view_id) {
-                return entry.data;
-            }
-        }
-
-        Entry new_entry;
-        new_entry.buffer_id = buffer_id;
-        new_entry.buffer_view_id = buffer_view_id;
-        entries_.push_back(new_entry);
-
-        return entries_.back().data;
-    }
-
-    bool contains(std::size_t buffer_id, std::size_t buffer_view_id) {
-        for(auto& entry: entries_) {
-            if(entry.buffer_id == buffer_id &&
-               entry.buffer_view_id == buffer_view_id) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-private:
-    struct Entry {
-        std::size_t buffer_id;
-        std::size_t buffer_view_id;
-        std::vector<uint8_t> data;
-    };
-
-    std::vector<Entry> entries_;
-};
-
 static auto process_buffer(JSONIterator& js, const Accessor& accessor,
-                           BufferArray& buffers, std::istream* bin)
-    -> BufferInfo {
+                           std::istream* bin) -> BufferInfo {
 
     auto accessor_component_type = accessor.component_type;
     auto type = accessor.type;
@@ -265,55 +223,48 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
         return BufferInfo();
     }
 
+    BufferInfo result;
+
+    const char* b64_marker = "data:application/octet-stream;base64,";
+
     auto byte_offset = buffer_view["byteOffset"]->to_int().value_or(0);
     auto byte_length = buffer_view["byteLength"]->to_int().value_or(0);
     auto byte_stride = buffer_view["byteStride"]->to_int().value_or(0);
 
-    if(!buffers.contains(buffer_id, buffer_view_id)) {
-        const char* b64_marker = "data:application/octet-stream;base64,";
-        if(uri.empty()) {
-            // We need to seek and read from bin
-            uint32_t g = bin->tellg();
-            bin->seekg(byte_offset, std::ios::cur);
-            auto& data = buffers.data(buffer_id, buffer_view_id);
-            data.resize(byte_length);
-            bin->read((char*)&data[0], byte_length);
-            byte_offset = 0;
-            bin->seekg(g, std::ios::beg);
-        } else if(uri.find(b64_marker) == 0) {
-            auto data = uri.substr(strlen(b64_marker));
-            auto decoded = smlt::base64_decode(data);
-            if(!decoded) {
-                S_ERROR("Failed to decode base64 data");
-                return BufferInfo();
-            }
-
-            auto& d = buffers.data(buffer_id, buffer_view_id);
-            d.insert(d.begin(), decoded->begin(), decoded->end());
-        } else {
-            auto istream = smlt::get_app()->vfs->read_file(uri);
-            auto& d = buffers.data(buffer_id, buffer_view_id);
-            d.insert(d.begin(), std::istreambuf_iterator<char>(*istream),
-                     std::istreambuf_iterator<char>());
+    if(uri.empty()) {
+        // We need to seek and read from bin
+        uint32_t g = bin->tellg();
+        bin->seekg(byte_offset, std::ios::cur);
+        result.data.resize(byte_length);
+        bin->read((char*)&result.data[0], byte_length);
+        byte_offset = 0;
+        bin->seekg(g, std::ios::beg);
+    } else if(uri.find(b64_marker) == 0) {
+        auto data = uri.substr(strlen(b64_marker));
+        auto decoded = smlt::base64_decode(data);
+        if(!decoded) {
+            S_ERROR("Failed to decode base64 data");
+            return BufferInfo();
         }
+        result.data.insert(result.data.begin(), decoded->begin(),
+                           decoded->end());
+    } else {
+        auto istream = smlt::get_app()->vfs->open_file(uri);
+        istream->seekg(byte_offset);
+        result.data.resize(byte_length);
+        istream->read((char*)&result.data[0], byte_length);
     }
-
-    uint8_t* buffer_data = &buffers.data(buffer_id, buffer_view_id)[0];
-
     auto c_stride = component_size(accessor_component_type);
     auto c_count = component_count(type);
     if(byte_stride == 0) {
         byte_stride = c_stride * c_count;
     }
+    result.stride = byte_stride;
+    result.c_type = accessor_component_type;
+    result.c_stride = c_stride;
+    result.c_count = c_count;
 
-    return BufferInfo{
-        buffer_data + byte_offset,
-        (std::size_t)byte_length,
-        (std::size_t)byte_stride,
-        accessor_component_type,
-        c_stride,
-        c_count,
-    };
+    return result;
 }
 
 void process_positions(const BufferInfo& buffer_info, JSONIterator&,
@@ -325,8 +276,9 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
     auto t0 = smlt::get_app()->time_keeper->now_in_us();
 #endif
     if(spec.position_attribute == VERTEX_ATTRIBUTE_2F) {
-        uint8_t* src = buffer_info.data;
-        for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+        const uint8_t* src = &buffer_info.data[0];
+        for(std::size_t i = 0; i < buffer_info.data.size();
+            i += buffer_info.stride) {
             auto x = *(float*)src;
             auto y = *(float*)(src + 4);
             final_mesh->vertex_data->position(x, y);
@@ -334,8 +286,9 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
             final_mesh->vertex_data->move_next();
         }
     } else if(spec.position_attribute == VERTEX_ATTRIBUTE_3F) {
-        uint8_t* src = buffer_info.data;
-        for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+        const uint8_t* src = &buffer_info.data[0];
+        for(std::size_t i = 0; i < buffer_info.data.size();
+            i += buffer_info.stride) {
             auto x = *(float*)src;
             auto y = *(float*)(src + 4);
             auto z = *(float*)(src + 8);
@@ -344,8 +297,9 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
             final_mesh->vertex_data->move_next();
         }
     } else if(spec.position_attribute == VERTEX_ATTRIBUTE_4F) {
-        uint8_t* src = buffer_info.data;
-        for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+        const uint8_t* src = &buffer_info.data[0];
+        for(std::size_t i = 0; i < buffer_info.data.size();
+            i += buffer_info.stride) {
             auto x = *(float*)src;
             auto y = *(float*)(src + 4);
             auto z = *(float*)(src + 8);
@@ -378,29 +332,31 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
 
     auto start = final_mesh->vertex_data->cursor_position();
 
-    for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+    for(std::size_t i = 0; i < buffer_info.data.size();
+        i += buffer_info.stride) {
+        auto d = &buffer_info.data[0];
         if(attr == VERTEX_ATTRIBUTE_3F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
             final_mesh->vertex_data->color(smlt::Color(x, y, z, 1));
         } else if(attr == VERTEX_ATTRIBUTE_4F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
-            auto w = *(float*)(buffer_info.data + i + 12);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
+            auto w = *(float*)(d + i + 12);
             final_mesh->vertex_data->color(smlt::Color(x, y, z, w));
         } else if(attr == VERTEX_ATTRIBUTE_4UB) {
-            auto r = *(uint8_t*)(buffer_info.data + i);
-            auto g = *(uint8_t*)(buffer_info.data + i + 1);
-            auto b = *(uint8_t*)(buffer_info.data + i + 2);
-            auto a = *(uint8_t*)(buffer_info.data + i + 3);
+            auto r = *(uint8_t*)(d + i);
+            auto g = *(uint8_t*)(d + i + 1);
+            auto b = *(uint8_t*)(d + i + 2);
+            auto a = *(uint8_t*)(d + i + 3);
             final_mesh->vertex_data->color(smlt::Color::from_bytes(r, g, b, a));
         } else if(attr == VERTEX_ATTRIBUTE_4US) {
-            auto r = *(uint16_t*)(buffer_info.data + i);
-            auto g = *(uint16_t*)(buffer_info.data + i + 2);
-            auto b = *(uint16_t*)(buffer_info.data + i + 4);
-            auto a = *(uint16_t*)(buffer_info.data + i + 6);
+            auto r = *(uint16_t*)(d + i);
+            auto g = *(uint16_t*)(d + i + 2);
+            auto b = *(uint16_t*)(d + i + 4);
+            auto a = *(uint16_t*)(d + i + 6);
 
             final_mesh->vertex_data->color(
                 smlt::Color::from_bytes(r >> 8, g >> 8, b >> 8, a >> 8));
@@ -431,16 +387,18 @@ void process_normals(const BufferInfo& buffer_info, JSONIterator& js,
     auto t0 = smlt::get_app()->time_keeper->now_in_us();
 #endif
 
-    for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+    for(std::size_t i = 0; i < buffer_info.data.size();
+        i += buffer_info.stride) {
+        const auto d = &buffer_info.data[0];
         if(spec.normal_attribute == VERTEX_ATTRIBUTE_3F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
             final_mesh->vertex_data->normal(x, y, z);
         } else if(spec.normal_attribute == VERTEX_ATTRIBUTE_4F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
             final_mesh->vertex_data->normal(x, y, z);
         } else {
             S_ERROR("Unsupported normal attribute type");
@@ -468,21 +426,24 @@ void process_texcoord0s(const BufferInfo& buffer_info, JSONIterator& js,
     auto t0 = smlt::get_app()->time_keeper->now_in_us();
 #endif
 
-    for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+    for(std::size_t i = 0; i < buffer_info.data.size();
+        i += buffer_info.stride) {
+        const auto& d = &buffer_info.data[0];
+
         if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_2F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
             final_mesh->vertex_data->tex_coord0(x, -y);
         } else if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_3F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
             final_mesh->vertex_data->tex_coord0(x, -y, z);
         } else if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_4F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
-            auto w = *(float*)(buffer_info.data + i + 12);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
+            auto w = *(float*)(d + i + 12);
             final_mesh->vertex_data->tex_coord0(x, -y, z, w);
         } else {
             S_ERROR("Unsupported texcoord0 attribute type");
@@ -695,7 +656,7 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
                                JSONIterator& mesh, int mesh_id,
                                const std::vector<Accessor>& accessors,
                                const std::vector<smlt::MaterialPtr>& materials,
-                               BufferArray& buffers, std::istream* bin_chunk) {
+                               std::istream* bin_chunk) {
     _S_UNUSED(mesh_id);
 
     struct MeshPrimitive {
@@ -805,45 +766,45 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
 
         if(primitive.position_id >= 0) {
             auto position = accessors[primitive.position_id];
-            auto buffer_info = process_buffer(js, position, buffers, bin_chunk);
+            auto buffer_info = process_buffer(js, position, bin_chunk);
             process_positions(buffer_info, js, final_mesh, spec);
         }
 
         if(primitive.normal_id >= 0) {
             auto normal = accessors[primitive.normal_id];
-            auto buffer_info = process_buffer(js, normal, buffers, bin_chunk);
+            auto buffer_info = process_buffer(js, normal, bin_chunk);
             process_normals(buffer_info, js, final_mesh, spec);
         }
 
         if(primitive.color_id >= 0) {
             auto color = accessors[primitive.color_id];
-            auto buffer_info = process_buffer(js, color, buffers, bin_chunk);
+            auto buffer_info = process_buffer(js, color, bin_chunk);
             process_colors(buffer_info, js, final_mesh, diff);
         }
 
         if(primitive.texcoord_id >= 0) {
             auto texcoord0 = accessors[primitive.texcoord_id];
-            auto buffer_info =
-                process_buffer(js, texcoord0, buffers, bin_chunk);
+            auto buffer_info = process_buffer(js, texcoord0, bin_chunk);
             process_texcoord0s(buffer_info, js, final_mesh, spec);
         }
 
         auto indices_id = primitive.indexes_id;
         if(indices_id >= 0) {
             auto indices = accessors[indices_id];
-            auto buffer_info = process_buffer(js, indices, buffers, bin_chunk);
+            auto buffer_info = process_buffer(js, indices, bin_chunk);
             S_VERBOSE("Populating indices");
-            for(std::size_t i = 0; i < buffer_info.size;
+            for(std::size_t i = 0; i < buffer_info.data.size();
                 i += buffer_info.stride) {
+                const auto& d = &buffer_info.data[0];
                 switch(buffer_info.c_type) {
                     case BYTE:
                     case UNSIGNED_BYTE: {
-                        auto u8idx = *(uint8_t*)(buffer_info.data + i);
+                        auto u8idx = *(uint8_t*)(d + i);
                         sm->index_data->index(u8idx + offset);
                     } break;
                     case SHORT:
                     case UNSIGNED_SHORT: {
-                        auto u16idx = *(uint16_t*)(buffer_info.data + i);
+                        auto u16idx = *(uint16_t*)(d + i);
                         sm->index_data->index(u16idx + offset);
                     } break;
                     default:
@@ -1075,8 +1036,6 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         return;
     }
 
-    BufferArray buffers;
-
     /* We add the containing folder to the front of the search path
        and ensure we always remove it when we're done (if it wasn't there
        already)
@@ -1140,7 +1099,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     for(auto& node: meshes_it) {
         auto mesh_it = node.to_iterator();
         auto mesh = load_mesh(&prefab->asset_manager(), js, mesh_it, j++,
-                              accessors, materials, buffers, bin_chunk.get());
+                              accessors, materials, bin_chunk.get());
         prefab->push_mesh(mesh);
         meshes.push_back(mesh);
     }
@@ -1236,13 +1195,13 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
              * a vector that could be cleared as we convert it into a typed
              * array */
             auto times_buffer = process_buffer(js, accessors[input_id.value()],
-                                               buffers, bin_chunk.get());
+                                               bin_chunk.get());
 
             std::vector<float> times;
             times_buffer.to_typed_array(times);
 
             auto output_buffer = process_buffer(
-                js, accessors[output_id.value()], buffers, bin_chunk.get());
+                js, accessors[output_id.value()], bin_chunk.get());
 
             AnimationDataPtr data;
 
