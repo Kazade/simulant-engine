@@ -10,7 +10,7 @@ public:
 
     void on_load() override {
 
-        camera_ = create_child<smlt::Camera>();
+        camera_ = create_child<smlt::Camera3D>();
         auto pipeline = compositor->create_layer(this, camera_);
 
         pipeline->viewport->set_color(smlt::Color::black());
@@ -95,7 +95,7 @@ public:
         // Fairy
         fairy_actor_->transform->set_position(fairyPath_->calc_bezier_point(0));
 
-        panel_cam_ = create_child<Camera>();
+        panel_cam_ = create_child<Camera2D>();
         panel_cam_->set_orthographic_projection(0, window->width(), 0,
                                                 window->height());
         stats_ = create_child<StatsPanel>();
