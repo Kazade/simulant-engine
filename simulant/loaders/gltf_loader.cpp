@@ -246,8 +246,8 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
             S_ERROR("Failed to decode base64 data");
             return BufferInfo();
         }
-        result.data.insert(result.data.begin(), decoded->begin(),
-                           decoded->end());
+        result.data.insert(result.data.begin(), decoded->begin() + byte_offset,
+                           decoded->begin() + byte_length);
     } else {
         auto istream = smlt::get_app()->vfs->open_file(uri);
         istream->seekg(byte_offset);
@@ -282,7 +282,6 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
             auto x = *(float*)src;
             auto y = *(float*)(src + 4);
             final_mesh->vertex_data->position(x, y);
-            src += buffer_info.stride;
             final_mesh->vertex_data->move_next();
         }
     } else if(spec.position_attribute == VERTEX_ATTRIBUTE_3F) {
@@ -293,7 +292,6 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
             auto y = *(float*)(src + 4);
             auto z = *(float*)(src + 8);
             final_mesh->vertex_data->position(x, y, z);
-            src += buffer_info.stride;
             final_mesh->vertex_data->move_next();
         }
     } else if(spec.position_attribute == VERTEX_ATTRIBUTE_4F) {
@@ -305,7 +303,6 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
             auto z = *(float*)(src + 8);
             auto w = *(float*)(src + 12);
             final_mesh->vertex_data->position(x, y, z, w);
-            src += buffer_info.stride;
             final_mesh->vertex_data->move_next();
         }
     } else {
@@ -793,9 +790,11 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
             auto indices = accessors[indices_id];
             auto buffer_info = process_buffer(js, indices, bin_chunk);
             S_VERBOSE("Populating indices");
+
+            const auto d = &buffer_info.data[0];
             for(std::size_t i = 0; i < buffer_info.data.size();
-                i += buffer_info.stride) {
-                const auto& d = &buffer_info.data[0];
+                i += buffer_info.c_stride) {
+
                 switch(buffer_info.c_type) {
                     case BYTE:
                     case UNSIGNED_BYTE: {
