@@ -137,6 +137,13 @@ bool DTEXLoader::do_load(std::shared_ptr<FileIfstream> stream,
 
         // Read the rest of the data
         stream->read((char*)data + 2048, header.size - 2048 - offset);
+    } else {
+        result->set_format(format);
+        result->resize(header.width, header.height);
+
+        data = result->map_data(header.size);
+
+        stream->read((char*)data, header.size);
     }
 #else
     result->set_format(format);
