@@ -6,7 +6,7 @@
     "quota": 50,
 
     "material": "TEXTURE_ONLY",
-    "material.s_diffuse_map": "flare.tga",
+    "material.s_base_color_map": "flare.tga",
     "material.s_depth_write_enabled": false,
     "material.s_blend_func": "add",
 
