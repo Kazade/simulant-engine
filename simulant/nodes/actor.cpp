@@ -178,7 +178,7 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
 #ifdef DEBUG_ANIMATION
     debug->transform->set_translation(Vec3());
     debug->transform->set_rotation(Quaternion());
-    debug->transform->set_scale_factor(Vec3());
+    debug->transform->set_scale_factor(Vec3(1, 1, 1));
 #endif
 }
 
@@ -324,7 +324,7 @@ bool Actor::on_create(Params params) {
     }
 
     set_mesh(mesh->lock());
-    return true;
+    return StageNode::on_create(params);
 }
 
 void Actor::recalc_effective_meshes() {

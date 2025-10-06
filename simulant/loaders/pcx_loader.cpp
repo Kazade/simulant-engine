@@ -49,9 +49,7 @@ struct PCXHeader {
 
 #pragma pack(pop)
 
-TextureLoadResult PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
-    TextureLoadResult result;
-
+bool PCXLoader::do_load(std::shared_ptr<FileIfstream> stream, Texture* result) {
     stream->seekg(0, std::ios::end);
     int size = stream->tellg();
     stream->seekg(0, std::ios::beg);
@@ -63,11 +61,12 @@ TextureLoadResult PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
         throw std::runtime_error("Unsupported PCX manufacturer");
     }
 
-    result.width = header.xmax - header.xmin + 1;
-    result.height = header.ymax - header.ymin + 1;
-    result.channels = 3;
-    result.format = TEXTURE_FORMAT_RGB_3UB_888;
-    result.data.resize(result.width * result.height * result.channels);
+    auto width = header.xmax - header.xmin + 1;
+    auto height = header.ymax - header.ymin + 1;
+
+    result->set_format(TEXTURE_FORMAT_RGB_3UB_888);
+
+    auto data = result->map_data(result->data_size());
 
     auto bitcount = header.bits_per_pixel * header.num_color_planes;
     if(bitcount != 8) {
@@ -97,7 +96,7 @@ TextureLoadResult PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
     uint8_t image_data;
     stream->read((char*) &image_data, sizeof(uint8_t));
 
-    for(uint32_t idx = 0; idx < (result.width * result.height * result.channels); idx += result.channels) {
+    for(uint32_t idx = 0; idx < result->data_size(); idx += 3) {
 
         if(rle_count == 0) {
             rle_value = image_data;
@@ -116,9 +115,9 @@ TextureLoadResult PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
 
         assert(rle_value * 3 < 768);
 
-        result.data[idx + 0] = palette[(rle_value * 3) + 0];
-        result.data[idx + 1] = palette[(rle_value * 3) + 1];
-        result.data[idx + 2] = palette[(rle_value * 3) + 2];
+        data[idx + 0] = palette[(rle_value * 3) + 0];
+        data[idx + 1] = palette[(rle_value * 3) + 1];
+        data[idx + 2] = palette[(rle_value * 3) + 2];
     }
 
     if(palette != header.palette) {
@@ -127,6 +126,5 @@ TextureLoadResult PCXLoader::do_load(std::shared_ptr<FileIfstream> stream) {
 
     return result;
 }
-
 }
 }

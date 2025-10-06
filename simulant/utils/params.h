@@ -29,8 +29,8 @@ typedef std::vector<ParamKey> ParamKeys;
 
 typedef std::variant<float, FloatArray, int, IntArray, bool, BoolArray,
                      std::string, TextureRef, MeshRef, ParticleScriptRef,
-                     ui::UIConfig, ui::WidgetStyleRef, GeomCullerOptions,
-                     TextureFlags, StageNode*>
+                     PrefabRef, ui::UIConfig, ui::WidgetStyleRef,
+                     GeomCullerOptions, TextureFlags, StageNode*>
     ParamValue;
 
 /*
@@ -90,6 +90,22 @@ public:
             return it->second;
         }
 
+        return no_value;
+    }
+
+    template<typename F>
+    static optional<ParamValue> to_param(const F& fallback) {
+        /* We abuse the default coersion rules of Params */
+        Params tmp;
+        tmp.set("value", fallback);
+        return tmp.raw("value");
+    }
+
+    static optional<ParamValue> to_param(const OptionalInit&) {
+        return no_value;
+    }
+
+    static optional<ParamValue> to_param(const std::nullptr_t&) {
         return no_value;
     }
 

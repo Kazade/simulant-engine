@@ -140,7 +140,7 @@ class VertexSpecification {
     VertexAttribute texcoord5_attribute_ = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute texcoord6_attribute_ = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute texcoord7_attribute_ = VERTEX_ATTRIBUTE_NONE;
-    VertexAttribute diffuse_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute color_attribute_ = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute specular_attribute_ = VERTEX_ATTRIBUTE_NONE;
 
     AttributeOffset position_offset_ = 0;
@@ -153,7 +153,7 @@ class VertexSpecification {
     AttributeOffset texcoord5_offset_ = 0;
     AttributeOffset texcoord6_offset_ = 0;
     AttributeOffset texcoord7_offset_ = 0;
-    AttributeOffset diffuse_offset_ = 0;
+    AttributeOffset color_offset_ = 0;
     AttributeOffset specular_offset_ = 0;
 
 public:
@@ -171,11 +171,12 @@ public:
     VertexAttributeProperty texcoord5_attribute = {this, &VertexSpecification::texcoord5_attribute_};
     VertexAttributeProperty texcoord6_attribute = {this, &VertexSpecification::texcoord6_attribute_};
     VertexAttributeProperty texcoord7_attribute = {this, &VertexSpecification::texcoord7_attribute_};
-    VertexAttributeProperty diffuse_attribute = {this, &VertexSpecification::diffuse_attribute_};
+    VertexAttributeProperty color_attribute = {
+        this, &VertexSpecification::color_attribute_};
     VertexAttributeProperty specular_attribute = {this, &VertexSpecification::specular_attribute_};
 
     VertexSpecification() = default;
-    VertexSpecification(const VertexSpecification&& rhs):
+    VertexSpecification(const VertexSpecification&& rhs) :
         position_attribute_(rhs.position_attribute_),
         normal_attribute_(rhs.normal_attribute_),
         texcoord0_attribute_(rhs.texcoord0_attribute_),
@@ -186,7 +187,7 @@ public:
         texcoord5_attribute_(rhs.texcoord5_attribute_),
         texcoord6_attribute_(rhs.texcoord6_attribute_),
         texcoord7_attribute_(rhs.texcoord7_attribute_),
-        diffuse_attribute_(rhs.diffuse_attribute_),
+        color_attribute_(rhs.color_attribute_),
         specular_attribute_(rhs.specular_attribute_),
         position_attribute(this, &VertexSpecification::position_attribute_),
         normal_attribute(this, &VertexSpecification::normal_attribute_),
@@ -198,13 +199,13 @@ public:
         texcoord5_attribute(this, &VertexSpecification::texcoord5_attribute_),
         texcoord6_attribute(this, &VertexSpecification::texcoord6_attribute_),
         texcoord7_attribute(this, &VertexSpecification::texcoord7_attribute_),
-        diffuse_attribute(this, &VertexSpecification::diffuse_attribute_),
+        color_attribute(this, &VertexSpecification::color_attribute_),
         specular_attribute(this, &VertexSpecification::specular_attribute_) {
 
         recalc_stride_and_offsets();
     }
 
-    VertexSpecification(const VertexSpecification& rhs):
+    VertexSpecification(const VertexSpecification& rhs) :
         position_attribute_(rhs.position_attribute_),
         normal_attribute_(rhs.normal_attribute_),
         texcoord0_attribute_(rhs.texcoord0_attribute_),
@@ -215,7 +216,7 @@ public:
         texcoord5_attribute_(rhs.texcoord5_attribute_),
         texcoord6_attribute_(rhs.texcoord6_attribute_),
         texcoord7_attribute_(rhs.texcoord7_attribute_),
-        diffuse_attribute_(rhs.diffuse_attribute_),
+        color_attribute_(rhs.color_attribute_),
         specular_attribute_(rhs.specular_attribute_),
         position_attribute(this, &VertexSpecification::position_attribute_),
         normal_attribute(this, &VertexSpecification::normal_attribute_),
@@ -227,7 +228,7 @@ public:
         texcoord5_attribute(this, &VertexSpecification::texcoord5_attribute_),
         texcoord6_attribute(this, &VertexSpecification::texcoord6_attribute_),
         texcoord7_attribute(this, &VertexSpecification::texcoord7_attribute_),
-        diffuse_attribute(this, &VertexSpecification::diffuse_attribute_),
+        color_attribute(this, &VertexSpecification::color_attribute_),
         specular_attribute(this, &VertexSpecification::specular_attribute_) {
 
         recalc_stride_and_offsets();
@@ -244,7 +245,7 @@ public:
         texcoord5_attribute_ = rhs.texcoord5_attribute_;
         texcoord6_attribute_ = rhs.texcoord6_attribute_;
         texcoord7_attribute_ = rhs.texcoord7_attribute_;
-        diffuse_attribute_ = rhs.diffuse_attribute_;
+        color_attribute_ = rhs.color_attribute_;
         specular_attribute_ = rhs.specular_attribute_;
 
         recalc_stride_and_offsets();
@@ -269,17 +270,17 @@ public:
 
     bool operator==(const VertexSpecification& rhs) const {
         return position_attribute == rhs.position_attribute &&
-               normal_attribute == rhs.normal_attribute  &&
-                texcoord0_attribute == rhs.texcoord0_attribute &&
-                texcoord1_attribute == rhs.texcoord1_attribute &&
-                texcoord2_attribute == rhs.texcoord2_attribute &&
-                texcoord3_attribute == rhs.texcoord3_attribute &&
-                texcoord4_attribute == rhs.texcoord4_attribute &&
-                texcoord5_attribute == rhs.texcoord5_attribute &&
-                texcoord6_attribute == rhs.texcoord6_attribute &&
-                texcoord7_attribute == rhs.texcoord7_attribute &&
-                diffuse_attribute == rhs.diffuse_attribute &&
-                specular_attribute == rhs.specular_attribute;
+               normal_attribute == rhs.normal_attribute &&
+               texcoord0_attribute == rhs.texcoord0_attribute &&
+               texcoord1_attribute == rhs.texcoord1_attribute &&
+               texcoord2_attribute == rhs.texcoord2_attribute &&
+               texcoord3_attribute == rhs.texcoord3_attribute &&
+               texcoord4_attribute == rhs.texcoord4_attribute &&
+               texcoord5_attribute == rhs.texcoord5_attribute &&
+               texcoord6_attribute == rhs.texcoord6_attribute &&
+               texcoord7_attribute == rhs.texcoord7_attribute &&
+               color_attribute == rhs.color_attribute &&
+               specular_attribute == rhs.specular_attribute;
     }
 
     bool operator!=(const VertexSpecification& rhs) const {
@@ -304,7 +305,9 @@ public:
     bool has_texcoord6() const { return bool(texcoord6_attribute_); }
     bool has_texcoord7() const { return bool(texcoord7_attribute_); }
 
-    bool has_diffuse() const { return bool(diffuse_attribute_); }
+    bool has_color() const {
+        return bool(color_attribute_);
+    }
     bool has_specular() const { return bool(specular_attribute_); }
 
     AttributeOffset position_offset(bool check=true) const;
@@ -320,7 +323,7 @@ public:
 
     AttributeOffset texcoordX_offset(uint8_t which, bool check=true) const;
 
-    AttributeOffset diffuse_offset(bool check=true) const;
+    AttributeOffset color_offset(bool check = true) const;
     AttributeOffset specular_offset(bool check=true) const;
 
 private:
@@ -422,6 +425,10 @@ typedef std::shared_ptr<Material> MaterialPtr;
 class Texture;
 typedef std::weak_ptr<Texture> TextureRef;
 typedef std::shared_ptr<Texture> TexturePtr;
+
+class Prefab;
+typedef std::weak_ptr<Prefab> PrefabRef;
+typedef std::shared_ptr<Prefab> PrefabPtr;
 
 class ParticleScript;
 typedef std::weak_ptr<ParticleScript> ParticleScriptRef;
@@ -613,7 +620,7 @@ namespace std{
             hash_combine(seed, (unsigned int) spec.texcoord5_attribute_);
             hash_combine(seed, (unsigned int) spec.texcoord6_attribute_);
             hash_combine(seed, (unsigned int) spec.texcoord7_attribute_);
-            hash_combine(seed, (unsigned int) spec.diffuse_attribute_);
+            hash_combine(seed, (unsigned int)spec.color_attribute_);
             hash_combine(seed, (unsigned int) spec.specular_attribute_);
             return seed;
         }

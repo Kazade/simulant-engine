@@ -74,7 +74,7 @@ public:
 
     void test_descendent_lookups() {
         auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
 
         auto b = scene->create_child<NodeWithLookups>();
 
@@ -105,7 +105,7 @@ class CylindricalBillboardTests : public test::SimulantTestCase {
 public:
     void test_basic_usage() {
         auto actor = scene->create_child<smlt::Stage>();
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
 
         auto pipeline = window->compositor->create_layer(scene, camera);
         pipeline->activate();
@@ -138,7 +138,7 @@ public:
 
     void test_basic_usage() {
         auto actor = scene->create_child<smlt::Stage>();
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
 
         auto pipeline = window->compositor->create_layer(scene, camera);
         pipeline->activate();

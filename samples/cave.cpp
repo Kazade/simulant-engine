@@ -10,7 +10,7 @@ public:
 
     void on_load() override {
 
-        camera_ = create_child<smlt::Camera>();
+        camera_ = create_child<smlt::Camera3D>();
         auto pipeline = compositor->create_layer(this, camera_);
 
         pipeline->viewport->set_color(smlt::Color::black());
@@ -38,7 +38,7 @@ public:
 
         // Materials + Textures
         for(auto submesh: cave_mesh_->each_submesh()) {
-            submesh->material()->diffuse_map()->set_texture_filter(
+            submesh->material()->base_color_map()->set_texture_filter(
                 TextureFilter::TEXTURE_FILTER_BILINEAR);
         }
 
@@ -47,13 +47,13 @@ public:
         ray_mat->set_lighting_enabled(false);
         ray_mat->pass(0)->set_depth_test_enabled(false);
         ray_mat->pass(0)->set_depth_write_enabled(false);
-        ray_mat->diffuse_map()->set_texture_filter(
+        ray_mat->base_color_map()->set_texture_filter(
             TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         auto fairy_mat = fairy_mesh_->first_submesh()->material();
         fairy_mat->pass(0)->set_blend_func(BlendType::BLEND_ADD);
         fairy_mat->pass(0)->set_lighting_enabled(false);
-        fairy_mat->diffuse_map()->set_texture_filter(
+        fairy_mat->base_color_map()->set_texture_filter(
             TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         // Geoms + Actors
@@ -75,13 +75,13 @@ public:
                 .set("position", Vec3(-12.15f, -0.67f, 0.73f))
                 .set("color", lightCol * 23.0f));
 
-        rock_light->set_attenuation(4.31f, 0.01f, 0.25f, 0.75);
+        rock_light->set_intensity(1000.0f);
 
         auto fairy_light = create_child<smlt::PointLight>(
             Params()
                 .set("position", Vec3())
                 .set("color", Color(0.5f, 0.85f, 1, 1) * 10));
-        fairy_light->set_attenuation(5, 0.01f, 0.25f, 0.75f);
+        fairy_light->set_intensity(1000.0f);
         fairy_light->set_parent(fairy_actor_);
 
         // BezierPath
@@ -95,7 +95,7 @@ public:
         // Fairy
         fairy_actor_->transform->set_position(fairyPath_->calc_bezier_point(0));
 
-        panel_cam_ = create_child<Camera>();
+        panel_cam_ = create_child<Camera2D>();
         panel_cam_->set_orthographic_projection(0, window->width(), 0,
                                                 window->height());
         stats_ = create_child<StatsPanel>();
@@ -214,7 +214,7 @@ int main(int argc, char* argv[]) {
     config.title = "Cave Demo";
     config.fullscreen = false;
     config.log_level = smlt::LOG_LEVEL_INFO;
-    config.development.force_renderer = "gl1x";
+    // config.development.force_renderer = "gl1x";
 
 #ifdef __DREAMCAST__
     config.width = 640;

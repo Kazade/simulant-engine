@@ -39,7 +39,6 @@
 
 #include <set>
 
-#include "../asset_manager.h"
 #include "../compositor.h"
 #include "../generic/any/any.h"
 #include "../generic/managed.h"
@@ -56,6 +55,7 @@
 namespace smlt {
 
 class Application;
+class AssetManager;
 class Window;
 class InputManager;
 class SceneManager;
@@ -217,7 +217,7 @@ private:
     SceneManager* scene_manager_ = nullptr;
     SceneCompositor compositor_;
 
-    AssetManager assets_;
+    std::unique_ptr<AssetManager> assets_;
 
     friend class SceneManager;
 

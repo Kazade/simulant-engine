@@ -20,30 +20,30 @@ public:
     virtual ~MaterialObject();
 
     /* Built-in properties */
-    void set_specular(const Color& color);
-    void set_ambient(const Color& color);
-    void set_diffuse(const Color& color);
-    void set_emission(const Color& color);
-    void set_shininess(float shininess);
-    void set_diffuse_map(TexturePtr texture);
-    void set_light_map(TexturePtr texture);
-    void set_specular_map(TexturePtr texture);
+    void set_base_color(const Color& color);
+    void set_metallic(float metallic);
+    void set_roughness(float roughness);
+    void set_specular(float specular);
+    void set_specular_color(const Color& color);
+    void set_metallic_roughness_map(TexturePtr texture);
+    void set_base_color_map(TexturePtr texture);
+    void set_light_map(TexturePtr texture);    
     void set_normal_map(TexturePtr texture);
 
-    const Mat4& diffuse_map_matrix() const;
+    const Mat4& base_color_map_matrix() const;
     const Mat4& light_map_matrix() const;
     const Mat4& normal_map_matrix() const;
-    const Mat4& specular_map_matrix() const;
+    const Mat4& metallic_roughness_map_matrix() const;
 
-    void set_diffuse_map_matrix(const Mat4& mat);
+    void set_base_color_map_matrix(const Mat4& mat);
     void set_light_map_matrix(const Mat4& mat);
     void set_normal_map_matrix(const Mat4& mat);
-    void set_specular_map_matrix(const Mat4& mat);
+    void set_metallic_roughness_map_matrix(const Mat4& mat);
 
-    const TexturePtr& diffuse_map() const;
+    const TexturePtr& base_color_map() const;
     const TexturePtr& light_map() const;
     const TexturePtr& normal_map() const;
-    const TexturePtr& specular_map() const;
+    const TexturePtr& metallic_roughness_map() const;
 
     void set_fog_density(float density);
     void set_fog_start(float start);
@@ -57,11 +57,12 @@ public:
     FogMode fog_mode() const;
     const Color& fog_color() const;
 
-    const Color& specular() const;
-    const Color& ambient() const;
-    const Color& emission() const;
-    const Color& diffuse() const;
-    float shininess() const;
+    float metallic() const;
+    float roughness() const;
+    const Color& specular_color() const;
+    const Color& base_color() const;
+
+    float specular() const;
     bool is_blending_enabled() const;
     void set_blend_func(BlendType b);
     BlendType blend_func() const;

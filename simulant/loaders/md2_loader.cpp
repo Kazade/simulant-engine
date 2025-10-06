@@ -198,7 +198,7 @@ public:
 
             out->position(v1v + (v2v - v1v) * t);
             out->tex_coord0(v1->st);
-            out->diffuse(smlt::Color::white());
+            out->color(smlt::Color::white());
             out->normal(n1 + (n2 - n1) * t);
             out->move_next();
 
@@ -304,7 +304,7 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
         }
 
         auto material = asset_manager->clone_default_material();
-        material->set_diffuse_map(tex);
+        material->set_base_color_map(tex);
 
         if(i == 0) {
             submesh->set_material(material);

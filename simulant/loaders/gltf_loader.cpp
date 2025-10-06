@@ -1,43 +1,15 @@
 #include "gltf_loader.h"
 
+#include "../asset_manager.h"
+#include "../assets/prefab.h"
 #include "../generic/raii.h"
 #include "../time_keeper.h"
 #include "../utils/base64.h"
+#include "../utils/random.h"
 #include "../vfs.h"
 
 namespace smlt {
 namespace loaders {
-
-const char* GLTFLoader::node_factory_key = "node-factory";
-
-static void approximate_light_intensity(Light* light, const Color& color,
-                                        float intensity, float range,
-                                        bool directional) {
-    if(directional) {
-        /*
-         * Blender uses W/m2 for sun strength, with 1000 being direct sunlight.
-         * GLTF uses lux which is W/m2 * 683
-         * However, anything over 5 W/m2 seems to be brighter than the max
-         * brightness of the material so we cap it out at 10.0f.
-         */
-
-        float max = 683 * 10.0f;
-        float m = std::min(intensity, max) / max;
-        auto c = color * m;
-        c.a = color.a;
-        light->set_diffuse(c);
-        light->set_ambient(c);
-        light->set_specular(c);
-    } else {
-        // FIXME: This is a very rough approximation
-        range = std::sqrt(intensity) / 8;
-        auto c = color;
-        light->set_diffuse(c);
-        light->set_ambient(c);
-        light->set_specular(c);
-        light->set_attenuation_from_range(range);
-    }
-}
 
 static smlt::Vec3 parse_pos(JSONIterator it) {
     return smlt::Vec3(it[0]->to_float().value_or(0.0f),
@@ -58,15 +30,21 @@ static smlt::Color parse_color3(JSONIterator it) {
 }
 
 static smlt::Color parse_color4(JSONIterator it) {
-    return smlt::Color(
-        it[0]->to_float().value_or(1.0f), it[1]->to_float().value_or(1.0f),
-        it[2]->to_float().value_or(1.0f), it[3]->to_float().value_or(1.0f));
+    float r = it[0]->to_float().value_or(1.0f);
+    float g = it[1]->to_float().value_or(1.0f);
+    float b = it[2]->to_float().value_or(1.0f);
+    float a = it[3]->to_float().value_or(1.0f);
+
+    return smlt::Color(r, g, b, a);
 }
 
 static smlt::Quaternion parse_quaternion(JSONIterator it) {
-    return smlt::Quaternion(
-        it[0]->to_float().value_or(0.0f), it[1]->to_float().value_or(0.0f),
-        it[2]->to_float().value_or(0.0f), it[3]->to_float().value_or(1.0f));
+    float x = it[0]->to_float().value_or(0.0f);
+    float y = it[1]->to_float().value_or(0.0f);
+    float z = it[2]->to_float().value_or(0.0f);
+    float w = it[3]->to_float().value_or(1.0f);
+
+    return smlt::Quaternion(x, y, z, w);
 }
 
 bool check_gltf_version(JSONIterator& js) {
@@ -76,144 +54,6 @@ bool check_gltf_version(JSONIterator& js) {
     }
 
     return js["asset"]["version"]->to_str().value_or("0.0") == "2.0";
-}
-
-StageNode* default_node_factory(StageNode* parent,
-                                const GLTFLoader::NodeFactoryInput& input) {
-    StageNode* ret = nullptr;
-    Light* light = nullptr;
-
-    /* If someone specifies the node type in the extras, we create the node by
-     * name*/
-    if(input.params.contains("s_node")) {
-        auto node_name = input.params.get<std::string>("s_node");
-        if(node_name) {
-            auto name = node_name.value();
-            ret =
-                parent->scene->create_node(name.c_str(), input.params, nullptr);
-
-            if(!ret) {
-                S_WARN("Unable to spawn node with name: {0}", name);
-            } else {
-                ret->set_parent(parent);
-            }
-        }
-    }
-
-    // If we don't have a node, fallback to the default behaviour
-    // of spawning actors + stages
-    if(!ret) {
-        if(input.mesh) {
-            S_VERBOSE("Spawning actor");
-            ret = parent->create_child<Actor>(input.mesh);
-        } else if(input.camera) {
-            Camera* cam = parent->create_child<Camera>();
-            if(input.camera->type == "perspective") {
-                smlt::Mat4 proj;
-                float a = input.camera->aspect;
-                float y = input.camera->yfov;
-                float n = input.camera->znear;
-                if(input.camera->zfar) {
-                    float f = input.camera->zfar.value();
-                    proj[0] = 1.0f / (a * std::tan(0.5f * y));
-                    proj[5] = 1.0f / std::tan(0.5f * y);
-                    proj[10] = (n + f) / (n - f);
-                    proj[11] = -1.0f;
-                    proj[14] = (2.0f * n * f) / (n - f);
-                    proj[15] = 0.0f;
-                } else {
-                    proj[0] = 1.0f / (a * std::tan(0.5f * y));
-                    proj[5] = 1.0f / std::tan(0.5f * y);
-                    proj[10] = -1;
-                    proj[11] = -1;
-                    proj[14] = -2.0f * n;
-                    proj[15] = 0.0f;
-                }
-
-                cam->set_projection_matrix(proj);
-            } else {
-                S_ERROR("FIXME: Orthocam");
-            }
-            ret = cam;
-        } else if(input.light) {
-            if(input.light->type == "directional") {
-                light = parent->create_child<DirectionalLight>();
-            } else {
-                light = parent->create_child<PointLight>();
-            }
-
-            approximate_light_intensity(
-                light, input.light->color, input.light->intensity,
-                input.light->range, input.light->type == "directional");
-            ret = light;
-
-        } else {
-            ret = parent->create_child<Stage>();
-        }
-    }
-
-    if(ret) {
-        ret->transform->set_translation(input.translation);
-        ret->transform->set_rotation(input.rotation);
-        ret->transform->set_scale_factor(input.scale);
-
-        if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-            light->set_direction(ret->transform->orientation().forward());
-        }
-
-        if(input.params.contains("s_mixins")) {
-            auto mixins_maybe = input.params.get<std::string>("s_mixins");
-            if(mixins_maybe) {
-                auto mixins = smlt::split(mixins_maybe.value(), ",");
-                for(std::size_t i = 0; i < mixins.size(); ++i) {
-                    auto mixin_name = strip(mixins[i]);
-                    Params mixin_params;
-                    std::string prefix = "s_mixin." + std::to_string(i) + ".";
-                    for(auto arg_name: input.params.arg_names()) {
-                        if(arg_name.str().find(prefix) == 0) {
-                            auto key = arg_name.str().substr(prefix.size());
-                            mixin_params.set(
-                                key.c_str(),
-                                input.params.raw(arg_name.c_str()).value());
-                        }
-                    }
-
-                    if(input.mesh) {
-                        mixin_params.set("mesh", input.mesh);
-                    }
-
-                    // FIXME: These inputs should NOT be the relative
-                    // positions, but should instead be absolute. If you
-                    // have a parent node this may not be correct.
-                    mixin_params.set("scale", input.scale);
-                    mixin_params.set("position", input.translation);
-                    mixin_params.set("orientation", input.rotation);
-
-                    auto new_mixin =
-                        ret->create_mixin(mixin_name, mixin_params);
-                    if(!new_mixin) {
-                        S_ERROR("Failed to create mixin with name {0}",
-                                mixin_name);
-                    }
-                }
-            }
-        }
-    }
-
-    return ret;
-}
-
-GLTFLoader::NodeFactory determine_node_factory(const LoaderOptions& options) {
-    if(options.count(GLTFLoader::node_factory_key)) {
-        try {
-            return any_cast<GLTFLoader::NodeFactory>(
-                options.at(GLTFLoader::node_factory_key));
-        } catch(bad_any_cast& e) {
-            S_WARN("Failed to cast node factory, using default");
-        }
-    }
-
-    return default_node_factory;
 }
 
 optional<JSONIterator> find_scene(JSONIterator& js) {
@@ -262,11 +102,82 @@ std::size_t component_count(const std::string& type) {
 }
 
 struct BufferInfo {
-    uint8_t* data = nullptr;
-    std::size_t size = 0;
+    std::vector<uint8_t> data;
     std::size_t stride = 0;
     ComponentType c_type = INVALID;
     std::size_t c_stride = 0;
+    std::size_t c_count = 0;
+
+    bool to_typed_array(std::vector<Vec3>& vecs_out) {
+        if(c_type != FLOAT || c_count != 3) {
+            S_ERROR("Only float conversion implemented");
+            return false;
+        }
+
+        vecs_out.clear();
+
+        uint8_t* it = &data[0];
+        auto count = data.size() / stride;
+        for(std::size_t i = 0; i < count; ++i) {
+            float x = *reinterpret_cast<float*>(it);
+            it += c_stride;
+            float y = *reinterpret_cast<float*>(it);
+            it += c_stride;
+            float z = *reinterpret_cast<float*>(it);
+            it += c_stride;
+
+            vecs_out.push_back(Vec3(x, y, z));
+        }
+
+        return true;
+    }
+
+    bool to_typed_array(std::vector<Quaternion>& quats_out) {
+        if(c_type != FLOAT || c_count != 4) {
+            S_ERROR("Only float conversion implemented");
+            return false;
+        }
+
+        quats_out.clear();
+
+        uint8_t* it = &data[0];
+        auto count = data.size() / stride;
+        for(std::size_t i = 0; i < count; ++i) {
+            float x = *reinterpret_cast<float*>(it);
+            it += c_stride;
+            float y = *reinterpret_cast<float*>(it);
+            it += c_stride;
+            float z = *reinterpret_cast<float*>(it);
+            it += c_stride;
+            float w = *reinterpret_cast<float*>(it);
+            it += c_stride;
+
+            quats_out.push_back(Quaternion(x, y, z, w));
+        }
+
+        return true;
+    }
+
+    bool to_typed_array(std::vector<float>& scalars_out) {
+        if(c_type != FLOAT || c_count != 1) {
+            S_ERROR("Only float conversion implemented");
+            return false;
+        }
+
+        scalars_out.clear();
+
+        uint8_t* it = &data[0];
+        auto count = data.size() / stride;
+        for(std::size_t i = 0; i < count; ++i) {
+            for(std::size_t j = 0; j < c_count; ++j) {
+                float* thing = reinterpret_cast<float*>(it);
+                scalars_out.push_back(*thing);
+                it += c_stride;
+            }
+        }
+
+        return true;
+    }
 };
 
 struct TypeKey {
@@ -294,8 +205,7 @@ struct Accessor {
 };
 
 static auto process_buffer(JSONIterator& js, const Accessor& accessor,
-                           std::vector<std::vector<uint8_t>>& buffers)
-    -> BufferInfo {
+                           std::istream* bin) -> BufferInfo {
 
     auto accessor_component_type = accessor.component_type;
     auto type = accessor.type;
@@ -308,51 +218,53 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
 
     auto buffer = js["buffers"][buffer_id];
     auto uri = buffer["uri"]->to_str().value_or("");
-    if(uri.empty()) {
+    if(uri.empty() && !bin) {
         S_ERROR("Buffer has no uri");
         return BufferInfo();
     }
 
-    if((int)buffers.size() <= buffer_id) {
+    BufferInfo result;
 
-        const char* b64_marker = "data:application/octet-stream;base64,";
-        if(uri.find(b64_marker) == 0) {
-            auto data = uri.substr(strlen(b64_marker));
-            auto decoded = smlt::base64_decode(data);
-            if(!decoded) {
-                S_ERROR("Failed to decode base64 data");
-                return BufferInfo();
-            }
+    const char* b64_marker = "data:application/octet-stream;base64,";
 
-            buffers.push_back(
-                std::vector<uint8_t>(decoded->begin(), decoded->end()));
-        } else {
-            auto istream = smlt::get_app()->vfs->read_file(uri);
-            auto data =
-                std::vector<uint8_t>(std::istreambuf_iterator<char>(*istream),
-                                     std::istreambuf_iterator<char>());
-            buffers.push_back(data);
-        }
-    }
-
-    uint8_t* buffer_data = &buffers[buffer_id][0];
     auto byte_offset = buffer_view["byteOffset"]->to_int().value_or(0);
     auto byte_length = buffer_view["byteLength"]->to_int().value_or(0);
     auto byte_stride = buffer_view["byteStride"]->to_int().value_or(0);
 
+    if(uri.empty()) {
+        // We need to seek and read from bin
+        uint32_t g = bin->tellg();
+        bin->seekg(byte_offset, std::ios::cur);
+        result.data.resize(byte_length);
+        bin->read((char*)&result.data[0], byte_length);
+        byte_offset = 0;
+        bin->seekg(g, std::ios::beg);
+    } else if(uri.find(b64_marker) == 0) {
+        auto data = uri.substr(strlen(b64_marker));
+        auto decoded = smlt::base64_decode(data);
+        if(!decoded) {
+            S_ERROR("Failed to decode base64 data");
+            return BufferInfo();
+        }
+        result.data.insert(result.data.begin(), decoded->begin() + byte_offset,
+                           decoded->begin() + byte_length);
+    } else {
+        auto istream = smlt::get_app()->vfs->open_file(uri);
+        istream->seekg(byte_offset);
+        result.data.resize(byte_length);
+        istream->read((char*)&result.data[0], byte_length);
+    }
     auto c_stride = component_size(accessor_component_type);
     auto c_count = component_count(type);
     if(byte_stride == 0) {
         byte_stride = c_stride * c_count;
     }
+    result.stride = byte_stride;
+    result.c_type = accessor_component_type;
+    result.c_stride = c_stride;
+    result.c_count = c_count;
 
-    return BufferInfo{
-        buffer_data + byte_offset,
-        (std::size_t)byte_length,
-        (std::size_t)byte_stride,
-        accessor_component_type,
-        c_stride,
-    };
+    return result;
 }
 
 void process_positions(const BufferInfo& buffer_info, JSONIterator&,
@@ -363,35 +275,34 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
 #ifndef NDEBUG
     auto t0 = smlt::get_app()->time_keeper->now_in_us();
 #endif
-
     if(spec.position_attribute == VERTEX_ATTRIBUTE_2F) {
-        uint8_t* src = buffer_info.data;
-        for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+        const uint8_t* src = &buffer_info.data[0];
+        for(std::size_t i = 0; i < buffer_info.data.size();
+            i += buffer_info.stride) {
             auto x = *(float*)src;
             auto y = *(float*)(src + 4);
             final_mesh->vertex_data->position(x, y);
-            src += buffer_info.stride;
             final_mesh->vertex_data->move_next();
         }
     } else if(spec.position_attribute == VERTEX_ATTRIBUTE_3F) {
-        uint8_t* src = buffer_info.data;
-        for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+        const uint8_t* src = &buffer_info.data[0];
+        for(std::size_t i = 0; i < buffer_info.data.size();
+            i += buffer_info.stride) {
             auto x = *(float*)src;
             auto y = *(float*)(src + 4);
             auto z = *(float*)(src + 8);
             final_mesh->vertex_data->position(x, y, z);
-            src += buffer_info.stride;
             final_mesh->vertex_data->move_next();
         }
     } else if(spec.position_attribute == VERTEX_ATTRIBUTE_4F) {
-        uint8_t* src = buffer_info.data;
-        for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+        const uint8_t* src = &buffer_info.data[0];
+        for(std::size_t i = 0; i < buffer_info.data.size();
+            i += buffer_info.stride) {
             auto x = *(float*)src;
             auto y = *(float*)(src + 4);
             auto z = *(float*)(src + 8);
             auto w = *(float*)(src + 12);
             final_mesh->vertex_data->position(x, y, z, w);
-            src += buffer_info.stride;
             final_mesh->vertex_data->move_next();
         }
     } else {
@@ -418,32 +329,33 @@ void process_colors(const BufferInfo& buffer_info, JSONIterator& js,
 
     auto start = final_mesh->vertex_data->cursor_position();
 
-    for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+    for(std::size_t i = 0; i < buffer_info.data.size();
+        i += buffer_info.stride) {
+        auto d = &buffer_info.data[0];
         if(attr == VERTEX_ATTRIBUTE_3F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
-            final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, 1));
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
+            final_mesh->vertex_data->color(smlt::Color(x, y, z, 1));
         } else if(attr == VERTEX_ATTRIBUTE_4F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
-            auto w = *(float*)(buffer_info.data + i + 12);
-            final_mesh->vertex_data->diffuse(smlt::Color(x, y, z, w));
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
+            auto w = *(float*)(d + i + 12);
+            final_mesh->vertex_data->color(smlt::Color(x, y, z, w));
         } else if(attr == VERTEX_ATTRIBUTE_4UB) {
-            auto r = *(uint8_t*)(buffer_info.data + i);
-            auto g = *(uint8_t*)(buffer_info.data + i + 1);
-            auto b = *(uint8_t*)(buffer_info.data + i + 2);
-            auto a = *(uint8_t*)(buffer_info.data + i + 3);
-            final_mesh->vertex_data->diffuse(
-                smlt::Color::from_bytes(r, g, b, a));
+            auto r = *(uint8_t*)(d + i);
+            auto g = *(uint8_t*)(d + i + 1);
+            auto b = *(uint8_t*)(d + i + 2);
+            auto a = *(uint8_t*)(d + i + 3);
+            final_mesh->vertex_data->color(smlt::Color::from_bytes(r, g, b, a));
         } else if(attr == VERTEX_ATTRIBUTE_4US) {
-            auto r = *(uint16_t*)(buffer_info.data + i);
-            auto g = *(uint16_t*)(buffer_info.data + i + 2);
-            auto b = *(uint16_t*)(buffer_info.data + i + 4);
-            auto a = *(uint16_t*)(buffer_info.data + i + 6);
+            auto r = *(uint16_t*)(d + i);
+            auto g = *(uint16_t*)(d + i + 2);
+            auto b = *(uint16_t*)(d + i + 4);
+            auto a = *(uint16_t*)(d + i + 6);
 
-            final_mesh->vertex_data->diffuse(
+            final_mesh->vertex_data->color(
                 smlt::Color::from_bytes(r >> 8, g >> 8, b >> 8, a >> 8));
         } else {
             S_ERROR("Unsupported color attribute type");
@@ -472,16 +384,18 @@ void process_normals(const BufferInfo& buffer_info, JSONIterator& js,
     auto t0 = smlt::get_app()->time_keeper->now_in_us();
 #endif
 
-    for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+    for(std::size_t i = 0; i < buffer_info.data.size();
+        i += buffer_info.stride) {
+        const auto d = &buffer_info.data[0];
         if(spec.normal_attribute == VERTEX_ATTRIBUTE_3F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
             final_mesh->vertex_data->normal(x, y, z);
         } else if(spec.normal_attribute == VERTEX_ATTRIBUTE_4F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
             final_mesh->vertex_data->normal(x, y, z);
         } else {
             S_ERROR("Unsupported normal attribute type");
@@ -509,21 +423,24 @@ void process_texcoord0s(const BufferInfo& buffer_info, JSONIterator& js,
     auto t0 = smlt::get_app()->time_keeper->now_in_us();
 #endif
 
-    for(std::size_t i = 0; i < buffer_info.size; i += buffer_info.stride) {
+    for(std::size_t i = 0; i < buffer_info.data.size();
+        i += buffer_info.stride) {
+        const auto& d = &buffer_info.data[0];
+
         if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_2F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
             final_mesh->vertex_data->tex_coord0(x, -y);
         } else if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_3F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
             final_mesh->vertex_data->tex_coord0(x, -y, z);
         } else if(spec.texcoord0_attribute == VERTEX_ATTRIBUTE_4F) {
-            auto x = *(float*)(buffer_info.data + i);
-            auto y = *(float*)(buffer_info.data + i + 4);
-            auto z = *(float*)(buffer_info.data + i + 8);
-            auto w = *(float*)(buffer_info.data + i + 12);
+            auto x = *(float*)(d + i);
+            auto y = *(float*)(d + i + 4);
+            auto z = *(float*)(d + i + 8);
+            auto w = *(float*)(d + i + 12);
             final_mesh->vertex_data->tex_coord0(x, -y, z, w);
         } else {
             S_ERROR("Unsupported texcoord0 attribute type");
@@ -560,13 +477,11 @@ TextureFilter calculate_filter(int magFilter, int minFilter) {
     }
 }
 
-static smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
+static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
                                      JSONIterator& texture, int texture_id,
                                      const std::string& ext = "") {
 
     _S_UNUSED(texture_id);
-
-    auto& scene = node->scene;
 
     int sampler_id = texture["sampler"]->to_int().value_or(-1);
     int source_id = texture["source"]->to_int().value_or(-1);
@@ -585,7 +500,7 @@ static smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
         if(!ext.empty()) {
             uri = uri.replace_ext(ext);
         }
-        auto tex = scene->assets->load_texture(uri);
+        auto tex = assets->load_texture(uri);
 
         auto wrapS = sampler["wrapS"]->to_int().value_or(10497);
         auto wrapT = sampler["wrapT"]->to_int().value_or(10497);
@@ -618,6 +533,7 @@ static smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
 
         tex->set_texture_filter(calculate_filter(magFilter, minFilter));
         tex->set_texture_wrap(u, v, TEXTURE_WRAP_REPEAT);
+        tex->flush();
         return tex;
     } else {
         S_ERROR("Only uri textures supported atm");
@@ -626,48 +542,29 @@ static smlt::TexturePtr load_texture(StageNode* node, JSONIterator& js,
     return smlt::TexturePtr();
 }
 
-static void approximate_pbr_material(MaterialPtr& mat, float metallic,
-                                     float roughness, Color emissive,
-                                     Color base_color) {
-    auto ambient = base_color * 0.1f;
-    ambient.a = base_color.a;
-
-    auto diffuse = base_color;
-    diffuse.a = base_color.a;
-
-    auto specular = base_color * metallic;
-    specular.a = base_color.a;
-
-    mat->set_shininess(128.0f * (1.0f - roughness));
-    mat->set_ambient(ambient);
-    mat->set_diffuse(diffuse);
-    mat->set_specular(specular);
-    mat->set_emission(emissive);
-}
-
-static smlt::MaterialPtr create_default_material(StageNode* node) {
-    auto& scene = node->scene;
-    auto base_color = smlt::Color::white();
-    auto mat = scene->assets->clone_default_material();
+static smlt::MaterialPtr create_default_material(AssetManager* assets) {
+    auto mat = assets->clone_default_material();
     mat->set_name("Default");
     mat->set_lighting_enabled(true);
     mat->set_textures_enabled(0);
-    approximate_pbr_material(mat, 0.0f, 0.4f, Color(0, 0, 0, 1), base_color);
-    mat->set_cull_mode(smlt::CULL_MODE_BACK_FACE);
+    mat->set_cull_mode(smlt::CULL_MODE_NONE);
     return mat;
 }
 
-smlt::MaterialPtr load_material(StageNode* node, JSONIterator& js,
+smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
                                 JSONIterator& material, int material_id,
                                 const std::vector<smlt::TexturePtr>& textures) {
 
     _S_UNUSED(material_id);
     _S_UNUSED(js);
 
-    auto& scene = node->scene;
-
     auto base_texture_id =
         material["pbrMetallicRoughness"]["baseColorTexture"]["index"]
+            ->to_int()
+            .value_or(-1);
+
+    auto metallic_roughness_texture_id =
+        material["pbrMetallicRoughness"]["metallicRoughnessTexture"]["index"]
             ->to_int()
             .value_or(-1);
 
@@ -691,20 +588,26 @@ smlt::MaterialPtr load_material(StageNode* node, JSONIterator& js,
         material["occlusionTexture"]["index"]->to_int().value_or(-1);
 
     smlt::EnabledTextureMask enabled = 0;
-    smlt::MaterialPtr ret = scene->assets->clone_default_material();
+    smlt::MaterialPtr ret = assets->clone_default_material();
     if(base_texture_id >= 0) {
-        ret->set_diffuse_map(textures[base_texture_id]);
-        enabled |= smlt::DIFFUSE_MAP_ENABLED;
+        ret->set_base_color_map(textures[base_texture_id]);
+        enabled |= BASE_COLOR_MAP_ENABLED;
+    }
+
+    if(metallic_roughness_texture_id >= 0) {
+        ret->set_metallic_roughness_map(
+            textures[metallic_roughness_texture_id]);
+        enabled |= METALLIC_ROUGHNESS_MAP_ENABLED;
     }
 
     if(normal_texture_id >= 0) {
         ret->set_normal_map(textures[normal_texture_id]);
-        enabled |= smlt::NORMAL_MAP_ENABLED;
+        enabled |= NORMAL_MAP_ENABLED;
     }
 
     if(occ_texture_id >= 0) {
         ret->set_light_map(textures[occ_texture_id]);
-        enabled |= smlt::LIGHT_MAP_ENABLED;
+        enabled |= LIGHT_MAP_ENABLED;
     }
 
     auto base_color = material["pbrMetallicRoughness"]["baseColorFactor"];
@@ -731,17 +634,27 @@ smlt::MaterialPtr load_material(StageNode* node, JSONIterator& js,
     ret->pass(0)->set_blend_func((alpha_mode == "OPAQUE") ? smlt::BLEND_NONE
                                                           : smlt::BLEND_ALPHA);
 
-    approximate_pbr_material(ret, metallic, roughness, emissive, color);
+    ret->set_metallic(metallic);
+    ret->set_roughness(roughness);
+    ret->set_base_color(color);
+
+    // Look for the unlit extension, if it's there then disable lighting
+    if(material->has_key("extensions")) {
+        auto ext = material["extensions"];
+        if(ext->has_key("KHR_materials_unlit")) {
+            ret->set_lighting_enabled(false);
+        }
+    }
+
     return ret;
 }
 
-smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
-                        int mesh_id,
-                        const std::vector<smlt::MaterialPtr>& materials,
-                        std::vector<std::vector<uint8_t>>& buffers) {
+static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
+                               JSONIterator& mesh, int mesh_id,
+                               const std::vector<Accessor>& accessors,
+                               const std::vector<smlt::MaterialPtr>& materials,
+                               std::istream* bin_chunk) {
     _S_UNUSED(mesh_id);
-
-    auto& scene = node->scene;
 
     struct MeshPrimitive {
         MeshPrimitive(const smlt::JSONIterator& attrs) :
@@ -757,19 +670,7 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
     };
 
     std::vector<MeshPrimitive> primitives;
-    std::vector<Accessor> accessors;
 
-    /* This is the most complicated part of the loader. A GLTF file has a
-       heirarchy of: mesh -> accessor -> bufferView -> buffer */
-    for(auto& acc_node: js["accessors"]) {
-        auto acc = acc_node.to_iterator();
-        Accessor accessor;
-        accessor.type = acc["type"]->to_str().value_or("SCALAR");
-        accessor.component_type =
-            (ComponentType)acc["componentType"]->to_int().value_or(5121);
-        accessor.buffer_view_id = acc["bufferView"]->to_int().value_or(-1);
-        accessors.push_back(accessor);
-    }
 
     const std::map<TypeKey, VertexAttribute> lookup = {
         {TypeKey(FLOAT,          "VEC2"), VERTEX_ATTRIBUTE_2F },
@@ -832,7 +733,7 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
             VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, clean_diffuse(diff));
 
         if(!final_mesh) {
-            final_mesh = scene->assets->create_mesh(spec);
+            final_mesh = assets->create_mesh(spec);
         } else if(final_mesh->vertex_data->vertex_specification() != spec) {
             S_ERROR("GLTF mesh contains multiple vertex types which is "
                     "currently unsupported");
@@ -862,44 +763,47 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
 
         if(primitive.position_id >= 0) {
             auto position = accessors[primitive.position_id];
-            auto buffer_info = process_buffer(js, position, buffers);
+            auto buffer_info = process_buffer(js, position, bin_chunk);
             process_positions(buffer_info, js, final_mesh, spec);
         }
 
         if(primitive.normal_id >= 0) {
             auto normal = accessors[primitive.normal_id];
-            auto buffer_info = process_buffer(js, normal, buffers);
+            auto buffer_info = process_buffer(js, normal, bin_chunk);
             process_normals(buffer_info, js, final_mesh, spec);
         }
 
         if(primitive.color_id >= 0) {
             auto color = accessors[primitive.color_id];
-            auto buffer_info = process_buffer(js, color, buffers);
+            auto buffer_info = process_buffer(js, color, bin_chunk);
             process_colors(buffer_info, js, final_mesh, diff);
         }
 
         if(primitive.texcoord_id >= 0) {
             auto texcoord0 = accessors[primitive.texcoord_id];
-            auto buffer_info = process_buffer(js, texcoord0, buffers);
+            auto buffer_info = process_buffer(js, texcoord0, bin_chunk);
             process_texcoord0s(buffer_info, js, final_mesh, spec);
         }
 
         auto indices_id = primitive.indexes_id;
         if(indices_id >= 0) {
             auto indices = accessors[indices_id];
-            auto buffer_info = process_buffer(js, indices, buffers);
+            auto buffer_info = process_buffer(js, indices, bin_chunk);
             S_VERBOSE("Populating indices");
-            for(std::size_t i = 0; i < buffer_info.size;
-                i += buffer_info.stride) {
+
+            const auto d = &buffer_info.data[0];
+            for(std::size_t i = 0; i < buffer_info.data.size();
+                i += buffer_info.c_stride) {
+
                 switch(buffer_info.c_type) {
                     case BYTE:
                     case UNSIGNED_BYTE: {
-                        auto u8idx = *(uint8_t*)(buffer_info.data + i);
+                        auto u8idx = *(uint8_t*)(d + i);
                         sm->index_data->index(u8idx + offset);
                     } break;
                     case SHORT:
                     case UNSIGNED_SHORT: {
-                        auto u16idx = *(uint16_t*)(buffer_info.data + i);
+                        auto u16idx = *(uint16_t*)(d + i);
                         sm->index_data->index(u16idx + offset);
                     } break;
                     default:
@@ -917,37 +821,62 @@ smlt::MeshPtr load_mesh(StageNode* node, JSONIterator& js, JSONIterator& mesh,
     return final_mesh;
 }
 
-StageNode* spawn_node_recursively(StageNode* parent, int node_id,
-                                  JSONIterator& js,
-                                  GLTFLoader::NodeFactory factory,
-                                  const std::vector<smlt::MeshPtr>& meshes) {
+static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
+                                   JSONIterator& js,
+                                   const std::vector<smlt::MeshPtr>& meshes) {
     auto nodes = js["nodes"];
     auto node = nodes[node_id];
-    smlt::MeshPtr mesh;
-    if(node->has_key("mesh") && !meshes.empty()) {
-        mesh = meshes[node["mesh"]->to_int().value_or(0)];
-    }
 
-    smlt::optional<GLTFLoader::CameraInfo> cam;
-    if(node->has_key("camera")) {
+    PrefabNode prefab_node;
+    prefab_node.id = node_id;
+
+    auto light_id =
+        node["extensions"]["KHR_lights_punctual"]["light"]->to_int().value_or(
+            -1);
+
+    if(node->has_key("mesh") && !meshes.empty()) {
+        prefab_node.node_type_name = "actor";
+        prefab_node.params.set("mesh",
+                               meshes[node["mesh"]->to_int().value_or(0)]);
+    } else if(node->has_key("camera")) {
         auto camera_id = node["camera"]->to_int().value_or(-1);
         if(camera_id >= 0) {
-            GLTFLoader::CameraInfo c;
+            prefab_node.node_type_name = "camera";
+
             auto cam_node = js["cameras"][camera_id];
             auto persp_node = cam_node["perspective"];
-            c.type = cam_node["type"]->to_str().value_or("perspective");
-            if(c.type == "perspective") {
-                c.aspect =
-                    persp_node["aspectRatio"]->to_float().value_or(1.777f);
-                c.yfov = persp_node["yfov"]->to_float().value_or(60.0f);
-                c.znear = persp_node["znear"]->to_float().value_or(1.0f);
+            auto type = cam_node["type"]->to_str().value_or("perspective");
+            if(type == "perspective") {
+                prefab_node.params.set(
+                    "aspect",
+                    persp_node["aspectRatio"]->to_float().value_or(1.777f));
+                prefab_node.params.set(
+                    "yfov", persp_node["yfov"]->to_float().value_or(60.0f));
+                prefab_node.params.set(
+                    "znear", persp_node["znear"]->to_float().value_or(1.0f));
+
                 if(persp_node["zfar"].is_valid()) {
-                    c.zfar = persp_node["zfar"]->to_float().value_or(1000.0f);
+                    prefab_node.params.set(
+                        "zfar",
+                        persp_node["zfar"]->to_float().value_or(1000.0f));
                 }
             }
-
-            cam = c;
         }
+    } else if(light_id >= 0) {
+        auto light =
+            js["extensions"]["KHR_lights_punctual"]["lights"][light_id];
+        if(light.is_valid()) {
+            prefab_node.node_type_name = "light";
+            prefab_node.params.set("color", parse_color3(light["color"]));
+            prefab_node.params.set(
+                "intensity", light["intensity"]->to_float().value_or(1.0f));
+            prefab_node.params.set("range",
+                                   light["range"]->to_float().value_or(100.0f));
+            prefab_node.params.set(
+                "type", light["type"]->to_str().value_or("directional"));
+        }
+    } else {
+        prefab_node.node_type_name = "stage";
     }
 
     GLTFLoader::NodeFactoryInput input;
@@ -956,18 +885,19 @@ StageNode* spawn_node_recursively(StageNode* parent, int node_id,
         for(auto& k: node["extras"]->keys()) {
             auto it = node["extras"];
             if(it[k]->is_str()) {
-                input.params.set(k.c_str(), it[k]->to_str().value_or(""));
+                prefab_node.params.set(k.c_str(), it[k]->to_str().value_or(""));
             } else if(it[k]->is_number()) {
                 if(it[k]->is_float()) {
-                    input.params.set(k.c_str(),
-                                     it[k]->to_float().value_or(0.0f));
+                    prefab_node.params.set(k.c_str(),
+                                           it[k]->to_float().value_or(0.0f));
                 } else {
-                    input.params.set(k.c_str(),
-                                     (int)it[k]->to_int().value_or(0));
+                    prefab_node.params.set(k.c_str(),
+                                           (int)it[k]->to_int().value_or(0));
                 }
 
             } else if(it[k]->is_bool()) {
-                input.params.set(k.c_str(), it[k]->to_bool().value_or(false));
+                prefab_node.params.set(k.c_str(),
+                                       it[k]->to_bool().value_or(false));
             } else if(it[k]->is_array()) {
                 std::vector<float> farr;
                 std::vector<int> iarr;
@@ -986,86 +916,124 @@ StageNode* spawn_node_recursively(StageNode* parent, int node_id,
                 }
 
                 if(farr.size()) {
-                    input.params.set(k.c_str(), farr);
+                    prefab_node.params.set(k.c_str(), farr);
                 } else if(iarr.size()) {
-                    input.params.set(k.c_str(), iarr);
+                    prefab_node.params.set(k.c_str(), iarr);
                 } else if(barr.size()) {
-                    input.params.set(k.c_str(), barr);
+                    prefab_node.params.set(k.c_str(), barr);
                 }
             }
         }
     }
 
-    auto light_id =
-        node["extensions"]["KHR_lights_punctual"]["light"]->to_int().value_or(
-            -1);
+    auto extract_transform =
+        [](JSONIterator& node) -> std::tuple<Vec3, Quaternion, Vec3> {
+        auto trn = parse_pos(node["translation"]);
+        auto rot = (node->has_key("rotation"))
+                       ? parse_quaternion(node["rotation"])
+                       : smlt::Quaternion();
+        auto sf = parse_scale(node["scale"]);
 
-    if(light_id >= 0) {
-        auto light =
-            js["extensions"]["KHR_lights_punctual"]["lights"][light_id];
-        if(light.is_valid()) {
-            GLTFLoader::LightInfo info;
-            info.color = parse_color3(light["color"]);
-            info.intensity = light["intensity"]->to_float().value_or(1.0f);
-            info.range = light["range"]->to_float().value_or(100.0f);
-            info.type = light["type"]->to_str().value_or("directional");
-            input.light = info;
+        if(node["matrix"]) {
+            auto mat = Mat4();
+            for(int i = 0; i < 16; ++i) {
+                mat[i] = node["matrix"][i]->to_float().value_or(0.0f);
+            }
+
+            mat.extract_rotation_and_translation(rot, trn);
+            sf.x = mat[0];
+            sf.y = mat[5];
+            sf.z = mat[10];
         }
-    }
 
-    input.name = node["name"]->to_str().value_or("");
-    input.mesh = mesh;
+        return std::make_tuple(trn, rot, sf);
+    };
 
-    if(mesh) {
-        // Auto populate the mesh in the params
-        input.params.set("mesh", mesh);
-    }
-
-    input.camera = cam;
-    input.scale = (cam) ? smlt::Vec3(1) : parse_scale(node["scale"]);
-    input.translation = parse_pos(node["translation"]);
-    input.rotation = parse_quaternion(node["rotation"]);
+    prefab_node.name = node["name"]->to_str().value_or("");
     // FIXME: Additional properties!
 
-    // FIXME: These should be absolute values, not relative!
-    input.params.set("scale", input.scale);
-    input.params.set("position", input.translation);
-    input.params.set("orientation", input.rotation);
+    auto trn = extract_transform(node);
+    prefab_node.params.set("translation", std::get<0>(trn));
+    prefab_node.params.set("rotation", std::get<1>(trn));
+    prefab_node.params.set("scale_factor", std::get<2>(trn));
 
-    StageNode* new_node = factory(parent, input);
-    if(new_node) {
-        new_node->set_name(input.name.str());
+    prefab.push_node(prefab_node, parent);
 
-        if(node->has_key("children")) {
-            for(auto& child: node["children"]) {
-                spawn_node_recursively(new_node, child.to_int().value_or(0), js,
-                                       factory, meshes);
-            }
+    if(node->has_key("children")) {
+        for(auto& child: node["children"]) {
+            spawn_node_recursively(prefab, prefab_node.id,
+                                   child.to_int().value_or(0), js, meshes);
         }
     }
 
-    return new_node;
+    return true;
 }
 
 void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
-    auto scene = loadable_to<StageNode>(resource);
+    auto prefab = loadable_to<Prefab>(resource);
+    std::shared_ptr<std::istream> bin_chunk;
+
+    uint32_t magic;
+    data_->read((char*)&magic, sizeof(magic));
+    if(magic == 0x46546C67) {
+        // This is a glb file
+        uint32_t file_length;
+        uint32_t version;
+
+        data_->read((char*)&version, sizeof(version));
+
+        if(version != 2) {
+            S_ERROR("Unsupported glTF version: {0}", version);
+            return;
+        }
+
+        data_->read((char*)&file_length, sizeof(file_length));
+
+        uint32_t chunk_length;
+        uint32_t chunk_type;
+        data_->read((char*)&chunk_length, sizeof(chunk_length));
+        data_->read((char*)&chunk_type, sizeof(chunk_type));
+        if(chunk_type != 0x4E4F534A) {
+            S_ERROR("First chunk is not JSON");
+            return;
+        }
+
+        uint32_t here = data_->tellg();
+
+        uint32_t json_end = here + chunk_length;
+
+        if(json_end < file_length) {
+            // Now let's open a second stream and seek to the bin chunk
+            bin_chunk = std::make_shared<std::ifstream>(filename_.str(),
+                                                        std::ios::binary);
+
+            uint32_t bin_length;
+            uint32_t bin_type;
+            bin_chunk->seekg(json_end);
+            bin_chunk->read((char*)&bin_length, sizeof(uint32_t));
+            bin_chunk->read((char*)&bin_type, sizeof(uint32_t));
+
+            if(bin_type != 0x004E4942) {
+                S_ERROR("Unrecognised chunk: {0}", bin_type);
+                return;
+            }
+        }
+    } else {
+        // Rewind, bo selecta
+        data_->seekg(0, std::ios::beg);
+    }
+
     auto js = json_read(this->data_);
 
     if(!check_gltf_version(js)) {
         return;
     }
 
-    auto node_factory = determine_node_factory(options);
     auto maybe_scene_it = find_scene(js);
     if(!maybe_scene_it) {
         S_ERROR("No scene in gltf file");
         return;
     }
-
-    std::vector<TexturePtr> textures;
-    std::vector<MaterialPtr> materials;
-    std::vector<MeshPtr> meshes;
-    std::vector<std::vector<uint8_t>> buffers;
 
     /* We add the containing folder to the front of the search path
        and ensure we always remove it when we're done (if it wasn't there
@@ -1084,31 +1052,54 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         ext = any_cast<std::string>(options.at("override_texture_extension"));
     }
 
+    std::vector<TexturePtr> textures;
+    std::vector<MaterialPtr> materials;
+    std::vector<MeshPtr> meshes;
+    std::vector<Accessor> accessors;
+
+    /* This is the most complicated part of the loader. A GLTF file has a
+       heirarchy of: mesh/animation -> accessor -> bufferView -> buffer */
+    for(auto& acc_node: js["accessors"]) {
+        auto acc = acc_node.to_iterator();
+        Accessor accessor;
+        accessor.type = acc["type"]->to_str().value_or("SCALAR");
+        accessor.component_type =
+            (ComponentType)acc["componentType"]->to_int().value_or(5121);
+        accessor.buffer_view_id = acc["bufferView"]->to_int().value_or(-1);
+        accessors.push_back(accessor);
+    }
+
     int j = 0;
     auto textures_it = js["textures"];
     for(auto& node: textures_it) {
         auto tex_it = node.to_iterator();
-        auto tex = load_texture(scene, js, tex_it, j++, ext);
+        auto tex = load_texture(&prefab->asset_manager(), js, tex_it, j++, ext);
         textures.push_back(tex);
+        prefab->push_texture(tex);
     }
 
     auto materials_it = js["materials"];
     j = 0;
     for(auto& node: materials_it) {
         auto mat_it = node.to_iterator();
-        auto mat = load_material(scene, js, mat_it, j++, textures);
+        auto mat =
+            load_material(&prefab->asset_manager(), js, mat_it, j++, textures);
+        prefab->push_material(mat);
         materials.push_back(mat);
     }
 
     /* Add the default material at the end */
-    auto default_material = create_default_material(scene);
+    auto default_material = create_default_material(&prefab->asset_manager());
+    prefab->push_material(default_material);
     materials.push_back(default_material);
 
     auto meshes_it = js["meshes"];
     j = 0;
     for(auto& node: meshes_it) {
         auto mesh_it = node.to_iterator();
-        auto mesh = load_mesh(scene, js, mesh_it, j++, materials, buffers);
+        auto mesh = load_mesh(&prefab->asset_manager(), js, mesh_it, j++,
+                              accessors, materials, bin_chunk.get());
+        prefab->push_mesh(mesh);
         meshes.push_back(mesh);
     }
 
@@ -1123,7 +1114,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
             if(it->has_key("name")) {
                 auto name_maybe = it["name"]->to_str();
                 if(name_maybe && name_maybe.value() == root_name) {
-                    spawn_node_recursively(scene, i, js, node_factory, meshes);
+                    spawn_node_recursively(*prefab, -1, i, js, meshes);
                     return;
                 }
             }
@@ -1144,7 +1135,98 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         auto node_id = maybe_id.value();
-        spawn_node_recursively(scene, node_id, js, node_factory, meshes);
+        spawn_node_recursively(*prefab, -1, node_id, js, meshes);
+    }
+
+    auto animations_it = js["animations"];
+    for(auto& node: animations_it) {
+        auto node_it = node.to_iterator();
+
+        auto name = node_it["name"]->to_str().value();
+        for(auto& ch_node: node_it["channels"]) {
+            auto ch_node_it = ch_node.to_iterator();
+            auto target = ch_node_it["target"];
+            auto target_node = target["node"]->to_int();
+            if(!target_node) {
+                continue;
+            }
+            auto target_node_id = target_node.value();
+
+            auto path_str = target["path"]->to_str().value_or("translation");
+            auto path = (path_str == "translation") ? ANIMATION_PATH_TRANSLATION
+                        : (path_str == "rotation")  ? ANIMATION_PATH_ROTATION
+                        : (path_str == "scale")     ? ANIMATION_PATH_SCALE
+                                                    : ANIMATION_PATH_WEIGHTS;
+
+            auto prefab_node = prefab->node(target_node_id);
+
+            if(!prefab_node) {
+                continue;
+            }
+
+            auto sampler_id = ch_node_it["sampler"]->to_int();
+            if(!sampler_id) {
+                continue;
+            }
+
+            auto sampler = node_it["samplers"][sampler_id.value()];
+            auto interpolation_name =
+                sampler["interpolation"]->to_str().value_or("LINEAR");
+            auto input_id = sampler["input"]->to_int();
+            auto output_id = sampler["output"]->to_int();
+            if(!input_id || !output_id) {
+                continue;
+            }
+
+            auto interpolation = (interpolation_name == "LINEAR")
+                                     ? ANIMATION_INTERPOLATION_LINEAR
+                                 : (interpolation_name == "STEP")
+                                     ? ANIMATION_INTERPOLATION_STEP
+                                     : ANIMATION_INTERPOLATION_CUBIC_SPLINE;
+
+            /* FIXME: This process ends up with data duplicated in memory
+             * (first in the raw data form returned from process_buffer, and
+             * then the typed form)
+             *
+             * Once we've converted to a typed array, the AnimationData
+             * constructor does an inline transformation - clearing the source
+             * vector as it goes. It would be better if process_buffer returned
+             * a vector that could be cleared as we convert it into a typed
+             * array */
+            auto times_buffer = process_buffer(js, accessors[input_id.value()],
+                                               bin_chunk.get());
+
+            std::vector<float> times;
+            times_buffer.to_typed_array(times);
+
+            auto output_buffer = process_buffer(
+                js, accessors[output_id.value()], bin_chunk.get());
+
+            AnimationDataPtr data;
+
+            if(output_buffer.c_count == 1) {
+                std::vector<float> output;
+                output_buffer.to_typed_array(output);
+                data =
+                    std::make_shared<AnimationData>(times, std::move(output));
+            } else if(output_buffer.c_count == 3) {
+                std::vector<Vec3> output;
+                output_buffer.to_typed_array(output);
+                data =
+                    std::make_shared<AnimationData>(times, std::move(output));
+            } else if(output_buffer.c_count == 4) {
+                std::vector<Quaternion> output;
+                output_buffer.to_typed_array(output);
+                data =
+                    std::make_shared<AnimationData>(times, std::move(output));
+            } else {
+                S_ERROR("Unhandled buffer type");
+                continue;
+            }
+
+            prefab->push_animation_channel(name, prefab_node.value(), path,
+                                           interpolation, data);
+        }
     }
 }
 

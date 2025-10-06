@@ -463,7 +463,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
     spec.position_attribute = VERTEX_ATTRIBUTE_3F;
     spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
     spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;
-    spec.diffuse_attribute = VERTEX_ATTRIBUTE_4F;
+    spec.color_attribute = VERTEX_ATTRIBUTE_4F;
     spec.normal_attribute = VERTEX_ATTRIBUTE_3F;
 
     mesh->reset(spec);
@@ -556,7 +556,7 @@ void OPTLoader::into(Loadable& resource, const LoaderOptions &options) {
             mesh->vertex_data->position(pos.x / 33.3f, pos.y / 33.3f, pos.z / 33.3f);
             mesh->vertex_data->tex_coord0(tex_coord);
             mesh->vertex_data->tex_coord1(tex_coord.x, tex_coord.y);
-            mesh->vertex_data->diffuse(smlt::Color::white());
+            mesh->vertex_data->color(smlt::Color::white());
             mesh->vertex_data->normal(normal.x, normal.y, normal.z);
             mesh->vertex_data->move_next();
 

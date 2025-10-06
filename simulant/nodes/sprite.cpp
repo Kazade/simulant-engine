@@ -19,6 +19,7 @@
 
 #include "sprite.h"
 #include "../animation.h"
+#include "../asset_manager.h"
 #include "../scenes/scene.h"
 #include "../window.h"
 #include "actor.h"
@@ -186,7 +187,7 @@ void Sprite::set_render_priority(RenderPriority priority) {
 
 void Sprite::set_alpha(float alpha) {
     alpha_ = alpha;
-    mesh_->set_diffuse(smlt::Color(1.0f, 1.0f, 1.0f, alpha_));
+    mesh_->set_color(smlt::Color(1.0f, 1.0f, 1.0f, alpha_));
 }
 
 void Sprite::set_render_dimensions_from_width(float width) {

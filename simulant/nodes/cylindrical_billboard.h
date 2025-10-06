@@ -36,7 +36,7 @@ private:
         }
 
         forward_ = params.get<FloatArray>("forward").value_or(Vec3::forward());
-        return true;
+        return StageNode::on_create(params);
     }
 
     void on_late_update(float dt) override {

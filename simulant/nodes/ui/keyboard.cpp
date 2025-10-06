@@ -1,4 +1,9 @@
 #include "keyboard.h"
+#include "../../application.h"
+#include "../../asset_manager.h"
+#include "../../event_listener.h"
+#include "../../stage.h"
+#include "../../window.h"
 #include "button.h"
 #include "frame.h"
 #include "label.h"
@@ -9,11 +14,6 @@
 #include "text_entry.h"
 #include "ui_manager.h"
 #include <vector>
-
-#include "../../application.h"
-#include "../../event_listener.h"
-#include "../../stage.h"
-#include "../../window.h"
 
 namespace smlt {
 namespace ui {
@@ -1050,7 +1050,7 @@ public:
             icon->material->set_blend_func(BLEND_ALPHA);
             icon->material->set_depth_test_enabled(false);
             icon->material->set_cull_mode(CULL_MODE_NONE);
-            icon->material->set_diffuse_map(icon->tex);
+            icon->material->set_base_color_map(icon->tex);
             icon->submesh = mesh_->create_submesh(
                 name, icon->material, MESH_ARRANGEMENT_TRIANGLE_STRIP);
         };
@@ -1196,14 +1196,14 @@ private:
                 mesh_->vertex_data->move_to(idx);
 
                 for(int i = 0; i < 4; ++i) {
-                    mesh_->vertex_data->diffuse(fg_color);
+                    mesh_->vertex_data->color(fg_color);
                     mesh_->vertex_data->move_next();
                 }
             }
 
             mesh_->vertex_data->move_to(key->first_vertex_index);
             for(int i = 0; i < 4; ++i) {
-                mesh_->vertex_data->diffuse(highlight_color);
+                mesh_->vertex_data->color(highlight_color);
                 mesh_->vertex_data->move_next();
             }
 
@@ -1776,9 +1776,11 @@ void Keyboard::set_font(FontPtr font) {
 }
 
 void Keyboard::on_transformation_change_attempted() {
-    auto ap = anchor_point();
-    main_frame_->set_anchor_point(ap.x, ap.y);
-    main_frame_->rebuild();
+    if(main_frame_) {
+        auto ap = anchor_point();
+        main_frame_->set_anchor_point(ap.x, ap.y);
+        main_frame_->rebuild();
+    }
     Widget::on_transformation_change_attempted();
 }
 

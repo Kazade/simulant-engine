@@ -23,6 +23,7 @@
 #include "../compositor.h"
 #include "../layer.h"
 #include "../nodes/actor.h"
+#include "../nodes/animation_controller.h"
 #include "../nodes/audio_source.h"
 #include "../nodes/camera.h"
 #include "../nodes/cylindrical_billboard.h"
@@ -36,6 +37,7 @@
 #include "../nodes/physics/dynamic_body.h"
 #include "../nodes/physics/kinematic_body.h"
 #include "../nodes/physics/static_body.h"
+#include "../nodes/prefab_instance.h"
 #include "../nodes/skies/skybox.h"
 #include "../nodes/smooth_follow.h"
 #include "../nodes/spherical_billboard.h"
@@ -56,14 +58,14 @@
 
 namespace smlt {
 
-Scene::Scene(Window *window):
+Scene::Scene(Window* window) :
     StageNode(this, STAGE_NODE_TYPE_SCENE),
     StageNodeManager(this),
     window_(window),
     input_(window->input.get()),
     app_(window->app),
     compositor_(this, window->compositor),
-    assets_(window->app->shared_assets.get()) {
+    assets_(std::make_unique<AssetManager>(window->app->shared_assets.get())) {
 
     register_builtin_nodes();
 }
@@ -85,6 +87,8 @@ void Scene::register_builtin_nodes() {
     register_stage_node<Actor>();
     register_stage_node<Geom>();
     register_stage_node<Camera>();
+    register_stage_node<Camera2D>();
+    register_stage_node<Camera3D>();
     register_stage_node<AudioSource>();
     register_stage_node<DirectionalLight>();
     register_stage_node<PointLight>();
@@ -97,6 +101,8 @@ void Scene::register_builtin_nodes() {
     register_stage_node<Skybox>();
     register_stage_node<SmoothFollow>();
     register_stage_node<FlyController>();
+    register_stage_node<PrefabInstance>();
+    register_stage_node<AnimationController>();
 
     register_stage_node<StaticBody>();
     register_stage_node<DynamicBody>();

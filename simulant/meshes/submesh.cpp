@@ -67,19 +67,19 @@ void SubMesh::remove_all_vertex_ranges() {
     vertex_ranges_.clear();
 }
 
-void SubMesh::set_diffuse(const smlt::Color& color) {
+void SubMesh::set_base_color(const smlt::Color& color) {
     auto vertex_data = parent_->vertex_data.get();
 
     if(type_ == SUBMESH_TYPE_INDEXED) {
         for(auto i: *index_data) {
             vertex_data->move_to(i);
-            vertex_data->diffuse(color);
+            vertex_data->color(color);
         };
     } else {
         for(auto& range: vertex_ranges_) {
             for(uint32_t i = range.start; i < range.start + range.count; ++i) {
                 vertex_data->move_to(i);
-                vertex_data->diffuse(color);
+                vertex_data->color(color);
             };
         }
     }

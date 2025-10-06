@@ -1,8 +1,9 @@
 #pragma once
 
 #include <array>
-#include <cstring>
 #include <cstdint>
+#include <cstring>
+#include <vector>
 
 #ifdef __DREAMCAST__
 #include "../utils/sh4_math.h"
@@ -32,6 +33,8 @@ enum FrustumPlane {
     FRUSTUM_PLANE_MAX
 };
 
+typedef std::vector<float> FloatArray;
+
 struct Mat4 {
 private:
     float m[16];
@@ -41,6 +44,10 @@ public:
     Mat4() {
         memset(m, 0, sizeof(float) * 16);
         m[0] = m[5] = m[10] = m[15] = 1.0f;
+    }
+
+    Mat4(const FloatArray& arr) {
+        std::copy(arr.begin(), arr.end(), m);
     }
 
     Mat4 operator*(const Mat4& rhs) const {
@@ -147,6 +154,19 @@ public:
         return &m[0];
     }
 
+    void transpose() {
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                (*this)[j * 4 + i] = (*this)[i * 4 + j];
+            }
+        }
+    }
+
+    Mat4 transposed() const {
+        auto cpy = *this;
+        cpy.transpose();
+        return cpy;
+    }
 };
 
 

@@ -75,6 +75,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "loaders/opt_loader.h"
 #include "loaders/particle_script.h"
 #include "loaders/pcx_loader.h"
+#include "loaders/png_loader.h"
 #include "loaders/texture_loader.h"
 #include "loaders/ttf_loader.h"
 #include "loaders/wal_loader.h"
@@ -178,6 +179,7 @@ Application::Application(const AppConfig& config, void* platform_state) :
 
     //Register the default resource loaders
     register_loader(std::make_shared<smlt::loaders::TextureLoaderType>());
+    register_loader(std::make_shared<smlt::loaders::PNGLoaderType>());
     register_loader(std::make_shared<smlt::loaders::MaterialScriptLoaderType>());
     register_loader(std::make_shared<smlt::loaders::ParticleScriptLoaderType>());
     register_loader(std::make_shared<smlt::loaders::OPTLoaderType>());

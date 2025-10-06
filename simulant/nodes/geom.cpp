@@ -55,10 +55,16 @@ bool Geom::on_create(Params params) {
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();
 
-    Vec3 pos = params.get<FloatArray>("position").value_or(Vec3());
-    Quaternion rot =
-        params.get<FloatArray>("orientation").value_or(Quaternion());
-    Vec3 scale = params.get<FloatArray>("scale").value_or(Vec3(1));
+    // Call up to apply transform to node
+    bool ret = StageNode::on_create(params);
+    if(!ret) {
+        return false;
+    }
+
+    // Compile the culler around the current transform
+    Vec3 pos = transform->position();
+    Quaternion rot = transform->orientation();
+    Vec3 scale = transform->scale();
     culler_->compile(pos, rot, scale);
     return true;
 }

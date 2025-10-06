@@ -19,6 +19,7 @@
 
 #include "asset_manager.h"
 #include "application.h"
+#include "assets/prefab.h"
 #include "generic/lru_cache.h"
 #include "loader.h"
 #include "loaders/heightmap_loader.h"
@@ -27,6 +28,7 @@
 #include "utils/simple_memstream.h"
 #include "vfs.h"
 #include <iterator>
+
 /** FIXME
  *
  * - Write tests to show that all load_X methods mark resources as uncollected before returning
@@ -359,7 +361,7 @@ MaterialPtr AssetManager::create_material_from_texture(TexturePtr texture, Garba
     auto m = load_material(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
     assert(m);
 
-    m->set_diffuse_map(texture);
+    m->set_base_color_map(texture);
 
     material_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
@@ -655,6 +657,67 @@ FontPtr AssetManager::create_font_from_family(const std::string& family, const F
         S_WARN("Unable to locate font file with family {0} and size {1}", family, size);
         return FontPtr();
     }
+}
+
+PrefabPtr AssetManager::create_prefab(const smlt::StageNode* root,
+                                      GarbageCollectMethod garbage_collect) {
+    auto prefab = prefab_manager_.make(this);
+    auto prefab_id = prefab->id();
+    prefab_manager_.set_garbage_collection_method(prefab_id, garbage_collect);
+
+    auto create_prefab_node = [](const smlt::StageNode* node) -> PrefabNode {
+        auto pn = PrefabNode();
+        pn.id = node->id();
+        pn.node_type_name = node->node_type_name();
+        pn.params = node->create_params();
+        return pn;
+    };
+
+    if(root) {
+        prefab->push_node(create_prefab_node(root));
+        for(auto& node: root->each_descendent()) {
+            prefab->push_node(create_prefab_node(&node), node.parent()->id());
+        }
+    }
+
+    return prefab;
+}
+
+PrefabPtr AssetManager::load_prefab(const Path& filename,
+                                    GarbageCollectMethod garbage_collect) {
+
+    auto prefab = prefab_manager_.make(this);
+    auto prefab_id = prefab->id();
+    prefab_manager_.set_garbage_collection_method(prefab_id, garbage_collect);
+
+    LoaderOptions opts;
+    get_app()->loader_for(filename)->into(prefab.get(), opts);
+
+    return prefab;
+}
+
+PrefabPtr AssetManager::prefab(AssetID id) {
+    GET_X(Prefab, prefab, prefab_manager_);
+}
+
+const PrefabPtr AssetManager::prefab(AssetID id) const {
+    GET_X(Prefab, prefab, prefab_manager_);
+}
+
+std::size_t AssetManager::prefab_count() const {
+    return prefab_manager_.count();
+}
+
+bool AssetManager::has_prefab(AssetID id) const {
+    return prefab_manager_.contains(id);
+}
+
+PrefabPtr AssetManager::find_prefab(const std::string& name) {
+    return prefab_manager_.find_object(name);
+}
+
+void AssetManager::destroy_prefab(AssetID id) {
+    prefab_manager_.set_garbage_collection_method(id, GARBAGE_COLLECT_PERIODIC);
 }
 
 FontPtr AssetManager::load_font(const Path& filename, const FontFlags& flags, GarbageCollectMethod garbage_collect) {

@@ -80,27 +80,20 @@ const uint8_t PALETTE[768] = {
     87, 159, 91, 83
 };
 
-TextureLoadResult WALLoader::do_load(std::shared_ptr<FileIfstream> stream) {
-    TextureLoadResult result;
-
+bool WALLoader::do_load(std::shared_ptr<FileIfstream> stream, Texture* result) {
     // The file starts with the header, so we can just cast directly to a pointer
     // and read the memory directly
     WALHeader header;
     stream->read((char*) &header, sizeof(WALHeader));
 
-    result.width = header.width;
-    result.height = header.height;
-    result.channels = 4;
-    result.format = TEXTURE_FORMAT_RGBA_4UB_8888;
+    result->set_format(TEXTURE_FORMAT_RGBA_4UB_8888);
+    result->resize(header.width, header.height);
+    auto out = result->map_data(result->data_size());
 
     stream->seekg(header.offset[0]);
 
-    result.data.resize(result.width * result.height * 4);
-
-    uint8_t* out = &result.data[0];
-
     uint32_t j = 0;
-    for(uint32_t i = 0; i < result.width * result.height; ++i) {
+    for(uint32_t i = 0; i < header.width * header.height; ++i) {
         uint8_t pidx;
         stream->read((char*) &pidx, sizeof(uint8_t));
         auto idx = pidx * 3;
@@ -116,8 +109,7 @@ TextureLoadResult WALLoader::do_load(std::shared_ptr<FileIfstream> stream) {
         }
     }
 
-    return result;
+    return true;
 }
-
 }
 }

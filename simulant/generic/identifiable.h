@@ -47,6 +47,10 @@ public:
         return id() < rhs.id();
     }
 
+    void replace_id(IDType id) {
+        id_ = id;
+    }
+
 private:
     IDType id_ = 0;
 };

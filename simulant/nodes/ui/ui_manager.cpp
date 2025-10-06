@@ -68,7 +68,7 @@ UIManager::~UIManager() {
 
 bool UIManager::on_create(Params params) {
     config_ = params.get<UIConfig>("config").value_or(UIConfig());
-    return true;
+    return StageNode::on_create(params);
 }
 
 // Keyboard* UIManager::new_widget_as_keyboard(const KeyboardMode& mode, const

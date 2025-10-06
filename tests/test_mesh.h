@@ -15,7 +15,7 @@ public:
         SimulantTestCase::set_up();
 
         stage_ = scene->create_child<smlt::Stage>();
-        camera_ = scene->create_child<smlt::Camera>();
+        camera_ = scene->create_child<smlt::Camera3D>();
     }
 
     void tear_down() {
@@ -265,7 +265,7 @@ public:
         assert_true(!data->vertex_specification().has_texcoord1());
         assert_true(!data->vertex_specification().has_texcoord2());
         assert_true(!data->vertex_specification().has_texcoord3());
-        assert_true(!data->vertex_specification().has_diffuse());
+        assert_true(!data->vertex_specification().has_color());
         assert_true(!data->vertex_specification().has_specular());
         assert_equal(4u, data->count());
 
@@ -316,7 +316,7 @@ public:
         actor2->use_material_slot(MATERIAL_SLOT1);
         actor3->use_material_slot(MATERIAL_SLOT7);
 
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 

@@ -19,10 +19,13 @@
 #include "gl1x_renderer.h"
 
 #include "../../application.h"
+#include "../../meshes/submesh.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../stage.h"
 #include "../../utils/gl_error.h"
+#include "../../utils/pbr.h"
+#include "../../vertex_data.h"
 #include "../../window.h"
 
 namespace smlt {
@@ -93,18 +96,15 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
                                                  const MaterialPass* next) {
     pass_ = next;
 
-    const auto& diffuse = next->diffuse();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &diffuse.r);
+    auto s = pbr_to_traditional(next->base_color(), next->metallic(),
+                                next->roughness(), next->specular_color(),
+                                next->specular());
 
-    const auto& ambient = next->ambient();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &ambient.r);
-
-    const auto& emission = next->emission();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_EMISSION, &emission.r);
-
-    const auto& specular = next->specular();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &specular.r);
-    GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, next->shininess());
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &s.diffuse.r);
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &s.ambient.r);
+    // GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_EMISSION, &s.emission.r);
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &s.specular.r);
+    GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, s.shininess);
 
     if(next->is_depth_test_enabled()) {
         GLCheck(glEnable, GL_DEPTH_TEST);
@@ -172,10 +172,10 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         }                                                                      \
     }
 
-    ENABLE_TEXTURE(0, diffuse);
+    ENABLE_TEXTURE(0, base_color);
     ENABLE_TEXTURE(1, light);
     ENABLE_TEXTURE(2, normal);
-    ENABLE_TEXTURE(3, specular);
+    ENABLE_TEXTURE(3, metallic_roughness);
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
     if(!prev || prev->point_size() != next->point_size()) {
@@ -321,7 +321,7 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
                                          const uint8_t count) {
 
-    const LightState disabled_state;
+    LightState disabled_state;
 
     Light* current = nullptr;
 
@@ -349,9 +349,8 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
                 true,
                 Vec4(pos,
                      (current->light_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
-                current->diffuse(), current->ambient(), current->specular(),
-                current->constant_attenuation(), current->linear_attenuation(),
-                current->quadratic_attenuation());
+
+                current->color(), current->intensity(), current->range());
         }
 
         /* No need to update this light */
@@ -362,15 +361,22 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
         if(state.enabled) {
             GLCheck(glEnable, GL_LIGHT0 + i);
             GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &state.position.x);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &state.ambient.r);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &state.diffuse.r);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &state.specular.r);
-            GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION,
-                    state.constant_att);
+
+            auto ambient = state.color * state.intensity * 0.1;
+            auto diffuse = state.color * state.intensity;
+            auto specular = state.color * state.intensity * 0.1;
+
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &ambient.r);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &diffuse.r);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &specular.r);
+
+            // Approximate the GLTF lighting formula:
+            // attenuation = max( min( 1.0 - ( current_distance / range )4, 1 ),
+            // 0 ) / current_distance2
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION, 0.1f);
             GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION,
-                    state.linear_att);
-            GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION,
-                    state.quadratic_att);
+                    -1.0f / state.range);
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION, 1.0f);
 
         } else {
             GLCheck(glDisable, GL_LIGHT0 + i);
@@ -530,23 +536,23 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         disable_vertex_arrays();
     }
 
-    const auto has_diffuse = spec.has_diffuse();
-    if(has_diffuse) {
+    const auto has_color = spec.has_color();
+    if(has_color) {
         S_VERBOSE("Enabling colors");
         enable_color_arrays();
         GLCheck(glColorPointer,
-                (spec.diffuse_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
-                : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_3F) ? 3
-                : (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4F ||
-                   spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA)
+                (spec.color_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
+                : (spec.color_attribute == VERTEX_ATTRIBUTE_3F) ? 3
+                : (spec.color_attribute == VERTEX_ATTRIBUTE_4F ||
+                   spec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA)
                     ? 4
                     : GL_BGRA, // This weirdness is an extension apparently
-                (spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
-                 spec.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_BGRA)
+                (spec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
+                 spec.color_attribute == VERTEX_ATTRIBUTE_4UB_BGRA)
                     ? GL_UNSIGNED_BYTE
                     : GL_FLOAT,
                 stride,
-                ((const uint8_t*)vertex_data) + spec.diffuse_offset(false));
+                ((const uint8_t*)vertex_data) + spec.color_offset(false));
     } else {
         disable_color_arrays();
     }

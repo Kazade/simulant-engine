@@ -111,9 +111,8 @@ void RenderQueue::insert_renderable(Renderable&& renderable) {
         group.sort_key = render_group_factory_->prepare_render_group(
             &group, &renderable, pass, priority, i, is_blended,
             renderable_dist_to_camera,
-            material->diffuse_map()
-                ? clamp(material->diffuse_map()->_renderer_specific_id(), 0,
-                        1024)
+            material->base_color_map()
+                ? material->base_color_map()->_renderer_specific_id()
                 : 0);
 
         render_queue_.insert(group, std::move(renderable));

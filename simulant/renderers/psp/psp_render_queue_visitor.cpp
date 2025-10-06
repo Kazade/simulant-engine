@@ -3,15 +3,17 @@
 #include <pspgum.h>
 #include <pspkernel.h>
 
-#include "psp_render_queue_visitor.h"
-#include "psp_renderer.h"
-#include "psp_render_group_impl.h"
-
 #include "../../application.h"
+#include "../../meshes/submesh.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../stage.h"
+#include "../../utils/pbr.h"
+#include "../../vertex_data.h"
 #include "../../window.h"
+#include "psp_render_group_impl.h"
+#include "psp_render_queue_visitor.h"
+#include "psp_renderer.h"
 
 namespace smlt {
 
@@ -59,19 +61,23 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         return;
     }
 
-    const auto& diffuse = next->diffuse();
+    auto s = pbr_to_traditional(next->base_color(), next->metallic(),
+                                next->roughness(), next->specular_color(),
+                                next->specular());
+
+    const auto& diffuse = s.diffuse;
     sceGuMaterial(GU_DIFFUSE,
                   GU_COLOR(diffuse.r, diffuse.g, diffuse.b, diffuse.a));
 
-    const auto& ambient = next->ambient();
+    const auto& ambient = s.ambient;
     sceGuMaterial(GU_AMBIENT,
                   GU_COLOR(ambient.r, ambient.g, ambient.b, ambient.a));
 
-    const auto& specular = next->specular();
+    const auto& specular = s.specular;
     sceGuMaterial(GU_SPECULAR,
                   GU_COLOR(specular.r, specular.g, specular.b, specular.a));
 
-    sceGuSpecular(next->shininess());
+    sceGuSpecular(s.shininess);
 
     switch (next->color_material()) {
     case COLOR_MATERIAL_NONE:
@@ -179,9 +185,9 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         sceGuEnable(GU_TEXTURE_2D);
 
         // We have to keep the filter in sync
-        auto id = next->diffuse_map()->_renderer_specific_id();
+        auto id = next->base_color_map()->_renderer_specific_id();
         auto tex = renderer_->texture_manager_.find_texture(id);
-        tex->filter = next->diffuse_map()->texture_filter();
+        tex->filter = next->base_color_map()->texture_filter();
 
         renderer_->texture_manager_.bind_texture(id);
     } else {
@@ -212,17 +218,15 @@ void PSPRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
                            &light_pos);
             }
 
-            auto d = light->diffuse();
-            auto a = light->ambient();
-            auto s = light->specular();
+            auto a = light->color() * light->intensity() * 0.1f;
+            auto d = light->color() * light->intensity();
+            auto s = light->color() * light->intensity() * 0.1f;
 
             sceGuLightColor(i, GU_DIFFUSE, d.to_abgr_8888());
             sceGuLightColor(i, GU_AMBIENT, a.to_abgr_8888());
             sceGuLightColor(i, GU_SPECULAR, s.to_abgr_8888());
 
-            sceGuLightAtt(i, light->constant_attenuation(),
-                          light->linear_attenuation(),
-                          light->quadratic_attenuation());
+            sceGuLightAtt(i, 0.1f, -1.0f / light->range(), 1.0f);
         } else {
             sceGuDisable(GU_LIGHT0 + i);
         }
@@ -307,7 +311,7 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
     auto uv_off = (spec.has_texcoord0())
                       ? spec.texcoord0_offset(false)
                       : 0; // FIXME: 0 assumes not first attribute
-    auto color_off = (spec.has_diffuse()) ? spec.diffuse_offset(false) : 0;
+    auto color_off = (spec.has_color()) ? spec.color_offset(false) : 0;
     auto normal_off = (spec.has_normals()) ? spec.normal_offset(false) : 0;
 
     int i = buffer.size();
@@ -322,7 +326,7 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
     }
 
     if(color_off) {
-        convert_color(&v->color, it + color_off, spec.diffuse_attribute);
+        convert_color(&v->color, it + color_off, spec.color_attribute);
     }
 
     if(normal_off) {

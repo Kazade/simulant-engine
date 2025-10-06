@@ -15,6 +15,10 @@ AudioSource::~AudioSource() {
 }
 
 bool AudioSource::on_create(Params params) {
+    if(!clean_params<AudioSource>(params)) {
+        return false;
+    }
+
     _S_UNUSED(params);
 
     thread::Lock<thread::Mutex> glock(ACTIVE_SOURCES_MUTEX);
@@ -34,7 +38,7 @@ bool AudioSource::on_create(Params params) {
 
     ACTIVE_SOURCES.push_back(this);
 
-    return true;
+    return StageNode::on_create(params);
 }
 
 bool AudioSource::on_destroy() {

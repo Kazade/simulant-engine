@@ -99,7 +99,7 @@ bool MeshInstancer::on_create(Params params) {
     }
 
     set_mesh(params.get<MeshRef>("mesh").value_or(MeshRef()).lock());
-    return true;
+    return StageNode::on_create(params);
 }
 
 void MeshInstancer::on_transformation_changed() {

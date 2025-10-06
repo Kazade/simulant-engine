@@ -19,6 +19,7 @@
 
 #include "debug.h"
 #include "../application.h"
+#include "../asset_manager.h"
 #include "../compat.h"
 #include "../macros.h"
 #include "../stage.h"
@@ -72,19 +73,19 @@ void Debug::push_line(SubMeshPtr& submesh, const Vec3& start, const Vec3& end,
 
     auto c_ = mesh_->vertex_data->count();
     mesh_->vertex_data->position(a);
-    mesh_->vertex_data->diffuse(color);
+    mesh_->vertex_data->color(color);
     mesh_->vertex_data->move_next();
 
     mesh_->vertex_data->position(b);
-    mesh_->vertex_data->diffuse(color);
+    mesh_->vertex_data->color(color);
     mesh_->vertex_data->move_next();
 
     mesh_->vertex_data->position(c);
-    mesh_->vertex_data->diffuse(color);
+    mesh_->vertex_data->color(color);
     mesh_->vertex_data->move_next();
 
     mesh_->vertex_data->position(d);
-    mesh_->vertex_data->diffuse(color);
+    mesh_->vertex_data->color(color);
     mesh_->vertex_data->move_next();
 
     submesh->add_vertex_range(c_, 4);
@@ -105,7 +106,7 @@ void Debug::push_point(SubMeshPtr& submesh, const Vec3& position,
         for(int j = -1; j <= 1; j += 2) {
             auto pos = position + (right * i * hs) + (up * j * hs);
             mesh_->vertex_data->position(pos);
-            mesh_->vertex_data->diffuse(color);
+            mesh_->vertex_data->color(color);
             mesh_->vertex_data->move_next();
         }
     }

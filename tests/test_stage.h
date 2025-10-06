@@ -50,11 +50,11 @@ public:
             destroyed_ids.insert(dynamic_cast<Camera*>(node)->id());
         });
 
-        auto a1 = scene->create_child<smlt::Camera>();
-        auto a2 = scene->create_child<smlt::Camera>();
+        auto a1 = scene->create_child<smlt::Camera3D>();
+        auto a2 = scene->create_child<smlt::Camera3D>();
         a2->set_parent(a1);
 
-        auto a3 = scene->create_child<smlt::Camera>();
+        auto a3 = scene->create_child<smlt::Camera3D>();
         a3->set_parent(a2);
 
         auto a2id = a2->id();

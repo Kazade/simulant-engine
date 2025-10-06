@@ -113,7 +113,8 @@ VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecifi
         case VERTEX_ATTRIBUTE_TYPE_TEXCOORD5: return spec.texcoord5_attribute;
         case VERTEX_ATTRIBUTE_TYPE_TEXCOORD6: return spec.texcoord6_attribute;
         case VERTEX_ATTRIBUTE_TYPE_TEXCOORD7: return spec.texcoord7_attribute;
-        case VERTEX_ATTRIBUTE_TYPE_DIFFUSE: return spec.diffuse_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_COLOR:
+            return spec.color_attribute;
         case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return spec.specular_attribute;
     default:
         assert(0 && "Invalid vertex attribute type");
@@ -391,17 +392,18 @@ const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const {
 }
 
 template<>
-const Color* VertexData::diffuse_at(const uint32_t idx) const {
-    assert(vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4F);
-    return ((Color*) &data_[(idx * stride()) + vertex_specification_.diffuse_offset()]);
+const Color* VertexData::color_at(const uint32_t idx) const {
+    assert(vertex_specification_.color_attribute == VERTEX_ATTRIBUTE_4F);
+    return ((
+        Color*)&data_[(idx * stride()) + vertex_specification_.color_offset()]);
 }
 
 template<>
-const uint8_t* VertexData::diffuse_at(const uint32_t idx) const {
-    assert(
-        vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
-        vertex_specification_.diffuse_attribute == VERTEX_ATTRIBUTE_4UB_BGRA);
-    return ((uint8_t*) &data_[(idx * stride()) + vertex_specification_.diffuse_offset()]);
+const uint8_t* VertexData::color_at(const uint32_t idx) const {
+    assert(vertex_specification_.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
+           vertex_specification_.color_attribute == VERTEX_ATTRIBUTE_4UB_BGRA);
+    return ((uint8_t*)&data_[(idx * stride()) +
+                             vertex_specification_.color_offset()]);
 }
 
 void VertexData::tex_coord1(float u, float v) {
@@ -440,11 +442,11 @@ void VertexData::tex_coord3(float u, float v, float w, float x) {
     tex_coordX(3, u, v, w, x);
 }
 
-void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-    assert(
-        vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4UB_BGRA ||
-        vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4UB_RGBA);
-    auto offset = vertex_specification_.diffuse_offset();
+void VertexData::color(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    assert(vertex_specification_.color_attribute_ ==
+               VERTEX_ATTRIBUTE_4UB_BGRA ||
+           vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_4UB_RGBA);
+    auto offset = vertex_specification_.color_offset();
 
     if(offset == INVALID_ATTRIBUTE_OFFSET) {
         return;
@@ -453,7 +455,7 @@ void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 
     uint8_t* out = (uint8_t*) &data_[cursor_offset() + offset];
 
-    if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4UB_BGRA) {
+    if(vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_4UB_BGRA) {
         out[0] = b;
         out[1] = g;
         out[2] = r;
@@ -466,10 +468,10 @@ void VertexData::diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     }
 }
 
-void VertexData::diffuse(float r, float g, float b) {
-    assert(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_3F);
+void VertexData::color(float r, float g, float b) {
+    assert(vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_3F);
 
-    auto offset = vertex_specification_.diffuse_offset();
+    auto offset = vertex_specification_.color_offset();
 
     if(offset == INVALID_ATTRIBUTE_OFFSET) {
         return;
@@ -479,10 +481,10 @@ void VertexData::diffuse(float r, float g, float b) {
     *out = Vec3(r, g, b);
 }
 
-void VertexData::diffuse(float r, float g, float b, float a) {
-    assert(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4F);
+void VertexData::color(float r, float g, float b, float a) {
+    assert(vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_4F);
 
-    auto offset = vertex_specification_.diffuse_offset();
+    auto offset = vertex_specification_.color_offset();
 
     if(offset == INVALID_ATTRIBUTE_OFFSET) {
         return;
@@ -492,19 +494,15 @@ void VertexData::diffuse(float r, float g, float b, float a) {
     *out = Vec4(r, g, b, a);
 }
 
-void VertexData::diffuse(const Color& color) {
-    if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_4F) {
-        diffuse(color.r, color.g, color.b, color.a);
-    } else if(vertex_specification_.diffuse_attribute_ == VERTEX_ATTRIBUTE_3F) {
-        diffuse(color.r, color.g, color.b);
+void VertexData::color(const Color& c) {
+    if(vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_4F) {
+        color(c.r, c.g, c.b, c.a);
+    } else if(vertex_specification_.color_attribute_ == VERTEX_ATTRIBUTE_3F) {
+        color(c.r, c.g, c.b);
     } else {
         const float s = 255.0f;
-        diffuse(
-            (uint8_t) clamp(color.r * s, 0, 255),
-            (uint8_t) clamp(color.g * s, 0, 255),
-            (uint8_t) clamp(color.b * s, 0, 255),
-            (uint8_t) clamp(color.a * s, 0, 255)
-        );
+        color((uint8_t)clamp(c.r * s, 0, 255), (uint8_t)clamp(c.g * s, 0, 255),
+              (uint8_t)clamp(c.b * s, 0, 255), (uint8_t)clamp(c.a * s, 0, 255));
     }
 }
 

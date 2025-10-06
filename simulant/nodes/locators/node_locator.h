@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../../nodes/stage_node.h"
+#include "../../nodes/stage_node_watch_controller.h"
 #include "../../scenes/scene.h"
+
 #include <cstddef>
 #include <functional>
 
@@ -13,6 +15,17 @@ public:
     static StageNode* find_child(StageNode* organism) {
         for(auto& node: organism->base()->each_child()) {
             if(node.node_type() == T::Meta::node_type) {
+                return &node;
+            }
+        }
+
+        return nullptr;
+    }
+
+    static StageNode* find_descendent_by_id(StageNodeID id,
+                                            StageNode* organism) {
+        for(auto& node: organism->base()->each_descendent()) {
+            if(node.id() == id) {
                 return &node;
             }
         }
@@ -54,6 +67,8 @@ typedef std::function<StageNode*(StageNode*)> NodeFinder;
 template<typename T>
 class FindResult {
 public:
+    FindResult() = default;
+
     FindResult(const std::tuple<NodeFinder, StageNode*,
                                 StageNodeNotificationList>& finder) :
         finder_(std::get<0>(finder)),
@@ -170,6 +185,8 @@ std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>
     FindAncestor(const char* name, StageNode* node);
 std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>
     FindDescendent(const char* name, StageNode* node);
+std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>
+    FindDescendentByID(StageNodeID id, StageNode* behaviour);
 
 template<typename T>
 std::tuple<NodeFinder, StageNode*, StageNodeNotificationList>

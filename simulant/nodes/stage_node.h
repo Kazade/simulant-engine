@@ -106,6 +106,7 @@ enum NodeParamType {
     NODE_PARAM_TYPE_TEXTURE_PTR,
     NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR,
     NODE_PARAM_TYPE_STAGE_NODE_PTR,
+    NODE_PARAM_TYPE_PREFAB_PTR,
     // FIXME: Ideally these wouldn't exist and instead
     // widgets would take base types as arguments
     NODE_PARAM_TYPE_UI_CONFIG,
@@ -165,6 +166,11 @@ struct type_to_node_param_type<TexturePtr> {
 template<>
 struct type_to_node_param_type<ParticleScriptPtr> {
     static const NodeParamType value = NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR;
+};
+
+template<>
+struct type_to_node_param_type<PrefabPtr> {
+    static const NodeParamType value = NODE_PARAM_TYPE_PREFAB_PTR;
 };
 
 template<>
@@ -295,6 +301,28 @@ private:
 template<typename T>
 std::set<NodeParam>& get_node_params() {
     static std::set<NodeParam> properties;
+    if(properties.empty()) {
+        // All stage nodes should be able to handle
+        // these things
+        properties.insert(
+            NodeParam(20000, "position", NODE_PARAM_TYPE_FLOAT_ARRAY,
+                      Params::to_param(Vec3()), "Node absolute position"));
+        properties.insert(NodeParam(
+            20001, "orientation", NODE_PARAM_TYPE_FLOAT_ARRAY,
+            Params::to_param(Quaternion()), "Node absolute orientation"));
+        properties.insert(NodeParam(20002, "scale", NODE_PARAM_TYPE_FLOAT_ARRAY,
+                                    Params::to_param(Vec3(1, 1, 1)),
+                                    "Node absolute scale"));
+        properties.insert(
+            NodeParam(20003, "translation", NODE_PARAM_TYPE_FLOAT_ARRAY,
+                      Params::to_param(Vec3()), "Node relative translation"));
+        properties.insert(NodeParam(
+            20004, "rotation", NODE_PARAM_TYPE_FLOAT_ARRAY,
+            Params::to_param(Quaternion()), "Node relative rotation"));
+        properties.insert(NodeParam(
+            20005, "scale_factor", NODE_PARAM_TYPE_FLOAT_ARRAY,
+            Params::to_param(Vec3(1, 1, 1)), "Node relative scale factor"));
+    }
     return properties;
 }
 
@@ -307,7 +335,7 @@ public:
     TypedNodeParam(int order, const char* name, const F& fallback,
                    const char* desc) :
         param_(NodeParam(order, name, type_to_node_param_type<T>::value,
-                         to_param(fallback), desc)) {
+                         Params::to_param(fallback), desc)) {
 
         get_node_params<C>().insert(param_);
     }
@@ -317,22 +345,6 @@ public:
     }
 
 private:
-    template<typename F>
-    optional<ParamValue> to_param(const F& fallback) {
-        /* We abuse the default coersion rules of Params */
-        Params tmp;
-        tmp.set("value", fallback);
-        return tmp.raw("value");
-    }
-
-    optional<ParamValue> to_param(const OptionalInit&) {
-        return no_value;
-    }
-
-    optional<ParamValue> to_param(const std::nullptr_t&) {
-        return no_value;
-    }
-
     NodeParam param_;
 };
 
@@ -357,6 +369,7 @@ private:
                   std::is_same<type, smlt::FloatArray>::value ||               \
                   std::is_same<type, smlt::ParticleScriptPtr>::value ||        \
                   std::is_same<type, smlt::MeshPtr>::value ||                  \
+                  std::is_same<type, smlt::PrefabPtr>::value ||                \
                   std::is_same<type, smlt::GeomCullerOptions>::value ||        \
                   std::is_same<type, std::string>::value ||                    \
                   std::is_same<type, smlt::TextureFlags>::value ||             \
@@ -689,7 +702,40 @@ public:
     virtual std::set<NodeParam> node_params() const = 0;
 
 protected:
-    virtual bool on_create(Params params) = 0;
+    virtual bool on_create(Params params) {
+        auto position_maybe = params.get<FloatArray>("position");
+        if(position_maybe) {
+            transform->set_position(position_maybe.value());
+        }
+
+        auto orientation_maybe = params.get<FloatArray>("orientation");
+        if(orientation_maybe) {
+            transform->set_orientation(orientation_maybe.value());
+        }
+
+        auto scale_maybe = params.get<FloatArray>("scale");
+        if(scale_maybe) {
+            transform->set_scale(scale_maybe.value());
+        }
+
+        auto translation_maybe = params.get<FloatArray>("translation");
+        if(translation_maybe) {
+            transform->set_translation(translation_maybe.value());
+        }
+
+        auto rotation_maybe = params.get<FloatArray>("rotation");
+        if(rotation_maybe) {
+            transform->set_rotation(rotation_maybe.value());
+        }
+
+        auto scale_factor_maybe = params.get<FloatArray>("scale_factor");
+        if(scale_factor_maybe) {
+            transform->set_scale_factor(scale_factor_maybe.value());
+        }
+
+        return true;
+    }
+
     virtual bool on_destroy() override {
         return true;
     }
@@ -726,9 +772,11 @@ protected:
                 // No default and not provided
                 return false;
             } else if(passed) {
-                cleaned.set(name, params.raw(name).value());
+                auto v = params.raw(name).value();
+                cleaned.set(name, v);
             } else {
-                cleaned.set(name, param.default_value().value());
+                auto v = param.default_value().value();
+                cleaned.set(name, v);
             }
         }
 

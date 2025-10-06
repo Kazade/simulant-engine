@@ -39,7 +39,7 @@ public:
 
         auto light = scene->create_child<PointLight>();
         light->transform->set_translation(Vec3(0, 0, -10));
-        light->set_attenuation_from_range(5.0);
+        light->set_range(5.0);
 
         // Out of range of light, no silhouette edges
         MeshSilhouette silhouette(mesh, Mat4(), light);

@@ -161,6 +161,10 @@ public:
     virtual bool initialize_virtual_screen(uint16_t width, uint16_t height,
                                            ScreenFormat format,
                                            uint16_t integer_scale) {
+        _S_UNUSED(width);
+        _S_UNUSED(height);
+        _S_UNUSED(format);
+        _S_UNUSED(integer_scale);
         return false;
     }
 
