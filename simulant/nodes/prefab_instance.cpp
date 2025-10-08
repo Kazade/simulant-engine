@@ -16,7 +16,7 @@ bool PrefabInstance::on_create(Params params) {
         return false;
     }
 
-    build_tree(prefab_ptr);
+    auto node_map = build_tree(prefab_ptr);
 
     if(prefab_ptr->has_animations()) {
         auto anims = create_mixin<AnimationController>();
@@ -25,10 +25,12 @@ bool PrefabInstance::on_create(Params params) {
                 const std::vector<PrefabAnimationChannel>& channels) {
             Animation anim;
             anim.name = name;
+
             for(auto& ch: channels) {
+                auto id = node_map.at(ch.target.id)->id();
                 Channel channel;
                 channel.path = ch.path;
-                channel.target = FindDescendentByID(ch.target.id, this);
+                channel.target = FindDescendentByID(id, this);
                 channel.data = ch.data;
                 channel.interpolation = ch.interpolation;
                 anim.channels.push_back(channel);
@@ -43,7 +45,8 @@ bool PrefabInstance::on_create(Params params) {
     return StageNode::on_create(params);
 }
 
-void PrefabInstance::build_tree(const PrefabPtr& prefab) {
+std::map<uint32_t, StageNodePtr>
+    PrefabInstance::build_tree(const PrefabPtr& prefab) {
     std::map<uint32_t, StageNodePtr> node_map;
 
     auto cb = [&](const PrefabKey& key, const PrefabNode& node) {
@@ -58,6 +61,8 @@ void PrefabInstance::build_tree(const PrefabPtr& prefab) {
     };
 
     prefab->each_node(cb);
+
+    return node_map;
 }
 
 StageNode* PrefabInstance::default_node_factory(StageNode* parent,
@@ -75,51 +80,45 @@ StageNode* PrefabInstance::default_node_factory(StageNode* parent,
 
     if(!ret) {
         S_WARN("Unable to spawn node with name: {0}", node_type_name);
-    } else {
-        ret->set_parent(parent);
+        return nullptr;
     }
 
-    if(ret) {
-        ret->set_name(input.name);
-        ret->replace_id(input.id);
-        if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-            light->set_direction(ret->transform->orientation().forward());
-        }
+    ret->set_parent(parent);
+    ret->set_name(input.name);
+    if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
+        light->set_direction(ret->transform->orientation().forward());
+    }
 
-        if(input.params.contains("s_mixins")) {
-            auto mixins_maybe = input.params.get<std::string>("s_mixins");
-            if(mixins_maybe) {
-                auto mixins = smlt::split(mixins_maybe.value(), ",");
-                for(std::size_t i = 0; i < mixins.size(); ++i) {
-                    auto mixin_name = strip(mixins[i]);
-                    Params mixin_params;
-                    std::string prefix = "s_mixin." + std::to_string(i) + ".";
-                    for(auto arg_name: input.params.arg_names()) {
-                        if(arg_name.str().find(prefix) == 0) {
-                            auto key = arg_name.str().substr(prefix.size());
-                            mixin_params.set(
-                                key.c_str(),
-                                input.params.raw(arg_name.c_str()).value());
-                        }
-                    }
-
-                    if(input.params.contains("mesh")) {
+    if(input.params.contains("s_mixins")) {
+        auto mixins_maybe = input.params.get<std::string>("s_mixins");
+        if(mixins_maybe) {
+            auto mixins = smlt::split(mixins_maybe.value(), ",");
+            for(std::size_t i = 0; i < mixins.size(); ++i) {
+                auto mixin_name = strip(mixins[i]);
+                Params mixin_params;
+                std::string prefix = "s_mixin." + std::to_string(i) + ".";
+                for(auto arg_name: input.params.arg_names()) {
+                    if(arg_name.str().find(prefix) == 0) {
+                        auto key = arg_name.str().substr(prefix.size());
                         mixin_params.set(
-                            "mesh", input.params.get<MeshRef>("mesh").value_or(
-                                        MeshPtr()));
+                            key.c_str(),
+                            input.params.raw(arg_name.c_str()).value());
                     }
+                }
 
-                    auto new_mixin =
-                        ret->create_mixin(mixin_name, mixin_params);
-                    if(!new_mixin) {
-                        S_ERROR("Failed to create mixin with name {0}",
-                                mixin_name);
-                    }
+                if(input.params.contains("mesh")) {
+                    mixin_params.set(
+                        "mesh",
+                        input.params.get<MeshRef>("mesh").value_or(MeshPtr()));
+                }
+
+                auto new_mixin = ret->create_mixin(mixin_name, mixin_params);
+                if(!new_mixin) {
+                    S_ERROR("Failed to create mixin with name {0}", mixin_name);
                 }
             }
         }
     }
-
     return ret;
 }
 
