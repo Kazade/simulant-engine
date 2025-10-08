@@ -20,7 +20,7 @@ public:
     bool on_create(Params params) override;
 
 private:
-    void build_tree(const PrefabPtr& prefab);
+    std::map<uint32_t, StageNodePtr> build_tree(const PrefabPtr& prefab);
 
     StageNode* default_node_factory(StageNode* parent, const PrefabNode& input);
 };

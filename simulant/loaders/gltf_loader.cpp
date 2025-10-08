@@ -276,18 +276,20 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
     auto t0 = smlt::get_app()->time_keeper->now_in_us();
 #endif
     if(spec.position_attribute == VERTEX_ATTRIBUTE_2F) {
-        const uint8_t* src = &buffer_info.data[0];
+
         for(std::size_t i = 0; i < buffer_info.data.size();
             i += buffer_info.stride) {
+            const uint8_t* src = &buffer_info.data[i];
             auto x = *(float*)src;
             auto y = *(float*)(src + 4);
             final_mesh->vertex_data->position(x, y);
             final_mesh->vertex_data->move_next();
         }
     } else if(spec.position_attribute == VERTEX_ATTRIBUTE_3F) {
-        const uint8_t* src = &buffer_info.data[0];
+
         for(std::size_t i = 0; i < buffer_info.data.size();
             i += buffer_info.stride) {
+            const uint8_t* src = &buffer_info.data[i];
             auto x = *(float*)src;
             auto y = *(float*)(src + 4);
             auto z = *(float*)(src + 8);
@@ -295,9 +297,11 @@ void process_positions(const BufferInfo& buffer_info, JSONIterator&,
             final_mesh->vertex_data->move_next();
         }
     } else if(spec.position_attribute == VERTEX_ATTRIBUTE_4F) {
-        const uint8_t* src = &buffer_info.data[0];
+
         for(std::size_t i = 0; i < buffer_info.data.size();
             i += buffer_info.stride) {
+
+            const uint8_t* src = &buffer_info.data[i];
             auto x = *(float*)src;
             auto y = *(float*)(src + 4);
             auto z = *(float*)(src + 8);
