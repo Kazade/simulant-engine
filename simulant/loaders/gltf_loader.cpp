@@ -709,6 +709,9 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
         int normal_id = -1;
         int color_id = -1;
         int texcoord_id = -1;
+
+        int joint_ids[4] = {-1, -1, -1, -1};
+        int weight_ids[4] = {-1, -1, -1, -1};
     };
 
     std::vector<MeshPrimitive> primitives;
@@ -749,6 +752,19 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
         mp.texcoord_id =
             primitive["attributes"]["TEXCOORD_0"]->to_int().value_or(-1);
         mp.indexes_id = primitive["indices"]->to_int().value_or(-1);
+
+        for(int i = 0; i < 4; ++i) {
+            if(primitive["attributes"]->has_key(_F("JOINTS_{0}").format(i))) {
+                mp.joint_ids[i] =
+                    primitive["attributes"][_F("JOINTS_{0}").format(i)]
+                        ->to_int()
+                        .value_or(-1);
+                mp.weight_ids[i] =
+                    primitive["attributes"][_F("WEIGHTS_{0}").format(i)]
+                        ->to_int()
+                        .value_or(-1);
+            }
+        }
 
         primitives.push_back(mp);
     }
@@ -865,7 +881,8 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
 
 static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
                                    JSONIterator& js,
-                                   const std::vector<smlt::MeshPtr>& meshes) {
+                                   const std::vector<smlt::MeshPtr>& meshes,
+                                   const std::set<uint32_t> all_joints) {
     auto nodes = js["nodes"];
     auto node = nodes[node_id];
 
@@ -876,7 +893,9 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
         node["extensions"]["KHR_lights_punctual"]["light"]->to_int().value_or(
             -1);
 
-    if(node->has_key("mesh") && !meshes.empty()) {
+    if(all_joints.count(node_id)) {
+        prefab_node.node_type_name = "joint";
+    } else if(node->has_key("mesh") && !meshes.empty()) {
         prefab_node.node_type_name = "actor";
         prefab_node.params.set("mesh",
                                meshes[node["mesh"]->to_int().value_or(0)]);
@@ -1004,12 +1023,18 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
     if(node->has_key("children")) {
         for(auto& child: node["children"]) {
             spawn_node_recursively(prefab, prefab_node.id,
-                                   child.to_int().value_or(0), js, meshes);
+                                   child.to_int().value_or(0), js, meshes,
+                                   all_joints);
         }
     }
 
     return true;
 }
+
+struct Skin {
+    std::string name;
+    std::vector<uint32_t> joints;
+};
 
 bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     auto prefab = loadable_to<Prefab>(resource);
@@ -1098,6 +1123,24 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     std::vector<MaterialPtr> materials;
     std::vector<MeshPtr> meshes;
     std::vector<Accessor> accessors;
+    std::vector<Skin> skins;
+    std::set<uint32_t> all_joints;
+
+    for(auto& skin_node: js["skins"]) {
+        auto ski = skin_node.to_iterator();
+
+        Skin skin;
+        skin.name = ski["name"]->to_str().value_or("");
+
+        for(auto& joint_node: ski["joints"]) {
+            auto joint = joint_node.to_iterator();
+            auto jid = joint->to_int().value_or(-1);
+            if(jid != -1) {
+                skin.joints.push_back(jid);
+                all_joints.insert(jid);
+            }
+        }
+    }
 
     /* This is the most complicated part of the loader. A GLTF file has a
        heirarchy of: mesh/animation -> accessor -> bufferView -> buffer */
@@ -1157,7 +1200,8 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
             if(it->has_key("name")) {
                 auto name_maybe = it["name"]->to_str();
                 if(name_maybe && name_maybe.value() == root_name) {
-                    spawn_node_recursively(*prefab, -1, i, js, meshes);
+                    spawn_node_recursively(*prefab, -1, i, js, meshes,
+                                           all_joints);
                     return true;
                 }
             }
@@ -1178,7 +1222,7 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         auto node_id = maybe_id.value();
-        spawn_node_recursively(*prefab, -1, node_id, js, meshes);
+        spawn_node_recursively(*prefab, -1, node_id, js, meshes, all_joints);
     }
 
     auto animations_it = js["animations"];

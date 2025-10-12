@@ -31,6 +31,7 @@
 #include "../nodes/fly_controller.h"
 #include "../nodes/frustum_culler.h"
 #include "../nodes/geom.h"
+#include "../nodes/joint.h"
 #include "../nodes/light.h"
 #include "../nodes/mesh_instancer.h"
 #include "../nodes/particle_system.h"
@@ -103,7 +104,7 @@ void Scene::register_builtin_nodes() {
     register_stage_node<FlyController>();
     register_stage_node<PrefabInstance>();
     register_stage_node<AnimationController>();
-
+    register_stage_node<AnimationJoint>();
     register_stage_node<StaticBody>();
     register_stage_node<DynamicBody>();
     register_stage_node<KinematicBody>();
