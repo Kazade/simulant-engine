@@ -14,6 +14,9 @@ struct UserData {
 static void draw_cb(pngle_t* pngle, uint32_t x, uint32_t y, uint32_t w,
                     uint32_t h, const uint8_t rgba[4]) {
 
+    _S_UNUSED(h);
+    _S_UNUSED(w);
+
     UserData* user_data = (UserData*)pngle_get_user_data(pngle);
     auto result = user_data->texture;
 
