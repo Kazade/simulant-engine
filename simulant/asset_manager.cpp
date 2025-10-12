@@ -261,7 +261,7 @@ MeshPtr AssetManager::load_mesh(const Path& path,
     GarbageCollectMethod garbage_collect) {
 
     //Load the material
-    auto mesh = create_mesh(desired_specification, GARBAGE_COLLECT_NEVER);
+    auto mesh = create_mesh(desired_specification, garbage_collect);
     auto loader = get_app()->loader_for(path);
     assert(loader && "Unable to locate a loader for the specified mesh file");
 
@@ -273,9 +273,10 @@ MeshPtr AssetManager::load_mesh(const Path& path,
     LoaderOptions loader_options;
     loader_options[MESH_LOAD_OPTIONS_KEY] = options;
 
-    loader->into(mesh, loader_options);
+    if(!loader->into(mesh, loader_options)) {
+        return nullptr;
+    }
 
-    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
     return mesh;
 }
 
@@ -302,9 +303,11 @@ MeshPtr AssetManager::create_mesh_from_heightmap(const TexturePtr& texture, cons
 
     loaders::HeightmapLoader loader(texture);
 
-    loader.into(*mesh, {
-        {"spec", spec},
-    });
+    if(!loader.into(*mesh, {
+                               {"spec", spec},
+    })) {
+        return nullptr;
+    }
     mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
 
     return mesh;
@@ -352,7 +355,9 @@ MaterialPtr AssetManager::load_material(const Path& path, GarbageCollectMethod g
         return MaterialPtr();
     }
 
-    loader->into(new_mat);
+    if(!loader->into(new_mat)) {
+        return nullptr;
+    }
     material_manager_.set_garbage_collection_method(new_mat->id(), garbage_collect);
     return new_mat;
 }
@@ -410,7 +415,9 @@ TexturePtr AssetManager::load_texture(const Path& path, TextureFlags flags, Garb
         }
 
         S_DEBUG("Loader found, loading...");
-        loader->into(tex);
+        if(!loader->into(tex)) {
+            return nullptr;
+        }
 
         if(flags.flip_vertically) {
             S_DEBUG("Flipping texture vertically");
@@ -462,7 +469,9 @@ SoundPtr AssetManager::load_sound(const Path& path, const SoundFlags &flags, Gar
     opts["stream"] = flags.stream_audio;
 
     if(loader) {
-        loader->into(snd, opts);
+        if(!loader->into(snd, opts)) {
+            return nullptr;
+        }
     } else {
         S_ERROR("Unsupported file type: ", path);
     }
@@ -577,32 +586,27 @@ FontPtr AssetManager::create_font_from_memory(
 
     auto font = font_manager_.make(this);
     auto font_id = font->id();
-    font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
 
-    try {
-        LoaderOptions options;
-        options["size"] =
-            flags.size ? flags.size : get_app()->config->ui.font_size;
-        options["weight"] = flags.weight;
-        options["style"] = flags.style;
-        options["charset"] = flags.charset;
-        options["blur_radius"] = flags.blur_radius;
+    LoaderOptions options;
+    options["size"] = flags.size ? flags.size : get_app()->config->ui.font_size;
+    options["weight"] = flags.weight;
+    options["style"] = flags.style;
+    options["charset"] = flags.charset;
+    options["blur_radius"] = flags.blur_radius;
 
-        // FIXME: We should see if it's a ttf_font or something else not just
-        // assume a TTF.
-        auto loadert = get_app()->loader_type("ttf_font");
-        assert(loadert);
+    // FIXME: We should see if it's a ttf_font or something else not just
+    // assume a TTF.
+    auto loadert = get_app()->loader_type("ttf_font");
+    assert(loadert);
 
-        auto stream = stream_from_memory(data, size);
-        stream->seekg(0);
+    auto stream = stream_from_memory(data, size);
+    stream->seekg(0);
 
-        loadert->loader_for("", stream)->into(font.get(), options);
-        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
-    } catch(...) {
-        // Make sure we don't leave the font hanging around
+    if(!loadert->loader_for("", stream)->into(font.get(), options)) {
         destroy_font(font_id);
-        throw;
+        return nullptr;
     }
+    font_manager_.set_garbage_collection_method(font_id, garbage_collect);
 
     return font;
 }
@@ -691,7 +695,9 @@ PrefabPtr AssetManager::load_prefab(const Path& filename,
     prefab_manager_.set_garbage_collection_method(prefab_id, garbage_collect);
 
     LoaderOptions opts;
-    get_app()->loader_for(filename)->into(prefab.get(), opts);
+    if(!get_app()->loader_for(filename)->into(prefab.get(), opts)) {
+        return nullptr;
+    }
 
     return prefab;
 }
@@ -723,22 +729,18 @@ void AssetManager::destroy_prefab(AssetID id) {
 FontPtr AssetManager::load_font(const Path& filename, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
     auto font = font_manager_.make(this);
     auto font_id = font->id();
-    font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
 
-    try {
-        LoaderOptions options;
-        options["size"] = flags.size ? flags.size : get_app()->config->ui.font_size;
-        options["weight"] = flags.weight;
-        options["style"] = flags.style;
-        options["charset"] = flags.charset;
-        options["blur_radius"] = flags.blur_radius;
-        get_app()->loader_for(filename)->into(font.get(), options);
-        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
-    } catch (...) {
-        // Make sure we don't leave the font hanging around
-        destroy_font(font_id);
-        throw;
+    LoaderOptions options;
+    options["size"] = flags.size ? flags.size : get_app()->config->ui.font_size;
+    options["weight"] = flags.weight;
+    options["style"] = flags.style;
+    options["charset"] = flags.charset;
+    options["blur_radius"] = flags.blur_radius;
+    if(!get_app()->loader_for(filename)->into(font.get(), options)) {
+        return nullptr;
     }
+
+    font_manager_.set_garbage_collection_method(font_id, garbage_collect);
 
     return font;
 }
@@ -769,16 +771,10 @@ bool AssetManager::has_font(AssetID f) const {
 
 ParticleScriptPtr AssetManager::load_particle_script(const Path& filename, GarbageCollectMethod garbage_collect) {
     auto ps = particle_script_manager_.make(this);
-    auto ps_id = ps->id();
-    particle_script_manager_.set_garbage_collection_method(ps_id, garbage_collect);
 
-    try {
-        LoaderOptions options;
-        get_app()->loader_for(filename)->into(ps.get(), options);
-    } catch (...) {
-        // Make sure we don't leave the font hanging around
-        destroy_particle_script(ps_id);
-        throw;
+    LoaderOptions options;
+    if(!get_app()->loader_for(filename)->into(ps.get(), options)) {
+        return nullptr;
     }
 
     return ps;

@@ -10,121 +10,121 @@
 
 namespace smlt {
 namespace loaders {
-    void TTFLoader::into(Loadable& resource, const LoaderOptions& options) {
-        Font* font = loadable_to<Font>(resource);
+bool TTFLoader::into(Loadable& resource, const LoaderOptions& options) {
+    Font* font = loadable_to<Font>(resource);
 
-        CharacterSet charset = smlt::any_cast<CharacterSet>(options.at("charset"));
-        uint16_t font_size = smlt::any_cast<uint16_t>(options.at("size"));
-        std::size_t blur = smlt::any_cast<std::size_t>(options.at("blur_radius"));
+    CharacterSet charset = smlt::any_cast<CharacterSet>(options.at("charset"));
+    uint16_t font_size = smlt::any_cast<uint16_t>(options.at("size"));
+    std::size_t blur = smlt::any_cast<std::size_t>(options.at("blur_radius"));
 
-        font->info_.reset(new stbtt_fontinfo());
-        font->font_size_ = font_size;
+    font->info_.reset(new stbtt_fontinfo());
+    font->font_size_ = font_size;
 
-        stbtt_fontinfo* info = font->info_.get();
+    stbtt_fontinfo* info = font->info_.get();
 
-        data_->seekg(0, std::ios::end);
-        auto e = data_->tellg();
-        data_->seekg(0, std::ios::beg);
+    data_->seekg(0, std::ios::end);
+    auto e = data_->tellg();
+    data_->seekg(0, std::ios::beg);
 
-        std::vector<char> data(e);
-        data_->read(data.data(), data.size());
+    std::vector<char> data(e);
+    data_->read(data.data(), data.size());
 
-        unsigned char* buffer = (unsigned char*) &data[0];
-        // Initialize the font data
-        stbtt_InitFont(info, buffer, stbtt_GetFontOffsetForIndex(buffer, 0));
+    unsigned char* buffer = (unsigned char*)&data[0];
+    // Initialize the font data
+    stbtt_InitFont(info, buffer, stbtt_GetFontOffsetForIndex(buffer, 0));
 
-        font->scale_ = stbtt_ScaleForPixelHeight(info, (int) font_size);
+    font->scale_ = stbtt_ScaleForPixelHeight(info, (int)font_size);
 
-        int ascent, descent, line_gap;
-        stbtt_GetFontVMetrics(info, &ascent, &descent, &line_gap);
+    int ascent, descent, line_gap;
+    stbtt_GetFontVMetrics(info, &ascent, &descent, &line_gap);
 
-        font->ascent_ = float(ascent) * font->scale_;
-        font->descent_ = float(descent) * font->scale_;
-        font->line_gap_ = float(line_gap) * font->scale_;
+    font->ascent_ = float(ascent) * font->scale_;
+    font->descent_ = float(descent) * font->scale_;
+    font->line_gap_ = float(line_gap) * font->scale_;
 
-        if(charset != CHARACTER_SET_LATIN) {
-            throw std::runtime_error("Unsupported character set - please submit a patch!");
+    if(charset != CHARACTER_SET_LATIN) {
+        S_ERROR("Unsupported character set - please submit a patch!");
+        return false;
+    }
+
+    std::vector<stbtt_pack_range> blocks;
+    std::vector<stbtt_packedchar> char_data;
+    stbtt_pack_context ctx;
+
+    std::size_t packed = 0;
+    int current_page = 0;
+
+    std::map<int, int> blocks_to_pages;
+
+    auto upload_texture = [&](int width, std::vector<uint8_t>&& pixels) {
+        // Dreamcast needs 16bpp, so we bake the font bitmap here
+        // temporarily and then generate a RGBA texture from it
+
+        auto tmp_texture = font->asset_manager().create_texture(
+            width, width, TEXTURE_FORMAT_R_1UB_8);
+
+        tmp_texture->set_auto_upload(false);
+        tmp_texture->set_data(std::move(pixels));
+
+        if(blur) {
+            tmp_texture->blur(BLUR_TYPE_SIMPLE, blur);
         }
 
-        std::vector<stbtt_pack_range> blocks;
-        std::vector<stbtt_packedchar> char_data;
-        stbtt_pack_context ctx;
-
-        std::size_t packed = 0;
-        int current_page = 0;
-
-        std::map<int, int> blocks_to_pages;
-
-        auto upload_texture = [&](int width, std::vector<uint8_t>&& pixels) {
-            // Dreamcast needs 16bpp, so we bake the font bitmap here
-            // temporarily and then generate a RGBA texture from it
-
-            auto tmp_texture = font->asset_manager().create_texture(
-                width,
-                width,
-                TEXTURE_FORMAT_R_1UB_8
-            );
-
-            tmp_texture->set_auto_upload(false);
-            tmp_texture->set_data(std::move(pixels));
-
-            if(blur) {
-                tmp_texture->blur(BLUR_TYPE_SIMPLE, blur);
-            }
-
-            /* We create a 16 colour paletted texture. This is an RGBA texture
+        /* We create a 16 colour paletted texture. This is an RGBA texture
          * where the colour is white with 16 levels of alpha. We then pack
          * into 4bpp data. This means that a 512x512 texture takes up less than
          * 150kb - essential for memory constrained systems. */
 
-            S_DEBUG("Converting to paletted format");
+        S_DEBUG("Converting to paletted format");
 
-            const uint8_t* tmp_buffer = tmp_texture->data();
+        const uint8_t* tmp_buffer = tmp_texture->data();
 
-            // Generate a new texture for rendering the font to
-            auto texture = font->pages_[current_page].texture = font->asset_manager().create_texture(
-                width,
-                width,
-                TEXTURE_FORMAT_RGBA8_PALETTED4
-            );
+        // Generate a new texture for rendering the font to
+        auto texture = font->pages_[current_page].texture =
+            font->asset_manager().create_texture(
+                width, width, TEXTURE_FORMAT_RGBA8_PALETTED4);
 
 #if defined(__DREAMCAST__)
-            /* FIXME: Implement 4bpp mipmap generation in GLdc */
-            texture->set_mipmap_generation(MIPMAP_GENERATE_NONE);
+        /* FIXME: Implement 4bpp mipmap generation in GLdc */
+        texture->set_mipmap_generation(MIPMAP_GENERATE_NONE);
 #endif
-            texture->set_texture_filter(TEXTURE_FILTER_BILINEAR);
-            texture->set_free_data_mode(TEXTURE_FREE_DATA_AFTER_UPLOAD);
-            texture->mutate_data([&](uint8_t* palette_data, uint16_t, uint16_t, TextureFormat) {
-                uint8_t* pout = palette_data;
-                for(int i = 0; i < 16; ++i) {
-                    *(pout++) = 255;
-                    *(pout++) = 255;
-                    *(pout++) = 255;
-                    *(pout++) = (i * 17);
-                }
+        texture->set_texture_filter(TEXTURE_FILTER_BILINEAR);
+        texture->set_free_data_mode(TEXTURE_FREE_DATA_AFTER_UPLOAD);
+        texture->mutate_data(
+            [&](uint8_t* palette_data, uint16_t, uint16_t, TextureFormat) {
+            uint8_t* pout = palette_data;
+            for(int i = 0; i < 16; ++i) {
+                *(pout++) = 255;
+                *(pout++) = 255;
+                *(pout++) = 255;
+                *(pout++) = (i * 17);
+            }
 
-                for(std::size_t i = 0; i < tmp_texture->data_size(); i += 2) {
-                    uint8_t t0 = tmp_buffer[i];
-                    uint8_t t1 = tmp_buffer[i + 1];
-                    uint8_t i0 = t0 >> 4;
-                    uint8_t i1 = t1 >> 4;
-                    *(pout++) = ((i0 << 4) | i1);
-                }
-            });
+            for(std::size_t i = 0; i < tmp_texture->data_size(); i += 2) {
+                uint8_t t0 = tmp_buffer[i];
+                uint8_t t1 = tmp_buffer[i + 1];
+                uint8_t i0 = t0 >> 4;
+                uint8_t i1 = t1 >> 4;
+                *(pout++) = ((i0 << 4) | i1);
+            }
+        });
 
-            /* We're done with this now */
-            tmp_texture.reset();
-            S_DEBUG("Finished conversion");
+        /* We're done with this now */
+        tmp_texture.reset();
+        S_DEBUG("Finished conversion");
 
-            texture->flush();
+        texture->flush();
 
-            font->pages_[current_page].material = font->asset_manager().load_material(Material::BuiltIns::TEXTURE_ONLY);
-            font->pages_[current_page].material->set_base_color_map(font->pages_[current_page].texture);
+        font->pages_[current_page].material =
+            font->asset_manager().load_material(
+                Material::BuiltIns::TEXTURE_ONLY);
+        font->pages_[current_page].material->set_base_color_map(
+            font->pages_[current_page].texture);
 
-            font->pages_[current_page].material->set_blend_func(BLEND_ALPHA);
-            font->pages_[current_page].material->set_depth_test_enabled(false);
-            font->pages_[current_page].material->set_cull_mode(CULL_MODE_NONE);
-        };
+        font->pages_[current_page].material->set_blend_func(BLEND_ALPHA);
+        font->pages_[current_page].material->set_depth_test_enabled(false);
+        font->pages_[current_page].material->set_cull_mode(CULL_MODE_NONE);
+    };
 
         auto push_block = [&](int first_codepoint, int num_chars) {
             stbtt_pack_range new_block;
@@ -309,8 +309,7 @@ namespace loaders {
         data.clear();
         data.shrink_to_fit();
 
-
-        S_DEBUG("Font loaded successfully");
-    }
+        return true;
+}
 }
 }

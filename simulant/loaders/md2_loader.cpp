@@ -215,7 +215,7 @@ typedef std::shared_ptr<MD2MeshFrameData> MD2MeshFrameDataPtr;
 
 const int32_t MAGIC_NUMBER_ID = 844121161;
 
-void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
+bool MD2Loader::into(Loadable& resource, const LoaderOptions& options) {
     _S_UNUSED(options);
 
     Mesh* mesh = loadable_to<Mesh>(resource);
@@ -239,7 +239,8 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     data_->read((char*) &header, sizeof(MD2Header));
 
     if(header.ident != MAGIC_NUMBER_ID || header.version != 8) {
-        throw std::logic_error("Unsupported MD2 file: " + this->filename_.str());
+        S_ERROR("Unsupported MD2 file: " + this->filename_.str());
+        return false;
     }
 
     data_->seekg(header.offset_frames, std::ios_base::beg);
@@ -436,8 +437,9 @@ void MD2Loader::into(Loadable &resource, const LoaderOptions &options) {
     mesh->add_animation("death_4", 198, 198, 5.0);
 
     S_DEBUG("Done loading MD2");
-}
 
+    return true;
+}
 
 } //loaders
 } //smlt

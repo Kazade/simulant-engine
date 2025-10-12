@@ -61,8 +61,7 @@ Loader::~Loader() {
 
 namespace loaders {
 
-
-void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
     Loadable* res_ptr = &resource;
     Texture* tex = dynamic_cast<Texture*>(res_ptr);
     assert(tex && "You passed a Resource that is not a texture to the texture loader");
@@ -73,11 +72,19 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
         data_
     );
 
-    assert(ifstream);
+    if(ifstream) {
+        if(!do_load(ifstream, tex)) {
+            S_ERROR("Failed to load texture");
+            return false;
+        }
+    } else {
+        std::vector<uint8_t> contents((std::istreambuf_iterator<char>(*data_)),
+                                      std::istreambuf_iterator<char>());
 
-    if(!do_load(ifstream, tex)) {
-        S_ERROR("Failed to load texture");
-        return;
+        if(!do_load(contents, tex)) {
+            S_ERROR("Failed to load memory texture");
+            return false;
+        }
     }
 
     /* Respect the auto_upload option if it exists*/
@@ -91,7 +98,8 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
     if(format_stored_upside_down()) {
         tex->flip_vertically();
     }
-}
 
+    return true;
+}
 }
 }

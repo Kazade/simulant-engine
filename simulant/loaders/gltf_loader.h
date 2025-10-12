@@ -71,7 +71,7 @@ public:
      read from the "extras" key of the node, or its mesh (if any)
      */
 
-    void into(smlt::Loadable& resource, const smlt::LoaderOptions& options =
+    bool into(smlt::Loadable& resource, const smlt::LoaderOptions& options =
                                             smlt::LoaderOptions()) override;
 };
 

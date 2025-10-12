@@ -42,6 +42,30 @@ static void draw_cb(pngle_t* pngle, uint32_t x, uint32_t y, uint32_t w,
     }
 }
 
+bool PNGLoader::do_load(const std::vector<uint8_t>& input, Texture* result) {
+    UserData data;
+    data.texture = result;
+    data.initialized = false;
+
+    auto pngl = pngle_new();
+    pngle_set_user_data(pngl, &data);
+    pngle_set_draw_callback(pngl, draw_cb);
+
+    const std::size_t chunk_size = 32 * 1024;
+    for(std::size_t i = 0; i < input.size(); i += chunk_size) {
+        auto ret = pngle_feed(pngl, (const void*)&input[i],
+                              std::min(chunk_size, input.size() - i));
+        if(ret == -1) {
+            S_ERROR("Failed to read PNG");
+            return result;
+        }
+    }
+
+    pngle_destroy(pngl);
+
+    return result;
+}
+
 bool PNGLoader::do_load(std::shared_ptr<FileIfstream> stream, Texture* result) {
 
     UserData data;

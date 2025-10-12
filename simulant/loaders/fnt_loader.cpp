@@ -312,7 +312,7 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
     S_DEBUG("Font texture loaded");
 }
 
-void FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
     const char TEXT_MARKER[4] = {'i', 'n', 'f', 'o'};
     const char BINARY_MARKER[4] = {'B', 'M', 'F', '\3'};
 
@@ -330,11 +330,11 @@ void FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
         S_DEBUG("Loading binary FNT");
         read_binary(font, *data_, options);
     } else {
-        throw std::runtime_error("Unsupported .FNT file");
+        S_ERROR("Unsupported .FNT file");
+        return false;
     }
 
-    S_DEBUG("FNT loaded successfully");
+    return true;
 }
-
 }
 }

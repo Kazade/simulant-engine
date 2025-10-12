@@ -45,7 +45,7 @@ VertexSpecification determine_spec(const FileHeader& header) {
     return vspec;
 }
 
-void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     Mesh* mesh = loadable_to<Mesh>(resource);
 
     S_DEBUG("Loading mesh from {0}", filename_);
@@ -62,14 +62,14 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     if(fheader.version != DCM_CURRENT_VERSION) {
         S_ERROR("Unsupported dcm version: {0}", fheader.version);
-        return;
+        return false;
     }
 
     LimitedString<3> hid((const char*)fheader.id);
 
     if(hid != std::string("DCM")) {
         S_ERROR("Not a valid .dcm file: {0}", fheader.id);
-        return;
+        return false;
     }
 
     auto spec = determine_spec(fheader);
@@ -305,7 +305,8 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     for(auto& sm: mesh->each_submesh()) {
         sm->mark_changed();
     }
-}
 
+    return true;
+}
 }
 }

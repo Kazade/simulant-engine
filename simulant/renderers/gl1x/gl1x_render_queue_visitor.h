@@ -66,8 +66,8 @@ private:
         bool enabled = false;
         Vec4 position;
         Color color;
-        float intensity;
-        float range;
+        float intensity = 0.0f;
+        float range = 0.0f;
 
         LightState() = default;
         LightState(bool enabled, Vec4 pos, Color color, float intensity,

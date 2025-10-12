@@ -31,6 +31,8 @@ private:
     bool do_load(std::shared_ptr<FileIfstream> stream,
                  Texture* result) override;
 
+    bool do_load(const std::vector<uint8_t>& data, Texture* result) override;
+
     thread::Mutex lock_;
 };
 

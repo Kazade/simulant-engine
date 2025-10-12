@@ -506,8 +506,7 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
     return true;
 }
 
-
-void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
+bool OBJLoader::into(Loadable& resource, const LoaderOptions& options) {
     std::vector<HalfVec3> _vertices, _colors, _normals;
     std::vector<HalfVec2> _texcoords;
 
@@ -643,7 +642,8 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             }
         }
     }
-}
 
+    return true;
+}
 }
 }
