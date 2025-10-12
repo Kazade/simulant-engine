@@ -100,27 +100,13 @@ public:
      * @param t
      * @return The pair of time indices.
      */
-    std::pair<std::size_t, std::size_t> find_times_indices(float t) const {
-        if(t < 0.0f) {
-            return std::make_pair(0u, 1u);
-        }
-
-        for(std::size_t i = 0u; i < times_.size(); ++i) {
-            float time = times_[i];
-            if(time > t) {
-                return std::make_pair((i > 0) ? i - 1 : 0, i);
-            }
-        }
-
-        return std::make_pair(times_.size() - 2, times_.size() - 1);
-    }
+    std::pair<std::size_t, std::size_t> find_times_indices(float t) const;
 
     template<typename T>
     T interpolated_value(AnimationInterpolation i, float t) {
         t = clamp(t, times_[0], times_.back());
 
         auto indexes = find_times_indices(t);
-
         auto t0 = *(((const T*)&output_[0]) + indexes.first);
         auto t1 = *(((const T*)&output_[0]) + indexes.second);
 
@@ -256,7 +242,7 @@ public:
             // animation.
 
             if(loop_count_ > 0) {
-                // Restart
+                // Restart                
                 time_ = 0.0f;
                 loop_count_--;
             } else if(loop_count_ == 0) {

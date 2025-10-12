@@ -81,5 +81,48 @@ bool TextureLoader::do_load(std::shared_ptr<FileIfstream> stream,
         return false;
     }
 }
+
+bool TextureLoader::do_load(const std::vector<uint8_t>& input,
+                            Texture* result) {
+    int width, height, channels;
+    unsigned char* data = stbi_load_from_memory(&input[0], input.size(), &width,
+                                                &height, &channels, 0);
+
+    if((width & -width) != width || (height & -height) != height || width < 8 ||
+       height < 8) {
+        // FIXME: Add SIMULANT_COMPAT_WARNINGS=1 and only do this then
+        S_WARN("[COMPAT] Using a non power-of-two texture will break "
+               "compatibility with some platforms (e.g. Dreamcast)");
+    }
+
+    if(data) {
+        TextureFormat format;
+        switch(channels) {
+            case 1:
+                format = TEXTURE_FORMAT_R_1UB_8;
+                break;
+            case 2:
+                S_ERROR("2-channel textures are not supported");
+                return false;
+                break;
+            case 3:
+                format = TEXTURE_FORMAT_RGB_3UB_888;
+                break;
+            default:
+                format = TEXTURE_FORMAT_RGBA_4UB_8888;
+        }
+
+        result->resize(width, height);
+        result->set_format(format);
+        result->set_data(data, (width * height * channels));
+
+        stbi_image_free(data);
+        return true;
+    } else {
+        S_ERROR("Unable to load texture {0}. Reason was {1}", filename_,
+                stbi_failure_reason());
+        return false;
+    }
+}
 }
 }

@@ -7,6 +7,8 @@
 #include "../utils/base64.h"
 #include "../utils/random.h"
 #include "../vfs.h"
+#include "png_loader.h"
+#include "texture_loader.h"
 
 namespace smlt {
 namespace loaders {
@@ -481,8 +483,18 @@ TextureFilter calculate_filter(int magFilter, int minFilter) {
     }
 }
 
+class VectorStreamBuf: public std::streambuf {
+public:
+    VectorStreamBuf(std::vector<uint8_t>& vec) {
+        setg(reinterpret_cast<char*>(vec.data()),
+             reinterpret_cast<char*>(vec.data()),
+             reinterpret_cast<char*>(vec.data() + vec.size()));
+    }
+};
+
 static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
                                      JSONIterator& texture, int texture_id,
+                                     std::istream* bin_chunk,
                                      const std::string& ext = "") {
 
     _S_UNUSED(texture_id);
@@ -498,7 +510,7 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
     if(!sampler.is_valid() || !image.is_valid()) {
         return smlt::TexturePtr();
     }
-
+    auto keys = image->keys();
     smlt::Path uri = image["uri"]->to_str().value_or("");
     if(!uri.str().empty()) {
         if(!ext.empty()) {
@@ -540,7 +552,33 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
         tex->flush();
         return tex;
     } else {
-        S_ERROR("Only uri textures supported atm");
+        Accessor acc;
+        acc.component_type = BYTE;
+        acc.type = "SCALAR";
+        acc.buffer_view_id = image["bufferView"]->to_int().value_or(-1);
+        if(acc.buffer_view_id != -1) {
+            auto buff = process_buffer(js, acc, bin_chunk);
+            auto mime = image["mimeType"]->to_str().value_or("");
+
+            VectorStreamBuf buffer(buff.data);
+            auto is = std::make_shared<std::istream>(&buffer);
+
+            if(mime == "image/png") {
+                auto loader = PNGLoader("something.png", is);
+                auto tex = assets->create_texture(8, 8);
+                loader.into(*tex);
+                tex->flush();
+                return tex;
+            } else if(mime == "image/jpeg") {
+                auto loader = TextureLoader("something.jpg", is);
+                auto tex = assets->create_texture(8, 8);
+                loader.into(*tex);
+                tex->flush();
+                return tex;
+            } else {
+                S_ERROR("Unsupported texture format");
+            }
+        }
     }
 
     return smlt::TexturePtr();
@@ -973,7 +1011,7 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
     return true;
 }
 
-void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     auto prefab = loadable_to<Prefab>(resource);
     std::shared_ptr<std::istream> bin_chunk;
 
@@ -988,7 +1026,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         if(version != 2) {
             S_ERROR("Unsupported glTF version: {0}", version);
-            return;
+            return false;
         }
 
         data_->read((char*)&file_length, sizeof(file_length));
@@ -999,7 +1037,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         data_->read((char*)&chunk_type, sizeof(chunk_type));
         if(chunk_type != 0x4E4F534A) {
             S_ERROR("First chunk is not JSON");
-            return;
+            return false;
         }
 
         uint32_t here = data_->tellg();
@@ -1019,7 +1057,7 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
 
             if(bin_type != 0x004E4942) {
                 S_ERROR("Unrecognised chunk: {0}", bin_type);
-                return;
+                return false;
             }
         }
     } else {
@@ -1030,13 +1068,13 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     auto js = json_read(this->data_);
 
     if(!check_gltf_version(js)) {
-        return;
+        return false;
     }
 
     auto maybe_scene_it = find_scene(js);
     if(!maybe_scene_it) {
         S_ERROR("No scene in gltf file");
-        return;
+        return false;
     }
 
     /* We add the containing folder to the front of the search path
@@ -1077,7 +1115,8 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     auto textures_it = js["textures"];
     for(auto& node: textures_it) {
         auto tex_it = node.to_iterator();
-        auto tex = load_texture(&prefab->asset_manager(), js, tex_it, j++, ext);
+        auto tex = load_texture(&prefab->asset_manager(), js, tex_it, j++,
+                                bin_chunk.get(), ext);
         textures.push_back(tex);
         prefab->push_texture(tex);
     }
@@ -1119,14 +1158,14 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
                 auto name_maybe = it["name"]->to_str();
                 if(name_maybe && name_maybe.value() == root_name) {
                     spawn_node_recursively(*prefab, -1, i, js, meshes);
-                    return;
+                    return true;
                 }
             }
         }
 
         S_ERROR("Unable to locate specified root_name: {0}", root_name);
         // FIXME: convey error!
-        return;
+        return false;
     }
 
     auto scene_it = maybe_scene_it.value();
@@ -1232,6 +1271,8 @@ void GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
                                            interpolation, data);
         }
     }
+
+    return true;
 }
 
 } // namespace loaders
