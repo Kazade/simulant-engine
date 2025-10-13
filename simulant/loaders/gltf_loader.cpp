@@ -940,8 +940,6 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
         prefab_node.node_type_name = "stage";
     }
 
-    GLTFLoader::NodeFactoryInput input;
-
     if(node["extras"].is_valid()) {
         for(auto& k: node["extras"]->keys()) {
             auto it = node["extras"];
