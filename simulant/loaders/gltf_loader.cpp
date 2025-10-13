@@ -94,10 +94,11 @@ std::size_t component_size(ComponentType type) {
 
 std::size_t component_count(const std::string& type) {
     const std::map<std::string, std::size_t> lookup = {
-        {"SCALAR", 1},
-        {"VEC2",   2},
-        {"VEC3",   3},
-        {"VEC4",   4}
+        {"SCALAR", 1 },
+        {"VEC2",   2 },
+        {"VEC3",   3 },
+        {"VEC4",   4 },
+        {"MAT4",   16},
     };
 
     return lookup.at(type);
@@ -882,7 +883,7 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
 static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
                                    JSONIterator& js,
                                    const std::vector<smlt::MeshPtr>& meshes,
-                                   const std::set<uint32_t> all_joints) {
+                                   const std::map<uint32_t, Mat4>& all_joints) {
     auto nodes = js["nodes"];
     auto node = nodes[node_id];
 
@@ -895,6 +896,7 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
 
     if(all_joints.count(node_id)) {
         prefab_node.node_type_name = "joint";
+        prefab_node.params.set("inverse_bind_matrix", all_joints.at(node_id));
     } else if(node->has_key("mesh") && !meshes.empty()) {
         prefab_node.node_type_name = "actor";
         prefab_node.params.set("mesh",
@@ -1031,7 +1033,7 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
 
 struct Skin {
     std::string name;
-    std::vector<uint32_t> joints;
+    std::map<uint32_t, Mat4> joints;
 };
 
 bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
@@ -1122,23 +1124,7 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     std::vector<MeshPtr> meshes;
     std::vector<Accessor> accessors;
     std::vector<Skin> skins;
-    std::set<uint32_t> all_joints;
-
-    for(auto& skin_node: js["skins"]) {
-        auto ski = skin_node.to_iterator();
-
-        Skin skin;
-        skin.name = ski["name"]->to_str().value_or("");
-
-        for(auto& joint_node: ski["joints"]) {
-            auto joint = joint_node.to_iterator();
-            auto jid = joint->to_int().value_or(-1);
-            if(jid != -1) {
-                skin.joints.push_back(jid);
-                all_joints.insert(jid);
-            }
-        }
-    }
+    std::map<uint32_t, Mat4> all_joints;
 
     /* This is the most complicated part of the loader. A GLTF file has a
        heirarchy of: mesh/animation -> accessor -> bufferView -> buffer */
@@ -1150,6 +1136,33 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
             (ComponentType)acc["componentType"]->to_int().value_or(5121);
         accessor.buffer_view_id = acc["bufferView"]->to_int().value_or(-1);
         accessors.push_back(accessor);
+    }
+
+    for(auto& skin_node: js["skins"]) {
+        auto ski = skin_node.to_iterator();
+
+        Skin skin;
+        skin.name = ski["name"]->to_str().value_or("");
+
+        auto imatrices = ski["inverseBindMatrices"]->to_int().value_or(-1);
+        BufferInfo matrix_info;
+
+        if(imatrices != -1) {
+            auto& acc = accessors[imatrices];
+            matrix_info = process_buffer(js, acc, bin_chunk.get());
+        }
+
+        const Mat4* ibms =
+            (imatrices != -1) ? (Mat4*)&matrix_info.data[0] : nullptr;
+        for(auto& joint_node: ski["joints"]) {
+            auto joint = joint_node.to_iterator();
+            auto jid = joint->to_int().value_or(-1);
+            if(jid != -1) {
+                auto ibm = (ibms) ? ibms[jid] : Mat4();
+                skin.joints.insert(std::make_pair(jid, ibm));
+                all_joints.insert(std::make_pair(jid, ibm));
+            }
+        }
     }
 
     int j = 0;

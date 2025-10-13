@@ -139,6 +139,11 @@ private:
         return set_arg(name, FloatArray({vec.x, vec.y, vec.z, vec.w}));
     }
 
+    bool set_arg(const char* name, const Mat4& vec) {
+        FloatArray arr(vec.data(), vec.data() + 16);
+        return set_arg(name, arr);
+    }
+
     bool set_arg(const char* name, const char* text) {
         return set_arg(name, std::string(text));
     }
