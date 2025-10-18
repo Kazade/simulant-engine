@@ -33,9 +33,8 @@ void Light::set_type(LightType type) {
 }
 
 bool Light::on_create(Params args) {
-    color_ = args.get<FloatArray>("color").value_or(Color::white());
-    intensity_ = args.get<float>("intensity").value_or(1.0f);
-    range_ = args.get<float>("range").value_or(0.0f);
+    Color c = args.get<FloatArray>("color").value_or(smlt::Color::white());
+    set_color(c);
 
     return true;
 }

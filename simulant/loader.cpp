@@ -61,8 +61,7 @@ Loader::~Loader() {
 
 namespace loaders {
 
-
-void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
     Loadable* res_ptr = &resource;
     Texture* tex = dynamic_cast<Texture*>(res_ptr);
     assert(tex && "You passed a Resource that is not a texture to the texture loader");
@@ -73,9 +72,20 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
         data_
     );
 
-    assert(ifstream);
+    if(ifstream) {
+        if(!do_load(ifstream, tex)) {
+            S_ERROR("Failed to load texture");
+            return false;
+        }
+    } else {
+        std::vector<uint8_t> contents((std::istreambuf_iterator<char>(*data_)),
+                                      std::istreambuf_iterator<char>());
 
-    auto result = do_load(ifstream);
+        if(!do_load(contents, tex)) {
+            S_ERROR("Failed to load memory texture");
+            return false;
+        }
+    }
 
     /* Respect the auto_upload option if it exists*/
     bool auto_upload = true;
@@ -83,21 +93,13 @@ void BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
         auto_upload = smlt::any_cast<bool>(options.at("auto_upload"));
     }
 
-    if (result.data.empty()) {
-        S_ERROR(_F("Unable to load texture with name: {0}").format(filename_));
-        throw std::runtime_error("Couldn't load the file: " + filename_.str());
-    } else {
-        tex->set_source(filename_);
-        tex->set_format(result.format);
-        tex->resize(result.width, result.height);
-        tex->set_data(result.data);
-        tex->set_auto_upload(auto_upload);
+    tex->set_auto_upload(auto_upload);
 
-        if(format_stored_upside_down()) {
-            tex->flip_vertically();
-        }
+    if(format_stored_upside_down()) {
+        tex->flip_vertically();
     }
-}
 
+    return true;
+}
 }
 }

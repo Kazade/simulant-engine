@@ -98,13 +98,14 @@ void ProgressBar::set_range(float min, float max) {
 }
 
 void ProgressBar::set_value(float value) {
+    value = smlt::clamp(value, min(), max());
     if(value != this->value()) {
         needs_refresh_ = true;
         value_ = value;
     }
 }
 
-void ProgressBar::set_fraction(float fraction) {
+void ProgressBar::set_fraction(NormalizedFloat fraction) {
     auto value = min() + (max() * fraction);
     set_value(value);
 }
@@ -134,7 +135,9 @@ bool ProgressBar::on_create(Params params) {
         return true;
     }
 
-    auto sstyle = params.get<WidgetStylePtr>("shared_style");
+    auto sstyle = params.get<WidgetStyleRef>("shared_style")
+                      .value_or(WidgetStyleRef())
+                      .lock();
     auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
 
     if(!sstyle) {

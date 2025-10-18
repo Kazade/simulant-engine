@@ -33,13 +33,6 @@ void Renderer::unregister_texture(AssetID texture_id, Texture* texture) {
     on_texture_unregister(texture_id, texture);
 }
 
-std::shared_ptr<VertexBuffer> Renderer::vertex_buffer_factory(
-    VertexFormat format,
-    std::shared_ptr<VertexBufferRendererData> renderer_data) {
-    return std::shared_ptr<VertexBuffer>(
-        new VertexBuffer(format, renderer_data));
-}
-
 bool Renderer::texture_format_is_native(TextureFormat fmt) {
     switch(fmt) {
         case TEXTURE_FORMAT_R_1UB_8:
@@ -279,31 +272,6 @@ bool Renderer::convert_if_necessary(Texture* tex) {
     }
 
     return true;
-}
-
-void Renderer::on_renderable_prepare(Renderable* renderable) {
-    _S_UNUSED(renderable);
-
-    /* We have some vertex data that hasn't been prepared for the GPU */
-    if(renderable->vertex_data && (!renderable->vertex_data->gpu_buffer() ||
-                                   renderable->vertex_data->is_dirty())) {
-
-        renderable->vertex_data->buffer_ = prepare_vertex_data(
-            renderable->arrangement, renderable->vertex_data,
-            renderable->index_data, renderable->vertex_ranges);
-        renderable->vertex_data->set_dirty(false);
-
-        if(renderable->vertex_data->free_data_mode() ==
-           UPLOAD_FREE_DATA_MODE_DISCARD) {
-
-            assert(renderable->vertex_data->buffer_);
-            renderable->vertex_data->clear();
-        }
-    }
-}
-
-void Renderer::prepare_renderable(Renderable* renderable) {
-    on_renderable_prepare(renderable);
 }
 
 void Renderer::prepare_texture(Texture* tex) {

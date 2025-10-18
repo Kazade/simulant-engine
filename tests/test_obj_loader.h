@@ -116,7 +116,7 @@ public:
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
-        auto spec = mesh->vertex_data->vertex_specification();
+        auto spec = mesh->vertex_data->vertex_format();
         assert_false(spec.attr_count(VERTEX_ATTR_NAME_COLOR));
         assert_false(spec.attr_count(VERTEX_ATTR_NAME_NORMAL));
         assert_false(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0));

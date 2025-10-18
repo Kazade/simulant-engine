@@ -13,12 +13,13 @@ public:
     void on_load() override {
         start_service<PhysicsService>();
 
-        camera_ = create_child<smlt::Camera>();
+        camera_ = create_child<smlt::Camera3D>();
         pipeline_ = compositor->create_layer(
             this, camera_
         );
 
         pipeline_->viewport->set_color(smlt::Color::blue());
+        pipeline_->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
 
         camera_->set_perspective_projection(
             Degrees(45.0), float(window->width()) / float(window->height()), 1.0, 1000.0
@@ -28,20 +29,24 @@ public:
 
         // Create a nice skybox (not on DC, the image is too big)
         if(get_platform()->name() != "dreamcast") {
-            create_child<Skybox>("sample_data/skyboxes/TropicalSunnyDay");
+            create_child<Skybox>("assets/samples/skyboxes/TropicalSunnyDay");
         }
 
-        auto crate = app->shared_assets->load_texture("sample_data/crate.png");
-        auto mat = app->shared_assets->create_material_from_texture(crate);
+        auto crate =
+            app->shared_assets->load_texture("assets/samples/crate.png");
+
+        auto mat = assets->clone_default_material();
+        mat->set_base_color_map(crate);
+        mat->set_lighting_enabled(false);
 
         auto box_mesh = app->shared_assets->create_mesh(
             smlt::VertexFormat::standard(), smlt::GARBAGE_COLLECT_NEVER);
         box_mesh->create_submesh_as_cube("cube", mat, 5);
         box_mesh_ = box_mesh;
 
-        auto grass = app->shared_assets->load_texture("sample_data/beach_sand.png");
-        auto ground_mesh =
-            app->shared_assets->create_mesh(smlt::VertexFormat::standard());
+        auto grass =
+            app->shared_assets->load_texture("assets/samples/beach_sand.png");
+        auto ground_mesh = app->shared_assets->create_mesh(smlt::VertexFormat::standard());
         ground_mesh->create_submesh_as_box(
             "ground", app->shared_assets->create_material_from_texture(grass), 1000, 2.5, 1000
         ); //window->shared_assets->load_mesh("sample_data/playground.obj");
@@ -50,29 +55,28 @@ public:
         ground_ = create_child<smlt::Actor>(ground_mesh_);
 
         // Make the ground a staticbody
-        auto c = create_child<smlt::StaticBody>();
-        c->adopt_children(ground_); // FIXME: Convert to mixin
+        auto c = ground_->create_mixin<smlt::StaticBody>();
         c->add_box_collider(ground_->aabb().dimensions(),
                             PhysicsMaterial::stone());
 
-        srand(time(nullptr));
+        lighting->set_ambient_light(Color::white() * 0.5f);
+        auto l = create_child<smlt::PointLight>();
+        l->set_intensity(1000);
     }
 
     void spawn_box() {
-        boxes_.push_back(create_child<smlt::Actor>(box_mesh_));
-
-        auto box = boxes_.back();
+        auto box = create_child<smlt::Actor>(box_mesh_);
         auto pos = Vec3(
-            ((float(rand()) / RAND_MAX) * 20.0f) - 10.0f,
-            20,
-            ((float(rand()) / RAND_MAX) * 10.0f) - 5.0f
-        );
+            smlt::RandomGenerator::instance().float_in_range(-20.0f, 20.0f),
+            smlt::RandomGenerator::instance().float_in_range(20.0f, 30.0f),
+            smlt::RandomGenerator::instance().float_in_range(-10.0f, 10.0f));
 
         auto controller = create_child<smlt::DynamicBody>(pos);
         controller->add_box_collider(box->aabb().dimensions(),
                                      PhysicsMaterial::wood());
 
         box->set_parent(controller);
+        boxes_.push_back(controller);
         controller->transform->set_position(pos);
     }
 
@@ -81,11 +85,16 @@ public:
         if(counter > 1.0f) {
             counter = 0;
             spawn_box();
+
+            if(boxes_.size() > 10) {
+                boxes_.front()->destroy();
+                boxes_.erase(boxes_.begin());
+            }
         }
     }
 
 private:
-    std::vector<ActorPtr> boxes_;
+    std::vector<StageNodePtr> boxes_;
 
     LayerPtr pipeline_;
     StagePtr stage_;
@@ -133,6 +142,8 @@ int main(int argc, char* argv[]) {
     config.fullscreen = false;
     config.log_level = LOG_LEVEL_DEBUG;
 #endif
+
+    // config.development.force_renderer = "gl1x";
 
     PhysicsDemo app(config);
     return app.run();

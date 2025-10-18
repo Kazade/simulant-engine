@@ -278,10 +278,10 @@ public:
     /* Releases all presses forcibly, firing signals */
     void force_release();
 
-    void set_anchor_point(RangeValue<0, 1> x, RangeValue<0, 1> y);
+    void set_anchor_point(NormalizedFloat x, NormalizedFloat y);
     smlt::Vec2 anchor_point() const;
 
-    void set_opacity(RangeValue<0, 1> alpha);
+    void set_opacity(NormalizedFloat alpha);
 
     Px line_height() const;
 

@@ -127,12 +127,8 @@ float Vec3::distance_to(const AABB& aabb) const {
     float dy = fast_max(fast_abs(y - center.y) - (aabb.height() * 0.5f), 0.0f);
     float dz = fast_max(fast_abs(z - center.z) - (aabb.depth() * 0.5f), 0.0f);
 
-#ifdef __DREAMCAST__
-    return fast_sqrt(MATH_Sum_of_Squares(dx, dy, dz, 0));
-#else
     Vec3 d = Vec3(dx, dy, dz);
     return fast_sqrt(d.dot(d));
-#endif
 }
 
 }

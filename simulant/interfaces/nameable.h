@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../utils/limited_string.h"
 #include <string>
 
 namespace smlt {
@@ -11,14 +12,24 @@ namespace smlt {
  */
 class Nameable {
 public:
+    static constexpr std::size_t MAX_NAME_LENGTH = 64;
+
     virtual ~Nameable() {}
+
+    void set_name(const char* name) {
+        name_ = name;
+    }
 
     void set_name(const std::string& name) {
         name_ = name;
     }
 
-    const std::string& name() const {
-        return name_;
+    void set_name(const LimitedString<MAX_NAME_LENGTH>& name) {
+        name_ = name;
+    }
+
+    std::string name() const {
+        return name_.str();
     }
 
     bool has_name() const {
@@ -26,7 +37,7 @@ public:
     }
 
 private:
-    std::string name_;
+    LimitedString<MAX_NAME_LENGTH> name_;
 };
 
 template<typename T>
@@ -34,7 +45,7 @@ class ChainNameable:
     public virtual Nameable {
 
 public:
-    T* set_name_and_get(const std::string& name) {
+    T* set_name_and_get(const LimitedString<MAX_NAME_LENGTH>& name) {
         set_name(name);
         return dynamic_cast<T*>(this);
     }

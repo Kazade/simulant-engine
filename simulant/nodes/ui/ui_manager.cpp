@@ -68,7 +68,7 @@ UIManager::~UIManager() {
 
 bool UIManager::on_create(Params params) {
     config_ = params.get<UIConfig>("config").value_or(UIConfig());
-    return true;
+    return StageNode::on_create(params);
 }
 
 // Keyboard* UIManager::new_widget_as_keyboard(const KeyboardMode& mode, const
@@ -400,7 +400,14 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(
 void UIManager::do_generate_renderables(batcher::RenderQueue* render_queue,
                                         const Camera* camera,
                                         const Viewport* viewport,
-                                        const DetailLevel detail_level) {
+                                        const DetailLevel detail_level,
+                                        Light** light,
+                                        const std::size_t light_count) {
+
+    _S_UNUSED(detail_level);
+    _S_UNUSED(light);
+    _S_UNUSED(light_count);
+
     /* Each time the scene is rendered with a camera and viewport, we need to
      * process any queued events so that (for example) we can interact with the
      * same widget rendered to different viewports */

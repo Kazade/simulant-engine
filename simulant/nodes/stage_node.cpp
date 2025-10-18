@@ -1,7 +1,9 @@
-#include "../stage.h"
-#include "camera.h"
-#include "../window.h"
 #include "../application.h"
+#include "../asset_manager.h"
+#include "../nodes/prefab_instance.h"
+#include "../stage.h"
+#include "../window.h"
+#include "camera.h"
 
 namespace smlt {
 
@@ -17,6 +19,7 @@ StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
     }
 
     LoaderOptions lopts;
+
     if(!opts.root_name.empty()) {
         lopts["root_name"] = opts;
     }
@@ -29,9 +32,9 @@ StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
         loader->into(this, lopts);
         return this;
     } else {
-        auto new_child = create_child<Stage>();
+        auto new_child = scene->assets->create_prefab();
         loader->into(new_child, lopts);
-        return new_child;
+        return create_child<PrefabInstance>(new_child);
     }
 }
 
@@ -215,8 +218,16 @@ StageNode* StageNode::find_mixin(const std::string& name) const {
     return nullptr;
 }
 
-void StageNode::generate_renderables(batcher::RenderQueue* render_queue, const smlt::Camera* camera, const smlt::Viewport *viewport, const DetailLevel detail_level) {
-    do_generate_renderables(render_queue, camera, viewport, detail_level);
+std::size_t StageNode::generate_renderables(batcher::RenderQueue* render_queue,
+                                            const smlt::Camera* camera,
+                                            const smlt::Viewport* viewport,
+                                            const DetailLevel detail_level,
+                                            Light** lights,
+                                            const std::size_t light_count) {
+    auto before = render_queue->renderable_count();
+    do_generate_renderables(render_queue, camera, viewport, detail_level,
+                            lights, light_count);
+    return render_queue->renderable_count() - before;
 }
 
 /* Right this is a bit confusing.

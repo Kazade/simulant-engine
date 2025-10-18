@@ -57,7 +57,7 @@ optional<SkyboxImageDict> discover_files_from_directory(const Path& folder) {
         auto full_path = kfs::path::join(folder.str(), file);
 
         // Make sure this is a supported texture file
-        if(!get_app()->loader_type("texture")->supports(full_path)) {
+        if(!get_app()->loader_for(full_path, LOADER_HINT_TEXTURE)) {
             continue;
         }
 
@@ -146,7 +146,7 @@ void Skybox::generate(const Path& up, const Path& down, const Path& left,
     auto set_texture = [](SubMesh* sm, TexturePtr tex) {
         /* Force a flush. Skyboxes are usually big textures */
         tex->flush();
-        sm->material()->set_diffuse_map(tex);
+        sm->material()->set_base_color_map(tex);
     };
 
     set_texture(mesh->find_submesh("top"),

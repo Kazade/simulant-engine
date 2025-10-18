@@ -15,6 +15,7 @@ SET(SAMPLES
     boxes
     widgets
     cave
+    anim
 )
 
 SET(EXE_EXTENSION ".elf")

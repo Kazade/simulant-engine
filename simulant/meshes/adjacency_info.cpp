@@ -31,7 +31,7 @@ void AdjacencyInfo::rebuild() {
     std::unordered_map<edge_pair, uint32_t> edge_triangles;
 
     // FIXME: handle other types
-    if(mesh_->vertex_data->vertex_specification()
+    if(mesh_->vertex_data->vertex_format()
            .attr(VERTEX_ATTR_NAME_POSITION)
            .value()
            .arrangement != VERTEX_ATTR_ARRANGEMENT_XYZ) {

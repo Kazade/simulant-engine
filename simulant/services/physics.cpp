@@ -431,7 +431,11 @@ void PhysicsService::add_capsule_collider(PhysicsBody* self, const Vec3& v0,
     self->bounce_->fixtures.push_back(fdata);
 }
 
-void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, const PhysicsMaterial& properties, uint16_t kind, const Vec3& offset, const Quaternion& rotation) {
+void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh,
+                                       const PhysicsMaterial& properties,
+                                       uint16_t kind, const Vec3& position,
+                                       const Quaternion& orientation,
+                                       const Vec3& scale) {
     auto bmesh = std::make_shared<b3MeshGenerator>();
 
     std::vector<Triangle> triangles;
@@ -439,9 +443,9 @@ void PhysicsService::add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh, c
     bmesh->reserve_vertices(mesh->vertex_data->count());
 
     uint8_t* pos = mesh->vertex_data->data();
-    auto stride = mesh->vertex_data->vertex_specification().stride();
+    auto stride = mesh->vertex_data->vertex_format().stride();
 
-    Mat4 tx = Mat4::as_transform(offset, rotation, Vec3(1));
+    Mat4 tx = Mat4::as_transform(position, orientation, scale);
 
     for(std::size_t i = 0; i < mesh->vertex_data->count(); ++i, pos += stride) {
         auto p = tx * Vec4(*((Vec3*) pos), 1);

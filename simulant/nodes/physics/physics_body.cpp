@@ -150,9 +150,18 @@ PhysicsService* PhysicsBody::get_simulation() const {
 }
 
 bool PhysicsBody::on_create(Params params) {
-    Vec3 initial_pos = params.get<FloatArray>("position").value_or(Vec3());
-    Quaternion initial_rot =
-        params.get<FloatArray>("orientation").value_or(Quaternion());
+    if(!clean_params<PhysicsBody>(params)) {
+        return false;
+    }
+
+    bool ret = StageNode::on_create(params);
+    if(!ret) {
+        return false;
+    }
+
+    Vec3 initial_pos = transform->position();
+    Quaternion initial_rot = transform->orientation();
+
     auto sim = get_simulation();
     if(sim) {
         assert(!bounce_);
@@ -162,11 +171,6 @@ bool PhysicsBody::on_create(Params params) {
     } else {
         S_ERROR("PhysicsBody added without an active PhysicsService");
     }
-
-    /* FIXME: These should probably be create arguments for *all* stage nodes,
-     * not just PhysicsBodies */
-    transform->set_position(initial_pos);
-    transform->set_orientation(initial_rot);
 
     return true;
 }

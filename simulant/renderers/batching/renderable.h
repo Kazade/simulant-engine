@@ -29,7 +29,6 @@
 namespace smlt {
 
 class VertexData;
-class VertexBuffer;
 class IndexData;
 struct VertexRange;
 

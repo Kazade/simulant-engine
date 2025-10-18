@@ -4,9 +4,9 @@
 //     This file is part of Simulant.
 //
 //     Simulant is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU Lesser General Public License as published
-//     by the Free Software Foundation, either version 3 of the License, or (at
-//     your option) any later version.
+//     it under the terms of the GNU Lesser General Public License as published by
+//     the Free Software Foundation, either version 3 of the License, or
+//     (at your option) any later version.
 //
 //     Simulant is distributed in the hope that it will be useful,
 //     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -641,87 +641,93 @@ SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr 
 
     auto idx_offset = vertex_data->count();
 
-    auto spec = vertex_data->vertex_specification();
+    auto spec = vertex_data->vertex_format();
     vertex_data->move_to_end();
 
-    bool has_z =
-        spec.attr(VERTEX_ATTR_NAME_POSITION).value().component_count() >= 3;
-    bool has_w =
-        spec.attr(VERTEX_ATTR_NAME_POSITION).value().component_count() >= 4;
-
-#define POSITION(x, y, z, w)                                                   \
-    do {                                                                       \
-        if(has_z && has_w) {                                                   \
-            vertex_data->position(x, y, z, w);                                 \
-        } else if(has_z) {                                                     \
-            vertex_data->position(x, y, z);                                    \
-        } else {                                                               \
-            vertex_data->position(x, y);                                       \
-        }                                                                      \
-    } while(0)
-
-    POSITION(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset,
-             1);
-
-    if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
+    //Build some shared vertex data
+    auto ccount = vertex_data->vertex_format()
+                      .attr(VERTEX_ATTR_NAME_POSITION)
+                      ->component_count();
+    if(ccount == 3) {
+        vertex_data->position(x_offset + (-width / 2.0f),
+                              y_offset + (-height / 2.0f), z_offset);
+    } else {
+        vertex_data->position(x_offset + (-width / 2.0f),
+                              y_offset + (-height / 2.0f));
+    }
+    if(spec.attr(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->color(smlt::Color::white());
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
+    if(spec.attr(VERTEX_ATTR_NAME_TEXCOORD_0)) {
         vertex_data->tex_coord0(0.0, 0.0f);
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_1)) {
+    if(spec.attr(VERTEX_ATTR_NAME_TEXCOORD_1)) {
         vertex_data->tex_coord1(0.0, 0.0f);
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
+    if(spec.attr(VERTEX_ATTR_NAME_NORMAL)) {
         vertex_data->normal(0, 0, 1);
     }
     vertex_data->move_next();
 
-    POSITION(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset,
-             1);
-
-    if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
+    if(ccount == 3) {
+        vertex_data->position(x_offset + (width / 2.0f),
+                              y_offset + (-height / 2.0f), z_offset);
+    } else {
+        vertex_data->position(x_offset + (width / 2.0f),
+                              y_offset + (-height / 2.0f));
+    }
+    if(spec.attr(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->color(smlt::Color::white());
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
+    if(spec.attr(VERTEX_ATTR_NAME_TEXCOORD_0)) {
         vertex_data->tex_coord0(1.0, 0.0f);
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_1)) {
+    if(spec.attr(VERTEX_ATTR_NAME_TEXCOORD_1)) {
         vertex_data->tex_coord1(1.0, 0.0f);
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
+    if(spec.attr(VERTEX_ATTR_NAME_NORMAL)) {
         vertex_data->normal(0, 0, 1);
     }
     vertex_data->move_next();
 
-    POSITION(x_offset + (width / 2.0f), y_offset + (height / 2.0f), z_offset,
-             1);
-    if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
+    if(ccount == 3) {
+        vertex_data->position(x_offset + (width / 2.0f),
+                              y_offset + (height / 2.0f), z_offset);
+    } else {
+        vertex_data->position(x_offset + (width / 2.0f),
+                              y_offset + (height / 2.0f));
+    }
+    if(spec.attr(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->color(smlt::Color::white());
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
+    if(spec.attr(VERTEX_ATTR_NAME_TEXCOORD_0)) {
         vertex_data->tex_coord0(1.0, 1.0f);
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_1)) {
+    if(spec.attr(VERTEX_ATTR_NAME_TEXCOORD_1)) {
         vertex_data->tex_coord1(1.0, 1.0f);
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
+    if(spec.attr(VERTEX_ATTR_NAME_NORMAL)) {
         vertex_data->normal(0, 0, 1);
     }
     vertex_data->move_next();
 
-    POSITION(x_offset + (-width / 2.0f), y_offset + (height / 2.0f), z_offset,
-             1);
-    if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
+    if(ccount == 3) {
+        vertex_data->position(x_offset + (-width / 2.0f),
+                              y_offset + (height / 2.0f), z_offset);
+    } else {
+        vertex_data->position(x_offset + (-width / 2.0f),
+                              y_offset + (height / 2.0f));
+    }
+    if(spec.attr(VERTEX_ATTR_NAME_COLOR)) {
         vertex_data->color(smlt::Color::white());
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
+    if(spec.attr(VERTEX_ATTR_NAME_TEXCOORD_0)) {
         vertex_data->tex_coord0(0.0, 1.0f);
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_1)) {
+    if(spec.attr(VERTEX_ATTR_NAME_TEXCOORD_1)) {
         vertex_data->tex_coord1(0.0, 1.0f);
     }
-    if(spec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
+    if(spec.attr(VERTEX_ATTR_NAME_NORMAL)) {
         vertex_data->normal(0, 0, 1);
     }
     vertex_data->done();
@@ -768,11 +774,11 @@ void Mesh::set_material(MaterialPtr material) {
 void Mesh::transform_vertices(const smlt::Mat4& transform) {
     vertex_data->move_to_start();
 
-    bool has_positions = vertex_data->vertex_specification().attr_count(
-        VERTEX_ATTR_NAME_POSITION);
+    bool has_positions =
+        vertex_data->vertex_format().attr_count(VERTEX_ATTR_NAME_POSITION);
 
     bool has_normals =
-        vertex_data->vertex_specification().attr_count(VERTEX_ATTR_NAME_NORMAL);
+        vertex_data->vertex_format().attr_count(VERTEX_ATTR_NAME_NORMAL);
 
     for(uint32_t i = 0; i < vertex_data->count(); ++i) {
         if(has_positions) {

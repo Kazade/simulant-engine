@@ -20,10 +20,12 @@ bool Image::on_create(Params params) {
         return false;
     }
 
-    auto sstyle =
-        params.get<WidgetStylePtr>("shared_style").value_or(WidgetStylePtr());
+    auto sstyle = params.get<WidgetStyleRef>("shared_style")
+                      .value_or(WidgetStyleRef())
+                      .lock();
     auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
-    auto texture = params.get<TexturePtr>("texture").value_or(TexturePtr());
+    auto texture =
+        params.get<TextureRef>("texture").value_or(TextureRef()).lock();
     if(!sstyle) {
         /* By default, images don't have a border */
         set_border_width(theme.image_border_width_);

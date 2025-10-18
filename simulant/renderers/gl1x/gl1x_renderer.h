@@ -31,12 +31,11 @@ public:
 
     GL1XRenderer(Window* window);
 
-    batcher::RenderGroupKey prepare_render_group(batcher::RenderGroup* group,
-        const Renderable *renderable,
-        const MaterialPass *material_pass,
-        const uint8_t pass_number,
-        const bool is_blended,
-        const float distance_to_camera) override;
+    batcher::RenderGroupKey prepare_render_group(
+        batcher::RenderGroup* group, const Renderable* renderable,
+        const MaterialPass* material_pass, const RenderPriority priority,
+        const uint8_t pass_number, const bool is_blended,
+        const float distance_to_camera, uint16_t texture_id) override;
 
     std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera) override;
 
@@ -46,34 +45,8 @@ public:
         return "gl1x";
     }
 
-private:
-    virtual void on_pre_render() override;
-
-    TexturePtr normalization_cube_map_;
-
-    void init_normalization_map();
-
-    virtual std::shared_ptr<VertexBuffer> prepare_vertex_data(
-        MeshArrangement arrangement, const VertexData* vertex_data,
-        const IndexData* index_data, const VertexRangeList* ranges) override;
-
-    VertexFormat on_native_vertex_format(VertexFormat hint) override {
-        return VertexFormatBuilder()
-            .add(VERTEX_ATTR_NAME_POSITION, VERTEX_ATTR_ARRANGEMENT_XYZ,
-                 VERTEX_ATTR_TYPE_FLOAT)
-            .add(VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_ARRANGEMENT_XY,
-                 VERTEX_ATTR_TYPE_FLOAT)
-            .add(VERTEX_ATTR_NAME_COLOR, VERTEX_ATTR_ARRANGEMENT_BGRA,
-                 VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
-            .add(VERTEX_ATTR_NAME_NORMAL, VERTEX_ATTR_ARRANGEMENT_XYZ,
-                 VERTEX_ATTR_TYPE_FLOAT)
-            .build();
-    }
-
-    uint32_t null_texture_id_ = 0;
-
-    uint32_t null_texture_id() const {
-        return null_texture_id_;
+    void prepare_to_render(const Renderable* renderable) override {
+        _S_UNUSED(renderable);
     }
 };
 

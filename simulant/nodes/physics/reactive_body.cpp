@@ -289,9 +289,8 @@ void ReactiveBody::lock_rotation(bool x, bool y, bool z) {
 }
 
 bool ReactiveBody::on_destroy() {
-
     // Remove the sphere joints from the counterpart body
-    for(auto joint: sphere_joints_) {
+    for(auto& joint: sphere_joints_) {
         auto& other = joint->second_body()->sphere_joints_;
         other.erase(std::remove(other.begin(), other.end(), joint), other.end());
     }

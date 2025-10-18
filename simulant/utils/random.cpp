@@ -31,6 +31,11 @@ int32_t RandomGenerator::int_in_range(int32_t lower, int32_t upper) {
     return distr(impl_->engine);
 }
 
+int32_t RandomGenerator::any_int() {
+    return int_in_range(std::numeric_limits<int32_t>::lowest(),
+                        std::numeric_limits<int32_t>::max());
+}
+
 Vec2 RandomGenerator::point_in_circle(float diameter) {
     return point_on_circle(diameter) * float_in_range(0.0f, 1.0f);
 }
@@ -60,5 +65,4 @@ Vec2 RandomGenerator::direction_2d() {
 Vec3 RandomGenerator::direction_3d() {
     return point_on_sphere(1.0f);
 }
-
 }

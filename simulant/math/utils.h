@@ -67,19 +67,6 @@ static inline float clamp(const float x, const float l, const float h) {
     return std::min(std::max(x, l), h);
 }
 
-/** Linear interpolation from x to y with factor t, where t can be any value between 0 and 1 */
-static inline float lerp(const float x, const float y, const float t) {
-    return ::fmaf((y - x), t, x);
-}
-
-/** Frame rate independent interpolation from x to y: 
- * dt is the delta time in seconds
- * p is the target precision (e.g. 0.01f which would be 1% of distance remaining) 
- * t is the expected positive duration until the remaining distance matches the target precision p */
-static inline float lerp_smooth(const float x, const float y, const float dt, const float p, const float t) {
-    return lerp(x, y, 1.0f - ::powf(p, fast_divide(dt, t)));
-}
-
 static inline float fast_sqrt(float n) {
     return std::sqrt(n);
 }

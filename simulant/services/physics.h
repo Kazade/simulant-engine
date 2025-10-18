@@ -98,11 +98,11 @@ private:
                               const float diameter,
                               const PhysicsMaterial& properties, uint16_t kind);
 
-    void add_mesh_collider(
-        PhysicsBody* self,
-        const MeshPtr& mesh, const PhysicsMaterial& properties,
-        uint16_t kind, const Vec3& offset, const Quaternion& rotation
-    );
+    void add_mesh_collider(PhysicsBody* self, const MeshPtr& mesh,
+                           const PhysicsMaterial& properties, uint16_t kind,
+                           const Vec3& position = Vec3(),
+                           const Quaternion& orientation = Quaternion(),
+                           const Vec3& scale = Vec3(1));
 
     void on_fixed_update(float step) override;
 };

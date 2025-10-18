@@ -24,7 +24,9 @@
 #include "assets/binary_data.h"
 #include "assets/material.h"
 #include "assets/particle_script.h"
+#include "assets/prefab.h"
 #include "assets/texture_flags.h"
+
 #include "font.h"
 #include "generic/lru_cache.h"
 #include "generic/object_manager.h"
@@ -48,6 +50,7 @@ typedef ObjectManager<AssetID, Font, DO_REFCOUNT> FontManager;
 typedef ObjectManager<AssetID, ParticleScript, DO_REFCOUNT>
     ParticleScriptManager;
 typedef ObjectManager<AssetID, Binary, DO_REFCOUNT> BinaryManager;
+typedef ObjectManager<AssetID, Prefab, DO_REFCOUNT> PrefabManager;
 
 struct FontFlags {
     uint16_t size = 0;
@@ -106,6 +109,20 @@ public:
     std::size_t particle_script_count() const;
     bool has_particle_script(AssetID id) const;
     ParticleScriptPtr find_particle_script(const std::string& name);
+
+    PrefabPtr load_prefab(
+        const Path& filename,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+    PrefabPtr prefab(AssetID id);
+    const PrefabPtr prefab(AssetID id) const;
+    std::size_t prefab_count() const;
+    bool has_prefab(AssetID id) const;
+    PrefabPtr find_prefab(const std::string& name);
+    void destroy_prefab(AssetID id);
+
+    PrefabPtr create_prefab(
+        const smlt::StageNode* root = nullptr,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
 
     /* Texture API */
     TexturePtr load_texture(
@@ -275,6 +292,7 @@ private:
     SoundManager sound_manager_;
     ParticleScriptManager particle_script_manager_;
     BinaryManager binary_manager_;
+    PrefabManager prefab_manager_;
 
     std::vector<AssetManager*> children_;
     void register_child(AssetManager* child) {
@@ -307,6 +325,8 @@ private:
                                                                    method);
         } else if(auto p = dynamic_cast<const Binary*>(resource)) {
             binary_manager_.set_garbage_collection_method(p->id(), method);
+        } else if(auto p = dynamic_cast<const Prefab*>(resource)) {
+            prefab_manager_.set_garbage_collection_method(p->id(), method);
         } else {
             S_ERROR("Unhandled asset type. GC method not set");
         }

@@ -28,7 +28,7 @@ public:
     void test_visibility() {
         FrustumCuller* partitioner = scene->create_child<FrustumCuller>();
 
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
         camera->set_parent(partitioner);
         camera->transform->set_translation(Vec3(784, 58, -775));
 
@@ -46,7 +46,8 @@ public:
         queue.reset(partitioner, window->renderer.get(), camera);
 
         Viewport viewport;
-        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        partitioner->generate_renderables(&queue, camera, &viewport,
+                                          DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         assert_true(queue.renderable_count() > 0);
     }
@@ -54,7 +55,7 @@ public:
     void test_nodes_returned_if_never_culled() {
         FrustumCuller* partitioner = scene->create_child<FrustumCuller>();
 
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
         auto a1 = scene->create_child<smlt::Actor>(box_);
         a1->set_parent(partitioner);
         a1->transform->set_translation(Vec3(0, 0, 100));
@@ -63,14 +64,16 @@ public:
         queue.reset(partitioner, window->renderer.get(), camera);
 
         Viewport viewport;
-        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        partitioner->generate_renderables(&queue, camera, &viewport,
+                                          DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         /* Not visible */
         assert_equal(queue.renderable_count(), 0u);
 
         a1->set_cullable(false);
 
-        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        partitioner->generate_renderables(&queue, camera, &viewport,
+                                          DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         /* Now visible */
         assert_true(queue.renderable_count() > 0);
@@ -79,7 +82,7 @@ public:
     void test_destroyed_nodes_not_returned() {
         FrustumCuller* partitioner = scene->create_child<FrustumCuller>();
 
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
 
         auto a1 = scene->create_child<smlt::Actor>(box_);
         auto a2 = scene->create_child<smlt::Actor>(box_);
@@ -95,7 +98,8 @@ public:
         queue.reset(partitioner, window->renderer.get(), camera);
 
         Viewport viewport;
-        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        partitioner->generate_renderables(&queue, camera, &viewport,
+                                          DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         auto all_visible_count = queue.renderable_count();
 
@@ -103,7 +107,8 @@ public:
 
         a2->destroy();
 
-        partitioner->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        partitioner->generate_renderables(&queue, camera, &viewport,
+                                          DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         assert_true(queue.renderable_count() < all_visible_count);
     }

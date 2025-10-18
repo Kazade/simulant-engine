@@ -318,10 +318,25 @@ void VertexData::color(float r, float g, float b, float a) {
     *out = Vec4(r, g, b, a);
 }
 
+void VertexData::color(float r, float g, float b) {
+    auto offset =
+        (int)vertex_specification_.offset(VERTEX_ATTR_NAME_COLOR).value_or(-1);
+
+    if(offset == -1) {
+        return;
+    }
+
+    Vec3* out = (Vec3*)&data_[cursor_offset() + offset];
+    *out = Vec3(r, g, b);
+}
+
 void VertexData::color(const Color& c) {
-    if(vertex_specification_.attr(VERTEX_ATTR_NAME_COLOR)->type ==
-       VERTEX_ATTR_TYPE_FLOAT) {
+    auto attr = vertex_specification_.attr(VERTEX_ATTR_NAME_COLOR);
+    if(attr->type == VERTEX_ATTR_TYPE_FLOAT && attr->component_count() == 4) {
         color(c.r, c.g, c.b, c.a);
+    } else if(attr->type == VERTEX_ATTR_TYPE_FLOAT &&
+              attr->component_count() == 3) {
+        color(c.r, c.g, c.b);
     } else {
         const float s = 255.0f;
         color((uint8_t)clamp(c.r * s, 0, 255), (uint8_t)clamp(c.g * s, 0, 255),
@@ -428,7 +443,6 @@ void VertexData::resize(uint32_t size) {
 void VertexData::done() {
     signal_update_complete_();
     last_updated_ = TimeKeeper::now_in_us();
-    set_dirty(true);
 }
 
 uint64_t VertexData::last_updated() const {
@@ -489,7 +503,6 @@ std::vector<uint32_t> IndexData::all() {
 void IndexData::done() {
     signal_update_complete_();
     last_updated_ = TimeKeeper::now_in_us();
-    set_dirty(true);
 }
 
 uint64_t IndexData::last_updated() const {

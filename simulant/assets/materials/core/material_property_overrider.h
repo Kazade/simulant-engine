@@ -4,9 +4,10 @@
 #include <list>
 #include <string>
 
+#include "../../../generic/containers/contiguous_map.h"
 #include "../property_value.h"
 #include "core_material.h"
-#include "../../../generic/containers/contiguous_map.h"
+#include "material_value_pool.h"
 
 namespace smlt {
 
@@ -25,84 +26,71 @@ public:
     MaterialPropertyOverrider(const MaterialPropertyOverrider* parent):
         parent_(parent) {}
 
-    template<typename T>
-    bool set_property_value(MaterialPropertyNameHash hsh, const char* name, const T& value) {
-        if(auto v = find_core_property_value(hsh)) {
-            v->set(value);
-        } else {
-            clear_override(hsh);
+public:
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const bool& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const float& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const int32_t& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Vec2& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Vec3& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Vec4& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Mat3& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Mat4& value) = 0;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name,
+                                    const TexturePtr& value) = 0;
 
-            properties_.insert(std::make_pair(hsh, PropertyValue<void>(value)));
-            on_override(hsh, name, _impl::material_property_lookup<T>::type);
-        }
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                const bool*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                const float*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                const int32_t*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                const Vec2*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                const Vec3*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                const Vec4*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                const Mat3*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                const Mat4*& out) const = 0;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                const TexturePtr*& out) const = 0;
 
-        return true;
+    virtual bool set_property_value(MaterialPropertyNameHash hsh,
+                                    const char* name, const Color& value) {
+        return set_property_value(
+            hsh, name,
+            reinterpret_cast<const Vec4&>(
+                value)); // FIXME: dirty cast, add to_vec4() to Color
     }
 
-    template<typename T>
-    bool set_property_value(const char* name, const T& value) {
-        if(!valid_name(name)) {
-            S_WARN("Ignoring invalid property name: {0}", name);
-            return false;
-        }
-
-        if(parent_ && !parent_->check_existance(name)) {
-            S_WARN("Ignoring unknown property override for {0}", name);
-            return false;
-        }
-
-        return set_property_value(material_property_hash(name), name, value);
-    }
-
-    bool set_property_value(const char* name, const Color& value) {
-        if(!valid_name(name)) {
-            S_WARN("Ignoring invalid property name: {0}", name);
-            return false;
-        }
-
-        if(parent_ && !parent_->check_existance(name)) {
-            S_WARN("Ignoring unknown property override for {0}", name);
-            return false;
-        }
-
-        return set_property_value(material_property_hash(name), name, (const Vec4&) value);
-    }
-
-    template<typename T>
-    bool property_value(const MaterialPropertyNameHash hsh, const T*& out) const {
-        /* Core property fast-path. If it's a core property, check locally
-         * then check the parent without doing a hash lookup on the properties
-         * list (which is for non-core properties) */
-        auto mem_ptr = find_core_property(hsh);
-        if(mem_ptr) {
-            auto v = &(this->*mem_ptr);
-            auto p = (parent_) ? &(parent_->*mem_ptr) : nullptr;
-            if(v->has_value()) {
-                out = v->get<T>();
-                return true;
-            } else if(p && p->has_value()) {
-                out = p->get<T>();
-                return true;
-            } else {
-                return core_material_property_value(hsh, out);
-            }
-        } else {
-            auto it = properties_.find(hsh);
-            if(it != properties_.end()) {
-                out = it->second.get<T>();
-                return true;
-            } else if(parent_) {
-                return parent_->property_value(hsh, out);
-            }
-        }
-
-        return false;
+    virtual bool property_value(const MaterialPropertyNameHash hsh,
+                                const Color*& out) const {
+        return property_value(
+            hsh, reinterpret_cast<const Vec4*&>(out)); // FIXME: dirty cast
     }
 
     /* Helpers for std::string */
     template<typename T>
     void set_property_value(const std::string& str, const T& v) {
-        set_property_value(str.c_str(), v);
+        MaterialPropertyNameHash hsh = material_property_hash(str.c_str());
+        set_property_value(hsh, str.c_str(), v);
+    }
+
+    template<typename T>
+    void set_property_value(const char* name, const T& v) {
+        MaterialPropertyNameHash hsh = material_property_hash(name);
+        set_property_value(hsh, name, v);
     }
 
     template<typename T>
@@ -117,159 +105,32 @@ public:
     }
 
     bool clear_override(const char* name) {
-        return clear_override(material_property_hash(name));
+        return on_clear_override(material_property_hash(name));
     }
 
-    bool property_type(const char* property_name, MaterialPropertyType* type) const;
+    bool clear_override(MaterialPropertyNameHash hsh) {
+        return on_clear_override(hsh);
+    }
 
+    bool check_existance(const char* property_name) const {
+        return on_check_existence(material_property_hash(property_name));
+    }
+
+    virtual bool property_type(const char* property_name,
+                               MaterialPropertyType* type) const = 0;
+
+    virtual bool on_check_existence(MaterialPropertyNameHash hsh) const = 0;
 
 protected:
-    /* It would be nice if we could treat core properties and
-     * custom properties identically. Unfortunately that leads to
-     * poor performance due to lack of cache locality and the
-     * hash table lookups. So instead we keep a list of core properties
-     * directly embedded in the material and use a massive switch
-     * statement to find them. */
-    PropertyValue<Vec4> diffuse_property_;
-    PropertyValue<Vec4> ambient_property_;
-    PropertyValue<Vec4> emission_property_;
-    PropertyValue<Vec4> specular_property_;
-    PropertyValue<float> shininess_property_;
-    PropertyValue<float> point_size_property_;
-    PropertyValue<bool> depth_write_enabled_property_;
-    PropertyValue<bool> depth_test_enabled_property_;
-    PropertyValue<int32_t> depth_func_property_;
-    PropertyValue<bool> lighting_enabled_property_;
-    PropertyValue<int32_t> textures_enabled_property_;
-    PropertyValue<TexturePtr> diffuse_map_property_;
-    PropertyValue<TexturePtr> specular_map_property_;
-    PropertyValue<TexturePtr> light_map_property_;
-    PropertyValue<TexturePtr> normal_map_property_;
-    PropertyValue<Mat4> diffuse_map_matrix_property_;
-    PropertyValue<Mat4> specular_map_matrix_property_;
-    PropertyValue<Mat4> light_map_matrix_property_;
-    PropertyValue<Mat4> normal_map_matrix_property_;
-    PropertyValue<int32_t> blend_func_property_;
-    PropertyValue<int32_t> polygon_mode_property_;
-    PropertyValue<int32_t> shade_model_property_;
-    PropertyValue<bool> color_material_property_;
-    PropertyValue<int32_t> cull_mode_property_;
-    PropertyValue<Vec4> fog_color_property_;
-    PropertyValue<float> fog_density_property_;
-    PropertyValue<float> fog_start_property_;
-    PropertyValue<float> fog_end_property_;
-    PropertyValue<int32_t> fog_mode_property_;
-
-    PropertyValue<int32_t> alpha_func_property_;
-    PropertyValue<float> alpha_threshold_property_;
-
-    BasePropertyValue* find_core_property_value(const MaterialPropertyNameHash& hsh) {
-        return const_cast<BasePropertyValue*>(static_cast<const MaterialPropertyOverrider*>(this)->find_core_property_value(hsh));
-    }
-
-    typedef BasePropertyValue MaterialPropertyOverrider::* PropertyValueMemberPtr;
-
-    PropertyValueMemberPtr find_core_property(const MaterialPropertyNameHash& hsh) const {
-        switch(hsh) {
-            case DIFFUSE_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::diffuse_property_;
-            case AMBIENT_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::ambient_property_;
-            case EMISSION_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::emission_property_;
-            case SPECULAR_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::specular_property_;
-            case SHININESS_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::shininess_property_;
-            case POINT_SIZE_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::point_size_property_;
-            case DEPTH_WRITE_ENABLED_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::depth_write_enabled_property_;
-            case DEPTH_TEST_ENABLED_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::depth_test_enabled_property_;
-            case DEPTH_FUNC_PROPERTY_HASH:
-                return (PropertyValueMemberPtr)&MaterialPropertyOverrider::
-                    depth_func_property_;
-            case LIGHTING_ENABLED_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::lighting_enabled_property_;
-            case TEXTURES_ENABLED_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::textures_enabled_property_;
-            case DIFFUSE_MAP_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::diffuse_map_property_;
-            case SPECULAR_MAP_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::specular_map_property_;
-            case LIGHT_MAP_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::light_map_property_;
-            case NORMAL_MAP_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::normal_map_property_;
-            case DIFFUSE_MAP_MATRIX_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::diffuse_map_matrix_property_;
-            case SPECULAR_MAP_MATRIX_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::specular_map_matrix_property_;
-            case LIGHT_MAP_MATRIX_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::light_map_matrix_property_;
-            case NORMAL_MAP_MATRIX_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::normal_map_matrix_property_;
-            case BLEND_FUNC_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::blend_func_property_;
-            case POLYGON_MODE_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::polygon_mode_property_;
-            case SHADE_MODEL_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::shade_model_property_;
-            case COLOR_MATERIAL_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::color_material_property_;
-            case CULL_MODE_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::cull_mode_property_;
-            case FOG_COLOR_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_color_property_;
-            case FOG_DENSITY_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_density_property_;
-            case FOG_START_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_start_property_;
-            case FOG_END_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_end_property_;
-            case FOG_MODE_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::fog_mode_property_;
-            case ALPHA_FUNC_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::alpha_func_property_;
-            case ALPHA_THRESHOLD_PROPERTY_HASH:
-                return (PropertyValueMemberPtr) &MaterialPropertyOverrider::alpha_threshold_property_;
-            default:
-                return nullptr;
-        }
-    }
-
-    const BasePropertyValue* find_core_property_value(const MaterialPropertyNameHash& hsh) const {
-        auto ptr = find_core_property(hsh);
-        if(!ptr) {
-            return nullptr;
-        }
-
-        return &(this->*ptr);
-    }
-
-
-    virtual void on_override(
-        MaterialPropertyNameHash hsh,
-        const char* name,
-        MaterialPropertyType type
-    ) {
+    virtual void on_override(MaterialPropertyNameHash hsh, const char* name,
+                             MaterialPropertyType type) {
         _S_UNUSED(hsh);
         _S_UNUSED(name);
         _S_UNUSED(type);
     }
 
-    virtual void on_clear_override(MaterialPropertyNameHash hsh) { _S_UNUSED(hsh); }
-
-    /* If we have a parent, then we can't override unless the property has
-     * been defined on the parent - or it's a core property */
-    bool check_existance(const MaterialPropertyNameHash hsh) const;
-    bool check_existance(const char* property_name) const;
-    bool clear_override(const unsigned hsh);
-
+    virtual bool on_clear_override(MaterialPropertyNameHash hsh) = 0;
     const MaterialPropertyOverrider* parent_ = nullptr;
-
-    std::unordered_map<MaterialPropertyNameHash, PropertyValue<void>> properties_;
 };
 
-}
+} // namespace smlt

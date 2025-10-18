@@ -21,6 +21,11 @@
 
 #include "types.h"
 
+/* In some cases you might want to override window creation, in which case
+ * we don't want to include the default platform stuff */
+
+#ifndef SIMULANT_CUSTOM_WINDOW
+
 #ifdef __DREAMCAST__
 #include "platforms/dreamcast/kos_window.h"
 #elif defined(__PSP__)
@@ -29,6 +34,8 @@
 #include "platforms/android/android_window.h"
 #else
 #include "platforms/sdl/sdl2_window.h"
+#endif
+
 #endif
 
 #include "assets/material.h"
@@ -54,21 +61,22 @@
 
 #include "nodes/skies/skybox.h"
 
-#include "nodes/ui/ui_manager.h"
-#include "nodes/ui/button.h"
-#include "nodes/ui/label.h"
-#include "nodes/ui/progress_bar.h"
-#include "nodes/ui/image.h"
-#include "nodes/ui/frame.h"
-#include "nodes/ui/keyboard.h"
-#include "nodes/ui/text_entry.h"
-#include "nodes/sprite.h"
-#include "nodes/particle_system.h"
-#include "nodes/camera.h"
 #include "nodes/audio_source.h"
+#include "nodes/camera.h"
 #include "nodes/debug.h"
 #include "nodes/locators/node_locator.h"
+#include "nodes/particle_system.h"
+#include "nodes/prefab_instance.h"
+#include "nodes/sprite.h"
 #include "nodes/stats_panel.h"
+#include "nodes/ui/button.h"
+#include "nodes/ui/frame.h"
+#include "nodes/ui/image.h"
+#include "nodes/ui/keyboard.h"
+#include "nodes/ui/label.h"
+#include "nodes/ui/progress_bar.h"
+#include "nodes/ui/text_entry.h"
+#include "nodes/ui/ui_manager.h"
 
 #include "sound.h"
 #include "utils/random.h"

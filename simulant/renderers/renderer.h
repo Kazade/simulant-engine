@@ -28,7 +28,6 @@
 #include "../macros.h"
 #include "../texture.h"
 
-#include "../meshes/vertex_buffer.h"
 #include "../meshes/vertex_format.h"
 #include "batching/render_queue.h"
 #include "batching/renderable.h"
@@ -37,15 +36,9 @@ namespace smlt {
 
 class SubActor;
 class Window;
-class VertexRangeList;
 
 class Renderer:
     public batcher::RenderGroupFactory {
-
-protected:
-    std::shared_ptr<VertexBuffer> vertex_buffer_factory(
-        VertexFormat format,
-        std::shared_ptr<VertexBufferRendererData> renderer_data);
 
 public:
     typedef std::shared_ptr<Renderer> ptr;
@@ -72,6 +65,9 @@ public:
 
     virtual std::string name() const = 0;
 
+    /* This function is called just before drawing the renderable, it can be
+     * used to upload any data to VRAM if necessary */
+    virtual void prepare_to_render(const Renderable* renderable) = 0;
 
     /** Returns true if the GPU can support the texture format
      *  without any kind of conversion */
@@ -130,15 +126,6 @@ public:
 
     void prepare_texture(Texture *texture);
     void prepare_material(Material* material);
-    void prepare_renderable(Renderable* renderable);
-
-    VertexFormat native_vertex_format(VertexFormat hint) {
-        return on_native_vertex_format(hint);
-    }
-
-    bool natively_supports_vertex_format(VertexFormat fmt) {
-        return fmt == native_vertex_format(fmt);
-    }
 
 private:
     friend class Texture;
@@ -149,11 +136,6 @@ private:
     bool convert_if_necessary(Texture* tex);
 
     Window* window_ = nullptr;
-
-    /* Given a VertexFormat return the best matching format supported by
-     * the hardware natively. The returned format should ideally not lose
-     * information (but that may be inevitable in some cases) */
-    virtual VertexFormat on_native_vertex_format(VertexFormat hint) = 0;
 
     /*
      * Called when a texture is created. This should do whatever is necessary to
@@ -202,21 +184,12 @@ private:
         _S_UNUSED(material);
     }
 
-    /* Called when the render queue is processed as each renderable is visited
-     */
-    virtual void on_renderable_prepare(Renderable* renderable);
-
-    virtual std::shared_ptr<VertexBuffer> prepare_vertex_data(
-        MeshArrangement arrangement, const VertexData* vertex_data,
-        const IndexData* index_data, const VertexRangeList* ranges) = 0;
-
-    mutable thread::Mutex texture_registry_mutex_;
-    std::unordered_map<AssetID, Texture*> texture_registry_;
-
-protected:
     /* Called at the start of pre_render() */
     virtual void on_pre_render() {}
     virtual void on_post_render() {}
+
+    mutable thread::Mutex texture_registry_mutex_;
+    std::unordered_map<AssetID, Texture*> texture_registry_;
 };
 
 }

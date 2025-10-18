@@ -14,7 +14,7 @@ public:
     void test_basic_usage() {
         Viewport view;
         auto stage = scene->create_child<smlt::Stage>();
-        auto cam = scene->create_child<smlt::Camera>();
+        auto cam = scene->create_child<smlt::Camera3D>();
         auto tex = application->shared_assets->create_texture(256, 256);
 
         auto pipeline1 = window->compositor->create_layer(stage, cam);

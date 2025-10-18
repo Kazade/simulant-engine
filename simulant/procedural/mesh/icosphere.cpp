@@ -142,19 +142,19 @@ public:
         auto vdata = submesh->mesh->vertex_data.get();
         auto start = vdata->count();
 
-        auto& spec = vdata->vertex_specification();
+        auto& spec = vdata->vertex_format();
 
         vdata->move_to_end();
         for(auto& pos: positions_) {
             /* Supply the position and scale */
             vdata->position(pos * diameter);
-            if(spec.attr_count(VERTEX_ATTR_NAME_COLOR)) {
+            if(spec.attr(VERTEX_ATTR_NAME_COLOR)) {
                 vdata->color(smlt::Color::white());
             }
 
             auto N = pos.normalized();
             // The normal is the position normalized as we generate around the origin
-            if(spec.attr_count(VERTEX_ATTR_NAME_NORMAL)) {
+            if(spec.attr(VERTEX_ATTR_NAME_NORMAL)) {
                 vdata->normal(N);
             }
 
@@ -162,11 +162,11 @@ public:
             uv.x = N.x / 2.0f + 0.5f;
             uv.y = N.y / 2.0f + 0.5f;
 
-            if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_0)) {
+            if(spec.attr(VERTEX_ATTR_NAME_TEXCOORD_0)) {
                 vdata->tex_coord0(uv);
             }
 
-            if(spec.attr_count(VERTEX_ATTR_NAME_TEXCOORD_1)) {
+            if(spec.attr(VERTEX_ATTR_NAME_TEXCOORD_1)) {
                 vdata->tex_coord1(uv);
             }
 

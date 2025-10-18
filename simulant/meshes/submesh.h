@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../generic/managed.h"
-#include "../generic/property.h"
 #include "../interfaces/boundable.h"
+#include "../generic/property.h"
+#include "../generic/managed.h"
 #include "../interfaces/nameable.h"
 #include "vertex_ranges.h"
 
@@ -36,19 +36,13 @@ class SubMesh:
 
 public:
     /* Indexed submesh constructor */
-    SubMesh(Mesh* parent,
-        const std::string& name,
-        MaterialPtr material,
-        std::shared_ptr<IndexData>& index_data,
-        MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES
-    );
+    SubMesh(Mesh* parent, const std::string& name, MaterialPtr material,
+            std::shared_ptr<IndexData>& index_data,
+            MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES);
 
     /* Ranged submesh constructor */
-    SubMesh(Mesh* parent,
-        const std::string& name,
-        MaterialPtr material,
-        MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES
-    );
+    SubMesh(Mesh* parent, const std::string& name, MaterialPtr material,
+            MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES);
 
     virtual ~SubMesh();
 
@@ -70,7 +64,7 @@ public:
 
     /* Goes through the indexes in this submesh and changes the diffuse color of the vertices
      * they point to */
-    void set_color(const Color& color);
+    void set_base_color(const Color& color);
 
     /*
      * Whether or not this submesh contributes to the adjacency info attached to the mesh

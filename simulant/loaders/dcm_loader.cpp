@@ -3,6 +3,7 @@
 #include "../asset_manager.h"
 #include "../meshes/mesh.h"
 #include "../utils/limited_string.h"
+#include "../utils/pbr.h"
 #include "../vertex_data.h"
 #include "../vfs.h"
 #include "dcm.h"
@@ -84,7 +85,7 @@ VertexFormat determine_spec(const FileHeader& header) {
     return builder.build();
 }
 
-void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     Mesh* mesh = loadable_to<Mesh>(resource);
 
     S_DEBUG("Loading mesh from {0}", filename_);
@@ -101,14 +102,14 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     if(fheader.version != DCM_CURRENT_VERSION) {
         S_ERROR("Unsupported dcm version: {0}", fheader.version);
-        return;
+        return false;
     }
 
     LimitedString<3> hid((const char*)fheader.id);
 
     if(hid != std::string("DCM")) {
         S_ERROR("Not a valid .dcm file: {0}", fheader.id);
-        return;
+        return false;
     }
 
     auto spec = determine_spec(fheader);
@@ -135,30 +136,36 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         data_->read((char*) mat.emission, sizeof(mat.emission));
         data_->read((char*) &mat.shininess, sizeof(mat.shininess));
 
-        data_->read((char*) mat.diffuse_map, sizeof(mat.diffuse_map));
+        data_->read((char*) mat.base_color_map, sizeof(mat.base_color_map));
         data_->read((char*) mat.light_map, sizeof(mat.light_map));
         data_->read((char*) mat.normal_map, sizeof(mat.normal_map));
-        data_->read((char*) mat.specular_map, sizeof(mat.specular_map));
+        data_->read((char*) mat.metallic_roughness_map, sizeof(mat.metallic_roughness_map));
 
         smlt::MaterialPtr new_mat =
             mesh->asset_manager().clone_default_material();
-        new_mat->set_pass_count(1);
+
         new_mat->set_lighting_enabled(true);
         new_mat->set_cull_mode(mesh_opts.cull_mode);
         new_mat->set_blend_func(mesh_opts.blending_enabled ? BLEND_ALPHA : BLEND_NONE);
-        new_mat->set_diffuse(smlt::Color(mat.diffuse, 4));
-        new_mat->set_ambient(smlt::Color(mat.ambient, 4));
-        new_mat->set_specular(smlt::Color(mat.specular, 4));
-        new_mat->set_emission(smlt::Color(mat.emission, 4));
-        new_mat->set_shininess(mat.shininess * 128.0f);
+
+        auto s = traditional_to_pbr(
+            smlt::Color(mat.ambient, 4), smlt::Color(mat.diffuse, 4),
+            smlt::Color(mat.specular, 4), mat.shininess * 128.0f);
+
+        new_mat->set_base_color(s.base_color);
+        new_mat->set_metallic(s.metallic);
+        new_mat->set_roughness(s.roughness);
+        new_mat->set_specular_color(s.specular_color);
+        new_mat->set_specular(s.specular);
+
         new_mat->set_name(
             std::string(mat.data_header.path, sizeof(mat.data_header.path))
                 .c_str());
 
         int enabled_textures = 0;
 
-        if(mat.diffuse_map[0]) {
-            Path final = Path(std::string(mat.diffuse_map, 32).c_str());
+        if(mat.base_color_map[0]) {
+            Path final = Path(std::string(mat.base_color_map, 32).c_str());
             if(!mesh_opts.override_texture_extension.empty()) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
@@ -167,15 +174,15 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
-                new_mat->set_diffuse_map(tex);
+                new_mat->set_base_color_map(tex);
                 tex->flush();
             }
 
-            enabled_textures |= DIFFUSE_MAP_ENABLED;
+            enabled_textures |= BASE_COLOR_MAP_ENABLED;
         }
 
-        if(mat.specular_map[0]) {
-            Path final = Path(std::string(mat.specular_map, 32).c_str());
+        if(mat.metallic_roughness_map[0]) {
+            Path final = Path(std::string(mat.metallic_roughness_map, 32).c_str());
             if(!mesh_opts.override_texture_extension.empty()) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
@@ -184,11 +191,11 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
-                new_mat->set_specular_map(tex);
+                new_mat->set_metallic_roughness_map(tex);
                 tex->flush();
             }
 
-            enabled_textures |= SPECULAR_MAP_ENABLED;
+            enabled_textures |= METALLIC_ROUGHNESS_MAP_ENABLED;
         }
 
         if(mat.light_map[0]) {
@@ -347,6 +354,8 @@ void DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     for(auto& sm: mesh->each_submesh()) {
         sm->mark_changed();
     }
+
+    return true;
 }
 
 }

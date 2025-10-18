@@ -23,6 +23,8 @@ OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 OPTION(SIMULANT_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 OPTION(SIMULANT_PROFILE "Force profiling mode" OFF)
 
+OPTION(SIMULANT_CUSTOM_WINDOW "If on, no window subclasses will be included in the build" OFF)
+
 # This is only for testing! You will not get any sound!
 OPTION(SIMULANT_USE_ALDC "Use ALdc on all platforms" OFF)
 
@@ -30,6 +32,10 @@ IF(PLATFORM_DREAMCAST)
     OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" ON)
 ELSE()
     OPTION(SIMULANT_SEPERATE_DEBUGINFO "Generate debuginfo seperately and strip from executable" OFF)
+ENDIF()
+
+IF(SIMULANT_CUSTOM_WINDOW)
+    ADD_DEFINITIONS(-DSIMULANT_CUSTOM_WINDOW)
 ENDIF()
 
 SET(OpenGL_GL_PREFERENCE "LEGACY")
@@ -40,7 +46,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTIXML_USE_STL")
 IF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17 /W3")
 ELSE()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wpedantic -Wextra -Wno-variadic-macros -Wno-c++20-extensions")
 ENDIF()
 
 IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -210,7 +216,14 @@ ELSEIF(PLATFORM_PSP)
     SET(SDL2_LIBRARIES "")
 ELSEIF(MINGW)
     FIND_PACKAGE(PkgConfig REQUIRED)
-    PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
+    
+    IF(SIMULANT_CUSTOM_WINDOW)
+        SET(SDL2_INCLUDE_DIR "")
+        SET(SDL2_LIBRARIES "")
+    ELSE()
+        PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
+    ENDIF()
+    
     PKG_CHECK_MODULES(OPENAL REQUIRED openal)
     LINK_LIBRARIES(psapi userenv)
     SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
@@ -219,7 +232,10 @@ ELSEIF(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # On Windows, SDL2 and OpenAL need to be installed and the paths need to be correctly set
     # For SDL2 it's the path under SDL2DIR
     # For OpenAL it's the path under OPENALDIR
-    IF(NOT SDL2_FOUND)
+    IF(SIMULANT_CUSTOM_WINDOW)
+        SET(SDL2_INCLUDE_DIR "")
+        SET(SDL2_LIBRARIES "")    
+    ELSE()
         SET(SDL2_INCLUDE_DIR $ENV{SDL2DIR}/include)
         SET(SDL2_LIBRARY $ENV{SDL2DIR}/lib/x64/SDL2.lib)
         FIND_PACKAGE(SDL2 REQUIRED)

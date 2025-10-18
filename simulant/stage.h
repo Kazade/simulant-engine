@@ -44,13 +44,9 @@ public:
     }
 
 private:
-    bool on_create(Params params) override {
-        _S_UNUSED(params);
-        return true;
-    }
-
     void do_generate_renderables(batcher::RenderQueue*, const Camera*,
-                                 const Viewport*, DetailLevel) override {}
+                                 const Viewport*, DetailLevel, Light**,
+                                 const std::size_t) override {}
 };
 
 } // namespace smlt

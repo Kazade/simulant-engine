@@ -23,9 +23,10 @@
 
 #include "../../generic/containers/contiguous_map.h"
 
-#include "../../types.h"
-#include "../../threads/shared_mutex.h"
+#include "../../core/aligned_allocator.h"
 #include "../../macros.h"
+#include "../../threads/shared_mutex.h"
+#include "../../types.h"
 
 namespace smlt {
 
@@ -37,21 +38,51 @@ class StageNode;
 
 namespace batcher {
 
-
-/* How render ordering works:
+/* Remember! Render group keys are for *sorting* only. Priority, pass, and
+is_blended are the only values you
+ * can rely on to be accurate, the others are capped or limited in some way. We
+order in the following way:
  *
- * 1. Pass number takes precendence
- * 2. Within a pass, blended objects are rendered first
- * 3. If an object is not blended, objects order by distance to camera least, to most. If blended, most to least
- * 4. If distance to camera is equal, z order is taken into account
+ *  - RenderPriority. This is the highest level ordering, renderables with
+different priorities are basically in different "queues"
+ *  - Pass. This is the material pass number, the lower the pass number, the
+earlier it is rendered
+ *  - is_blended. This is 0 if the object is opaque or 1 if it's translucent.
+This impacts the next value.
+ *  - distance to camera. Stored as an unsigned 10-bit minifloat, with 5
+exponent bits and 5 mantissa bits. If the object is blended, this is the
+max-storable float minus the distance to camera)
+ *  - Precedence. This is a value that allows you to tweak the order of objects
 */
+
 struct RenderGroupKey {
-    uint8_t pass = 0; // 1 byte
-    bool is_blended = false; // 1 byte
-    float distance_to_camera = 0.0f; // 4 bytes
-    int16_t precedence = 0; // 2-bytes to get 8-byte alignment
+    union {
+        struct alignas(alignof(uint32_t)) {
+            // Texture ID of the base color texture. This is used
+            // to minimize texture changes, if you have a lot of
+            // textures this will lose its value
+            unsigned texture : 10;
+
+            // This allows 7 levels of tweaking the
+            unsigned precedence : 3;
+
+            // Float10 value for the distance to camera. If is_blended is true
+            // then this will be Float10::max_value - value
+            unsigned distance_to_camera : 10;
+
+            unsigned is_blended : 1;
+
+            unsigned pass : 2; // Max material passes is 4
+
+            // Min/max priority is -/+ 25, but we store as 0 - 50.
+            unsigned priority : 6;
+        } __attribute__((packed)) s;
+        uint32_t i;
+    };
 };
 
+static_assert(sizeof(RenderGroupKey::s) == 4,
+              "Render group key has unexpected size");
 
 struct RenderGroup {
     /* A sort key, generated from priority and material properties, this
@@ -59,50 +90,11 @@ struct RenderGroup {
     RenderGroupKey sort_key;
 
     bool operator<(const RenderGroup& rhs) const {
-        if(sort_key.pass < rhs.sort_key.pass) {
-            return true;
-        } else if(sort_key.pass > rhs.sort_key.pass) {
-            return false;
-        }
-
-        if(sort_key.is_blended < rhs.sort_key.is_blended) {
-            return true;
-        } else if(sort_key.is_blended > rhs.sort_key.is_blended) {
-            return false;
-        }
-
-        if(!sort_key.is_blended) {
-            if(sort_key.distance_to_camera < rhs.sort_key.distance_to_camera) {
-                // If the object is opaque, we want to render
-                // front-to-back, so less distance is less
-                return true;
-            } else if(sort_key.distance_to_camera > rhs.sort_key.distance_to_camera) {
-                return false;
-            }
-
-            return sort_key.precedence > rhs.sort_key.precedence;
-        } else {
-            if(rhs.sort_key.distance_to_camera < sort_key.distance_to_camera) {
-                // If the object is translucent, we want to render
-                // back-to-front
-                return true;
-            } else if(rhs.sort_key.distance_to_camera > sort_key.distance_to_camera) {
-                return false;
-            }
-
-            return sort_key.precedence > rhs.sort_key.precedence;
-        }
-
-        return false;
+        return sort_key.i < rhs.sort_key.i;
     }
 
     bool operator==(const RenderGroup& rhs) const  {
-        return (
-            sort_key.pass == rhs.sort_key.pass &&
-            sort_key.is_blended == rhs.sort_key.is_blended &&
-            almost_equal(sort_key.distance_to_camera, rhs.sort_key.distance_to_camera) &&
-            sort_key.precedence == rhs.sort_key.precedence
-        );
+        return sort_key.i == rhs.sort_key.i;
     }
 
     bool operator!=(const RenderGroup& rhs) const {
@@ -110,7 +102,9 @@ struct RenderGroup {
     }
 };
 
-RenderGroupKey generate_render_group_key(const uint8_t pass, const bool is_blended, const float distance_to_camera, int16_t precedence);
+RenderGroupKey generate_render_group_key(
+    const RenderPriority priority, const uint8_t pass, const bool is_blended,
+    const float distance_to_camera, int16_t precedence, uint16_t texture_id);
 
 class RenderGroupFactory {
 public:
@@ -119,13 +113,10 @@ public:
     /* Initialize a render group based on the provided arguments
      * Returns the group's sort_key */
     virtual RenderGroupKey prepare_render_group(
-        RenderGroup* group,
-        const Renderable* renderable,
-        const MaterialPass* material_pass,
-        const uint8_t pass_number,
-        const bool is_blended,
-        const float distance_to_camera
-    ) = 0;
+        RenderGroup* group, const Renderable* renderable,
+        const MaterialPass* material_pass, const RenderPriority priority,
+        const uint8_t pass_number, const bool is_blended,
+        const float distance_to_camera, uint16_t texture_id) = 0;
 };
 
 typedef uint32_t Pass;
@@ -134,15 +125,7 @@ typedef uint32_t Iteration;
 class RenderQueue;
 
 class RenderQueueVisitor {
-protected:
-    Renderer* renderer() const {
-        return renderer_;
-    }
-
 public:
-    RenderQueueVisitor(Renderer* renderer) :
-        renderer_(renderer) {}
-
     virtual ~RenderQueueVisitor() {}
 
     virtual void start_traversal(const RenderQueue& queue, uint64_t frame_id, StageNode* stage) = 0;
@@ -152,15 +135,9 @@ public:
     virtual void change_material_pass(const MaterialPass* prev, const MaterialPass* next) = 0;
     virtual void apply_lights(const LightPtr* lights, const uint8_t count) = 0;
 
-    void visit(const Renderable* renderable, const MaterialPass* pass,
-               Iteration iteration);
+    virtual void visit(const Renderable* renderable, const MaterialPass* pass,
+                       Iteration iteration) = 0;
     virtual void end_traversal(const RenderQueue& queue, StageNode* stage) = 0;
-
-private:
-    Renderer* renderer_ = nullptr;
-
-    virtual void do_visit(const Renderable*, const MaterialPass*,
-                          Iteration) = 0;
 };
 
 
@@ -203,26 +180,24 @@ public:
 
     void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;
 
-    std::size_t queue_count() const { return priority_queues_.size(); }
-    std::size_t group_count(Pass pass_number) const;
-
-    std::size_t renderable_count() const { return renderables_.size(); }
-    Renderable* renderable(const std::size_t i) {
-        return &renderables_[i];
+    std::size_t renderable_count() const {
+        return render_queue_.size();
     }
+
+    Renderable* renderable(std::size_t idx);
+
 private:
     // std::map is ordered, so by using the RenderGroup as the key we
     // minimize GL state changes (e.g. if a RenderGroupImpl orders by AssetID, then ShaderID
     // then we'll see  (TexID(1), ShaderID(1)), (TexID(1), ShaderID(2)) for example meaning the
     // texture doesn't change even if the shader does
-    typedef ContiguousMultiMap<RenderGroup, std::size_t> SortedRenderables;
+    typedef ContiguousMultiMap<RenderGroup, Renderable> SortedRenderables;
 
     StageNode* stage_node_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
     CameraPtr camera_;
 
-    std::vector<Renderable> renderables_;
-    std::array<SortedRenderables, RENDER_PRIORITY_MAX - RENDER_PRIORITY_MIN> priority_queues_;
+    SortedRenderables render_queue_;
 
     void clean_empty_batches();
 

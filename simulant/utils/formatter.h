@@ -32,12 +32,13 @@ private:
     }
 
     template<typename... Args>
-    std::string _format(const std::string& str, int c, int8_t&& v, Args&& ...args) {
+    std::string _format(const std::string& str, int c, int8_t&& v,
+                        Args&&... args) {
         return _format(str, c, (int16_t) v, std::forward<Args>(args)...);
     }
 
     template<typename T, typename... Args>
-    std::string _format(const std::string& str, int c, T&& v, Args&& ...args) {
+    std::string _format(const std::string& str, int c, T&& v, Args&&... args) {
         std::stringstream ss;
         int max_token_size = 7;
 

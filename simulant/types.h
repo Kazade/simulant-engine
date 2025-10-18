@@ -133,16 +133,19 @@ enum BufferClearFlag {
     BUFFER_CLEAR_ALL = BUFFER_CLEAR_COLOR_BUFFER | BUFFER_CLEAR_DEPTH_BUFFER | BUFFER_CLEAR_STENCIL_BUFFER
 };
 
-typedef int32_t RenderPriority;
-const RenderPriority RENDER_PRIORITY_MIN = -25;
-const RenderPriority RENDER_PRIORITY_ABSOLUTE_BACKGROUND = -25;
-const RenderPriority RENDER_PRIORITY_BACKGROUND = -10;
-const RenderPriority RENDER_PRIORITY_DISTANT = -5;
-const RenderPriority RENDER_PRIORITY_MAIN = 0;
-const RenderPriority RENDER_PRIORITY_NEAR = 5;
-const RenderPriority RENDER_PRIORITY_FOREGROUND = 10;
-const RenderPriority RENDER_PRIORITY_ABSOLUTE_FOREGROUND = 25;
-const RenderPriority RENDER_PRIORITY_MAX = RENDER_PRIORITY_ABSOLUTE_FOREGROUND + 1;
+enum RenderPriorityPreset : int8_t {
+    RENDER_PRIORITY_MIN = -25,
+    RENDER_PRIORITY_ABSOLUTE_BACKGROUND = -25,
+    RENDER_PRIORITY_BACKGROUND = -10,
+    RENDER_PRIORITY_DISTANT = -5,
+    RENDER_PRIORITY_MAIN = 0,
+    RENDER_PRIORITY_NEAR = 5,
+    RENDER_PRIORITY_FOREGROUND = 10,
+    RENDER_PRIORITY_ABSOLUTE_FOREGROUND = 25,
+    RENDER_PRIORITY_MAX = RENDER_PRIORITY_ABSOLUTE_FOREGROUND + 1
+};
+
+typedef int8_t RenderPriority;
 
 extern const std::vector<RenderPriority> RENDER_PRIORITIES;
 
@@ -174,10 +177,16 @@ class Texture;
 typedef std::weak_ptr<Texture> TextureRef;
 typedef std::shared_ptr<Texture> TexturePtr;
 
+class Prefab;
+typedef std::weak_ptr<Prefab> PrefabRef;
+typedef std::shared_ptr<Prefab> PrefabPtr;
+
 class ParticleScript;
+typedef std::weak_ptr<ParticleScript> ParticleScriptRef;
 typedef std::shared_ptr<ParticleScript> ParticleScriptPtr;
 
 class Binary;
+typedef std::weak_ptr<Binary> BinaryRef;
 typedef std::shared_ptr<Binary> BinaryPtr;
 
 class Sound;

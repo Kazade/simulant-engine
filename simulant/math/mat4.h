@@ -1,8 +1,9 @@
 #pragma once
 
 #include <array>
-#include <cstring>
 #include <cstdint>
+#include <cstring>
+#include <vector>
 
 #ifdef __DREAMCAST__
 #include "../utils/sh4_math.h"
@@ -35,6 +36,8 @@ enum FrustumPlane {
     FRUSTUM_PLANE_MAX
 };
 
+typedef std::vector<float> FloatArray;
+
 struct Mat4 {
 private:
     float m[16];
@@ -44,6 +47,10 @@ public:
     Mat4() {
         memset(m, 0, sizeof(float) * 16);
         m[0] = m[5] = m[10] = m[15] = 1.0f;
+    }
+
+    Mat4(const FloatArray& arr) {
+        std::copy(arr.begin(), arr.end(), m);
     }
 
     Mat4 operator*(const Mat4& rhs) const {
@@ -98,6 +105,10 @@ public:
     Vec4 operator*(const Vec4& rhs) const;
     Vec3 operator*(const Vec3& rhs) const;
 
+    bool operator==(const Mat4& rhs) const {
+        return std::memcmp(m, rhs.m, sizeof(m)) == 0;
+    }
+
     /** Perform an in-place transformation of 3d vectors */
     void transform_positions(Vec3* positions, std::size_t count,
                              std::size_t stride = sizeof(Vec3)) const;
@@ -106,8 +117,7 @@ public:
     void transform_positions(Vec4* positions, std::size_t count,
                              std::size_t stride = sizeof(Vec4)) const;
 
-    void extract_rotation_and_translation(Quaternion& rotation,
-                                          Vec3& translation) const;
+    void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
 
     static Mat4 as_rotation_x(const Degrees& angle);
     static Mat4 as_rotation_y(const Degrees& angle);
@@ -155,6 +165,19 @@ public:
         return &m[0];
     }
 
+    void transpose() {
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                (*this)[j * 4 + i] = (*this)[i * 4 + j];
+            }
+        }
+    }
+
+    Mat4 transposed() const {
+        auto cpy = *this;
+        cpy.transpose();
+        return cpy;
+    }
 };
 
 

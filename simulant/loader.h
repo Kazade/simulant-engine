@@ -72,16 +72,18 @@ public:
         data_(data) {}
 
     virtual ~Loader();
-    void into(Loadable* resource, const LoaderOptions& options = LoaderOptions()) {
-        into(*resource, options);
+    bool into(Loadable* resource,
+              const LoaderOptions& options = LoaderOptions()) {
+        return into(*resource, options);
     }
 
-    void into(std::shared_ptr<Loadable> resource, const LoaderOptions& options=LoaderOptions()) {
-        into(*resource, options);
+    bool into(std::shared_ptr<Loadable> resource,
+              const LoaderOptions& options = LoaderOptions()) {
+        return into(*resource, options);
     }
 
-    void into(Window& window, const LoaderOptions& options=LoaderOptions()) {
-        into((Loadable&) window, options);
+    bool into(Window& window, const LoaderOptions& options = LoaderOptions()) {
+        return into((Loadable&)window, options);
     }
 
     void set_vfs(VirtualFileSystem* locator) { locator_ = locator; }
@@ -105,7 +107,8 @@ protected:
 
 private:
     VirtualFileSystem* locator_ = nullptr;
-    virtual void into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) = 0;
+    virtual bool into(Loadable& resource,
+                      const LoaderOptions& options = LoaderOptions()) = 0;
 };
 
 class LoaderType {
@@ -130,27 +133,30 @@ protected:
     std::set<LoaderHint> hints_;
 };
 
-struct TextureLoadResult {
-    uint16_t width;
-    uint16_t height;
-    uint8_t channels;
-    TextureFormat format;
-    std::vector<uint8_t> data;
-};
-
 namespace loaders {
 
 class BaseTextureLoader : public Loader {
 public:
     BaseTextureLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {
+
+        
     }
 
-    void into(Loadable& resource, const LoaderOptions& options = LoaderOptions()) override;
+    bool into(Loadable& resource,
+              const LoaderOptions& options = LoaderOptions()) override;
 
 private:
     virtual bool format_stored_upside_down() const { return true; }
-    virtual TextureLoadResult do_load(std::shared_ptr<FileIfstream> stream) = 0;
+    virtual bool do_load(std::shared_ptr<FileIfstream> stream,
+                         Texture* result) = 0;
+
+    virtual bool do_load(const std::vector<uint8_t>& data, Texture* result) {
+        _S_UNUSED(data);
+        _S_UNUSED(result);
+        S_ERROR("Loading from memory is unsupported");
+        return false;
+    }
 };
 
 }

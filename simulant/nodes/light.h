@@ -29,8 +29,6 @@
 
 namespace smlt {
 
-extern const Color DEFAULT_LIGHT_COLOR;
-
 class Light: public ContainerNode, public ChainNameable<Light> {
 
 public:
@@ -64,59 +62,28 @@ public:
         transform->set_position(Vec3(-dir.x, -dir.y, -dir.z));
     }
 
-    LightType light_type() const {
-        return type_;
+    void set_intensity(float intensity) {
+        intensity_ = intensity;
     }
 
-    void set_color(const Color& color) {
+    void set_color(const smlt::Color& color) {
         color_ = color;
+    }
+
+    LightType light_type() const {
+        return type_;
     }
 
     const smlt::Color& color() const {
         return color_;
     }
 
-    void set_intensity(float i) {
-        intensity_ = i;
-        if(range_ == 0) {
-            // FIXME: This is ugly, this should probably
-            // happen in the renderer, and this is clearly
-            // a bad approximation
-            range_ = std::sqrt(intensity_) / 8;
-        }
-    }
-    float intensity() const {
-        return intensity_;
-    }
-
     float range() const {
         return range_;
     }
 
-    /**
-     * @brief effective_range
-     * @return if range is non-zero, then this returns range
-     * otherwise it returns a value based on the intensity
-     * and inverse square law
-     */
-    float effective_range() const {
-        return std::sqrt(effective_range_squared());
-    }
-
-    float effective_range_squared() const {
-        if(smlt::almost_equal(range_, 0.0f)) {
-            return range_ * range_;
-        } else {
-            // FIXME: This value may need tweaking if it cause
-            // lights to unexpectedly cut-off
-            const float effectively_zero = 0.001f;
-
-            // FIXME: The use of fast inverse sqrt here is for perf on Dreamcast
-            // and should be divisions on other platforms
-            const float d =
-                effectively_zero * fast_inverse_sqrt(intensity_ * intensity_);
-            return fast_inverse_sqrt(d * d);
-        }
+    float intensity() const {
+        return intensity_;
     }
 
     const AABB& aabb() const override {
@@ -130,10 +97,9 @@ private:
     LightType type_;
 
     smlt::Color color_;
-    float intensity_;
-
     AABB bounds_;
-    float range_ = 0;
+    float range_ = 100.0f;
+    float intensity_ = 1.0f;
 };
 
 class PointLight: public Light {
@@ -141,12 +107,6 @@ public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_POINT_LIGHT, "point_light");
     S_DEFINE_STAGE_NODE_PARAM(PointLight, "position", FloatArray, Vec3(),
                               "The position of the light");
-    S_DEFINE_STAGE_NODE_PARAM(PointLight, "color", FloatArray, Vec4(),
-                              "The color of the light");
-    S_DEFINE_STAGE_NODE_PARAM(PointLight, "range", float, 0.0f,
-                              "The range of the light");
-    S_DEFINE_STAGE_NODE_PARAM(PointLight, "intensity", FloatArray, Vec4(),
-                              "The intensity of the light");
 
     PointLight(Scene* owner) :
         Light(owner, STAGE_NODE_TYPE_POINT_LIGHT) {}
@@ -175,12 +135,6 @@ public:
     S_DEFINE_STAGE_NODE_PARAM(DirectionalLight, "direction", FloatArray,
                               Vec3(1, -0.5, 0),
                               "The direction the light is pointing");
-    S_DEFINE_STAGE_NODE_PARAM(PointLight, "color", FloatArray, Vec4(),
-                              "The color of the light");
-    S_DEFINE_STAGE_NODE_PARAM(PointLight, "range", float, 0.0f,
-                              "The range of the light");
-    S_DEFINE_STAGE_NODE_PARAM(PointLight, "intensity", FloatArray, Vec4(),
-                              "The intensity of the light");
 
     DirectionalLight(Scene* owner) :
         Light(owner, STAGE_NODE_TYPE_DIRECTIONAL_LIGHT) {}

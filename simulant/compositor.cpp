@@ -79,8 +79,8 @@ void Compositor::clean_destroyed_layers() {
 
 class TraceWriter : public batcher::RenderQueueVisitor {
 public:
-    TraceWriter(Renderer* renderer, std::ostream* out) :
-        RenderQueueVisitor(renderer), out_(out) {}
+    TraceWriter(std::ostream* out):
+        out_(out) {}
 
     void start_traversal(const batcher::RenderQueue&, uint64_t, StageNode*) {}
 
@@ -90,15 +90,15 @@ public:
 
     void change_material_pass(const MaterialPass*, const MaterialPass*) {}
     void apply_lights(const LightPtr*, const uint8_t) {}
-    void do_visit(const Renderable* r, const MaterialPass*,
-                  batcher::Iteration) override {
-        auto line = _F("{0}, {1}, {2}, {3}, {4}\n").format(
-            r,
-            (group_) ? group_->sort_key.is_blended : false,
-            (group_) ? group_->sort_key.distance_to_camera : -1.0f,
-            r->render_priority,
-            (group_) ? group_->sort_key.precedence : -1
-        );
+    void visit(const Renderable* r, const MaterialPass*, batcher::Iteration) {
+        auto line =
+            _F("{0}, {1}, {2}, {3}, {4}\n")
+                .format(r, (group_) ? group_->sort_key.s.is_blended : false,
+                        (group_) ? group_->sort_key.s.distance_to_camera
+                                 : -1.0f,
+                        r->render_priority,
+                        (group_) ? group_->sort_key.s.precedence : -1,
+                        (group_) ? group_->sort_key.s.texture : 0);
 
         out_->write(line.c_str(), line.size());
     }
@@ -110,14 +110,15 @@ private:
     const batcher::RenderGroup* group_ = nullptr;
 };
 
-void Compositor::dump_render_trace(Renderer* renderer, std::ostream* out) {
-    auto visitor = std::make_shared<TraceWriter>(renderer, out);
+void Compositor::dump_render_trace(std::ostream* out) {
+    auto visitor = std::make_shared<TraceWriter>(out);
 
-    std::string headings = "RENDERABLE, BLENDED?, DISTANCE, PRIORITY, Z-ORDER\n";
+    std::string headings =
+        "RENDERABLE, BLENDED?, DISTANCE, PRIORITY, Z-ORDER, TEXTURE\n";
     out->write(headings.c_str(), headings.size());
 
     sig::Connection conn = signal_layer_render_finished().connect([=](Layer&) {
-        std::string row = ", , , ,\n";
+        std::string row = ", , , , ,\n";
         out->write(row.c_str(), row.size());
 
         render_queue_.traverse(visitor.get(), 0);
@@ -250,32 +251,11 @@ static bool build_renderables(
 
     /* Push any renderables for this node */
     auto viewport = pipeline_stage->viewport.get();
-    auto initial = render_queue_->renderable_count();
-    node->generate_renderables(render_queue_, camera, viewport, level);
 
-    // FIXME: Change get_renderables to return the number inserted
-    auto count = render_queue_->renderable_count() - initial;
-
-    for(auto i = initial; i < initial + count; ++i) {
-        auto renderable = render_queue_->renderable(i);
-
-        assert(
-            renderable->arrangement == MESH_ARRANGEMENT_LINES ||
-            renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP ||
-            renderable->arrangement == MESH_ARRANGEMENT_QUADS ||
-            renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES ||
-            renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN ||
-            renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP
-        );
-
-        assert(renderable->material);
-        assert(renderable->vertex_data);
-
-        renderable->light_count = std::min((std::size_t) MAX_LIGHTS_PER_RENDERABLE, lights_visible.size());
-        for(auto i = 0u; i < renderable->light_count; ++i) {
-            renderable->lights_affecting_this_frame[i] = lights_visible[i];
-        }
-    }
+    node->generate_renderables(render_queue_, camera, viewport, level,
+                               lights_visible.data(),
+                               std::min((std::size_t)MAX_LIGHTS_PER_RENDERABLE,
+                                        lights_visible.size()));
 
     return !(node->generates_renderables_for_descendents());
 }

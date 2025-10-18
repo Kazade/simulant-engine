@@ -98,7 +98,7 @@ SubMesh *rectangle(
         bool clear) {
 
     if(clear) {
-        mesh->reset(mesh->vertex_data->vertex_specification());
+        mesh->reset(mesh->vertex_data->vertex_format());
     }
 
     uint16_t offset = mesh->vertex_data->count();
@@ -162,7 +162,7 @@ SubMesh* rectangle_outline(
     bool clear) {
 
     if(clear) {
-        mesh->reset(mesh->vertex_data->vertex_specification());
+        mesh->reset(mesh->vertex_data->vertex_format());
     }
 
     uint16_t offset = mesh->vertex_data->count();

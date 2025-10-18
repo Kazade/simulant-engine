@@ -25,74 +25,22 @@
 
 #include <vector>
 
-#include "color.h"
-#include "generic/managed.h"
-#include "generic/notifies_destruction.h"
-#include "generic/uniquely_identifiable.h"
-#include "meshes/index_buffer.h"
-#include "meshes/vertex_format.h"
 #include "signals/signal.h"
+#include "generic/managed.h"
+#include "generic/uniquely_identifiable.h"
+#include "generic/notifies_destruction.h"
+
+#include "color.h"
+#include "meshes/vertex_format.h"
 #include "types.h"
 
 namespace smlt {
 
 class Window;
-class VertexBuffer;
-
-typedef std::shared_ptr<VertexBuffer> VertexBufferPtr;
-typedef std::shared_ptr<IndexBuffer> IndexBufferPtr;
-
-/* What should we do after uploading the vertex
- * data to the GPU */
-enum UploadFreeDataMode {
-    UPLOAD_FREE_DATA_MODE_KEEP,
-    UPLOAD_FREE_DATA_MODE_DISCARD
-};
-
-template<typename T>
-class GPUUploadable {
-public:
-    virtual ~GPUUploadable() {}
-
-    /* Control whether or not to free the vertex data
-     * once it has been uploaded to a vertex buffer */
-    void set_free_data_mode(UploadFreeDataMode mode) {
-        free_data_mode_ = mode;
-    }
-
-    UploadFreeDataMode free_data_mode() const {
-        return free_data_mode_;
-    }
-
-    /** Returns true if the vertex data was changed
-     *  since the last upload to the GPU */
-    bool is_dirty() const {
-        return is_dirty_;
-    }
-
-    /* Mark the vertex data as requiring upload to the
-     * GPU */
-    void set_dirty(bool dirty) {
-        is_dirty_ = dirty;
-    }
-
-    /** Return the attached vertex buffer, if any */
-    const std::shared_ptr<T> gpu_buffer() const {
-        return buffer_;
-    }
-
-protected:
-    std::shared_ptr<T> buffer_;
-    bool is_dirty_ = true;
-    UploadFreeDataMode free_data_mode_ = UPLOAD_FREE_DATA_MODE_DISCARD;
-};
 
 class VertexData:
     public UniquelyIdentifiable<VertexData>,
-    public NotifiesDestruction<VertexData>,
-    public GPUUploadable<VertexBuffer> {
-
-    friend class Renderer;
+    public NotifiesDestruction<VertexData> {
 
 public:
     typedef std::shared_ptr<VertexData> ptr;
@@ -197,9 +145,13 @@ public:
     void tex_coord3(float x, float y, float z, float w);
     void tex_coord3(const Vec2& vec) { tex_coord3(vec.x, vec.y); }
 
+    void color(float r, float g, float b);
     void color(float r, float g, float b, float a);
     void color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     void color(const Color& color);
+
+    void specular(float r, float g, float b, float a);
+    void specular(const Color& color);
 
     uint32_t count() const { return vertex_count_; }
 
@@ -269,6 +221,8 @@ public:
                 position(pos.x, pos.y, pos.z);
             } else if(pos_attr.arrangement == VERTEX_ATTR_ARRANGEMENT_FOUR) {
                 position(pos);
+            } else {
+                S_ERROR("Attempted to transform unsupported position attribute type");
             }
         }
 
@@ -286,7 +240,9 @@ public:
 
     void resize(uint32_t size);
 
-    const VertexFormat& vertex_specification() const { return vertex_specification_; }
+    const VertexFormat& vertex_format() const {
+        return vertex_specification_;
+    }
 
     /* Clones this VertexData into another. The other data must have the same
      * specification and will be wiped if it contains vertices already.
@@ -368,10 +324,10 @@ private:
     const uint8_t* ptr_;
 };
 
+
 class IndexData:
     public UniquelyIdentifiable<IndexData>,
-    public NotifiesDestruction<IndexData>,
-    public GPUUploadable<IndexBuffer> {
+    public NotifiesDestruction<IndexData> {
 
     friend class IndexDataIterator;
 public:

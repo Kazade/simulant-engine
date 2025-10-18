@@ -266,7 +266,7 @@ public:
     void test_cameras_are_freed() {
         auto count = scene->count_nodes_by_type<Camera>();
 
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
         assert_equal(camera->node_type(), STAGE_NODE_TYPE_CAMERA);
 
         assert_equal(scene->count_nodes_by_type<Camera>(), count + 1);
@@ -281,7 +281,7 @@ public:
 
     void test_pipelines_are_freed() {
         auto stage = scene->create_child<smlt::Stage>();
-        auto pipeline = window->compositor->create_layer(stage, scene->create_child<smlt::Camera>());
+        auto pipeline = window->compositor->create_layer(stage, scene->create_child<smlt::Camera3D>());
         pipeline->set_name("test");
 
         auto name = pipeline->name();

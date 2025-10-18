@@ -17,8 +17,5 @@ Radians Degrees::to_radians() const {
     return Radians(*this);
 }
 
-Degrees lerp_angle(Degrees a, Degrees b, float t) {
-    return Degrees(lerp_angle(Radians(a), Radians(b), t));
-}
 
 }

@@ -18,3 +18,11 @@ void* smlt::aligned_alloc(std::size_t alignment, std::size_t size) {
 
     return p;
 }
+
+void smlt::aligned_free(void* ptr) {
+#ifdef __WIN32__
+    _aligned_free(ptr);
+#else
+    free(ptr);
+#endif
+}

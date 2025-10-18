@@ -54,7 +54,8 @@ public:
 private:
     void do_generate_renderables(batcher::RenderQueue* render_queue,
                                  const Camera* camera, const Viewport*,
-                                 const DetailLevel detail_level) override;
+                                 const DetailLevel detail_level, Light** light,
+                                 const std::size_t light_count) override;
 
     void reset();
     void build_mesh(const Camera* camera);
@@ -98,8 +99,11 @@ private:
     sig::Connection frame_connection_;
 
     bool on_create(Params params) override {
-        _S_UNUSED(params);
-        return true;
+        if(!clean_params<Debug>(params)) {
+            return false;
+        }
+
+        return StageNode::on_create(params);
     }
 };
 

@@ -21,15 +21,16 @@ class StageNode;
 namespace ui {
 struct WidgetStyle;
 typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
+typedef std::weak_ptr<WidgetStyle> WidgetStyleRef;
 } // namespace ui
 
 typedef LimitedString<32> ParamKey;
 typedef std::vector<ParamKey> ParamKeys;
 
 typedef std::variant<float, FloatArray, int, IntArray, bool, BoolArray,
-                     std::string, TexturePtr, MeshPtr, ParticleScriptPtr,
-                     ui::UIConfig, ui::WidgetStylePtr, GeomCullerOptions,
-                     TextureFlags, StageNode*>
+                     std::string, TextureRef, MeshRef, ParticleScriptRef,
+                     PrefabRef, ui::UIConfig, ui::WidgetStyleRef,
+                     GeomCullerOptions, TextureFlags, StageNode*>
     ParamValue;
 
 /*
@@ -92,6 +93,22 @@ public:
         return no_value;
     }
 
+    template<typename F>
+    static optional<ParamValue> to_param(const F& fallback) {
+        /* We abuse the default coersion rules of Params */
+        Params tmp;
+        tmp.set("value", fallback);
+        return tmp.raw("value");
+    }
+
+    static optional<ParamValue> to_param(const OptionalInit&) {
+        return no_value;
+    }
+
+    static optional<ParamValue> to_param(const std::nullptr_t&) {
+        return no_value;
+    }
+
 private:
     std::map<ParamKey, ParamValue> dict_;
 
@@ -120,6 +137,11 @@ private:
 
     bool set_arg(const char* name, const Quaternion& vec) {
         return set_arg(name, FloatArray({vec.x, vec.y, vec.z, vec.w}));
+    }
+
+    bool set_arg(const char* name, const Mat4& vec) {
+        FloatArray arr(vec.data(), vec.data() + 16);
+        return set_arg(name, arr);
     }
 
     bool set_arg(const char* name, const char* text) {

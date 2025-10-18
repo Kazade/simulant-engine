@@ -102,7 +102,7 @@ public:
 
     virtual void check_events() = 0;
 
-    void swap_buffers();
+    virtual void swap_buffers();
 
     uint16_t width() const override { return width_; }
     uint16_t height() const override { return height_; }
@@ -157,6 +157,16 @@ public:
     Screen* screen(const std::string& name) const;
 
     void each_screen(std::function<void (std::string, Screen*)> callback);
+
+    virtual bool initialize_virtual_screen(uint16_t width, uint16_t height,
+                                           ScreenFormat format,
+                                           uint16_t integer_scale) {
+        _S_UNUSED(width);
+        _S_UNUSED(height);
+        _S_UNUSED(format);
+        _S_UNUSED(integer_scale);
+        return false;
+    }
 
     /* Private API for Window subclasses (public for testing)
        don't call this directly
@@ -253,6 +263,10 @@ protected:
         return input_state_.get();
     }
 
+    bool initialized() const {
+        return initialized_;
+    }
+
 private:
     Application* application_ = nullptr;
 
@@ -318,7 +332,7 @@ protected:
 
     InputState* _input_state() const { return input_state_.get(); }
 
-    virtual void game_controller_start_rumble(GameController *controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) {
+    virtual void game_controller_start_rumble(GameController *controller, NormalizedFloat low_rumble, NormalizedFloat high_rumble, const smlt::Seconds& duration) {
         _S_UNUSED(controller);
         _S_UNUSED(low_rumble);
         _S_UNUSED(high_rumble);

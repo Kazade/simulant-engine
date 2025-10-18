@@ -107,7 +107,7 @@ void Actor::set_mesh(const MeshPtr& mesh, DetailLevel detail_level) {
         using namespace std::placeholders;
 
         interpolated_vertex_data_ = std::make_shared<VertexData>(
-            meshes_[DETAIL_LEVEL_NEAREST]->vertex_data->vertex_specification());
+            meshes_[DETAIL_LEVEL_NEAREST]->vertex_data->vertex_format());
         animation_state_ = std::make_shared<KeyFrameAnimationState>(
             meshes_[detail_level].get(),
             std::bind(&Actor::refresh_animation_state, this, _1, _2, _3));
@@ -178,7 +178,7 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
 #ifdef DEBUG_ANIMATION
     debug->transform->set_translation(Vec3());
     debug->transform->set_rotation(Quaternion());
-    debug->transform->set_scale_factor(Vec3());
+    debug->transform->set_scale_factor(Vec3(1, 1, 1));
 #endif
 }
 
@@ -231,7 +231,9 @@ bool Actor::has_mesh(DetailLevel detail_level) const {
 
 void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
                                     const Camera* camera, const Viewport*,
-                                    const DetailLevel detail_level) {
+                                    const DetailLevel detail_level,
+                                    Light** lights,
+                                    const std::size_t light_count) {
     _S_UNUSED(camera);
 
     auto mesh = find_mesh(detail_level);
@@ -269,11 +271,20 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
                                        : mesh->vertex_data.get();
 
     int i = mesh->submesh_count();
-    for(auto submesh: mesh->each_submesh()) {
+
+    if(!is_visible()) {
+        return;
+    }
+
+    auto rp = render_priority();
+    auto mat = transform->world_space_matrix();
+    auto center = transformed_aabb().center();
+
+    for(auto& submesh: mesh->each_submesh()) {
         Renderable new_renderable;
-        new_renderable.final_transformation = transform->world_space_matrix();
-        new_renderable.render_priority = render_priority();
-        new_renderable.is_visible = is_visible();
+        new_renderable.final_transformation = mat;
+        new_renderable.render_priority = rp;
+        new_renderable.is_visible = true;
         new_renderable.arrangement = submesh->arrangement();
         new_renderable.vertex_data = vdata;
         new_renderable.index_data = submesh->index_data.get();
@@ -283,7 +294,13 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
         new_renderable.vertex_ranges = submesh->vertex_ranges.get();
         new_renderable.material =
             submesh->material_at_slot(material_slot_, true).get();
-        new_renderable.center = transformed_aabb().center();
+        new_renderable.center = center;
+
+        new_renderable.light_count = light_count;
+        for(auto i = 0u; i < light_count; ++i) {
+            new_renderable.lights_affecting_this_frame[i] = lights[i];
+        }
+
         /* We include the submesh order in the precedence so that overlapping
          * submeshes can be tie-broken when their distance is the same.
          *
@@ -300,13 +317,13 @@ bool Actor::on_create(Params params) {
         return false;
     }
 
-    auto mesh = params.get<MeshPtr>("mesh");
-    if(!mesh) {
+    auto mesh = params.get<MeshRef>("mesh");
+    if(!mesh || !mesh->lock()) {
         return false;
     }
 
-    set_mesh(mesh.value());
-    return true;
+    set_mesh(mesh->lock());
+    return StageNode::on_create(params);
 }
 
 void Actor::recalc_effective_meshes() {

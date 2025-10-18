@@ -1,12 +1,13 @@
 #include "ms3d_loader.h"
-#include "../vertex_data.h"
-#include "../meshes/mesh.h"
+#include "../application.h"
 #include "../asset_manager.h"
+#include "../assets/meshes/skeleton.h"
+#include "../meshes/mesh.h"
+#include "../platform.h"
+#include "../utils/pbr.h"
+#include "../vertex_data.h"
 #include "../vfs.h"
 #include "../window.h"
-#include "../assets/meshes/skeleton.h"
-#include "../platform.h"
-#include "../application.h"
 
 namespace smlt {
 namespace loaders {
@@ -126,7 +127,7 @@ static std::pair<T*, T*> find_next_previous(T* array, std::size_t count, float f
 MS3DLoader::MS3DLoader(const Path& filename, std::shared_ptr<std::istream> data):
     Loader(filename, data) {}
 
-void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     _S_UNUSED(options);
 
     S_DEBUG("MS3D: Beginning read..");
@@ -154,7 +155,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     std::string header_id(header.id, 10);
 
     if(header_id != "MS3D000000") {
-        throw std::logic_error("Unsupported MS3D file. ID mismatch");
+        S_ERROR("Unsupported MS3D file. ID mismatch");
+        return false;
     }
 
     S_DEBUG("MS3D: Header OK.");
@@ -344,11 +346,14 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         auto& material = materials[group.material_index];
         smlt::MaterialPtr mat = assets->create_material();
 
-        mat->set_ambient(material.ambient);
-        mat->set_diffuse(material.diffuse);
-        mat->set_specular(material.specular);
-        mat->set_emission(material.emissive);
-        mat->set_shininess(material.shininess);
+        auto s = traditional_to_pbr(material.ambient, material.diffuse,
+                                    material.specular, material.shininess);
+
+        mat->set_metallic(s.metallic);
+        mat->set_roughness(s.roughness);
+        mat->set_base_color(s.base_color);
+        mat->set_specular(s.specular);
+        mat->set_specular_color(s.specular_color);
 
         auto texname = kfs::path::norm_path(material.texture);
         if(texname[0] == '.' && texname[1] == '\\') {
@@ -372,10 +377,10 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         if(tex) {
             loaded_textures[texname] = tex;
-            mat->set_diffuse_map(tex);
+            mat->set_base_color_map(tex);
         }
 
-        mat->set_textures_enabled(DIFFUSE_MAP_ENABLED);
+        mat->set_textures_enabled(BASE_COLOR_MAP_ENABLED);
         mat->set_lighting_enabled(true);
 
         SubMeshPtr sm;
@@ -448,13 +453,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     }
 
     auto to_quaternion = [](const Vec3& angles) -> Quaternion {
-        /* This is what OGRE does... so it should be right! */
-
-        auto qx = Quaternion(Vec3::right(), Radians(angles.x));
-        auto qy = Quaternion(Vec3::up(), Radians(angles.y));
-        auto qz = Quaternion(Vec3::backward(), Radians(angles.z));
-
-        return qz * qy * qx;
+        return Quaternion(Radians(angles.x), Radians(angles.y),
+                          Radians(angles.z));
     };
 
     Skeleton* skeleton = mesh->skeleton;
@@ -538,7 +538,8 @@ void MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         anim_data.total_frames,
         frame_data
     );
-}
 
+    return true;
+}
 }
 }

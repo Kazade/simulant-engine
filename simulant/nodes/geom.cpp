@@ -34,7 +34,7 @@ bool Geom::on_create(Params params) {
         return false;
     }
 
-    auto mesh_ptr = params.get<MeshPtr>("mesh").value_or(MeshPtr());
+    auto mesh_ptr = params.get<MeshRef>("mesh").value_or(MeshRef()).lock();
     assert(mesh_ptr);
 
     if(!mesh_ptr) {
@@ -55,10 +55,16 @@ bool Geom::on_create(Params params) {
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();
 
-    Vec3 pos = params.get<FloatArray>("position").value_or(Vec3());
-    Quaternion rot =
-        params.get<FloatArray>("orientation").value_or(Quaternion());
-    Vec3 scale = params.get<FloatArray>("scale").value_or(Vec3(1));
+    // Call up to apply transform to node
+    bool ret = StageNode::on_create(params);
+    if(!ret) {
+        return false;
+    }
+
+    // Compile the culler around the current transform
+    Vec3 pos = transform->position();
+    Quaternion rot = transform->orientation();
+    Vec3 scale = transform->scale();
     culler_->compile(pos, rot, scale);
     return true;
 }
@@ -69,8 +75,12 @@ const AABB& Geom::aabb() const {
 
 void Geom::do_generate_renderables(batcher::RenderQueue* render_queue,
                                    const Camera* camera, const Viewport*,
-                                   const DetailLevel detail_level) {
+                                   const DetailLevel detail_level,
+                                   Light** lights,
+                                   const std::size_t light_count) {
     _S_UNUSED(detail_level);
+    _S_UNUSED(lights);
+    _S_UNUSED(light_count);
 
     culler_->renderables_visible(camera->frustum(), render_queue);
 }

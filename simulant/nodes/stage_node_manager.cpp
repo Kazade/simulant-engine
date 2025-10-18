@@ -30,11 +30,8 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
     }
 
     it->second.destructor(node);
-#if !defined(_MSC_VER)
-    free(node_data_it->second.alloc_base);
-#else
-    _aligned_free(node_data_it->second.alloc_base);
-#endif
+    aligned_free(node_data_it->second.alloc_base);
+
     all_nodes_.erase(node_data_it);
     S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
     return true;
@@ -63,16 +60,21 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
         return nullptr;
     }
 
+    auto construction_data = info->second;
+    auto alignment = construction_data.alignment;
+    auto size = construction_data.size_in_bytes;
+    auto& constructor = construction_data.constructor;
+    auto& destructor = construction_data.destructor;
+
     /* Allocate aligned memory. This is temporary, in future we'll do some
      * chunked allocation depending on the node size */
-    void* mem =
-        smlt::aligned_alloc(info->second.alignment, info->second.size_in_bytes);
-    StageNode* node = info->second.constructor(mem);
+    void* mem = smlt::aligned_alloc(alignment, size);
+    StageNode* node = constructor(mem);
 
     if(!node->init()) {
         S_ERROR("Failed to initialize node");
-        info->second.destructor(node);
-        free(node);
+        destructor(node);
+        aligned_free(node);
         return nullptr;
     }
 
@@ -84,7 +86,7 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
         S_ERROR("Failed to create the node");
         node->clean_up();
         info->second.destructor(node);
-        free(node);
+        aligned_free(node);
         return nullptr;
     }
 

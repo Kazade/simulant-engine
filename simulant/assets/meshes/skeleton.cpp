@@ -165,8 +165,8 @@ void SkeletalFrameUnpacker::unpack_frame(
      * weighting */
     vdata->move_to_start();
 
-    auto vfmt = vdata->vertex_specification();
-    auto ovfmt = out->vertex_specification();
+    auto vfmt = vdata->vertex_format();
+    auto ovfmt = out->vertex_format();
 
     assert(vfmt.attr(VERTEX_ATTR_NAME_POSITION));
     assert(vfmt.attr(VERTEX_ATTR_NAME_NORMAL));

@@ -11,6 +11,9 @@ namespace smlt {
 
 constexpr const char* const LIGHT_POSITION_PROPERTY = "s_light_position";
 constexpr const char* const LIGHT_COLOR_PROPERTY = "s_light_color";
+constexpr const char* const LIGHT_INTENSITY_PROPERTY = "s_light_intensity";
+constexpr const char* const LIGHT_RANGE_PROPERTY = "s_light_range";
+constexpr const char* const LIGHT_COUNT_PROPERTY = "s_light_count";
 constexpr const char* const VIEW_MATRIX_PROPERTY = "s_view";
 constexpr const char* const MODELVIEW_PROJECTION_MATRIX_PROPERTY = "s_modelview_projection";
 constexpr const char* const PROJECTION_MATRIX_PROPERTY = "s_projection";

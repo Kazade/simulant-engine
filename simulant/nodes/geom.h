@@ -67,7 +67,8 @@ public:
 
     void do_generate_renderables(batcher::RenderQueue* render_queue,
                                  const Camera*, const Viewport* viewport,
-                                 const DetailLevel detail_level) override;
+                                 const DetailLevel detail_level, Light** light,
+                                 const std::size_t light_count) override;
 
     bool on_create(Params params) override;
 

@@ -47,6 +47,8 @@ public:
     GL2RenderQueueVisitor(GenericRenderer* renderer, CameraPtr camera);
 
     void start_traversal(const batcher::RenderQueue& queue, uint64_t frame_id, StageNode *stage) override;
+    void visit(const Renderable* renderable, const MaterialPass* pass,
+               batcher::Iteration iteration) override;
     void end_traversal(const batcher::RenderQueue &queue, StageNode* stage) override;
 
     void change_render_group(const batcher::RenderGroup *prev, const batcher::RenderGroup *next) override;
@@ -54,6 +56,7 @@ public:
     void apply_lights(const LightPtr* lights, const uint8_t count) override;
 
 private:
+    GenericRenderer* renderer_;
     CameraPtr camera_;
     Color global_ambient_;
 
@@ -65,7 +68,7 @@ private:
 
     void do_visit(const Renderable* renderable,
                   const MaterialPass* material_pass,
-                  batcher::Iteration iteration) override;
+                  batcher::Iteration iteration);
 
     void rebind_attribute_locations_if_necessary(const MaterialPass* pass, GPUProgram* program);
 };
@@ -79,13 +82,10 @@ public:
     GenericRenderer(Window* window, bool use_es=false);
 
     batcher::RenderGroupKey prepare_render_group(
-        batcher::RenderGroup* group,
-        const Renderable *renderable,
-        const MaterialPass *material_pass,
-        const uint8_t pass_number,
-        const bool is_blended,
-        const float distance_to_camera
-    ) override;
+        batcher::RenderGroup* group, const Renderable* renderable,
+        const MaterialPass* material_pass, const RenderPriority priority,
+        const uint8_t pass_number, const bool is_blended,
+        const float distance_to_camera, uint16_t texture_id) override;
 
     void init_context() override;
 
@@ -102,9 +102,7 @@ public:
         return (use_es_) ? "gles2x" : "gl2x";
     }
 
-    std::shared_ptr<VertexBuffer> prepare_vertex_data(
-        MeshArrangement arrangement, const VertexData* vertex_data,
-        const IndexData* index_data, const VertexRangeList* ranges) override;
+    void prepare_to_render(const Renderable* renderable) override;
 
     bool is_gles() const {
         return use_es_;
@@ -113,10 +111,14 @@ public:
 private:
     GPUProgramManager program_manager_;
     GPUProgramPtr default_gpu_program_ = 0;
+
+    TexturePtr default_texture_;
+
     bool use_es_ = false;
     std::shared_ptr<VBOManager> buffer_manager_;
 
-    void set_light_uniforms(const MaterialPass* pass, GPUProgram* program, const LightPtr light);
+    void set_light_uniforms(const MaterialPass* pass, GPUProgram* program,
+                            uint8_t light_id, const LightPtr light);
     void set_material_uniforms(const MaterialPass *pass, GPUProgram* program);
     void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, const Renderable* renderable, Camera* camera);
     void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Color& global_ambient);
@@ -125,13 +127,12 @@ private:
                                        const Renderable* buffer,
                                        GPUBuffer* vbuffer);
     void set_blending_mode(BlendType type);
-    void send_geometry(const Renderable* renderable, const GPUBuffer* ibuffer);
+    void send_geometry(const Renderable* renderable, GPUBuffer* buffers);
+
+    /* Stashed here in prepare_to_render and used later for that renderable */
+    std::shared_ptr<GPUBuffer> buffer_stash_;
 
     friend class GL2RenderQueueVisitor;
-
-    VertexFormat on_native_vertex_format(VertexFormat hint) override {
-        return hint;
-    }
 };
 
 }

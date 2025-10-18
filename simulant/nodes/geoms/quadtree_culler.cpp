@@ -55,7 +55,7 @@ QuadtreeCuller::QuadtreeCuller(Geom *geom, const MeshPtr mesh, uint8_t max_depth
 void QuadtreeCuller::_compile(const Vec3& pos, const Quaternion& rot, const Vec3& scale) {
     auto data = std::make_shared<CullerTreeData>();
 
-    data->vertices.reset(new VertexData(mesh_->vertex_data->vertex_specification()));
+    data->vertices.reset(new VertexData(mesh_->vertex_data->vertex_format()));
     mesh_->vertex_data->clone_into(*data->vertices);
 
     Mat4 transform = Mat4::as_transform(pos, rot, scale);

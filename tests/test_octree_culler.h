@@ -35,7 +35,7 @@ public:
 
     void test_basic_visibility() {
         auto stage = scene->create_child<smlt::Stage>();
-        auto camera = scene->create_child<smlt::Camera>(); // Looking down -Z
+        auto camera = scene->create_child<smlt::Camera3D>(); // Looking down -Z
 
         // Guarantee 2 renderables by using different materials
         auto mat1 = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
@@ -52,7 +52,7 @@ public:
         auto geom = scene->create_child<Geom>(mesh);
         geom->culler->renderables_visible(camera->frustum(), &queue);
 
-        std::vector<Renderable*> result;
+        std::vector<Renderable*> result;        
         for(auto i = 0u; i < queue.renderable_count(); ++i) {
             result.push_back(queue.renderable(i));
         }

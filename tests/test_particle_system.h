@@ -51,6 +51,42 @@ public:
         assert_false(system->has_active_emitters());
     }
 
+    void test_world_space() {
+        ParticleScriptPtr script =
+            scene->assets->load_particle_script(ParticleScript::BuiltIns::FIRE);
+
+        ParticleSystemPtr system = scene->create_child<ParticleSystem>(script);
+        system->update(0.1f);
+        assert_true(system->particle_count() > 0);
+
+        // Move the system above the particles, the particles
+        system->transform->set_position(smlt::Vec3(0, 100, 0));
+
+        system->update(0.1f);
+        auto p0 = system->particle(0);
+
+        assert_true(p0.position.y < 100);
+    }
+
+    void test_local_space() {
+        ParticleScriptPtr script =
+            scene->assets->load_particle_script(ParticleScript::BuiltIns::FIRE);
+
+        ParticleSystemPtr system = scene->create_child<ParticleSystem>(script);
+        system->set_space(smlt::PARTICLE_SYSTEM_SPACE_LOCAL);
+
+        system->update(0.1f);
+        assert_true(system->particle_count() > 0);
+
+        system->transform->set_position(smlt::Vec3(0, 100, 0));
+
+        system->update(0.1f);
+        auto p0 = system->particle(0);
+
+        // Should be a small value
+        assert_true(p0.position.y <= p0.velocity.y * 0.1f);
+    }
+
     void test_direction_manipulator() {
         ParticleScriptPtr script = scene->assets->load_particle_script(
             ParticleScript::BuiltIns::FIRE

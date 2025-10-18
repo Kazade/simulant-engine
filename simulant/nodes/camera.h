@@ -19,6 +19,9 @@ class Camera: public ContainerNode, public ChainNameable<Camera> {
 public:
     S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CAMERA, "camera");
 
+    S_DEFINE_STAGE_NODE_PARAM(Camera, "projection_matrix", FloatArray, no_value,
+                              "16 floats defining the projection matrix");
+
     using ContainerNode::do_generate_renderables;
 
     Camera(Scene* owner);
@@ -70,8 +73,13 @@ public:
                                                   float ratio);
 
     bool on_create(Params params) override {
-        _S_UNUSED(params);
-        return true;
+        if(!clean_params<Camera>(params)) {
+            return false;
+        }
+
+        set_projection_matrix(
+            params.get<FloatArray>("projection_matrix").value());
+        return StageNode::on_create(params);
     }
 
 private:
@@ -86,7 +94,42 @@ private:
     void on_transformation_changed() override;
 };
 
-class Camera2D: public Camera {};
-class Camera3D: public Camera {};
+class Camera2D: public Camera {
+public:
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CAMERA2D, "camera2d");
+
+    S_DEFINE_STAGE_NODE_PARAM(Camera2D, "xmag", float, 1.0f,
+                              "Width of the view");
+    S_DEFINE_STAGE_NODE_PARAM(Camera2D, "ymag", float, 1.0f,
+                              "Height of the view");
+    S_DEFINE_STAGE_NODE_PARAM(Camera2D, "znear", float, 1.0f,
+                              "The camera near distance");
+    S_DEFINE_STAGE_NODE_PARAM(Camera2D, "zfar", float, 100.0f,
+                              "The camera far distance");
+
+    Camera2D(Scene* owner) :
+        Camera(owner) {}
+
+    bool on_create(Params params) override;
+};
+
+class Camera3D: public Camera {
+public:
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CAMERA3D, "camera3d");
+
+    S_DEFINE_STAGE_NODE_PARAM(Camera3D, "znear", float, 1.0f,
+                              "The camera near distance");
+    S_DEFINE_STAGE_NODE_PARAM(Camera3D, "zfar", float, 100.0f,
+                              "The camera far distance");
+    S_DEFINE_STAGE_NODE_PARAM(Camera3D, "aspect_ratio", float, 1.0f,
+                              "Aspect ratio");
+    S_DEFINE_STAGE_NODE_PARAM(Camera3D, "yfov", float, 60.0f,
+                              "The camera field of view (in degrees)");
+
+    Camera3D(Scene* owner) :
+        Camera(owner) {}
+
+    bool on_create(Params params) override;
+};
 
 } // namespace smlt

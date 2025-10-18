@@ -56,7 +56,7 @@ void OctreeCuller::_compile(const Vec3 &pos, const Quaternion &rot, const Vec3 &
     auto data = std::make_shared<CullerTreeData>();
 
     /* Copy the vertex data as the mesh will be released */
-    data->vertices.reset(new VertexData(mesh_->vertex_data->vertex_specification()));
+    data->vertices.reset(new VertexData(mesh_->vertex_data->vertex_format()));
     mesh_->vertex_data->clone_into(*data->vertices);
 
     /* Transform the vertices by the passed in transformation */

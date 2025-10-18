@@ -153,13 +153,13 @@ public:
 
         smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
 
-        assert_equal(0, (int32_t)data->vertex_specification()
+        assert_equal(0, (int32_t)data->vertex_format()
                             .offset(VERTEX_ATTR_NAME_POSITION)
                             .value());
-        assert_equal(sizeof(float) * 3, (uint32_t)data->vertex_specification()
+        assert_equal(sizeof(float) * 3, (uint32_t)data->vertex_format()
                                             .offset(VERTEX_ATTR_NAME_TEXCOORD_0)
                                             .value());
-        assert_equal(sizeof(float) * 5, (uint32_t)data->vertex_specification()
+        assert_equal(sizeof(float) * 5, (uint32_t)data->vertex_format()
                                             .offset(VERTEX_ATTR_NAME_COLOR)
                                             .value());
     }
@@ -365,8 +365,6 @@ public:
         data.position(3, 0, 0);
         data.move_next();
         data.done();
-
-        assert_true(data.is_dirty());
 
         assert_equal(((float*) data.data())[0], 0.0f);
         assert_equal(((float*) data.data())[5], 1.0f);

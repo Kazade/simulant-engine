@@ -40,22 +40,6 @@ public:
         float range = 0.0f;
     };
 
-    struct NodeFactoryInput {
-        smlt::LimitedString<32> name;
-        smlt::MeshPtr mesh;
-        smlt::optional<CameraInfo> camera;
-        smlt::optional<LightInfo> light;
-        smlt::Vec3 translation;
-        smlt::Quaternion rotation;
-        smlt::Vec3 scale;
-        smlt::Params params;
-        CustomAttributeMap attrs;
-    };
-
-    typedef std::function<smlt::StageNode*(smlt::StageNode* parent,
-                                           const NodeFactoryInput& attributes)>
-        NodeFactory;
-
     static const char* node_factory_key;
 
     GLTFLoader(const smlt::Path& filename, std::shared_ptr<std::istream> data) :
@@ -71,7 +55,7 @@ public:
      read from the "extras" key of the node, or its mesh (if any)
      */
 
-    void into(smlt::Loadable& resource, const smlt::LoaderOptions& options =
+    bool into(smlt::Loadable& resource, const smlt::LoaderOptions& options =
                                             smlt::LoaderOptions()) override;
 };
 
@@ -84,7 +68,7 @@ public:
     }
 
     bool supports(const smlt::Path& filename) const override {
-        return filename.ext() == ".gltf";
+        return filename.ext() == ".gltf" || filename.ext() == ".glb";
     }
 
     smlt::Loader::ptr

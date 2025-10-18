@@ -214,11 +214,12 @@ public:
         for(auto it = this->objects_.begin(); it != this->objects_.end();) {
             ObjMeta meta = object_metas_.at(it->first);
             bool collect = meta.collection_method == GARBAGE_COLLECT_PERIODIC;
+            auto use_count = it->second.use_count();
 
-            if(collect && it->second.unique()) {
-                // The user accessed this, and GC is enabled, and now there is only the
-                // single ref left
+            if(collect && use_count <= 1) {
+                /* FIXME: use_count isn't thread safe */
                 on_destroy(it->first);
+
                 it = this->objects_.erase(it);
             } else {
                 ++it;

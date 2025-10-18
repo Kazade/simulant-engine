@@ -89,12 +89,12 @@ void NullSoundDriver::set_source_reference_distance(AudioSourceID id, float dist
     _S_UNUSED(dist);
 }
 
-void NullSoundDriver::set_source_pitch(AudioSourceID id, RangeValue<0, 1> value) {
+void NullSoundDriver::set_source_pitch(AudioSourceID id, NormalizedFloat value) {
     _S_UNUSED(id);
     _S_UNUSED(value);
 }
 
-void NullSoundDriver::set_source_gain(AudioSourceID id, RangeValue<0, 1> value) {
+void NullSoundDriver::set_source_gain(AudioSourceID id, NormalizedFloat value) {
     _S_UNUSED(id);
     _S_UNUSED(value);
 }

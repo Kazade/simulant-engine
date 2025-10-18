@@ -94,6 +94,7 @@ T* mixin_factory(F& factory, StageNode* base, Args&&... args);
 } // namespace impl
 
 enum NodeParamType {
+    NODE_PARAM_TYPE_INVALID = -1,
     NODE_PARAM_TYPE_FLOAT,
     NODE_PARAM_TYPE_FLOAT_ARRAY,
     NODE_PARAM_TYPE_INT,
@@ -105,6 +106,7 @@ enum NodeParamType {
     NODE_PARAM_TYPE_TEXTURE_PTR,
     NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR,
     NODE_PARAM_TYPE_STAGE_NODE_PTR,
+    NODE_PARAM_TYPE_PREFAB_PTR,
     // FIXME: Ideally these wouldn't exist and instead
     // widgets would take base types as arguments
     NODE_PARAM_TYPE_UI_CONFIG,
@@ -164,6 +166,11 @@ struct type_to_node_param_type<TexturePtr> {
 template<>
 struct type_to_node_param_type<ParticleScriptPtr> {
     static const NodeParamType value = NODE_PARAM_TYPE_PARTICLE_SCRIPT_PTR;
+};
+
+template<>
+struct type_to_node_param_type<PrefabPtr> {
+    static const NodeParamType value = NODE_PARAM_TYPE_PREFAB_PTR;
 };
 
 template<>
@@ -294,6 +301,28 @@ private:
 template<typename T>
 std::set<NodeParam>& get_node_params() {
     static std::set<NodeParam> properties;
+    if(properties.empty()) {
+        // All stage nodes should be able to handle
+        // these things
+        properties.insert(
+            NodeParam(20000, "position", NODE_PARAM_TYPE_FLOAT_ARRAY,
+                      Params::to_param(Vec3()), "Node absolute position"));
+        properties.insert(NodeParam(
+            20001, "orientation", NODE_PARAM_TYPE_FLOAT_ARRAY,
+            Params::to_param(Quaternion()), "Node absolute orientation"));
+        properties.insert(NodeParam(20002, "scale", NODE_PARAM_TYPE_FLOAT_ARRAY,
+                                    Params::to_param(Vec3(1, 1, 1)),
+                                    "Node absolute scale"));
+        properties.insert(
+            NodeParam(20003, "translation", NODE_PARAM_TYPE_FLOAT_ARRAY,
+                      Params::to_param(Vec3()), "Node relative translation"));
+        properties.insert(NodeParam(
+            20004, "rotation", NODE_PARAM_TYPE_FLOAT_ARRAY,
+            Params::to_param(Quaternion()), "Node relative rotation"));
+        properties.insert(NodeParam(
+            20005, "scale_factor", NODE_PARAM_TYPE_FLOAT_ARRAY,
+            Params::to_param(Vec3(1, 1, 1)), "Node relative scale factor"));
+    }
     return properties;
 }
 
@@ -306,7 +335,7 @@ public:
     TypedNodeParam(int order, const char* name, const F& fallback,
                    const char* desc) :
         param_(NodeParam(order, name, type_to_node_param_type<T>::value,
-                         to_param(fallback), desc)) {
+                         Params::to_param(fallback), desc)) {
 
         get_node_params<C>().insert(param_);
     }
@@ -316,22 +345,6 @@ public:
     }
 
 private:
-    template<typename F>
-    optional<ParamValue> to_param(const F& fallback) {
-        /* We abuse the default coersion rules of Params */
-        Params tmp;
-        tmp.set("value", fallback);
-        return tmp.raw("value");
-    }
-
-    optional<ParamValue> to_param(const OptionalInit&) {
-        return no_value;
-    }
-
-    optional<ParamValue> to_param(const std::nullptr_t&) {
-        return no_value;
-    }
-
     NodeParam param_;
 };
 
@@ -356,6 +369,7 @@ private:
                   std::is_same<type, smlt::FloatArray>::value ||               \
                   std::is_same<type, smlt::ParticleScriptPtr>::value ||        \
                   std::is_same<type, smlt::MeshPtr>::value ||                  \
+                  std::is_same<type, smlt::PrefabPtr>::value ||                \
                   std::is_same<type, smlt::GeomCullerOptions>::value ||        \
                   std::is_same<type, std::string>::value ||                    \
                   std::is_same<type, smlt::TextureFlags>::value ||             \
@@ -647,9 +661,11 @@ public:
 
     /** Populates the render queue with a list of renderables to send to be
      *  rendered by the render pipelines */
-    void generate_renderables(batcher::RenderQueue* render_queue, const Camera*,
-                              const Viewport* viewport,
-                              const DetailLevel detail_level);
+    std::size_t generate_renderables(batcher::RenderQueue* render_queue,
+                                     const Camera*, const Viewport* viewport,
+                                     const DetailLevel detail_level,
+                                     Light** lights,
+                                     const std::size_t light_count);
 
     void update(float dt) override final;
     void late_update(float dt) override final;
@@ -683,8 +699,43 @@ public:
     StageNode* load_tree(const Path& path,
                          const TreeLoadOptions& opts = TreeLoadOptions());
 
+    virtual std::set<NodeParam> node_params() const = 0;
+
 protected:
-    virtual bool on_create(Params params) = 0;
+    virtual bool on_create(Params params) {
+        auto position_maybe = params.get<FloatArray>("position");
+        if(position_maybe) {
+            transform->set_position(position_maybe.value());
+        }
+
+        auto orientation_maybe = params.get<FloatArray>("orientation");
+        if(orientation_maybe) {
+            transform->set_orientation(orientation_maybe.value());
+        }
+
+        auto scale_maybe = params.get<FloatArray>("scale");
+        if(scale_maybe) {
+            transform->set_scale(scale_maybe.value());
+        }
+
+        auto translation_maybe = params.get<FloatArray>("translation");
+        if(translation_maybe) {
+            transform->set_translation(translation_maybe.value());
+        }
+
+        auto rotation_maybe = params.get<FloatArray>("rotation");
+        if(rotation_maybe) {
+            transform->set_rotation(rotation_maybe.value());
+        }
+
+        auto scale_factor_maybe = params.get<FloatArray>("scale_factor");
+        if(scale_factor_maybe) {
+            transform->set_scale_factor(scale_factor_maybe.value());
+        }
+
+        return true;
+    }
+
     virtual bool on_destroy() override {
         return true;
     }
@@ -721,9 +772,11 @@ protected:
                 // No default and not provided
                 return false;
             } else if(passed) {
-                cleaned.set(name, params.raw(name).value());
+                auto v = params.raw(name).value();
+                cleaned.set(name, v);
             } else {
-                cleaned.set(name, param.default_value().value());
+                auto v = param.default_value().value();
+                cleaned.set(name, v);
             }
         }
 
@@ -731,13 +784,25 @@ protected:
         return true;
     }
 
+public:
+    /** Returns the parameters used to construct this node */
+    const Params& create_params() const {
+        return params_;
+    }
+
 private:
     friend class StageNodeManager;
 
     Transform transform_;
 
+    // FIXME: This is potentially quite wasteful outside of the
+    // Simulant Studio editor. We can probably just optimise this
+    // away somehow during game release builds
+    Params params_;
+
     // NVI idiom
     bool _create(const Params& params) {
+        params_ = params;
         return on_create(params);
     }
 
@@ -751,10 +816,14 @@ private:
     virtual void do_generate_renderables(batcher::RenderQueue* render_queue,
                                          const Camera*,
                                          const Viewport* viewport,
-                                         const DetailLevel detail_level) {
+                                         const DetailLevel detail_level,
+                                         Light** lights,
+                                         const std::size_t light_count) {
         _S_UNUSED(render_queue);
         _S_UNUSED(viewport);
         _S_UNUSED(detail_level);
+        _S_UNUSED(lights);
+        _S_UNUSED(light_count);
     }
 
     virtual void finalize_destroy() override final;
@@ -951,6 +1020,8 @@ public:
 
     int16_t precedence() const;
 
+    virtual const char* node_type_name() const = 0;
+
 protected:
     // Faster than properties, useful for subclasses where a clean API isn't as
     // important
@@ -1038,7 +1109,8 @@ public:
 
     /* Containers don't directly have renderables, but their children do */
     void do_generate_renderables(batcher::RenderQueue*, const Camera*,
-                                 const Viewport*, const DetailLevel) override {}
+                                 const Viewport*, const DetailLevel, Light**,
+                                 const std::size_t) override {}
 
     virtual ~ContainerNode() {}
 };
@@ -1079,7 +1151,12 @@ typedef StageNode* StageNodePtr;
         const static smlt::StageNodeType node_type = node_type_id;             \
         inline static const char* name = alias;                                \
     };                                                                         \
-    const char* node_type_name() const {                                       \
+    const char* node_type_name() const override {                              \
         return Meta::name;                                                     \
     }                                                                          \
+                                                                               \
+    std::set<smlt::NodeParam> node_params() const override {                   \
+        return smlt::get_node_params<std::decay<decltype(*this)>::type>();     \
+    }                                                                          \
+                                                                               \
     struct _unused_ {}

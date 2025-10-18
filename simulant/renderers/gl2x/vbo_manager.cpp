@@ -2,8 +2,11 @@
 
 namespace smlt {
 
-void GPUBuffer::bind_vbo() {
-    vbo->bind(vbo_slot);
+void GPUBuffer::bind_vbos() {
+    vertex_vbo->bind(vertex_vbo_slot);
+    if(index_vbo) {
+        index_vbo->bind(index_vbo_slot);
+    }
 }
 
 void VBOManager::on_index_data_destroyed(IndexData* index_data) {
@@ -73,26 +76,26 @@ std::pair<VBO*, VBOSlot> VBOManager::perform_fetch_or_upload(const Data* vdata, 
     return std::make_pair(vvbo, vslot);
 }
 
-GPUBuffer VBOManager::update_and_fetch_vertex_buffer(const VertexData& vdata) {
-    auto vpair = perform_fetch_or_upload(&vdata, dedicated_vertex_vbos_,
+GPUBuffer VBOManager::update_and_fetch_buffers(const Renderable* renderable) {
+    const auto& vdata = renderable->vertex_data;
+    auto vpair = perform_fetch_or_upload(vdata, dedicated_vertex_vbos_,
                                          vertex_data_slots_);
 
     assert(vpair.first->target() == GL_ARRAY_BUFFER);
 
     GPUBuffer buffer;
-    buffer.vbo = vpair.first;
-    buffer.vbo_slot = vpair.second;
-    return buffer;
-}
+    buffer.vertex_vbo = vpair.first;
+    buffer.vertex_vbo_slot = vpair.second;
 
-GPUBuffer VBOManager::update_and_fetch_index_buffer(const IndexData& idata) {
-    auto ipair = perform_fetch_or_upload(&idata, dedicated_index_vbos_,
-                                         index_data_slots_);
-    assert(ipair.first->target() == GL_ELEMENT_ARRAY_BUFFER);
+    if(renderable->index_data) {
+        const auto& idata = renderable->index_data;
+        auto ipair = perform_fetch_or_upload(idata, dedicated_index_vbos_,
+                                             index_data_slots_);
+        assert(ipair.first->target() == GL_ELEMENT_ARRAY_BUFFER);
+        buffer.index_vbo = ipair.first;
+        buffer.index_vbo_slot = ipair.second;
+    }
 
-    GPUBuffer buffer;
-    buffer.vbo = ipair.first;
-    buffer.vbo_slot = ipair.second;
     return buffer;
 }
 
@@ -135,7 +138,7 @@ VBOSlotSize VBOManager::calc_vbo_slot_size(uint32_t required_size_in_bytes) {
 
 std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const VertexData *vertex_data) {
     auto required_size = vertex_data->data_size();
-    auto spec = vertex_data->vertex_specification();
+    auto spec = vertex_data->vertex_format();
 
     if(required_size >= int(VBO_SLOT_SIZE_512K)) {
         /* Use a dedicated VBO */

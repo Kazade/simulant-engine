@@ -19,6 +19,7 @@
 
 #include "generic_renderer.h"
 
+#include "../../asset_manager.h"
 #include "../../nodes/actor.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
@@ -26,7 +27,6 @@
 #include "../../stage.h"
 #include "../../types.h"
 #include "gpu_program.h"
-#include "simulant/renderers/gl2x/gl2x_vertex_buffer_data.h"
 #include "vbo_manager.h"
 
 #ifdef __ANDROID__
@@ -45,7 +45,7 @@ namespace smlt {
 /* These are bare minimal shaders so that *something* is displayed, they're only
  * used when the Material is incomplete (no shaders provided) */
 
-const std::string default_vertex_shader = R"(
+static const char* default_vertex_shader = R"(
 #version {0}
 
 attribute vec4 s_position;
@@ -55,7 +55,7 @@ void main(void) {
 
 )";
 
-const std::string default_fragment_shader = R"(
+static const char* default_fragment_shader = R"(
 #version {0}
 
 void main(void) {
@@ -80,8 +80,9 @@ GenericRenderer::GenericRenderer(Window* window, bool use_es) :
 
 batcher::RenderGroupKey GenericRenderer::prepare_render_group(
     batcher::RenderGroup* group, const Renderable* renderable,
-    const MaterialPass* material_pass, const uint8_t pass_number,
-    const bool is_blended, const float distance_to_camera) {
+    const MaterialPass* material_pass, const RenderPriority priority,
+    const uint8_t pass_number, const bool is_blended,
+    const float distance_to_camera, uint16_t texture_id) {
 
     _S_UNUSED(group);
     _S_UNUSED(renderable);
@@ -91,59 +92,89 @@ batcher::RenderGroupKey GenericRenderer::prepare_render_group(
     _S_UNUSED(distance_to_camera);
 
     return batcher::generate_render_group_key(
-        pass_number, is_blended, distance_to_camera, renderable->precedence);
+        priority, pass_number, is_blended, distance_to_camera,
+        renderable->precedence, texture_id);
 }
 
 void GenericRenderer::set_light_uniforms(const MaterialPass* pass,
-                                         GPUProgram* program,
+                                         GPUProgram* program, uint8_t light_id,
                                          const LightPtr light) {
     _S_UNUSED(pass);
 
-    auto pos_loc = program->locate_uniform(LIGHT_POSITION_PROPERTY, true);
-    if(pos_loc > -1) {
-        auto pos = (light) ? light->transform->position() : Vec3();
-        if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-            pos = light->direction();
-        }
-        auto vec =
-            (light) ? Vec4(pos, (light->light_type() == LIGHT_TYPE_DIRECTIONAL)
+    LimitedVector<std::string, 2> suffixes;
+    suffixes.push_back(_F("[{0}]").format(light_id));
+    if(light_id == 0) {
+        suffixes.push_back("");
+    }
+
+    for(std::size_t i = 0; i < suffixes.size(); ++i) {
+        auto sfx = suffixes[i];
+        auto pos_loc =
+            program->locate_uniform(LIGHT_POSITION_PROPERTY + sfx, true);
+        if(pos_loc > -1) {
+            auto pos = (light) ? light->transform->position() : Vec3();
+            if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
+                pos = light->direction();
+            }
+            auto vec =
+                (light)
+                    ? Vec4(pos, (light->light_type() == LIGHT_TYPE_DIRECTIONAL)
                                     ? 0.0
                                     : 1.0)
                     : Vec4();
-        program->set_uniform_vec4(pos_loc, vec);
-    }
+            program->set_uniform_vec4(pos_loc, vec);
+        }
 
-    auto amb_loc = program->locate_uniform(LIGHT_COLOR_PROPERTY, true);
-    if(amb_loc > -1) {
-        program->set_uniform_color(amb_loc,
-                                   (light) ? light->color() : Color::none());
-    }
+        auto amb_loc =
+            program->locate_uniform(LIGHT_COLOR_PROPERTY + sfx, true);
+        if(amb_loc > -1) {
+            program->set_uniform_color(amb_loc, (light) ? light->color()
+                                                        : Color::none());
+        }
 
-    // FIXME send range and intensity to the shader
+        auto intensity_loc =
+            program->locate_uniform(LIGHT_INTENSITY_PROPERTY + sfx, true);
+        if(intensity_loc > -1) {
+            auto att = (light) ? light->intensity() : 0;
+            program->set_uniform_float(intensity_loc, att);
+        }
+
+        auto range_loc =
+            program->locate_uniform(LIGHT_RANGE_PROPERTY + sfx, true);
+        if(range_loc > -1) {
+            auto att = (light) ? light->range() : 0;
+            program->set_uniform_float(range_loc, att);
+        }
+    }
 }
 
 void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
                                             GPUProgram* program) {
     auto mat = pass->material();
 
-    auto amb_loc = program->locate_uniform(AMBIENT_PROPERTY_NAME, true);
-    if(amb_loc > -1) {
-        program->set_uniform_color(AMBIENT_PROPERTY_NAME, pass->ambient());
+    auto r_loc = program->locate_uniform(ROUGHNESS_PROPERTY_NAME, true);
+    if(r_loc > -1) {
+        program->set_uniform_float(r_loc, pass->roughness());
     }
 
-    auto diff_loc = program->locate_uniform(DIFFUSE_PROPERTY_NAME, true);
+    auto m_loc = program->locate_uniform(METALLIC_PROPERTY_NAME, true);
+    if(m_loc > -1) {
+        program->set_uniform_float(m_loc, pass->roughness());
+    }
+
+    auto diff_loc = program->locate_uniform(BASE_COLOR_PROPERTY_NAME, true);
     if(diff_loc > -1) {
-        program->set_uniform_color(DIFFUSE_PROPERTY_NAME, pass->diffuse());
+        program->set_uniform_color(diff_loc, pass->base_color());
     }
 
-    auto spec_loc = program->locate_uniform(SPECULAR_PROPERTY_NAME, true);
+    auto spec_loc = program->locate_uniform(SPECULAR_COLOR_PROPERTY_NAME, true);
     if(spec_loc > -1) {
-        program->set_uniform_color(SPECULAR_PROPERTY_NAME, pass->specular());
+        program->set_uniform_color(spec_loc, pass->specular_color());
     }
 
-    auto shin_loc = program->locate_uniform(SHININESS_PROPERTY_NAME, true);
+    auto shin_loc = program->locate_uniform(SPECULAR_PROPERTY_NAME, true);
     if(shin_loc > -1) {
-        program->set_uniform_float(SHININESS_PROPERTY_NAME, pass->shininess());
+        program->set_uniform_float(shin_loc, pass->specular());
     }
 
     auto ps_loc = program->locate_uniform(POINT_SIZE_PROPERTY_NAME, true);
@@ -158,7 +189,9 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
     uint8_t texture_unit = 0;
     for(auto& tex_prop: texture_props) {
         auto& info = tex_prop.second;
+
         auto tloc = program->locate_uniform(info.texture_property_name, true);
+
         if(tloc > -1) {
             // This texture is being used
             program->set_uniform_int(tloc, texture_unit++);
@@ -217,8 +250,8 @@ void send_attribute(int32_t loc, VertexAttributeName attr,
                     const VertexFormat& vertex_spec, uint32_t global_offset) {
 
     const GLenum lookup[VERTEX_ATTR_TYPE_MAX] = {
-        GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT,
-        GL_INT,  GL_UNSIGNED_INT,  GL_FLOAT,
+        GL_NONE,           GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT,
+        GL_UNSIGNED_SHORT, GL_INT,  GL_UNSIGNED_INT,  GL_FLOAT,
     };
 
     if(loc > -1 && (vertex_spec.attr_count(attr) > 0)) {
@@ -230,8 +263,8 @@ void send_attribute(int32_t loc, VertexAttributeName attr,
                             VERTEX_ATTR_ARRANGEMENT_BGRA
                         ? 4
                         : (int)vertex_spec.attr(attr).value().arrangement;
-
-        auto type = lookup[vertex_spec.attr(attr).value().type];
+        auto attr_type = vertex_spec.attr(attr).value().type;
+        auto type = lookup[attr_type];
         auto stride = vertex_spec.stride();
         // auto normalized = (attr_for_type == VERTEX_ATTR_4UB_RGBA ||
         //                    attr_for_type == VERTEX_ATTR_4UB_BGRA)
@@ -239,6 +272,7 @@ void send_attribute(int32_t loc, VertexAttributeName attr,
         //                       : GL_FALSE;
         // FIXME: What should this be set to?
         auto normalized = GL_FALSE;
+
         GLCheck(glVertexAttribPointer, loc, size, type, normalized, stride,
                 BUFFER_OFFSET(global_offset + offset));
     } else if(loc > -1) {
@@ -249,7 +283,7 @@ void send_attribute(int32_t loc, VertexAttributeName attr,
 }
 
 void GenericRenderer::set_auto_attributes_on_shader(
-    GPUProgram* program, const Renderable* renderable, GPUBuffer* vbuffer) {
+    GPUProgram* program, const Renderable* renderable, GPUBuffer* buffers) {
     /*
      *  Binding attributes generically is hard. So we have some template magic
      * in the send_attribute function above that takes the VertexData member
@@ -257,14 +291,13 @@ void GenericRenderer::set_auto_attributes_on_shader(
      * generic. Before this was 100s of lines of boilerplate. Thank god for
      * templates!
      */
-    const VertexFormat& vertex_spec =
-        renderable->vertex_data->vertex_specification();
-    auto offset = vbuffer->vbo->byte_offset(vbuffer->vbo_slot);
+    const VertexFormat& vertex_spec = renderable->vertex_data->vertex_format();
+    auto offset = buffers->vertex_vbo->byte_offset(buffers->vertex_vbo_slot);
 
     send_attribute(program->locate_attribute("s_position", true),
                    VERTEX_ATTR_NAME_POSITION, vertex_spec, offset);
 
-    send_attribute(program->locate_attribute("s_diffuse", true),
+    send_attribute(program->locate_attribute("s_color", true),
                    VERTEX_ATTR_NAME_COLOR, vertex_spec, offset);
 
     send_attribute(program->locate_attribute("s_texcoord0", true),
@@ -340,7 +373,13 @@ smlt::GPUProgramPtr smlt::GenericRenderer::gpu_program(
 
 GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer,
                                              CameraPtr camera) :
-    RenderQueueVisitor(renderer), camera_(camera) {}
+    renderer_(renderer), camera_(camera) {}
+
+void GL2RenderQueueVisitor::visit(const Renderable* renderable,
+                                  const MaterialPass* material_pass,
+                                  batcher::Iteration iteration) {
+    do_visit(renderable, material_pass, iteration);
+}
 
 void GL2RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
                                             uint64_t frame_id,
@@ -360,24 +399,23 @@ void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
 
 void GL2RenderQueueVisitor::apply_lights(const LightPtr* lights,
                                          const uint8_t count) {
-    GenericRenderer* rend = (GenericRenderer*)renderer();
-    if(count == 1) {
-        rend->set_light_uniforms(pass_, program_, lights[0]);
-    } else {
-        // FIXME: This should fill out a light array in the shader. Needs a new
-        // property defined!
+    for(std::size_t i = 0; i < count; ++i) {
+        renderer_->set_light_uniforms(pass_, program_, i, lights[i]);
+    }
+
+    auto m_loc = program_->locate_uniform(LIGHT_COUNT_PROPERTY, true);
+    if(m_loc > -1) {
+        program_->set_uniform_int(m_loc, count);
     }
 }
 
 void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
                                                  const MaterialPass* next) {
-
-    GenericRenderer* rend = (GenericRenderer*)renderer();
     pass_ = next;
 
     // Active the new program, if this render group uses a different one
     if(!prev || prev->gpu_program_id() != next->gpu_program_id()) {
-        program_ = rend->gpu_program(pass_->gpu_program_id()).get();
+        program_ = this->renderer_->gpu_program(pass_->gpu_program_id()).get();
         assert(program_);
 
         program_->build();
@@ -387,6 +425,16 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     if(!program_) {
         S_ERROR("Failed to find GPU program");
         return;
+    }
+
+    if(!renderer_->default_texture_) {
+        renderer_->default_texture_ = get_app()->shared_assets->create_texture(
+            1, 1, TEXTURE_FORMAT_RGB_3UB_888);
+        renderer_->default_texture_->set_name("DefaultTexture");
+        renderer_->default_texture_->set_data(
+            std::vector<uint8_t>({255, 255, 255})); // White texture
+        renderer_->default_texture_->set_texture_filter(TEXTURE_FILTER_POINT);
+        renderer_->default_texture_->flush();
     }
 
     /* First we bind any used texture properties to their associated variables
@@ -404,27 +452,22 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 
         const TexturePtr tex = *tex_prop;
 
-        // Do we use this texture property? Then bind the texture appropriately
-        // FIXME: Is this right? The GL1 renderer uses the existence of a
-        // texture_id to decide whether or not to bind a texture to a unit. This
-        // checks the variable exists and also whether there's a texture ID. The
-        // question is, should the material have some other type of existence
-        // check for texture properties? Is checking the texture_id right for
-        // all situations? If someone uses s_diffuse_map, but doesn't set a
-        // value, surely that should get the default texture?
         auto loc = program_->locate_uniform(
             defined_property.second.texture_property_name, true);
         if(loc > -1 && (texture_unit + 1u) < _S_GL_MAX_TEXTURE_UNITS) {
             GLCheck(glActiveTexture, GL_TEXTURE0 + texture_unit);
             GLCheck(glBindTexture, GL_TEXTURE_2D,
-                    (tex) ? tex->_renderer_specific_id() : 0);
+                    (tex)
+                        ? tex->_renderer_specific_id()
+                        : renderer_->default_texture_->_renderer_specific_id());
+            program_->set_uniform_int(loc, texture_unit);
             texture_unit++;
         }
     }
 
     /* Next, we wipe out any unused texture units */
     for(uint8_t i = texture_unit; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
-        GLCheck(glActiveTexture, GL_TEXTURE0 + texture_unit);
+        GLCheck(glActiveTexture, GL_TEXTURE0 + i);
         GLCheck(glBindTexture, GL_TEXTURE_2D, 0);
     }
 
@@ -446,7 +489,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         }
     }
 
-    if(!rend->is_gles()) {
+    if(!renderer_->is_gles()) {
         if(!prev || prev->point_size() != next->point_size()) {
             glPointSize(next->point_size());
         }
@@ -464,13 +507,13 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             }
         }
 
-        if(!prev || prev->shade_model() != next->shade_model()) {
-            if(next->shade_model() == SHADE_MODEL_SMOOTH) {
-                GLCheck(glShadeModel, GL_SMOOTH);
-            } else {
-                GLCheck(glShadeModel, GL_FLAT);
-            }
-        }
+        // if(!prev || prev->shade_model() != next->shade_model()) {
+        //     if(next->shade_model() == SHADE_MODEL_SMOOTH) {
+        //         GLCheck(glShadeModel, GL_SMOOTH);
+        //     } else {
+        //         GLCheck(glShadeModel, GL_FLAT);
+        //     }
+        // }
     }
 
     if(!prev || prev->cull_mode() != next->cull_mode()) {
@@ -497,13 +540,13 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     }
 
     if(!prev || prev->blend_func() != next->blend_func()) {
-        rend->set_blending_mode(next->blend_func());
+        renderer_->set_blending_mode(next->blend_func());
     }
 
-    rend->set_stage_uniforms(next, program_, global_ambient_);
-    rend->set_material_uniforms(next, program_);
+    renderer_->set_stage_uniforms(next, program_, global_ambient_);
+    renderer_->set_material_uniforms(next, program_);
 
-    for(auto prop: mat->custom_properties()) {
+    for(auto& prop: mat->custom_properties()) {
         switch(prop.second.type) {
             case MATERIAL_PROPERTY_TYPE_INT:
                 const int* i;
@@ -614,17 +657,12 @@ void GL2RenderQueueVisitor::do_visit(const Renderable* renderable,
                                      batcher::Iteration iteration) {
     _S_UNUSED(iteration);
 
-    GenericRenderer* rend = (GenericRenderer*)renderer();
-
-    auto vbuffer_data =
-        (GL2VertexBufferRendererData*)renderable->vertex_data->gpu_buffer()
-            ->renderer_data()
-            .get();
-
-    rend->set_renderable_uniforms(material_pass, program_, renderable, camera_);
-    rend->set_auto_attributes_on_shader(program_, renderable,
-                                        &vbuffer_data->vertex_buffer);
-    rend->send_geometry(renderable, &vbuffer_data->index_buffer);
+    renderer_->set_renderable_uniforms(material_pass, program_, renderable,
+                                       camera_);
+    renderer_->prepare_to_render(renderable);
+    renderer_->set_auto_attributes_on_shader(program_, renderable,
+                                             renderer_->buffer_stash_.get());
+    renderer_->send_geometry(renderable, renderer_->buffer_stash_.get());
 }
 
 static GLenum convert_id_type(IndexType type) {
@@ -676,24 +714,24 @@ GPUProgramPtr GenericRenderer::current_gpu_program() const {
 }
 
 void GenericRenderer::send_geometry(const Renderable* renderable,
-                                    const GPUBuffer* ibuffer) {
+                                    GPUBuffer* buffers) {
     auto element_count = renderable->index_element_count;
     auto arrangement = convert_arrangement(renderable->arrangement);
+
     if(element_count) {
         auto index_type = convert_id_type(renderable->index_data->index_type());
-        auto offset = ibuffer->vbo->byte_offset(ibuffer->vbo_slot);
+        auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);
         GLCheck(glDrawElements, arrangement, element_count, index_type,
                 BUFFER_OFFSET(offset));
         get_app()->stats->increment_polygons_rendered(renderable->arrangement,
                                                       element_count);
-    } else {
+    } else if(renderable->vertex_ranges->size()) {
         assert(renderable->vertex_ranges);
         assert(renderable->vertex_ranges->size());
 
         auto total = 0;
         for(std::size_t i = 0; i < renderable->vertex_ranges->size(); ++i) {
             auto range = renderable->vertex_ranges->at(i);
-
             GLCheck(glDrawArrays, arrangement, range->start, range->count);
 
             total += range->count;
@@ -760,27 +798,12 @@ void GenericRenderer::init_context() {
     }
 }
 
-std::shared_ptr<VertexBuffer> GenericRenderer::prepare_vertex_data(
-    MeshArrangement arrangement, const VertexData* vertex_data,
-    const IndexData* index_data, const VertexRangeList* ranges) {
-
-    auto vbdata = std::make_shared<GL2VertexBufferRendererData>();
-
-    /* FIXME!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     *
-     * - We need to add prepare_index_data to the renderer
-     * - We need to make this upload the *transformed* data to the GPU buffers
-     *   (e.g. in the optimised format, not the native format)
-     * - It *seems* if we change the vertex data, but not the data size that we
-     *   may not actually perform any upload!
-
-     * Here we allocate VBOs for the renderable if necessary, and then upload
+void GenericRenderer::prepare_to_render(const Renderable* renderable) {
+    /* Here we allocate VBOs for the renderable if necessary, and then upload
      * any new data */
-    vbdata->vertex_buffer =
-        buffer_manager_->update_and_fetch_vertex_buffer(*vertex_data);
-    vbdata->vertex_buffer.bind_vbo();
-
-    return vertex_buffer_factory(vertex_data->vertex_specification(), vbdata);
+    buffer_stash_.reset(
+        new GPUBuffer(buffer_manager_->update_and_fetch_buffers(renderable)));
+    buffer_stash_->bind_vbos();
 }
 
 } // namespace smlt

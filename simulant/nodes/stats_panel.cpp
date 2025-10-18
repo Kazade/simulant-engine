@@ -19,6 +19,7 @@
 
 #include "stats_panel.h"
 #include "../application.h"
+#include "../asset_manager.h"
 #include "../compositor.h"
 #include "../nodes/actor.h"
 #include "../nodes/camera.h"
@@ -138,8 +139,7 @@ void StatsPanel::rebuild_ram_graph() {
     float width = scene->window->width();
     float height = 64;
 
-    ram_graph_mesh_->reset(
-        ram_graph_mesh_->vertex_data->vertex_specification());
+    ram_graph_mesh_->reset(ram_graph_mesh_->vertex_data->vertex_format());
 
     if(free_ram_history_.size() < 2) {
         // Can't make a graph with a single sample point

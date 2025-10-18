@@ -85,12 +85,12 @@ bool PlayingSound::is_playing() const {
     return driver->source_state(source_) == AUDIO_SOURCE_STATE_PLAYING;
 }
 
-void PlayingSound::set_gain(RangeValue<0, 1> gain) {
+void PlayingSound::set_gain(NormalizedFloat gain) {
     auto driver = get_app()->sound_driver.get();
     driver->set_source_gain(source_, gain);
 }
 
-void PlayingSound::set_pitch(RangeValue<0, 1> pitch) {
+void PlayingSound::set_pitch(NormalizedFloat pitch) {
     auto driver = get_app()->sound_driver.get();
     driver->set_source_pitch(source_, pitch);
 }

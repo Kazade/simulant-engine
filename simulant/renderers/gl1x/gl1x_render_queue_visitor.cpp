@@ -14,27 +14,27 @@
 
 #endif
 
+#include "gl1x_render_group_impl.h"
+#include "gl1x_render_queue_visitor.h"
+#include "gl1x_renderer.h"
+
 #include "../../application.h"
 #include "../../core/aligned_vector.h"
-#include "../../meshes/vertex_buffer.h"
 #include "../../meshes/vertex_format.h"
+#include "../../meshes/vertex_ranges.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../stage.h"
 #include "../../utils/gl_error.h"
+#include "../../utils/pbr.h"
+#include "../../vertex_data.h"
 #include "../../window.h"
-#include "gl1x_render_group_impl.h"
-#include "gl1x_render_queue_visitor.h"
-#include "gl1x_renderer.h"
-#include "gl1x_vertex_buffer_data.h"
 
 namespace smlt {
 
-static GLuint test = 0;
-
 GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer,
                                              CameraPtr camera) :
-    RenderQueueVisitor(renderer), camera_(camera) {}
+    renderer_(renderer), camera_(camera) {}
 
 void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
                                             uint64_t frame_id,
@@ -44,18 +44,24 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
 
     /* Set up default client state before the run. This is necessary
      * so that the boolean flags get correctly set */
-    enable_vertex_arrays(false);
-    enable_color_arrays(false);
-    enable_normal_arrays(false);
-    enable_texcoord_array(0, false);
+    enable_vertex_arrays(true);
+    enable_color_arrays(true);
+    enable_normal_arrays(true);
+    enable_texcoord_array(0, true);
 
     for(auto i = 1u; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {
         disable_texcoord_array(i, true);
     }
 
     global_ambient_ = stage->scene->lighting->ambient_light();
+    GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
 }
 
+void GL1RenderQueueVisitor::visit(const Renderable* renderable,
+                                  const MaterialPass* pass,
+                                  batcher::Iteration iteration) {
+    do_visit(renderable, pass, iteration);
+}
 
 void GL1RenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
                                           StageNode* stage) {
@@ -76,11 +82,7 @@ constexpr GLenum gl_target(TextureTarget target) {
 
 _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex,
                                   const Mat4& mat) {
-    if(!tex) {
-        return false;
-    }
-
-    auto id = tex->_renderer_specific_id();
+    auto id = (tex) ? tex->_renderer_specific_id() : 0;
 
     if(which >= _S_GL_MAX_TEXTURE_UNITS) {
         return false;
@@ -102,18 +104,15 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
                                                  const MaterialPass* next) {
     pass_ = next;
 
-    const auto& diffuse = next->diffuse();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &diffuse.r);
+    auto s = pbr_to_traditional(next->base_color(), next->metallic(),
+                                next->roughness(), next->specular_color(),
+                                next->specular());
 
-    const auto& ambient = next->ambient();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &ambient.r);
-
-    const auto& emission = next->emission();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_EMISSION, &emission.r);
-
-    const auto& specular = next->specular();
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &specular.r);
-    GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, next->shininess());
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &s.diffuse.r);
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &s.ambient.r);
+    // GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_EMISSION, &s.emission.r);
+    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &s.specular.r);
+    GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, s.shininess);
 
     if(next->is_depth_test_enabled()) {
         GLCheck(glEnable, GL_DEPTH_TEST);
@@ -151,6 +150,13 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             break;
     }
 
+    /* Enable lighting on the pass appropriately */
+    if(next->is_lighting_enabled()) {
+        GLCheck(glEnable, GL_LIGHTING);
+    } else {
+        GLCheck(glDisable, GL_LIGHTING);
+    }
+
     auto enabled = next->textures_enabled();
 
 #if !_S_GL_SUPPORTS_MULTITEXTURE
@@ -160,10 +166,12 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 #define CAT_I(a, b) a##b
 #define CAT(a, b) CAT_I(a, b)
 
+// FIXME: This could break stuff because if there's no texture bound we have
+// no idea what target we're rendering
 #define ENABLE_TEXTURE(i, map, force)                                          \
     if(_S_GL_MAX_TEXTURE_UNITS > (i)) {                                        \
         auto tex = next->CAT(map, _map)();                                     \
-        auto target = gl_target(tex->target());                                \
+        auto target = (tex) ? gl_target(tex->target()) : GL_TEXTURE_2D;        \
         if((enabled & (1 << (i))) || force) {                                  \
             GLCheck(glActiveTexture, GL_TEXTURE0 + (i));                       \
             GLCheck(glEnable, target);                                         \
@@ -175,72 +183,10 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         }                                                                      \
     }
 
-    // If normal mapping is enabled, then do the DOT3 dance
-    if(enabled & (1 << 2)) {
-#ifdef __DREAMCAST__
-        /* Normal mapping on DC is different, we need to supply the light
-         * direction as the secondary color, and the normal map has to be in a
-         * different format.
-         *
-         * We bind the normal map to texture unit 0, and the diffuse map to
-         * texture unit 1 and we use the special DC-specific GL_SECONDARY_COLOR
-         * constant as the light direction
-         */
-
-        ENABLE_TEXTURE(0, normal, true);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_DOT3_RGB);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_SECONDARY_COLOR);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_TEXTURE);
-
-        ENABLE_TEXTURE(1, diffuse, true);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PREVIOUS);
-
-#else
-        // Bind the cube map to texture unit 0
-        auto cubemap_id =
-            ((GL1XRenderer*)renderer())
-                ->normalization_cube_map_->_renderer_specific_id();
-        GLCheck(glActiveTexture, GL_TEXTURE0);
-        GLCheck(glEnable, GL_TEXTURE_CUBE_MAP);
-        GLCheck(glBindTexture, GL_TEXTURE_CUBE_MAP, cubemap_id);
-
-        GLCheck(glTexEnvi, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-        GLCheck(glTexEnvi, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-        GLCheck(glTexEnvi, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
-
-        ENABLE_TEXTURE(1, normal, true);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_DOT3_RGB);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_TEXTURE);
-
-        ENABLE_TEXTURE(2, diffuse, true);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PREVIOUS);
-
-        GLCheck(glActiveTexture, GL_TEXTURE3);
-        GLCheck(glBindTexture, GL_TEXTURE_2D,
-                ((GL1XRenderer*)renderer())->null_texture_id());
-
-        GLCheck(glEnable, GL_TEXTURE_2D);
-
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
-        GLCheck(glTexEnvf, GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PRIMARY_COLOR);
-#endif
-    } else {
-        ENABLE_TEXTURE(0, diffuse, false);
-        ENABLE_TEXTURE(1, light, false);
-        ENABLE_TEXTURE(2, normal, false);
-        ENABLE_TEXTURE(3, specular, false);
-    }
+    ENABLE_TEXTURE(0, base_color, false);
+    ENABLE_TEXTURE(1, light, false);
+    ENABLE_TEXTURE(2, normal, false);
+    ENABLE_TEXTURE(3, metallic_roughness, false);
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
     if(!prev || prev->point_size() != next->point_size()) {
@@ -386,71 +332,74 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
                                          const uint8_t count) {
 
-    // const LightState disabled_state;
+    LightState disabled_state;
 
-    // Light* current = nullptr;
+    Light* current = nullptr;
 
-    // if(count) {
-    //     GLCheck(glMatrixMode, GL_MODELVIEW);
-    //     GLCheck(glPushMatrix);
+    if(count) {
+        GLCheck(glMatrixMode, GL_MODELVIEW);
+        GLCheck(glPushMatrix);
 
-    //     const Mat4& view = camera_->view_matrix();
+        const Mat4& view = camera_->view_matrix();
 
-    //     GLCheck(glLoadMatrixf, view.data());
-    // }
+        GLCheck(glLoadMatrixf, view.data());        
+    }
+    
+    for(uint8_t i = 0; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
+        current = (i < count) ? lights[i] : nullptr;
 
-    // for(uint8_t i = 0; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
-    //     current = (i < count) ? lights[i] : nullptr;
+        smlt::Vec3 pos;
+        LightState state = disabled_state;
 
-    //     smlt::Vec3 pos;
-    //     LightState state = disabled_state;
+        if(current) {
+            pos = (current->light_type()) == LIGHT_TYPE_DIRECTIONAL
+                      ? current->direction()
+                      : current->transform->position();
 
-    //     if(current) {
-    //         pos = (current->light_type()) == LIGHT_TYPE_DIRECTIONAL
-    //                   ? current->direction()
-    //                   : current->transform->position();
+            state = LightState(
+                true,
+                Vec4(pos,
+                     (current->light_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
 
-    //         state = LightState(
-    //             true,
-    //             Vec4(pos,
-    //                  (current->light_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 :
-    //                  1),
-    //             current->diffuse(), current->ambient(), current->specular(),
-    //             current->constant_attenuation(),
-    //             current->linear_attenuation(),
-    //             current->quadratic_attenuation());
-    //     }
+                current->color(), current->intensity(), current->range());
+        }
 
-    //     /* No need to update this light */
-    //     if(light_states_[i].initialized && light_states_[i] == state) {
-    //         continue;
-    //     }
+        /* No need to update this light */
+        if(light_states_[i].initialized && light_states_[i] == state) {
+            continue;
+        }
 
-    //     if(state.enabled) {
-    //         GLCheck(glEnable, GL_LIGHT0 + i);
-    //         GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION,
-    //         &state.position.x); GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT,
-    //         &state.ambient.r); GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE,
-    //         &state.diffuse.r); GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR,
-    //         &state.specular.r); GLCheck(glLightf, GL_LIGHT0 + i,
-    //         GL_CONSTANT_ATTENUATION,
-    //                 state.constant_att);
-    //         GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION,
-    //                 state.linear_att);
-    //         GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION,
-    //                 state.quadratic_att);
+        if(state.enabled) {
+            GLCheck(glEnable, GL_LIGHT0 + i);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &state.position.x);
 
-    //     } else {
-    //         GLCheck(glDisable, GL_LIGHT0 + i);
-    //     }
+            auto ambient = state.color * state.intensity * 0.1;
+            auto diffuse = state.color * state.intensity;
+            auto specular = state.color * state.intensity * 0.1;
 
-    //     light_states_[i] = state;
-    //     light_states_[i].initialized = true;
-    // }
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &ambient.r);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &diffuse.r);
+            GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &specular.r);
 
-    // if(count) {
-    //     GLCheck(glPopMatrix);
-    // }
+            // Approximate the GLTF lighting formula:
+            // attenuation = max( min( 1.0 - ( current_distance / range )4, 1 ),
+            // 0 ) / current_distance2
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION, 0.1f);
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION,
+                    -1.0f / state.range);
+            GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION, 1.0f);
+
+        } else {
+            GLCheck(glDisable, GL_LIGHT0 + i);
+        }
+
+        light_states_[i] = state;
+        light_states_[i].initialized = true;
+    }
+
+    if(count) {
+        GLCheck(glPopMatrix);
+    }
 }
 
 void GL1RenderQueueVisitor::enable_vertex_arrays(bool force) {
@@ -541,7 +490,7 @@ static constexpr GLenum convert_arrangement(MeshArrangement arrangement) {
            : (arrangement == MESH_ARRANGEMENT_TRIANGLES)  ? GL_TRIANGLES
            : (arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP)
                ? GL_TRIANGLE_STRIP
-           : (arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) ? GL_TRIANGLE_STRIP
+           : (arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) ? GL_TRIANGLE_FAN
            : (arrangement == MESH_ARRANGEMENT_QUADS)        ? GL_QUADS
                                                             : GL_TRIANGLES;
 }
@@ -550,93 +499,6 @@ static constexpr GLenum convert_index_type(IndexType type) {
     return (type == INDEX_TYPE_8_BIT)    ? GL_UNSIGNED_BYTE
            : (type == INDEX_TYPE_16_BIT) ? GL_UNSIGNED_SHORT
                                          : GL_UNSIGNED_INT;
-}
-
-static smlt::Color calculate_vertex_color(const Vec3& N, const Vec3& L,
-                                          const float D2, const float I,
-                                          const smlt::Color& color,
-                                          const smlt::Color& light_color,
-                                          const smlt::Color& global_ambient) {
-
-    auto NdotL = std::max(N.dot(L), 0.0f);
-    auto att = clamp((1.0f / D2) * I, 0.0f, 1.0f);
-    auto result = (color * NdotL * light_color * att) + global_ambient;
-    return result;
-}
-
-static void apply_lighting(GL1XVertexBufferData* data, const Mat4* model,
-                           bool lighting_enabled, GL1Vertex* vertices,
-                           uint32_t start, uint32_t count,
-                           const Light* const light,
-                           const smlt::Color& global_ambient,
-                           TexturePtr normal_map) {
-
-    data->colors.resize(start + count);
-
-    if(lighting_enabled && light) {
-        Mat3 tbn;
-
-        data->world_space_normals.resize(start + count);
-        data->world_space_positions.resize(start + count);
-
-        if(normal_map) {
-            data->tangent_space_light_dirs.resize(start + count);
-        }
-
-        /* First we need to convert everything to eye-space */
-        for(uint32_t i = start; i < start + count; ++i) {
-            GL1Vertex& v = vertices[i];
-
-            data->world_space_positions[i] = (*model * Vec4(v.xyz, 1)).xyz();
-            data->world_space_normals[i] =
-                (*model * Vec4(v.n, 0)).xyz().normalized();
-        }
-
-        const Vec3 light_pos = light->transform->position();
-
-        if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-            assert(0 && "Not Implemented");
-        } else {
-            auto inverse_model = Mat3(*model).inversed();
-
-            for(uint32_t i = start; i < start + count; ++i) {
-                GL1Vertex& v = vertices[i];
-
-                auto L = (light_pos - data->world_space_positions[i]);
-                auto N = data->world_space_normals[i].normalized();
-
-                auto D2 = L.length_squared();
-                auto color = calculate_vertex_color(
-                    N, L.normalized(), D2, light->intensity(), v.color,
-                    light->color(), global_ambient);
-
-                data->colors[i] = color.to_argb_8888();
-
-                if(normal_map) {
-                    // FIXME: Why not store TBN on the vertex?
-                    // FIXME: Can we compress to save mem?
-                    tbn = Mat3(v.t.normalized(), v.b.normalized(),
-                               v.n.normalized())
-                              .inversed();
-                    auto light_dir = L;
-
-                    light_dir = light_dir * inverse_model;
-                    light_dir = light_dir * tbn;
-                    data->tangent_space_light_dirs[i] = light_dir;
-                }
-            }
-        }
-    } else {
-        // FIXME: we could remove this copy and potentially just
-        // submit the original color, but that would mean submitting
-        // in floats...
-        for(uint32_t i = start; i < start + count; ++i) {
-            GL1Vertex& v = vertices[i];
-            data->colors[i] = v.color.to_argb_8888();
-        }
-    }
-
-    GLCheck(glColorPointer, GL_BGRA, GL_UNSIGNED_BYTE, 0, &data->colors[0]);
 }
 
 void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
@@ -665,83 +527,79 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     GLCheck(glMatrixMode, GL_PROJECTION);
     GLCheck(glLoadMatrixf, projection.data());
 
-    const auto& buffer = renderable->vertex_data->gpu_buffer();
-    const auto& spec = buffer->format();
+    const auto& spec = renderable->vertex_data->vertex_format();
     const auto stride = spec.stride();
 
-    const auto renderer_data =
-        (GL1XVertexBufferData*)buffer->renderer_data().get();
-    assert(renderer_data);
+    renderer_->prepare_to_render(renderable);
 
-    const auto vertex_data = (const uint8_t*)&renderer_data->vertices[0];
+    const auto vertex_data = renderable->vertex_data->data();
+    assert(vertex_data);
 
-    enable_vertex_arrays();
-    enable_color_arrays(true);
-
-    GLCheck(glVertexPointer, 3, GL_FLOAT, stride,
-            ((const uint8_t*)vertex_data) +
-                spec.offset(VERTEX_ATTR_NAME_POSITION).value());
-
-    if(pass_->normal_map()) {
-        enable_texcoord_array(0, true);
-        enable_texcoord_array(1, true);
-        enable_texcoord_array(2, true);
-
-        /* Make sure we don't realloc in apply_lighting */
-        renderer_data->tangent_space_light_dirs.reserve(
-            renderer_data->vertices.size());
-
-        // If normal mapping is enabled, we need to shift the texture coords to
-        // different units. This is the tex coordinate into the normalization
-        // cube map
-#ifdef __DREAMCAST__
-        // On DC pass the light direction as secondary colours (oargb)
-        GLCheck(glSecondaryColorPointer, 3, GL_FLOAT, 0,
-                &renderer_data->tangent_space_light_dirs[0]);
-#else
-        GLCheck(glClientActiveTexture, GL_TEXTURE0);
-        GLCheck(glTexCoordPointer, 3, GL_FLOAT, 0,
-                &renderer_data->tangent_space_light_dirs[0]);
-#endif
-
-        // We duplicate the diffuse UVs into the normal map
-        GLCheck(glClientActiveTexture, GL_TEXTURE1);
-        GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
+    auto pos_attr = spec.attr(VERTEX_ATTR_NAME_POSITION);
+    if(pos_attr) {
+        enable_vertex_arrays();
+        GLCheck(glVertexPointer, pos_attr.value().component_count(), GL_FLOAT,
+                stride,
                 ((const uint8_t*)vertex_data) +
-                    spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value());
-
-        // This is diffuse
-        GLCheck(glClientActiveTexture, GL_TEXTURE2);
-        GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
-                ((const uint8_t*)vertex_data) +
-                    spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value());
+                    spec.offset(VERTEX_ATTR_NAME_POSITION).value());
     } else {
-        enable_texcoord_array(0);
-        GLCheck(glClientActiveTexture, GL_TEXTURE0);
-        GLCheck(glTexCoordPointer, 2, GL_FLOAT, stride,
+        disable_vertex_arrays();
+    }
+
+    auto color_attr = spec.attr(VERTEX_ATTR_NAME_COLOR);
+    if(color_attr) {
+        S_VERBOSE("Enabling colors");
+        enable_color_arrays();
+
+        auto bgra = (color_attr->arrangement == VERTEX_ATTR_ARRANGEMENT_BGRA);
+        auto count = bgra ? GL_BGRA : color_attr->component_count();
+
+        GLCheck(glColorPointer, count,
+                (color_attr->type == VERTEX_ATTR_TYPE_UNSIGNED_BYTE)
+                    ? GL_UNSIGNED_BYTE
+                    : GL_FLOAT,
+                stride,
                 ((const uint8_t*)vertex_data) +
-                    spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value());
+                    spec.offset(VERTEX_ATTR_NAME_COLOR).value());
+    } else {
+        disable_color_arrays();
+    }
+
+    auto normal_attr = spec.attr(VERTEX_ATTR_NAME_NORMAL);
+    if(normal_attr) {
+        enable_normal_arrays();
+        GLCheck(glNormalPointer, GL_FLOAT, stride,
+                ((const uint8_t*)vertex_data) +
+                    spec.offset(VERTEX_ATTR_NAME_NORMAL).value());
+    } else {
+        disable_normal_arrays();
+    }
+
+    for(uint8_t i = 0; i < 4; ++i) {
+        const VertexAttributeName names[] = {
+            VERTEX_ATTR_NAME_TEXCOORD_0, VERTEX_ATTR_NAME_TEXCOORD_1,
+            VERTEX_ATTR_NAME_TEXCOORD_2, VERTEX_ATTR_NAME_TEXCOORD_3};
+
+        auto attr = spec.attr(names[i]);
+
+        if(attr) {
+            enable_texcoord_array(i);
+            auto offset = spec.offset(names[i]).value();
+            GLCheck(glClientActiveTexture, GL_TEXTURE0 + i);
+            GLCheck(glTexCoordPointer, attr->component_count(), GL_FLOAT,
+                    stride, ((const uint8_t*)vertex_data) + offset);
+        } else {
+            disable_texcoord_array(i);
+        }
     }
 
     auto arrangement = convert_arrangement(renderable->arrangement);
-
-    // FIXME: This should be lights[iteration] and the compositor should
-    // always pass down all lights
-    Light* light = (renderable->light_count)
-                       ? renderable->lights_affecting_this_frame[0]
-                       : nullptr;
 
     if(element_count) {
         /* Indexed renderable */
         const auto index_data = renderable->index_data->data();
         auto index_type =
             convert_index_type(renderable->index_data->index_type());
-
-        apply_lighting(renderer_data, &model, pass_->is_lighting_enabled(),
-                       &renderer_data->vertices[0],
-                       renderable->index_data->min_index(),
-                       renderable->index_data->max_index(), light,
-                       global_ambient_, pass_->normal_map());
 
         GLCheck(glDrawElements, arrangement, element_count, index_type,
                 (const void*)index_data);
@@ -757,11 +615,6 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         auto total = 0;
         for(std::size_t i = 0; i < renderable->vertex_ranges->size(); ++i) {
             auto range = renderable->vertex_ranges->at(i);
-            apply_lighting(renderer_data, &model, pass_->is_lighting_enabled(),
-                           &renderer_data->vertices[0], range->start,
-                           range->count, light, global_ambient_,
-                           pass_->normal_map());
-
             GLCheck(glDrawArrays, arrangement, range->start, range->count);
 
             total += range->count;

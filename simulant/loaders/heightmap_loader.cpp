@@ -312,15 +312,14 @@ std::vector<Vec3> gather_surrounding_points(VertexData* data, int width, int hei
     return results;
 }
 
-
-
-
-void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
+bool HeightmapLoader::into(Loadable& resource, const LoaderOptions& options) {
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
 
     if(!mesh) {
-        throw std::logic_error("Tried to load a heightmap file into something that wasn't a mesh");
+        S_ERROR(
+            "Tried to load a heightmap file into something that wasn't a mesh");
+        return false;
     }
 
     HeightmapSpecification spec = (
@@ -342,7 +341,9 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     // Now generate the heightmap from it
     if(tex->is_compressed()) {
-        throw std::logic_error("Creating a heightmap from a compressed texture is currently unimplemented");
+        S_ERROR("Creating a heightmap from a compressed texture is currently "
+                "unimplemented");
+        return false;
     }
 
     float range = spec.max_height - spec.min_height;
@@ -469,7 +470,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         }
 
         // Now set the normal on the vertex data
-        for(auto p: index_to_normal) {
+        for(auto& p: index_to_normal) {
             mesh->vertex_data->move_to(p.first);
             auto n = p.second.normalized();
             mesh->vertex_data->normal(n);
@@ -480,8 +481,9 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     mesh->vertex_data->done();
 
     mesh->asset_manager().destroy_texture(tex->id()); //Finally delete the texture
-}
 
+    return true;
+}
 }
 }
 

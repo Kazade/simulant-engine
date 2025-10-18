@@ -15,7 +15,7 @@ public:
         SimulantTestCase::set_up();
 
         stage_ = scene->create_child<smlt::Stage>();
-        camera_ = scene->create_child<smlt::Camera>();
+        camera_ = scene->create_child<smlt::Camera3D>();
     }
 
     void tear_down() {
@@ -131,12 +131,26 @@ public:
         auto mesh1 = generate_test_mesh(stage_);
         auto mesh2 = generate_test_mesh(stage_);
 
+        assert_equal(mesh1.use_count(), 2);
+        assert_equal(mesh2.use_count(), 2);
+
+        assert_equal(scene->assets->mesh_count(), initial + 2);
+
         auto actor = scene->create_child<Actor>(mesh1);
+        assert_equal(mesh1.use_count(), 8);
+
         actor->set_mesh(mesh2);
+
+        assert_equal(mesh1.use_count(), 2);
+
         mesh1.reset();
         mesh2.reset();
 
+        assert_equal(scene->assets->mesh_count(), initial + 2);
+
         scene->assets->run_garbage_collection();
+        application->run_frame();
+
         assert_false(stage_->is_destroyed());
 
         assert_equal(scene->assets->mesh_count(), initial + 1);
@@ -247,19 +261,17 @@ public:
         auto& data = mesh->vertex_data;
 
         assert_true(
-            data->vertex_specification().attr_count(VERTEX_ATTR_NAME_POSITION));
+            data->vertex_format().attr_count(VERTEX_ATTR_NAME_POSITION));
+        assert_true(!data->vertex_format().attr_count(VERTEX_ATTR_NAME_NORMAL));
         assert_true(
-            !data->vertex_specification().attr_count(VERTEX_ATTR_NAME_NORMAL));
-        assert_true(!data->vertex_specification().attr_count(
-            VERTEX_ATTR_NAME_TEXCOORD_0));
-        assert_true(!data->vertex_specification().attr_count(
-            VERTEX_ATTR_NAME_TEXCOORD_1));
-        assert_true(!data->vertex_specification().attr_count(
-            VERTEX_ATTR_NAME_TEXCOORD_2));
-        assert_true(!data->vertex_specification().attr_count(
-            VERTEX_ATTR_NAME_TEXCOORD_3));
+            !data->vertex_format().attr_count(VERTEX_ATTR_NAME_TEXCOORD_0));
         assert_true(
-            !data->vertex_specification().attr_count(VERTEX_ATTR_NAME_COLOR));
+            !data->vertex_format().attr_count(VERTEX_ATTR_NAME_TEXCOORD_1));
+        assert_true(
+            !data->vertex_format().attr_count(VERTEX_ATTR_NAME_TEXCOORD_2));
+        assert_true(
+            !data->vertex_format().attr_count(VERTEX_ATTR_NAME_TEXCOORD_3));
+        assert_true(!data->vertex_format().attr_count(VERTEX_ATTR_NAME_COLOR));
         assert_equal(4u, data->count());
 
         assert_equal(2u, mesh->submesh_count());
@@ -310,13 +322,16 @@ public:
         actor2->use_material_slot(MATERIAL_SLOT1);
         actor3->use_material_slot(MATERIAL_SLOT7);
 
-        auto camera = scene->create_child<smlt::Camera>();
+        auto camera = scene->create_child<smlt::Camera3D>();
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera);
 
-        actor1->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
-        actor2->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
-        actor3->generate_renderables(&queue, camera, &viewport, DETAIL_LEVEL_NEAREST);
+        actor1->generate_renderables(&queue, camera, &viewport,
+                                     DETAIL_LEVEL_NEAREST, nullptr, 0);
+        actor2->generate_renderables(&queue, camera, &viewport,
+                                     DETAIL_LEVEL_NEAREST, nullptr, 0);
+        actor3->generate_renderables(&queue, camera, &viewport,
+                                     DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         std::vector<Renderable> renderables;
         for(auto i = 0u; i < queue.renderable_count(); ++i) {

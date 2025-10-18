@@ -1,5 +1,6 @@
 #pragma once
 
+#include "./generic/optional.h"
 #include <string>
 
 namespace smlt {
@@ -60,9 +61,18 @@ public:
      *  normalized path starts with a '/' with the drive letter removed
      */
     bool is_absolute() const;
+
+    bool exists() const;
+
 private:
     std::string path_;
 };
+
+namespace path {
+
+smlt::optional<Path> exe_path();
+
+} // namespace path
 
 std::ostream& operator<<(std::ostream& os, const Path& p);
 

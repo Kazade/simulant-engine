@@ -41,15 +41,4 @@ void GeomCuller::compile(const Vec3 &pos, const Quaternion &rot, const Vec3& sca
 void GeomCuller::renderables_visible(const Frustum& frustum, batcher::RenderQueue* render_queue) {
     _gather_renderables(frustum, render_queue);
 }
-
-void GeomCuller::each_renderable(EachRenderableCallback cb) {
-    batcher::RenderQueue queue;
-
-    _all_renderables(&queue);
-
-    for(auto i = 0u; i < queue.renderable_count(); ++i) {
-        cb(queue.renderable(i));
-    }
-}
-
 }

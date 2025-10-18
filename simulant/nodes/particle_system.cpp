@@ -107,7 +107,9 @@ void ParticleSystem::set_update_when_hidden(bool value) {
 void ParticleSystem::do_generate_renderables(batcher::RenderQueue* render_queue,
                                              const Camera* camera,
                                              const Viewport*,
-                                             const DetailLevel detail_level) {
+                                             const DetailLevel detail_level,
+                                             Light** lights,
+                                             const std::size_t light_count) {
     _S_UNUSED(detail_level);
 
     if(!is_visible()) {
@@ -134,6 +136,11 @@ void ParticleSystem::do_generate_renderables(batcher::RenderQueue* render_queue,
     new_renderable.material = script_->material().get();
     new_renderable.center = transformed_aabb().center();
 
+    new_renderable.light_count = light_count;
+    for(std::size_t i = 0; i < light_count; ++i) {
+        new_renderable.lights_affecting_this_frame[i] = lights[i];
+    }
+
     render_queue->insert_renderable(std::move(new_renderable));
 }
 
@@ -148,18 +155,27 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
         return;
     }
 
+    const auto& spec = vertex_data_->vertex_format();
+
     uint8_t* pos_ptr = vertex_data_->data();
-    uint8_t* dif_ptr = pos_ptr + vertex_data_->vertex_specification()
-                                     .offset(VERTEX_ATTR_NAME_COLOR)
-                                     .value();
-    uint8_t* uv_ptr = pos_ptr + vertex_data_->vertex_specification()
+    uint8_t* dif_ptr =
+        pos_ptr +
+        vertex_data_->vertex_format().offset(VERTEX_ATTR_NAME_COLOR).value();
+    uint8_t* uv_ptr = pos_ptr + vertex_data_->vertex_format()
                                     .offset(VERTEX_ATTR_NAME_TEXCOORD_0)
                                     .value();
 
-    auto stride = vertex_data_->vertex_specification().stride();
+    auto stride = vertex_data_->vertex_format().stride();
 
     for(auto j = 0u; j < particle_count_; ++j) {
         auto& p = particles_[j];
+
+        const auto ppos =
+            (space_ == PARTICLE_SYSTEM_SPACE_WORLD)
+                ? p.position
+                : transform->position() +
+                      script_->emitter(p.emitter_index)->relative_position +
+                      p.position;
 
         Vec3* pos = (Vec3*)pos_ptr;
         float* uv = (float*)uv_ptr;
@@ -188,8 +204,8 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
 #define AIDX 3
 #endif
 
-        *(pos) = p.position + right * p.dimensions.x * -0.5f +
-                 up * p.dimensions.y * -0.5f;
+        *(pos) =
+            ppos + right * p.dimensions.x * -0.5f + up * p.dimensions.y * -0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -207,8 +223,8 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
         dif = (decltype(dif))dif_ptr;
         uv = (float*)uv_ptr;
 
-        *(pos) = p.position + right * p.dimensions.x * +0.5f +
-                 up * p.dimensions.y * -0.5f;
+        *(pos) =
+            ppos + right * p.dimensions.x * +0.5f + up * p.dimensions.y * -0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -226,8 +242,8 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
         dif = (decltype(dif))dif_ptr;
         uv = (float*)uv_ptr;
 
-        *(pos) = p.position + right * p.dimensions.x * -0.5f +
-                 up * p.dimensions.y * +0.5f;
+        *(pos) =
+            ppos + right * p.dimensions.x * -0.5f + up * p.dimensions.y * +0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -245,8 +261,8 @@ void ParticleSystem::rebuild_vertex_data(const smlt::Vec3& up,
         dif = (decltype(dif))dif_ptr;
         uv = (float*)uv_ptr;
 
-        *(pos) = p.position + right * p.dimensions.x * +0.5f +
-                 up * p.dimensions.y * +0.5f;
+        *(pos) =
+            ppos + right * p.dimensions.x * +0.5f + up * p.dimensions.y * +0.5f;
 
         dif[BIDX] = b;
         dif[GIDX] = g;
@@ -341,12 +357,14 @@ bool ParticleSystem::on_create(Params params) {
         return false;
     }
 
-    auto maybe_script = params.get<ParticleScriptPtr>("script");
+    auto maybe_script = params.get<ParticleScriptRef>("script")
+                            .value_or(ParticleScriptRef())
+                            .lock();
     if(!maybe_script) {
         return false;
     }
 
-    script_ = maybe_script.value();
+    script_ = maybe_script;
 
     // Initialize the emitter states
     for(auto i = 0u; i < script_->emitter_count(); ++i) {
@@ -357,7 +375,7 @@ bool ParticleSystem::on_create(Params params) {
         emitter_states_[i].emission_accumulator = 0.0f;
     }
 
-    return true;
+    return StageNode::on_create(params);
 }
 
 void ParticleSystem::update_active_state(uint16_t e, float dt) {
@@ -426,10 +444,18 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
     while(state.emission_accumulator >= decrement) {
         // EMIT THE PARTICLE!
         Particle p;
+        p.emitter_index = (uint8_t)e;
+
         if(emitter->type == PARTICLE_EMITTER_POINT) {
-            p.position = transform->position() + emitter->relative_position;
+            p.position =
+                (space_ == PARTICLE_SYSTEM_SPACE_WORLD)
+                    ? transform->position() + emitter->relative_position
+                    : Vec3();
         } else {
-            p.position = transform->position() + emitter->relative_position;
+            p.position =
+                (space_ == PARTICLE_SYSTEM_SPACE_WORLD)
+                    ? transform->position() + emitter->relative_position
+                    : Vec3();
 
             float hw = emitter->dimensions.x * 0.5f * scale.x;
             float hh = emitter->dimensions.y * 0.5f * scale.y;

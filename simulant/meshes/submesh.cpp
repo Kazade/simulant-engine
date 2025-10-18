@@ -10,12 +10,9 @@
 
 namespace smlt {
 
-SubMesh::SubMesh(
-    Mesh* parent, const std::string& name,
-    MaterialPtr material, MeshArrangement arrangement):
-    parent_(parent),
-    type_(SUBMESH_TYPE_RANGED),
-    arrangement_(arrangement) {
+SubMesh::SubMesh(Mesh* parent, const std::string& name, MaterialPtr material,
+                 MeshArrangement arrangement) :
+    parent_(parent), type_(SUBMESH_TYPE_RANGED), arrangement_(arrangement) {
 
     set_name(name);
 
@@ -23,9 +20,9 @@ SubMesh::SubMesh(
     set_material(material);
 }
 
-SubMesh::SubMesh(
-    Mesh* parent, const std::string& name,
-    MaterialPtr material, std::shared_ptr<IndexData>& index_data, MeshArrangement arrangement):
+SubMesh::SubMesh(Mesh* parent, const std::string& name, MaterialPtr material,
+                 std::shared_ptr<IndexData>& index_data,
+                 MeshArrangement arrangement) :
     parent_(parent),
     type_(SUBMESH_TYPE_INDEXED),
     arrangement_(arrangement),
@@ -50,8 +47,7 @@ SubMesh::~SubMesh() {
 SubmeshType SubMesh::type() const {
     return type_;
 }
-
-void SubMesh::set_color(const smlt::Color& color) {
+void SubMesh::set_base_color(const smlt::Color& color) {
     auto vertex_data = parent_->vertex_data.get();
 
     if(type_ == SUBMESH_TYPE_INDEXED) {
@@ -114,6 +110,9 @@ void SubMesh::mark_changed() {
 }
 
 void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
+    float minx = FLT_MAX, miny = FLT_MAX, minz = FLT_MAX;
+    float maxx = -FLT_MAX, maxy = -FLT_MAX, maxz = -FLT_MAX;
+
     // Store a raw-pointer for performance
     VertexData* vdata = parent_->vertex_data.get();
 
@@ -145,6 +144,9 @@ void SubMesh::_recalc_bounds_ranged(AABB& bounds) {
 }
 
 void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
+    float minx = FLT_MAX, miny = FLT_MAX, minz = FLT_MAX;
+    float maxx = -FLT_MAX, maxy = -FLT_MAX, maxz = -FLT_MAX;
+
     if(!index_data_->count()) {
         bounds = AABB();
         return;

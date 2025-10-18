@@ -34,7 +34,7 @@ private:
             return false;
         }
         set_speed(params.get<float>("speed").value_or(600.0f));
-        return true;
+        return StageNode::on_create(params);
     }
 };
 

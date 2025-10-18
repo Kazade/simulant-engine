@@ -31,11 +31,10 @@ AABB::AABB(const VertexData& vertex_data) {
     float maxz = std::numeric_limits<float>::lowest();
 
     const uint8_t* p =
-        vertex_data.data() + vertex_data.vertex_specification()
-                                 .offset(VERTEX_ATTR_NAME_POSITION)
-                                 .value();
+        vertex_data.data() +
+        vertex_data.vertex_format().offset(VERTEX_ATTR_NAME_POSITION).value();
 
-    bool twod = vertex_data.vertex_specification()
+    bool twod = vertex_data.vertex_format()
                     .attr(VERTEX_ATTR_NAME_POSITION)
                     .value()
                     .arrangement == VERTEX_ATTR_ARRANGEMENT_XY;
@@ -57,7 +56,7 @@ AABB::AABB(const VertexData& vertex_data) {
             minz = maxz = 0.0f;
         }
 
-        p += vertex_data.vertex_specification().stride();
+        p += vertex_data.vertex_format().stride();
     }
 
     set_min_max(Vec3(minx, miny, minz), Vec3(maxx, maxy, maxz));

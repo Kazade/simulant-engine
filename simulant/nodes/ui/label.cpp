@@ -16,8 +16,9 @@ bool Label::on_create(Params params) {
         return false;
     }
 
-    auto shared_style =
-        params.get<WidgetStylePtr>("shared_style").value_or(WidgetStylePtr());
+    auto shared_style = params.get<WidgetStyleRef>("shared_style")
+                            .value_or(WidgetStyleRef())
+                            .lock();
 
     if(!shared_style) {
         auto config = params.get<UIConfig>("theme").value_or(UIConfig());

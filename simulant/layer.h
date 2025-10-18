@@ -92,6 +92,10 @@ public:
         return mode_;
     }
 
+    uint32_t id() const {
+        return id_;
+    }
+
 private:
     uint32_t id_ = 0;
 

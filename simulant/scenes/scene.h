@@ -39,7 +39,6 @@
 
 #include <set>
 
-#include "../asset_manager.h"
 #include "../compositor.h"
 #include "../generic/any/any.h"
 #include "../generic/managed.h"
@@ -56,6 +55,7 @@
 namespace smlt {
 
 class Application;
+class AssetManager;
 class Window;
 class InputManager;
 class SceneManager;
@@ -181,6 +181,15 @@ public:
         return stray_nodes_;
     }
 
+    const char* node_type_name() const override {
+        return "Scene";
+    }
+
+    // Scenes don't take parameters (for now...)
+    std::set<NodeParam> node_params() const override {
+        return std::set<NodeParam>();
+    }
+
 protected:
     virtual void on_load() = 0;
     virtual void on_unload() {}
@@ -208,7 +217,7 @@ private:
     SceneManager* scene_manager_ = nullptr;
     SceneCompositor compositor_;
 
-    AssetManager assets_;
+    std::unique_ptr<AssetManager> assets_;
 
     friend class SceneManager;
 
@@ -235,8 +244,8 @@ private:
     }
 
     void do_generate_renderables(batcher::RenderQueue*, const Camera*,
-                                 const Viewport*,
-                                 const DetailLevel) override final {
+                                 const Viewport*, const DetailLevel, Light**,
+                                 const std::size_t) override final {
         /* Do nothing, Scenes don't create renderables.. for now */
     }
 

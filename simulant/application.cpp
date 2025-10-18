@@ -26,6 +26,8 @@
 #include "nodes/stage_node.h"
 #include "nodes/stage_node_pool.h"
 
+#ifndef SIMULANT_CUSTOM_WINDOW
+
 #ifdef __DREAMCAST__
 #include "platforms/dreamcast/profiler.h"
 #include "platforms/dreamcast/kos_window.h"
@@ -43,6 +45,8 @@ namespace smlt { typedef AndroidWindow SysWindow; }
 namespace smlt { typedef SDL2Window SysWindow; }
 #endif
 
+#endif
+
 #ifdef __linux__
 #include <sys/types.h>
 #include <unistd.h>
@@ -52,6 +56,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 
 #include "application.h"
 #include "asset_manager.h"
+#include "assets/materials/core/material_value_pool.h"
 #include "assets/sweet16.h"
 #include "compositor.h"
 #include "input/input_manager.h"
@@ -70,6 +75,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "loaders/opt_loader.h"
 #include "loaders/particle_script.h"
 #include "loaders/pcx_loader.h"
+#include "loaders/png_loader.h"
 #include "loaders/texture_loader.h"
 #include "loaders/ttf_loader.h"
 #include "loaders/wal_loader.h"
@@ -84,6 +90,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "utils/json.h"
 #include "utils/string.h"
 #include "vfs.h"
+#include "window.h"
 
 #define SIMULANT_PROFILE_KEY "SIMULANT_PROFILE"
 #define SIMULANT_SHOW_CURSOR_KEY "SIMULANT_SHOW_CURSOR"
@@ -122,11 +129,13 @@ bool Application::profiling_enabled() const {
     return PROFILING;
 }
 
-Application::Application(const AppConfig &config, void* platform_state):
+Application::Application(const AppConfig& config, void* platform_state) :
     platform_state_(platform_state),
     main_thread_id_(thread::this_thread_id()),
-    time_keeper_(TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
+    time_keeper_(
+        TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
     stats_(StatsRecorder::create()),
+    pool_(std::make_shared<MaterialValuePool>()),
     config_(config) {
 
     /* Start off with debug logging, this might change when the window is constructed */
@@ -170,6 +179,7 @@ Application::Application(const AppConfig &config, void* platform_state):
 
     //Register the default resource loaders
     register_loader(std::make_shared<smlt::loaders::TextureLoaderType>());
+    register_loader(std::make_shared<smlt::loaders::PNGLoaderType>());
     register_loader(std::make_shared<smlt::loaders::MaterialScriptLoaderType>());
     register_loader(std::make_shared<smlt::loaders::ParticleScriptLoaderType>());
     register_loader(std::make_shared<smlt::loaders::OPTLoaderType>());
@@ -208,6 +218,8 @@ Application::~Application() {
     overlay_scene_->clean_up();
     overlay_scene_.reset();
 
+    pool_->clear();
+
     if(window_) {
         window_->_clean_up();
         window_.reset();
@@ -230,7 +242,10 @@ void Application::preload_default_font() {
         FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");
     }
 
-    fnt->set_name(Font::generate_name(ui.font_family, flags.size, flags.weight, flags.style));
+    smlt::LimitedString<64> n;
+    n = Font::generate_name(ui.font_family, flags.size, flags.weight,
+                            flags.style);
+    fnt->set_name(n);
     fnt->set_garbage_collection_method(smlt::GARBAGE_COLLECT_NEVER);
 }
 
@@ -246,7 +261,11 @@ std::vector<std::string> Application::generate_potential_codes(const std::string
 }
 
 std::shared_ptr<Window> Application::instantiate_window() {
+#ifdef SIMULANT_CUSTOM_WINDOW
+    return std::shared_ptr<Window>();
+#else
     return SysWindow::create(this);
+#endif
 }
 
 bool Application::construct_window(const AppConfig& config) {
@@ -340,22 +359,14 @@ bool Application::construct_window(const AppConfig& config) {
 
     window_->set_title(config.title.encode());
 
-    /* Is this a desktop window? */
-
-#if defined(__WIN32__) || defined(__APPLE__) || defined(__LINUX__)
-    SDL2Window* desktop = dynamic_cast<SDL2Window*>(window_.get());
-
-    if(desktop) {
-        if(config.desktop.enable_virtual_screen) {
-            desktop->initialize_virtual_screen(
-                config.desktop.virtual_screen_width,
-                config.desktop.virtual_screen_height,
-                config.desktop.virtual_screen_format,
-                config.desktop.virtual_screen_integer_scale
-            );
-        }
+    if(config.desktop.enable_virtual_screen) {
+        window->initialize_virtual_screen(
+            config.desktop.virtual_screen_width,
+            config.desktop.virtual_screen_height,
+            config.desktop.virtual_screen_format,
+            config.desktop.virtual_screen_integer_scale);
     }
-#endif
+
     return true;
 }
 
@@ -436,6 +447,10 @@ void Application::run_update(float dt) {
     frame_counter_time_ += dt;
     frame_counter_frames_++;
 
+    if(!update_enabled()) {
+        return;
+    }
+
     if(frame_counter_time_ >= 1.0f) {
         stats->set_frames_per_second(frame_counter_frames_);
 
@@ -456,6 +471,10 @@ void Application::run_update(float dt) {
 }
 
 void Application::run_fixed_updates() {
+    if(!fixed_update_enabled()) {
+        return;
+    }
+
     while(time_keeper_->use_fixed_step()) {
         float step = time_keeper_->fixed_step();
 
@@ -561,7 +580,9 @@ bool Application::run_frame() {
 
             S_PROFILE_SECTION("swap");
             window_->swap_buffers();
-        }
+
+            S_VERBOSE("Buffers swapped");
+        }                
     }
 
     /* We totally ignore the first frame as it can take a while and messes up
@@ -580,6 +601,7 @@ bool Application::run_frame() {
         shutdown();
     }
 
+    S_VERBOSE("Frame finished");
     signal_frame_finished_();
 
     return is_running;
@@ -684,6 +706,10 @@ void Application::start_coroutine(std::function<void ()> func) {
 
 void Application::run_coroutines_and_late_update() {
     update_coroutines();
+
+    if(!late_update_enabled()) {
+        return;
+    }
 
     float dt = time_keeper_->delta_time();
 
@@ -814,6 +840,10 @@ void Application::on_render_context_created() {
             Scene(window) {}
 
         void on_load() override {}
+
+        std::set<NodeParam> node_params() const override {
+            return std::set<NodeParam>();
+        }
     };
 
     overlay_scene_.reset(new OverlayScene(window_.get()));

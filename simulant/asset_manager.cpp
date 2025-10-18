@@ -19,6 +19,7 @@
 
 #include "asset_manager.h"
 #include "application.h"
+#include "assets/prefab.h"
 #include "generic/lru_cache.h"
 #include "loader.h"
 #include "loaders/heightmap_loader.h"
@@ -27,6 +28,7 @@
 #include "utils/simple_memstream.h"
 #include "vfs.h"
 #include <iterator>
+
 /** FIXME
  *
  * - Write tests to show that all load_X methods mark resources as uncollected before returning
@@ -134,16 +136,6 @@ bool SharedAssetManager::on_init() {
     z_tex_ = create_texture_with_color(this, smlt::Color::from_hex_string("#8080FF"));
     z_tex_->set_name("s_znormal_texture");
 
-    /* Update the core material */
-    CoreMaterial mat;
-
-    mat.diffuse_map = white_tex_;
-    mat.light_map = white_tex_;
-    mat.specular_map = black_tex_;
-    mat.normal_map = z_tex_;
-
-    init_core_material(mat);
-
     S_DEBUG("Finished initializing defaults");
     return true;
 }
@@ -183,11 +175,20 @@ bool AssetManager::is_base_manager() const {
 #define DOCONCAT(x, y) x##y
 #define CONCAT(x, y) DOCONCAT(x, y)
 
-#define NEW_X(klass, name, manager_name, ...) \
-    auto result = manager_name.make(this, ##__VA_ARGS__); \
-    manager_name.set_garbage_collection_method(result->id(), garbage_collect); \
-    return result
+template<typename T, typename M, typename... Args>
+auto new_x(T self, M& manager, GarbageCollectMethod garbage_collect,
+           Args... args) -> auto {
+    auto result = manager.make(self, args...);
+    manager.set_garbage_collection_method(result->id(), garbage_collect);
+    return result;
+}
 
+template<typename T, typename M>
+auto new_x(T self, M& manager, GarbageCollectMethod garbage_collect) -> auto {
+    auto result = manager.make(self);
+    manager.set_garbage_collection_method(result->id(), garbage_collect);
+    return result;
+}
 
 #define GET_X(klass, name, manager_name) \
     if(parent_ && !CONCAT(has_, name)(id)) { \
@@ -197,11 +198,11 @@ bool AssetManager::is_base_manager() const {
 
 MeshPtr AssetManager::create_mesh(VertexFormat vertex_specification,
                                   GarbageCollectMethod garbage_collect) {
-    NEW_X(Mesh, mesh, mesh_manager_, vertex_specification);
+    return new_x(this, mesh_manager_, garbage_collect, vertex_specification);
 }
 
 MeshPtr AssetManager::create_mesh(VertexDataPtr vertex_data, GarbageCollectMethod garbage_collect) {
-    NEW_X(Mesh, mesh, mesh_manager_, vertex_data);
+    return new_x(this, mesh_manager_, garbage_collect, vertex_data);
 }
 
 MeshPtr AssetManager::mesh(AssetID id) {
@@ -221,7 +222,7 @@ MeshPtr AssetManager::create_mesh_from_submesh(SubMesh* submesh, GarbageCollectM
 
     auto source_vdata = submesh->mesh->vertex_data.get();
 
-    VertexFormat spec = source_vdata->vertex_specification();
+    auto spec = source_vdata->vertex_format();
 
     auto mesh = create_mesh(spec, garbage_collect);
     auto target_vdata = mesh->vertex_data.get();
@@ -279,9 +280,10 @@ MeshPtr AssetManager::load_mesh(const Path& path,
     LoaderOptions loader_options;
     loader_options[MESH_LOAD_OPTIONS_KEY] = options;
 
-    loader->into(mesh, loader_options);
+    if(!loader->into(mesh, loader_options)) {
+        return nullptr;
+    }
 
-    mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
     return mesh;
 }
 
@@ -312,9 +314,11 @@ MeshPtr AssetManager::create_mesh_from_heightmap(
 
     loaders::HeightmapLoader loader(texture);
 
-    loader.into(*mesh, {
-        {"spec", spec},
-    });
+    if(!loader.into(*mesh, {
+                               {"spec", spec},
+    })) {
+        return nullptr;
+    }
     mesh_manager_.set_garbage_collection_method(mesh->id(), garbage_collect);
 
     return mesh;
@@ -346,7 +350,7 @@ std::size_t AssetManager::mesh_count() const {
 }
 
 MaterialPtr AssetManager::create_material(GarbageCollectMethod garbage_collect) {
-    NEW_X(Material, material, material_manager_);
+    return new_x(this, material_manager_, garbage_collect);
 }
 
 void AssetManager::destroy_material(const AssetID& m) {
@@ -361,7 +365,9 @@ MaterialPtr AssetManager::load_material(const Path& path, GarbageCollectMethod g
         return MaterialPtr();
     }
 
-    loader->into(new_mat);
+    if(!loader->into(new_mat)) {
+        return nullptr;
+    }
     material_manager_.set_garbage_collection_method(new_mat->id(), garbage_collect);
     return new_mat;
 }
@@ -370,7 +376,7 @@ MaterialPtr AssetManager::create_material_from_texture(TexturePtr texture, Garba
     auto m = load_material(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
     assert(m);
 
-    m->set_diffuse_map(texture);
+    m->set_base_color_map(texture);
 
     material_manager_.set_garbage_collection_method(m->id(), garbage_collect);
     return m;
@@ -396,11 +402,9 @@ std::size_t AssetManager::material_count() const {
     return material_manager_.count();
 }
 
-TexturePtr AssetManager::create_texture(uint16_t width, uint16_t height,
-                                        TextureFormat format,
-                                        TextureTarget target,
-                                        GarbageCollectMethod garbage_collect) {
-    NEW_X(Texture, texture, texture_manager_, width, height, format, target);
+TexturePtr AssetManager::create_texture(uint16_t width, uint16_t height, TextureFormat format, TextureTarget target, GarbageCollectMethod garbage_collect) {
+    return new_x(this, texture_manager_, garbage_collect, width, height,
+                 format, target);
 }
 
 TexturePtr AssetManager::load_texture(const Path& path, TextureTarget target,
@@ -425,7 +429,9 @@ TexturePtr AssetManager::load_texture(const Path& path, TextureFlags flags,
         }
 
         S_DEBUG("Loader found, loading...");
-        loader->into(tex);
+        if(!loader->into(tex)) {
+            return nullptr;
+        }
 
         if(flags.flip_vertically) {
             S_DEBUG("Flipping texture vertically");
@@ -477,7 +483,9 @@ SoundPtr AssetManager::load_sound(const Path& path, const SoundFlags &flags, Gar
     opts["stream"] = flags.stream_audio;
 
     if(loader) {
-        loader->into(snd, opts);
+        if(!loader->into(snd, opts)) {
+            return nullptr;
+        }
     } else {
         S_ERROR("Unsupported file type: ", path);
     }
@@ -592,32 +600,27 @@ FontPtr AssetManager::create_font_from_memory(
 
     auto font = font_manager_.make(this);
     auto font_id = font->id();
-    font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
 
-    try {
-        LoaderOptions options;
-        options["size"] =
-            flags.size ? flags.size : get_app()->config->ui.font_size;
-        options["weight"] = flags.weight;
-        options["style"] = flags.style;
-        options["charset"] = flags.charset;
-        options["blur_radius"] = flags.blur_radius;
+    LoaderOptions options;
+    options["size"] = flags.size ? flags.size : get_app()->config->ui.font_size;
+    options["weight"] = flags.weight;
+    options["style"] = flags.style;
+    options["charset"] = flags.charset;
+    options["blur_radius"] = flags.blur_radius;
 
-        // FIXME: We should see if it's a ttf_font or something else not just
-        // assume a TTF.
-        auto loadert = get_app()->loader_type("ttf_font");
-        assert(loadert);
+    // FIXME: We should see if it's a ttf_font or something else not just
+    // assume a TTF.
+    auto loadert = get_app()->loader_type("ttf_font");
+    assert(loadert);
 
-        auto stream = stream_from_memory(data, size);
-        stream->seekg(0);
+    auto stream = stream_from_memory(data, size);
+    stream->seekg(0);
 
-        loadert->loader_for("", stream)->into(font.get(), options);
-        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
-    } catch(...) {
-        // Make sure we don't leave the font hanging around
+    if(!loadert->loader_for("", stream)->into(font.get(), options)) {
         destroy_font(font_id);
-        throw;
+        return nullptr;
     }
+    font_manager_.set_garbage_collection_method(font_id, garbage_collect);
 
     return font;
 }
@@ -674,25 +677,84 @@ FontPtr AssetManager::create_font_from_family(const std::string& family, const F
     }
 }
 
+PrefabPtr AssetManager::create_prefab(const smlt::StageNode* root,
+                                      GarbageCollectMethod garbage_collect) {
+    auto prefab = prefab_manager_.make(this);
+    auto prefab_id = prefab->id();
+    prefab_manager_.set_garbage_collection_method(prefab_id, garbage_collect);
+
+    auto create_prefab_node = [](const smlt::StageNode* node) -> PrefabNode {
+        auto pn = PrefabNode();
+        pn.id = node->id();
+        pn.node_type_name = node->node_type_name();
+        pn.params = node->create_params();
+        return pn;
+    };
+
+    if(root) {
+        prefab->push_node(create_prefab_node(root));
+        for(auto& node: root->each_descendent()) {
+            prefab->push_node(create_prefab_node(&node), node.parent()->id());
+        }
+    }
+
+    return prefab;
+}
+
+PrefabPtr AssetManager::load_prefab(const Path& filename,
+                                    GarbageCollectMethod garbage_collect) {
+
+    auto prefab = prefab_manager_.make(this);
+    auto prefab_id = prefab->id();
+    prefab_manager_.set_garbage_collection_method(prefab_id, garbage_collect);
+
+    LoaderOptions opts;
+    if(!get_app()->loader_for(filename)->into(prefab.get(), opts)) {
+        return nullptr;
+    }
+
+    return prefab;
+}
+
+PrefabPtr AssetManager::prefab(AssetID id) {
+    GET_X(Prefab, prefab, prefab_manager_);
+}
+
+const PrefabPtr AssetManager::prefab(AssetID id) const {
+    GET_X(Prefab, prefab, prefab_manager_);
+}
+
+std::size_t AssetManager::prefab_count() const {
+    return prefab_manager_.count();
+}
+
+bool AssetManager::has_prefab(AssetID id) const {
+    return prefab_manager_.contains(id);
+}
+
+PrefabPtr AssetManager::find_prefab(const std::string& name) {
+    return prefab_manager_.find_object(name);
+}
+
+void AssetManager::destroy_prefab(AssetID id) {
+    prefab_manager_.set_garbage_collection_method(id, GARBAGE_COLLECT_PERIODIC);
+}
+
 FontPtr AssetManager::load_font(const Path& filename, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
     auto font = font_manager_.make(this);
     auto font_id = font->id();
-    font_manager_.set_garbage_collection_method(font_id, GARBAGE_COLLECT_NEVER);
 
-    try {
-        LoaderOptions options;
-        options["size"] = flags.size ? flags.size : get_app()->config->ui.font_size;
-        options["weight"] = flags.weight;
-        options["style"] = flags.style;
-        options["charset"] = flags.charset;
-        options["blur_radius"] = flags.blur_radius;
-        get_app()->loader_for(filename)->into(font.get(), options);
-        font_manager_.set_garbage_collection_method(font_id, garbage_collect);
-    } catch (...) {
-        // Make sure we don't leave the font hanging around
-        destroy_font(font_id);
-        throw;
+    LoaderOptions options;
+    options["size"] = flags.size ? flags.size : get_app()->config->ui.font_size;
+    options["weight"] = flags.weight;
+    options["style"] = flags.style;
+    options["charset"] = flags.charset;
+    options["blur_radius"] = flags.blur_radius;
+    if(!get_app()->loader_for(filename)->into(font.get(), options)) {
+        return nullptr;
     }
+
+    font_manager_.set_garbage_collection_method(font_id, garbage_collect);
 
     return font;
 }
@@ -723,17 +785,14 @@ bool AssetManager::has_font(AssetID f) const {
 
 ParticleScriptPtr AssetManager::load_particle_script(const Path& filename, GarbageCollectMethod garbage_collect) {
     auto ps = particle_script_manager_.make(this);
-    auto ps_id = ps->id();
-    particle_script_manager_.set_garbage_collection_method(ps_id, garbage_collect);
 
-    try {
-        LoaderOptions options;
-        get_app()->loader_for(filename)->into(ps.get(), options);
-    } catch (...) {
-        // Make sure we don't leave the font hanging around
-        destroy_particle_script(ps_id);
-        throw;
+    LoaderOptions options;
+    if(!get_app()->loader_for(filename)->into(ps.get(), options)) {
+        return nullptr;
     }
+
+    particle_script_manager_.set_garbage_collection_method(ps->id(),
+                                                           garbage_collect);
 
     return ps;
 }

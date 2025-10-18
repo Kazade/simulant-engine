@@ -22,6 +22,11 @@ namespace smlt {
 
 class ParticleSystem;
 
+enum ParticleSystemSpace {
+    PARTICLE_SYSTEM_SPACE_WORLD,
+    PARTICLE_SYSTEM_SPACE_LOCAL
+};
+
 typedef sig::signal<void(ParticleSystem*, AssetID, AssetID)>
     ParticleSystemMaterialChangedSignal;
 
@@ -73,7 +78,8 @@ public:
 
     void do_generate_renderables(batcher::RenderQueue* render_queue,
                                  const Camera*, const Viewport* viewport,
-                                 const DetailLevel) override;
+                                 const DetailLevel, Light** lights,
+                                 const std::size_t light_count) override;
 
     ParticleScript* script() const {
         return script_.get();
@@ -87,6 +93,14 @@ public:
 
     const Particle& particle(const std::size_t i) const {
         return particles_[i];
+    }
+
+    void set_space(ParticleSystemSpace space) {
+        space_ = space;
+    }
+
+    ParticleSystemSpace space() const {
+        return space_;
     }
 
 private:
@@ -126,6 +140,8 @@ private:
     bool emitters_active_ = true;
 
     RandomGenerator random_;
+
+    ParticleSystemSpace space_ = PARTICLE_SYSTEM_SPACE_WORLD;
 };
 
 } // namespace smlt

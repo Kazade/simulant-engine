@@ -55,7 +55,7 @@ public:
         assert_true(one->is_value_type());
         assert_equal(one->to_int().value_or(0), 1);
         assert_equal(one->to_float().value_or(0.0f), 1.0f);
-        assert_equal(one->to_str().value(), "1");
+        assert_equal(one->repr(), "1");
 
         assert_equal(obj["five"]->type(), JSON_NULL);
 
@@ -281,7 +281,6 @@ public:
         assert_true(it.is_array_iterator());
 
         ++it;
-
         assert_equal(it->to_int().value_or(0), 2);
 
         ++it;

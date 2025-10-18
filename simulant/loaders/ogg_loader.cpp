@@ -135,7 +135,7 @@ static void init_source_memory(Sound* self, PlayingSound& source) {
     source.set_stream_func(std::bind(&queue_buffer, wptr, stream, std::placeholders::_1));
 }
 
-void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     /* Stream unless someone passed stream == false */
     bool stream = !(options.count("stream") && any_cast<bool>(options.at("stream")) == false);
 
@@ -157,7 +157,7 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     if(!stb_stream) {
         S_ERROR("Unable to load the OGG file");
-        throw std::runtime_error("Unable to load the OGG file");
+        return false;
     }
 
     stb_vorbis_info info = stb_vorbis_get_info(stb_stream);
@@ -181,8 +181,8 @@ void OGGLoader::into(Loadable& resource, const LoaderOptions& options) {
     } else {
         sound->set_playing_sound_init_function(std::bind(&init_source_memory, sound, std::placeholders::_1));
     }
+
+    return true;
 }
-
-
 }
 }

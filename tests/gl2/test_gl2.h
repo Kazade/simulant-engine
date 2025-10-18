@@ -26,7 +26,7 @@ public:
         mesh_ = scene->assets->create_mesh(smlt::VertexFormat::standard());
         mesh_->create_submesh_as_cube("cube", scene->assets->create_material(), 1.0f);
 
-        camera_ = scene->create_child<smlt::Camera>();
+        camera_ = scene->create_child<smlt::Camera3D>();
     }
 
     void test_shared_vertex_vbo() {
@@ -131,14 +131,15 @@ public:
         batcher::RenderQueue queue;
         queue.reset(stage_, window->renderer.get(), camera_);
 
-        actor->generate_renderables(&queue, camera_, &viewport, DETAIL_LEVEL_NEAREST);
+        actor->generate_renderables(&queue, camera_, &viewport,
+                                    DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         std::vector<Renderable*> result;
         for(auto i = 0u; i < queue.renderable_count(); ++i) {
             result.push_back(queue.renderable(i));
         }
 
-        vbo_manager_->update_and_fetch_vertex_buffer(*result[0]->vertex_data);
+        vbo_manager_->update_and_fetch_buffers(result[0]);
 
         assert_equal(vbo_manager_->dedicated_buffer_count(), 1u);
 

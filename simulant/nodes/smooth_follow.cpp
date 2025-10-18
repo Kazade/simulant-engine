@@ -98,7 +98,7 @@ bool SmoothFollow::on_create(Params params) {
         S_WARN("Unable to find target with name: {0}", target_name);
     }
 
-    return true;
+    return StageNode::on_create(params);
 }
 
 bool SmoothFollow::has_target() const {

@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "../../application.h"
+#include "../../asset_manager.h"
 #include "../../assets/material.h"
 #include "../../stage.h"
 #include "../../window.h"
@@ -89,17 +90,19 @@ void Widget::on_clean_up() {
 }
 
 bool Widget::on_create(Params params) {
-    auto shared_style = params.get<WidgetStylePtr>("shared_style");
+    auto shared_style = params.get<WidgetStyleRef>("shared_style")
+                            .value_or(WidgetStyleRef())
+                            .lock();
     auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
 
-    if(!shared_style || !shared_style.value()) {
+    if(!shared_style) {
         style_ = std::make_shared<WidgetStyle>();
 
         set_foreground_color(theme.foreground_color_);
         set_background_color(theme.background_color_);
         set_text_color(theme.text_color_);
     } else {
-        style_ = shared_style.value();
+        style_ = shared_style;
     }
 
     auto format = VertexFormatBuilder()
@@ -149,7 +152,7 @@ bool Widget::on_create(Params params) {
 
     initialized_ = true;
 
-    return true;
+    return StageNode::on_create(params);
 }
 
 void Widget::set_font(const std::string& family, Rem size, FontWeight weight,
@@ -568,7 +571,7 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds,
     auto sm = mesh_->find_submesh(name);
     assert(sm);
 
-    sm->set_color(color);
+    sm->set_base_color(color);
 
     auto min = bounds.min;
     auto max = bounds.max;
@@ -1008,7 +1011,7 @@ void Widget::set_background_image(TexturePtr texture) {
     }
 
     style_->background_image_ = texture;
-    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_diffuse_map(
+    style_->materials_[WIDGET_LAYER_INDEX_BACKGROUND]->set_base_color_map(
         style_->background_image_);
 
     auto dim = texture->dimensions();
@@ -1046,7 +1049,7 @@ void Widget::set_foreground_image(TexturePtr texture) {
     }
 
     style_->foreground_image_ = texture;
-    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_diffuse_map(
+    style_->materials_[WIDGET_LAYER_INDEX_FOREGROUND]->set_base_color_map(
         style_->foreground_image_);
 
     auto dim = texture->dimensions();
@@ -1199,7 +1202,7 @@ Vec2 Widget::anchor_point() const {
     return anchor_point_;
 }
 
-void Widget::set_opacity(RangeValue<0, 1> alpha) {
+void Widget::set_opacity(NormalizedFloat alpha) {
     if(style_->opacity_ != alpha) {
         style_->opacity_ = alpha;
         rebuild();
@@ -1232,7 +1235,7 @@ void Widget::set_style(std::shared_ptr<WidgetStyle> style) {
     rebuild();
 }
 
-void Widget::set_anchor_point(RangeValue<0, 1> x, RangeValue<0, 1> y) {
+void Widget::set_anchor_point(NormalizedFloat x, NormalizedFloat y) {
     if(anchor_point_.x != (float)x || anchor_point_.y != (float)y) {
         anchor_point_ = smlt::Vec2(x, y);
         anchor_point_dirty_ = true;

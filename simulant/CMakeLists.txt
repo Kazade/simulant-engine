@@ -9,6 +9,13 @@ FILE(GLOB_RECURSE TO_REMOVE
     "sound/drivers/*"
 )
 
+FILE(GLOB_RECURSE BOUNCE_FILES FOLLOW_SYMLINKS deps/bounce/src/*.cpp)
+
+# Disable fast math on Physics as it can lead to unpredictable results
+set_source_files_properties(BOUNCE_FILES
+                PROPERTIES
+                COMPILE_FLAGS -fno-fast-math)
+
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/deps/bounce/include)
 
 LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
@@ -189,11 +196,11 @@ ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
     nodes/physics/fixture.cpp
     nodes/physics/contact_list.cpp
     meshes/vertex_format.h
-    meshes/vertex_buffer.h
+
     meshes/vertex_format.cpp
-    renderers/gl1x/gl1x_vertex_buffer_data.h
-    renderers/gl2x/gl2x_vertex_buffer_data.h
-    meshes/index_buffer.h)
+
+
+)
 ENDIF()
 
 if(FLTO_SUPPORTED)
