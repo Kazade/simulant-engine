@@ -321,15 +321,15 @@ void convert_normal(int16_t* vout, const uint8_t* vin, VertexAttribute type) {
 
 static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
                              const VertexFormat& spec) {
-    auto pos_off = spec.offset(VERTEX_ATTR_NAME_POSITION);
+    auto pos_off = spec.offset(VERTEX_ATTR_NAME_POSITION).value();
     auto uv_off = (spec.attr(VERTEX_ATTR_NAME_TEXCOORD_0))
-                      ? spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0)
+                      ? spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0).value()
                       : 0; // FIXME: 0 assumes not first attribute
     auto color_off = (spec.attr(VERTEX_ATTR_NAME_COLOR))
-                         ? spec.offset(VERTEX_ATTR_NAME_COLOR)
+                         ? spec.offset(VERTEX_ATTR_NAME_COLOR).value()
                          : 0;
     auto normal_off = (spec.attr(VERTEX_ATTR_NAME_NORMAL))
-                          ? spec.offset(VERTEX_ATTR_NAME_NORMAL)
+                          ? spec.offset(VERTEX_ATTR_NAME_NORMAL).value()
                           : 0;
 
     int i = buffer.size();
