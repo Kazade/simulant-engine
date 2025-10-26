@@ -205,6 +205,12 @@ void GLRenderer::do_swap_buffers() {
 }
 
 void GLRenderer::on_texture_prepare(Texture *texture) {
+#ifdef __DREAMCAST__
+#define GL_TEXTURE_CUBE_MAP GL_TEXTURE_CUBE_MAP_ARB
+#define GL_TEXTURE_BINDING_CUBE_MAP GL_TEXTURE_BINDING_CUBE_MAP_ARB
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_X GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB
+#endif
+
     // Do nothing if everything is up to date
     if(!texture->_data_dirty() && !texture->_params_dirty()) {
         return;
