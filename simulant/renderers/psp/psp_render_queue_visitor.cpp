@@ -340,18 +340,22 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
     v->color = 0xFFFF;
 
     if(uv_off) {
-        convert_uv(&v->u, it + uv_off, spec.texcoord0_attribute);
+        convert_uv(&v->u, it + uv_off,
+                   spec.attr(VERTEX_ATTR_NAME_TEXCOORD_0).value());
     }
 
     if(color_off) {
-        convert_color(&v->color, it + color_off, spec.color_attribute);
+        convert_color(&v->color, it + color_off,
+                      spec.attr(VERTEX_ATTR_NAME_COLOR).value());
     }
 
     if(normal_off) {
-        convert_normal(&v->nx, it + normal_off, spec.normal_attribute);
+        convert_normal(&v->nx, it + normal_off,
+                       spec.attr(VERTEX_ATTR_NAME_NORMAL).value());
     }
 
-    convert_position(&v->x, it + pos_off, spec.position_attribute);
+    convert_position(&v->x, it + pos_off,
+                     spec.attr(VERTEX_ATTR_NAME_POSITION).value());
 }
 
 static std::vector<PSPVertex> buffer;
