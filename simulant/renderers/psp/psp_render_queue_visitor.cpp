@@ -243,7 +243,7 @@ struct PSPVertex {
 };
 
 void convert_position(float* vout, const uint8_t* vin, VertexAttribute type) {
-    if(type.type != VERTEX_ATTRIBUTE_TYPE_FLOAT) {
+    if(type.type != VERTEX_ATTR_TYPE_FLOAT) {
         S_ERROR_DEBUG("Unsupported vertex type");
         return;
     }
@@ -266,7 +266,7 @@ void convert_position(float* vout, const uint8_t* vin, VertexAttribute type) {
 }
 
 void convert_uv(float* vout, const uint8_t* vin, VertexAttribute type) {
-    if(type.type != VERTEX_ATTRIBUTE_TYPE_FLOAT) {
+    if(type.type != VERTEX_ATTR_TYPE_FLOAT) {
         S_ERROR_DEBUG("Unsupported vertex type");
         return;
     }
