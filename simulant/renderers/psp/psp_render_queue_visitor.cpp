@@ -411,7 +411,7 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     _S_UNUSED(iteration);
 
     auto element_count = renderable->index_element_count;
-    auto vertex_range_count = renderable->vertex_range_count;
+    auto vertex_range_count = renderable->vertex_ranges->size();
 
     if(!element_count && !vertex_range_count) {
         return;

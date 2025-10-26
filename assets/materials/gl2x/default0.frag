@@ -63,7 +63,7 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 void main() {
     // Sample the base color and metallic/roughness maps
     vec4 base_color_tex = texture2D(s_base_color_map, frag_texcoord0);
-    vec3 base_color = mix(s_material_base_color.rgb, base_color_tex.rgb, base_color_tex.a);
+    vec3 base_color = s_material_base_color.rgb * base_color_tex.rgb;
     float alpha = s_material_base_color.a * base_color_tex.a; // Retain alpha
 
     float metallic = s_material_metallic;
