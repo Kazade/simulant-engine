@@ -24,6 +24,22 @@ struct StageNodeTypeInfo {
 
 class Scene;
 
+template<typename T>
+class HasRegisterFunc {
+private:
+    typedef char yes[1];
+    typedef char no[2];
+
+    template<typename C>
+    static yes& test(decltype(&C::on_register)*);
+
+    template<typename>
+    static no& test(...);
+
+public:
+    static const bool value = sizeof(test<T>(0)) == sizeof(yes);
+};
+
 class StageNodeManager {
 private:
     template<typename T>
@@ -138,6 +154,12 @@ public:
 
     template<typename T>
     bool register_stage_node() {
+        // If the stage node has an on_register callback, then call
+        // it with this scene
+        if constexpr(HasRegisterFunc<T>::value) {
+            T::on_register(scene_);
+        }
+
         return register_stage_node(T::Meta::node_type, T::Meta::name, sizeof(T),
                                    alignof(T),
                                    std::bind(&StageNodeManager::standard_new<T>,
