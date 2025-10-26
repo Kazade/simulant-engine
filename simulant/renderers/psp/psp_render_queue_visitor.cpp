@@ -315,7 +315,7 @@ void convert_normal(int16_t* vout, const uint8_t* vin, VertexAttribute type) {
             vout[2] = ((float*)v)[2] * 32767.0f;
             break;
         default:
-            S_ERROR("{0}", type);
+            S_ERROR_DEBUG("{0}", type.type);
     }
 }
 
