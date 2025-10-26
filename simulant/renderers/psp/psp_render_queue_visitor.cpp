@@ -14,6 +14,8 @@
 #include "psp_render_group_impl.h"
 #include "psp_render_queue_visitor.h"
 #include "psp_renderer.h"
+#include "simulant/logging.h"
+#include "simulant/meshes/vertex_format.h"
 
 namespace smlt {
 
@@ -241,14 +243,19 @@ struct PSPVertex {
 };
 
 void convert_position(float* vout, const uint8_t* vin, VertexAttribute type) {
-    switch(type) {
-        case VERTEX_ATTR_2F:
+    if(type.type != VERTEX_ATTRIBUTE_TYPE_FLOAT) {
+        S_ERROR_DEBUG("Unsupported vertex type");
+        return;
+    }
+
+    switch(type.component_count()) {
+        case 2:
             vout[0] = ((float*)vin)[0];
             vout[1] = ((float*)vin)[1];
             vout[2] = 0.0f;
             break;
-        case VERTEX_ATTR_3F:
-        case VERTEX_ATTR_4F:
+        case 3:
+        case 4:
             vout[0] = ((float*)vin)[0];
             vout[1] = ((float*)vin)[1];
             vout[2] = ((float*)vin)[2];
@@ -259,10 +266,15 @@ void convert_position(float* vout, const uint8_t* vin, VertexAttribute type) {
 }
 
 void convert_uv(float* vout, const uint8_t* vin, VertexAttribute type) {
-    switch(type) {
-        case VERTEX_ATTR_2F:
-        case VERTEX_ATTR_3F:
-        case VERTEX_ATTR_4F:
+    if(type.type != VERTEX_ATTRIBUTE_TYPE_FLOAT) {
+        S_ERROR_DEBUG("Unsupported vertex type");
+        return;
+    }
+
+    switch(type.component_count()) {
+        case 2:
+        case 3:
+        case 4:
             vout[0] = ((float*)vin)[0];
             vout[1] = ((float*)vin)[1];
             break;
@@ -273,18 +285,20 @@ void convert_uv(float* vout, const uint8_t* vin, VertexAttribute type) {
 
 void convert_color(uint16_t* vout, const uint8_t* vin, VertexAttribute type) {
     const float* v = (const float*)vin;
-    switch(type) {
-        case VERTEX_ATTR_4F:
-            *vout = smlt::Color(v[0], v[1], v[2], v[3]).to_abgr_4444();
+    switch(type.component_count()) {
+        case 4:
+            if(type.arrangement == VERTEX_ATTR_ARRANGEMENT_BGRA) {
+                *vout = smlt::Color::from_bytes(vin[2], vin[1], vin[0], vin[3])
+                            .to_abgr_4444();
+            } else if(type.arrangement == VERTEX_ATTR_ARRANGEMENT_RGBA) {
+                *vout = smlt::Color::from_bytes(vin[0], vin[1], vin[2], vin[3])
+                            .to_abgr_4444();
+            } else {
+                *vout = smlt::Color(v[0], v[1], v[2], v[3]).to_abgr_4444();
+            }
             break;
-        case VERTEX_ATTR_3F:
+        case 3:
             *vout = smlt::Color(v[0], v[1], v[2], 1.0f).to_abgr_4444();
-            break;
-        case VERTEX_ATTR_4UB_RGBA:
-            *vout = smlt::Color::from_bytes(vin[0], vin[1], vin[2], vin[3]).to_abgr_4444();
-            break;
-        case VERTEX_ATTR_4UB_BGRA:
-            *vout = smlt::Color::from_bytes(vin[2], vin[1], vin[0], vin[3]).to_abgr_4444();
             break;
         default:
             *vout = 0xFFFF;
@@ -294,8 +308,8 @@ void convert_color(uint16_t* vout, const uint8_t* vin, VertexAttribute type) {
 
 void convert_normal(int16_t* vout, const uint8_t* vin, VertexAttribute type) {
     float* v = (float*)vin;
-    switch(type) {
-        case VERTEX_ATTR_3F:
+    switch(type.component_count()) {
+        case 3:
             vout[0] = ((float*)v)[0] * 32767.0f;
             vout[1] = ((float*)v)[1] * 32767.0f;
             vout[2] = ((float*)v)[2] * 32767.0f;
@@ -307,12 +321,16 @@ void convert_normal(int16_t* vout, const uint8_t* vin, VertexAttribute type) {
 
 static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
                              const VertexFormat& spec) {
-    auto pos_off = spec.position_offset(false);
-    auto uv_off = (spec.has_texcoord0())
-                      ? spec.texcoord0_offset(false)
+    auto pos_off = spec.offset(VERTEX_ATTR_NAME_POSITION);
+    auto uv_off = (spec.attr(VERTEX_ATTR_NAME_TEXCOORD_0))
+                      ? spec.offset(VERTEX_ATTR_NAME_TEXCOORD_0)
                       : 0; // FIXME: 0 assumes not first attribute
-    auto color_off = (spec.has_color()) ? spec.color_offset(false) : 0;
-    auto normal_off = (spec.has_normals()) ? spec.normal_offset(false) : 0;
+    auto color_off = (spec.attr(VERTEX_ATTR_NAME_COLOR))
+                         ? spec.offset(VERTEX_ATTR_NAME_COLOR)
+                         : 0;
+    auto normal_off = (spec.attr(VERTEX_ATTR_NAME_NORMAL))
+                          ? spec.offset(VERTEX_ATTR_NAME_NORMAL)
+                          : 0;
 
     int i = buffer.size();
     buffer.push_back(PSPVertex());
