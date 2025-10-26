@@ -201,6 +201,9 @@ private:
 #define S_ERROR(str, ...) \
     smlt::error(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
 
+#define S_ERROR_DEBUG(str, ...)                                                \
+    smlt::error(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
+
 #define S_DEBUG_ONCE(str, ...) \
     do { static char _done = 0; if(!_done++) smlt::debug(_F(str).format(__VA_ARGS__)); } while(0)
 
@@ -229,6 +232,10 @@ private:
 
 #define S_ERROR(str, ...) \
     smlt::error(_F(str).format(__VA_ARGS__))
+
+#define S_ERROR_DEBUG(str, ...)                                                \
+    do {                                                                       \
+    } while(0);
 
 #define S_DEBUG_ONCE(str, ...) \
     do { static char _done = 0; if(!_done++) smlt::debug(_F(str).format(__VA_ARGS__)); } while(0)

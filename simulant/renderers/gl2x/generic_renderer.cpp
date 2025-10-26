@@ -535,7 +535,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
                 glCullFace(GL_FRONT_AND_BACK);
                 break;
             default:
-                assert(0 && "Invalid cull mode");
+                S_ERROR_DEBUG("Invalid cull mode");
         }
     }
 
@@ -566,7 +566,8 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
                 // Ignore, we handle textures separately
                 break;
             default:
-                S_ERROR("UNIMPLEMENTED property type: {0}", prop.second.type);
+                S_ERROR_DEBUG("UNIMPLEMENTED property type: {0}",
+                              prop.second.type);
         }
     }
 

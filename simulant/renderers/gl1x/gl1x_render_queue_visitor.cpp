@@ -76,6 +76,10 @@ void GL1RenderQueueVisitor::change_render_group(
 }
 
 constexpr GLenum gl_target(TextureTarget target) {
+#ifdef __DREAMCAST__
+#define GL_TEXTURE_CUBE_MAP GL_TEXTURE_CUBE_MAP_ARB
+#endif
+
     return (target == TEXTURE_TARGET_CUBE_MAP) ? GL_TEXTURE_CUBE_MAP
                                                : GL_TEXTURE_2D;
 }

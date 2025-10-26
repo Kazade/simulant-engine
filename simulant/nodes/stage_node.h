@@ -762,15 +762,20 @@ protected:
     void on_transformation_change_attempted() override {}
 
 protected:
+    /*
+     * Cleans the passed parameters. Returns false
+     * if some parameters had no defined value. True
+     * if all params were specified */
     template<typename N>
     bool clean_params(Params& params) {
         Params cleaned;
+        bool ret = true;
         for(auto param: get_node_params<N>()) {
             auto name = param.name();
             bool passed = params.contains(name);
             if(!passed && !param.default_value()) {
                 // No default and not provided
-                return false;
+                ret = false;
             } else if(passed) {
                 auto v = params.raw(name).value();
                 cleaned.set(name, v);
@@ -781,7 +786,7 @@ protected:
         }
 
         params = cleaned;
-        return true;
+        return ret;
     }
 
 public:
