@@ -621,6 +621,12 @@ public:
             owner_, this, std::forward<Args>(args)...);
     }
 
+    template<typename T>
+    T* create_mixin(Params args) {
+        return impl::mixin_factory<decltype(owner_), T>(
+            owner_, this, std::forward<Params>(args));
+    }
+
     StageNode* create_mixin(const std::string& node_name, const Params& params);
 
     StageNode* find_mixin(const std::string& name) const;
