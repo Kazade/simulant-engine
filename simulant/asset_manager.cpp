@@ -777,6 +777,8 @@ ParticleScriptPtr AssetManager::load_particle_script(const Path& filename, Garba
         return nullptr;
     }
 
+    particle_script_manager_.set_garbage_collection_method(ps->id(),
+                                                           garbage_collect);
     return ps;
 }
 

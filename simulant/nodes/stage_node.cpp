@@ -316,6 +316,10 @@ void StageNode::finalize_destroy_immediately() {
 void StageNode::add_mixin(StageNode* mixin) {
     mixin->base_ = this;
 
+    // We need to make sure the mixin is listening
+    // to the new transform
+    mixin->transform->add_listener(mixin);
+
     MixinInfo info;
     info.ptr = mixin;
     info.destroy_connection = mixin->signal_destroyed().connect([=]() {
