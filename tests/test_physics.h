@@ -204,6 +204,7 @@ public:
     void test_collision_listener_enter() {
         bool enter_called = false;
         bool leave_called = false;
+        bool signal_enter_called = false;
 
         // Create a CollisionListener
         Listener listener(&enter_called, nullptr, &leave_called);
@@ -212,6 +213,9 @@ public:
         auto body = scene->create_child<StaticBody>();
         body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood());
         body->register_collision_listener(&listener); // Register the listener
+        body->signal_collision_enter().connect([&](const Collision& c) {
+            signal_enter_called = true;
+        });
 
         // Create overlapping body B!
         auto body2 = scene->create_child<DynamicBody>();
@@ -220,6 +224,7 @@ public:
         // Run physics
         physics->fixed_update(1.0f / 60.0f);
         assert_true(enter_called);
+        assert_true(signal_enter_called);
         assert_false(leave_called);
 
         // Check the contacts exist
@@ -236,11 +241,13 @@ public:
         assert_equal(body->contacts()[0]->fixtures[1].body(), body2);
 
         enter_called = false; // Reset
+        signal_enter_called = false;
 
         // Shouldn't call again!
         physics->fixed_update(1.0f / 60.0f);
         assert_false(enter_called);
         assert_false(leave_called);
+        assert_false(signal_enter_called);
 
         // Move away (should still not call anything)
         body2->transform->set_translation(Vec3(0, 10, 0));
@@ -260,6 +267,7 @@ public:
         physics->fixed_update(1.0f / 60.0f);
         physics->fixed_update(1.0f / 60.0f);
         assert_true(enter_called);
+        assert_true(signal_enter_called);
 
         body->unregister_collision_listener(&listener);
     }
@@ -267,12 +275,16 @@ public:
     void test_collision_listener_leave() {
         bool enter_called = false;
         bool leave_called = false;
+        bool signal_leave_called = false;
 
         Listener listener(&enter_called, nullptr, &leave_called);
 
         auto body = scene->create_child<StaticBody>();
         body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood());
         body->register_collision_listener(&listener);
+        body->signal_collision_exit().connect([&](const Collision& c) {
+            signal_leave_called = true;
+        });
 
         auto body2 = scene->create_child<DynamicBody>();
         body2->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood());
@@ -281,6 +293,7 @@ public:
 
         assert_true(enter_called);
         assert_false(leave_called);
+        assert_false(signal_leave_called);
 
         body2->destroy();
 
@@ -288,6 +301,7 @@ public:
         application->run_frame();
 
         assert_true(leave_called);
+        assert_true(signal_leave_called);
 
         body->unregister_collision_listener(&listener);
     }

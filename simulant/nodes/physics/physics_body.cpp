@@ -134,12 +134,16 @@ void PhysicsBody::set_orientation(const Quaternion& rotation) {
 }
 
 void PhysicsBody::contact_started(const Collision& collision) {
+    signal_collision_enter_(collision);
+
     for(auto listener: listeners_) {
         listener->on_collision_enter(collision);
     }
 }
 
 void PhysicsBody::contact_finished(const Collision& collision) {
+    signal_collision_exit_(collision);
+
     for(auto listener: listeners_) {
         listener->on_collision_exit(collision);
     }

@@ -70,6 +70,9 @@ struct PhysicsBodyParams {
         initial_position(position), initial_rotation(rotation) {}
 };
 
+typedef sig::signal<void(const Collision&)> CollisionEnterSignal;
+typedef sig::signal<void(const Collision&)> CollisionExitSignal;
+
 class PhysicsBody: public StageNode {
 public:
     PhysicsBody(Scene* owner, StageNodeType node_type, PhysicsBodyType type);
@@ -141,6 +144,9 @@ public:
     ContactList& contacts() {
         return contact_list_;
     }
+
+    DEFINE_SIGNAL(CollisionEnterSignal, signal_collision_enter);
+    DEFINE_SIGNAL(CollisionExitSignal, signal_collision_exit);
 };
 
 class CollisionListener {
