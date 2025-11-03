@@ -196,9 +196,10 @@ protected:
     virtual void on_activate() {}
     virtual void on_deactivate() {}
 
-private:
     void on_fixed_update(float step) override;
+    void on_update(float step) override;
 
+private:
     void register_builtin_nodes();
     std::unordered_map<size_t, std::shared_ptr<Service>> services_;
 

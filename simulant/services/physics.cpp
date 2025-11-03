@@ -26,6 +26,155 @@ class PrivateContactListener;
 class PrivateContactFilter;
 class b3MeshGenerator;
 
+class DebugDraw: public b3Draw {
+public:
+    DebugDraw(Debug* debug) :
+        debug_(debug) {}
+
+    Vec3 _p(const b3Vec3& p) const {
+        return Vec3(p.x, p.y, p.z);
+    }
+
+    Color _c(const b3Color& c) const {
+        return Color(c.r, c.g, c.b, c.a);
+    }
+
+    // Draw a point.
+    virtual void DrawPoint(const b3Vec3& p, scalar size, const b3Color& color,
+                           bool depthEnabled = true) {
+
+        debug_->draw_point(_p(p), _c(color), Seconds(), depthEnabled);
+    }
+
+    // Draw a line segment.
+    virtual void DrawSegment(const b3Vec3& p1, const b3Vec3& p2,
+                             const b3Color& color, bool depthEnabled = true) {
+        debug_->draw_line(_p(p1), _p(p2), _c(color), Seconds(), depthEnabled);
+    }
+
+    // Draw a triangle with vertices ordered CCW.
+    virtual void DrawTriangle(const b3Vec3& p1, const b3Vec3& p2,
+                              const b3Vec3& p3, const b3Color& color,
+                              bool depthEnabled = true) {
+
+        DrawSegment(p1, p2, color, depthEnabled);
+        DrawSegment(p2, p3, color, depthEnabled);
+        DrawSegment(p3, p1, color, depthEnabled);
+    }
+
+    // Draw a solid triangle with vertices ordered CCW.
+    virtual void DrawSolidTriangle(const b3Vec3& normal, const b3Vec3& p1,
+                                   const b3Vec3& p2, const b3Vec3& p3,
+                                   const b3Color& color,
+                                   bool depthEnabled = true) {
+        DrawTriangle(p1, p2, p3, color, depthEnabled);
+    }
+
+    // Draw a polygon with vertices ordered CCW.
+    virtual void DrawPolygon(const void* vertices, uint32 vertexStride,
+                             uint32 count, const b3Color& color,
+                             bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawPolygon unimplemented");
+    }
+
+    // Draw a solid polygon with vertices ordered CCW.
+    virtual void DrawSolidPolygon(const b3Vec3& normal, const void* vertices,
+                                  uint32 vertexStride, uint32 count,
+                                  const b3Color& color,
+                                  bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawSolidPolygon unimplemented");
+    }
+
+    // Draw a circle with center, normal, and radius.
+    virtual void DrawCircle(const b3Vec3& normal, const b3Vec3& center,
+                            scalar radius, const b3Color& color,
+                            bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawCircle unimplemented");
+    }
+
+    // Draw a solid circle with center, normal, and radius.
+    virtual void DrawSolidCircle(const b3Vec3& normal, const b3Vec3& center,
+                                 scalar radius, const b3Color& color,
+                                 bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawSolidCircle unimplemented");
+    }
+
+    // Draw a plane with center, normal and radius.
+    virtual void DrawPlane(const b3Vec3& normal, const b3Vec3& center,
+                           scalar radius, const b3Color& color,
+                           bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawPlane unimplemented");
+    }
+
+    // Draw a solid plane with center, normal and radius.
+    virtual void DrawSolidPlane(const b3Vec3& normal, const b3Vec3& center,
+                                scalar radius, const b3Color& color,
+                                bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawSolidPlane unimplemented");
+    }
+
+    // Draw a sphere with center, and radius.
+    virtual void DrawSphere(const b3Vec3& center, scalar radius,
+                            const b3Color& color, bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawSphere unimplemented");
+    }
+
+    // Draw a solid sphere with axis of rotation, center, and radius.
+    virtual void DrawSolidSphere(const b3Vec3& axis, const b3Vec3& center,
+                                 scalar radius, const b3Color& color,
+                                 bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawSolidSphere unimplemented");
+    }
+
+    // Draw a cylinder with axis, center, radius, and height.
+    virtual void DrawCylinder(const b3Vec3& axis, const b3Vec3& center,
+                              scalar radius, scalar height,
+                              const b3Color& color, bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawCylinder unimplemented");
+    }
+
+    // Draw a solid cylinder with axis, center, radius, and height.
+    virtual void DrawSolidCylinder(const b3Vec3& axis, const b3Vec3& center,
+                                   scalar radius, scalar height,
+                                   const b3Color& color,
+                                   bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawSolidCylinder unimplemented");
+    }
+
+    // Draw a grid with orientation, center, width, and height.
+    virtual void DrawGrid(const b3Vec3& normal, const b3Vec3& center,
+                          uint32 width, uint32 height, const b3Color& color,
+                          bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawGrid unimplemented");
+    }
+
+    // Draw a capsule with segment and radius.
+    virtual void DrawCapsule(const b3Vec3& p1, const b3Vec3& p2, scalar radius,
+                             const b3Color& color, bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawCapsule unimplemented");
+    }
+
+    // Draw a solid capsule with axis, segment and radius.
+    virtual void DrawSolidCapsule(const b3Vec3& axis, const b3Vec3& p1,
+                                  const b3Vec3& p2, scalar radius,
+                                  const b3Color& color,
+                                  bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawSolidCapsule unimplemented");
+    }
+
+    // Draw a AABB.
+    virtual void DrawAABB(const b3AABB& aabb, const b3Color& color,
+                          bool depthEnabled = true) {
+        S_ERROR_ONCE("DrawAABB unimplemented");
+    }
+
+    // Draw a transform.
+    virtual void DrawTransform(const b3Transform& xf,
+                               bool depthEnabled = true) {}
+
+private:
+    Debug* debug_;
+};
 
 struct _PhysicsData {
     ContactFilter* filter_ = nullptr;
@@ -497,6 +646,22 @@ void PhysicsService::on_fixed_update(float step) {
     uint32_t velocity_iterations = 8;
     uint32_t position_iterations = 2;
     pimpl_->scene_->Step(step, velocity_iterations, position_iterations);
+}
+
+void PhysicsService::on_update(float dt) {
+    _S_UNUSED(dt);
+
+    if(!debug_) {
+        return;
+    }
+
+    auto draw = DebugDraw(debug_);
+
+    for(b3Body* b = pimpl_->scene_->GetBodyList(); b; b = b->GetNext()) {
+        for(b3Fixture* f = b->GetFixtureList(); f; f = f->GetNext()) {
+            f->Draw(&draw, b3Color(1, 1, 1, 1));
+        }
+    }
 }
 
 void PhysicsService::set_gravity(const Vec3& gravity) {

@@ -8,6 +8,7 @@ namespace smlt {
 
 typedef struct _PhysicsData PhysicsData;
 
+class Debug;
 class PhysicsBody;
 class PhysicsService;
 struct PhysicsMaterial;
@@ -53,6 +54,10 @@ public:
 
     const ContactFilter* contact_filter() const;
     void set_contact_filter(ContactFilter* filter);
+
+    void set_debug(smlt::Debug* debug) {
+        debug_ = debug;
+    }
 
 private:
     friend class PhysicsBody;
@@ -104,7 +109,10 @@ private:
                            const Quaternion& orientation = Quaternion(),
                            const Vec3& scale = Vec3(1));
 
+    void on_update(float dt) override;
     void on_fixed_update(float step) override;
+
+    Debug* debug_ = nullptr;
 };
 
 }

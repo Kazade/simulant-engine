@@ -11,7 +11,10 @@ public:
         smlt::Scene(window) {}
 
     void on_load() override {
-        start_service<PhysicsService>();
+        auto physics = start_service<PhysicsService>();
+
+        auto debug = create_child<smlt::Debug>();
+        physics->set_debug(debug);
 
         camera_ = create_child<smlt::Camera3D>();
         pipeline_ = compositor->create_layer(
@@ -81,6 +84,8 @@ public:
     }
 
     void on_update(float dt) override {
+        Scene::on_update(dt);
+
         counter += dt;
         if(counter > 1.0f) {
             counter = 0;

@@ -248,7 +248,13 @@ void Scene::on_fixed_update(float step) {
     StageNode::on_fixed_update(step);
 }
 
+void Scene::on_update(float step) {
+    /* Update services, before moving onto the scene tree */
+    for(auto& service: services_) {
+        service.second->update(step);
+    }
 
-
+    StageNode::on_update(step);
+}
 }
 
