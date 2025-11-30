@@ -51,7 +51,7 @@ void Splash::on_load() {
     text_->transform->set_position_2d(window->coordinate_from_normalized(0.5f, 0.4f));
 
     //Create an orthographic camera
-    camera_ = create_node<Camera>();
+    camera_ = create_node<Camera2D>();
     camera_->set_orthographic_projection(
         0, window->width(), 0, window->height()
     );
