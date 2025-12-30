@@ -388,11 +388,15 @@ private:
         smlt::TypedNodeParam<type, klass>(line, name, fallback, desc,          \
                                           required)
 
-#define _S_DEFAULT(v, ...) (v)
+#define S_DEFINE_STAGE_NODE_PARAM(...) S_DEFINE_STAGE_NODE_PARAM_(__VA_ARGS__)
 
-#define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc, ...)      \
+#define S_DEFINE_STAGE_NODE_PARAM_(...)                                        \
+    S_DEFINE_STAGE_NODE_PARAM__(__VA_ARGS__, true)
+
+#define S_DEFINE_STAGE_NODE_PARAM__(klass, name, type, fallback, desc,         \
+                                    required, ...)                             \
     _S_DEFINE_STAGE_NODE_PARAM(__LINE__, klass, name, type, fallback, desc,    \
-                               _S_DEFAULT(__VA_ARGS__ __VA_OPT__(, ) true))
+                               required)
 
 /* We need to coerce const char* into the correct string class */
 template<typename T>
