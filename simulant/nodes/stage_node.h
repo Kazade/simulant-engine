@@ -486,8 +486,8 @@ private:
     StageNode* first_child_ = nullptr;
     StageNode* last_child_ = nullptr;
 
-    virtual void on_parent_set(StageNode* oldp, StageNode* newp,
-                               TransformRetainMode transform_retain) {
+    void _on_parent_set(StageNode* oldp, StageNode* newp,
+                        TransformRetainMode transform_retain) {
         _S_UNUSED(oldp);
 
         if(newp) {
@@ -497,6 +497,8 @@ private:
         }
 
         recalc_visibility();
+
+        on_parent_set(oldp, newp);
     }
 
 public:
@@ -768,6 +770,11 @@ protected:
     }
     virtual void on_late_update(float dt) override {
         _S_UNUSED(dt);
+    }
+
+    virtual void on_parent_set(const StageNode* oldp, const StageNode* newp) {
+        _S_UNUSED(oldp);
+        _S_UNUSED(newp);
     }
 
     void on_transformation_changed() override {

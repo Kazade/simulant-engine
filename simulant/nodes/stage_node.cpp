@@ -133,7 +133,7 @@ void StageNode::remove_from_parent() {
     assert(next_ != this);
     assert(prev_ != this);
 
-    on_parent_set(parent_, nullptr, TRANSFORM_RETAIN_MODE_LOSE);
+    _on_parent_set(parent_, nullptr, TRANSFORM_RETAIN_MODE_LOSE);
 }
 
 std::list<StageNode*> StageNode::detach() {
@@ -203,7 +203,7 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
     scene->_signal_change(this, old_path, node_path(),
                           STAGE_NODE_CHANGE_HIERARCHY);
 
-    on_parent_set(old_parent, parent_, transform_retain);
+    _on_parent_set(old_parent, parent_, transform_retain);
 }
 
 StageNode* StageNode::find_mixin(const std::string& name) const {
