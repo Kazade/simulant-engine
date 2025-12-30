@@ -13,6 +13,7 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
     - if: '$CI_COMMIT_REF_NAME == "next"'
+    - if: '$CI_COMMIT_REF_NAME == "legacy"'
     - if: '$CI_COMMIT_TAG'
 
 stages:
@@ -577,8 +578,8 @@ test:dreamcast-sh4-gcc:
 .deploy:deploy:
   stage: deploy
   only:
-   - master
    - main
+   - legacy
    - next
    - tags
   variables:
@@ -688,7 +689,7 @@ deploy:android-all-clang:
 deploy:assets:
   stage: deploy
   only:
-   - master
+   - legacy
    - main
    - next
    - tags
@@ -708,7 +709,7 @@ deploy:assets:
 deploy:tools:
   stage: deploy
   only:
-   - master
+   - legacy
    - main
    - next
    - tags
