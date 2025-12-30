@@ -45,6 +45,17 @@ public:
         assert_close(actor->transform->translation().z, 0.0f, 0.0001f);
     }
 
+    void test_stage_node_params() {
+        auto obj = scene->create_child<smlt::Stage>({
+            {"position", smlt::Vec3(1, 2, 3)}
+        });
+
+        assert_equal(smlt::Vec3(1, 2, 3), obj->transform->position());
+
+        obj = scene->create_child<smlt::Stage>();
+        assert_equal(smlt::Vec3(), obj->transform->position());
+    }
+
     void test_child_rotation() {
         auto parent = scene->create_child<smlt::Stage>();
         auto child = scene->create_child<smlt::Stage>();

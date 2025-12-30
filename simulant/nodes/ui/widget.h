@@ -39,15 +39,16 @@ struct WidgetImpl {
 
 #define S_DEFINE_CORE_WIDGET_PROPERTIES(klass)                                 \
     _S_DEFINE_STAGE_NODE_PARAM(10000, klass, "width", int, -1,                 \
-                               "The width of the widget");                     \
+                               "The width of the widget", true);               \
     _S_DEFINE_STAGE_NODE_PARAM(10001, klass, "height", int, -1,                \
-                               "The height of the widget");                    \
+                               "The height of the widget", true);              \
     _S_DEFINE_STAGE_NODE_PARAM(10002, klass, "theme", smlt::ui::UIConfig,      \
                                smlt::ui::UIConfig(),                           \
-                               "The theme to use for this widget");            \
-    _S_DEFINE_STAGE_NODE_PARAM(                                                \
-        10003, klass, "shared_style", smlt::ui::WidgetStylePtr,                \
-        smlt::ui::WidgetStylePtr(), "A shared style to use for this widget")
+                               "The theme to use for this widget", true);      \
+    _S_DEFINE_STAGE_NODE_PARAM(10003, klass, "shared_style",                   \
+                               smlt::ui::WidgetStylePtr,                       \
+                               smlt::ui::WidgetStylePtr(),                     \
+                               "A shared style to use for this widget", true)
 
 namespace smlt {
 namespace ui {

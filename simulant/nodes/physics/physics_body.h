@@ -12,12 +12,13 @@
 
 #define S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(klass)                           \
     TypedNodeParam<FloatArray, klass> param_10000 = {                          \
-        10000, "position", smlt::Vec3(), "The initial position of the body"};  \
+        10000, "position", smlt::Vec3(), "The initial position of the body",   \
+        true};                                                                 \
     TypedNodeParam<FloatArray, klass> param_10001 = {                          \
         10001, "orientation", smlt::Quaternion(),                              \
-        "The initial rotation of the body"};                                   \
+        "The initial rotation of the body", true};                             \
     TypedNodeParam<FloatArray, klass> param_10002 = {                          \
-        10002, "scale", smlt::Vec3(), "The initial scale of the body"}
+        10002, "scale", smlt::Vec3(), "The initial scale of the body", true}
 
 namespace smlt {
 

@@ -263,12 +263,14 @@ constexpr bool has_spaces(const char* s) {
 class NodeParam {
 public:
     NodeParam(int order, const char* name, NodeParamType type,
-              optional<ParamValue> default_value, const char* desc) :
+              optional<ParamValue> default_value, const char* desc,
+              bool required) :
         order_(order),
         name_(name),
         type_(type),
         default_value_(default_value),
-        desc_(desc) {}
+        desc_(desc),
+        required_(required) {}
 
     bool operator<(const NodeParam& rhs) const {
         return order_ < rhs.order_;
@@ -290,12 +292,17 @@ public:
         return default_value_;
     }
 
+    bool is_required() const {
+        return required_;
+    }
+
 private:
     int order_;
     const char* name_;
     NodeParamType type_;
     optional<ParamValue> default_value_;
     const char* desc_;
+    bool required_ = true;
 };
 
 template<typename T>
@@ -304,24 +311,23 @@ std::set<NodeParam>& get_node_params() {
     if(properties.empty()) {
         // All stage nodes should be able to handle
         // these things
-        properties.insert(
-            NodeParam(20000, "position", NODE_PARAM_TYPE_FLOAT_ARRAY,
-                      Params::to_param(Vec3()), "Node absolute position"));
-        properties.insert(NodeParam(
-            20001, "orientation", NODE_PARAM_TYPE_FLOAT_ARRAY,
-            Params::to_param(Quaternion()), "Node absolute orientation"));
+        properties.insert(NodeParam(20000, "position",
+                                    NODE_PARAM_TYPE_FLOAT_ARRAY, no_value,
+                                    "Node absolute position", false));
+        properties.insert(NodeParam(20001, "orientation",
+                                    NODE_PARAM_TYPE_FLOAT_ARRAY, no_value,
+                                    "Node absolute orientation", false));
         properties.insert(NodeParam(20002, "scale", NODE_PARAM_TYPE_FLOAT_ARRAY,
-                                    Params::to_param(Vec3(1, 1, 1)),
-                                    "Node absolute scale"));
-        properties.insert(
-            NodeParam(20003, "translation", NODE_PARAM_TYPE_FLOAT_ARRAY,
-                      Params::to_param(Vec3()), "Node relative translation"));
-        properties.insert(NodeParam(
-            20004, "rotation", NODE_PARAM_TYPE_FLOAT_ARRAY,
-            Params::to_param(Quaternion()), "Node relative rotation"));
-        properties.insert(NodeParam(
-            20005, "scale_factor", NODE_PARAM_TYPE_FLOAT_ARRAY,
-            Params::to_param(Vec3(1, 1, 1)), "Node relative scale factor"));
+                                    no_value, "Node absolute scale", false));
+        properties.insert(NodeParam(20003, "translation",
+                                    NODE_PARAM_TYPE_FLOAT_ARRAY, no_value,
+                                    "Node relative translation", false));
+        properties.insert(NodeParam(20004, "rotation",
+                                    NODE_PARAM_TYPE_FLOAT_ARRAY, no_value,
+                                    "Node relative rotation", false));
+        properties.insert(NodeParam(20005, "scale_factor",
+                                    NODE_PARAM_TYPE_FLOAT_ARRAY, no_value,
+                                    "Node relative scale factor", false));
     }
     return properties;
 }
@@ -333,9 +339,9 @@ public:
 
     template<typename F>
     TypedNodeParam(int order, const char* name, const F& fallback,
-                   const char* desc) :
+                   const char* desc, bool required) :
         param_(NodeParam(order, name, type_to_node_param_type<T>::value,
-                         Params::to_param(fallback), desc)) {
+                         Params::to_param(fallback), desc, required)) {
 
         get_node_params<C>().insert(param_);
     }
@@ -361,7 +367,8 @@ private:
 #define __S_GEN_PARAM(param, line) param##line
 #define _S_GEN_PARAM(param, line) __S_GEN_PARAM(param, line)
 
-#define _S_DEFINE_STAGE_NODE_PARAM(line, klass, name, type, fallback, desc)    \
+#define _S_DEFINE_STAGE_NODE_PARAM(line, klass, name, type, fallback, desc,    \
+                                   required)                                   \
     static_assert(!smlt::has_spaces(name), "Param name must not have spaces"); \
     static_assert(std::is_same<type, int>::value ||                            \
                   std::is_same<type, smlt::IntArray>::value ||                 \
@@ -378,10 +385,14 @@ private:
                   std::is_same<type, smlt::StageNode*>::value ||               \
                   std::is_same<type, smlt::ui::WidgetStylePtr>::value);        \
     static inline auto _S_GEN_PARAM(param_, line) =                            \
-        smlt::TypedNodeParam<type, klass>(line, name, fallback, desc)
+        smlt::TypedNodeParam<type, klass>(line, name, fallback, desc,          \
+                                          required)
 
-#define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc)           \
-    _S_DEFINE_STAGE_NODE_PARAM(__LINE__, klass, name, type, fallback, desc)
+#define _S_DEFAULT(v, ...) (v)
+
+#define S_DEFINE_STAGE_NODE_PARAM(klass, name, type, fallback, desc, ...)      \
+    _S_DEFINE_STAGE_NODE_PARAM(__LINE__, klass, name, type, fallback, desc,    \
+                               _S_DEFAULT(__VA_ARGS__ __VA_OPT__(, ) true))
 
 /* We need to coerce const char* into the correct string class */
 template<typename T>
@@ -776,7 +787,12 @@ protected:
             bool passed = params.contains(name);
             if(!passed && !param.default_value()) {
                 // No default and not provided
-                return false;
+                if(param.is_required()) {
+                    return false;
+                } else {
+                    // Ignore if not required
+                    continue;
+                }
             } else if(passed) {
                 auto v = params.raw(name).value();
                 cleaned.set(name, v);
