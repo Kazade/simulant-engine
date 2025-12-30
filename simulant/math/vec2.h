@@ -7,6 +7,8 @@
 
 namespace smlt {
 
+typedef std::vector<float> FloatArray;
+
 struct Vec3;
 struct Vec4;
 struct Degrees;
@@ -14,24 +16,38 @@ struct Degrees;
 struct Vec2 {
 
 public:
-    static const Vec2 NEGATIVE_X;
-    static const Vec2 POSITIVE_X;
-    static const Vec2 NEGATIVE_Y;
-    static const Vec2 POSITIVE_Y;
+    static Vec2 left() {
+        return Vec2(-1.0f, 0.0f);
+    }
 
-    static const Vec2 DOWN;
-    static const Vec2 LEFT;
-    static const Vec2 ONE;
-    static const Vec2 RIGHT;
-    static const Vec2 UP;
-    static const Vec2 ZERO;
+    static Vec2 right() {
+        return Vec2(1.0f, 0.0f);
+    }
+
+    static Vec2 up() {
+        return Vec2(0.0f, 1.0f);
+    }
+
+    static Vec2 down() {
+        return Vec2(0.0f, -1.0f);
+    }
+
+    static Vec2 zero() {
+        return Vec2(0, 0);
+    }
+
+    static Vec2 one() {
+        return Vec2(1, 1);
+    }
 
     float x;
     float y;
 
-    Vec2():
-        x(0.0f), y(0.0f) {
-    }
+    Vec2() :
+        x(0.0f), y(0.0f) {}
+
+    Vec2(const FloatArray& arr) :
+        x(arr[0]), y(arr[1]) {}
 
     Vec2(float x, float y):
         x(x), y(y) {
@@ -64,11 +80,32 @@ public:
         return ret;
     }
 
+    Vec2 lerp(const Vec2& end, float t) const {
+        t = fast_min(t, 1.0f);
+        t = fast_max(t, 0.0f);
+
+        return Vec2(
+            fast_fmaf((end.x - x), t, x),
+            fast_fmaf((end.y - y), t, y)
+        );
+    }
+
+    Vec2 lerp_smooth(const Vec2& end, const float dt, const float p, const float t) const {
+        return Vec2(
+            fast_fmaf((end.x - x), 1.0f - ::powf(p, fast_divide(dt, t)), x),
+            fast_fmaf((end.y - y), 1.0f - ::powf(p, fast_divide(dt, t)), y)
+        );
+    }
+
     void limit(float l) {
         if(length() > l) {
             normalize();
             *this *= l;
         }
+    }
+
+    operator FloatArray() const {
+        return {x, y};
     }
 
     Vec2 operator*(float rhs) const {

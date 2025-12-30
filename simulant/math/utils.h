@@ -39,17 +39,6 @@ bool almost_gequal(const T& lhs, const T& rhs, const T& epsilon) {
 
 uint32_t next_power_of_two(uint32_t x);
 
-
-/** Clamps x between l and h*/
-inline float clamp(const float x, const float l, const float h) {
-    return std::min(std::max(x, l), h);
-}
-
-/** Linear interpolation from x to y with factor t, where t can be any value between 0 and 1 */
-inline float lerp(const float x, const float y, const float t) {
-    return ::fmaf((y - x), t, x);
-}
-
 /* fast_ prefixed versions of functions allow of loss of precision over speed. IT IS IMPORTANT
  THAT THESE ARE USED WHEN COMPILED WITH -O3 -ffast-math or these will be drastically slower */
 static inline float fast_divide(float d, float n) {
@@ -67,6 +56,11 @@ static inline float fast_divide(float d, float n) {
 #else
     return d / n;
 #endif
+}
+
+/** Clamps x between l and h*/
+static inline float clamp(const float x, const float l, const float h) {
+    return std::min(std::max(x, l), h);
 }
 
 static inline float fast_sqrt(float n) {

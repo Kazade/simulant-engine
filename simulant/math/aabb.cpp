@@ -5,13 +5,13 @@
 
 namespace smlt {
 
-AABB::AABB(const Vec3 &centre, float width) {
-    center_ = centre;
+AABB::AABB(const Vec3 &center, float width) {
+    center_ = center;
     extents_ = Vec3(width * 0.5f, width * 0.5f, width * 0.5f);
 }
 
-AABB::AABB(const Vec3 &centre, float xsize, float ysize, float zsize) {
-    center_ = centre;
+AABB::AABB(const Vec3 &center, float xsize, float ysize, float zsize) {
+    center_ = center;
     extents_ = Vec3(xsize * 0.5f, ysize * 0.5f, zsize * 0.5f);
 }
 

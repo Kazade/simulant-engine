@@ -13,24 +13,25 @@ public:
     void set_up() {
         SimulantTestCase::set_up();
 
-        stage = scene->new_stage();
-        actor = stage->new_actor();
+        stage = scene->create_child<smlt::Stage>();
+        actor = scene->create_child<smlt::Actor>(
+            scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT)
+        );
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
 
-        scene->destroy_stage(stage->id());
+        stage->destroy();
     }
 
     void test_origin_bug() {
         // See #241
 
-        auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_sphere("sphere", stage->assets->new_material(), 10, 5, 5);
-        auto sphere = stage->new_actor_with_mesh(mesh);
-        auto camera = stage->new_camera();
-        auto follow = camera->new_behaviour<smlt::behaviours::SmoothFollow>();
+        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_sphere("sphere", scene->assets->create_material(), 10, 5, 5);
+        auto sphere = scene->create_child<smlt::Actor>(mesh);
+        auto follow = scene->create_child<smlt::SmoothFollow>();
         follow->set_target(sphere);
         follow->set_follow_distance(15.f);
         follow->set_follow_height(10.f);
@@ -39,11 +40,10 @@ public:
     }
 
     void test_target_reset_on_destroy() {
-        auto mesh = stage->assets->new_mesh(smlt::VertexSpecification::DEFAULT);
-        mesh->new_submesh_as_sphere("sphere", stage->assets->new_material(), 10, 5, 5);
-        auto sphere = stage->new_actor_with_mesh(mesh);
-        auto camera = stage->new_camera();
-        auto follow = camera->new_behaviour<smlt::behaviours::SmoothFollow>();
+        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_sphere("sphere", scene->assets->create_material(), 10, 5, 5);
+        auto sphere = scene->create_child<smlt::Actor>(mesh);
+        auto follow = scene->create_child<smlt::SmoothFollow>();
         follow->set_target(sphere);
 
         assert_true(follow->has_target());
@@ -56,39 +56,38 @@ public:
     }
 
     void test_half_turn() {
-        auto follower = stage->new_actor();
-        auto controller = follower->new_behaviour<smlt::behaviours::SmoothFollow>();
-        controller->set_target(actor);
-        controller->set_follow_height(0);
+        auto follower = scene->create_child<smlt::SmoothFollow>();
+        follower->set_target(actor);
+        follower->set_follow_height(0);
 
         float step = 1.0f / 60.0f;
         int seconds = 5;
 
         // Rotate the target 90 degrees
-        actor->rotate_to_absolute(Quaternion(Vec3(0, 1, 0), Degrees(90)));
+        actor->transform->set_orientation(Quaternion(Vec3(0, 1, 0), Degrees(90)));
 
         // Run 5 seconds of updates at 1/60
         for(int32_t i = 0; i < seconds * 60; ++i) {
-            controller->_late_update_thunk(step);
+            follower->late_update(step);
         }
 
         // Follower should now be facing negative Z
         assert_close(
-            follower->absolute_rotation().forward().x,
+            follower->transform->orientation().forward().x,
             -1.0f, 0.0001f
         );
 
         // Rotate the target 180 degrees
-        actor->rotate_to_absolute(Quaternion(Vec3(0, 1, 0), Degrees(180)));
+        actor->transform->set_orientation(Quaternion(Vec3(0, 1, 0), Degrees(180)));
 
         // Run 3 seconds of updates at 1/60
         for(int32_t i = 0; i < seconds * 60; ++i) {
-            controller->_late_update_thunk(step);
+            follower->late_update(step);
         }
 
         // Follower should now be facing positive Z
         assert_close(
-            follower->absolute_rotation().forward().z,
+            follower->transform->forward().z,
             1.0f, 0.0001f
         );
 

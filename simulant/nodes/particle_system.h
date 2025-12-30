@@ -5,47 +5,45 @@
 
 #include "stage_node.h"
 
+#include "../assets/particle_script.h"
 #include "../generic/identifiable.h"
 #include "../generic/managed.h"
 #include "../generic/manual_object.h"
+#include "../interfaces.h"
 #include "../renderers/renderer.h"
 #include "../sound.h"
-#include "../interfaces.h"
 #include "../types.h"
-#include "../vertex_data.h"
 #include "../utils/random.h"
-#include "../assets/particle_script.h"
+#include "../vertex_data.h"
+#include "particles/particle.h"
 
 namespace smlt {
 
-struct Particle {
-    smlt::Vec3 position;
-    smlt::Vec3 velocity;
-    smlt::Vec2 dimensions;
-    smlt::Vec2 initial_dimensions;
-    float ttl;
-    float lifetime;
-    smlt::Colour colour;
-};
-
-
 class ParticleSystem;
 
-typedef sig::signal<void (ParticleSystem*, MaterialID, MaterialID)> ParticleSystemMaterialChangedSignal;
+enum ParticleSystemSpace {
+    PARTICLE_SYSTEM_SPACE_WORLD,
+    PARTICLE_SYSTEM_SPACE_LOCAL
+};
 
-class ParticleSystem :
-    public TypedDestroyableObject<ParticleSystem, Stage>,
+typedef sig::signal<void(ParticleSystem*, AssetID, AssetID)>
+    ParticleSystemMaterialChangedSignal;
+
+class ParticleSystem:
     public StageNode,
-    public generic::Identifiable<ParticleSystemID>,
-    public AudioSource,
-    public Loadable,
     public HasMutableRenderPriority,
-    public ChainNameable<ParticleSystem>  {
+    public ChainNameable<ParticleSystem> {
 
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);
 
 public:
-    ParticleSystem(Stage* stage, SoundDriver *sound_driver, ParticleScriptPtr script);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PARTICLE_SYSTEM,
+                             "particle_system");
+    S_DEFINE_STAGE_NODE_PARAM(ParticleSystem, "script", ParticleScriptPtr,
+                              no_value,
+                              "The particle script to use for this system");
+
+    ParticleSystem(Scene* owner);
     virtual ~ParticleSystem();
 
     const AABB& aabb() const override;
@@ -54,35 +52,39 @@ public:
     }
 
     bool emitters_active() const;
-    void set_emitters_active(bool value=true);
+    void set_emitters_active(bool value = true);
 
-    void set_destroy_on_completion(bool value=true) { destroy_on_completion_ = value; }
-    bool destroy_on_completion() const { return destroy_on_completion_; }
+    void set_destroy_on_completion(bool value = true) {
+        destroy_on_completion_ = value;
+    }
+    bool destroy_on_completion() const {
+        return destroy_on_completion_;
+    }
     bool has_active_emitters() const;
 
     /**
-     * @brief If update_when_hidden is true, then particles will continue to be simulated
-     * even if the particle system is hidden via set_visible. The default is false.
+     * @brief If update_when_hidden is true, then particles will continue to be
+     * simulated even if the particle system is hidden via set_visible. The
+     * default is false.
      * @return True if update_when_hidden is set.
      */
     bool update_when_hidden() const;
-    void set_update_when_hidden(bool value=true);
+    void set_update_when_hidden(bool value = true);
 
     VertexData* vertex_data() const {
         return vertex_data_;
     }
 
-    void clean_up() override {
-        StageNode::clean_up();
-    }
-
-    void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
+    void do_generate_renderables(batcher::RenderQueue* render_queue,
+                                 const Camera*, const Viewport* viewport,
+                                 const DetailLevel, Light** lights,
+                                 const std::size_t light_count) override;
 
     ParticleScript* script() const {
         return script_.get();
     }
 
-    void update(float dt) override;
+    void on_update(float dt) override;
 
     std::size_t particle_count() const {
         return particle_count_;
@@ -92,10 +94,16 @@ public:
         return particles_[i];
     }
 
-private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
+    void set_space(ParticleSystemSpace space) {
+        space_ = space;
     }
+
+    ParticleSystemSpace space() const {
+        return space_;
+    }
+
+private:
+    bool on_create(Params params) override;
 
     struct EmitterState {
         bool is_active = true;
@@ -111,7 +119,6 @@ private:
     void update_emitter(uint16_t emitter, float dt);
     void update_active_state(uint16_t emitter, float dt);
     void emit_particles(uint16_t emitter, float dt, uint32_t max);
-
 
     AABB aabb_;
     void calc_aabb();
@@ -132,6 +139,8 @@ private:
     bool emitters_active_ = true;
 
     RandomGenerator random_;
+
+    ParticleSystemSpace space_ = PARTICLE_SYSTEM_SPACE_WORLD;
 };
 
-}
+} // namespace smlt

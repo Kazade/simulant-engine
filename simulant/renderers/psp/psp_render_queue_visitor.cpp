@@ -3,15 +3,17 @@
 #include <pspgum.h>
 #include <pspkernel.h>
 
-#include "psp_render_queue_visitor.h"
-#include "psp_renderer.h"
-#include "psp_render_group_impl.h"
-
 #include "../../application.h"
+#include "../../meshes/submesh.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../stage.h"
+#include "../../utils/pbr.h"
+#include "../../vertex_data.h"
 #include "../../window.h"
+#include "psp_render_group_impl.h"
+#include "psp_render_queue_visitor.h"
+#include "psp_renderer.h"
 
 namespace smlt {
 
@@ -19,15 +21,16 @@ PSPRenderQueueVisitor::PSPRenderQueueVisitor(PSPRenderer* renderer,
                                              CameraPtr camera) :
     renderer_(renderer), camera_(camera) {}
 
-void PSPRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
-                                            uint64_t frame_id, Stage* stage) {
-
+void PSPRenderQueueVisitor::start_traversal(const batcher::RenderQueue &queue,
+                                            uint64_t frame_id,
+                                            StageNode *stage_node)
+{
     S_VERBOSE("start_traversal");
 
     _S_UNUSED(queue);
     _S_UNUSED(frame_id);
 
-    auto l = stage->ambient_light();
+    auto l = stage_node->scene->lighting->ambient_light();
     sceGuAmbient(l.to_abgr_8888());
 }
 
@@ -36,10 +39,10 @@ void PSPRenderQueueVisitor::visit(const Renderable* renderable, const MaterialPa
     do_visit(renderable, pass, iteration);
 }
 
-void PSPRenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
-                                          Stage* stage) {
+void PSPRenderQueueVisitor::end_traversal(const batcher::RenderQueue &queue, StageNode *stage_node)
+{
     _S_UNUSED(queue);
-    _S_UNUSED(stage);
+    _S_UNUSED(stage_node);
 
     S_VERBOSE("end_traversal");
 }
@@ -58,35 +61,39 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         return;
     }
 
-    const auto& diffuse = next->diffuse();
+    auto s = pbr_to_traditional(next->base_color(), next->metallic(),
+                                next->roughness(), next->specular_color(),
+                                next->specular());
+
+    const auto& diffuse = s.diffuse;
     sceGuMaterial(GU_DIFFUSE,
                   GU_COLOR(diffuse.r, diffuse.g, diffuse.b, diffuse.a));
 
-    const auto& ambient = next->ambient();
+    const auto& ambient = s.ambient;
     sceGuMaterial(GU_AMBIENT,
                   GU_COLOR(ambient.r, ambient.g, ambient.b, ambient.a));
 
-    const auto& specular = next->specular();
+    const auto& specular = s.specular;
     sceGuMaterial(GU_SPECULAR,
                   GU_COLOR(specular.r, specular.g, specular.b, specular.a));
 
-    sceGuSpecular(next->shininess());
+    sceGuSpecular(s.shininess);
 
-    switch(next->colour_material()) {
-        case COLOUR_MATERIAL_NONE:
-            sceGuColorMaterial(0);
-            break;
-        case COLOUR_MATERIAL_AMBIENT:
-            sceGuColorMaterial(GU_AMBIENT);
-            break;
-        case COLOUR_MATERIAL_DIFFUSE:
-            sceGuColorMaterial(GU_DIFFUSE);
-            break;
-        case COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE:
-            sceGuColorMaterial(GU_AMBIENT | GU_DIFFUSE);
-            break;
-        default:
-            break;
+    switch (next->color_material()) {
+    case COLOR_MATERIAL_NONE:
+        sceGuColorMaterial(0);
+        break;
+    case COLOR_MATERIAL_AMBIENT:
+        sceGuColorMaterial(GU_AMBIENT);
+        break;
+    case COLOR_MATERIAL_DIFFUSE:
+        sceGuColorMaterial(GU_DIFFUSE);
+        break;
+    case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
+        sceGuColorMaterial(GU_AMBIENT | GU_DIFFUSE);
+        break;
+    default:
+        break;
     }
 
     if(next->is_lighting_enabled()) {
@@ -157,7 +164,7 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         case BLEND_ALPHA:
             sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
             break;
-        case BLEND_COLOUR:
+        case BLEND_COLOR:
             sceGuBlendFunc(GU_ADD, GU_SRC_COLOR, GU_ONE_MINUS_SRC_COLOR, 0, 0);
             break;
         case BLEND_MODULATE:
@@ -178,9 +185,9 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         sceGuEnable(GU_TEXTURE_2D);
 
         // We have to keep the filter in sync
-        auto id = next->diffuse_map()->_renderer_specific_id();
+        auto id = next->base_color_map()->_renderer_specific_id();
         auto tex = renderer_->texture_manager_.find_texture(id);
-        tex->filter = next->diffuse_map()->texture_filter();
+        tex->filter = next->base_color_map()->texture_filter();
 
         renderer_->texture_manager_.bind_texture(id);
     } else {
@@ -198,12 +205,12 @@ void PSPRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
         bool enabled = i < count;
 
         if(enabled) {
-            auto pos = camera_->view_matrix() * light->absolute_position();
+            auto pos = camera_->view_matrix() * light->transform->position();
 
             ScePspFVector3 light_pos = {pos.x, pos.y, -pos.z};
             sceGuEnable(GU_LIGHT0 + i);
 
-            if(light->type() == LIGHT_TYPE_DIRECTIONAL) {
+            if (light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
                 sceGuLight(i, GU_DIRECTIONAL, GU_DIFFUSE_AND_SPECULAR,
                            &light_pos);
             } else {
@@ -211,17 +218,15 @@ void PSPRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
                            &light_pos);
             }
 
-            auto d = light->diffuse();
-            auto a = light->ambient();
-            auto s = light->specular();
+            auto a = light->color() * light->intensity() * 0.1f;
+            auto d = light->color() * light->intensity();
+            auto s = light->color() * light->intensity() * 0.1f;
 
             sceGuLightColor(i, GU_DIFFUSE, d.to_abgr_8888());
             sceGuLightColor(i, GU_AMBIENT, a.to_abgr_8888());
             sceGuLightColor(i, GU_SPECULAR, s.to_abgr_8888());
 
-            sceGuLightAtt(i, light->constant_attenuation(),
-                          light->linear_attenuation(),
-                          light->quadratic_attenuation());
+            sceGuLightAtt(i, 0.1f, -1.0f / light->range(), 1.0f);
         } else {
             sceGuDisable(GU_LIGHT0 + i);
         }
@@ -270,18 +275,16 @@ void convert_color(uint16_t* vout, const uint8_t* vin, VertexAttribute type) {
     const float* v = (const float*)vin;
     switch(type) {
         case VERTEX_ATTRIBUTE_4F:
-            *vout = smlt::Colour(v[0], v[1], v[2], v[3]).to_abgr_4444();
+            *vout = smlt::Color(v[0], v[1], v[2], v[3]).to_abgr_4444();
             break;
         case VERTEX_ATTRIBUTE_3F:
-            *vout = smlt::Colour(v[0], v[1], v[2], 1.0f).to_abgr_4444();
+            *vout = smlt::Color(v[0], v[1], v[2], 1.0f).to_abgr_4444();
             break;
         case VERTEX_ATTRIBUTE_4UB_RGBA:
-            *vout = smlt::Colour::from_bytes(vin[0], vin[1], vin[2], vin[3])
-                        .to_abgr_4444();
+            *vout = smlt::Color::from_bytes(vin[0], vin[1], vin[2], vin[3]).to_abgr_4444();
             break;
         case VERTEX_ATTRIBUTE_4UB_BGRA:
-            *vout = smlt::Colour::from_bytes(vin[2], vin[1], vin[0], vin[3])
-                        .to_abgr_4444();
+            *vout = smlt::Color::from_bytes(vin[2], vin[1], vin[0], vin[3]).to_abgr_4444();
             break;
         default:
             *vout = 0xFFFF;
@@ -304,12 +307,11 @@ void convert_normal(int16_t* vout, const uint8_t* vin, VertexAttribute type) {
 
 static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
                              const VertexSpecification& spec) {
-    auto stride = spec.stride();
     auto pos_off = spec.position_offset(false);
     auto uv_off = (spec.has_texcoord0())
                       ? spec.texcoord0_offset(false)
                       : 0; // FIXME: 0 assumes not first attribute
-    auto color_off = (spec.has_diffuse()) ? spec.diffuse_offset(false) : 0;
+    auto color_off = (spec.has_color()) ? spec.color_offset(false) : 0;
     auto normal_off = (spec.has_normals()) ? spec.normal_offset(false) : 0;
 
     int i = buffer.size();
@@ -324,7 +326,7 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
     }
 
     if(color_off) {
-        convert_color(&v->color, it + color_off, spec.diffuse_attribute);
+        convert_color(&v->color, it + color_off, spec.color_attribute);
     }
 
     if(normal_off) {
@@ -398,7 +400,6 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     const auto& model = renderable->final_transformation;
     const auto& view = camera_->view_matrix();
     const auto& projection = camera_->projection_matrix();
-    const auto vertex_data = renderable->vertex_data->data();
 
     ScePspFMatrix4* psp_model =
         (ScePspFMatrix4*)sceGuGetMemory(3 * sizeof(ScePspFMatrix4));

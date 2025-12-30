@@ -31,7 +31,10 @@ public:
         BaseTextureLoader(filename, data) {}
 
 private:
-    TextureLoadResult do_load(std::shared_ptr<FileIfstream> stream) override;
+    bool do_load(std::shared_ptr<FileIfstream> stream,
+                 Texture* result) override;
+
+    bool do_load(const std::vector<uint8_t>& data, Texture* result) override;
 
     thread::Mutex lock_;
 };
@@ -47,7 +50,7 @@ public:
 
     const char* name() override { return "texture"; }
     bool supports(const Path& filename) const override {
-        return filename.ext() == ".tga" || filename.ext() == ".png" || filename.ext() == ".jpg";
+        return filename.ext() == ".tga" || filename.ext() == ".jpg";
     }
 
     Loader::ptr loader_for(const Path& filename, std::shared_ptr<std::istream> data) const override {

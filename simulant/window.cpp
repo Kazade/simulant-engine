@@ -26,18 +26,14 @@
 #include "window.h"
 #include "platform.h"
 #include "input/input_state.h"
+#include "input/input_manager.h"
 #include "nodes/camera.h"
 #include "nodes/ui/ui_manager.h"
 #include "asset_manager.h"
 #include "renderers/renderer_config.h"
 #include "compositor.h"
-#include "scenes/loading.h"
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
-
-#include "panels/stats_panel.h"
-#include "panels/partitioner_panel.h"
-
 #include "vfs.h"
 
 
@@ -78,7 +74,7 @@ bool Window::create_window(uint16_t width, uint16_t height, uint8_t bpp, bool fu
 
     has_focus_ = true;
 
-    update_conn_ = application->signal_late_update().connect(std::bind(&Window::update_screens, this, std::placeholders::_1));
+    update_conn_ = app->signal_late_update().connect(std::bind(&Window::update_screens, this, std::placeholders::_1));
 
     return true;
 }
@@ -91,6 +87,13 @@ void Window::swap_buffers() {
 }
 
 void Window::create_defaults() {
+    // Initialize the render_sequence once we have a renderer
+    compositor_ = std::make_shared<Compositor>(this);
+    if(!compositor_->init()) {
+        S_ERROR("Failed to initialize the compositor");
+        return;
+    }
+
     //This needs to happen after SDL or whatever is initialized
     input_state_ = InputState::create(this);
     input_manager_ = InputManager::create(input_state_.get());
@@ -100,22 +103,25 @@ void Window::create_defaults() {
 }
 
 void Window::_clean_up() {
+    if(!initialized_) {
+        return;
+    }
+
     update_conn_.disconnect();
     auto screens = screens_;
     for(auto& screen: screens) {
         _destroy_screen(screen.first);
     }
 
-    auto panels = panels_;
-    for(auto p: panels) {
-        unregister_panel(p.first);
+    if(compositor_) {
+        assert(compositor_);
+        compositor_->clean_up();
+        compositor_.reset();
     }
-    panels.clear();
-
-    compositor_.reset();
 
     destroy_window();
     GLThreadCheck::clean_up();
+    initialized_ = false;
 }
 
 StageNode* Window::audio_listener()  {
@@ -165,8 +171,6 @@ void Window::on_application_set(Application* app) {
 bool Window::initialize_assets_and_devices() {
     S_DEBUG("Starting initialization");
 
-    // Initialize the render_sequence once we have a renderer
-    compositor_ = std::make_shared<Compositor>(this);
 
     if(!initialized_) {
         /* Swap buffers immediately after creation, this makes sure that
@@ -174,12 +178,9 @@ bool Window::initialize_assets_and_devices() {
          * spending time loading anything */
         swap_buffers();
 
-        //watcher_ = Watcher::create(*this);
-
         S_INFO("Initializing the default resources");
 
         create_defaults();
-        create_panels();
 
         initialized_ = true;
     }
@@ -187,41 +188,6 @@ bool Window::initialize_assets_and_devices() {
     S_DEBUG("Initialization finished");
 
     return true;
-}
-
-void Window::register_panel(uint8_t function_key, std::shared_ptr<Panel> panel) {
-    PanelEntry entry;
-    entry.panel = panel;
-
-    panel->set_activation_key((KeyboardCode) (int(KEYBOARD_CODE_F1) + (function_key - 1)));
-
-    panels_[function_key] = entry;
-    register_event_listener(panel.get());
-}
-
-void Window::unregister_panel(uint8_t function_key) {
-    unregister_event_listener(panels_[function_key].panel.get());
-    panels_.erase(function_key);
-}
-
-void Window::toggle_panel(uint8_t id) {
-    if(panels_[id].panel->is_active()) {
-        panels_[id].panel->deactivate();
-    } else {
-        panels_[id].panel->activate();
-    }
-}
-
-void Window::activate_panel(uint8_t id) {
-    panels_[id].panel->activate();
-}
-
-void Window::deactivate_panel(uint8_t id) {
-    panels_[id].panel->deactivate();
-}
-
-bool Window::panel_is_active(uint8_t id) {
-    return panels_[id].panel->is_active();
 }
 
 void Window::set_logging_level(LogLevel level) {
@@ -281,36 +247,19 @@ void Window::set_has_context(bool value) {
 
     /* Tell the application we now have, or lost, the context */
     if(application_) {
-        if(has_context_) {            
+        if(has_context_) {
             renderer_->init_context();
-            application_->on_render_context_created();            
+            application_->on_render_context_created();
         } else {
             application_->on_render_context_destroyed();
         }
     }
 }
 
-void Window::create_panels() {
-    destroy_panels();
-
-    S_DEBUG("Recreating panels");
-    register_panel(1, StatsPanel::create(this));
-    // register_panel(2, PartitionerPanel::create(this));
-}
-
-void Window::destroy_panels() {
-    auto panels = panels_;
-    for(auto p: panels) {
-        unregister_panel(p.first);
-    }
-    panels.clear();
-}
-
 void Window::set_application(Application* app) {
     application_ = app;
     on_application_set(app);
 }
-
 
 /**
  * @brief Window::reset
@@ -324,12 +273,12 @@ void Window::reset() {
     // Make sure we aren't still getting text input
     input->stop_text_input();
 
-    compositor_->destroy_all_pipelines();
+    compositor_->destroy_all_layers();
+    compositor_->clean_destroyed_layers();
     compositor_->clean_up();
 
     S_DEBUG("Recreating defaults");
     create_defaults();
-    create_panels();
 }
 
 void Window::on_mouse_down(MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device) {
@@ -352,7 +301,7 @@ void Window::on_mouse_move(MouseID id, int32_t x, int32_t y, bool touch_device) 
 
 void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
     if(code == KEYBOARD_CODE_ESCAPE && escape_to_quit_enabled()) {
-        application->stop_running();
+        app->stop_running();
     }
 
     each_event_listener([=](EventListener* listener) {

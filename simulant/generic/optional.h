@@ -4,7 +4,13 @@
 #include <utility>
 #include <cstdint>
 
+#include "../macros.h"
+
 namespace smlt {
+
+enum OptionalInit {
+    no_value = 0,
+};
 
 /* When all compilers support the true optional class we can delete this. This exists largely for compatibility
  * with old GCC for the Dreamcast port */
@@ -13,6 +19,9 @@ template<typename T>
 class optional {
 public:
     optional() = default;
+
+    optional(OptionalInit) :
+        optional() {}
 
     ~optional() {
         reset();
@@ -68,8 +77,12 @@ public:
         return *value_ptr();
     }
 
+    T value_or(const T& def) const {
+        return *this ? **this : def;
+    }
+
     T value_or(T&& def) const {
-        bool(*this) ? **this : static_cast<T>(std::forward<T>(def));
+        return bool(*this) ? **this : static_cast<T>(std::forward<T>(def));
     }
 
     T value_or(T&& def) {
@@ -96,8 +109,13 @@ public:
         return *value_ptr();
     }
 
+    optional& operator=(const OptionalInit&) {
+        reset();
+        return *this;
+    }
+
 private:
-    uint8_t data_[sizeof(T)] __attribute__((aligned(8)));
+    uint8_t _S_ALIGN(8) data_[sizeof(T)];
     bool has_value_ = false;
 
     T* value_ptr() const {

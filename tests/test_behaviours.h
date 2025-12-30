@@ -3,55 +3,87 @@
 #include <simulant/test.h>
 #include <simulant/simulant.h>
 
-#include "../simulant/behaviours/movement/cylindrical_billboard.h"
-#include "../simulant/behaviours/movement/spherical_billboard.h"
-#include "../simulant/behaviours/locators/node_locator.h"
+#include "../simulant/nodes/locators/node_locator.h"
+#include "simulant/nodes/stage_node.h"
 
 namespace {
 
 using namespace smlt;
 
-class BehaviourWithLookups : public Behaviour, public RefCounted<BehaviourWithLookups> {
+struct NodeWithLookupsParams {};
+
+class NodeWithLookups : public StageNode {
 public:
+    S_DEFINE_STAGE_NODE_META((STAGE_NODE_TYPE_USER_BASE + 1),
+                             "node_with_lookups");
+
+    NodeWithLookups(Scene* owner):
+        StageNode(owner, STAGE_NODE_TYPE_USER_BASE + 1) {}
+
     FindResult<Actor> child_one = FindDescendent("Child 1", this);
     FindResult<ParticleSystem> invalid_child = FindDescendent("Child 1", this);
     FindResult<Camera> camera = FindDescendent("Camera", this);
 
+    FindResult<Actor> mixin = FindMixin<Actor>(this);
+    FindResult<Stage> no_mixin = FindMixin<Stage>(this);
+
     FindResult<Actor> parent = FindAncestor("Some Parent", this);
 
-    const char* name() const {
-        return "lookups";
+    bool on_create(Params) {
+        return true;
+    }
+    void do_generate_renderables(batcher::RenderQueue*, const Camera*,
+                                 const Viewport*, const DetailLevel, Light**,
+                                 const std::size_t) override {}
+    const AABB& aabb() const {
+        static AABB aabb;
+        return aabb;
     }
 };
 
 class BehaviourLookupTests : public test::SimulantTestCase {
 public:
+    void set_up() {
+        test::SimulantTestCase::set_up();
+        scene->register_stage_node<NodeWithLookups>();
+    }
+
+    void test_mixin_lookups() {
+        auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto node = scene->create_child<NodeWithLookups>();
+        auto mixin = node->create_mixin<Actor>(m);
+        assert_equal(node->find_mixin<Actor>(), mixin);
+        assert_is_null(node->find_mixin<Stage>());
+
+        assert_equal(node->mixin.get(), mixin);
+        assert_is_null(node->no_mixin.get());
+    }
+
     void test_ancestor_lookups() {
-        auto stage = scene->new_stage();
-        auto actor = stage->new_actor();
-        auto b = actor->new_behaviour<BehaviourWithLookups>();
+        auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto b = scene->create_child<NodeWithLookups>();
 
         assert_is_null((StageNode*) b->parent.get());
 
-        auto parent = stage->new_actor();
+        auto parent = scene->create_child<smlt::Actor>(m);
         parent->set_name("Some Parent");
-        actor->set_parent(parent);
+        b->set_parent(parent);
 
         assert_equal((StageNode*) b->parent.get(), (StageNode*) parent);
     }
 
     void test_descendent_lookups() {
-        auto stage = scene->new_stage();
-        auto actor = stage->new_actor();
-        auto camera = stage->new_camera();
+        auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto camera = scene->create_child<smlt::Camera3D>();
 
-        auto b = actor->new_behaviour<BehaviourWithLookups>();
+        auto b = scene->create_child<NodeWithLookups>();
 
         assert_is_null((StageNode*) b->child_one);
         assert_is_null((StageNode*) b->invalid_child);
 
-        auto child_one = stage->new_actor_with_name("Child 1");
-        child_one->set_parent(actor);
+        auto child_one = scene->create_child<Actor>(m);
+        child_one->set_name("Child 1");
+        child_one->set_parent(b);
 
         camera->set_parent(child_one);
         camera->set_name("Camera");
@@ -69,35 +101,35 @@ public:
 };
 
 
-
 class CylindricalBillboardTests : public test::SimulantTestCase {
 public:
     void test_basic_usage() {
-        auto stage = scene->new_stage();
-        auto actor = stage->new_actor();
-        auto camera = stage->new_camera();
+        auto actor = scene->create_child<smlt::Stage>();
+        auto camera = scene->create_child<smlt::Camera3D>();
 
-        auto pipeline = window->compositor->render(stage, camera);
+        auto pipeline = window->compositor->create_layer(scene, camera);
         pipeline->activate();
 
-        actor->new_behaviour<behaviours::CylindricalBillboard>(camera);
+        auto billboard = scene->create_child<CylindricalBillboard>();
+        billboard->set_target(camera);
+        billboard->adopt_children(actor);
 
-        camera->move_to(0, 0, 100);
+        camera->transform->set_translation(Vec3(0, 0, 100));
 
         application->run_frame();
-        assert_equal(actor->forward(), Vec3(0, 0, 1));
+        assert_equal(actor->transform->forward(), Vec3(0, 0, 1));
 
-        camera->move_to(0, 100, 0);
+        camera->transform->set_translation(Vec3(0, 100, 0));
 
         application->run_frame();
 
         // Default to negative Z
-        assert_equal(actor->forward(), Vec3(0, 0, -1));
+        assert_equal(actor->transform->forward(), Vec3(0, 0, -1));
 
-        camera->move_to(100, 0, 0);
+        camera->transform->set_translation(Vec3(100, 0, 0));
 
         application->run_frame();
-        assert_equal(actor->forward(), Vec3(1, 0, 0));
+        assert_equal(actor->transform->forward(), Vec3(1, 0, 0));
     }
 };
 
@@ -105,29 +137,30 @@ class SphericalBillboardTests : public test::SimulantTestCase {
 public:
 
     void test_basic_usage() {
-        auto stage = scene->new_stage();
-        auto actor = stage->new_actor();
-        auto camera = stage->new_camera();
+        auto actor = scene->create_child<smlt::Stage>();
+        auto camera = scene->create_child<smlt::Camera3D>();
 
-        auto pipeline = window->compositor->render(stage, camera);
+        auto pipeline = window->compositor->create_layer(scene, camera);
         pipeline->activate();
 
-        actor->new_behaviour<behaviours::SphericalBillboard>(camera);
+        auto billboard = scene->create_child<SphericalBillboard>();
+        billboard->set_target(camera);
+        billboard->adopt_children(actor);
 
-        camera->move_to(0, 0, 100);
-
-        application->run_frame();
-        assert_equal(actor->forward(), Vec3(0, 0, 1));
-
-        camera->move_to(0, 100, 0);
+        camera->transform->set_translation(Vec3(0, 0, 100));
 
         application->run_frame();
-        assert_equal(actor->forward(), Vec3(0, 1, 0));
+        assert_equal(actor->transform->forward(), Vec3(0, 0, 1));
 
-        camera->move_to(100, 0, 0);
+        camera->transform->set_translation(Vec3(0, 100, 0));
 
         application->run_frame();
-        assert_equal(actor->forward(), Vec3(1, 0, 0));
+        assert_equal(actor->transform->forward(), Vec3(0, 1, 0));
+
+        camera->transform->set_translation(Vec3(100, 0, 0));
+
+        application->run_frame();
+        assert_equal(actor->transform->forward(), Vec3(1, 0, 0));
     }
 };
 

@@ -31,12 +31,11 @@ public:
 
     PSPRenderer(Window* window);
 
-    batcher::RenderGroupKey prepare_render_group(batcher::RenderGroup* group,
-        const Renderable *renderable,
-        const MaterialPass *material_pass,
-        const uint8_t pass_number,
-        const bool is_blended,
-        const float distance_to_camera) override;
+    batcher::RenderGroupKey prepare_render_group(
+        batcher::RenderGroup* group, const Renderable* renderable,
+        const MaterialPass* material_pass, const RenderPriority priority,
+        const uint8_t pass_number, const bool is_blended,
+        const float distance_to_camera, uint16_t texture_id) override;
 
     std::shared_ptr<batcher::RenderQueueVisitor> get_render_queue_visitor(CameraPtr camera) override;
 
@@ -52,8 +51,7 @@ public:
 
     bool texture_format_is_native(TextureFormat fmt) override;
 
-    void clear(const RenderTarget& target, const Colour& colour,
-               uint32_t clear_flags) override;
+    void clear(const RenderTarget &target, const Color &colour, uint32_t clear_flags) override;
     void apply_viewport(const RenderTarget& target,
                         const Viewport& viewport) override;
 
@@ -73,7 +71,7 @@ private:
     void do_swap_buffers() override;
 
     void on_texture_prepare(Texture* texture) override;
-    void on_texture_unregister(TextureID tex_id, Texture* texture) override;
+    void on_texture_unregister(AssetID tex_id, Texture *texture) override;
 };
 }
 

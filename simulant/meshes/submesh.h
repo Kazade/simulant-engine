@@ -43,19 +43,13 @@ class SubMesh:
 
 public:
     /* Indexed submesh constructor */
-    SubMesh(Mesh* parent,
-        const std::string& name,
-        MaterialPtr material,
-        std::shared_ptr<IndexData>& index_data,
-        MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES
-    );
+    SubMesh(Mesh* parent, const std::string& name, MaterialPtr material,
+            std::shared_ptr<IndexData>& index_data,
+            MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES);
 
     /* Ranged submesh constructor */
-    SubMesh(Mesh* parent,
-        const std::string& name,
-        MaterialPtr material,
-        MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES
-    );
+    SubMesh(Mesh* parent, const std::string& name, MaterialPtr material,
+            MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES);
 
     virtual ~SubMesh();
 
@@ -71,7 +65,8 @@ public:
     void mark_changed();
 
     const VertexRange* vertex_ranges() const {
-        return &vertex_ranges_[0];
+
+        return vertex_range_count() ? &vertex_ranges_[0] : nullptr;
     }
 
     std::size_t vertex_range_count() const {
@@ -92,9 +87,9 @@ public:
 
     void generate_texture_coordinates_cube(uint32_t texture=0);
 
-    /* Goes through the indexes in this submesh and changes the diffuse colour of the vertices
+    /* Goes through the indexes in this submesh and changes the diffuse color of the vertices
      * they point to */
-    void set_diffuse(const Colour &colour);
+    void set_base_color(const Color& color);
 
     /*
      * Whether or not this submesh contributes to the adjacency info attached to the mesh
@@ -119,7 +114,7 @@ public:
     const AABB& aabb() const;
 
 public:
-    typedef sig::signal<void (SubMeshPtr, MaterialSlot, MaterialID, MaterialID)> MaterialChangedCallback;
+    typedef sig::signal<void (SubMeshPtr, MaterialSlot, AssetID, AssetID)> MaterialChangedCallback;
 
     MaterialChangedCallback& signal_material_changed() {
         return signal_material_changed_;

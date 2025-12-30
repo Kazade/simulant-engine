@@ -106,17 +106,14 @@ public:
     virtual void set_source_properties(AudioSourceID id, const Vec3& position, const Vec3& velocity) = 0;
 
     virtual void set_source_reference_distance(AudioSourceID id, float dist) = 0;
-    virtual void set_source_gain(AudioSourceID id, RangeValue<0, 1> value) = 0;
-    virtual void set_source_pitch(AudioSourceID id, RangeValue<0, 1> value) = 0;
-
-    PlayingSoundPtr play_sound(SoundPtr sound, AudioRepeat repeat=AUDIO_REPEAT_NONE);
+    virtual void set_source_gain(AudioSourceID id, NormalizedFloat value) = 0;
+    virtual void set_source_pitch(AudioSourceID id, NormalizedFloat value) = 0;
 
 private:
     virtual bool _startup() = 0;
     virtual void _shutdown() = 0;
 
     Window* window_ = nullptr;
-    AudioSource* global_source_ = nullptr;
 
     sig::connection source_update_;
 };

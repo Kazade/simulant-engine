@@ -23,8 +23,6 @@
 #include <memory>
 #include <cstdint>
 
-#include "default_init_ptr.h"
-
 namespace smlt {
 
 namespace property_impl {
@@ -75,20 +73,6 @@ struct Getter<MP, C, std::unique_ptr<T>> {
 
     T* get(C* _this) const {
         return (_this->*mp_).get();
-    }
-};
-
-template<typename MP, typename C, typename T>
-struct Getter<MP, C, default_init_ptr<T>> {
-    MP mp_;
-
-    Getter(MP mp):
-        mp_(mp) {
-
-    }
-
-    T* get(C* _this) const {
-        return (_this->*mp_);
     }
 };
 
@@ -166,11 +150,6 @@ struct ExtractType<std::shared_ptr<T>> {
 
 template<typename T>
 struct ExtractType<std::unique_ptr<T>> {
-    typedef T type;
-};
-
-template<typename T>
-struct ExtractType<default_init_ptr<T>> {
     typedef T type;
 };
 

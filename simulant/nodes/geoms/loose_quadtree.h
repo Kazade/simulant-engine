@@ -34,7 +34,7 @@ public:
         NodeData* data = nullptr;
         uint32_t child_indexes[4];
 
-        Vec3 centre;
+        Vec3 center;
         float size;
     };
 
@@ -47,14 +47,14 @@ public:
         tree_data_(tree_data),
         root_width_(bounds.max_dimension()),
         bounds_(bounds),
-        centre_(bounds_.centre()) {
+        center_(bounds_.center()) {
 
         /* Make sure the bounds are square */
         float maxd = root_width_;
         auto halfd = maxd / 2.0f;
 
         auto half = Vec3(halfd, 0, halfd);
-        bounds_ = AABB(centre_, half);
+        bounds_ = AABB(center_, half);
 
         /* Grow the tree to whatever size we passed in */
         grow(max_level_count);
@@ -72,18 +72,18 @@ public:
         return node.level == (levels_ - 1);
     }
 
-    Quadtree::Node* find_destination_for_sphere(const Vec3& centre, float radius) {
+    Quadtree::Node* find_destination_for_sphere(const Vec3& center, float radius) {
         auto diameter = radius * 2.0f;
         auto level_and_node_width = level_for_width(diameter);
 
         /* Calculate the cell index to insert the sphere */
         auto half_width = root_width_ * 0.5f;
 
-        assert(centre.x <= bounds_.max().x && centre.x >= bounds_.min().x);
-        assert(centre.z <= bounds_.max().z && centre.z >= bounds_.min().z);
+        assert(center.x <= bounds_.max().x && center.x >= bounds_.min().x);
+        assert(center.z <= bounds_.max().z && center.z >= bounds_.min().z);
 
-        auto x = (GridCoord) ((centre.x + half_width - centre_.x) / level_and_node_width.second);
-        auto z = (GridCoord) ((centre.z + half_width - centre_.z) / level_and_node_width.second);
+        auto x = (GridCoord) ((center.x + half_width - center_.x) / level_and_node_width.second);
+        auto z = (GridCoord) ((center.z + half_width - center_.z) / level_and_node_width.second);
 
         assert(x >= 0);
         assert(z >= 0);
@@ -112,9 +112,9 @@ public:
          */
 
         AABB bounds(vertices, 3);
-        auto centre = bounds.centre();
+        auto center = bounds.center();
         auto radius = bounds.max_dimension() / 2.0f;
-        return find_destination_for_sphere(centre, radius);
+        return find_destination_for_sphere(center, radius);
     }
 
     void traverse(std::function<void (Quadtree::Node*)> cb) {
@@ -153,7 +153,7 @@ public:
 private:
     template<typename Callback>
     void _visible_visitor(const Frustum& frustum, const Callback& callback, Quadtree::Node& node) {
-        if(frustum.intersects_cube(node.centre, node.size * 2.0f)) {
+        if(frustum.intersects_cube(node.center, node.size * 2.0f)) {
             callback(&node);
 
             if(!is_leaf(node)) {
@@ -206,7 +206,7 @@ private:
         min += bounds_.min();
 
         float hw = cell_width * 0.5f;
-        node.centre = min + Vec3(hw, hw, hw);
+        node.center = min + Vec3(hw, hw, hw);
         node.size = cell_width;
     }
 
@@ -278,7 +278,7 @@ private:
 
     float root_width_;
     AABB bounds_;
-    Vec3 centre_;
+    Vec3 center_;
 
     Level levels_ = 0;
     std::vector<Quadtree::Node> nodes_;

@@ -29,7 +29,7 @@ public:
             smlt::VERTEX_ATTRIBUTE_2F
         };
 
-        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
 
         assert_equal(0, (int32_t) data->vertex_specification().position_offset());
         assert_equal(sizeof(float) * 3, (uint32_t) data->vertex_specification().texcoord0_offset());
@@ -43,7 +43,7 @@ public:
         smlt::VertexSpecification spec;
         spec.position_attribute = VERTEX_ATTRIBUTE_4F;
 
-        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
 
         data->position(smlt::Vec2(9.0f, 8.0f));
         data->move_next();
@@ -59,27 +59,27 @@ public:
         smlt::VertexSpecification spec;
         spec.position_attribute = VERTEX_ATTRIBUTE_3F;
         spec.texcoord0_attribute = VERTEX_ATTRIBUTE_2F;
-        spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB;
+        spec.color_attribute = VERTEX_ATTRIBUTE_4UB;
         spec.normal_attribute = VERTEX_ATTRIBUTE_PACKED_VEC4_1I;
         spec.texcoord1_attribute = VERTEX_ATTRIBUTE_2F;
 
-        assert_equal((uint32_t) spec.diffuse_offset(), sizeof(float) * 5u);
+        assert_equal((uint32_t)spec.color_offset(), sizeof(float) * 5u);
         assert_equal((uint32_t) spec.normal_offset(), (sizeof(float) * 5u) + sizeof(uint32_t));
         assert_equal((uint32_t) spec.texcoord1_offset(), (sizeof(float) * 5u) + (sizeof(uint32_t) * 2));
 
-        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
         data->position(smlt::Vec3());
-        data->diffuse(smlt::Colour(0, 0, 0, 0));
-        data->normal(smlt::Vec3::POSITIVE_Y);
+        data->color(smlt::Color(0, 0, 0, 0));
+        data->normal(smlt::Vec3::up());
         data->move_next();
 
         data->position(smlt::Vec3());
-        data->diffuse(smlt::Colour(0, 0, 0, 0));
-        data->normal(smlt::Vec3::NEGATIVE_X);
+        data->color(smlt::Color(0, 0, 0, 0));
+        data->normal(smlt::Vec3::left());
         data->move_next();
 
         data->position(smlt::Vec3());
-        data->diffuse(smlt::Colour(0, 0, 0, 0));
+        data->color(smlt::Color(0, 0, 0, 0));
         data->normal(smlt::Vec3(0.5, -0.5, 0.5));
         data->move_next();
 
@@ -99,24 +99,24 @@ public:
         assert_close(n3->z, 0.5f, 0.01f);
     }
 
-    void test_colours_dont_overflow() {
+    void test_colors_dont_overflow() {
         smlt::VertexSpecification spec = VertexSpecification{
             smlt::VERTEX_ATTRIBUTE_3F
         };
 
-        spec.diffuse_attribute = smlt::VERTEX_ATTRIBUTE_4UB;
+        spec.color_attribute = smlt::VERTEX_ATTRIBUTE_4UB;
 
-        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
         data->position(0, 0, 0);
-        data->diffuse(smlt::Colour(1.1, 1.1, 1.1, 1.1));
+        data->color(smlt::Color(1.1, 1.1, 1.1, 1.1));
         data->move_next();
 
-        uint8_t* colour = &(data->data()[spec.diffuse_offset()]);
+        uint8_t* color = &(data->data()[spec.color_offset()]);
 
-        assert_equal(colour[0], 255);
-        assert_equal(colour[1], 255);
-        assert_equal(colour[2], 255);
-        assert_equal(colour[3], 255);
+        assert_equal(color[0], 255);
+        assert_equal(color[1], 255);
+        assert_equal(color[2], 255);
+        assert_equal(color[3], 255);
     }
 
     void test_moving_cursor() {
@@ -126,7 +126,7 @@ public:
             smlt::VERTEX_ATTRIBUTE_2F
         };
 
-        smlt::VertexData::ptr data = smlt::VertexData::create(spec);
+        smlt::VertexData::ptr data = std::make_shared<VertexData>(spec);
         auto stride = data->stride();
 
         data->position(0, 0, 0);

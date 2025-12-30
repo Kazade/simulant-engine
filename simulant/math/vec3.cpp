@@ -6,22 +6,6 @@
 
 namespace smlt {
 
-const Vec3 Vec3::NEGATIVE_X = Vec3(-1, 0, 0);
-const Vec3 Vec3::POSITIVE_X = Vec3(1, 0, 0);
-const Vec3 Vec3::NEGATIVE_Y = Vec3(0, -1, 0);
-const Vec3 Vec3::POSITIVE_Y = Vec3(0, 1, 0);
-const Vec3 Vec3::POSITIVE_Z = Vec3(0, 0, 1);
-const Vec3 Vec3::NEGATIVE_Z = Vec3(0, 0, -1);
-
-const Vec3 Vec3::BACK = Vec3::POSITIVE_Z;       //Shorthand for writing Vec3(0, 0, 1)
-const Vec3 Vec3::DOWN = Vec3::NEGATIVE_Y;       //Shorthand for writing Vec3(0, -1, 0)
-const Vec3 Vec3::FORWARD = Vec3::NEGATIVE_Z;    //Shorthand for writing Vec3(0, 0, -1)
-const Vec3 Vec3::LEFT = Vec3::NEGATIVE_X;       //Shorthand for writing Vec3(-1, 0, 0)
-const Vec3 Vec3::ONE = Vec3(1, 1, 1);           //Shorthand for writing Vec3(1, 1, 1)
-const Vec3 Vec3::RIGHT = Vec3::POSITIVE_X;      //Shorthand for writing Vec3(1, 0, 0)
-const Vec3 Vec3::UP = Vec3::POSITIVE_Y;         //Shorthand for writing Vec3(0, 1, 0)
-const Vec3 Vec3::ZERO = Vec3();                 //Shorthand for writing Vec3(0, 0, 0)
-
 std::ostream& operator<<(std::ostream& stream, const Vec3& vec) {
     stream << "(" << vec.x << "," << vec.y << "," << vec.z << ")";
     return stream;
@@ -52,18 +36,26 @@ Vec3 operator/(float lhs, const Vec3& rhs) {
     return result * l;
 }
 
-Vec3 Vec3::random_deviant(const Degrees& angle, const Vec3 up) const {
-    //Lovingly adapted from ogre
-    Vec3 new_up = (up == Vec3()) ? perpendicular() : up;
+Vec3 Vec3::random_deviant(const Degrees& angle) const {
+    auto v = normalized();
+    auto& rgen = RandomGenerator::instance();
 
-    Quaternion q(*this, Radians(RandomGenerator().float_in_range(0, 1) * (PI * 2.0f)));
+    smlt::Radians theta(
+        rgen.float_in_range(-angle.to_float() * smlt::PI_OVER_180,
+                            angle.to_float() * smlt::PI_OVER_180));
 
-    new_up = new_up * q;
+    auto r = smlt::Vec3(1.0f, 0.0f, 0.0f);
+    if(std::abs(v.x) > 0.9f) {
+        r = smlt::Vec3(0.0f, 1.0f, 0.0f);
+    }
 
-    q = Quaternion(new_up, angle);
+    auto w = v.cross(r).normalized();
 
-    return *this * q;
+    float cosTheta = std::cos(theta.to_float());
+    float sinTheta = std::sin(theta.to_float());
 
+    return (v * cosTheta) + (w * sinTheta) +
+           (w * (v.dot(w) * (1.0f - cosTheta)));
 }
 
 Vec2 Vec3::xy() const {
@@ -79,9 +71,9 @@ Quaternion Vec3::rotation_to(const Vec3 &dir) const {
     if(d >= 1.0f) {
        return Quaternion();
     } else if(d < (EPSILON - 1.0f)) {
-       Vec3 axis = Vec3::POSITIVE_X.cross(*this);
-       if(fast_abs(axis.length_squared()) < EPSILON) {
-           axis = Vec3::POSITIVE_Y.cross(*this);
+        Vec3 axis = Vec3::right().cross(*this);
+        if(fast_abs(axis.length_squared()) < EPSILON) {
+            axis = Vec3::up().cross(*this);
        }
        axis.normalize();
        return smlt::Quaternion(axis, smlt::Radians(smlt::PI));
@@ -121,15 +113,7 @@ Vec3 Vec3::transformed_by(const Mat4 &trans) const {
 }
 
 Vec3 Vec3::perpendicular() const {
-    //Lovingly adapted from Ogre
-    static const float square_zero = (float)(1e-06 * 1e-06);
-    Vec3 perp = this->cross(Vec3(1, 0, 0));
-
-    if(perp.length_squared() < square_zero) {
-        //This vector is the X-axis, so use another
-        perp = this->cross(Vec3(0, 1, 0));
-    }
-    return perp.normalized();
+    return (z < x) ? Vec3(y, -x, 0) : Vec3(0, -z, y);
 }
 
 smlt::Vec3 operator-(const smlt::Vec3& vec) {
@@ -137,18 +121,14 @@ smlt::Vec3 operator-(const smlt::Vec3& vec) {
 }
 
 float Vec3::distance_to(const AABB& aabb) const {
-    Vec3 centre = aabb.centre();
+    Vec3 center = aabb.center();
 
-    float dx = fast_max(fast_abs(x - centre.x) - (aabb.width() * 0.5f), 0.0f);
-    float dy = fast_max(fast_abs(y - centre.y) - (aabb.height() * 0.5f), 0.0f);
-    float dz = fast_max(fast_abs(z - centre.z) - (aabb.depth() * 0.5f), 0.0f);
+    float dx = fast_max(fast_abs(x - center.x) - (aabb.width() * 0.5f), 0.0f);
+    float dy = fast_max(fast_abs(y - center.y) - (aabb.height() * 0.5f), 0.0f);
+    float dz = fast_max(fast_abs(z - center.z) - (aabb.depth() * 0.5f), 0.0f);
 
-#ifdef __DREAMCAST__
-    return fast_sqrt(MATH_Sum_of_Squares(dx, dy, dz, 0));
-#else
     Vec3 d = Vec3(dx, dy, dz);
     return fast_sqrt(d.dot(d));
-#endif
 }
 
 }

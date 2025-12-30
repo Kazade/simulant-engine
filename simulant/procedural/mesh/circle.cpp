@@ -24,17 +24,18 @@ namespace smlt {
 namespace procedural {
 namespace mesh {
 
-SubMesh* circle(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
+SubMesh* circle(smlt::MeshPtr mesh, smlt::MaterialPtr mat, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    SubMesh* submesh = mesh.new_submesh(
+    SubMesh* submesh = mesh->create_submesh(
         "circle",
+        mat,
         MESH_ARRANGEMENT_TRIANGLE_FAN
     );
 
-    auto offset = mesh.vertex_data->count();
+    auto offset = mesh->vertex_data->count();
 
-    auto& vdata = mesh.vertex_data;
+    auto& vdata = mesh->vertex_data;
     auto& idata = submesh->index_data;
 
     vdata->move_to_end();
@@ -51,7 +52,7 @@ SubMesh* circle(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_o
         float v = std::sin(rads) * 0.5f + 0.5f;
 
         vdata->position(x_offset + x, y_offset + y, z_offset);
-        vdata->diffuse(smlt::Colour::WHITE);
+        vdata->color(smlt::Color::white());
         vdata->tex_coord0(u, v);
         vdata->tex_coord1(u, v);
         vdata->tex_coord2(u, v);
@@ -70,14 +71,14 @@ SubMesh* circle(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_o
     return submesh;
 }
 
-SubMesh* circle_outline(smlt::Mesh& mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
+SubMesh* circle_outline(smlt::MeshPtr mesh, smlt::MaterialPtr mat, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
     float radius = diameter * 0.5f;
 
-    SubMesh* submesh = mesh.new_submesh("circle_outline", MESH_ARRANGEMENT_LINE_STRIP);
+    SubMesh* submesh = mesh->create_submesh("circle_outline", mat, MESH_ARRANGEMENT_LINE_STRIP);
 
-    auto offset = mesh.vertex_data->count();
+    auto offset = mesh->vertex_data->count();
 
-    auto& vdata = mesh.vertex_data;
+    auto& vdata = mesh->vertex_data;
     auto& idata = submesh->index_data;
 
     vdata->move_to_end();
@@ -94,7 +95,7 @@ SubMesh* circle_outline(smlt::Mesh& mesh, float diameter, int32_t point_count, f
         float v = std::sin(rads) * 0.5f + 0.5f;
 
         vdata->position(x_offset + x, y_offset + y, z_offset);
-        vdata->diffuse(smlt::Colour::WHITE);
+        vdata->color(smlt::Color::white());
         vdata->tex_coord0(u, v);
         vdata->tex_coord1(u, v);
         vdata->tex_coord2(u, v);

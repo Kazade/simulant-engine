@@ -102,7 +102,7 @@ public:
 
     virtual void check_events() = 0;
 
-    void swap_buffers();
+    virtual void swap_buffers();
 
     uint16_t width() const override { return width_; }
     uint16_t height() const override { return height_; }
@@ -158,6 +158,16 @@ public:
 
     void each_screen(std::function<void (std::string, Screen*)> callback);
 
+    virtual bool initialize_virtual_screen(uint16_t width, uint16_t height,
+                                           ScreenFormat format,
+                                           uint16_t integer_scale) {
+        _S_UNUSED(width);
+        _S_UNUSED(height);
+        _S_UNUSED(format);
+        _S_UNUSED(integer_scale);
+        return false;
+    }
+
     /* Private API for Window subclasses (public for testing)
        don't call this directly
     */
@@ -209,11 +219,6 @@ public:
      *  not be called by user code directly. */
     void set_has_focus(bool v=true);
 
-    /** Recreates the debugging panels (e.g stats) */
-    void create_panels();
-
-    /** Destroys the panels */
-    void destroy_panels();
 protected:
     std::shared_ptr<Renderer> renderer_;
 
@@ -253,17 +258,13 @@ public:
     void set_escape_to_quit(bool value=true) { escape_to_quit_ = value; }
     bool escape_to_quit_enabled() const { return escape_to_quit_; }
 
-    // Panels
-    void register_panel(uint8_t function_key, std::shared_ptr<Panel> panel);
-    void unregister_panel(uint8_t function_key);
-    void toggle_panel(uint8_t id);
-    void activate_panel(uint8_t id);
-    void deactivate_panel(uint8_t id);
-    bool panel_is_active(uint8_t id);
-
 protected:
     InputState* get_input_state() {
         return input_state_.get();
+    }
+
+    bool initialized() const {
+        return initialized_;
     }
 
 private:
@@ -274,7 +275,7 @@ private:
 
     bool can_attach_sound_by_id() const { return false; }
 
-    bool initialized_;
+    bool initialized_ = false;
 
     uint16_t width_ = 0;
     uint16_t height_ = 0;
@@ -286,12 +287,6 @@ private:
 
     bool has_context_ = false;
     bool has_focus_ = false;
-
-    struct PanelEntry {
-        std::shared_ptr<Panel> panel;
-    };
-
-    std::unordered_map<uint8_t, PanelEntry> panels_;
 
     /*
      *  Sometimes we need to destroy or recreate the GL context, if that happens while we are rendering in the
@@ -337,7 +332,7 @@ protected:
 
     InputState* _input_state() const { return input_state_.get(); }
 
-    virtual void game_controller_start_rumble(GameController *controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) {
+    virtual void game_controller_start_rumble(GameController *controller, NormalizedFloat low_rumble, NormalizedFloat high_rumble, const smlt::Seconds& duration) {
         _S_UNUSED(controller);
         _S_UNUSED(low_rumble);
         _S_UNUSED(high_rumble);
@@ -350,7 +345,7 @@ protected:
 
 public:
     //Read only properties
-    S_DEFINE_PROPERTY(application, &Window::application_);
+    S_DEFINE_PROPERTY(app, &Window::application_);
     S_DEFINE_PROPERTY(renderer, &Window::renderer_);
     S_DEFINE_PROPERTY(data, &Window::data_carrier_);
     S_DEFINE_PROPERTY(input, &Window::input_manager_);

@@ -11,6 +11,8 @@
 
 namespace smlt {
 
+typedef std::vector<float> FloatArray;
+
 struct Vec2;
 struct Quaternion;
 struct Mat4;
@@ -29,21 +31,37 @@ private:
     friend struct Ray;
 
 public:
-    static const Vec3 NEGATIVE_X;
-    static const Vec3 POSITIVE_X;
-    static const Vec3 NEGATIVE_Y;
-    static const Vec3 POSITIVE_Y;
-    static const Vec3 POSITIVE_Z;
-    static const Vec3 NEGATIVE_Z;
+    static Vec3 up() {
+        return Vec3(0.0f, 1.0f, 0.0f);
+    }
 
-    static const Vec3 BACK;
-    static const Vec3 DOWN;
-    static const Vec3 FORWARD;
-    static const Vec3 LEFT;
-    static const Vec3 ONE;
-    static const Vec3 RIGHT;
-    static const Vec3 UP;
-    static const Vec3 ZERO;
+    static Vec3 down() {
+        return Vec3(0.0f, -1.0f, 0.0f);
+    }
+
+    static Vec3 left() {
+        return Vec3(-1.0f, 0.0f, 0.0f);
+    }
+
+    static Vec3 right() {
+        return Vec3(1.0f, 0.0f, 0.0f);
+    }
+
+    static Vec3 forward() {
+        return Vec3(0.0f, 0.0f, -1.0f);
+    }
+
+    static Vec3 backward() {
+        return Vec3(0.0f, 0.0f, 1.0f);
+    }
+
+    static Vec3 zero() {
+        return Vec3(0, 0, 0);
+    }
+
+    static Vec3 one() {
+        return Vec3(1, 1, 1);
+    }
 
     float x;
     float y;
@@ -54,6 +72,9 @@ public:
         y(0.0f),
         z(0.0f) {
     }
+
+    Vec3(const FloatArray& arr) :
+        x(arr[0]), y(arr[1]), z(arr[2]) {}
 
     Vec3(float xyz):
         x(xyz), y(xyz), z(xyz) {}
@@ -124,6 +145,10 @@ public:
         return result;
     }
 
+    Vec3 operator/(const Vec3& rhs) const {
+        return Vec3(x / rhs.x, y / rhs.y, z / rhs.z);
+    }
+
     bool equals(const Vec3& rhs) const {
         return x == rhs.x && y == rhs.y && z == rhs.z;
     }
@@ -171,6 +196,26 @@ public:
             fast_fmaf((end.x - x), t, x),
             fast_fmaf((end.y - y), t, y),
             fast_fmaf((end.z - z), t, z)
+        );
+    }
+
+    Vec3 lerp_smooth(const Vec3& end, const float dt, const float p, const float t) const {
+        return Vec3(
+            fast_fmaf((end.x - x), 1.0f - std::pow(p, fast_divide(dt, t)), x),
+            fast_fmaf((end.y - y), 1.0f - std::pow(p, fast_divide(dt, t)), y),
+            fast_fmaf((end.z - z), 1.0f - std::pow(p, fast_divide(dt, t)), z)
+        );
+    }
+
+    // Exponential decay function based on Freya Holmer's talk
+    // Reference: https://www.youtube.com/watch?v=LSNQuFEDOyQ
+    Vec3 lerp_decay(const Vec3& end, const float dt, const float decay) const {
+        const float expDecay = std::exp(-decay * dt);
+
+        return Vec3(
+            fast_fmaf((x - end.x), expDecay, end.x),
+            fast_fmaf((y - end.y), expDecay, end.y),
+            fast_fmaf((z - end.z), expDecay, end.z)
         );
     }
 
@@ -224,6 +269,13 @@ public:
     }
 
     float distance_to(const AABB& aabb) const;
+    float distance_to(const Vec3& other) const {
+        return (other - *this).length();
+    }
+
+    float squared_distance_to(const Vec3& other) const {
+        return (other - *this).length_squared();
+    }
 
     template<typename Container>
     static Vec3 find_average(const Container& vectors) {
@@ -234,14 +286,6 @@ public:
 
         ret /= float(vectors.size());
         return ret;
-    }
-
-    static float distance(const smlt::Vec3& lhs, const smlt::Vec3& rhs) {
-        return (rhs - lhs).length();
-    }
-
-    static float sqr_distance(const smlt::Vec3& lhs, const smlt::Vec3& rhs) {
-        return (rhs - lhs).length_squared();
     }
 
     inline Vec3 parallel_component(const Vec3& unit_basis) const {
@@ -259,7 +303,7 @@ public:
     friend std::ostream& operator<<(std::ostream& stream, const Vec3& vec);
 
     Vec3 perpendicular() const;
-    Vec3 random_deviant(const Degrees& angle, const Vec3 up=Vec3()) const;
+    Vec3 random_deviant(const Degrees& angle) const;
 
     Vec2 xy() const;
     Vec4 xyzw(float w=1.0f) const;
@@ -274,6 +318,10 @@ public:
 
     static Vec3 max(const Vec3& a, const Vec3& b) {
         return Vec3(fast_max(a.x, b.x), fast_max(a.y, b.y), fast_max(a.z, b.z));
+    }
+
+    operator FloatArray() const {
+        return {x, y, z};
     }
 };
 

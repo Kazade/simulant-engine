@@ -15,52 +15,44 @@ public:
 
         SimulantTestCase::set_up();
 
-        stage_ = scene->new_stage();
-        camera_ = stage_->new_camera();
+        stage_ = scene->create_child<smlt::Stage>();
+        camera_ = scene->create_child<smlt::Camera3D>();
     }
 
     void tear_down() {
         SimulantTestCase::tear_down();
-        scene->destroy_stage(stage_->id());
+        stage_->destroy();
+        camera_->destroy();
     }
 
     void test_audio_listener() {
         assert_false(window->has_explicit_audio_listener());
         assert_is_null(window->audio_listener());
 
-        auto p = window->compositor->render(stage_, camera_);
+        auto p = window->compositor->create_layer(scene, camera_);
         p->activate();
 
         // Make the first camera of the first pipeline the audio listener
         assert_equal(window->audio_listener(), camera_);
         assert_false(window->has_explicit_audio_listener());
 
-        auto actor = stage_->new_actor();
+        auto actor = scene->create_child<smlt::Stage>();
         window->set_audio_listener(actor);
 
         assert_equal(window->audio_listener(), actor);
         assert_true(window->has_explicit_audio_listener());
 
-        stage_->destroy_actor(actor);
+        actor->destroy();
         application->run_frame(); // actually destroy
 
         assert_equal(window->audio_listener(), camera_);
         assert_false(window->has_explicit_audio_listener());
     }
 
-    void test_global_output() {
-        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("assets/sounds/simulant.ogg");
-        auto playing = application->sound_driver->play_sound(sound);
-        assert_true(playing->is_playing());
-        while(playing->is_playing()) {
-            application->run_frame();
-        }
-    }
-
     void test_2d_sound_output() {
-        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("assets/sounds/simulant.ogg");
+        smlt::SoundPtr sound = application->shared_assets->load_sound("assets/sounds/simulant.ogg");
 
-        auto actor = stage_->new_actor();
+        auto actor = scene->create_child<smlt::AudioSource>();
 
         assert_false(actor->playing_sound_count());
 
@@ -76,9 +68,9 @@ public:
     void test_played_signal() {
         bool played = false;
 
-        smlt::SoundPtr sound = application->shared_assets->new_sound_from_file("assets/sounds/simulant.ogg");
+        smlt::SoundPtr sound = application->shared_assets->load_sound("assets/sounds/simulant.ogg");
 
-        auto actor = stage_->new_actor();
+        auto actor = scene->create_child<smlt::AudioSource>();
 
         assert_false(actor->playing_sound_count());
 
@@ -102,10 +94,10 @@ public:
     }
 
     void test_3d_sound_output() {
-        smlt::SoundPtr sound = stage_->assets->new_sound_from_file("assets/sounds/simulant.ogg");
+        smlt::SoundPtr sound = scene->assets->load_sound("assets/sounds/simulant.ogg");
 
-        auto actor = stage_->new_actor();
-        actor->move_to(10, 0, 0);
+        auto actor = scene->create_child<smlt::AudioSource>();
+        actor->transform->set_translation(smlt::Vec3(10, 0, 0));
 
         assert_false(actor->playing_sound_count());
 
@@ -120,18 +112,18 @@ public:
     }
 
     void test_sound_destruction_stops_play() {
-        auto sound = application->shared_assets->new_sound_from_file("assets/sounds/simulant.ogg");
+        auto sound = application->shared_assets->load_sound("assets/sounds/simulant.ogg");
 
         auto sid = sound->id();
 
-        auto a = stage_->new_actor();
+        auto a = scene->create_child<smlt::AudioSource>();
 
         assert_true(application->shared_assets->has_sound(sid));
         a->play_sound(sound);
 
         assert_true(a->is_sound_playing());
 
-        application->shared_assets->destroy_sound(sound);
+        application->shared_assets->destroy_sound(sound->id());
         sound.reset();
 
         application->shared_assets->run_garbage_collection();
@@ -144,8 +136,8 @@ public:
     }
 
     void test_sound_stopping() {
-        auto sound = application->shared_assets->new_sound_from_file("assets/sounds/simulant.ogg");
-        auto a = stage_->new_actor();
+        auto sound = application->shared_assets->load_sound("assets/sounds/simulant.ogg");
+        auto a = scene->create_child<smlt::AudioSource>();
         smlt::PlayingSoundPtr s = a->play_sound(sound);
 
         assert_true(s);

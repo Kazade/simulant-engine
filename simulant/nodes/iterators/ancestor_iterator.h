@@ -42,7 +42,7 @@ public:
     template<bool _IsConst=IsConst>
     typename std::enable_if<!_IsConst, reference>::type
     operator*() {
-        return *current_;
+        return const_cast<reference>(*current_);
     }
 
     /* Const versions */
@@ -61,11 +61,11 @@ public:
 private:
     friend class StageNode;
 
-    AncestorIterator(StageNode* start);
-    AncestorIterator(StageNode* start, StageNode* current);
+    AncestorIterator(const StageNode* start);
+    AncestorIterator(const StageNode* start, const StageNode* current);
 
-    StageNode* start_ = nullptr;
-    StageNode* current_ = nullptr;
+    const StageNode* start_ = nullptr;
+    const StageNode* current_ = nullptr;
 };
 
 }

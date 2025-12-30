@@ -1,11 +1,16 @@
 #pragma once
 
 #include <array>
-#include <cstring>
 #include <cstdint>
+#include <cstring>
+#include <vector>
 
 #ifdef __DREAMCAST__
 #include "../utils/sh4_math.h"
+#endif
+
+#if defined(_MSC_VER)
+#include "degrees.h"
 #endif
 
 namespace smlt {
@@ -14,7 +19,9 @@ struct Quaternion;
 struct Vec3;
 struct Vec4;
 struct Plane;
+#if !defined(_MSC_VER)
 struct Degrees;
+#endif
 
 enum FrustumPlane {
     FRUSTUM_PLANE_LEFT = 0,
@@ -25,6 +32,8 @@ enum FrustumPlane {
     FRUSTUM_PLANE_FAR,
     FRUSTUM_PLANE_MAX
 };
+
+typedef std::vector<float> FloatArray;
 
 struct Mat4 {
 private:
@@ -37,8 +46,9 @@ public:
         m[0] = m[5] = m[10] = m[15] = 1.0f;
     }
 
-    Mat4(const Quaternion& rhs);
-    Mat4(const Quaternion& rot, const Vec3& trans, const Vec3& scale);
+    Mat4(const FloatArray& arr) {
+        std::copy(arr.begin(), arr.end(), m);
+    }
 
     Mat4 operator*(const Mat4& rhs) const {
 
@@ -92,6 +102,10 @@ public:
     Vec4 operator*(const Vec4& rhs) const;
     Vec3 operator*(const Vec3& rhs) const;
 
+    bool operator==(const Mat4& rhs) const {
+        return std::memcmp(m, rhs.m, sizeof(m)) == 0;
+    }
+
     void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
 
     static Mat4 as_rotation_x(const Degrees& angle);
@@ -99,8 +113,6 @@ public:
     static Mat4 as_rotation_z(const Degrees& angle);
     static Mat4 as_rotation_xyz(const Degrees& angle_x, const Degrees& angle_y, const Degrees& angle_z);
     static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
-    static Mat4 as_scaling(float s);
-    static Mat4 from_pos_rot_scale(const Vec3& pos, const Quaternion& rot, const Vec3& scale);
 
     inline const float& operator[](const uint32_t index) const {
         return m[index];
@@ -119,6 +131,10 @@ public:
     }
 
     static Mat4 as_translation(const Vec3& v);
+    static Mat4 as_rotation(const Quaternion& r);
+    static Mat4 as_scale(const Vec3& v);
+    static Mat4 as_transform(const Vec3& pos, const Quaternion& rot,
+                             const Vec3& scale);
 
     static Mat4 as_projection(const Degrees& fov, float aspect, float near, float far);
 
@@ -138,6 +154,19 @@ public:
         return &m[0];
     }
 
+    void transpose() {
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                (*this)[j * 4 + i] = (*this)[i * 4 + j];
+            }
+        }
+    }
+
+    Mat4 transposed() const {
+        auto cpy = *this;
+        cpy.transpose();
+        return cpy;
+    }
 };
 
 

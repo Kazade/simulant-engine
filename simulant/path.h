@@ -1,5 +1,6 @@
 #pragma once
 
+#include "./generic/optional.h"
 #include <string>
 
 namespace smlt {
@@ -13,6 +14,8 @@ public:
 
     Path(const std::string& path):
         path_(path) {}
+
+    static Path system_temp_dir();
 
     /** Returns the parent path of this one. If this is a path to a
      *  directory, it'll return the parent directory. If it's a path
@@ -58,9 +61,18 @@ public:
      *  normalized path starts with a '/' with the drive letter removed
      */
     bool is_absolute() const;
+
+    bool exists() const;
+
 private:
     std::string path_;
 };
+
+namespace path {
+
+smlt::optional<Path> exe_path();
+
+} // namespace path
 
 std::ostream& operator<<(std::ostream& os, const Path& p);
 

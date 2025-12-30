@@ -25,7 +25,7 @@ struct TriangleData {
 };
 
 struct CullerNodeData {
-    std::unordered_map<MaterialID, TriangleData> triangles;
+    std::unordered_map<AssetID, TriangleData> triangles;
 };
 
 
@@ -58,7 +58,7 @@ void QuadtreeCuller::_compile(const Vec3& pos, const Quaternion& rot, const Vec3
     data->vertices.reset(new VertexData(mesh_->vertex_data->vertex_specification()));
     mesh_->vertex_data->clone_into(*data->vertices);
 
-    Mat4 transform(rot, pos, scale);
+    Mat4 transform = Mat4::as_transform(pos, rot, scale);
     data->vertices->transform_by(transform);
 
     AABB bounds(*data->vertices);

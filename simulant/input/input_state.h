@@ -29,12 +29,11 @@
 #include "../keycodes.h"
 #include "../types.h"
 
-#include "../generic/identifiable.h"
-#include "../generic/managed.h"
-#include "../generic/unique_id.h"
 #include "../signals/signal.h"
-#include "simulant/utils/limited_vector.h"
-
+#include "../generic/managed.h"
+#include "../generic/identifiable.h"
+#include "../core/stage_node_id.h"
+#include "../utils/limited_vector.h"
 namespace smlt {
 
 class InputState;
@@ -56,7 +55,7 @@ class InputState;
                                                                                \
     private:                                                                   \
         type v;                                                                \
-    }(name)
+    } name
 
 STRONG_TYPEDEF(MouseID, int8_t);
 STRONG_TYPEDEF(KeyboardID, int8_t);
@@ -75,6 +74,7 @@ typedef int8_t JoystickHatID;
 static const KeyboardID ALL_KEYBOARDS = KeyboardID(-1);
 static const MouseID ALL_MICE = MouseID(-1);
 static const GameControllerIndex ALL_GAME_CONTROLLERS = GameControllerIndex(-1);
+
 
 struct GameControllerInfo {
     GameControllerID id;

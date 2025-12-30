@@ -21,7 +21,7 @@ static int android_read(void* cookie, char* buf, int size) {
 static int android_write(void* cookie, const char* buf, int size) {
     _S_UNUSED(cookie);
     _S_UNUSED(buf);
-   _S_UNUSED(size);
+    _S_UNUSED(size);
     return EACCES; // read-only
 }
 

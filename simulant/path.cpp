@@ -1,3 +1,8 @@
+#ifdef __WIN32__
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 #include <ostream>
 
 #include "path.h"
@@ -8,6 +13,21 @@ namespace smlt {
 std::ostream& operator<<(std::ostream& os, const Path& p) {
     os << p.str();
     return os;
+}
+
+Path Path::system_temp_dir() {
+#ifdef __WIN32__
+    TCHAR temp_path_buffer[MAX_PATH];
+    GetTempPath(MAX_PATH, temp_path_buffer);
+    return std::string(temp_path_buffer);
+#elif __DREAMCAST__
+    /* KallistiOS mounts a ram disk at /ram. Given that
+     * we have no writeable memory on the DC (aside the VMU)
+     * this is the best we got */
+    return "/ram";
+#else
+    return "/tmp";
+#endif
 }
 
 Path Path::parent() const {
@@ -64,4 +84,10 @@ bool Path::operator<(const Path &p) const {
     return path_ < p.path_;
 }
 
+namespace path {
+smlt::optional<Path> exe_path() {
+    return Path(kfs::exe_path());
 }
+
+} // namespace path
+} // namespace smlt

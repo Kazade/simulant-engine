@@ -24,7 +24,7 @@
 
 namespace smlt {
 
-typedef std::function<smlt::Colour (const smlt::Vec3&, const smlt::Vec3&, const std::vector<Vec3>&)> HeightmapDiffuseGenerator;
+typedef std::function<smlt::Color (const smlt::Vec3&, const smlt::Vec3&, const std::vector<Vec3>&)> HeightmapDiffuseGenerator;
 
 struct TerrainTriangle {
     uint32_t index[3];
@@ -62,7 +62,7 @@ typedef std::function<void (float height, const Vec3&, float& weight1, float& we
 
 void recalculate_terrain_normals(smlt::MeshPtr terrain);
 void smooth_terrain(smlt::MeshPtr terrain, uint32_t iterations=20);
-TextureID generate_alphamap(smlt::MeshPtr terrain, AlphaMapWeightFunc func);
+AssetID generate_alphamap(smlt::MeshPtr terrain, AlphaMapWeightFunc func);
 
 }
 
@@ -88,7 +88,8 @@ public:
         Loader("", std::make_shared<std::istringstream>()),
         texture_(texture) {}
 
-    void into(Loadable& resource, const LoaderOptions& options = LoaderOptions());
+    bool into(Loadable& resource,
+              const LoaderOptions& options = LoaderOptions());
 
 private:
     TexturePtr texture_ = nullptr;

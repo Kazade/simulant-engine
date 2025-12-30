@@ -6,19 +6,11 @@ LINK_LIBRARIES(
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 
 SET(SAMPLES
-    sample
-    viewport_sample
-    selection_sample
-    light_sample
-    rtt_sample
-    fleets_demo
-    terrain_sample
-    physics_demo
-    nehe02
-    nehe03
-    ui_demo
-    particles
-    cave_demo
+    viewports
+    boxes
+    widgets
+    cave
+    anim
 )
 
 SET(EXE_EXTENSION ".elf")

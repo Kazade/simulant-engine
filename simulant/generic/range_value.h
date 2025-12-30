@@ -12,7 +12,7 @@ namespace smlt {
  * allows you to specify a range (and type) for arguments and
  * automatically clamps to the range. e.g.
  *
- * void set_some_value(RangeValue<0, 1> value);
+ * void set_some_value(NormalizedFloat value);
  *
  * or
  *
@@ -20,7 +20,7 @@ namespace smlt {
  *
  * Now it's clear what the value should be.
  */
-template<int min, int max, typename T=float>
+template<typename T, int min, int max>
 class RangeValue {
 public:
     RangeValue() = delete;
@@ -62,7 +62,6 @@ private:
     T value_ = (T) min;
 };
 
-typedef RangeValue<0, 1> NormalizedFloat;
-typedef RangeValue<0, 255, uint8_t> ByteValue;
-
-}
+typedef RangeValue<float, 0, 1> NormalizedFloat;
+typedef RangeValue<uint8_t, 0, 255> ByteValue;
+} // namespace smlt

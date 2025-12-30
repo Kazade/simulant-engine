@@ -3,14 +3,15 @@
 #include "../sound.h"
 #include "../application.h"
 #include "../nodes/stage_node.h"
+#include "../nodes/audio_source.h"
 
 namespace smlt {
 
 const static int BUFFER_COUNT = 4;
 
-PlayingSoundID PlayingSound::counter_ = 0;
+PlayingAssetID PlayingSound::counter_ = 0;
 
-PlayingSound::PlayingSound(AudioSource &parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model):
+PlayingSound::PlayingSound(AudioSource* parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model):
     id_(++PlayingSound::counter_),
     parent_(parent),
     source_(0),
@@ -84,12 +85,12 @@ bool PlayingSound::is_playing() const {
     return driver->source_state(source_) == AUDIO_SOURCE_STATE_PLAYING;
 }
 
-void PlayingSound::set_gain(RangeValue<0, 1> gain) {
+void PlayingSound::set_gain(NormalizedFloat gain) {
     auto driver = get_app()->sound_driver.get();
     driver->set_source_gain(source_, gain);
 }
 
-void PlayingSound::set_pitch(RangeValue<0, 1> pitch) {
+void PlayingSound::set_pitch(NormalizedFloat pitch) {
     auto driver = get_app()->sound_driver.get();
     driver->set_source_pitch(source_, pitch);
 }
@@ -103,8 +104,8 @@ void PlayingSound::update(float dt) {
     SoundDriver* driver = smlt::get_app()->sound_driver.get();
 
     // Update the position of the source if this is attached to a stagenode
-    if(parent_.node_) {
-        auto pos = parent_.node_->absolute_position();
+    if(parent_) {
+        auto pos = parent_->transform->position();
         driver->set_source_properties(
             source_,
             pos,
@@ -148,7 +149,7 @@ void PlayingSound::update(float dt) {
     }
 
     if(finished) {
-        parent_.signal_stream_finished_();
+        parent_->signal_stream_finished_();
 
         /* Make sure we're totally stopped! */
         driver->stop_source(source_);
@@ -177,7 +178,7 @@ void PlayingSound::update(float dt) {
 void PlayingSound::stop() {
     /* We don't call do_stop directly because the source
      * will need to remove the playing sound from its list */
-    parent_.stop_sound(id());
+    parent_->stop_sound(id());
 }
 
 }

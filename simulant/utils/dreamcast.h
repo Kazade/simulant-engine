@@ -13,7 +13,7 @@ namespace utils {
 
 enum VMUImageGenerationMode {
     VMU_IMAGE_GENERATION_MODE_ALPHA,
-    VMU_IMAGE_GENERATION_MODE_COLOUR
+    VMU_IMAGE_GENERATION_MODE_COLOR
 };
 
 /**

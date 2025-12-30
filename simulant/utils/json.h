@@ -1,12 +1,16 @@
 #pragma once
 
 #include <iosfwd>
+#include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "../generic/optional.h"
 #include "../path.h"
+#include "formatter.h"
 
 namespace smlt {
 
@@ -26,22 +30,103 @@ typedef std::shared_ptr<std::istream> IStreamPtr;
 
 class JSONIterator;
 
-class JSONNode {
+template<typename K, typename V>
+class InsertionOrderedDict {
 private:
-    std::string read_value_from_stream() const;
-
 public:
-    JSONNode() = default;
-    JSONNode(_json_impl::IStreamPtr stream, std::streampos start,
-             std::streampos end, std::size_t size = 0) :
-        stream_(stream), start_(start), end_(end), size_(size) {}
+    typedef typename std::pair<K, V> Entry;
 
-    std::streampos start() const {
-        return start_;
+    void insert(const std::pair<K, V>& p) {
+        // FIXME: blow on duplicate?
+        entries_.push_back(p);
     }
 
-    std::streampos end() const {
-        return end_;
+    void clear() {
+        entries_.clear();
+    }
+
+    typename std::vector<Entry>::const_iterator begin() const {
+        return entries_.begin();
+    }
+
+    typename std::vector<Entry>::const_iterator end() const {
+        return entries_.end();
+    }
+
+    typename std::vector<Entry>::iterator begin() {
+        return entries_.begin();
+    }
+
+    typename std::vector<Entry>::iterator end() {
+        return entries_.end();
+    }
+
+    V& operator[](const K& key) {
+        for(auto& e: entries_) {
+            if(e.first == key) {
+                return e.second;
+            }
+        }
+
+        entries_.push_back(std::make_pair(key, V()));
+        return entries_.back().second;
+    }
+
+    std::size_t count(const K& key) const {
+        for(auto& e: entries_) {
+            if(e.first == key) {
+                return 1;
+            }
+        }
+
+        return 0;
+    }
+
+    V& at(const K& key) {
+        for(auto& e: entries_) {
+            if(e.first == key) {
+                return e.second;
+            }
+        }
+
+        throw std::out_of_range("Key not found");
+    }
+
+    bool has_key(const K& key) const {
+        for(auto& e: entries_) {
+            if(e.first == key) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    std::size_t size() const {
+        return entries_.size();
+    }
+
+private:
+    std::vector<Entry> entries_;
+};
+
+class JSONNode {
+public:
+    JSONNode() = default;
+
+    JSONNode(JSONNodeType type, JSONNode* parent) :
+        type_(type), parent_(parent) {
+
+        switch(type) {
+            case JSON_OBJECT:
+                value_ = ObjectType();
+                break;
+            case JSON_ARRAY:
+                value_ = ArrayType();
+                break;
+            default:
+                value_ = ValueType();
+        }
     }
 
     JSONNodeType type() const;
@@ -93,24 +178,31 @@ public:
      *  - NULL - returns "null"
      */
     optional<std::string> to_str() const {
+        if(type_ == JSON_STRING) {
+            return std::get<std::string>(value_);
+        }
+
+        return no_value;
+    }
+
+    std::string repr() const {
         switch(type_) {
             case JSON_OBJECT:
-                return optional<std::string>();
+                return _F("{{0}...}").format(this->size());
             case JSON_ARRAY:
-                return optional<std::string>();
+                return _F("[{0}...]").format(this->size());
             case JSON_STRING:
-                return optional<std::string>(read_value_from_stream());
             case JSON_NUMBER:
-                return optional<std::string>(read_value_from_stream());
+                return std::get<std::string>(value_);
             case JSON_TRUE:
-                return optional<std::string>("true");
+                return "true";
             case JSON_FALSE:
-                return optional<std::string>("false");
+                return "false";
             case JSON_NULL:
-                return optional<std::string>("null");
-            default:
-                return optional<std::string>();
+                return "null";
         }
+
+        return "unknown";
     }
 
     /* Returns the value as an integer if the type is NUMBER */
@@ -126,19 +218,26 @@ public:
     /* Returns an iterator pointing to this node */
     JSONIterator to_iterator() const;
 
+    bool is_float() const;
+
+    typedef InsertionOrderedDict<std::string, std::shared_ptr<JSONNode>>
+        ObjectType;
+    typedef std::vector<std::shared_ptr<JSONNode>> ArrayType;
+    typedef std::string ValueType;
+
 private:
     friend class JSONIterator;
-    mutable _json_impl::IStreamPtr stream_;
-    std::streampos start_ = 0;
-    std::streampos end_ = 0;
-    std::size_t size_ = 0;
     JSONNodeType type_ = JSON_NULL;
+    JSONNode* parent_ = nullptr;
 
-    /* Internal function. If this is an object type,
-     * will read from start to end and call cb() with
-     * each key found */
-    template<typename Func>
-    void read_keys(Func&& cb) const;
+    friend std::shared_ptr<JSONNode> parse_array(_json_impl::IStreamPtr stream,
+                                                 JSONNode* parent);
+    friend std::shared_ptr<JSONNode> parse_object(_json_impl::IStreamPtr stream,
+                                                  JSONNode* parent);
+    friend std::shared_ptr<JSONNode> parse_node(_json_impl::IStreamPtr stream,
+                                                JSONNode* parent);
+
+    std::variant<ObjectType, ArrayType, ValueType> value_ = ValueType();
 };
 
 class JSONIterator {
@@ -157,28 +256,22 @@ private:
         current_node_ = invalid_node;
     }
 
-    JSONIterator(_json_impl::IStreamPtr stream, std::streampos pos,
-                 bool is_array_item = false) :
-        stream_(stream), is_array_iterator_(is_array_item) {
+    JSONIterator(std::shared_ptr<JSONNode> node) :
+        is_array_iterator_(node->parent_ &&
+                           node->parent_->type_ == JSON_ARRAY) {
 
-        current_node_ = std::make_shared<JSONNode>();
-        current_node_->type_ = JSON_OBJECT;
-        parse_node(*current_node_, stream, pos);
+        current_node_ = node;
     }
 
-    /* mutable as we need to manipulate inside const contexts */
-    mutable _json_impl::IStreamPtr stream_;
     bool is_array_iterator_ = false;
 
     std::shared_ptr<JSONNode> current_node_;
 
-    void parse_node(JSONNode& node, _json_impl::IStreamPtr stream,
-                    std::streampos pos);
     void set_invalid(const std::string& message);
 
+public:
     static std::shared_ptr<JSONNode> invalid_node;
 
-public:
     typedef JSONNode value_type;
     typedef JSONNode* pointer;
     typedef JSONNode reference;
@@ -216,8 +309,7 @@ public:
             return true;
         }
 
-        return ((stream_.get() == rhs.stream_.get()) &&
-                (current_node_->start() == rhs.current_node_->start()));
+        return current_node_.get() == rhs.current_node_.get();
     }
 
     bool operator!=(const JSONIterator& rhs) const {

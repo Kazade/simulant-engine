@@ -43,14 +43,14 @@ void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) 
     std::vector<SubMesh*> submeshes;
     submeshes.resize(6);
 
-    auto mat = mesh->asset_manager().new_material();
+    auto mat = mesh->asset_manager().create_material();
 
     if(style == MESH_STYLE_SUBMESH_PER_FACE) {
         for(uint8_t i = 0; i < 6; ++i) {
-            submeshes[i] = mesh->new_submesh(SUBMESH_NAMES.at(i), mat, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+            submeshes[i] = mesh->create_submesh(SUBMESH_NAMES.at(i), mat, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
         }
     } else {
-        SubMesh* sm = mesh->new_submesh("box", mat, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+        SubMesh* sm = mesh->create_submesh("box", mat, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
         for(uint8_t i = 0; i < 6; ++i) {
             submeshes[i] = sm;
@@ -63,25 +63,25 @@ void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) 
 
         mesh->vertex_data->position(-1 * rx, -1 * ry, z * rz);
         mesh->vertex_data->tex_coord0((z > 0) ? 0 : 1, 0);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(0, 0, z);
         mesh->vertex_data->move_next();
 
         mesh->vertex_data->position( 1 * rx, -1 * ry, z * rz);
         mesh->vertex_data->tex_coord0((z > 0) ? 1 : 0, 0);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(0, 0, z);
         mesh->vertex_data->move_next();
 
         mesh->vertex_data->position( 1 * rx,  1 * ry, z * rz);
         mesh->vertex_data->tex_coord0((z > 0) ? 1 : 0, 1);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(0, 0, z);
         mesh->vertex_data->move_next();
 
         mesh->vertex_data->position(-1 * rx,  1 * ry, z * rz);
         mesh->vertex_data->tex_coord0((z > 0) ? 0 : 1, 1);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(0, 0, z);
         mesh->vertex_data->move_next();
 
@@ -113,25 +113,25 @@ void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) 
 
         mesh->vertex_data->position( x * rx, -1 * ry, -1 * rz);
         mesh->vertex_data->tex_coord0((x < 0) ? 0 : 1, 0);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(x, 0, 0);
         mesh->vertex_data->move_next();
 
         mesh->vertex_data->position( x * rx,  1 * ry, -1 * rz);
         mesh->vertex_data->tex_coord0((x < 0) ? 0 : 1, 1);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(x, 0, 0);
         mesh->vertex_data->move_next();
 
         mesh->vertex_data->position( x * rx,  1 * ry, 1 * rz);
         mesh->vertex_data->tex_coord0((x < 0) ? 1 : 0, 1);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(x, 0, 0);
         mesh->vertex_data->move_next();
 
         mesh->vertex_data->position(x * rx, -1 * ry, 1 * rz);
         mesh->vertex_data->tex_coord0((x < 0) ? 1 : 0, 0);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(x, 0, 0);
         mesh->vertex_data->move_next();
 
@@ -163,25 +163,25 @@ void box(MeshPtr mesh, float width, float height, float depth, MeshStyle style) 
 
         mesh->vertex_data->position( 1 * rx, y * ry, -1 * rz);
         mesh->vertex_data->tex_coord0((y > 0) ? 1 : 0, 1);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(0, y, 0);
         mesh->vertex_data->move_next();
 
         mesh->vertex_data->position( -1 * rx,  y * ry, -1 * rz);
         mesh->vertex_data->tex_coord0((y > 0) ? 0 : 1, 1);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(0, y, 0);
         mesh->vertex_data->move_next();
 
         mesh->vertex_data->position( -1 * rx,  y * ry, 1 * rz);
         mesh->vertex_data->tex_coord0((y > 0) ? 0 : 1, 0);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(0, y, 0);
         mesh->vertex_data->move_next();
 
         mesh->vertex_data->position( 1 * rx, y * ry, 1 * rz);
         mesh->vertex_data->tex_coord0((y > 0) ? 1 : 0, 0);
-        mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+        mesh->vertex_data->color(smlt::Color::white());
         mesh->vertex_data->normal(0, y, 0);
         mesh->vertex_data->move_next();
 

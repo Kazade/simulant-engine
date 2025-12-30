@@ -37,7 +37,8 @@ public:
     OPTLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {}
 
-    void into(Loadable& resource, const LoaderOptions& options=LoaderOptions());
+    bool into(Loadable& resource,
+              const LoaderOptions& options = LoaderOptions());
 
 private:
     void read_block(std::istream& file, Offset offset);
@@ -67,7 +68,7 @@ private:
     std::string current_texture;
 
     std::map<std::string, SubMesh*> texture_submesh;
-    std::map<std::string, TextureID> texture_name_to_id;
+    std::map<std::string, TexturePtr> texture_name_to_id;
 
     struct Triangle {
         Vec3 positions[3];

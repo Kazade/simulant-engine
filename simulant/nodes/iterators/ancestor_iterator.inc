@@ -18,14 +18,14 @@ AncestorIterator<IsConst>& AncestorIterator<IsConst>::operator++() {
 }
 
 template<bool IsConst>
-AncestorIterator<IsConst>::AncestorIterator(StageNode *start):
+AncestorIterator<IsConst>::AncestorIterator(const StageNode *start):
     start_(start),
     current_((StageNode*) start_->parent()) {
 
 }
 
 template<bool IsConst>
-AncestorIterator<IsConst>::AncestorIterator(StageNode *start, StageNode* current):
+AncestorIterator<IsConst>::AncestorIterator(const StageNode *start, const StageNode* current):
     start_(start),
     current_(current) {
 

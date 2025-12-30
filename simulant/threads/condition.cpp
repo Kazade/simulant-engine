@@ -19,6 +19,8 @@ Condition::Condition() {
     );
 #elif defined(__DREAMCAST__)
     cond_init(&cond_);
+#elif defined(_MSC_VER)
+    InitializeConditionVariable(&cond_);
 #else
     int err = pthread_cond_init(&cond_, NULL);
     _S_UNUSED(err);
@@ -32,7 +34,7 @@ Condition::~Condition() {
     sceKernelDeleteSema(wait_done_);
 #elif defined(__DREAMCAST__)
     cond_destroy(&cond_);
-#else
+#elif !defined(_MSC_VER)
     pthread_cond_destroy(&cond_);
 #endif
 }
@@ -63,6 +65,11 @@ void Condition::wait(Mutex& mutex) {
     int err = cond_wait(&cond_, &mutex.mutex_);
     _S_UNUSED(err);
     assert(!err);
+#elif defined(_MSC_VER)
+    // FIXME: This sometimes ends up in a deadlock
+    int err = SleepConditionVariableCS(&cond_, &mutex.mutex_, 0);
+    mutex.unlock();
+    _S_UNUSED(err);
 #else
     assert(!mutex.try_lock());  /* Mutex should've been locked by this thread */
     int err = pthread_cond_wait(&cond_, &mutex.mutex_); /* FIXME: I've heard that this can wake early? */
@@ -86,6 +93,8 @@ void Condition::notify_one() {
     int err = cond_signal(&cond_);
     _S_UNUSED(err);
     assert(!err);
+#elif defined(_MSC_VER)
+    WakeConditionVariable(&cond_);
 #else
     int err = pthread_cond_signal(&cond_);
     _S_UNUSED(err);
@@ -114,6 +123,8 @@ void Condition::notify_all() {
     int err = cond_broadcast(&cond_);
     _S_UNUSED(err);
     assert(!err);
+#elif defined(_MSC_VER)
+    WakeAllConditionVariable(&cond_);
 #else
     pthread_cond_broadcast(&cond_);
 #endif

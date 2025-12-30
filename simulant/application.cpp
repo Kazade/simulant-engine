@@ -18,26 +18,15 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "simulant/nodes/actor.h"
-#include "simulant/nodes/camera.h"
-#include "simulant/nodes/geom.h"
-#include "simulant/nodes/light.h"
-#include "simulant/nodes/mesh_instancer.h"
-#include "simulant/nodes/particle_system.h"
-#include "simulant/nodes/skies/skybox.h"
-#include "simulant/nodes/sprite.h"
-#include "simulant/nodes/ui/button.h"
-#include "simulant/nodes/ui/frame.h"
-#include "simulant/nodes/ui/image.h"
-#include "simulant/nodes/ui/label.h"
-#include "simulant/nodes/ui/text_entry.h"
-#include "simulant/tools/profiler.h"
 #include <chrono>
-#include <cstdlib>
 #include <future>
+#include <cstdlib>
 
 #define DEFINE_STAGENODEPOOL
+#include "nodes/stage_node.h"
 #include "nodes/stage_node_pool.h"
+
+#ifndef SIMULANT_CUSTOM_WINDOW
 
 #ifdef __DREAMCAST__
 #include "platforms/dreamcast/profiler.h"
@@ -56,6 +45,8 @@ namespace smlt { typedef AndroidWindow SysWindow; }
 namespace smlt { typedef SDL2Window SysWindow; }
 #endif
 
+#endif
+
 #ifdef __linux__
 #include <sys/types.h>
 #include <unistd.h>
@@ -63,36 +54,43 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include <processthreadsapi.h>
 #endif
 
-#include "asset_manager.h"
 #include "application.h"
-#include "scenes/loading.h"
-#include "input/input_state.h"
-#include "platform.h"
-#include "time_keeper.h"
-#include "vfs.h"
+#include "asset_manager.h"
+#include "assets/materials/core/material_value_pool.h"
+#include "assets/sweet16.h"
 #include "compositor.h"
-#include "utils/gl_error.h"
-#include "nodes/ui/ui_manager.h"
-#include "loaders/texture_loader.h"
-#include "loaders/material_script.h"
-#include "loaders/opt_loader.h"
-#include "loaders/ogg_loader.h"
-#include "loaders/obj_loader.h"
-#include "loaders/particle_script.h"
-#include "loaders/heightmap_loader.h"
-#include "loaders/wal_loader.h"
-#include "loaders/md2_loader.h"
-#include "loaders/pcx_loader.h"
-#include "loaders/ttf_loader.h"
-#include "loaders/fnt_loader.h"
-#include "loaders/dds_texture_loader.h"
-#include "loaders/wav_loader.h"
-#include "loaders/ms3d_loader.h"
-#include "loaders/dtex_loader.h"
+#include "input/input_manager.h"
+#include "input/input_state.h"
 #include "loaders/dcm_loader.h"
+#include "loaders/dds_texture_loader.h"
+#include "loaders/dtex_loader.h"
+#include "loaders/fnt_loader.h"
+#include "loaders/gltf_loader.h"
+#include "loaders/heightmap_loader.h"
+#include "loaders/material_script.h"
+#include "loaders/md2_loader.h"
+#include "loaders/ms3d_loader.h"
+#include "loaders/obj_loader.h"
+#include "loaders/ogg_loader.h"
+#include "loaders/opt_loader.h"
+#include "loaders/particle_script.h"
+#include "loaders/pcx_loader.h"
+#include "loaders/png_loader.h"
+#include "loaders/texture_loader.h"
+#include "loaders/ttf_loader.h"
+#include "loaders/wal_loader.h"
+#include "loaders/wav_loader.h"
+#include "nodes/ui/ui_manager.h"
+#include "platform.h"
+#include "scenes/scene.h"
+#include "scenes/scene_manager.h"
+#include "time_keeper.h"
+#include "tools/profiler.h"
+#include "utils/gl_error.h"
 #include "utils/json.h"
 #include "utils/string.h"
-#include "scenes/scene_manager.h"
+#include "vfs.h"
+#include "window.h"
 
 #define SIMULANT_PROFILE_KEY "SIMULANT_PROFILE"
 #define SIMULANT_SHOW_CURSOR_KEY "SIMULANT_SHOW_CURSOR"
@@ -101,7 +99,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 extern "C" {
 
 void *__stack_chk_guard = (void *)0x69420A55;
-
+#if !defined(__WIN32__) && !defined(_MSC_VER)
 __attribute__((weak,noreturn)) void __stack_chk_fail(void) {
 
 #ifdef __DREAMCAST__
@@ -116,6 +114,9 @@ __attribute__((weak,noreturn)) void __stack_chk_fail(void) {
 #endif
     abort();
 }
+#else
+void __stack_chk_fail(void) {}
+#endif
 
 }
 
@@ -128,13 +129,14 @@ bool Application::profiling_enabled() const {
     return PROFILING;
 }
 
-Application::Application(const AppConfig &config, void* platform_state):
+Application::Application(const AppConfig& config, void* platform_state) :
     platform_state_(platform_state),
     main_thread_id_(thread::this_thread_id()),
-    time_keeper_(TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
+    time_keeper_(
+        TimeKeeper::create(1.0f / float(config.target_fixed_step_rate))),
     stats_(StatsRecorder::create()),
-    config_(config),
-    node_pool_(new StageNodePool(config_.general.stage_node_pool_size)) {
+    pool_(std::make_shared<MaterialValuePool>()),
+    config_(config) {
 
     /* Start off with debug logging, this might change when the window is constructed */
     smlt::get_logger("/")->add_handler(smlt::Handler::ptr(new smlt::StdIOHandler));
@@ -144,7 +146,7 @@ Application::Application(const AppConfig &config, void* platform_state):
     vfs_ = VirtualFileSystem::create();
 
 #ifdef __ANDROID__
-        /* Android is horrible, this is so we can actually read paths */
+    /* Android is horrible, this is so we can actually read paths */
     android_app* app = (android_app*) platform_state;
     if(app) {
         kfs::set_platform_data(app->activity->assetManager);
@@ -177,6 +179,7 @@ Application::Application(const AppConfig &config, void* platform_state):
 
     //Register the default resource loaders
     register_loader(std::make_shared<smlt::loaders::TextureLoaderType>());
+    register_loader(std::make_shared<smlt::loaders::PNGLoaderType>());
     register_loader(std::make_shared<smlt::loaders::MaterialScriptLoaderType>());
     register_loader(std::make_shared<smlt::loaders::ParticleScriptLoaderType>());
     register_loader(std::make_shared<smlt::loaders::OPTLoaderType>());
@@ -193,13 +196,13 @@ Application::Application(const AppConfig &config, void* platform_state):
     register_loader(std::make_shared<smlt::loaders::MS3DLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DTEXLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DCMLoaderType>());
+    register_loader(std::make_shared<smlt::loaders::GLTFLoaderType>());
 }
 
 Application::~Application() {
     stop_running();
     shutdown();
 
-    window_->destroy_panels();
     scene_manager_->destroy_all();
 
     /* This cleans up the destroyed scenes
@@ -212,7 +215,10 @@ Application::~Application() {
 
     asset_manager_.reset();
 
-    delete node_pool_;
+    overlay_scene_->clean_up();
+    overlay_scene_.reset();
+
+    pool_->clear();
 
     if(window_) {
         window_->_clean_up();
@@ -222,7 +228,6 @@ Application::~Application() {
     if(global_app == this) {
         global_app = nullptr;
     }
-
 }
 
 void Application::preload_default_font() {
@@ -230,13 +235,17 @@ void Application::preload_default_font() {
 
     FontFlags flags;
     flags.size = ui.font_size;
-    auto fnt = shared_assets->new_font_from_family(ui.font_family, flags);
 
+    auto fnt = shared_assets->create_font_from_memory(sweet16_ttf,
+                                                      sweet16_ttf_len, flags);
     if(!fnt) {
         FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");
     }
 
-    fnt->set_name(Font::generate_name(ui.font_family, flags.size, flags.weight, flags.style));
+    smlt::LimitedString<64> n;
+    n = Font::generate_name(ui.font_family, flags.size, flags.weight,
+                            flags.style);
+    fnt->set_name(n);
     fnt->set_garbage_collection_method(smlt::GARBAGE_COLLECT_NEVER);
 }
 
@@ -249,6 +258,14 @@ std::vector<std::string> Application::generate_potential_codes(const std::string
     }
 
     return codes;
+}
+
+std::shared_ptr<Window> Application::instantiate_window() {
+#ifdef SIMULANT_CUSTOM_WINDOW
+    return std::shared_ptr<Window>();
+#else
+    return SysWindow::create(this);
+#endif
 }
 
 bool Application::construct_window(const AppConfig& config) {
@@ -280,8 +297,9 @@ bool Application::construct_window(const AppConfig& config) {
     }
 
     S_DEBUG("Constructing the window");
+    S_DEBUG("Platform state: {0}", platform_state_);
 
-    window_ = SysWindow::create(this);
+    window_ = instantiate_window();
 
     /* Fallback. If fullscreen is disabled and there is no width
      * or height, then default to 640x480 */
@@ -341,22 +359,14 @@ bool Application::construct_window(const AppConfig& config) {
 
     window_->set_title(config.title.encode());
 
-    /* Is this a desktop window? */
-
-#if defined(__WIN32__) || defined(__APPLE__) || defined(__LINUX__)
-    SDL2Window* desktop = dynamic_cast<SDL2Window*>(window_.get());
-
-    if(desktop) {
-        if(config.desktop.enable_virtual_screen) {
-            desktop->initialize_virtual_screen(
-                config.desktop.virtual_screen_width,
-                config.desktop.virtual_screen_height,
-                config.desktop.virtual_screen_format,
-                config.desktop.virtual_screen_integer_scale
-            );
-        }
+    if(config.desktop.enable_virtual_screen) {
+        window->initialize_virtual_screen(
+            config.desktop.virtual_screen_width,
+            config.desktop.virtual_screen_height,
+            config.desktop.virtual_screen_format,
+            config.desktop.virtual_screen_integer_scale);
     }
-#endif
+
     return true;
 }
 
@@ -381,11 +391,7 @@ bool Application::_call_init() {
     scene_manager_.reset(new SceneManager(window_.get()));
     scene_manager_->init();
 
-    // Add some useful scenes by default, these can be overridden in init if the
-    // user so wishes
-    scenes->register_scene<scenes::Loading>("_loading");
-
-    S_DEBUG("Loading scene registered");
+    S_DEBUG("Scene manager initialized");
 
     initialized_ = init();
 
@@ -441,6 +447,10 @@ void Application::run_update(float dt) {
     frame_counter_time_ += dt;
     frame_counter_frames_++;
 
+    if(!update_enabled()) {
+        return;
+    }
+
     if(frame_counter_time_ >= 1.0f) {
         stats->set_frames_per_second(frame_counter_frames_);
 
@@ -461,6 +471,10 @@ void Application::run_update(float dt) {
 }
 
 void Application::run_fixed_updates() {
+    if(!fixed_update_enabled()) {
+        return;
+    }
+
     while(time_keeper_->use_fixed_step()) {
         float step = time_keeper_->fixed_step();
 
@@ -516,8 +530,8 @@ bool Application::run_frame() {
     auto listener = window_->audio_listener();
     if(listener) {
         sound_driver_->set_listener_properties(
-            listener->absolute_position(),
-            listener->absolute_rotation(),
+            listener->transform->position(),
+            listener->transform->rotation(),
             smlt::Vec3() // FIXME: Where do we get velocity?
         );
     }
@@ -527,16 +541,22 @@ bool Application::run_frame() {
     window_->input_state->update(dt); // Update input devices
     window_->input->update(dt); // Now update any manager stuff based on the new input state
 
-    run_fixed_updates();
-    run_update(dt);
+    /* Only run scene and asset manager updates if we have a valid context.
+       This is because the asset manager is only created when we get a context and
+       if we don't have an asset manager, we can't run any scene code */
+    {
+        thread::Lock<thread::Mutex> rendering_lock(window_->context_lock());
+        if(window_->has_context()) {
+            run_fixed_updates();
+            run_update(dt);
+            if(asset_manager_) {
+                asset_manager_->update(time_keeper->delta_time());
+            }
 
-    if(asset_manager_) {
-        S_VERBOSE("Updating assets");
-        asset_manager_->update(time_keeper->delta_time());
+            S_PROFILE_SECTION("coroutines");
+            run_coroutines_and_late_update();
+        }
     }
-
-    S_PROFILE_SECTION("coroutines");
-    run_coroutines_and_late_update();
 
     S_PROFILE_SECTION("garbage-collection");
     if(asset_manager_) {
@@ -560,7 +580,9 @@ bool Application::run_frame() {
 
             S_PROFILE_SECTION("swap");
             window_->swap_buffers();
-        }
+
+            S_VERBOSE("Buffers swapped");
+        }                
     }
 
     /* We totally ignore the first frame as it can take a while and messes up
@@ -579,6 +601,7 @@ bool Application::run_frame() {
         shutdown();
     }
 
+    S_VERBOSE("Frame finished");
     signal_frame_finished_();
 
     return is_running;
@@ -592,16 +615,18 @@ int32_t Application::run() {
     }
 #endif
 
+
     /* Try to write samples even if bad things happen */
     std::set_terminate(on_terminate);
 
     while(run_frame()) {}
 
-    /* Make sure we unload and destroy all scenes */
-    scene_manager_->destroy_all();
-
     /* Run any coroutines before we shut down */
     update_coroutines();
+
+    /* Make sure we unload and destroy all scenes */
+    scene_manager_->destroy_all();
+    scene_manager_->clean_destroyed_scenes();
 
     // Shutdown and clean up the window
     window_->_clean_up();
@@ -675,20 +700,16 @@ Application* get_app() {
     return Application::global_app;
 }
 
-uint32_t Application::stage_node_pool_capacity() const {
-    return node_pool_->capacity();
-}
-
-uint32_t Application::stage_node_pool_capacity_in_bytes() const {
-    return stage_node_pool_capacity() * node_pool_->entry_size;
-}
-
 void Application::start_coroutine(std::function<void ()> func) {
     coroutines_.push_back(cort::start_coroutine(func));
 }
 
 void Application::run_coroutines_and_late_update() {
     update_coroutines();
+
+    if(!late_update_enabled()) {
+        return;
+    }
 
     float dt = time_keeper_->delta_time();
 
@@ -700,29 +721,12 @@ void Application::run_coroutines_and_late_update() {
     _call_late_update(dt);
 
     signal_post_late_update();
-
-    // House keeping
-    auto s = scenes->active_scene();
-    if(s) {
-        s->clean_destroyed_stages();
-    }
 }
 
 void Application::_call_clean_up() {
     clean_up();
 
     scene_manager_->reset();
-}
-
-void Application::on_render_context_created() {
-    /* We can't do this in the initialiser as we need a valid
-     * window before doing things like creating textures */
-    asset_manager_ = SharedAssetManager::create();
-    preload_default_font();
-}
-
-void Application::on_render_context_destroyed() {
-    asset_manager_.reset();
 }
 
 void Application::stop_running() {
@@ -822,6 +826,32 @@ std::string normalize_language_code(const std::string& language_code) {
 bool Application::load_arb_from_file(const smlt::Path& filename) {
     auto stream = vfs->open_file(filename);
     return load_arb(stream);
+}
+
+void Application::on_render_context_created() {
+    /* We can't do this in the initialiser as we need a valid
+     * window before doing things like creating textures */
+    asset_manager_ = SharedAssetManager::create();
+    preload_default_font();
+
+    class OverlayScene : public Scene {
+    public:
+        OverlayScene(Window* window):
+            Scene(window) {}
+
+        void on_load() override {}
+
+        std::set<NodeParam> node_params() const override {
+            return std::set<NodeParam>();
+        }
+    };
+
+    overlay_scene_.reset(new OverlayScene(window_.get()));
+    overlay_scene_->init();
+}
+
+void Application::on_render_context_destroyed() {
+    asset_manager_.reset();
 }
 
 bool Application::load_arb(std::shared_ptr<std::istream> stream, std::string* language_code) {

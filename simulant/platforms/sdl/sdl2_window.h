@@ -25,7 +25,7 @@
 #if defined(__WIN32__)
     #undef main
 #endif
-#include "sdl2_keycodes.h"
+
 #include "../../generic/managed.h"
 #include "../../window.h"
 
@@ -49,6 +49,8 @@ public:
     void cursor_position(int32_t& mouse_x, int32_t& mouse_y) override;
 
 private:
+    virtual int32_t default_window_flags() const;
+
     bool _init_window() override;
     bool _init_renderer(Renderer* renderer) override;
 
@@ -70,7 +72,8 @@ private:
     std::vector<GameControllerInfo> detect_game_controllers();
 
     /* This is for testing mainly. If you set config.desktop.enable_virtual_screen = true */
-    void initialize_virtual_screen(uint16_t width, uint16_t height, ScreenFormat format, uint16_t integer_scale);
+    bool initialize_virtual_screen(uint16_t width, uint16_t height,
+                                   ScreenFormat format, uint16_t integer_scale);
 
     std::vector<SDL_Joystick*> open_joysticks_;
     std::vector<SDL_GameController*> open_controllers_;
@@ -79,7 +82,7 @@ private:
     void shutdown_screen(Screen* screen) override;
     void render_screen(Screen* screen, const uint8_t* data, int row_stride) override;
 
-    virtual void game_controller_start_rumble(GameController* controller, RangeValue<0, 1> low_rumble, RangeValue<0, 1> high_rumble, const smlt::Seconds& duration) override;
+    virtual void game_controller_start_rumble(GameController* controller, NormalizedFloat low_rumble, NormalizedFloat high_rumble, const smlt::Seconds& duration) override;
     virtual void game_controller_stop_rumble(GameController* controller) override;
 
     friend class Application;

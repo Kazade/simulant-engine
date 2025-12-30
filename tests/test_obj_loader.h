@@ -13,15 +13,14 @@ class OBJLoaderTest : public smlt::test::SimulantTestCase {
 public:
     void test_loading_without_texture_coords() {
         //Shouldn't throw
-        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("assets/samples/cube.obj");
+        application->shared_assets->load_mesh("assets/samples/cube.obj");
     }
 
     void test_culling_method_applied() {
         smlt::MeshLoadOptions opts;
         opts.cull_mode = smlt::CULL_MODE_FRONT_FACE;
 
-        smlt::MeshID mid = application->shared_assets->new_mesh_from_file("assets/samples/cube.obj", VertexSpecification::DEFAULT, opts);
-        smlt::MeshPtr m = mid.fetch();
+        auto m = application->shared_assets->load_mesh("assets/samples/cube.obj", VertexSpecification::DEFAULT, opts);
 
         assert_equal(m->submesh_count(), 1u);
         assert_true(m->first_submesh()->material());
@@ -30,7 +29,7 @@ public:
         assert_equal(mat->pass(0)->cull_mode(), opts.cull_mode);
     }
 
-    void test_vertex_colours() {
+    void test_vertex_colors() {
 
         std::string obj_file(R"(
             v 0.0 0.0 0.0 1.0 0.0 0.0
@@ -40,33 +39,33 @@ public:
         )");
 
         loaders::OBJLoader loader(
-            "assets/samples/test.obj",
+            "test.obj",
             std::make_shared<std::istringstream>(obj_file)
         );
 
         auto spec = smlt::VertexSpecification::DEFAULT;
-        spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
+        spec.color_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
 
-        auto mesh = application->shared_assets->new_mesh(spec);
+        auto mesh = application->shared_assets->create_mesh(spec);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
-        const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
+        const uint8_t* bytes = mesh->vertex_data->color_at<uint8_t>(0);
 
         assert_equal(bytes[0], 0);   // B
         assert_equal(bytes[1], 0);   // G
         assert_equal(bytes[2], 255); // R
         assert_equal(bytes[3], 255); // A
 
-        bytes = mesh->vertex_data->diffuse_at<uint8_t>(1);
+        bytes = mesh->vertex_data->color_at<uint8_t>(1);
         assert_equal(bytes[0], 0);   // B
         assert_equal(bytes[1], 255); // G
         assert_equal(bytes[2], 0);   // R
         assert_equal(bytes[3], 255); // A
     }
 
-    void test_vertex_colours_default_white() {
+    void test_vertex_colors_default_white() {
 
         std::string obj_file(R"(
             v 0.0 0.0 0.0
@@ -76,24 +75,24 @@ public:
         )");
 
         loaders::OBJLoader loader(
-            "assets/samples/test.obj",
+            "test.obj",
             std::make_shared<std::istringstream>(obj_file)
         );
 
         auto spec = smlt::VertexSpecification::DEFAULT;
-        spec.diffuse_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
-        auto mesh = application->shared_assets->new_mesh(spec);
+        spec.color_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
+        auto mesh = application->shared_assets->create_mesh(spec);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
-        const uint8_t* bytes = mesh->vertex_data->diffuse_at<uint8_t>(0);
+        const uint8_t* bytes = mesh->vertex_data->color_at<uint8_t>(0);
         assert_equal(bytes[0], 255);  // B
         assert_equal(bytes[1], 255);  // G
         assert_equal(bytes[2], 255);  // R
         assert_equal(bytes[3], 255);  // A
 
-        bytes = mesh->vertex_data->diffuse_at<uint8_t>(1);
+        bytes = mesh->vertex_data->color_at<uint8_t>(1);
         assert_equal(bytes[0], 255);  // B
         assert_equal(bytes[1], 255);  // G
         assert_equal(bytes[2], 255);  // R
@@ -108,21 +107,17 @@ public:
             f 1 2 3
         )");
 
-        loaders::OBJLoader loader(
-            "assets/samples/test.obj",
-            std::make_shared<std::istringstream>(obj_file)
-        );
+        loaders::OBJLoader loader("assets/samples/test.obj",
+                                  std::make_shared<std::istringstream>(obj_file));
 
-        auto mesh = application->shared_assets->new_mesh_from_file(
-            "assets/samples/cube.obj",
-            smlt::VertexSpecification::POSITION_ONLY
-        );
+        auto mesh = application->shared_assets->load_mesh("assets/samples/cube.obj",
+                                                          smlt::VertexSpecification::POSITION_ONLY);
         loader.into(*mesh);
 
         assert_equal(mesh->vertex_data->count(), 3u);
 
         auto spec = mesh->vertex_data->vertex_specification();
-        assert_false(spec.has_diffuse());
+        assert_false(spec.has_color());
         assert_false(spec.has_normals());
         assert_false(spec.has_texcoord0());
     }

@@ -1,22 +1,28 @@
 #pragma once
 
-#include <random>
-#include <vector>
 #include "../types.h"
-
 #include <cstdint>
-
-#define RND_U32 uint32_t
-#define RND_U64 uint64_t
-
-#include "_rnd.h"
+#include <memory>
+#include <vector>
 
 namespace smlt {
+
+struct _RandomImpl;
 
 class RandomGenerator {
 public:
     RandomGenerator();
     RandomGenerator(uint32_t seed);
+    ~RandomGenerator();
+
+    RandomGenerator(const RandomGenerator&) = delete;
+    bool operator=(const RandomGenerator&) = delete;
+
+    /* A default instance seeded on first call */
+    static RandomGenerator& instance() {
+        static RandomGenerator i(time(NULL));
+        return i;
+    }
 
     template<typename T>
     T choice(T* array, std::size_t count) {
@@ -29,10 +35,21 @@ public:
     }
 
     template<typename T>
-    void shuffle(T* array, std::size_t count);
+    void shuffle(T* array, std::size_t count) {
+        if(count == 0) {
+            return;
+        }
+
+        for(std::size_t i = count - 1; i > 0; i--) {
+            std::size_t j = int_in_range(0, i);
+            std::swap(array[i], array[j]);
+        }
+    }
 
     template<typename T>
-    void shuffle(std::vector<T>& choices);
+    void shuffle(std::vector<T>& choices) {
+        shuffle(choices.data(), choices.size());
+    }
 
     template<typename T>
     std::vector<T> shuffled(const std::vector<T>& choices);
@@ -46,8 +63,10 @@ public:
     smlt::Vec2 direction_2d();
     smlt::Vec3 direction_3d();
 
+    int32_t any_int();
+
 private:
-    rnd_pcg_t rand_;
+    std::unique_ptr<_RandomImpl> impl_;
 };
 
 

@@ -22,7 +22,11 @@ ADD_CUSTOM_COMMAND(
     DEPENDS ${TEST_FILES} ${GL_TESTS} ${TEST_GENERATOR_BIN}
 )
 
+EXECUTE_PROCESS(COMMAND ${TEST_GENERATOR_BIN} --list-tests ${TEST_FILES} ${GL_TESTS} OUTPUT_VARIABLE TEST_LIST RESULT_VARIABLE TEST_DISCOVERY_RESULT)
+
+IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-access-control")
+ENDIF()
 
 IF(PLATFORM_PSP)
     SET(PSP_TITLE "Simulant Tests")
@@ -36,8 +40,16 @@ IF(ANDROID_API)
     set(TEST_SOURCES ${TEST_SOURCES} ${CMAKE_SOURCE_DIR}/platforms/android/SDL_android_main.c)
 ENDIF()
 
-ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} ${CMAKE_CURRENT_BINARY_DIR}/${TEST_MAIN_FILENAME})
-ADD_TEST(simulant_suite simulant_tests)
+ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} ${CMAKE_CURRENT_BINARY_DIR}/${TEST_MAIN_FILENAME}
+    test_gltf.h)
+
+IF(${TEST_DISCOVERY_RESULT} EQUAL 0)
+    STRING(REPLACE "\n" ";" TEST_LIST ${TEST_LIST})
+    FOREACH(test_name ${TEST_LIST})
+        STRING(STRIP "${test_name}" test_name)
+        ADD_TEST(NAME "${test_name}" COMMAND simulant_tests ${test_name} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    ENDFOREACH()
+ENDIF()
 
 IF(PLATFORM_PSP)
     create_pbp_file(TARGET simulant_tests TITLE "Simulant Tests")
@@ -57,7 +69,7 @@ IF(PLATFORM_PSP)
     )
 ENDIF()
 
-IF(WIN32)
+IF(WIN32 AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 # Necessary when compiling tests on mingw because the main.cpp file gets too large
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wa,-mbig-obj")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj")

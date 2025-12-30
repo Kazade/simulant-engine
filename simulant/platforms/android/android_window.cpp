@@ -62,7 +62,6 @@ static void android_handle_command(struct android_app* app, int32_t cmd) {
     COMMANDS.push(cmd);
 }
 
-
 static int android_handle_input(struct android_app* app, AInputEvent* evt) {
     AndroidWindow* window = (AndroidWindow*) app->userData;
     assert(window);
@@ -90,7 +89,6 @@ static int android_handle_input(struct android_app* app, AInputEvent* evt) {
 
         return y;
     };
-
 
     AndroidEvent out;
     out.type = AInputEvent_getType(evt);
@@ -212,7 +210,7 @@ void AndroidWindow::create_egl_surface(android_app* aapp) {
 }
 
 bool AndroidWindow::_init_window() {
-    android_app* aapp = (android_app*) application->platform_state();
+    android_app* aapp = (android_app*) app->platform_state();
 
     if(!aapp) {
         S_ERROR("No platform state?");
@@ -302,7 +300,8 @@ bool AndroidWindow::_init_window() {
 
 bool AndroidWindow::_init_renderer(Renderer *renderer) {
     _S_UNUSED(renderer);
-    set_has_context(true);
+
+    set_has_context(true); //Mark that we have a valid GL context
     return true;
 }
 

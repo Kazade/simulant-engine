@@ -11,27 +11,16 @@ class ChildIterator;
 template<bool IsConst>
 ChildIterator<IsConst>& ChildIterator<IsConst>::operator++() {
     if(current_) {
-        current_ = (StageNode*) current_->next_node();
-    }
-
-    if(current_ == parent_->first_child()) {
-        current_ = nullptr;
+        current_ = current_->next_sibling();
     }
 
     return *this;
 }
 
 template<bool IsConst>
-ChildIterator<IsConst>::ChildIterator(StageNode *parent):
+ChildIterator<IsConst>::ChildIterator(const StageNode *parent, const StageNode* start):
     parent_(parent),
-    current_((StageNode*) parent_->first_child()) {
-
-}
-
-template<bool IsConst>
-ChildIterator<IsConst>::ChildIterator(StageNode *parent, StageNode* start):
-    parent_(parent),
-    current_(start) {
+    current_(const_cast<StageNode*>(start)) {
 
     assert(!current_ || current_->parent() == parent);
 }

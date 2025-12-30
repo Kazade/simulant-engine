@@ -1,8 +1,9 @@
 #pragma once
 
-#include <map>
-#include "widget.h"
 #include "../../keycodes.h"
+#include "simulant/nodes/stage_node.h"
+#include "ui_config.h"
+#include "widget.h"
 
 namespace smlt {
 
@@ -27,9 +28,9 @@ struct SoftKeyPressedEvent {
     }
 };
 
-typedef sig::signal<void (SoftKeyPressedEvent&)> KeyboardKeyPressedSignal;
-typedef sig::signal<void (const unicode&)> KeyboardDoneSignal;
-typedef sig::signal<void ()> KeyboardCancelledSignal;
+typedef sig::signal<void(SoftKeyPressedEvent&)> KeyboardKeyPressedSignal;
+typedef sig::signal<void(const unicode&)> KeyboardDoneSignal;
+typedef sig::signal<void()> KeyboardCancelledSignal;
 
 enum KeyboardMode {
     KEYBOARD_MODE_UPPERCASE,
@@ -42,17 +43,24 @@ enum KeyboardMode {
 class KeyboardPanel;
 
 /* A keyboard is combined of a TextInput and a KeyboardPanel */
-class Keyboard:
-    public Widget {
+class Keyboard: public Widget {
 
     DEFINE_SIGNAL(KeyboardKeyPressedSignal, signal_key_pressed);
     DEFINE_SIGNAL(KeyboardDoneSignal, signal_done);
     DEFINE_SIGNAL(KeyboardCancelledSignal, signal_cancelled);
-public:
-    using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
-    using Widget::clean_up;
 
-    Keyboard(UIManager* owner, UIConfig* config, Stage *stage, KeyboardMode mode, const unicode& initial_text="");
+public:
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_KEYBOARD, "keyboard");
+
+    S_DEFINE_STAGE_NODE_PARAM(Keyboard, "mode", int,
+                              int(KEYBOARD_MODE_UPPERCASE),
+                              "The mode of the keyboard");
+    S_DEFINE_CORE_WIDGET_PROPERTIES(Keyboard);
+
+    using Widget::clean_up;
+    using Widget::init; // Pull in init to satisfy TwoPhaseConstructed<Keyboard>
+
+    Keyboard(Scene* owner);
     ~Keyboard();
 
     void cursor_up();
@@ -84,16 +92,18 @@ public:
     void set_font(FontPtr font) override;
 
     TextEntry* entry() {
-        return entry_.get();
+        return entry_;
     }
+
 private:
+    bool on_create(Params params) override;
     void on_transformation_change_attempted() override;
 
     UIDim calculate_content_dimensions(Px text_width, Px text_height) override;
 
-    std::shared_ptr<KeyboardPanel> panel_;
-    std::shared_ptr<TextEntry> entry_;
-    std::shared_ptr<Frame> info_row_;
+    KeyboardPanel* panel_ = nullptr;
+    TextEntry* entry_ = nullptr;
+    Frame* info_row_ = nullptr;
 
     Frame* main_frame_ = nullptr;
 
@@ -104,5 +114,6 @@ private:
     const unicode& calc_text() const override;
 };
 
-}
-}
+} // namespace ui
+
+} // namespace smlt

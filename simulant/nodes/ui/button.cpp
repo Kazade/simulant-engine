@@ -1,31 +1,48 @@
-#include "ui_manager.h"
 #include "button.h"
+#include "simulant/nodes/ui/widget.h"
+#include "simulant/utils/params.h"
+#include "ui_manager.h"
 
 namespace smlt {
 namespace ui {
 
-Button::Button(UIManager *owner, UIConfig *config, Stage* stage, std::shared_ptr<WidgetStyle> shared_style):
-    Widget(owner, config, stage, shared_style) {
+Button::Button(Scene* owner) :
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_BUTTON) {}
 
-    set_resize_mode(config->button_resize_mode_);
-
-    if(!shared_style) {
-        set_padding(
-            config->button_padding_.left,
-            config->button_padding_.right,
-            config->button_padding_.bottom,
-            config->button_padding_.top
-        );
-
-        set_text_colour(config->button_text_colour_);
-        set_background_colour(config->button_background_colour_);
-        set_foreground_colour(config->button_foreground_colour_);
-        set_border_colour(config->button_border_colour_);
-        set_border_width(config->button_border_width_);
+bool Button::on_create(Params params) {
+    if(!clean_params<Button>(params)) {
+        return false;
     }
-}
 
+    if(!Widget::on_create(params)) {
+        return false;
+    }
 
+    auto sstyle = params.get<WidgetStyleRef>("shared_style")
+                      .value_or(WidgetStyleRef())
+                      .lock();
+    auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
+    if(!sstyle) {
+        set_padding(theme.button_padding_.left, theme.button_padding_.right,
+                    theme.button_padding_.bottom, theme.button_padding_.top);
 
+        set_text_color(theme.button_text_color_);
+        set_background_color(theme.button_background_color_);
+        set_foreground_color(theme.button_foreground_color_);
+        set_border_color(theme.button_border_color_);
+        set_border_width(theme.button_border_width_);
+    }
+
+    auto text = params.get<std::string>("text").value_or("");
+    auto w = params.get<int>("width").value_or(-1);
+    auto h = params.get<int>("height").value_or(-1);
+
+    set_text(text);
+    set_resize_mode(RESIZE_MODE_FIXED_HEIGHT);
+
+    resize(w, h);
+
+    return true;
 }
-}
+} // namespace ui
+} // namespace smlt

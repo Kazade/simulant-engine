@@ -53,7 +53,7 @@ public:
 
     bool intersects_sphere(const Vec3& pos, const float diameter);
     bool intersects_aabb(const AABB &box) const;
-    bool intersects_cube(const Vec3& centre, float size) const;
+    bool intersects_cube(const Vec3& center, float size) const;
 
     bool initialized() const { return initialized_; }
 

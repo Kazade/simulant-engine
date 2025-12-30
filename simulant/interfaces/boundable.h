@@ -50,9 +50,9 @@ class BoundableEntity:
 
 public:
     virtual const AABB transformed_aabb() const = 0;
-    virtual const Vec3 centre() const {
+    virtual const Vec3 center() const {
         AABB box = transformed_aabb();
-        return box.centre();
+        return box.center();
     }
 };
 

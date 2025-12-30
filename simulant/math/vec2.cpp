@@ -7,20 +7,8 @@
 
 namespace smlt {
 
-const Vec2 Vec2::NEGATIVE_X = Vec2(-1, 0);
-const Vec2 Vec2::POSITIVE_X = Vec2(1, 0);
-const Vec2 Vec2::NEGATIVE_Y = Vec2(0, -1);
-const Vec2 Vec2::POSITIVE_Y = Vec2(0, 1);
-
-const Vec2 Vec2::DOWN = Vec2::NEGATIVE_Y;       //Shorthand for writing Vec2(0, -1)
-const Vec2 Vec2::LEFT = Vec2::NEGATIVE_X;       //Shorthand for writing Vec2(-1, 0)
-const Vec2 Vec2::ONE = Vec2(1, 1);              //Shorthand for writing Vec2(1, 1)
-const Vec2 Vec2::RIGHT = Vec2::POSITIVE_X;      //Shorthand for writing Vec2(1, 0)
-const Vec2 Vec2::UP = Vec2::POSITIVE_Y;         //Shorthand for writing Vec2(0, 1)
-const Vec2 Vec2::ZERO = Vec2();                 //Shorthand for writing Vec2(0, 0)
-
 Vec2 Vec2::rotated_by(const Degrees& degrees) const {
-    float r = Radians(degrees).value;
+    float r = Radians(degrees).to_float();
     float cosR = 0.0f;
     float sinR = 0.0f;
     fast_sincos(r, &sinR, &cosR);

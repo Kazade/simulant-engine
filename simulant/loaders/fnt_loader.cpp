@@ -279,11 +279,11 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
 
     FontPage page;
 
-    page.texture = font->asset_manager().new_texture_from_file(texture_path, flags);
+    page.texture = font->asset_manager().load_texture(texture_path, flags);
     assert(page.texture);
 
-    page.material = font->asset_manager().new_material_from_file(Material::BuiltIns::TEXTURE_ONLY);
-    page.material->set_diffuse_map(page.texture);
+    page.material = font->asset_manager().load_material(Material::BuiltIns::TEXTURE_ONLY);
+    page.material->set_base_color_map(page.texture);
     page.material->set_cull_mode(CULL_MODE_NONE);
     page.material->set_depth_test_enabled(false);
     page.material->set_blend_func(BLEND_ALPHA);
@@ -312,7 +312,7 @@ void FNTLoader::prepare_texture(Font* font, const std::string& texture_file) {
     S_DEBUG("Font texture loaded");
 }
 
-void FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
+bool FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
     const char TEXT_MARKER[4] = {'i', 'n', 'f', 'o'};
     const char BINARY_MARKER[4] = {'B', 'M', 'F', '\3'};
 
@@ -330,11 +330,11 @@ void FNTLoader::into(Loadable& resource, const LoaderOptions& options) {
         S_DEBUG("Loading binary FNT");
         read_binary(font, *data_, options);
     } else {
-        throw std::runtime_error("Unsupported .FNT file");
+        S_ERROR("Unsupported .FNT file");
+        return false;
     }
 
-    S_DEBUG("FNT loaded successfully");
+    return true;
 }
-
 }
 }

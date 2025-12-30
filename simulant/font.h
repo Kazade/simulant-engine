@@ -70,7 +70,7 @@ class Font:
     public RefCounted<Font>,
     public Asset,
     public Loadable,
-    public generic::Identifiable<FontID>,
+    public generic::Identifiable<AssetID>,
     public ChainNameable<Font> {
 
 public:
@@ -80,9 +80,9 @@ public:
         return family + "-" + font_weight_name(weight) + "-" + font_style_name(style) + "-" + smlt::to_string(size);
     }
 
-    Font(FontID id, AssetManager* asset_manager);
+    Font(AssetID id, AssetManager* asset_manager);
 
-    bool init() override;
+    bool on_init() override;
 
     std::size_t page_count() const {
         return pages_.size();

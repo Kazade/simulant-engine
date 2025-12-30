@@ -19,11 +19,11 @@ enum ShadeModel : EnumType {
     SHADE_MODEL_FLAT
 };
 
-enum ColourMaterial : EnumType {
-    COLOUR_MATERIAL_NONE,
-    COLOUR_MATERIAL_AMBIENT,
-    COLOUR_MATERIAL_DIFFUSE,
-    COLOUR_MATERIAL_AMBIENT_AND_DIFFUSE
+enum ColorMaterial : EnumType {
+    COLOR_MATERIAL_NONE,
+    COLOR_MATERIAL_AMBIENT,
+    COLOR_MATERIAL_DIFFUSE,
+    COLOR_MATERIAL_AMBIENT_AND_DIFFUSE
 };
 
 enum CullMode : EnumType {
@@ -33,11 +33,20 @@ enum CullMode : EnumType {
     CULL_MODE_FRONT_AND_BACK_FACE
 };
 
+enum AlphaFunc : EnumType {
+    ALPHA_FUNC_NONE,
+    ALPHA_FUNC_LESS,
+    ALPHA_FUNC_LEQUAL,
+    ALPHA_FUNC_EQUAL,
+    ALPHA_FUNC_GEQUAL,
+    ALPHA_FUNC_GREATER
+};
+
 enum BlendType : EnumType {
     BLEND_NONE,
     BLEND_ADD,
     BLEND_MODULATE,
-    BLEND_COLOUR,
+    BLEND_COLOR,
     BLEND_ALPHA,
     BLEND_ONE_ONE_MINUS_ALPHA
 };
@@ -60,50 +69,54 @@ enum FogMode : EnumType {
 };
 
 enum EnabledTexture : EnumType {
-    DIFFUSE_MAP_ENABLED = 1,
+    BASE_COLOR_MAP_ENABLED = 1,
     LIGHT_MAP_ENABLED = 2,
     NORMAL_MAP_ENABLED = 4,
-    SPECULAR_MAP_ENABLED = 8
+    METALLIC_ROUGHNESS_MAP_ENABLED = 8
 };
 
 typedef int32_t EnabledTextureMask;
 
 PolygonMode polygon_mode_from_name(const char* name);
 ShadeModel shade_model_from_name(const char* name);
-ColourMaterial colour_material_from_name(const char* name);
+ColorMaterial color_material_from_name(const char* name);
 CullMode cull_mode_from_name(const char* name);
 BlendType blend_type_from_name(const char* name);
 DepthFunc depth_func_from_name(const char* name);
+AlphaFunc alpha_func_from_name(const char* name);
 
-#define DIFFUSE_PROPERTY_NAME "s_material_diffuse"
-#define AMBIENT_PROPERTY_NAME "s_material_ambient"
-#define EMISSION_PROPERTY_NAME "s_material_emission"
+#define BASE_COLOR_PROPERTY_NAME "s_material_base_color"
+#define SPECULAR_COLOR_PROPERTY_NAME "s_material_specular_color"
 #define SPECULAR_PROPERTY_NAME "s_material_specular"
-#define SHININESS_PROPERTY_NAME "s_material_shininess"
-#define DIFFUSE_MAP_PROPERTY_NAME "s_diffuse_map"
+#define ROUGHNESS_PROPERTY_NAME "s_material_roughness"
+#define METALLIC_PROPERTY_NAME "s_material_metallic"
+#define BASE_COLOR_MAP_PROPERTY_NAME "s_base_color_map"
 #define LIGHT_MAP_PROPERTY_NAME "s_light_map"
 #define NORMAL_MAP_PROPERTY_NAME "s_normal_map"
-#define SPECULAR_MAP_PROPERTY_NAME "s_specular_map"
+#define METALLIC_ROUGHNESS_MAP_PROPERTY_NAME "s_metallic_roughness_map"
 #define DEPTH_WRITE_ENABLED_PROPERTY_NAME "s_depth_write_enabled"
 #define DEPTH_TEST_ENABLED_PROPERTY_NAME "s_depth_test_enabled"
 #define DEPTH_FUNC_PROPERTY_NAME "s_depth_func"
 #define BLEND_FUNC_PROPERTY_NAME "s_blend_func"
+#define ALPHA_FUNC_PROPERTY_NAME "s_alpha_func"
+#define ALPHA_THRESHOLD_PROPERTY_NAME "s_alpha_threshold"
 #define CULL_MODE_PROPERTY_NAME "s_cull_mode"
 #define SHADE_MODEL_PROPERTY_NAME "s_shade_model"
 #define LIGHTING_ENABLED_PROPERTY_NAME "s_lighting_enabled"
 #define TEXTURES_ENABLED_PROPERTY_NAME "s_textures_enabled"
 #define POINT_SIZE_PROPERTY_NAME "s_point_size"
 #define POLYGON_MODE_PROPERTY_NAME "s_polygon_mode"
-#define COLOUR_MATERIAL_PROPERTY_NAME "s_colour_material"
-#define DIFFUSE_MAP_MATRIX_PROPERTY_NAME "s_diffuse_map_matrix"
+#define COLOR_MATERIAL_PROPERTY_NAME "s_color_material"
+#define BASE_COLOR_MAP_MATRIX_PROPERTY_NAME "s_base_color_map_matrix"
 #define LIGHT_MAP_MATRIX_PROPERTY_NAME "s_light_map_matrix"
 #define NORMAL_MAP_MATRIX_PROPERTY_NAME "s_normal_map_matrix"
-#define SPECULAR_MAP_MATRIX_PROPERTY_NAME "s_specular_map_matrix"
+#define METALLIC_ROUGHNESS_MAP_MATRIX_PROPERTY_NAME                            \
+    "s_metallic_roughness_map_matrix"
 
 #define FOG_MODE_PROPERTY_NAME "s_fog_mode"
 #define FOG_DENSITY_PROPERTY_NAME "s_fog_density"
 #define FOG_START_PROPERTY_NAME "s_fog_start"
 #define FOG_END_PROPERTY_NAME "s_fog_end"
-#define FOG_COLOUR_PROPERTY_NAME "s_fog_colour"
+#define FOG_COLOR_PROPERTY_NAME "s_fog_color"
 
 }

@@ -13,8 +13,6 @@ template<typename T, std::size_t N>
 class LimitedVector {
 public:
     LimitedVector() = default;
-    LimitedVector(const LimitedVector&) = default;
-    LimitedVector& operator=(const LimitedVector&) = default;
 
     bool operator==(const LimitedVector& rhs) const {
         return std::memcmp(&data_[0], &rhs.data_[0], sizeof(T) * N) == 0;
@@ -47,7 +45,10 @@ public:
     }
 
     void clear() {
-        size_ = 0;
+        while(size_ > 0) {
+            data_[size_] = {};
+            --size_;
+        }
     }
 
     std::size_t capacity() const {
@@ -70,6 +71,11 @@ public:
 
         data_[size_++] = std::move(value);
         return true;
+    }
+
+    void pop_back() {
+        data_[size_] = T();
+        --size_;
     }
 
     struct iterator {
@@ -105,7 +111,7 @@ public:
     }
 
 private:
-    T data_[N];
+    T data_[N] = {};
     std::size_t size_ = 0;
 };
 

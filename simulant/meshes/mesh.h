@@ -122,7 +122,7 @@ class Mesh :
     public Asset,
     public Loadable,
     public RefCounted<Mesh>,
-    public generic::Identifiable<MeshID>,
+    public generic::Identifiable<AssetID>,
     public KeyFrameAnimated,
     public ChainNameable<Mesh> {
 
@@ -136,7 +136,7 @@ public:
      *  same vertex data, different indices)
      */
     Mesh(
-        MeshID id,
+        AssetID id,
         AssetManager* asset_manager,
         VertexDataPtr vertex_data
     );
@@ -147,7 +147,7 @@ public:
      *  This creates a unique VertexData instance for this mesh.
      */
     Mesh(
-        MeshID id,
+        AssetID id,
         AssetManager* asset_manager,
         VertexSpecification vertex_specification
     );
@@ -171,9 +171,9 @@ public:
      * @param arrangement
      * @return
      */
-    SubMeshPtr new_submesh(
+    SubMeshPtr create_submesh(
         const std::string& name,
-        MaterialID material,
+        MaterialPtr material,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
     );
 
@@ -185,9 +185,9 @@ public:
      * @param arrangement
      * @return
      */
-    SubMeshPtr new_submesh(
+    SubMeshPtr create_submesh(
         const std::string& name,
-        MaterialID material,
+        MaterialPtr material,
         IndexType index_type,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
     );
@@ -200,16 +200,16 @@ public:
      * @param arrangement
      * @return
      */
-    SubMeshPtr new_submesh(
+    SubMeshPtr create_submesh(
         const std::string& name,
-        MaterialID material,
+        MaterialPtr material,
         IndexDataPtr index_data,
         MeshArrangement arrangement=MESH_ARRANGEMENT_TRIANGLES
-    );   
+    );
 
-    SubMeshPtr new_submesh_as_capsule(
+    SubMeshPtr create_submesh_as_capsule(
         const std::string& name,
-        MaterialID material,
+        MaterialPtr material,
         float diameter,
         float length,
         std::size_t segment_count,
@@ -217,36 +217,36 @@ public:
         std::size_t ring_count
     );
 
-    SubMeshPtr new_submesh_as_sphere(const std::string& name,
-        MaterialID material,
+    SubMeshPtr create_submesh_as_sphere(const std::string& name,
+        MaterialPtr material,
         float diameter,
         std::size_t slices,
         std::size_t stacks
     );
 
-    SubMeshPtr new_submesh_as_icosphere(const std::string& name,
-        MaterialID material,
+    SubMeshPtr create_submesh_as_icosphere(const std::string& name,
+        MaterialPtr material,
         float diameter,
         uint32_t subdivisions
     );
 
-    SubMeshPtr new_submesh_as_rectangle(
+    SubMeshPtr create_submesh_as_rectangle(
         const std::string& name,
-        MaterialID material,
+        MaterialPtr material,
         float width,
         float height,
         const Vec3& offset=Vec3()
     );
 
-    SubMeshPtr new_submesh_as_cube(
+    SubMeshPtr create_submesh_as_cube(
         const std::string& name,
-        MaterialID material,
+        MaterialPtr material,
         float size
     );
 
-    SubMeshPtr new_submesh_as_box(
+    SubMeshPtr create_submesh_as_box(
         const std::string& name,
-        MaterialID material,
+        MaterialPtr material,
         float width,
         float height,
         float depth,
@@ -277,21 +277,20 @@ public:
      */
     optional<std::size_t> submesh_index(const SubMeshPtr& submesh) const;
 
-    uint32_t submesh_count() const { return submeshes_.size(); }
+    std::size_t submesh_count() const { return submeshes_.size(); }
     bool has_submesh(const std::string& name) const;
     SubMeshPtr find_submesh(const std::string& name) const;
     SubMeshPtr find_submesh_with_material(const MaterialPtr& mat) const;
     std::vector<SubMeshPtr> find_all_submeshes(const std::string& name) const;
-    std::vector<SubMeshPtr>
-    find_all_submeshes_with_material(const MaterialPtr& mat) const;
+    std::vector<SubMeshPtr> find_all_submeshes_with_material(const MaterialPtr& mat) const;
 
     SubMeshPtr first_submesh() const;
 
     void destroy_submesh(const std::string& name);
 
-    void set_material(MaterialPtr material); ///< Apply material to all
-    void set_diffuse(
-        const smlt::Colour& colour); ///< Override vertex colour on all vertices
+    void set_material(MaterialPtr material); ///< Apply material to all submeshes
+    void set_color(
+        const smlt::Color& color); ///< Override vertex color on all vertices
 
     void reverse_winding(); ///< Reverse the winding of all submeshes
 
@@ -301,16 +300,12 @@ public:
 
     SubMeshIteratorPair each_submesh();
 
-    void enable_animation(MeshAnimationType animation_type,
-                          uint32_t animation_frames, FrameUnpackerPtr data);
-    bool is_animated() const {
-        return animation_type_ != MESH_ANIMATION_TYPE_NONE;
-    }
+    void enable_animation(MeshAnimationType animation_type, uint32_t animation_frames, FrameUnpackerPtr data);
+    bool is_animated() const { return animation_type_ != MESH_ANIMATION_TYPE_NONE; }
     uint32_t animation_frames() const { return animation_frames_; }
     MeshAnimationType animation_type() const { return animation_type_; }
 
-    /* Generates adjacency information for this mesh. This is necessary for
-    stencil shadowing
+    /* Generates adjacency information for this mesh. This is necessary for stencil shadowing
      * to work */
     void generate_adjacency_info();
     bool has_adjacency_info() const { return bool(adjacency_); }
@@ -319,9 +314,9 @@ public:
     // Signals
 
     typedef sig::signal<void (Skeleton*)> SkeletonAddedSignal;
-    typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshCreatedCallback;
-    typedef sig::signal<void (MeshID, SubMeshPtr)> SubMeshDestroyedCallback;
-    typedef sig::signal<void (MeshID, SubMeshPtr, MaterialSlot, MaterialID, MaterialID)> SubMeshMaterialChangedCallback;
+    typedef sig::signal<void (AssetID, SubMeshPtr)> SubMeshCreatedCallback;
+    typedef sig::signal<void (AssetID, SubMeshPtr)> SubMeshDestroyedCallback;
+    typedef sig::signal<void (AssetID, SubMeshPtr, MaterialSlot, AssetID, AssetID)> SubMeshMaterialChangedCallback;
 
     DEFINE_SIGNAL(SkeletonAddedSignal, signal_skeleton_added);
 

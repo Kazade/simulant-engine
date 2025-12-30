@@ -1,25 +1,44 @@
-#include "ui_manager.h"
 #include "frame.h"
 #include "../../meshes/mesh.h"
+#include "simulant/utils/params.h"
+#include "ui_manager.h"
 
 namespace smlt {
 namespace ui {
 
-Frame::Frame(UIManager *owner, UIConfig *config, Stage* stage):
-    Widget(owner, config, stage) {
+Frame::Frame(Scene* owner) :
+    Widget(owner, STAGE_NODE_TYPE_WIDGET_FRAME) {}
 
-    set_background_colour(config->frame_background_colour_);
-    set_foreground_colour(config->frame_titlebar_colour_);
-    set_text_colour(config->frame_text_colour_);
-    set_border_width(config->frame_border_width_);
-    set_border_colour(config->frame_border_colour_);
+bool Frame::on_create(Params params) {
+    if(!clean_params<Frame>(params)) {
+        return false;
+    }
+
+    if(!Widget::on_create(params)) {
+        return false;
+    }
+
+    auto sstyle = params.get<WidgetStyleRef>("shared_style")
+                      .value_or(WidgetStyleRef())
+                      .lock();
+    auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
+
+    if(!sstyle) {
+        set_background_color(theme.frame_background_color_);
+        set_foreground_color(theme.frame_titlebar_color_);
+        set_text_color(theme.frame_text_color_);
+        set_border_width(theme.frame_border_width_);
+        set_border_color(theme.frame_border_color_);
+    }
+
+    return true;
 }
 
 void Frame::finalize_build() {
     float ax = -(anchor_point().x - 0.5f);
     float ay = -(anchor_point().y - 0.5f);
 
-    /* We reposition all the children relative to our centre */
+    /* We reposition all the children relative to our center */
     float cx = ax * outer_width().value;
     float cy = ay * outer_height().value;
 
@@ -30,7 +49,7 @@ void Frame::finalize_build() {
         Px width = -(ow / 2);
         for(auto& child: packed_children()) {
             child->set_anchor_point(0.0f, 0.5f);
-            child->move_to(cx + width.value, cy);
+            child->transform->set_translation_2d(Vec2(cx + width.value, cy));
             width += child->outer_width();
             width += space_between_;
         }
@@ -44,7 +63,7 @@ void Frame::finalize_build() {
 
         for(auto& child: packed_children()) {
             child->set_anchor_point(0.5f, 1.0f);
-            child->move_to(cx, cy + height.value);
+            child->transform->set_translation_2d(Vec2(cx, cy + height.value));
             height -= child->outer_height();
             height -= space_between_;
         }
@@ -53,7 +72,7 @@ void Frame::finalize_build() {
     /* Reposition the text to be in the title bar */
     if(!text_.empty()) {
         static_assert(Font::max_pages == 4, "This code needs changing");
-        SubMeshPtr submeshes [] = {
+        SubMeshPtr submeshes[] = {
             mesh()->find_submesh("text-0"),
             mesh()->find_submesh("text-1"),
             mesh()->find_submesh("text-2"),
@@ -65,7 +84,8 @@ void Frame::finalize_build() {
         Px line_height_shift = (text_height_ - font_->size()) / 2;
         line_height_shift += padding().top;
 
-        Px shift = Px((oh.value * 0.5f) - line_height().value + (line_height_shift.value));
+        Px shift = Px((oh.value * 0.5f) - line_height().value +
+                      (line_height_shift.value));
 
         for(auto& sm: submeshes) {
             if(!sm) {
@@ -74,7 +94,8 @@ void Frame::finalize_build() {
 
             for(std::size_t i = 0; i < sm->vertex_range_count(); ++i) {
                 auto& range = sm->vertex_ranges()[i];
-                for(auto idx = range.start; idx < range.start + range.count; ++idx) {
+                for(auto idx = range.start; idx < range.start + range.count;
+                    ++idx) {
                     auto vpos = *vdata->position_at<smlt::Vec3>(idx);
                     vpos.y += shift.value;
 
@@ -86,14 +107,14 @@ void Frame::finalize_build() {
     }
 }
 
-bool Frame::pack_child(Widget *widget) {
+bool Frame::pack_child(Widget* widget) {
     if(widget == this) {
         return false;
     }
 
     auto it = std::find(children_.begin(), children_.end(), widget);
     if(it == children_.end()) {
-        widget->set_parent(this);  // Reparent
+        widget->set_parent(this); // Reparent
         children_.push_back(widget);
         rebuild();
         return true;
@@ -102,10 +123,11 @@ bool Frame::pack_child(Widget *widget) {
     return false;
 }
 
-bool Frame::unpack_child(Widget *widget, ChildCleanup clean_up) {
+bool Frame::unpack_child(Widget* widget, ChildCleanup clean_up) {
     auto it = std::find(children_.begin(), children_.end(), widget);
     if(it != children_.end()) {
-        children_.erase(std::remove(children_.begin(), children_.end(), widget));
+        children_.erase(
+            std::remove(children_.begin(), children_.end(), widget));
         if(clean_up == CHILD_CLEANUP_DESTROY) {
             widget->destroy();
         } else {
@@ -118,7 +140,7 @@ bool Frame::unpack_child(Widget *widget, ChildCleanup clean_up) {
     return false;
 }
 
-const std::vector<Widget *> &Frame::packed_children() const {
+const std::vector<Widget*>& Frame::packed_children() const {
     return children_;
 }
 
@@ -140,8 +162,8 @@ void Frame::set_space_between(Px spacing) {
     rebuild();
 }
 
-
-Widget::WidgetBounds Frame::calculate_foreground_size(const UIDim& content_dimensions) const {
+Widget::WidgetBounds
+    Frame::calculate_foreground_size(const UIDim& content_dimensions) const {
     /* Foreground height is literally line-height, if there is text. The width
      * is the same as the background size */
 
@@ -204,5 +226,5 @@ UIDim Frame::calculate_content_dimensions(Px text_width, Px text_height) {
     return UIDim(content_width, content_height);
 }
 
-}
-}
+} // namespace ui
+} // namespace smlt

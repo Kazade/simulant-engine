@@ -3,9 +3,9 @@
  *     This file is part of Simulant.
  *
  *     Simulant is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Lesser General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  *
  *     Simulant is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,11 +24,12 @@
 
 #include "../signals/signal.h"
 
-#include "stage_node.h"
+#include "../generic/manual_object.h"
 #include "../interfaces.h"
 #include "../meshes/mesh.h"
 #include "../sound.h"
-#include "../generic/manual_object.h"
+#include "simulant/utils/params.h"
+#include "stage_node.h"
 
 #include "../renderers/batching/render_queue.h"
 #include "../renderers/batching/renderable.h"
@@ -38,47 +39,56 @@ namespace smlt {
 class KeyFrameAnimationState;
 class Rig;
 
-class Actor :
-    public TypedDestroyableObject<Actor, Stage>,
+struct ActorParams {
+    ActorParams(MeshPtr mesh) :
+        mesh(mesh) {}
+
+    MeshPtr mesh;
+};
+
+class Actor:
     public StageNode,
     public virtual Boundable,
-    public generic::Identifiable<ActorID>,
-    public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<Actor> {
 
 public:
-    Actor(Stage* stage, SoundDriver *sound_driver);
-    Actor(Stage* stage, SoundDriver *sound_driver, MeshID mesh);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_ACTOR, "actor");
+    S_DEFINE_STAGE_NODE_PARAM(Actor, "mesh", MeshPtr, no_value,
+                              "The base mesh associated with this actor");
+
+    Actor(Scene* owner);
     virtual ~Actor();
 
     const AABB& aabb() const override;
 
-    MeshID mesh_id(DetailLevel detail_level) const;
-    const MeshPtr &mesh(DetailLevel detail_level) const;
+    AssetID mesh_id(DetailLevel detail_level) const;
+    const MeshPtr& mesh(DetailLevel detail_level) const;
     const MeshPtr& best_mesh(DetailLevel detail_level) const;
-    const MeshPtr &base_mesh() const;
+    const MeshPtr& base_mesh() const;
 
     bool has_mesh(DetailLevel detail_level) const;
     bool has_any_mesh() const;
     bool has_multiple_meshes() const;
 
-    void set_mesh(MeshID mesh, DetailLevel detail_level=DETAIL_LEVEL_NEAREST);
+    void set_mesh(const MeshPtr& mesh,
+                  DetailLevel detail_level = DETAIL_LEVEL_NEAREST);
 
-    typedef sig::signal<void (ActorID)> MeshChangedCallback;
+    typedef sig::signal<void(StageNodeID)> MeshChangedCallback;
 
-    MeshChangedCallback& signal_mesh_changed() { return signal_mesh_changed_; }
+    MeshChangedCallback& signal_mesh_changed() {
+        return signal_mesh_changed_;
+    }
 
     /* Returns true if the nearest detail level mesh is animated. */
     bool has_animated_mesh() const {
         return has_animated_mesh_;
     }
 
-    void clean_up() override {
-        StageNode::clean_up();
-    }
-
-    void _get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) override;
+    void do_generate_renderables(batcher::RenderQueue* render_queue,
+                                 const Camera* camera, const Viewport* viewport,
+                                 const DetailLevel detail_level, Light** lights,
+                                 const std::size_t light_count) override;
 
     void use_material_slot(MaterialSlot var) {
         material_slot_ = var;
@@ -97,13 +107,12 @@ public:
     }
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
+    bool on_create(Params params) override;
 
     const MeshPtr& find_mesh(DetailLevel level) const {
-        /* Find the most suitable mesh at the specified level. This will search downwards
-         * from the level to NEAREST and return the first non-null result */
+        /* Find the most suitable mesh at the specified level. This will search
+         * downwards from the level to NEAREST and return the first non-null
+         * result */
         return effective_meshes_[level];
     }
 
@@ -126,12 +135,13 @@ private:
 
     MaterialSlot material_slot_ = MATERIAL_SLOT0;
 
-    void update(float dt) override;
+    void on_update(float dt) override;
 
     sig::connection submesh_created_connection_;
     sig::connection submesh_destroyed_connection_;
 
-    void refresh_animation_state(uint32_t current_frame, uint32_t next_frame, float interp);
+    void refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
+                                 float interp);
 
     /* Only available if the base mesh has a skeleton */
     std::unique_ptr<Rig> rig_;
@@ -143,7 +153,6 @@ public:
     S_DEFINE_PROPERTY(rig, &Actor::rig_);
 };
 
-
-}
+} // namespace smlt
 
 #endif // ENTITY_H

@@ -1,10 +1,12 @@
 #pragma once
 
-#include <stdexcept>
-#include "../stage_node.h"
+#include "../../asset_manager.h"
 #include "../../generic/identifiable.h"
 #include "../../path.h"
-#include "../../asset_manager.h"
+#include "../stage_node.h"
+#include "simulant/nodes/builtins.h"
+#include "simulant/utils/params.h"
+#include <stdexcept>
 
 namespace smlt {
 
@@ -18,73 +20,56 @@ enum SkyboxFace {
     SKYBOX_FACE_MAX
 };
 
-class SkyboxImageNotFoundError : public std::runtime_error {
+class SkyboxImageNotFoundError: public std::runtime_error {
 public:
-    SkyboxImageNotFoundError(const std::string& what):
+    SkyboxImageNotFoundError(const std::string& what) :
         std::runtime_error(what) {}
 };
 
-class SkyboxImageDuplicateError : public std::runtime_error {
+class SkyboxImageDuplicateError: public std::runtime_error {
 public:
-    SkyboxImageDuplicateError(const std::string& what):
+    SkyboxImageDuplicateError(const std::string& what) :
         std::runtime_error(what) {}
 };
 
-class SkyManager;
-
-class Skybox:
-    public TypedDestroyableObject<Skybox, SkyManager>,
-    public generic::Identifiable<SkyID>,
-    public ContainerNode,
-    public ChainNameable<Skybox> {
+class Skybox: public ContainerNode, public ChainNameable<Skybox> {
 
 public:
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SKYBOX, "skybox");
+    S_DEFINE_STAGE_NODE_PARAM(Skybox, "source_directory", std::string, no_value,
+                              "The directory containing the skybox images");
+    S_DEFINE_STAGE_NODE_PARAM(Skybox, "flags", TextureFlags, TextureFlags(),
+                              "The flags to apply to the skybox textures");
+
     constexpr static float DEFAULT_SIZE = 128.0f;
 
-    Skybox(SkyManager* manager);
+    Skybox(Scene* owner);
 
-    bool init() override;
-    void clean_up() override;
+    void set_size(float size) {
+        width_ = size;
+    }
+    float size() const {
+        return width_;
+    }
 
-    void set_size(float size) { width_ = size; }
-    float size() const { return width_; }
-
-    void generate(
-        const Path& up,
-        const Path& down,
-        const Path& left,
-        const Path& right,
-        const Path& front,
-        const Path& back,
-        const TextureFlags& flags
-    );
-
-    bool destroy() override;
-    bool destroy_immediately() override;
+    void generate(const Path& up, const Path& down, const Path& left,
+                  const Path& right, const Path& front, const Path& back,
+                  const TextureFlags& flags);
 
     const AABB& aabb() const override;
 
-    void update(float step) override {
-        _S_UNUSED(step);
-    }
-
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     friend class SkyManager;
 
-    SkyManager* manager_ = nullptr;
+    bool on_create(Params params) override;
 
-    CameraID follow_camera_;
+    StageNodeID follow_camera_;
 
     ActorPtr actor_ = nullptr;
-    MeshID mesh_id_;
-
-    MaterialID materials_[SKYBOX_FACE_MAX];
+    MeshPtr mesh_;
+    MaterialPtr materials_[SKYBOX_FACE_MAX];
 
     float width_;
 };
 
-}
+} // namespace smlt

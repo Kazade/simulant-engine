@@ -21,15 +21,15 @@
 
 #include "obj_loader.h"
 
-#include "../meshes/mesh.h"
-#include "../asset_manager.h"
-#include "../shortcuts.h"
-#include "../vfs.h"
-#include "../utils/string.h"
 #include "../application.h"
-#include "../window.h"
-
+#include "../asset_manager.h"
+#include "../meshes/mesh.h"
+#include "../shortcuts.h"
 #include "../utils/packed_types.h"
+#include "../utils/pbr.h"
+#include "../utils/string.h"
+#include "../vfs.h"
+#include "../window.h"
 
 namespace smlt {
 namespace loaders {
@@ -63,14 +63,44 @@ struct VertexDataBatch {
     std::vector<int> ranges;
 };
 
+struct ObjMaterial {
+    std::string name;
+    smlt::Color ka;
+    smlt::Color kd;
+    smlt::Color ks;
+    smlt::Color ke;
+    float ns;
+    float d;
+
+    smlt::TexturePtr map_Kd;
+
+    smlt::CullMode cull_mode;
+    smlt::BlendType blend_func;
+
+    smlt::MaterialPtr as_material(smlt::AssetManager* assets) {
+        auto s = traditional_to_pbr(ka, kd, ks, ns);
+        auto mat = assets->clone_default_material();
+        mat->set_base_color(s.base_color);
+        mat->set_metallic(s.metallic);
+        mat->set_roughness(s.roughness);
+        mat->set_specular(s.specular);
+        mat->set_specular_color(s.specular_color);
+        mat->set_base_color_map(map_Kd);
+        mat->set_cull_mode(cull_mode);
+        mat->set_blend_func(blend_func);
+
+        return mat;
+    }
+};
+
 struct LoadInfo {
     Mesh* target_mesh = nullptr;
     AssetManager* assets = nullptr;
 
-    MaterialPtr default_material = nullptr;
-    std::map<std::string, MaterialPtr> materials;
+    std::shared_ptr<ObjMaterial> default_material = nullptr;
+    std::map<std::string, std::shared_ptr<ObjMaterial>> materials;
 
-    Material* current_material = nullptr;
+    ObjMaterial* current_material = nullptr;
 
     VertexData* vdata = nullptr;
     VertexSpecification vspec;
@@ -153,9 +183,9 @@ static bool newmtl(LoadInfo* info, std::string, const std::vector<std::string>& 
     if(info->materials.count(mat_name)) {
         info->current_material = info->materials.at(mat_name).get();
     } else {
-        auto new_mat = info->assets->clone_default_material();
-        new_mat->set_name(mat_name);
-        new_mat->set_cull_mode(info->cull_mode);
+        auto new_mat = std::make_shared<ObjMaterial>();
+        new_mat->name = mat_name;
+        new_mat->cull_mode = info->cull_mode;
 
         info->materials[mat_name] = new_mat;
         info->current_material = new_mat.get();
@@ -165,7 +195,8 @@ static bool newmtl(LoadInfo* info, std::string, const std::vector<std::string>& 
 }
 
 static bool map_Kd(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
-    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
+    auto mat = (info->current_material) ? info->current_material
+                                        : info->default_material.get();
 
     std::string tex_path = parts[0];
 
@@ -180,7 +211,7 @@ static bool map_Kd(LoadInfo* info, std::string, const std::vector<std::string>& 
         tex_path = kfs::path::split_ext(tex_path).first + ext;
     }
 
-    auto tex = info->assets->new_texture_from_file(tex_path);
+    auto tex = info->assets->load_texture(tex_path);
     if(!tex) {
         return false;
     }
@@ -188,90 +219,81 @@ static bool map_Kd(LoadInfo* info, std::string, const std::vector<std::string>& 
     /* Force upload to VRAM and free the RAM */
     tex->flush();
 
-    mat->set_diffuse_map(tex);
+    mat->map_Kd = tex;
     return true;
 }
 
 static bool Ka(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
-    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
+    auto mat = (info->current_material) ? info->current_material
+                                        : info->default_material.get();
 
     float r = smlt::stof(parts[0]);
     float g = smlt::stof(parts[1]);
     float b = smlt::stof(parts[2]);
 
-    mat->set_ambient(smlt::Colour(r, g, b, 1.0f));
+    mat->ka = smlt::Color(r, g, b, 1.0f);
 
     return true;
 }
 
 static bool Kd(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
-    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
+    auto mat = (info->current_material) ? info->current_material
+                                        : info->default_material.get();
 
     float r = smlt::stof(parts[0]);
     float g = smlt::stof(parts[1]);
     float b = smlt::stof(parts[2]);
 
-    mat->set_diffuse(smlt::Colour(r, g, b, 1.0f));
+    mat->kd = smlt::Color(r, g, b, 1.0f);
 
     return true;
 }
 
 static bool Ks(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
-    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
+    auto mat = (info->current_material) ? info->current_material
+                                        : info->default_material.get();
 
     float r = smlt::stof(parts[0]);
     float g = smlt::stof(parts[1]);
     float b = smlt::stof(parts[2]);
 
-    mat->set_specular(smlt::Colour(r, g, b, 1.0f));
+    mat->ks = smlt::Color(r, g, b, 1.0f);
     return true;
 }
 
 static bool Ke(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
-    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
+    auto mat = (info->current_material) ? info->current_material
+                                        : info->default_material.get();
 
     float r = smlt::stof(parts[0]);
     float g = smlt::stof(parts[1]);
     float b = smlt::stof(parts[2]);
 
-    mat->set_emission(smlt::Colour(r, g, b, 1.0f));
+    mat->ke = smlt::Color(r, g, b, 1.0f);
     return true;
 }
 
 static bool Ns(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
-    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
+    auto mat = (info->current_material) ? info->current_material
+                                        : info->default_material.get();
 
     float s = smlt::stof(parts[0]);
 
-    mat->set_shininess(128.0f * (0.001f * s));
+    mat->ns = s;
     return true;
 }
 
 static bool d(LoadInfo* info, std::string, const std::vector<std::string>& parts) {
-    Material* mat = (info->current_material) ? info->current_material : info->default_material.get();
+    auto mat = (info->current_material) ? info->current_material
+                                        : info->default_material.get();
 
-    float d = smlt::stof(parts[0]);
-    if(almost_equal(d, 1.0f)) {
-        mat->set_blend_func(smlt::BLEND_NONE);
+    mat->d = smlt::stof(parts[0]);
+    if(almost_equal(mat->d, 1.0f)) {
+        mat->blend_func = smlt::BLEND_NONE;
     } else {
-        mat->set_blend_func(smlt::BLEND_ALPHA);
+        mat->blend_func = smlt::BLEND_ALPHA;
     }
 
-    auto c = mat->ambient();
-    c.a = d;
-    mat->set_ambient(c);
-
-    c = mat->diffuse();
-    c.a = d;
-    mat->set_diffuse(c);
-
-    c = mat->specular();
-    c.a = d;
-    mat->set_specular(c);
-
-    c = mat->emission();
-    c.a = d;
-    mat->set_emission(c);
     return true;
 }
 
@@ -331,7 +353,7 @@ static bool apply_material(LoadInfo* info, std::string, const std::vector<std::s
 }
 
 static std::vector<HalfVec3>* VERTICES = nullptr;
-static std::vector<HalfVec3>* COLOURS = nullptr;
+static std::vector<HalfVec3>* COLORS = nullptr;
 static std::vector<HalfVec2>* TEXCOORDS = nullptr;
 static std::vector<HalfVec3>* NORMALS = nullptr;
 
@@ -354,7 +376,7 @@ static bool load_vertex(LoadInfo*, std::string, const std::vector<std::string>& 
 
     parse_floats(parts, xyzrgb, 6);
     VERTICES->push_back(HalfVec3(xyzrgb[0], xyzrgb[1], xyzrgb[2]));
-    COLOURS->push_back(HalfVec3(xyzrgb[3], xyzrgb[4], xyzrgb[5]));
+    COLORS->push_back(HalfVec3(xyzrgb[3], xyzrgb[4], xyzrgb[5]));
     return true;
 }
 
@@ -414,15 +436,15 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
 
     VertexDataBatch* batches[2];
 
-    batches[0] =
-        (info->current_material) ?
-            find_batch(info->current_material->name(), VERTEX_BATCH_TYPE_TRIANGLES) :
-            find_batch("__default__", VERTEX_BATCH_TYPE_TRIANGLES);
+    batches[0] = (info->current_material)
+                     ? find_batch(info->current_material->name,
+                                  VERTEX_BATCH_TYPE_TRIANGLES)
+                     : find_batch("__default__", VERTEX_BATCH_TYPE_TRIANGLES);
 
     batches[1] =
-        (info->current_material) ?
-            find_batch(info->current_material->name(), VERTEX_BATCH_TYPE_FANS) :
-            find_batch("__default__", VERTEX_BATCH_TYPE_FANS);
+        (info->current_material)
+            ? find_batch(info->current_material->name, VERTEX_BATCH_TYPE_FANS)
+            : find_batch("__default__", VERTEX_BATCH_TYPE_FANS);
 
     assert(batches[0]);
     assert(batches[1]);
@@ -448,12 +470,12 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
             nindex = (parts[2].empty()) ? -1 : smlt::stoi(parts[2]);
         }
 
-        smlt::Colour diffuse = smlt::Colour::WHITE;
+        smlt::Color diffuse = smlt::Color::white();
         if(vindex == -1) {
             return false;
         } else if((vindex - 1) < (int) VERTICES->size()) {
             Vec3 p = VERTICES->at(vindex - 1);
-            Vec3 c = COLOURS->at(vindex - 1);
+            Vec3 c = COLORS->at(vindex - 1);
 
             diffuse.r = c.x;
             diffuse.g = c.y;
@@ -475,8 +497,8 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
             batch->data->normal(n);
         }
 
-        if(info->vspec.has_diffuse()) {
-            batch->data->diffuse(diffuse);
+        if(info->vspec.has_color()) {
+            batch->data->color(diffuse);
         }
 
         batch->data->move_next();
@@ -484,15 +506,14 @@ static bool load_face(LoadInfo* info, std::string, const std::vector<std::string
     return true;
 }
 
-
-void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
-    std::vector<HalfVec3> _vertices, _colours, _normals;
+bool OBJLoader::into(Loadable& resource, const LoaderOptions& options) {
+    std::vector<HalfVec3> _vertices, _colors, _normals;
     std::vector<HalfVec2> _texcoords;
 
     VERTICES = &_vertices;
     TEXCOORDS = &_texcoords;
     NORMALS = &_normals;
-    COLOURS = &_colours;
+    COLORS = &_colors;
 
     Mesh* mesh = loadable_to<Mesh>(resource);
 
@@ -534,7 +555,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
     info.stream = data_.get();
     info.cull_mode = mesh_opts.cull_mode;
     info.overridden_tex_format = mesh_opts.override_texture_extension;
-    info.default_material = mesh->asset_manager().clone_default_material();
+    info.default_material = std::make_shared<ObjMaterial>();
     info.folder = kfs::path::dir_name(filename_.str());
 
     run_parser(info, commands);
@@ -548,10 +569,16 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         if(batch.type == VERTEX_BATCH_TYPE_TRIANGLES) {
             auto sm = mesh->find_submesh(batch.material_name);
             if(!sm) {
+                auto assets = &mesh->asset_manager();
                 if(batch.material_name == "__default__") {
-                    sm = mesh->new_submesh(batch.material_name, info.default_material);
+                    sm = mesh->create_submesh(
+                        batch.material_name,
+                        info.default_material->as_material(assets));
                 } else {
-                    sm = mesh->new_submesh(batch.material_name, info.materials.at(batch.material_name));
+                    sm = mesh->create_submesh(
+                        batch.material_name,
+                        info.materials.at(batch.material_name)
+                            ->as_material(assets));
                 }
             }
 
@@ -559,14 +586,22 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
             mesh->vertex_data->extend(*batch.data);
             batch.data.reset();
         } else {
+            auto assets = &mesh->asset_manager();
+
             /* Same thing, but with a triangle fan arrangement */
             auto sm_name = batch.material_name + "_fan";
             auto sm = mesh->find_submesh(sm_name);
             if(!sm) {
                 if(batch.material_name == "__default__") {
-                    sm = mesh->new_submesh(sm_name, info.default_material, MESH_ARRANGEMENT_TRIANGLE_FAN);
+                    sm = mesh->create_submesh(
+                        sm_name, info.default_material->as_material(assets),
+                        MESH_ARRANGEMENT_TRIANGLE_FAN);
                 } else {
-                    sm = mesh->new_submesh(sm_name, info.materials.at(batch.material_name), MESH_ARRANGEMENT_TRIANGLE_FAN);
+                    sm = mesh->create_submesh(
+                        sm_name,
+                        info.materials.at(batch.material_name)
+                            ->as_material(assets),
+                        MESH_ARRANGEMENT_TRIANGLE_FAN);
                 }
             }
             auto start = mesh->vertex_data->count();
@@ -585,7 +620,7 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     vdata->done();
 
-    if(!info.default_material->diffuse_map()) {
+    if(!info.default_material->map_Kd) {
         /* Final nicety - search for diffuse/specular/bump maps in the current directory */
         std::string extensions [] = {
             ".jpg",
@@ -596,18 +631,19 @@ void OBJLoader::into(Loadable &resource, const LoaderOptions &options) {
         for(auto& ext: extensions) {
             auto path = this->filename_.replace_ext(ext);
             if(kfs::path::exists(path.str().c_str())) {
-                auto tex = mesh->asset_manager().new_texture_from_file(path);
-                info.default_material->set_diffuse_map(tex);
+                auto tex = mesh->asset_manager().load_texture(path);
+                info.default_material->map_Kd = tex;
             } else {
                 path = kfs::path::split_ext(filename_.str()).first + "_color" + ext;
                 if(kfs::path::exists(path.str().c_str())) {
-                    auto tex = mesh->asset_manager().new_texture_from_file(path);
-                    info.default_material->set_diffuse_map(tex);
+                    auto tex = mesh->asset_manager().load_texture(path);
+                    info.default_material->map_Kd = tex;
                 }
             }
         }
     }
-}
 
+    return true;
+}
 }
 }

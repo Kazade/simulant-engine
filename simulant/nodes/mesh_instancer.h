@@ -4,11 +4,11 @@
 
 #include "../generic/identifiable.h"
 
-#include "stage_node.h"
+#include "../generic/containers/contiguous_map.h"
+#include "../generic/manual_object.h"
 #include "../interfaces.h"
 #include "../sound.h"
-#include "../generic/manual_object.h"
-#include "../generic/containers/contiguous_map.h"
+#include "stage_node.h"
 
 namespace smlt {
 
@@ -35,16 +35,17 @@ typedef std::size_t MeshInstanceID;
  * Spawning animated meshes is currently unsupported.
  */
 class MeshInstancer:
-    public TypedDestroyableObject<MeshInstancer, Stage>,
     public StageNode,
     public virtual Boundable,
-    public generic::Identifiable<MeshInstancerID>,
-    public AudioSource,
     public HasMutableRenderPriority,
     public ChainNameable<MeshInstancer> {
 
 public:
-    MeshInstancer(Stage* stage, SoundDriver* sound_driver, MeshPtr mesh);
+    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_MESH_INSTANCER, "mesh_instancer");
+    S_DEFINE_STAGE_NODE_PARAM(MeshInstancer, "mesh", MeshPtr, no_value,
+                              "The base mesh associated with this instancer");
+
+    MeshInstancer(Scene* owner);
     virtual ~MeshInstancer();
 
     const AABB& aabb() const override;
@@ -56,10 +57,9 @@ public:
      *  Returns a new non-zero MeshInstanceID on success. Returns
      *  0 on failure.
      */
-    MeshInstanceID new_mesh_instance(
+    MeshInstanceID create_mesh_instance(
         const smlt::Vec3& position,
-        const smlt::Quaternion& rotation=smlt::Quaternion()
-    );
+        const smlt::Quaternion& rotation = smlt::Quaternion());
 
     /**
      * @brief destroy_mesh_instance
@@ -83,23 +83,20 @@ public:
      */
     bool hide_mesh_instance(MeshInstanceID mid);
 
-    void _get_renderables(
-        batcher::RenderQueue* render_queue,
-        const CameraPtr camera,
-        const DetailLevel detail_level
-    ) override;
+    void do_generate_renderables(batcher::RenderQueue* render_queue,
+                                 const Camera* camera, const Viewport* viewport,
+                                 const DetailLevel detail_level, Light** lights,
+                                 const std::size_t light_count) override;
 
 private:
-    UniqueIDKey make_key() const override {
-        return make_unique_id_key(id());
-    }
-
     MeshPtr mesh_;
 
     /* The axis-aligned box containing all mesh instances */
     AABB aabb_;
 
-    void recalc_aabb();    
+    void recalc_aabb();
+
+    bool on_create(Params params) override;
 
     void on_transformation_changed() override;
 
@@ -120,5 +117,4 @@ private:
     std::unordered_map<uint32_t, MeshInstance> instances_;
 };
 
-
-}
+} // namespace smlt

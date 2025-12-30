@@ -44,19 +44,21 @@ const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
     {"DIFFUSE_ONLY", Material::BuiltIns::DIFFUSE_ONLY},
 };
 
-Material::Material(MaterialID id, AssetManager* asset_manager):
+Material::Material(AssetID id, AssetManager* asset_manager):
     Asset(asset_manager),
-    generic::Identifiable<MaterialID>(id),
+    generic::Identifiable<AssetID>(id),
     renderer_(get_app()->window->renderer) {
 
     /* The core material has 4 texture properties by default */
 
-    TexturePropertyInfo diffuse_map;
-    diffuse_map.texture_property_name = DIFFUSE_MAP_PROPERTY_NAME;
-    diffuse_map.texture_property_name_hash = DIFFUSE_MAP_PROPERTY_HASH;
-    diffuse_map.matrix_property_name = DIFFUSE_MAP_MATRIX_PROPERTY_NAME;
-    diffuse_map.matrix_property_name_hash = DIFFUSE_MAP_MATRIX_PROPERTY_HASH;
-    texture_properties_.insert(std::make_pair(DIFFUSE_MAP_PROPERTY_HASH, diffuse_map));
+    TexturePropertyInfo base_color_map;
+    base_color_map.texture_property_name = BASE_COLOR_MAP_PROPERTY_NAME;
+    base_color_map.texture_property_name_hash = BASE_COLOR_MAP_PROPERTY_HASH;
+    base_color_map.matrix_property_name = BASE_COLOR_MAP_MATRIX_PROPERTY_NAME;
+    base_color_map.matrix_property_name_hash =
+        BASE_COLOR_MAP_MATRIX_PROPERTY_HASH;
+    texture_properties_.insert(
+        std::make_pair(BASE_COLOR_MAP_PROPERTY_HASH, base_color_map));
 
     TexturePropertyInfo light_map;
     light_map.texture_property_name = LIGHT_MAP_PROPERTY_NAME;
@@ -65,13 +67,17 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
     light_map.matrix_property_name_hash = LIGHT_MAP_MATRIX_PROPERTY_HASH;
     texture_properties_.insert(std::make_pair(LIGHT_MAP_PROPERTY_HASH, light_map));
 
-    TexturePropertyInfo specular_map;
-    specular_map.texture_property_name = SPECULAR_MAP_PROPERTY_NAME;
-    specular_map.texture_property_name_hash = SPECULAR_MAP_PROPERTY_HASH;
-    specular_map.matrix_property_name = SPECULAR_MAP_MATRIX_PROPERTY_NAME;
-    specular_map.matrix_property_name_hash = SPECULAR_MAP_MATRIX_PROPERTY_HASH;
-    texture_properties_.insert(std::make_pair(SPECULAR_MAP_PROPERTY_HASH, specular_map));
-
+    TexturePropertyInfo metallic_roughness_map;
+    metallic_roughness_map.texture_property_name =
+        METALLIC_ROUGHNESS_MAP_PROPERTY_NAME;
+    metallic_roughness_map.texture_property_name_hash =
+        METALLIC_ROUGHNESS_MAP_PROPERTY_HASH;
+    metallic_roughness_map.matrix_property_name =
+        METALLIC_ROUGHNESS_MAP_MATRIX_PROPERTY_NAME;
+    metallic_roughness_map.matrix_property_name_hash =
+        METALLIC_ROUGHNESS_MAP_MATRIX_PROPERTY_HASH;
+    texture_properties_.insert(std::make_pair(
+        METALLIC_ROUGHNESS_MAP_PROPERTY_HASH, metallic_roughness_map));
 
     TexturePropertyInfo normal_map;
     normal_map.texture_property_name = NORMAL_MAP_PROPERTY_NAME;
@@ -80,6 +86,7 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
     normal_map.matrix_property_name_hash = NORMAL_MAP_MATRIX_PROPERTY_HASH;
     texture_properties_.insert(std::make_pair(NORMAL_MAP_PROPERTY_HASH, normal_map));
 
+    initialize_core_properties();
     set_pass_count(1);  // Enable a single pass by default otherwise the material is useless
 
     /* Some renderers will need to register additional properties etc.
@@ -87,14 +94,88 @@ Material::Material(MaterialID id, AssetManager* asset_manager):
     renderer_->prepare_material(this);
 }
 
-Material::~Material() {}
+Material::~Material() {
+    for(auto& entry: values_) {
+        for(auto& value: entry.entries) {
+            value.reset();
+        }
+
+        auto it = entry.next;
+        while(it) {
+            auto n = it->next;
+            delete it;
+            it = n;
+        }
+    }
+}
+
+void Material::initialize_core_properties() {
+    set_property_value(BASE_COLOR_PROPERTY_NAME, Color::white());
+    set_property_value(ROUGHNESS_PROPERTY_NAME, 0.4f);
+    set_property_value(METALLIC_PROPERTY_NAME, 0.0f);
+    set_property_value(SPECULAR_COLOR_PROPERTY_NAME, Color(0, 0, 0, 1));
+
+    set_property_value(SPECULAR_PROPERTY_NAME, 0.0f);
+    set_property_value(POINT_SIZE_PROPERTY_NAME, 1.0f);
+
+    set_property_value(DEPTH_WRITE_ENABLED_PROPERTY_NAME, true);
+    set_property_value(DEPTH_TEST_ENABLED_PROPERTY_NAME, true);
+    set_property_value(LIGHTING_ENABLED_PROPERTY_NAME, true);
+
+    set_property_value(TEXTURES_ENABLED_PROPERTY_NAME,
+                       BASE_COLOR_MAP_ENABLED | LIGHT_MAP_ENABLED |
+                           METALLIC_ROUGHNESS_MAP_ENABLED | NORMAL_MAP_ENABLED);
+
+    set_property_value(BASE_COLOR_MAP_PROPERTY_NAME, TexturePtr());
+    set_property_value(METALLIC_ROUGHNESS_MAP_PROPERTY_NAME, TexturePtr());
+    set_property_value(LIGHT_MAP_PROPERTY_NAME, TexturePtr());
+    set_property_value(NORMAL_MAP_PROPERTY_NAME, TexturePtr());
+
+    set_property_value(BASE_COLOR_MAP_MATRIX_PROPERTY_NAME, Mat4());
+    set_property_value(METALLIC_ROUGHNESS_MAP_MATRIX_PROPERTY_NAME, Mat4());
+    set_property_value(LIGHT_MAP_MATRIX_PROPERTY_NAME, Mat4());
+    set_property_value(NORMAL_MAP_MATRIX_PROPERTY_NAME, Mat4());
+
+    set_property_value(BLEND_FUNC_PROPERTY_NAME, (EnumType)BLEND_NONE);
+    set_property_value(POLYGON_MODE_PROPERTY_NAME, (EnumType)POLYGON_MODE_FILL);
+    set_property_value(SHADE_MODEL_PROPERTY_NAME, (EnumType)SHADE_MODEL_SMOOTH);
+    set_property_value(COLOR_MATERIAL_PROPERTY_NAME,
+                       (EnumType)COLOR_MATERIAL_NONE);
+    set_property_value(CULL_MODE_PROPERTY_NAME, (EnumType)CULL_MODE_NONE);
+    set_property_value(DEPTH_FUNC_PROPERTY_NAME, (EnumType)DEPTH_FUNC_LEQUAL);
+    set_property_value(ALPHA_FUNC_PROPERTY_NAME, (EnumType)ALPHA_FUNC_NONE);
+    set_property_value(ALPHA_THRESHOLD_PROPERTY_NAME, 1.0f);
+
+    set_property_value(FOG_MODE_PROPERTY_NAME, (EnumType)FOG_MODE_NONE);
+    set_property_value(FOG_DENSITY_PROPERTY_NAME, 1.0f);
+    set_property_value(FOG_START_PROPERTY_NAME, 100.0f);
+    set_property_value(FOG_END_PROPERTY_NAME, 1000.0f);
+    set_property_value(FOG_COLOR_PROPERTY_NAME, Color::white());
+}
+
+MaterialValuePool* Material::_get_pool() const {
+    return get_app()->material_value_pool.get();
+}
 
 bool Material::set_pass_count(uint8_t pass_count) {
     if(pass_count >= MAX_MATERIAL_PASSES) {
         return false;
     }
 
-    passes_.resize(pass_count, MaterialPass(this));
+    // If we are reducing the pass count, we need to clear any overrides
+    for(std::size_t i = pass_count; i < passes_.size(); ++i) {
+        for(auto& entry: values_) {
+            passes_[i].clear_override(entry.hsh);
+        }
+    }
+
+    for(int i = passes_.size(); i < pass_count; ++i) {
+        passes_.push_back(MaterialPass(this, i));
+    }
+
+    while(passes_.size() > pass_count) {
+        passes_.pop_back();
+    }
 
     return true;
 }
@@ -109,24 +190,47 @@ MaterialPass *Material::pass(uint8_t pass) {
     return nullptr;
 }
 
-void Material::update(float dt) {
-    _S_UNUSED(dt);
-}
-
 Material &Material::operator=(const Material &rhs) {
     MaterialObject::operator=(rhs);
+
+    // Delete dynamic overflow nodes
+    for(auto& entry: values_) {
+        auto it = entry.next;
+        while(it) {
+            auto n = it->next;
+            delete it;
+            it = n;
+        }
+    }
 
     renderer_ = rhs.renderer_;
     texture_properties_ = rhs.texture_properties_;
     custom_properties_ = rhs.custom_properties_;
-    passes_.clear();
 
-    /* Must set the parent to this material */
+    for(std::size_t i = 0; i < values_.size(); ++i) {
+        // Copy the base array value across
+        values_[i] = MaterialPropertyEntry(rhs.values_[i]);
+
+        // Now iterate the rhs node chain, and create copies
+        // of all the things
+        auto src = rhs.values_[i].next;
+        auto dst = &values_[i];
+        while(src) {
+            dst->next = new MaterialPropertyEntry(*src);
+            dst = dst->next;
+            src = src->next;
+        }
+    }
+
+    passes_.clear();
+    for(auto& pass: passes_) {
+        pass.program_.reset();
+    }
+
+    set_pass_count(rhs.passes_.size());
+
     for(std::size_t i = 0; i < rhs.passes_.size(); ++i) {
-        MaterialPass pass;
-        pass = rhs.passes_[i];
-        pass.parent_ = this;
-        passes_.push_back(std::move(pass));
+        passes_[i].program_ = rhs.passes_[i].program_;
     }
 
     /* Make sure this material is prepped */
@@ -138,13 +242,13 @@ Material &Material::operator=(const Material &rhs) {
 MaterialPass::MaterialPass():
     MaterialObject(nullptr) {}
 
-MaterialPass::MaterialPass(Material *material):
-    MaterialObject(material) {
+MaterialPass::MaterialPass(Material* material, uint8_t pass_number) :
+    MaterialObject(material), pass_number_(pass_number), material_(material) {
 
     /* If the renderer supports GPU programs, at least specify *something* */
     auto& renderer = get_app()->window->renderer;
     if(renderer->supports_gpu_programs()) {
-        set_gpu_program(renderer->default_gpu_program_id());
+        set_gpu_program(renderer->default_gpu_program());
     }
 }
 
@@ -152,9 +256,28 @@ GPUProgramID MaterialPass::gpu_program_id() const {
     return program_->id();
 }
 
-const Material *MaterialPass::material() const {
-    return dynamic_cast<const Material*>(parent_material_object());
+bool MaterialPass::on_check_existence(MaterialPropertyNameHash hsh) const {
+    auto material = (Material*)parent_;
+    auto it = material->find_entry(hsh);
+    return it && it->entries[pass_number_ + 1];
 }
 
+bool MaterialPass::on_clear_override(MaterialPropertyNameHash hsh) {
+    auto material = (Material*)parent_;
 
+    auto it = material->find_entry(hsh);
+    if(it->entries[pass_number_ + 1]) {
+        it->entries[pass_number_ + 1].reset();
+        return true;
+    }
+
+    return false;
+}
+
+// We always just return the type of the parent
+bool MaterialPass::property_type(const char* name,
+                                 MaterialPropertyType* type) const {
+    auto material = (Material*)parent_;
+    return material->property_type(name, type);
+}
 }

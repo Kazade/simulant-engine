@@ -2,6 +2,7 @@
 
 #include <simulant/test.h>
 #include <simulant/utils/json.h>
+#include <simulant/simulant.h>
 
 namespace {
 
@@ -54,9 +55,12 @@ public:
         assert_true(one->is_value_type());
         assert_equal(one->to_int().value_or(0), 1);
         assert_equal(one->to_float().value_or(0.0f), 1.0f);
-        assert_equal(one->to_str().value(), "1");
+        assert_equal(one->repr(), "1");
 
         assert_equal(obj["five"]->type(), JSON_NULL);
+
+        assert_true(obj["two"]->is_float());
+        assert_false(obj["one"]->is_float());
     }
 
     void test_invalid_iterator_comparison() {
@@ -277,7 +281,6 @@ public:
         assert_true(it.is_array_iterator());
 
         ++it;
-
         assert_equal(it->to_int().value_or(0), 2);
 
         ++it;
@@ -305,6 +308,17 @@ public:
         auto json = json_parse(data);
 
         assert_equal(json["sessions"]->size(), 0u);
+    }
+
+    void test_complex_example() {
+        const char* path = "assets/samples/level1.json";
+        std::ifstream t(path);
+        assert_true(t.good());
+        std::string str((std::istreambuf_iterator<char>(t)),
+                        std::istreambuf_iterator<char>());
+
+        auto json = json_parse(str);
+        assert_equal(json["geoms"]->size(), 2u);
     }
 };
 

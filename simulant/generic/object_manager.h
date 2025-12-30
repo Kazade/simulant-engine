@@ -5,8 +5,7 @@
 #include <unordered_set>
 #include <memory>
 
-#include "default_init_ptr.h"
-#include "unique_id.h"
+#include "../core/stage_node_id.h"
 
 #include "../logging.h"
 #include "../signals/signal.h"
@@ -69,7 +68,6 @@ public:
 
         S_DEBUG("Creating a new object with ID: {0}", new_id);
         auto obj = T::create(new_id, std::forward<Args>(args)...);
-        obj->_bind_id_pointer(obj);
         objects_.insert(std::make_pair(obj->id(), obj));
         on_make(obj->id());
 
@@ -164,13 +162,11 @@ struct ToSharedPtr {
 };
 
 template<typename T>
-struct ToDefaultInitPtr {
-    static default_init_ptr<T> convert(const std::shared_ptr<T>& ptr) {
+struct ToRawPtr {
+    static T* convert(const std::shared_ptr<T>& ptr) {
         return ptr.get();
     }
 };
-
-
 }
 
 template<typename IDType, typename ObjectType, bool RefCounted>
@@ -179,14 +175,14 @@ class ObjectManager;
 template<typename IDType, typename ObjectType>
 class ObjectManager<IDType, ObjectType, false>:
     public _object_manager_impl::ObjectManagerBase<
-        IDType, ObjectType, default_init_ptr<ObjectType>,
-        _object_manager_impl::ToDefaultInitPtr<ObjectType>
-    > {
+        IDType, ObjectType, ObjectType*,
+        _object_manager_impl::ToRawPtr<ObjectType>> {
 
 public:
     typedef typename _object_manager_impl::ObjectManagerBase<
-        IDType, ObjectType, default_init_ptr<ObjectType>, _object_manager_impl::ToDefaultInitPtr<ObjectType>
-    > parent_class;
+        IDType, ObjectType, ObjectType*,
+        _object_manager_impl::ToRawPtr<ObjectType>>
+        parent_class;
 
     typedef typename parent_class::ObjectTypePtr ObjectTypePtr;
     typedef typename parent_class::object_type object_type;
@@ -218,11 +214,12 @@ public:
         for(auto it = this->objects_.begin(); it != this->objects_.end();) {
             ObjMeta meta = object_metas_.at(it->first);
             bool collect = meta.collection_method == GARBAGE_COLLECT_PERIODIC;
+            auto use_count = it->second.use_count();
 
-            if(collect && it->second.unique()) {
-                // The user accessed this, and GC is enabled, and now there is only the
-                // single ref left
+            if(collect && use_count <= 1) {
+                /* FIXME: use_count isn't thread safe */
                 on_destroy(it->first);
+
                 it = this->objects_.erase(it);
             } else {
                 ++it;

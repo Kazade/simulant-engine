@@ -36,20 +36,20 @@ namespace smlt {
 
 
 Mesh::Mesh(
-    MeshID id,
+    AssetID id,
     AssetManager* asset_manager,
     VertexDataPtr vertex_data):
     Asset(asset_manager),
-    generic::Identifiable<MeshID>(id) {
+    generic::Identifiable<AssetID>(id) {
 
     reset(vertex_data);
 }
 
-Mesh::Mesh(MeshID id,
+Mesh::Mesh(AssetID id,
     AssetManager *asset_manager,
     VertexSpecification vertex_specification):
         Asset(asset_manager),
-        generic::Identifiable<MeshID>(id) {
+        generic::Identifiable<AssetID>(id) {
 
     reset(vertex_specification);
 }
@@ -230,21 +230,21 @@ const AABB &Mesh::aabb() const {
     return aabb_;
 }
 
-SubMesh* Mesh::new_submesh(
+SubMesh* Mesh::create_submesh(
     const std::string& name,
-    MaterialID material,
+    MaterialPtr material,
     IndexType index_type,
     MeshArrangement arrangement) {
 
-    return new_submesh(
+    return create_submesh(
         name, material,
         std::make_shared<IndexData>(index_type), arrangement
     );
 }
 
-SubMesh* Mesh::new_submesh(
+SubMesh* Mesh::create_submesh(
     const std::string& name,
-    MaterialID material,
+    MaterialPtr material,
     IndexDataPtr index_data,
     MeshArrangement arrangement) {
 
@@ -252,57 +252,55 @@ SubMesh* Mesh::new_submesh(
         throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
     }
 
-    auto mat = asset_manager().material(material);
-    assert(mat);
+    assert(material);
 
-    auto new_submesh = SubMesh::create(
-        this, name, mat, index_data, arrangement
+    auto create_submesh = SubMesh::create(
+        this, name, material, index_data, arrangement
     );
-    submeshes_.push_back(new_submesh);
+    submeshes_.push_back(create_submesh);
 
-    signal_submesh_created_(id(), new_submesh.get());
+    signal_submesh_created_(id(), create_submesh.get());
 
-    return new_submesh.get();
+    return create_submesh.get();
 }
 
-SubMesh* Mesh::new_submesh(
+SubMesh* Mesh::create_submesh(
     const std::string& name,
-    MaterialID material,
+    MaterialPtr material,
     MeshArrangement arrangement) {
 
     if(has_submesh(name)) {
         throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
     }
 
-    auto mat = asset_manager().material(material);
-    assert(mat);
+    assert(material);
 
-    auto new_submesh = SubMesh::create(
-        this, name, mat, arrangement
+    auto create_submesh = SubMesh::create(
+        this, name, material, arrangement
     );
-    submeshes_.push_back(new_submesh);
+    submeshes_.push_back(create_submesh);
 
-    signal_submesh_created_(id(), new_submesh.get());
+    signal_submesh_created_(id(), create_submesh.get());
 
-    return new_submesh.get();
+    return create_submesh.get();
 }
 
-SubMeshPtr Mesh::new_submesh_as_sphere(const std::string& name,
-    MaterialID material, float diameter, std::size_t slices, std::size_t stacks) {
+SubMeshPtr Mesh::create_submesh_as_sphere(const std::string& name,
+    MaterialPtr material, float diameter, std::size_t slices, std::size_t stacks) {
 
-    SubMesh* sm = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    SubMesh* sm = create_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     procedural::mesh::sphere(sm, diameter, slices, stacks);
 
     return sm;
 }
 
-SubMeshPtr Mesh::new_submesh_as_capsule(
+SubMeshPtr Mesh::create_submesh_as_capsule(
     const std::string& name,
-    MaterialID material, float diameter, float length,
+    MaterialPtr material, float diameter, float length,
     std::size_t segment_count, std::size_t vertical_segment_count, std::size_t ring_count) {
 
-    SubMesh* submesh = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+    SubMesh* submesh = create_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     float radius = diameter * 0.5f;
 
@@ -342,7 +340,7 @@ SubMeshPtr Mesh::new_submesh_as_capsule(
             vdata->tex_coord0(new_tex);
             vdata->tex_coord1(new_tex);
             vdata->normal(new_normal);
-            vdata->diffuse(smlt::Colour::WHITE);
+            vdata->color(smlt::Color::white());
             vdata->move_next();
 
             // each vertex (except the last) has six indices pointing to it
@@ -385,7 +383,7 @@ SubMeshPtr Mesh::new_submesh_as_capsule(
             vdata->tex_coord0(new_tex);
             vdata->tex_coord1(new_tex);
             vdata->normal(new_normal);
-            vdata->diffuse(smlt::Colour::WHITE);
+            vdata->color(smlt::Color::white());
             vdata->move_next();
 
             idata->index(offset + segment_count + 1);
@@ -427,7 +425,7 @@ SubMeshPtr Mesh::new_submesh_as_capsule(
             vdata->tex_coord0(new_tex);
             vdata->tex_coord1(new_tex);
             vdata->normal(new_normal);
-            vdata->diffuse(smlt::Colour::WHITE);
+            vdata->color(smlt::Color::white());
             vdata->move_next();
 
             if (ring != ring_count) {
@@ -449,24 +447,24 @@ SubMeshPtr Mesh::new_submesh_as_capsule(
     return submesh;
 }
 
-SubMeshPtr Mesh::new_submesh_as_icosphere(const std::string& name, MaterialID material, float diameter, uint32_t subdivisions) {
-    SubMeshPtr sm = new_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+SubMeshPtr Mesh::create_submesh_as_icosphere(const std::string& name, MaterialPtr material, float diameter, uint32_t subdivisions) {
+    SubMeshPtr sm = create_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
 
     procedural::mesh::icosphere(sm, diameter, subdivisions);
 
     return sm;
 }
 
-SubMeshPtr Mesh::new_submesh_as_cube(const std::string& name, MaterialID material, float size) {
-    return new_submesh_as_box(name, material, size, size, size);
+SubMeshPtr Mesh::create_submesh_as_cube(const std::string& name, MaterialPtr material, float size) {
+    return create_submesh_as_box(name, material, size, size, size);
 }
 
 bool Mesh::has_submesh(const std::string& name) const {
     return bool(find_submesh(name));
 }
 
-SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, float width, float height, float depth, const Vec3& offset) {
-    SubMesh* sm = new_submesh(
+SubMesh* Mesh::create_submesh_as_box(const std::string& name, MaterialPtr material, float width, float height, float depth, const Vec3& offset) {
+    SubMesh* sm = create_submesh(
         name,
         material, INDEX_TYPE_16_BIT,
         MESH_ARRANGEMENT_TRIANGLES
@@ -489,25 +487,25 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
 
         vd->position(ox + -1 * rx, oy + -1 * ry, oz + z * rz);
         vd->tex_coord0(0, 0);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + 1 * rx, oy + -1 * ry, oz + z * rz);
         vd->tex_coord0(1, 0);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + 1 * rx,  oy + 1 * ry, oz + z * rz);
         vd->tex_coord0(1, 1);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
         vd->position(ox + -1 * rx, oy + 1 * ry, oz + z * rz);
         vd->tex_coord0(0, 1);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(0, 0, z);
         vd->move_next();
 
@@ -536,25 +534,25 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
 
         vd->position(ox + x * rx, oy + -1 * ry, oz + -1 * rz);
         vd->tex_coord0(0, 0);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + 1 * ry, oz + -1 * rz);
         vd->tex_coord0(1, 0);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + 1 * ry, oz + 1 * rz);
         vd->tex_coord0(1, 1);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
         vd->position(ox + x * rx, oy + -1 * ry, oz + 1 * rz);
         vd->tex_coord0(0, 1);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(x, 0, 0);
         vd->move_next();
 
@@ -584,25 +582,25 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
 
         vd->position(ox + 1 * rx, oy + y * ry, oz + -1 * rz);
         vd->tex_coord0(0, 0);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + -1 * rx,  oy + y * ry, oz + -1 * rz);
         vd->tex_coord0(1, 0);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + -1 * rx, oy + y * ry, oz + 1 * rz);
         vd->tex_coord0(1, 1);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
         vd->position(ox + 1 * rx, oy + y * ry, oz + 1 * rz);
         vd->tex_coord0(0, 1);
-        vd->diffuse(smlt::Colour::WHITE);
+        vd->color(smlt::Color::white());
         vd->normal(0, y, 0);
         vd->move_next();
 
@@ -632,8 +630,8 @@ SubMesh* Mesh::new_submesh_as_box(const std::string& name, MaterialID material, 
     return sm;
 }
 
-SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialID material, float width, float height, const smlt::Vec3& offset) {
-    SubMesh* sm = new_submesh(
+SubMesh* Mesh::create_submesh_as_rectangle(const std::string& name, MaterialPtr material, float width, float height, const smlt::Vec3& offset) {
+    SubMesh* sm = create_submesh(
         name,
         material, INDEX_TYPE_16_BIT,
         MESH_ARRANGEMENT_TRIANGLES
@@ -650,28 +648,36 @@ SubMesh* Mesh::new_submesh_as_rectangle(const std::string& name, MaterialID mate
 
     //Build some shared vertex data
     vertex_data->position(x_offset + (-width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_color()) {
+        vertex_data->color(smlt::Color::white());
+    }
     if(spec.has_texcoord0()) vertex_data->tex_coord0(0.0, 0.0f);
     if(spec.has_texcoord1()) vertex_data->tex_coord1(0.0, 0.0f);
     if(spec.has_normals())   vertex_data->normal(0, 0, 1);
     vertex_data->move_next();
 
     vertex_data->position(x_offset + (width / 2.0f), y_offset + (-height / 2.0f), z_offset);
-    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_color()) {
+        vertex_data->color(smlt::Color::white());
+    }
     if(spec.has_texcoord0()) vertex_data->tex_coord0(1.0, 0.0f);
     if(spec.has_texcoord1()) vertex_data->tex_coord1(1.0, 0.0f);
     if(spec.has_normals())   vertex_data->normal(0, 0, 1);
     vertex_data->move_next();
 
     vertex_data->position(x_offset + (width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_color()) {
+        vertex_data->color(smlt::Color::white());
+    }
     if(spec.has_texcoord0()) vertex_data->tex_coord0(1.0, 1.0f);
     if(spec.has_texcoord1()) vertex_data->tex_coord1(1.0, 1.0f);
     if(spec.has_normals())   vertex_data->normal(0, 0, 1);
     vertex_data->move_next();
 
     vertex_data->position(x_offset + (-width / 2.0f),  y_offset + (height / 2.0f), z_offset);
-    if(spec.has_diffuse())   vertex_data->diffuse(smlt::Colour::WHITE);
+    if(spec.has_color()) {
+        vertex_data->color(smlt::Color::white());
+    }
     if(spec.has_texcoord0()) vertex_data->tex_coord0(0.0, 1.0f);
     if(spec.has_texcoord1()) vertex_data->tex_coord1(0.0, 1.0f);
     if(spec.has_normals())   vertex_data->normal(0, 0, 1);
@@ -738,10 +744,10 @@ SubMeshIteratorPair Mesh::each_submesh() {
     return SubMeshIteratorPair(submeshes_);
 }
 
-void Mesh::set_diffuse(const smlt::Colour& colour) {
+void Mesh::set_color(const smlt::Color& color) {
     vertex_data->move_to_start();
     for(uint32_t i = 0; i < vertex_data->count(); ++i) {
-        vertex_data->diffuse(colour);
+        vertex_data->color(color);
         vertex_data->move_next();
     }
     vertex_data->done();
@@ -751,7 +757,7 @@ void Mesh::normalize() {
     float dia = this->diameter();
     float scaling = 1.0f / dia;
 
-    smlt::Mat4 scale_matrix = Mat4::as_scaling(scaling);
+    smlt::Mat4 scale_matrix = Mat4::as_scale(smlt::Vec3(scaling));
 
     transform_vertices(scale_matrix);
 }

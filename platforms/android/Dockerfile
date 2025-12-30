@@ -18,7 +18,8 @@ RUN yes | /opt/android-sdk-linux/cmdline-tools/bin/sdkmanager --install "cmdline
 ENV JAVA_OPTS -XX:+IgnoreUnrecognizedVMOptions
 RUN yes | sdkmanager --install "build-tools;33.0.2" "platforms;android-33" "ndk;25.2.9519653"
 RUN yes | sdkmanager --install "extras;android;m2repository" "extras;google;m2repository" "extras;google;google_play_services"
-RUN yes | sdkmanager --install "cmake;3.22.1"
+RUN yes | sdkmanager --list
+RUN yes | sdkmanager --install "cmake;3.22.1" "platform-tools" "emulator"
 RUN cd /tmp && wget -q --output-document=gradle.zip https://downloads.gradle.org/distributions/gradle-8.3-bin.zip && \
     unzip gradle.zip && \
     rm -f gradle.zip && \
@@ -35,4 +36,15 @@ COPY --from=Build ${ANDROID_NDK} ${ANDROID_NDK}
 COPY --from=Build ${GRADLE_HOME} ${GRADLE_HOME}
 COPY --from=Build /root/.android /root/.android
 RUN dnf install -y cmake make libpng genisoimage findutils git pkgconf-pkg-config libisofs java-latest-openjdk
+RUN mkdir -p /root/.gradle
+RUN mkdir -p /root/.android
+ENV HOME /root
+RUN chmod -R 777 /root
+RUN chmod -R 777 $ANDROID_HOME
+RUN chmod -R 777 $GRADLE_HOME
+ENV ANDROID_USER_HOME /root/.android
+ENV GRADLE_USER_HOME /root/.gradle
+
+
+
 

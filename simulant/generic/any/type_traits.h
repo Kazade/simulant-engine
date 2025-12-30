@@ -22,6 +22,15 @@
 #include <type_traits>
 #include <utility>
 
+#if defined(_MSC_VER)
+#if __cplusplus >= 202002L
+// C++20 (and later) code
+#include <version>
+#else
+#include <ciso646>
+#endif
+#endif
+
 namespace smlt {
 inline namespace v1 {
 
@@ -113,7 +122,7 @@ using underlying_type_t = typename ::std::underlying_type<T>::type;
 template <class... Args> using invoke_of_t = typename invoke_of<Args...>::type;
 template <class T> using class_of_t = typename class_of<T>::type;
 
-namespace impl {
+namespace _any_impl {
 
 struct undefined { undefined (...); };
 
@@ -202,13 +211,13 @@ struct is_nothrow_swappable : ::std::integral_constant<
 template <class... Args> struct invokable : ::std::integral_constant<
   bool,
   not ::std::is_same<
-    decltype(impl::invoke_expr(::std::declval<Args>()...)),
-    impl::undefined
+    decltype(_any_impl::invoke_expr(::std::declval<Args>()...)),
+    _any_impl::undefined
   >::value
 > { };
 
 template <class... Args> struct invoke_of :
-  impl::invoke_of<invokable<Args...>::value, Args...>
+  _any_impl::invoke_of<invokable<Args...>::value, Args...>
 { };
 
 template <class F, class... Args>
@@ -252,12 +261,12 @@ struct is_null_pointer< ::std::nullptr_t> : ::std::true_type { };
 template <class T, class U=T>
 using is_swappable = ::std::integral_constant<
   bool,
-  impl::is_swappable<T, U>::value
+  _any_impl::is_swappable<T, U>::value
 >;
 
 /* is_nothrow_swappable */
 template <class T, class U=T>
-using is_nothrow_swappable = impl::is_nothrow_swappable<T, U>;
+using is_nothrow_swappable = _any_impl::is_nothrow_swappable<T, U>;
 
 /* all-traits */
 template <class...> struct all_traits;

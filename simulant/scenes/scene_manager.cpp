@@ -35,28 +35,36 @@ SceneManager::~SceneManager() {
 
 void SceneManager::destroy_all() {
     /* Unload all the routes */
-    for(auto route: routes_) {
-        route.second->_call_unload();
-
-        auto name = route.first;
-        routes_queued_for_destruction_.insert(name);
+    for(auto& route: routes_) {
+        route.second->unload();
+        scenes_queued_for_destruction_.insert(route.second);
     }
+
+    current_scene_.reset();
+}
+
+void SceneManager::clean_destroyed_scenes() {
+    /* Destroy any scenes that have been queued */
+    scenes_queued_for_destruction_.clear();
 }
 
 void SceneManager::late_update(float dt) {
+    auto app = get_app();
+    auto window = (app) ? app->window.get() : nullptr;
+    if(!(window && window->has_focus())) {
+        // if paused, send deltatime as 0.0.
+        // it's still accessible through window->time_keeper if the user needs it
+        dt = 0.0;
+    }
+
     if(active_scene()) {
-        active_scene()->_late_update_thunk(dt);
+        active_scene()->late_update(dt);
+
+        /* Anything destroyed must now be *really* destroyed */
+        active_scene()->clean_up_destroyed_objects();
     }
 
-    /* Destroy any scenes that have been queued */
-    for(auto& name: routes_queued_for_destruction_) {
-        auto it = routes_.find(name);
-        if(it != routes_.end()) {
-            routes_.erase(it);
-        }
-    }
-
-    routes_queued_for_destruction_.clear();
+    clean_destroyed_scenes();
 
     /* Finally, if a scene has been activated, do so! */
     if(scene_activation_trigger_) {
@@ -66,18 +74,30 @@ void SceneManager::late_update(float dt) {
 }
 
 void SceneManager::update(float dt) {
+    if(!get_app()->window->has_focus()) {
+        // if paused, send deltatime as 0.0.
+        // it's still accessible through window->time_keeper if the user needs it
+        dt = 0.0;
+    }
+
     if(active_scene()) {
-        active_scene()->_update_thunk(dt);
+        active_scene()->update(dt);
     }
 }
 
 void SceneManager::fixed_update(float dt) {
+    if(!get_app()->window->has_focus()) {
+        // if paused, send deltatime as 0.0.
+        // it's still accessible through window->time_keeper if the user needs it
+        dt = 0.0;
+    }
+
     if(active_scene()) {
-        active_scene()->_fixed_update_thunk(dt);
+        active_scene()->fixed_update(dt);
     }
 }
 
-SceneBase::ptr SceneManager::get_or_create_route(const std::string& route) {
+ScenePtr SceneManager::get_or_create_route(const std::string& route) {
     auto it = routes_.find(route);
     if(it == routes_.end()) {
         auto factory = scene_factories_.find(route);
@@ -91,7 +111,7 @@ SceneBase::ptr SceneManager::get_or_create_route(const std::string& route) {
     return it->second;
 }
 
-SceneBase::ptr SceneManager::active_scene() const {
+ScenePtr SceneManager::active_scene() const {
     return current_scene_;
 }
 
@@ -102,17 +122,21 @@ bool SceneManager::scene_queued_for_activation() const {
 void SceneManager::unload(const std::string& route) {
     auto it = routes_.find(route);
     if(it != routes_.end()) {
-        std::shared_ptr<SceneBase> scene = it->second;
-        scene->_call_unload();
+        std::shared_ptr<Scene> scene = it->second;
+        scene->unload();
         scene->load_args.clear();
+        scene->destroy();
 
-        if(scene->destroy_on_unload()) {
-            /* Destroy the scene once it's been unloaded but do
-             * it after late_update so that any queued destructions
-             * from unload can happen before we destroy the scene
-             */
-            routes_queued_for_destruction_.insert(route);
-        }
+        // Erase from routes so any further get_or_create triggers
+        // the factory function
+        routes_.erase(it);
+
+        /* Destroy the scene once it's been unloaded but do
+         * it after late_update so that any queued destructions
+         * from unload can happen before we destroy the scene
+         */
+        scenes_queued_for_destruction_.insert(scene);
+        current_scene_ = nullptr;
     }
 }
 
@@ -129,13 +153,13 @@ bool SceneManager::has_scene(const std::string& route) const {
     return scene_factories_.find(route) != scene_factories_.end();
 }
 
-SceneBase::ptr SceneManager::resolve_scene(const std::string& route) {
+ScenePtr SceneManager::resolve_scene(const std::string& route) {
     return get_or_create_route(route);
 }
 
 void SceneManager::reset() {
     for(auto p: routes_) {
-        p.second->_call_unload();
+        p.second->unload();
     }
     routes_.clear();
     scene_factories_.clear();

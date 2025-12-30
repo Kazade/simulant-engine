@@ -12,11 +12,10 @@ using namespace smlt;
 class ParticleSystemTests : public test::SimulantTestCase {
 public:
     void test_destroy_signal() {
-        auto stage = scene->new_stage();
-        ParticleScriptPtr script = stage->assets->new_particle_script_from_file(
+        ParticleScriptPtr script = scene->assets->load_particle_script(
             ParticleScript::BuiltIns::FIRE
         );
-        ParticleSystemPtr system = stage->new_particle_system(script);
+        ParticleSystemPtr system = scene->create_child<ParticleSystem>(script);
 
         bool fired = false;
         system->signal_destroyed().connect([&]() {
@@ -29,8 +28,7 @@ public:
     }
 
     void test_emitter_duration() {
-        auto stage = scene->new_stage();
-        ParticleScriptPtr script = stage->assets->new_particle_script_from_file(
+        ParticleScriptPtr script = scene->assets->load_particle_script(
             ParticleScript::BuiltIns::FIRE
         );
 
@@ -42,7 +40,7 @@ public:
         emitter->duration_range.first = 5.0f;
         emitter->duration_range.second = 5.0f;
 
-        ParticleSystemPtr system = stage->new_particle_system(script);
+        ParticleSystemPtr system = scene->create_child<ParticleSystem>(script);
 
         assert_true(system->has_active_emitters());
         system->update(1.0f);
@@ -53,17 +51,51 @@ public:
         assert_false(system->has_active_emitters());
     }
 
+    void test_world_space() {
+        ParticleScriptPtr script =
+            scene->assets->load_particle_script(ParticleScript::BuiltIns::FIRE);
+
+        ParticleSystemPtr system = scene->create_child<ParticleSystem>(script);
+        system->update(0.1f);
+        assert_true(system->particle_count() > 0);
+
+        // Move the system above the particles, the particles
+        system->transform->set_position(smlt::Vec3(0, 100, 0));
+
+        system->update(0.1f);
+        auto p0 = system->particle(0);
+
+        assert_true(p0.position.y < 100);
+    }
+
+    void test_local_space() {
+        ParticleScriptPtr script =
+            scene->assets->load_particle_script(ParticleScript::BuiltIns::FIRE);
+
+        ParticleSystemPtr system = scene->create_child<ParticleSystem>(script);
+        system->set_space(smlt::PARTICLE_SYSTEM_SPACE_LOCAL);
+
+        system->update(0.1f);
+        assert_true(system->particle_count() > 0);
+
+        system->transform->set_position(smlt::Vec3(0, 100, 0));
+
+        system->update(0.1f);
+        auto p0 = system->particle(0);
+
+        // Should be a small value
+        assert_true(p0.position.y <= p0.velocity.y * 0.1f);
+    }
+
     void test_direction_manipulator() {
-        auto stage = scene->new_stage();
-        ParticleScriptPtr script = stage->assets->new_particle_script_from_file(
+        ParticleScriptPtr script = scene->assets->load_particle_script(
             ParticleScript::BuiltIns::FIRE
         );
 
-        script->add_manipulator(
-            std::make_shared<DirectionManipulator>(script.get(), smlt::Vec3::NEGATIVE_Y)
-        );
+        script->add_manipulator(std::make_shared<DirectionManipulator>(
+            script.get(), smlt::Vec3::down()));
 
-        ParticleSystemPtr system = stage->new_particle_system(script);
+        ParticleSystemPtr system = scene->create_child<ParticleSystem>(script);
         system->update(0.1f);
         assert_true(system->particle_count() > 0);
         auto p0 = system->particle(0);

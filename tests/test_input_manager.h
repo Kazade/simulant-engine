@@ -15,13 +15,24 @@ public:
         SimulantTestCase::set_up();
 
         state_.reset(new InputState(window));
+        state_->init();
         state_->_update_keyboard_devices({KeyboardDeviceInfo{0}});
         state_->_update_game_controllers({GameControllerInfo{GameControllerID(0), "test", 1, 1, 0, false, {0}}});
+
         manager_.reset(new InputManager(state_.get()));
+        manager_->init();
 
         if(!window->input_state->keyboard_count()) {
             window->input_state->_update_keyboard_devices({KeyboardDeviceInfo{0}});
         }
+    }
+
+    void tear_down() {
+        manager_->clean_up();
+        manager_.reset();
+
+        state_->clean_up();
+        state_.reset();
     }
 
     void test_axis_force() {

@@ -19,19 +19,18 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
-
+#include <list>
 #include <unordered_map>
 #include <unordered_set>
 
 #include "../asset.h"
 #include "../generic/identifiable.h"
 #include "../generic/managed.h"
-#include "../types.h"
 #include "../loadable.h"
-#include "../interfaces/updateable.h"
-
-#include "materials/material_object.h"
+#include "../types.h"
+#include "../utils/limited_vector.h"
 #include "materials/constants.h"
+#include "materials/material_object.h"
 
 namespace smlt {
 
@@ -48,9 +47,10 @@ class MaterialPass:
 public:
     friend class Material;
 
-    MaterialPass();
+    using MaterialPropertyOverrider::property_value;
+    using MaterialPropertyOverrider::set_property_value;
 
-    MaterialPass(Material* material);
+    MaterialPass();
 
     void set_iteration_type(IterationType iteration) {
         iteration_type_ = iteration;
@@ -62,24 +62,116 @@ public:
 
     GPUProgramID gpu_program_id() const;
 
-    void set_gpu_program(GPUProgramID program) {
-        // If the renderer doesn't support GPU programs then this
-        // will be an empty ID
-        if(program) {
-            program_ = program.fetch();
-        }
+    void set_gpu_program(GPUProgramPtr program) {
+        program_ = program;
     }
 
     uint8_t max_iterations() const {
         return max_iterations_;
     }
 
-    const Material* material() const;
+    const Material* material() const {
+        return material_;
+    }
 
-private:
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const bool& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const float& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const int32_t& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const Vec2& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const Vec3& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const Vec4& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const Mat3& value) {
+        return _set_property_value<Mat3>(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const Mat4& value) {
+        return _set_property_value<Mat4>(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const TexturePtr& value) {
+        return _set_property_value<TexturePtr>(hsh, name, value);
+    }
+
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const bool*& out) const {
+        return _property_value(hsh, out);
+    }
+
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const float*& out) const {
+        return _property_value(hsh, out);
+    }
+
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const int32_t*& out) const {
+        return _property_value(hsh, out);
+    }
+
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const Vec2*& out) const {
+        return _property_value(hsh, out);
+    }
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const Vec3*& out) const {
+        return _property_value(hsh, out);
+    }
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const Vec4*& out) const {
+        return _property_value(hsh, out);
+    }
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const Mat3*& out) const {
+        return _property_value(hsh, out);
+    }
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const Mat4*& out) const {
+        return _property_value(hsh, out);
+    }
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const TexturePtr*& out) const {
+        return _property_value(hsh, out);
+    }
+
+    template<typename T>
+    bool _property_value(const MaterialPropertyNameHash hsh,
+                         const T*& out) const;
+    template<typename T>
+    bool _set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                             const T& value);
+
+    bool on_clear_override(MaterialPropertyNameHash hsh) override;
+
+    bool on_check_existence(MaterialPropertyNameHash hsh) const override;
+
+    bool property_type(const char* property_name,
+                       MaterialPropertyType* type) const override;
+
+private:    
+    MaterialPass(Material* material, uint8_t pass_number);
+
+    uint8_t pass_number_;
     IterationType iteration_type_ = ITERATION_TYPE_ONCE;
     uint8_t max_iterations_ = 1;
-
+    Material* material_ = nullptr;
     GPUProgramPtr program_;
 };
 
@@ -101,14 +193,14 @@ struct CustomPropertyInfo {
 class Material:
     public Asset,
     public Loadable,
-    public generic::Identifiable<MaterialID>,
+    public generic::Identifiable<AssetID>,
     public RefCounted<Material>,
-    public Updateable,
     public MaterialObject,
     public ChainNameable<Material> {
 
 public:
     friend class GenericRenderer;
+    friend class MaterialPass;
 
     struct BuiltIns {
         static const std::string DEFAULT;
@@ -118,25 +210,23 @@ public:
 
     static const std::unordered_map<std::string, std::string> BUILT_IN_NAMES;
 
-    Material(MaterialID id, AssetManager *asset_manager);
+    Material(AssetID id, AssetManager *asset_manager);
     virtual ~Material();
 
 // ---------- Passes ------------------------
     bool set_pass_count(uint8_t pass_count);
 
     uint8_t pass_count() const {
-        return passes_.size();
+        return (uint8_t)passes_.size();
     }
 
     MaterialPass* pass(uint8_t pass);
 
     void each(std::function<void (uint32_t, MaterialPass*)> callback) {
         for(std::size_t i = 0; i != passes_.size(); ++i) {
-            callback(i, &passes_[i]);
+            callback((uint32_t)i, &passes_[i]);
         }
     }
-
-    void update(float dt) override;
 
     const std::unordered_map<MaterialPropertyNameHash, CustomPropertyInfo>& custom_properties() const {
         return custom_properties_;
@@ -148,26 +238,73 @@ public:
 
 private:
     Renderer* renderer_ = nullptr;
-    std::vector<MaterialPass> passes_;
+    LimitedVector<MaterialPass, MAX_MATERIAL_PASSES> passes_;
 
-    std::unordered_map<MaterialPropertyNameHash, TexturePropertyInfo> texture_properties_;
+    struct MaterialPropertyEntry {
+        MaterialPropertyNameHash hsh = 0;
+        MaterialPropertyValuePointer entries[MAX_MATERIAL_PASSES];
+        MaterialPropertyEntry* next = nullptr;
+    };
 
-    std::unordered_map<
-        MaterialPropertyNameHash,
-        CustomPropertyInfo
-    > custom_properties_;
+    static constexpr int bucket_count = 16;
+    std::array<MaterialPropertyEntry, bucket_count> values_;
 
-    virtual void on_override(
-        MaterialPropertyNameHash hsh,
-        const char *name,
-        MaterialPropertyType type) override {
+    MaterialPropertyEntry* find_entry(MaterialPropertyNameHash hsh) {
+        auto it = &values_[hsh % Material::bucket_count];
+
+        while(it->hsh != hsh && it->next) {
+            it = it->next;
+        }
+
+        if(it->hsh == hsh) {
+            return it;
+        }
+
+        return nullptr;
+    }
+
+    const MaterialPropertyEntry*
+        find_entry(MaterialPropertyNameHash hsh) const {
+        auto it = &values_[hsh % Material::bucket_count];
+
+        while(it->hsh != hsh && it->next) {
+            it = it->next;
+        }
+
+        if(it->hsh == hsh) {
+            return it;
+        }
+
+        return nullptr;
+    }
+
+    MaterialPropertyEntry*
+        find_entry_or_last_in_bucket(MaterialPropertyNameHash hsh) {
+        auto it = &values_[hsh % Material::bucket_count];
+
+        while(it->hsh != hsh && it->next) {
+            it = it->next;
+        }
+
+        return it;
+    }
+
+    std::unordered_map<MaterialPropertyNameHash, TexturePropertyInfo>
+        texture_properties_;
+
+    std::unordered_map<MaterialPropertyNameHash, CustomPropertyInfo>
+        custom_properties_;
+
+    virtual void on_override(MaterialPropertyNameHash hsh, const char* name,
+                             MaterialPropertyType type) override {
 
         if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
             TexturePropertyInfo info;
             info.texture_property_name = name;
             info.texture_property_name_hash = hsh;
             info.matrix_property_name = info.texture_property_name + "_matrix";
-            info.matrix_property_name_hash = material_property_hash(info.matrix_property_name.c_str());
+            info.matrix_property_name_hash =
+                material_property_hash(info.matrix_property_name.c_str());
             texture_properties_[info.texture_property_name_hash] = info;
         }
 
@@ -180,9 +317,17 @@ private:
         }
     }
 
-    void on_clear_override(MaterialPropertyNameHash hsh) override {
+    bool on_clear_override(MaterialPropertyNameHash hsh) override {
         texture_properties_.erase(hsh);
         custom_properties_.erase(hsh);
+
+        auto it = find_entry(hsh);
+        if(it && it->entries[0]) {
+            it->entries[0].reset();
+            return true;
+        }
+
+        return false;
     }
 
 protected:
@@ -192,16 +337,195 @@ protected:
      */
 
     friend class _object_manager_impl::ObjectManagerBase<
-        MaterialID, Material, std::shared_ptr<smlt::Material>,
+        AssetID, Material, std::shared_ptr<smlt::Material>,
         _object_manager_impl::ToSharedPtr<smlt::Material>
     >;
 
     Material(const Material& rhs) = delete;
 
     Material& operator=(const Material& rhs);
+
+    void initialize_core_properties();
+
+public:
+    using MaterialPropertyOverrider::property_value;
+    using MaterialPropertyOverrider::set_property_value;
+
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const bool& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const float& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const int32_t& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const Vec2& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const Vec3& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const Vec4& value) {
+        return _set_property_value(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const Mat3& value) {
+        return _set_property_value<Mat3>(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const Mat4& value) {
+        return _set_property_value<Mat4>(hsh, name, value);
+    }
+    bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                            const TexturePtr& value) {
+        return _set_property_value<TexturePtr>(hsh, name, value);
+    }
+
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const bool*& out) const {
+        return _property_value(hsh, out);
+    }
+
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const float*& out) const {
+        return _property_value(hsh, out);
+    }
+
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const int32_t*& out) const {
+        return _property_value(hsh, out);
+    }
+
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const Vec2*& out) const {
+        return _property_value(hsh, out);
+    }
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const Vec3*& out) const {
+        return _property_value(hsh, out);
+    }
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const Vec4*& out) const {
+        return _property_value(hsh, out);
+    }
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const Mat3*& out) const {
+        return _property_value(hsh, out);
+    }
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const Mat4*& out) const {
+        return _property_value(hsh, out);
+    }
+    bool property_value(const MaterialPropertyNameHash hsh,
+                        const TexturePtr*& out) const {
+        return _property_value(hsh, out);
+    }
+
+    template<typename T>
+    bool _property_value(const MaterialPropertyNameHash hsh,
+                         const T*& out) const {
+
+        auto it = find_entry(hsh);
+        if(it && it->entries[0]) {
+            out = it->entries[0].get<T>();
+            return true;
+        }
+
+        return false;
+    }
+
+    MaterialValuePool* _get_pool() const;
+
+    template<typename T>
+    bool _set_property_value(MaterialPropertyNameHash hsh, const char* name,
+                             const T& value) {
+
+        auto property_value_ptr = _get_pool()->get_or_create_value(value);
+        auto it = find_entry_or_last_in_bucket(hsh);
+        bool ret = false;
+        if(it && it->hsh == hsh) {
+            clear_override(hsh);
+            it->entries[0] = property_value_ptr;
+        } else {
+            auto entry = new MaterialPropertyEntry();
+            entry->hsh = hsh;
+            entry->entries[0] = property_value_ptr;
+            it->next = entry;
+            ret = true;
+        }
+
+        on_override(hsh, name, property_value_ptr.type());
+        return ret;
+    }
+
+    bool property_type(const char* name,
+                       MaterialPropertyType* type) const override {
+        auto hsh = material_property_hash(name);
+
+        auto it = find_entry(hsh);
+        if(it && it->entries[0]) {
+            *type = it->entries[0].type();
+            return true;
+        }
+
+        return false;
+    }
+
+    bool on_check_existence(MaterialPropertyNameHash hsh) const {
+        auto it = find_entry(hsh);
+        return it && it->entries[0];
+    }
 };
 
+template<typename T>
+bool MaterialPass::_set_property_value(MaterialPropertyNameHash hsh,
+                                       const char* name, const T& value) {
 
+    clear_override(hsh);
+
+    auto material = (Material*)parent_;
+    auto it = material->find_entry(hsh);
+
+    if(it == nullptr) {
+        // Material passes should not add entries if the parent material
+        // hasn't added it
+        return false;
+    }
+
+    auto property_value_ptr = material->_get_pool()->get_or_create_value(value);
+
+    it->entries[pass_number_ + 1] = property_value_ptr;
+    on_override(hsh, name, property_value_ptr.type());
+
+    return true;
+}
+
+template<typename T>
+bool MaterialPass::_property_value(const MaterialPropertyNameHash hsh,
+                                   const T*& out) const {
+
+    auto it = material()->find_entry(hsh);
+    if(it) {
+        if(it->entries[pass_number_ + 1]) {
+            out = it->entries[pass_number_ + 1].get<T>();
+            return true;
+        }
+
+        if(it->entries[0]) {
+            out = it->entries[0].get<T>();
+            return true;
+        }
+    }
+
+    return false;
+}
 }
 
 #endif // MATERIAL_H

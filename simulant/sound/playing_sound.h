@@ -19,7 +19,7 @@ typedef uint32_t AudioSourceID;
 
 typedef std::function<int32_t (AudioBufferID)> StreamFunc;
 
-typedef std::size_t PlayingSoundID;
+typedef std::size_t PlayingAssetID;
 
 enum AudioRepeat {
     AUDIO_REPEAT_NONE,
@@ -38,11 +38,11 @@ class PlayingSound:
     friend class AudioSource;
 
 private:
-    static PlayingSoundID counter_;
+    static PlayingAssetID counter_;
 
-    PlayingSoundID id_;
+    PlayingAssetID id_;
 
-    AudioSource& parent_;
+    AudioSource* parent_;
 
     AudioSourceID source_;
     std::vector<AudioBufferID> buffers_;
@@ -60,10 +60,10 @@ private:
     void do_stop();
 
 public:
-    PlayingSound(AudioSource& parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
+    PlayingSound(AudioSource* parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
     virtual ~PlayingSound();
 
-    PlayingSoundID id() const {
+    PlayingAssetID id() const {
         return id_;
     }
 
@@ -78,8 +78,8 @@ public:
 
     bool is_dead() const { return is_dead_; }
 
-    void set_gain(RangeValue<0, 1> gain);
-    void set_pitch(RangeValue<0, 1> pitch);
+    void set_gain(NormalizedFloat gain);
+    void set_pitch(NormalizedFloat pitch);
     void set_reference_distance(float dist);
 };
 

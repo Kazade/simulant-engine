@@ -4,9 +4,9 @@
 //     This file is part of Simulant.
 //
 //     Simulant is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU Lesser General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
+//     it under the terms of the GNU Lesser General Public License as published
+//     by the Free Software Foundation, either version 3 of the License, or (at
+//     your option) any later version.
 //
 //     Simulant is distributed in the hope that it will be useful,
 //     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,25 +18,24 @@
 //
 
 #include <fstream>
-#include <string>
 #include <iostream>
 #include <sstream>
+#include <string>
 
-#include "utils/kfs.h"
+#include "application.h"
+#include "loader.h"
 #include "logging.h"
+#include "platform.h"
+#include "renderers/renderer.h"
+#include "streams/file_ifstream.h"
+#include "utils/kfs.h"
 #include "vfs.h"
 #include "window.h"
-#include "renderers/renderer.h"
-#include "loader.h"
-#include "platform.h"
-#include "streams/file_ifstream.h"
-#include "application.h"
 
 #ifdef __ANDROID__
 #define ANDROID_ASSET_DIR_PREFIX "/android_asset"
 #define ANDROID_ASSET_DIR_PREFIX_SLASH "/android_asset/"
 #endif
-
 
 namespace smlt {
 
@@ -45,15 +44,17 @@ VirtualFileSystem::VirtualFileSystem() {
     auto cwd = find_working_directory();
     S_INFO("CWD: {0}", cwd.str());
     if(!cwd.str().empty()) {
-        add_search_path(cwd); //Add the working directory (might be different)
+        add_search_path(cwd); // Add the working directory (might be different)
     }
 
 #ifdef __ANDROID__
     add_search_path(".");
 #else
-    //Android can't find the executable directory in release mode, but can in debug!
+    // Android can't find the executable directory in release mode, but can in
+    // debug!
     auto ed = find_executable_directory();
-    add_search_path(ed); //Make sure the directory the executable lives is on the resource path
+    add_search_path(ed); // Make sure the directory the executable lives is on
+                         // the resource path
 #endif
 
 #ifdef __DREAMCAST__
@@ -70,8 +71,10 @@ VirtualFileSystem::VirtualFileSystem() {
 #endif
 
 #ifdef __linux__
-    add_search_path("/usr/local/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
-    add_search_path("/usr/share"); //Look in /usr/share (smlt files might be installed to /usr/share/smlt)
+    add_search_path("/usr/local/share"); // Look in /usr/share (smlt files might
+                                         // be installed to /usr/share/smlt)
+    add_search_path("/usr/share"); // Look in /usr/share (smlt files might be
+                                   // installed to /usr/share/smlt)
 #endif
 
     /* In any standard project there are assets in the 'assets' directory.
@@ -81,7 +84,8 @@ VirtualFileSystem::VirtualFileSystem() {
     for(auto& path: copy) {
 #ifdef __ANDROID__
         if(path.str().find(ANDROID_ASSET_DIR_PREFIX) == 0) {
-            path = path.str().substr(std::string(ANDROID_ASSET_DIR_PREFIX).size());
+            path =
+                path.str().substr(std::string(ANDROID_ASSET_DIR_PREFIX).size());
         }
 #endif
         add_search_path(kfs::path::join(path.str(), "assets"));
@@ -93,7 +97,8 @@ VirtualFileSystem::VirtualFileSystem() {
     for(auto& path: copy) {
 #ifdef __ANDROID__
         if(path.str().find(ANDROID_ASSET_DIR_PREFIX) == 0) {
-            path = path.str().substr(std::string(ANDROID_ASSET_DIR_PREFIX).size());
+            path =
+                path.str().substr(std::string(ANDROID_ASSET_DIR_PREFIX).size());
         }
 #endif
 
@@ -108,13 +113,16 @@ bool VirtualFileSystem::insert_search_path(uint32_t index, const Path& path) {
         return false;
     }
 
-    if(std::find(resource_path_.begin(), resource_path_.end(), new_path) != resource_path_.end()) {
+    if(std::find(resource_path_.begin(), resource_path_.end(), new_path) !=
+       resource_path_.end()) {
         return false;
     }
 
-    /* If someone passed in value gte than the length of the list, then we insert at the end, else
-     * we insert at the appropriate position */
-    auto it = (index >= resource_path_.size()) ? resource_path_.end() : std::next(resource_path_.begin(), index);
+    /* If someone passed in value gte than the length of the list, then we
+     * insert at the end, else we insert at the appropriate position */
+    auto it = (index >= resource_path_.size())
+                  ? resource_path_.end()
+                  : std::next(resource_path_.begin(), index);
     resource_path_.insert(it, path);
     clear_location_cache();
     return true;
@@ -128,7 +136,8 @@ bool VirtualFileSystem::add_search_path(const Path& path) {
      * we use this as a placeholder resource path, and we special case it when
      * we do existence checks etc. It's depressing how bad Android is at this
      * stuff */
-    new_path = kfs::path::norm_path(ANDROID_ASSET_DIR_PREFIX_SLASH + new_path.str());
+    new_path =
+        kfs::path::norm_path(ANDROID_ASSET_DIR_PREFIX_SLASH + new_path.str());
 #endif
 
     S_INFO("Adding path: {0}", new_path);
@@ -137,7 +146,8 @@ bool VirtualFileSystem::add_search_path(const Path& path) {
         return false;
     }
 
-    if(std::find(resource_path_.begin(), resource_path_.end(), new_path) != resource_path_.end()) {
+    if(std::find(resource_path_.begin(), resource_path_.end(), new_path) !=
+       resource_path_.end()) {
         return false;
     }
 
@@ -147,7 +157,9 @@ bool VirtualFileSystem::add_search_path(const Path& path) {
 }
 
 void VirtualFileSystem::remove_search_path(const Path& path) {
-    resource_path_.erase(std::remove(resource_path_.begin(), resource_path_.end(), path), resource_path_.end());
+    resource_path_.erase(
+        std::remove(resource_path_.begin(), resource_path_.end(), path),
+        resource_path_.end());
 }
 
 std::size_t VirtualFileSystem::location_cache_size() const {
@@ -165,13 +177,13 @@ void VirtualFileSystem::set_location_cache_limit(std::size_t entries) {
 static const char* RENDERER_PLACEHOLDER = "${RENDERER}";
 static const char* PLATFORM_PLACEHOLDER = "${PLATFORM}";
 
-optional<Path> VirtualFileSystem::locate_file(
-        const Path &filename,
-        bool use_cache,
-        bool fail_silently) const {
+optional<Path> VirtualFileSystem::locate_file(const Path& filename,
+                                              bool use_cache,
+                                              bool fail_silently) const {
 
     if(read_blocking_enabled_) {
-        S_ERROR("Attempted to locate {0} while read blocking was enabled", filename.str());
+        S_ERROR("Attempted to locate {0} while read blocking was enabled",
+                filename.str());
         return optional<Path>();
     }
 
@@ -200,10 +212,10 @@ optional<Path> VirtualFileSystem::locate_file(
     auto platform = get_platform();
     std::multimap<std::string, std::string> replacements = {
         {RENDERER_PLACEHOLDER,
-         (window && window->renderer) ? window->renderer->name() : ""},
-        {PLATFORM_PLACEHOLDER, platform->name()                      },
-        {RENDERER_PLACEHOLDER, ""                                    },
-        {PLATFORM_PLACEHOLDER, ""                                    },
+         (window && window->renderer) ? window->renderer->name() : "__ERROR__"},
+        {PLATFORM_PLACEHOLDER, platform->name()                               },
+        {RENDERER_PLACEHOLDER, ""                                             },
+        {PLATFORM_PLACEHOLDER, ""                                             },
     };
 
     for(auto& p: replacements) {
@@ -296,7 +308,8 @@ optional<Path> VirtualFileSystem::locate_file(
     return optional<Path>();
 }
 
-std::shared_ptr<std::istream> VirtualFileSystem::open_file(const Path& filename) {
+std::shared_ptr<std::istream>
+    VirtualFileSystem::open_file(const Path& filename) {
     auto p = locate_file(filename);
 
     if(!p.has_value()) {
@@ -310,7 +323,8 @@ std::shared_ptr<std::istream> VirtualFileSystem::open_file(const Path& filename)
     return file_in;
 }
 
-std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const Path& filename) {
+std::shared_ptr<std::stringstream>
+    VirtualFileSystem::read_file(const Path& filename) {
     auto file_in = open_file(filename);
     if(!file_in) {
         return std::shared_ptr<std::stringstream>();
@@ -321,7 +335,8 @@ std::shared_ptr<std::stringstream> VirtualFileSystem::read_file(const Path& file
     return result;
 }
 
-std::vector<std::string> VirtualFileSystem::read_file_lines(const Path &filename) {
+std::vector<std::string>
+    VirtualFileSystem::read_file_lines(const Path& filename) {
     auto p = locate_file(filename);
 
     if(!p) {
@@ -355,4 +370,4 @@ Path VirtualFileSystem::find_working_directory() {
     return kfs::get_cwd();
 }
 
-}
+} // namespace smlt

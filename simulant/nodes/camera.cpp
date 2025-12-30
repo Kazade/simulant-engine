@@ -1,66 +1,80 @@
 #include "camera.h"
 #include "actor.h"
 
-#include "../stage.h"
-#include "../window.h"
-#include "../viewport.h"
 #include "../application.h"
+#include "../stage.h"
+#include "../viewport.h"
+#include "../window.h"
+#include "simulant/math/mat4.h"
+
+#if defined(_MSC_VER)
+#undef near
+#undef far
+#endif
 
 namespace smlt {
 
+Camera::Camera(Scene* owner) :
+    ContainerNode(owner, STAGE_NODE_TYPE_CAMERA) {
 
-Camera::Camera(Stage *stage, SoundDriver* sound_driver):
-    TypedDestroyableObject<Camera, Stage>(stage),
-    ContainerNode(stage, STAGE_NODE_TYPE_CAMERA),
-    AudioSource(stage, this, sound_driver){
+    assert(owner);
 
-    assert(stage);
-
-    set_perspective_projection(smlt::Degrees(45.0f), get_app()->window->aspect_ratio());
+    set_perspective_projection(smlt::Degrees(45.0f),
+                               get_app()->window->aspect_ratio());
 }
 
-Camera::~Camera() {
+Camera::~Camera() {}
 
-}
-
-void Camera::update(float dt) {
-    StageNode::update(dt);
-}
-
-void Camera::update_transformation_from_parent() {
-    StageNode::update_transformation_from_parent();
-    transform_ = absolute_transformation();
+void Camera::on_transformation_changed() {
+    StageNode::on_transformation_changed();
     update_frustum();
 }
 
 void Camera::update_frustum() {
-    //Recalculate the view matrix
-    auto pos = absolute_position();
-    auto rot = absolute_rotation();
-    view_matrix_ = Mat4::as_look_at(pos, pos + rot.forward(), rot.up());
+    // Recalculate the view matrix
+    // view_matrix_ = Mat4::as_look_at(transform->position(),
+    //                                 transform->position() +
+    //                                     transform->orientation().forward(),
+    //                                 transform->orientation().up());
+
+    auto rot = smlt::Mat4::as_rotation(transform->orientation());
+    auto irot = rot.inversed();
+    auto trns = smlt::Mat4::as_translation(-transform->position());
+    view_matrix_ = irot * trns;
 
     Mat4 mvp = projection_matrix_ * view_matrix_;
 
-    frustum_.build(&mvp); //Update the frustum for this camera
+    frustum_.build(&mvp); // Update the frustum for this camera
 }
 
-void Camera::set_perspective_projection(const Degrees& fov, float aspect, float near, float far) {
-    projection_matrix_ = Mat4::as_projection(fov, aspect, near, far);
+void Camera::set_projection_matrix(const Mat4& matrix) {
+    projection_matrix_ = matrix;
     update_frustum();
 }
 
-void Camera::set_orthographic_projection(float left, float right, float bottom, float top, float near, float far) {
-    projection_matrix_ = Mat4::as_orthographic(left, right, bottom, top, near, far);
-    update_frustum();
+void Camera::set_perspective_projection(const Degrees& fov, float aspect,
+                                        float near, float far) {
+    set_projection_matrix(Mat4::as_projection(fov, aspect, near, far));
 }
 
-float Camera::set_orthographic_projection_from_height(float desired_height_in_units, float ratio) {
+void Camera::set_orthographic_projection(float left, float right, float bottom,
+                                         float top, float near, float far) {
+    set_projection_matrix(
+        Mat4::as_orthographic(left, right, bottom, top, near, far));
+}
+
+float Camera::set_orthographic_projection_from_height(
+    float desired_height_in_units, float ratio) {
     float width = desired_height_in_units * ratio;
-    set_orthographic_projection(-width / 2.0f, width / 2.0f, -desired_height_in_units / 2.0f, desired_height_in_units / 2.0f, -10.0f, 10.0f);
+    set_orthographic_projection(-width / 2.0f, width / 2.0f,
+                                -desired_height_in_units / 2.0f,
+                                desired_height_in_units / 2.0f, -10.0f, 10.0f);
     return width;
 }
 
-smlt::optional<Vec3> Camera::project_point(const RenderTarget &target, const Viewport &viewport, const Vec3& point) const {
+smlt::optional<Vec3> Camera::project_point(const RenderTarget& target,
+                                           const Viewport& viewport,
+                                           const Vec3& point) const {
     Vec4 in(point, 1.0);
     Vec4 out = view_matrix() * in;
     in = projection_matrix() * out;
@@ -82,14 +96,13 @@ smlt::optional<Vec3> Camera::project_point(const RenderTarget &target, const Vie
     float vp_xoffset = target.width() * viewport.x();
     float vp_yoffset = target.height() * viewport.y();
 
-    return Vec3(
-        in.x * vp_width + vp_xoffset,
-        in.y * vp_height + vp_yoffset,
-        in.z
-    );
+    return Vec3(in.x * vp_width + vp_xoffset, in.y * vp_height + vp_yoffset,
+                in.z);
 }
 
-smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const Viewport& viewport, const Vec3& win) {
+smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target,
+                                             const Viewport& viewport,
+                                             const Vec3& win) {
     /*
      * WARNING: This function is untested (FIXME) !!!
      */
@@ -97,13 +110,13 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const V
     Mat4 A, m;
     Vec4 in;
 
-    A = projection_matrix() * view_matrix();
+    A = view_matrix() * projection_matrix();
     m = A.inversed();
 
     float vx = float(target.width()) * viewport.x();
     float vy = float(target.height()) * viewport.y();
-    float vw = (float) viewport.width_in_pixels(target);
-    float vh = (float) viewport.height_in_pixels(target);
+    float vw = (float)viewport.width_in_pixels(target);
+    float vh = (float)viewport.height_in_pixels(target);
 
     in.x = (win.x - vx) / vw * 2.0f - 1.0f;
     in.y = (win.y - vy) / vh * 2.0f - 1.0f;
@@ -127,4 +140,64 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target, const V
     return smlt::optional<Vec3>(std::move(ret));
 }
 
+bool Camera2D::on_create(Params params) {
+    if(!clean_params<Camera2D>(params)) {
+        return false;
+    }
+
+    float xmag = params.get<float>("xmag").value();
+    float ymag = params.get<float>("ymag").value();
+
+    float n = params.get<float>("znear").value_or(-1.0f);
+    float f = params.get<float>("zfar").value_or(1.0f);
+
+    Mat4 proj;
+
+    proj[0] = 2.0f / xmag;
+    proj[5] = 2.0f / ymag;
+    proj[10] = -2.0f / (f - n);
+    proj[12] = -(f + n) / (f - n);
+    proj[15] = 1.0f;
+
+    Params new_params;
+    FloatArray matrix(proj.data(), proj.data() + 16);
+    new_params.set<FloatArray>("projection_matrix", matrix);
+    return Camera::on_create(new_params);
 }
+
+bool Camera3D::on_create(Params params) {
+    if(!clean_params<Camera2D>(params)) {
+        return false;
+    }
+
+    smlt::Mat4 proj;
+    auto zfar_maybe = params.get<float>("zfar");
+
+    float a = params.get<float>("aspect").value_or(1.0f);
+    float y = params.get<float>("yfov").value_or(60.0f);
+    float n = params.get<float>("znear").value_or(1.0f);
+
+    if(zfar_maybe) {
+        float f = zfar_maybe.value();
+        proj[0] = 1.0f / (a * std::tan(0.5f * y));
+        proj[5] = 1.0f / std::tan(0.5f * y);
+        proj[10] = (n + f) / (n - f);
+        proj[11] = -1.0f;
+        proj[14] = (2.0f * n * f) / (n - f);
+        proj[15] = 0.0f;
+    } else {
+        proj[0] = 1.0f / (a * std::tan(0.5f * y));
+        proj[5] = 1.0f / std::tan(0.5f * y);
+        proj[10] = -1;
+        proj[11] = -1;
+        proj[14] = -2.0f * n;
+        proj[15] = 0.0f;
+    }
+
+    Params new_params;
+    FloatArray matrix(proj.data(), proj.data() + 16);
+    new_params.set<FloatArray>("projection_matrix", matrix);
+    return Camera::on_create(new_params);
+}
+
+} // namespace smlt

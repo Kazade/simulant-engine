@@ -156,13 +156,13 @@ struct Material {
     float specular[4] = {0, 0, 0, 1}; /* RGBA order */
     float emission[4] = {0, 0, 0, 1}; /* RGBA order */
     float shininess;      /* Specular exponent as per OpenGL GL_SHININESS */
-    char diffuse_map[32]; /* Filename of the diffuse map, if byte zero is \0
+    char base_color_map[32]; /* Filename of the diffuse map, if byte zero is \0
                              then there is no diffuse map */
     char light_map[32];   /* Filename of the light map, if byte zero is \0 then
                              there is no light map */
     char normal_map[32];  /* Filename of the normal map, if byte zero is \0 then
                              there is no normal map */
-    char specular_map[32]; /* Filename of the specular map, if byte zero is \0
+    char metallic_roughness_map[32]; /* Filename of the specular map, if byte zero is \0
                               then there is no specular map */
 };
 

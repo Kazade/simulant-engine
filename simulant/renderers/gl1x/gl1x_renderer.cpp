@@ -36,23 +36,18 @@
 namespace smlt {
 
 batcher::RenderGroupKey GL1XRenderer::prepare_render_group(
-    batcher::RenderGroup* group,
-    const Renderable *renderable,
-    const MaterialPass *material_pass,
-    const uint8_t pass_number,
-    const bool is_blended,
-    const float distance_to_camera) {
+    batcher::RenderGroup* group, const Renderable* renderable,
+    const MaterialPass* material_pass, const RenderPriority priority,
+    const uint8_t pass_number, const bool is_blended,
+    const float distance_to_camera, uint16_t texture_id) {
 
     _S_UNUSED(renderable);
     _S_UNUSED(material_pass);
     _S_UNUSED(group);
 
     return batcher::generate_render_group_key(
-        pass_number,
-        is_blended,
-        distance_to_camera,
-        renderable->precedence
-    );
+        priority, pass_number, is_blended, distance_to_camera,
+        renderable->precedence, texture_id);
 }
 
 void GL1XRenderer::init_context() {
@@ -83,7 +78,7 @@ void GL1XRenderer::init_context() {
     GLCheck(glEnable, GL_DEPTH_TEST);
     GLCheck(glDepthFunc, GL_LEQUAL);
     GLCheck(glEnable, GL_CULL_FACE);
-
+    GLCheck(glEnable, GL_MULTISAMPLE);
 #ifndef __PSP__
     GLCheck(glHint, GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 #endif

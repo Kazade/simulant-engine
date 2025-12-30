@@ -24,6 +24,10 @@ class AABB {
     Vec3 extents_;
 
 public:
+    static AABB zero() {
+        return AABB();
+    }
+
     void set_min_max(const Vec3& min, const Vec3& max) {
         extents_ = (max - min) * 0.5f;
         center_ = min + extents_;
@@ -42,8 +46,8 @@ public:
     AABB(const Vec3& center, const Vec3& extents):
         center_(center), extents_(extents) {}
 
-    AABB(const Vec3& centre, float width);
-    AABB(const Vec3& centre, float xsize, float ysize, float zsize);
+    AABB(const Vec3& center, float width);
+    AABB(const Vec3& center, float xsize, float ysize, float zsize);
     AABB(const Vec3* vertices, const std::size_t count);    
     AABB(const VertexData& vertex_data);
 
@@ -78,7 +82,7 @@ public:
     bool intersects_aabb(const AABB& other) const;
     bool intersects_sphere(const smlt::Vec3& center, float radius) const;
 
-    Vec3 centre() const {
+    Vec3 center() const {
         return center_;
     }
 
@@ -94,14 +98,9 @@ public:
     }
 
     bool contains_point(const Vec3& p) const {
-        // FIXME: Use extents_ directly
-        if(p.x >= min().x && p.x <= max().x &&
-           p.y >= min().y && p.y <= max().y &&
-           p.z >= min().z && p.z <= max().z) {
-            return true;
-        }
-
-        return false;
+        return (p.x >= (center_.x - extents_.x) && p.x <= (center_.x + extents_.x) &&
+                p.y >= (center_.y - extents_.y) && p.y <= (center_.y + extents_.y) &&
+                p.z >= (center_.z - extents_.z) && p.z <= (center_.z + extents_.z));
     }
 
     bool contains_points(const Vec3* vertices, std::size_t count) const {

@@ -1,37 +1,39 @@
-#define RND_IMPLEMENTATION
+#include "random.h"
+#include "../application.h"
 
 #include <cstdint>
-#include "../application.h"
-#include "../time_keeper.h"
-#include "_rnd.h"
-#include "random.h"
+#include <random>
 
 namespace smlt {
 
-RandomGenerator::RandomGenerator() {
-    /* rand works everywhere, but it's not easy to create "instances" of rand so we
-     * just use it to seed the pcg there */
-    int32_t r = time(NULL);
-    if(r == -1) {
-        /* If time fails for some reason, fallback to time in us... but this
-         * might still be fairly determinate */
-        S_WARN("Failed to get the time in seconds");
-        r = get_app()->time_keeper->now_in_us() * 1000000;
-    }
-    rnd_pcg_seed(&rand_, (uint32_t) r);
-}
+struct _RandomImpl {
+    std::mt19937 engine;
 
-RandomGenerator::RandomGenerator(uint32_t seed) {
-    rnd_pcg_seed(&rand_, (RND_U32) seed);
-}
+    _RandomImpl(uint32_t seed) :
+        engine(seed) {}
+};
+
+RandomGenerator::~RandomGenerator() = default;
+
+RandomGenerator::RandomGenerator() :
+    impl_(std::make_unique<_RandomImpl>(std::random_device()())) {}
+
+RandomGenerator::RandomGenerator(uint32_t seed) :
+    impl_(std::make_unique<_RandomImpl>(seed)) {}
 
 float RandomGenerator::float_in_range(float lower, float upper) {
-    float dist = upper - lower;
-    return lower + (dist * rnd_pcg_nextf(&rand_));
+    std::uniform_real_distribution<> distr(lower, upper);
+    return distr(impl_->engine);
 }
 
 int32_t RandomGenerator::int_in_range(int32_t lower, int32_t upper) {
-    return rnd_pcg_range(&rand_, lower, upper);
+    std::uniform_int_distribution<> distr(lower, upper);
+    return distr(impl_->engine);
+}
+
+int32_t RandomGenerator::any_int() {
+    return int_in_range(std::numeric_limits<int32_t>::lowest(),
+                        std::numeric_limits<int32_t>::max());
 }
 
 Vec2 RandomGenerator::point_in_circle(float diameter) {
@@ -63,5 +65,4 @@ Vec2 RandomGenerator::direction_2d() {
 Vec3 RandomGenerator::direction_3d() {
     return point_on_sphere(1.0f);
 }
-
 }

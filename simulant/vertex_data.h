@@ -17,8 +17,12 @@
  */
 
 #pragma once
-
+#if !defined(_MSC_VER)
 #include <cstdint>
+#else
+#include <stdint.h>
+#endif
+
 #include <vector>
 
 #include "signals/signal.h"
@@ -26,7 +30,7 @@
 #include "generic/uniquely_identifiable.h"
 #include "generic/notifies_destruction.h"
 
-#include "colour.h"
+#include "color.h"
 #include "types.h"
 
 namespace smlt {
@@ -45,18 +49,19 @@ enum VertexAttributeType {
     VERTEX_ATTRIBUTE_TYPE_TEXCOORD5,
     VERTEX_ATTRIBUTE_TYPE_TEXCOORD6,
     VERTEX_ATTRIBUTE_TYPE_TEXCOORD7,
-    VERTEX_ATTRIBUTE_TYPE_DIFFUSE,
+    VERTEX_ATTRIBUTE_TYPE_COLOR,
     VERTEX_ATTRIBUTE_TYPE_SPECULAR
 };
 
 VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec);
 
 class VertexData :
-    public RefCounted<VertexData>,
     public UniquelyIdentifiable<VertexData>,
     public NotifiesDestruction<VertexData> {
 
 public:
+    typedef std::shared_ptr<VertexData> ptr;
+
     VertexData(VertexSpecification vertex_specification);
     virtual ~VertexData();
 
@@ -99,7 +104,7 @@ public:
     const T* texcoord1_at(uint32_t idx) const;
 
     template<typename T>
-    const T* diffuse_at(const uint32_t index) const;
+    const T* color_at(const uint32_t index) const;
 
     /*
      * Position Non-Dimensional
@@ -132,12 +137,13 @@ public:
     void tex_coord3(float x, float y, float z, float w);
     void tex_coord3(const Vec2& vec) { tex_coord3(vec.x, vec.y); }
 
-    void diffuse(float r, float g, float b, float a);
-    void diffuse(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-    void diffuse(const Colour& colour);
+    void color(float r, float g, float b);
+    void color(float r, float g, float b, float a);
+    void color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    void color(const Color& color);
 
     void specular(float r, float g, float b, float a);
-    void specular(const Colour& colour);
+    void specular(const Color& color);
 
     uint32_t count() const { return vertex_count_; }
 
@@ -198,7 +204,7 @@ public:
     bool interp_vertex(uint32_t source_idx, const VertexData& dest_state, uint32_t dest_idx, VertexData& out, uint32_t out_idx, float interp);
     uint8_t* data() { if(empty()) { return nullptr; } return &data_[0]; }
     const uint8_t* data() const { if(empty()) { return nullptr; } return &data_[0]; }
-    uint32_t data_size() const { return data_.size(); }
+    std::size_t data_size() const { return data_.size(); }
 
     VertexAttribute attribute_for_type(VertexAttributeType type) const;
 
@@ -280,10 +286,10 @@ template<>
 const Vec4* VertexData::texcoord1_at<Vec4>(uint32_t idx) const;
 
 template<>
-const Colour* VertexData::diffuse_at(const uint32_t index) const;
+const Color* VertexData::color_at(const uint32_t index) const;
 
 template<>
-const uint8_t* VertexData::diffuse_at(const uint32_t index) const;
+const uint8_t* VertexData::color_at(const uint32_t index) const;
 
 typedef uint32_t Index;
 
@@ -329,12 +335,13 @@ private:
 
 
 class IndexData:
-    public RefCounted<IndexData>,
     public UniquelyIdentifiable<IndexData>,
     public NotifiesDestruction<IndexData> {
 
     friend class IndexDataIterator;
 public:
+    typedef std::shared_ptr<IndexData> ptr;
+
     IndexData(IndexType type);
 
     IndexDataIterator begin() const {
@@ -387,7 +394,7 @@ public:
             break;
         }
 
-        count_ = indices_.size() / stride_;
+        count_ = (uint32_t)(indices_.size() / stride_);
     }
 
     void index(uint32_t idx) {
@@ -446,6 +453,6 @@ private:
     uint32_t max_index_ = 0;
 };
 
-typedef std::shared_ptr<IndexData> IndexDataPtr;
+typedef IndexData::ptr IndexDataPtr;
 
 }

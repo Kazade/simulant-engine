@@ -41,14 +41,15 @@ enum ViewportType {
 
 void calculate_ratios_from_viewport(ViewportType type, float& x, float& y, float& width, float& height);
 
-class Viewport : public RefCounted<Viewport> {
+class Viewport {
 public:
     Viewport();
     Viewport(const Viewport& rhs) = default;
     Viewport& operator=(const Viewport& rhs) = default;
 
-    Viewport(ViewportType type, const Colour& colour=smlt::Colour::BLACK);
-    Viewport(Ratio x, Ratio y, Ratio width, Ratio height, const Colour& colour=smlt::Colour::BLACK);
+    Viewport(ViewportType type, const Color& color = smlt::Color::black());
+    Viewport(Ratio x, Ratio y, Ratio width, Ratio height,
+             const Color& color = smlt::Color::black());
 
     Ratio x() const { return x_; }
     Ratio y() const { return y_; }
@@ -60,11 +61,10 @@ public:
 
     ViewportType type() const { return type_; }
 
-    void set_colour(const smlt::Colour& colour);
-    const Colour& colour() const {
-        return colour_;
+    void set_color(const smlt::Color& color);
+    const Color& color() const {
+        return color_;
     }
-
 private:
     Ratio x_;
     Ratio y_;
@@ -72,7 +72,7 @@ private:
     Ratio height_;
     
 	ViewportType type_;
-	Colour colour_;
+	Color color_;
 };
 
 }

@@ -1,12 +1,15 @@
 #pragma once
 
 #include "degrees.h"
-#include "radians.h"
 #include "euler.h"
+#include "lerp.h"
+#include "radians.h"
 #include "utils.h"
 #include "vec3.h"
 
 namespace smlt {
+
+typedef std::vector<float> FloatArray;
 
 struct Vec3;
 struct Mat3;
@@ -31,6 +34,9 @@ struct Quaternion {
         x(0), y(0), z(0), w(1) {
 
     }
+
+    Quaternion(const FloatArray& arr) :
+        x(arr[0]), y(arr[1]), z(arr[2]), w(arr[3]) {}
 
     Quaternion(const Degrees& pitch, const Degrees& yaw, const Degrees& roll);
 
@@ -66,7 +72,7 @@ struct Quaternion {
         w *= l;
     }
 
-    const Quaternion normalized() {
+    const Quaternion normalized() const {
         Quaternion result = *this;
         result.normalize();
         return result;
@@ -77,11 +83,7 @@ struct Quaternion {
     }
 
     float dot(const Quaternion& rhs) const {
-#ifdef __DREAMCAST__
-        return MATH_fipr(x, y, z, w, rhs.x, rhs.y, rhs.z, rhs.w);
-#else
         return x * rhs.x + y * rhs.y + z * rhs.z + w * rhs.w;
-#endif
     }
 
     void inverse() {
@@ -93,6 +95,10 @@ struct Quaternion {
         Quaternion result(*this);
         result.inverse();
         return result;
+    }
+
+    operator FloatArray() const {
+        return {x, y, z, w};
     }
 
     bool equals(const Quaternion& rhs) const {
@@ -235,15 +241,15 @@ struct Quaternion {
 
     Vec3 forward() const {
         // OpenGL coordinate system has Neg-z as "forward"
-        return Vec3::NEGATIVE_Z.rotated_by(*this);
+        return Vec3::forward().rotated_by(*this);
     }
 
     Vec3 up() const {
-        return Vec3::POSITIVE_Y.rotated_by(*this);
+        return Vec3::up().rotated_by(*this);
     }
 
     Vec3 right() const {
-        return Vec3::POSITIVE_X.rotated_by(*this);
+        return Vec3::right().rotated_by(*this);
     }
 
     /* Returns the Quaternion rotation representing a turn to direction, using up as a basis.

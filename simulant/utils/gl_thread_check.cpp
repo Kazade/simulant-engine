@@ -24,17 +24,21 @@ namespace smlt {
 std::shared_ptr<GLThreadCheck> GL_thread;
 
 void GLThreadCheck::check() {
+    // We only do this check in debug builds
+#ifndef NDEBUG
     try {
         if(GL_thread) {
             GL_thread->do_check();
         }
     } catch(WrongThreadError& e) {
+        _S_UNUSED(e);
         S_ERROR(
             "Tried to call OpenGL dependent code from the wrong thread {0} vs {1}",
             GL_thread->thread_id(), thread::this_thread_id()
         );
         throw;
     }
+#endif
 }
 
 GLThreadCheck::GLThreadCheck(thread::ThreadID render_thread):

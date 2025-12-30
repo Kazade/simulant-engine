@@ -1,9 +1,10 @@
 #pragma once
 
+#include "simulant/generic/containers/contiguous_map.h"
+#include "simulant/renderers/batching/render_queue.h"
 #include "simulant/simulant.h"
 #include "simulant/test.h"
-#include "simulant/renderers/batching/render_queue.h"
-#include "simulant/generic/containers/contiguous_map.h"
+#include "simulant/utils/float.h"
 
 namespace {
 
@@ -13,11 +14,11 @@ class RenderQueueTests : public test::SimulantTestCase {
 public:
     void set_up() {
         SimulantTestCase::set_up();
-        stage_ = scene->new_stage();
+        stage_ = scene->create_child<smlt::Stage>();
     }
 
     void tear_down() {
-        scene->destroy_stage(stage_->id());
+        stage_->destroy();
     }
 
     void test_render_group_insertion() {
@@ -27,17 +28,17 @@ public:
         batcher::RenderGroup key2;
         batcher::RenderGroup key3;
 
-        key1.sort_key.pass = 0;
-        key1.sort_key.is_blended = true;
-        key1.sort_key.distance_to_camera = 739.956055;
+        key1.sort_key.s.pass = 0;
+        key1.sort_key.s.is_blended = true;
+        key1.sort_key.s.distance_to_camera = float10_from_float(739.956055)->i;
 
-        key2.sort_key.pass = 0;
-        key2.sort_key.is_blended = true;
-        key2.sort_key.distance_to_camera = 1523.241211;
+        key2.sort_key.s.pass = 0;
+        key2.sort_key.s.is_blended = true;
+        key2.sort_key.s.distance_to_camera = float10_from_float(1523.241211)->i;
 
-        key3.sort_key.pass = 0;
-        key3.sort_key.is_blended = true;
-        key3.sort_key.distance_to_camera = 1518.375244;
+        key3.sort_key.s.pass = 0;
+        key3.sort_key.s.is_blended = true;
+        key3.sort_key.s.distance_to_camera = float10_from_float(1518.375244)->i;
 
         SortedRenderables queue;
 
@@ -63,25 +64,25 @@ public:
     }
 
     void test_render_group_key_generation() {
-        batcher::RenderGroup pass0_unblended_100_tex1 = {batcher::generate_render_group_key(
-            0, false, 100.0f, 0
-        )};
+        batcher::RenderGroup pass0_unblended_100_tex1 = {
+            batcher::generate_render_group_key(RENDER_PRIORITY_MAIN, 0, false,
+                                               100.0f, 0, 0)};
 
-        batcher::RenderGroup  pass0_unblended_10_tex1 = {batcher::generate_render_group_key(
-            0, false, 10.0f, 0
-        )};
+        batcher::RenderGroup pass0_unblended_10_tex1 = {
+            batcher::generate_render_group_key(RENDER_PRIORITY_MAIN, 0, false,
+                                               10.0f, 0, 0)};
 
-        batcher::RenderGroup  pass0_blended_100_tex1 = {batcher::generate_render_group_key(
-            0, true, 100.0f, 0
-        )};
+        batcher::RenderGroup pass0_blended_100_tex1 = {
+            batcher::generate_render_group_key(RENDER_PRIORITY_MAIN, 0, true,
+                                               100.0f, 0, 0)};
 
-        batcher::RenderGroup  pass0_blended_10_tex1 = {batcher::generate_render_group_key(
-            0, true, 10.0f, 0
-        )};
+        batcher::RenderGroup pass0_blended_10_tex1 = {
+            batcher::generate_render_group_key(RENDER_PRIORITY_MAIN, 0, true,
+                                               10.0f, 0, 0)};
 
-        batcher::RenderGroup  pass1_blended_10_tex1 = {batcher::generate_render_group_key(
-            1, true, 10.0f, 0
-        )};
+        batcher::RenderGroup pass1_blended_10_tex1 = {
+            batcher::generate_render_group_key(RENDER_PRIORITY_MAIN, 1, true,
+                                               10.0f, 0, 0)};
 
         assert_true(pass0_unblended_100_tex1 < pass0_blended_100_tex1);
         assert_true(pass0_unblended_100_tex1 < pass0_blended_10_tex1);

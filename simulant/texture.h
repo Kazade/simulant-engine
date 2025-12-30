@@ -3,9 +3,9 @@
  *     This file is part of Simulant.
  *
  *     Simulant is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Lesser General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
  *
  *     Simulant is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,38 +19,20 @@
 #ifndef TEXTURE_H_INCLUDED
 #define TEXTURE_H_INCLUDED
 
+#include "asset.h"
+#include "assets/texture_flags.h"
+#include "generic/identifiable.h"
+#include "generic/managed.h"
+#include "interfaces.h"
+#include "loadable.h"
+#include "path.h"
+#include "types.h"
 #include <cstdint>
 #include <memory>
 #include <queue>
 #include <vector>
-#include "generic/identifiable.h"
-#include "generic/managed.h"
-#include "loadable.h"
-#include "types.h"
-#include "asset.h"
-#include "interfaces.h"
-#include "interfaces/updateable.h"
-#include "path.h"
 
 namespace smlt {
-
-enum MipmapGenerate {
-    MIPMAP_GENERATE_NONE,
-    MIPMAP_GENERATE_COMPLETE
-};
-
-enum TextureWrap {
-    TEXTURE_WRAP_REPEAT,
-    TEXTURE_WRAP_CLAMP_TO_EDGE,
-    TEXTURE_WRAP_MIRRORED_REPEAT,
-    TEXTURE_WRAP_MIRRORED_CLAMP_TO_EDGE
-};
-
-enum TextureFilter {
-    TEXTURE_FILTER_POINT,
-    TEXTURE_FILTER_BILINEAR,
-    TEXTURE_FILTER_TRILINEAR
-};
 
 enum BlurType {
     BLUR_TYPE_SIMPLE,
@@ -116,11 +98,6 @@ std::size_t texture_format_channels(TextureFormat format);
  * data following the main texture data */
 bool texture_format_contains_mipmaps(TextureFormat format);
 
-enum TextureFreeData {
-    TEXTURE_FREE_DATA_NEVER,
-    TEXTURE_FREE_DATA_AFTER_UPLOAD
-};
-
 class Renderer;
 
 enum TextureChannel {
@@ -135,7 +112,7 @@ enum TextureChannel {
 
 struct Pixel {
     Pixel() = default;
-    Pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a):
+    Pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a) :
         rgba{r, g, b, a} {}
 
     uint8_t rgba[4];
@@ -148,12 +125,11 @@ struct Pixel {
 
 typedef std::array<TextureChannel, 4> TextureChannelSet;
 
-class Texture :
+class Texture:
     public Asset,
     public Loadable,
-    public generic::Identifiable<TextureID>,
+    public generic::Identifiable<AssetID>,
     public RefCounted<Texture>,
-    public Updateable,
     public RenderTarget,
     public ChainNameable<Texture> {
 
@@ -168,9 +144,10 @@ public:
     typedef std::shared_ptr<Texture> ptr;
     typedef std::vector<uint8_t> Data;
 
-    Texture(TextureID id, AssetManager* asset_manager, uint16_t width, uint16_t height, TextureFormat format=TEXTURE_FORMAT_RGBA_4UB_8888);
+    Texture(AssetID id, AssetManager* asset_manager, uint16_t width,
+            uint16_t height,
+            TextureFormat format = TEXTURE_FORMAT_RGBA_4UB_8888);
     ~Texture();
-
 
     TextureFormat format() const;
     void set_format(TextureFormat format);
@@ -198,15 +175,15 @@ public:
      * texture data is empty */
     bool blur(BlurType blur_type, std::size_t radius);
 
-    /* Returns the byte colour data for the specified location. Will return
+    /* Returns the byte color data for the specified location. Will return
      * nothing if the texture data is empty, or it's a compressed texture */
     smlt::optional<Pixel> pixel(std::size_t x, std::size_t y);
 
-    /** Convert a texture to a new format and allow manipulating/filling the channels during the conversion */
+    /** Convert a texture to a new format and allow manipulating/filling the
+     * channels during the conversion */
     bool convert(
         TextureFormat new_format,
-        const TextureChannelSet& channels=Texture::DEFAULT_SOURCE_CHANNELS
-    );
+        const TextureChannelSet& channels = Texture::DEFAULT_SOURCE_CHANNELS);
 
     /**
      * Change the width and height, but manually set the data buffer size,
@@ -237,7 +214,8 @@ public:
     void set_free_data_mode(TextureFreeData mode);
 
     /** Set the texture wrap modes, either together or per-dimension */
-    void set_texture_wrap(TextureWrap wrap_u, TextureWrap wrap_v, TextureWrap wrap_w);
+    void set_texture_wrap(TextureWrap wrap_u, TextureWrap wrap_v,
+                          TextureWrap wrap_w);
     void set_texture_wrap_u(TextureWrap wrap_u);
     void set_texture_wrap_v(TextureWrap wrap_v);
     void set_texture_wrap_w(TextureWrap wrap_w);
@@ -246,7 +224,7 @@ public:
      * by the renderer. You can disable this if you need just a way
      * to load images from disk for other purposes (e.g. heightmaps)
      */
-    void set_auto_upload(bool v=true);
+    void set_auto_upload(bool v = true);
     void set_mipmap_generation(MipmapGenerate type);
 
     /** Return a copy of the internal data array */
@@ -258,19 +236,25 @@ public:
 
     /** Returns the size of the currently allocated data
      *  buffer, this will be zero if the data only
-     *  exists in vram. For paletted texture this will be the size of the data plus
-     *  the size of the palette. */
+     *  exists in vram. For paletted texture this will be the size of the data
+     * plus the size of the palette. */
     uint32_t data_size() const;
 
-    /** The required size that data() should be to hold a texture in this format with these dimensions.
-      * For non-compressed formats this is usually the width * height * stride. For compressed formats
-      * this can vary, and will include any space for things like codebooks. For paletted textures
-      * this will return the size of the index data + plus the size of the palette
-    */
-    static std::size_t required_data_size(TextureFormat fmt, uint16_t width, uint16_t height);
+    /** The required size that data() should be to hold a texture in this format
+     * with these dimensions. For non-compressed formats this is usually the
+     * width * height * stride. For compressed formats this can vary, and will
+     * include any space for things like codebooks. For paletted textures this
+     * will return the size of the index data + plus the size of the palette
+     */
+    static std::size_t required_data_size(TextureFormat fmt, uint16_t width,
+                                          uint16_t height);
 
     void set_data(const uint8_t* data, std::size_t size);
     void set_data(const std::vector<uint8_t>& data);
+
+    /* Equivalent to calling resize() but returns a pointer
+     * to the resized data for writing into */
+    uint8_t* map_data(std::size_t size);
 
     /** Clear the data buffer */
     void free();
@@ -280,18 +264,22 @@ public:
 
     /**
      * Flushes texture data / properties to the renderer immediately. This
-     * will free ram if the free data mode is set to TEXTURE_FREE_DATA_AFTER_UPLOAD
+     * will free ram if the free data mode is set to
+     * TEXTURE_FREE_DATA_AFTER_UPLOAD
      */
     void flush();
 
-    typedef std::function<void (uint8_t*, uint16_t, uint16_t, TextureFormat)> MutationFunc;
+    typedef std::function<void(uint8_t*, uint16_t, uint16_t, TextureFormat)>
+        MutationFunc;
 
     /** Apply a mutation function to the current texture data */
     void mutate_data(MutationFunc func);
 
     uint16_t width() const override;
     uint16_t height() const override;
-    Vec2 dimensions() const { return Vec2(width(), height()); }
+    Vec2 dimensions() const {
+        return Vec2(width(), height());
+    }
 
     /**
      * Returns true if this Texture uses a compressed format
@@ -318,9 +306,8 @@ public:
     TextureFreeData free_data_mode() const;
 
     /** These are overridden to notify the renderer of texture changes */
-    bool init() override;
-    void clean_up() override;
-    void update(float dt) override;
+    bool on_init() override;
+    void on_clean_up() override;
 
     /** Returns true if the format contains mipmap data, or mipmaps
      * have been generated during texture upload */
@@ -347,17 +334,19 @@ public:
 
     /** INTERNAL: copy the current data to the paletted data array */
     uint8_t* _stash_paletted_data();
+
 private:
     Renderer* renderer_ = nullptr;
 
     uint16_t width_ = 0;
     uint16_t height_ = 0;
 
-    TextureFormat format_ = TEXTURE_FORMAT_RGBA_4UB_8888;
+    TextureFormat format_ = TEXTURE_FORMAT_INVALID;
 
     Path source_;
 
-    bool auto_upload_ = true; /* If true, the texture is uploaded by the renderer asap */
+    bool auto_upload_ =
+        true; /* If true, the texture is uploaded by the renderer asap */
 
     void resize_data(uint32_t byte_size);
 
@@ -389,6 +378,6 @@ private:
     uint32_t renderer_id_ = 0;
 };
 
-}
+} // namespace smlt
 
 #endif // TEXTURE_H_INCLUDED

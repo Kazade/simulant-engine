@@ -12,6 +12,9 @@ RUN git clone --recursive https://github.com/KallistiOS/kos-ports.git /opt/toolc
 
 RUN cd /opt/toolchains/dc/kos/utils/dc-chain && cp Makefile.default.cfg Makefile.cfg 
 
+# Switch to the 14.2.0 toolchain to avoid issues with LTO
+RUN sed -i 's/toolchain_profile=stable/toolchain_profile=14.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile.cfg
+
 # Speed up compilation
 RUN sed -i 's/makejobs=2/makejobs=8/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile.cfg
 

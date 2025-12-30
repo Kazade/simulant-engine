@@ -2,6 +2,10 @@
 
 #include "mutex.h"
 
+#ifdef __DREAMCAST__
+#include <kos/cond.h>
+#endif
+
 namespace smlt {
 namespace thread {
 

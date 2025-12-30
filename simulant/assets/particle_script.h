@@ -17,16 +17,16 @@ enum EmitterType {
 struct Emitter {
     EmitterType type = PARTICLE_EMITTER_POINT;
     Vec3 relative_position;
-    Vec3 direction = Vec3::POSITIVE_Y;
+    Vec3 direction = Vec3::up();
     Vec3 dimensions = Vec3(100, 100, 100);
 
-    std::pair<float, float> duration_range = std::make_pair(0.0, 0.0);
-    std::pair<float, float> repeat_delay_range = std::make_pair(0.0, 0.0);
-    std::pair<float, float> velocity_range = std::make_pair(1.0, 1.0);
-    std::pair<float, float> ttl_range = std::make_pair(5.0, 5.0);
+    std::pair<float, float> duration_range = std::make_pair(0.0f, 0.0f);
+    std::pair<float, float> repeat_delay_range = std::make_pair(0.0f, 0.0f);
+    std::pair<float, float> velocity_range = std::make_pair(1.0f, 1.0f);
+    std::pair<float, float> ttl_range = std::make_pair(5.0f, 5.0f);
 
     Degrees angle;
-    std::vector<Colour> colours = {Colour::WHITE};
+    std::vector<Color> colors = {Color::white()};
 
     float emission_rate = 10.0f;
 };
@@ -66,7 +66,7 @@ typedef std::shared_ptr<Manipulator> ManipulatorPtr;
 class ParticleScript:
     public Asset,
     public Loadable,
-    public generic::Identifiable<ParticleScriptID>,
+    public generic::Identifiable<AssetID>,
     public RefCounted<ParticleScript>,
     public ChainNameable<ParticleScript> {
 
@@ -78,7 +78,7 @@ public:
     };
 
 
-    ParticleScript(ParticleScriptID id, AssetManager* asset_manager);
+    ParticleScript(AssetID id, AssetManager* asset_manager);
 
     std::size_t emitter_count() const;
     const Emitter* emitter(std::size_t i) const;

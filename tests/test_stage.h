@@ -13,19 +13,21 @@ class StageTests : public smlt::test::SimulantTestCase {
 public:
 
     void test_actor_destruction() {
-        auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
-        std::set<ActorID> destroyed_ids;
-        sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
+        std::set<StageNodeID> destroyed_ids;
+        sig::scoped_connection conn = scene->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
             assert_equal(type, STAGE_NODE_TYPE_ACTOR);
             destroyed_count++;
-            destroyed_ids.insert(dynamic_cast<Actor*>(node)->id());
+            destroyed_ids.insert(node->id());
         });
 
-        auto a1 = stage->new_actor();
-        auto a2 = stage->new_actor_with_parent(a1);
-        stage->new_actor_with_parent(a2);
+        auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto a1 = scene->create_child<smlt::Actor>(m);
+        auto a2 = scene->create_child<smlt::Actor>(m);
+        a2->set_parent(a1);
+
+        scene->create_child<smlt::Actor>(m)->set_parent(a2);
 
         auto a2id = a2->id();
         a2->destroy();
@@ -36,26 +38,23 @@ public:
         assert_equal(destroyed_count, 2); // Should've destroyed 2
 
         assert_true(destroyed_ids.count(a2id));
-
-
     }
 
     void test_camera_destruction() {
-        auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
-        std::set<CameraID> destroyed_ids;
-        sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](smlt::StageNode* node, StageNodeType type) {
+        std::set<StageNodeID> destroyed_ids;
+        sig::scoped_connection conn = scene->signal_stage_node_destroyed().connect([&](smlt::StageNode* node, StageNodeType type) {
             assert_equal(type, STAGE_NODE_TYPE_CAMERA);
             destroyed_count++;
             destroyed_ids.insert(dynamic_cast<Camera*>(node)->id());
         });
 
-        auto a1 = stage->new_camera();
-        auto a2 = stage->new_camera();
+        auto a1 = scene->create_child<smlt::Camera3D>();
+        auto a2 = scene->create_child<smlt::Camera3D>();
         a2->set_parent(a1);
 
-        auto a3 = stage->new_camera();
+        auto a3 = scene->create_child<smlt::Camera3D>();
         a3->set_parent(a2);
 
         auto a2id = a2->id();
@@ -70,23 +69,22 @@ public:
     }
 
     void test_particle_system_destruction() {
-        auto stage = scene->new_stage();
         auto destroyed_count = 0;
 
-        std::set<ParticleSystemID> destroyed_ids;
-        sig::scoped_connection conn = stage->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
+        std::set<StageNodeID> destroyed_ids;
+        sig::scoped_connection conn = scene->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
           assert_equal(type, STAGE_NODE_TYPE_PARTICLE_SYSTEM);
           destroyed_count++;
           destroyed_ids.insert(dynamic_cast<ParticleSystem*>(node)->id());
         });
 
-        auto script = stage->assets->new_particle_script_from_file(ParticleScript::BuiltIns::FIRE);
-        auto a1 = stage->new_particle_system(script);
+        auto script = scene->assets->load_particle_script(ParticleScript::BuiltIns::FIRE);
+        auto a1 = scene->create_child<smlt::ParticleSystem>(script);
 
-        auto a2 = stage->new_particle_system(script);
+        auto a2 = scene->create_child<smlt::ParticleSystem>(script);
         a2->set_parent(a1);
 
-        auto a3 = stage->new_particle_system(script);
+        auto a3 = scene->create_child<smlt::ParticleSystem>(script);
         a3->set_parent(a2);
 
         auto a2id = a2->id();
@@ -101,9 +99,8 @@ public:
     }
 
     void test_stage_node_clean_up_signals() {
-        auto stage = scene->new_stage();
-
-        auto actor = stage->new_actor();
+        auto m = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+        auto actor = scene->create_child<smlt::Actor>(m);
 
         bool cleaned_up = false;
         bool destroyed = false;
@@ -128,12 +125,7 @@ public:
     }
 
     void test_iteration_types() {
-        auto stage = scene->new_stage();
-
-        for(auto& node: stage->each_child()) {
-            node.destroy();
-        }
-        application->run_frame();
+        auto stage = scene->create_child<smlt::Stage>();
 
         /*
             stage-> o
@@ -145,12 +137,14 @@ public:
           c2  o   o  c3
         */
 
-        auto a1 = stage->new_actor();
-        auto a2 = stage->new_actor();
-        auto c1 = stage->new_actor();
-        auto c2 = stage->new_actor();
-        auto c3 = stage->new_actor();
-        auto c4 = stage->new_actor();
+        auto a1 = scene->create_child<smlt::Stage>();
+        auto a2 = scene->create_child<smlt::Stage>();
+        auto c1 = scene->create_child<smlt::Stage>();
+        auto c2 = scene->create_child<smlt::Stage>();
+        auto c3 = scene->create_child<smlt::Stage>();
+        auto c4 = scene->create_child<smlt::Stage>();
+        a1->set_parent(stage);
+        a2->set_parent(stage);
         c1->set_parent(a1);
         c2->set_parent(c1);
         c3->set_parent(c1);
@@ -249,6 +243,7 @@ public:
         expected.insert(c1);
         expected.insert(a1);
         expected.insert(stage);
+        expected.insert(scene);
 
         assert_items_equal(found, expected);
     }

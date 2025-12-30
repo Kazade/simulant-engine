@@ -4,9 +4,9 @@
 //     This file is part of Simulant.
 //
 //     Simulant is free software: you can redistribute it and/or modify
-//     it under the terms of the GNU Lesser General Public License as published by
-//     the Free Software Foundation, either version 3 of the License, or
-//     (at your option) any later version.
+//     it under the terms of the GNU Lesser General Public License as published
+//     by the Free Software Foundation, either version 3 of the License, or (at
+//     your option) any later version.
 //
 //     Simulant is distributed in the hope that it will be useful,
 //     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,56 +19,70 @@
 
 #include "geom.h"
 #include "../stage.h"
+#include "camera.h"
 #include "geoms/octree_culler.h"
 #include "geoms/quadtree_culler.h"
-#include "camera.h"
+#include "simulant/utils/params.h"
 
 namespace smlt {
 
-Geom::Geom(Stage* stage, SoundDriver* sound_driver, MeshID mesh, const Vec3 &position, const Quaternion rotation, const Vec3 &scale, GeomCullerOptions culler_options):
-    TypedDestroyableObject<Geom, Stage>(stage),
-    StageNode(stage, STAGE_NODE_TYPE_GEOM),
-    AudioSource(stage, this, sound_driver),
-    mesh_id_(mesh),
-    culler_options_(culler_options),
-    desired_transform(position),
-    desired_rotation(rotation),
-    desired_scale(scale) {
+Geom::Geom(Scene* owner) :
+    StageNode(owner, STAGE_NODE_TYPE_GEOM) {}
 
-    set_parent(stage);
-}
+bool Geom::on_create(Params params) {
+    if(!clean_params<Geom>(params)) {
+        return false;
+    }
 
-bool Geom::init() {
-    auto mesh_ptr = stage->assets->mesh(mesh_id_);
+    auto mesh_ptr = params.get<MeshRef>("mesh").value_or(MeshRef()).lock();
     assert(mesh_ptr);
 
     if(!mesh_ptr) {
         return false;
     }
 
-    if(culler_options_.type == GEOM_CULLER_TYPE_QUADTREE) {
-        culler_.reset(new QuadtreeCuller(this, mesh_ptr, culler_options_.quadtree_max_depth));
+    auto opts =
+        params.get<GeomCullerOptions>("options").value_or(GeomCullerOptions());
+
+    if(opts.type == GEOM_CULLER_TYPE_QUADTREE) {
+        culler_.reset(
+            new QuadtreeCuller(this, mesh_ptr, opts.quadtree_max_depth));
     } else {
-        assert(culler_options_.type == GEOM_CULLER_TYPE_OCTREE);
-        culler_.reset(new OctreeCuller(this, mesh_ptr, culler_options_.octree_max_depth));
+        assert(opts.type == GEOM_CULLER_TYPE_OCTREE);
+        culler_.reset(new OctreeCuller(this, mesh_ptr, opts.octree_max_depth));
     }
 
     /* FIXME: Transform and recalc */
     aabb_ = mesh_ptr->aabb();
 
-    culler_->compile(desired_transform, desired_rotation, desired_scale);
+    // Call up to apply transform to node
+    bool ret = StageNode::on_create(params);
+    if(!ret) {
+        return false;
+    }
+
+    // Compile the culler around the current transform
+    Vec3 pos = transform->position();
+    Quaternion rot = transform->orientation();
+    Vec3 scale = transform->scale();
+    culler_->compile(pos, rot, scale);
     return true;
 }
 
-const AABB &Geom::aabb() const {
+const AABB& Geom::aabb() const {
     return aabb_;
 }
 
-void Geom::_get_renderables(batcher::RenderQueue* render_queue, const CameraPtr camera, const DetailLevel detail_level) {
+void Geom::do_generate_renderables(batcher::RenderQueue* render_queue,
+                                   const Camera* camera, const Viewport*,
+                                   const DetailLevel detail_level,
+                                   Light** lights,
+                                   const std::size_t light_count) {
     _S_UNUSED(detail_level);
+    _S_UNUSED(lights);
+    _S_UNUSED(light_count);
 
     culler_->renderables_visible(camera->frustum(), render_queue);
 }
 
-
-}
+} // namespace smlt

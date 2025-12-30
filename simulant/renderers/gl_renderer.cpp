@@ -38,10 +38,9 @@ namespace smlt {
 
 GLRenderer::GLRenderer(Window* window):
     Renderer(window) {
-
 }
 
-void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
+void GLRenderer::on_texture_register(AssetID tex_id, Texture* texture) {
     _S_UNUSED(tex_id);
 
     GLuint gl_tex;
@@ -58,7 +57,7 @@ void GLRenderer::on_texture_register(TextureID tex_id, Texture* texture) {
     texture->_set_renderer_specific_id(gl_tex);
 }
 
-void GLRenderer::on_texture_unregister(TextureID tex_id, Texture* texture) {
+void GLRenderer::on_texture_unregister(AssetID tex_id, Texture* texture) {
     _S_UNUSED(tex_id);
 
     GLuint gl_tex = texture->_renderer_specific_id();
@@ -156,7 +155,7 @@ void GLRenderer::init_context() {
 
 static constexpr GLenum texture_format_to_internal_format(TextureFormat format) {
     return (format == TEXTURE_FORMAT_R_1UB_8) ? GL_RED :
-               (format == TEXTURE_FORMAT_RGB_3UB_888) ? GL_RGB :
+           (format == TEXTURE_FORMAT_RGB_3UB_888) ? GL_RGB :
            (format == TEXTURE_FORMAT_RGB_1US_565) ? GL_RGB :
             GL_RGBA;
 }
@@ -174,16 +173,15 @@ void GLRenderer::apply_viewport(const RenderTarget& target,
     GLCheck(glViewport, x, y, width, height);
 }
 
-void GLRenderer::clear(const RenderTarget& target, const Colour& colour,
+void GLRenderer::clear(const RenderTarget& target, const Color& color,
                        uint32_t clear_flags) {
 
     _S_UNUSED(target);
 
-    GLCheck(glClearColor, colour.r, colour.g, colour.b, colour.a);
+    GLCheck(glClearColor, color.r, color.g, color.b, color.a);
 
     uint32_t gl_clear_flags = 0;
-    if((clear_flags & BUFFER_CLEAR_COLOUR_BUFFER) ==
-       BUFFER_CLEAR_COLOUR_BUFFER) {
+    if((clear_flags & BUFFER_CLEAR_COLOR_BUFFER) == BUFFER_CLEAR_COLOR_BUFFER) {
         gl_clear_flags |= GL_COLOR_BUFFER_BIT;
     }
 
@@ -257,7 +255,12 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                 uint8_t* palette = texture->_stash_paletted_data();
                 uint8_t* indexed = palette + texture->palette_size();
 
-                auto half_byte = (f == TEXTURE_FORMAT_RGB565_PALETTED4 || f == TEXTURE_FORMAT_RGB8_PALETTED4 || f == TEXTURE_FORMAT_RGBA8_PALETTED4);
+                auto half_byte = (
+                    f == TEXTURE_FORMAT_RGB565_PALETTED4 ||
+                    f == TEXTURE_FORMAT_RGB8_PALETTED4 ||
+                    f == TEXTURE_FORMAT_RGBA8_PALETTED4
+                );
+
                 auto texel_size = (f == TEXTURE_FORMAT_RGB565_PALETTED4 || f == TEXTURE_FORMAT_RGB565_PALETTED8) ? 2 :
                                   (f == TEXTURE_FORMAT_RGB8_PALETTED4 || f == TEXTURE_FORMAT_RGB8_PALETTED4) ? 3 : 4;
 
@@ -333,7 +336,8 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
                     texture->_set_has_mipmaps(true);
                 }
             } else {
-                GLCheck(glTexImage2D,
+                GLCheck(
+                    glTexImage2D,
                     GL_TEXTURE_2D,
                     0, internal_format,
                     texture->width(), texture->height(), 0,

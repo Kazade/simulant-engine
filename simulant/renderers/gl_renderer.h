@@ -10,12 +10,10 @@
 namespace smlt {
 
 constexpr const char* const LIGHT_POSITION_PROPERTY = "s_light_position";
-constexpr const char* const LIGHT_AMBIENT_PROPERTY = "s_light_ambient";
-constexpr const char* const LIGHT_DIFFUSE_PROPERTY = "s_light_diffuse";
-constexpr const char* const LIGHT_SPECULAR_PROPERTY = "s_light_specular";
-constexpr const char* const LIGHT_CONSTANT_ATTENUATION_PROPERTY = "s_light_constant_attenuation";
-constexpr const char* const LIGHT_LINEAR_ATTENUATION_PROPERTY = "s_light_linear_attenuation";
-constexpr const char* const LIGHT_QUADRATIC_ATTENUATION_PROPERTY = "s_light_quadratic_attenuation";
+constexpr const char* const LIGHT_COLOR_PROPERTY = "s_light_color";
+constexpr const char* const LIGHT_INTENSITY_PROPERTY = "s_light_intensity";
+constexpr const char* const LIGHT_RANGE_PROPERTY = "s_light_range";
+constexpr const char* const LIGHT_COUNT_PROPERTY = "s_light_count";
 constexpr const char* const VIEW_MATRIX_PROPERTY = "s_view";
 constexpr const char* const MODELVIEW_PROJECTION_MATRIX_PROPERTY = "s_modelview_projection";
 constexpr const char* const PROJECTION_MATRIX_PROPERTY = "s_projection";
@@ -51,8 +49,8 @@ class GLRenderer : public Renderer {
 protected:
     GLRenderer(Window* window);
 
-    void on_texture_register(TextureID tex_id, Texture *texture) override;
-    void on_texture_unregister(TextureID tex_id, Texture* texture) override;
+    void on_texture_register(AssetID tex_id, Texture *texture) override;
+    void on_texture_unregister(AssetID tex_id, Texture* texture) override;
     void on_texture_prepare(Texture* texture) override;
     bool texture_format_is_native(TextureFormat fmt) override;
 
@@ -60,7 +58,7 @@ protected:
     uint32_t convert_type(TextureFormat format);
 
     thread::Mutex texture_object_mutex_;
-    std::unordered_map<TextureID, uint32_t> texture_objects_;
+    std::unordered_map<AssetID, uint32_t> texture_objects_;
 
     bool is_es() const {
         return is_es_;
@@ -70,7 +68,7 @@ protected:
 
     void apply_viewport(const RenderTarget& target,
                         const Viewport& viewport) override;
-    void clear(const RenderTarget& target, const Colour& colour,
+    void clear(const RenderTarget& target, const Color& colour,
                uint32_t clear_flags) override;
 
     void do_swap_buffers() override;

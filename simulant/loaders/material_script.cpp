@@ -63,7 +63,7 @@ void define_property<MATERIAL_PROPERTY_TYPE_TEXTURE, TexturePtr>(Material& mater
     if(prop->has_key("default") && !prop["default"]->is_null()) {
         std::string def = prop["default"]->to_str().value();
 
-        auto texture = material.asset_manager().new_texture_from_file(def);
+        auto texture = material.asset_manager().load_texture(def);
         material.set_property_value(name, texture);
     } else {
         material.set_property_value(name, TexturePtr());
@@ -147,7 +147,7 @@ static void read_property_values(Material& mat, MaterialObject& holder, JSONIter
                 }
             } else if(property_type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                 std::string path = value->to_str().value();
-                auto tex = mat.asset_manager().new_texture_from_file(path);
+                auto tex = mat.asset_manager().load_texture(path);
                 holder.set_property_value(key.c_str(), tex);
             } else {
                 S_ERROR("Unhandled property type");
@@ -156,7 +156,7 @@ static void read_property_values(Material& mat, MaterialObject& holder, JSONIter
     }
 }
 
-void MaterialScript::generate(Material& material) {
+bool MaterialScript::generate(Material& material) {
     auto lookup_material_property_type = [](const std::string& kind) -> MaterialPropertyType {
         if(kind == "bool") {
             return MATERIAL_PROPERTY_TYPE_BOOL;
@@ -181,7 +181,8 @@ void MaterialScript::generate(Material& material) {
     auto json = json_read(data_);
 
     if(!json->has_key("passes")) {
-        throw std::runtime_error("Material is missing the passes key");
+        S_ERROR("Material is missing the passes key");
+        return false;
     }
 
     /* Load any custom properties */
@@ -244,6 +245,7 @@ void MaterialScript::generate(Material& material) {
             std::string fragment_shader_path = pass["fragment_shader"]->to_str().value();
 
             auto parent_dir = Path(kfs::path::dir_name(filename_.str()));
+            S_INFO("Parent: {0}", parent_dir.str());
 
             bool added = false;
 
@@ -267,14 +269,15 @@ void MaterialScript::generate(Material& material) {
             material.pass(i)->set_gpu_program(program);
         }
     }
+
+    return true;
 }
 
 namespace loaders {
 
-void MaterialScriptLoader::into(Loadable& resource, const LoaderOptions&) {
+bool MaterialScriptLoader::into(Loadable& resource, const LoaderOptions&) {
     Material* mat = loadable_to<Material>(resource);
-    parser_->generate(*mat);
+    return parser_->generate(*mat);
 }
-
 }
 }

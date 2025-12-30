@@ -37,8 +37,6 @@
 #include "logging.h"
 #include "path.h"
 #include "loader.h"
-#include "nodes/stage_node_pool.h"
-
 
 #define DEFAULT_LANGUAGE_CODE "en-us"
 
@@ -157,7 +155,18 @@ typedef sig::signal<void (float)> FixedUpdateSignal;
 typedef sig::signal<void (float)> UpdateSignal;
 typedef sig::signal<void (float)> LateUpdateSignal;
 typedef sig::signal<void ()> PostLateUpdateSignal;
-typedef sig::signal<void ()> ShutdownSignal;
+typedef sig::signal<void()> ShutdownSignal;
+
+enum UpdateEnabledFlags {
+    ALL_UPDATES_DISABLED = 0,
+    UPDATE_ENABLED = 0x1,
+    FIXED_UPDATE_ENABLED = 0x2,
+    LATE_UPDATE_ENABLED = 0x4,
+    ALL_UPDATES_ENABLED =
+        UPDATE_ENABLED | FIXED_UPDATE_ENABLED | LATE_UPDATE_ENABLED,
+};
+
+typedef uint32_t UpdateEnabledMask;
 
 class Application {
     friend class Window;
@@ -197,12 +206,6 @@ public:
      * the current process. Returns -1 if an error occurs
      * or not supported on the platform */
     int64_t ram_usage_in_bytes() const;
-
-    /** Capacity of the global stagenode pool. This is a
-     * memory buffer where all stage nodes (across all stages)
-     * are stored/released */
-    uint32_t stage_node_pool_capacity() const;
-    uint32_t stage_node_pool_capacity_in_bytes() const;
 
     /** Runs a single frame of the application. You likely
      * don't want to call this! */
@@ -278,12 +281,44 @@ public:
         return platform_state_;
     }
 
+    /**
+     * @brief set_updates_enabled
+     * @param mask
+     *
+     * Allow disabling or enabling update, fixed_update, and late_update
+     * conditionally.
+     *
+     * WARNING: This primarily exists for game tools such as editors. Using this
+     * feature in a game may cause issues when editing that game with such
+     * tools.
+     */
+    void set_updates_enabled(UpdateEnabledMask mask = ALL_UPDATES_ENABLED) {
+        if(mask == ALL_UPDATES_DISABLED) {
+            S_INFO("Disabling all updates");
+        }
+        updates_enabled_ = mask;
+    }
+
 protected:
     bool _call_init();
 
-private:
-    void* platform_state_ = nullptr;
+    virtual std::shared_ptr<Window> instantiate_window();
 
+private:
+    bool update_enabled() const {
+        return (updates_enabled_ & UPDATE_ENABLED) == UPDATE_ENABLED;
+    }
+
+    bool fixed_update_enabled() const {
+        return (updates_enabled_ & FIXED_UPDATE_ENABLED) ==
+               FIXED_UPDATE_ENABLED;
+    }
+
+    bool late_update_enabled() const {
+        return (updates_enabled_ & LATE_UPDATE_ENABLED) == LATE_UPDATE_ENABLED;
+    }
+
+    void* platform_state_ = nullptr;
     friend void cr_run_main(std::function<void ()> func);
     std::function<void ()> cr_synced_function_;
 
@@ -299,7 +334,7 @@ private:
     std::shared_ptr<StatsRecorder> stats_;
     std::shared_ptr<VirtualFileSystem> vfs_;
     std::shared_ptr<SoundDriver> sound_driver_;
-
+    std::shared_ptr<MaterialValuePool> pool_;
     std::vector<LoaderTypePtr> loaders_;
 
     bool initialized_ = false;
@@ -308,6 +343,8 @@ private:
     float frame_counter_time_ = 0.0f;
     int32_t frame_counter_frames_ = 0;
     float frame_time_in_milliseconds_ = 0.0f;
+
+    UpdateEnabledMask updates_enabled_ = ALL_UPDATES_ENABLED;
 
     void _call_fixed_update(float dt) {
         fixed_update(dt);
@@ -352,7 +389,6 @@ private:
     generic::DataCarrier data_carrier_;
 
     AppConfig config_;
-    StageNodePool* node_pool_ = nullptr;
 
     bool construct_window(const AppConfig& config);
 
@@ -367,18 +403,26 @@ private:
 
     std::string active_language_ = DEFAULT_LANGUAGE_CODE;
     std::map<unicode, unicode> active_translations_;
+
+    std::shared_ptr<Scene> overlay_scene_;
 public:
     S_DEFINE_PROPERTY(window, &Application::window_);
     S_DEFINE_PROPERTY(data, &Application::data_carrier_);
     S_DEFINE_PROPERTY(scenes, &Application::scene_manager_);
     S_DEFINE_PROPERTY(args, &Application::args_);
     S_DEFINE_PROPERTY(config, &Application::config_);
-    S_DEFINE_PROPERTY(stage_node_pool, &Application::node_pool_);
     S_DEFINE_PROPERTY(shared_assets, &Application::asset_manager_);
     S_DEFINE_PROPERTY(time_keeper, &Application::time_keeper_);
     S_DEFINE_PROPERTY(stats, &Application::stats_);
     S_DEFINE_PROPERTY(vfs, &Application::vfs_);
     S_DEFINE_PROPERTY(sound_driver, &Application::sound_driver_);
+    S_DEFINE_PROPERTY(material_value_pool, &Application::pool_);
+
+    /** The overlay is a global scene that is always rendered with the highest
+     *  priority over everything. It's used for adding things like FPS counters
+     *  or performance graphs or persistent game version text etc. */
+    S_DEFINE_PROPERTY(overlay, &Application::overlay_scene_);
+
 private:
     friend Application* get_app();
     static Application* global_app;
@@ -388,6 +432,7 @@ private:
     std::vector<std::string> generate_potential_codes(const std::string& language_code);
     bool load_arb(std::shared_ptr<std::istream> stream, std::string* language_code = nullptr);
     bool load_arb_from_file(const smlt::Path& filename);
+
 
     /* A number of steps in the application initialization depend on a
      * viable GL context. Some platforms (cough, Android) won't have a

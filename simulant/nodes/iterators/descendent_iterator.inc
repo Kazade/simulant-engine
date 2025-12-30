@@ -10,32 +10,31 @@ class DescendentIterator;
 
 template<bool IsConst>
 DescendentIterator<IsConst>& DescendentIterator<IsConst>::operator++() {
-    auto next = (StageNode*) current_->next_;
-    auto next_is_first_sibling = !next->parent_ || next == next->parent_->first_child_;
+    auto next = current_->next_;
 
-    if(next_is_first_sibling) {
+    if(!next) {
         /* We've just reached the end of the current siblings, so
          * go up, then see if we can go right */
         previous_ = current_;
-        current_ = (StageNode*) current_->parent_;
+        current_ = current_->parent_;
         if(current_ == start_) {
             current_ = nullptr;
         }
         return *this;
-    }
-
-    /* Go right, then down the left branch to the end */
-    previous_ = current_;
-    current_ = next;
-    while(current_->first_child_) {
-        current_ = (StageNode*) current_->first_child_;
+    } else {
+        /* Go right, then down the left branch to the end */
+        previous_ = current_;
+        current_ = next;
+        while(current_->first_child_) {
+            current_ = current_->first_child_;
+        }
     }
 
     return *this;
 }
 
 template<bool IsConst>
-DescendentIterator<IsConst>::DescendentIterator(StageNode *start):
+DescendentIterator<IsConst>::DescendentIterator(const StageNode* start):
     start_(start) {
 
     /* We go down the left of the tree to the far
@@ -47,7 +46,7 @@ DescendentIterator<IsConst>::DescendentIterator(StageNode *start):
 }
 
 template<bool IsConst>
-DescendentIterator<IsConst>::DescendentIterator(StageNode *start, StageNode* current):
+DescendentIterator<IsConst>::DescendentIterator(const StageNode* start, pointer current):
     start_(start),
     current_(current) {
 

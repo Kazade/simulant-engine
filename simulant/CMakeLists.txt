@@ -1,4 +1,4 @@
-FILE(GLOB_RECURSE SIMULANT_FILES FOLLOW_SYMLINKS *.cpp *.c *.cc)
+FILE(GLOB_RECURSE SIMULANT_FILES FOLLOW_SYMLINKS *.cpp *.c *.cc *.h)
 
 # Remove all the renderer files so we can add them specifically
 FILE(GLOB_RECURSE TO_REMOVE
@@ -8,6 +8,13 @@ FILE(GLOB_RECURSE TO_REMOVE
     "renderers/psp/*"
     "sound/drivers/*"
 )
+
+FILE(GLOB_RECURSE BOUNCE_FILES FOLLOW_SYMLINKS deps/bounce/src/*.cpp)
+
+# Disable fast math on Physics as it can lead to unpredictable results
+set_source_files_properties(BOUNCE_FILES
+                PROPERTIES
+                COMPILE_FLAGS -fno-fast-math)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/deps/bounce/include)
 
@@ -139,6 +146,12 @@ ELSE()
         FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/linux/*.cpp)
     ELSEIF(WIN32)
         FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/windows/*.cpp)
+
+        IF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+            set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+            source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SIMULANT_FILES})
+            source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORM})
+        ENDIF()
     ELSEIF(APPLE)
         FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/osx/*.cpp)
     ENDIF()
@@ -162,11 +175,26 @@ ENDIF()
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/bounce/include)
 
-IF(PLATFORM_DREAMCAST OR PLATFORM_PSP)
+IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
 ELSE()
 ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
-    platforms/evercade/platform.cpp)
+    platforms/evercade/platform.cpp
+    nodes/helpers.h
+    nodes/stage_node_path.h
+    nodes/stage_node_watch_controller.h
+    nodes/stage_node_watch_controller.cpp
+    nodes/stage_node_path.cpp
+    loaders/gltf_loader.h
+    loaders/gltf_loader.cpp
+    utils/base64.h
+    utils/base64.cpp
+    nodes/physics/private.h
+    nodes/physics/material.h
+    nodes/physics/contact_list.h
+    nodes/physics/fixture.h
+    nodes/physics/fixture.cpp
+    nodes/physics/contact_list.cpp)
 ENDIF()
 
 if(FLTO_SUPPORTED)

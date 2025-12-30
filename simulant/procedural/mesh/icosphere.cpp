@@ -148,7 +148,9 @@ public:
         for(auto& pos: positions_) {
             /* Supply the position and scale */
             vdata->position(pos * diameter);
-            if(spec.has_diffuse()) vdata->diffuse(smlt::Colour::WHITE);
+            if(spec.has_color()) {
+                vdata->color(smlt::Color::white());
+            }
 
             auto N = pos.normalized();
             // The normal is the position normalized as we generate around the origin

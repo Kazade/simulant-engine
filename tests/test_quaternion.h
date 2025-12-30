@@ -7,7 +7,7 @@ namespace {
 
 using namespace smlt;
 
-class QuaternionTest : public smlt::test::TestCase {
+class QuaternionTest: public smlt::test::TestCase {
 public:
     void test_equals() {
         Quaternion q1(0, 0, 0, 1);
@@ -47,14 +47,17 @@ public:
 
         auto euler = q.to_euler();
 
-        assert_close(smlt::Degrees(90).value, euler.x.value, 0.000001f);
+        assert_close(smlt::Degrees(90).to_float(), euler.x.to_float(),
+                     0.000001f);
         assert_true(smlt::Degrees(0) == euler.y);
         assert_true(smlt::Degrees(0) == euler.z);
     }
 
     void test_mat3_to_quaternion() {
         smlt::Mat3 mat;
-        for(uint32_t i = 0; i < 9; ++i) mat[i] = 0;
+        for(uint32_t i = 0; i < 9; ++i) {
+            mat[i] = 0;
+        }
 
         // 90 degree rotation around z
         mat[1] = 1;
@@ -63,10 +66,16 @@ public:
 
         smlt::Quaternion quat(mat);
 
-        assert_close(quat.x, 0.0f, 0.001f);
-        assert_close(quat.y, 0.0f, 0.001f);
-        assert_close(quat.z, 0.707f, 0.001f);
-        assert_close(quat.w, 0.707f, 0.001f);
+        const float E = 0.0001f;
+        assert_close(quat.x, 0.0f, E);
+        assert_close(quat.y, 0.0f, E);
+        assert_close(quat.z, 0.707107f, E);
+        assert_close(quat.w, 0.707107f, E);
+
+        auto mat2 = smlt::Mat3::as_rotation(quat);
+        for(uint32_t i = 0; i < 9; ++i) {
+            assert_close(mat[i], mat2[i], E);
+        }
     }
 
     void test_forward_right_up() {
@@ -80,7 +89,6 @@ public:
 
         assert_close(-1.0f, q.forward().x, 0.0001f);
     }
-
 };
 
-}
+} // namespace

@@ -237,7 +237,7 @@ inline float clamp(float x, float a, float b) {
     return x < a ? a : (x > b ? b : x);
 }
 
-smlt::Colour colour_for_vertex(const smlt::Vec3& point, const smlt::Vec3& normal, const std::vector<Vec3>& surrounding_points) {
+smlt::Color color_for_vertex(const smlt::Vec3& point, const smlt::Vec3& normal, const std::vector<Vec3>& surrounding_points) {
     // FIXME: Replace with some kind of decent ambient occlusion
     float sum = 0.0f;
 
@@ -250,12 +250,12 @@ smlt::Colour colour_for_vertex(const smlt::Vec3& point, const smlt::Vec3& normal
 
     // If the average angle > 90 degrees, then we are white
     if(v > 3.142f / 2.0f) {
-        return smlt::Colour::WHITE;
+        return smlt::Color::white();
     } else {
         v /= (3.142f / 2.0f);
     }
 
-    return smlt::Colour(v, v, v, 1.0f);
+    return smlt::Color(v, v, v, 1.0f);
 }
 
 std::vector<Vec3> gather_surrounding_points(VertexData* data, int width, int height, uint32_t i) {
@@ -304,15 +304,14 @@ std::vector<Vec3> gather_surrounding_points(VertexData* data, int width, int hei
     return results;
 }
 
-
-
-
-void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
+bool HeightmapLoader::into(Loadable& resource, const LoaderOptions& options) {
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
 
     if(!mesh) {
-        throw std::logic_error("Tried to load a heightmap file into something that wasn't a mesh");
+        S_ERROR(
+            "Tried to load a heightmap file into something that wasn't a mesh");
+        return false;
     }
 
     HeightmapSpecification spec = (
@@ -326,7 +325,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     if(!tex) {
         // Load the texture using the texture loader
-        tex = mesh->asset_manager().new_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
+        tex = mesh->asset_manager().create_texture(8, 8, TEXTURE_FORMAT_R_1UB_8);
         TextureLoader loader(this->filename_, this->data_);
         loader.into(*tex, {{"auto_upload", false}});
         tex->flip_vertically();
@@ -334,7 +333,9 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
 
     // Now generate the heightmap from it
     if(tex->is_compressed()) {
-        throw std::logic_error("Creating a heightmap from a compressed texture is currently unimplemented");
+        S_ERROR("Creating a heightmap from a compressed texture is currently "
+                "unimplemented");
+        return false;
     }
 
     float range = spec.max_height - spec.min_height;
@@ -348,7 +349,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     // We divide the heightmap into patches for more efficient rendering
     smlt::MaterialPtr mat = mesh->asset_manager().clone_default_material();
 
-    auto sm = mesh->new_submesh(
+    auto sm = mesh->create_submesh(
         "terrain", mat, index_type, MESH_ARRANGEMENT_TRIANGLES
     );
 
@@ -392,7 +393,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
             mesh->vertex_data->position(pos);
             mesh->vertex_data->normal(Vec3(0, 1, 0));
 
-            mesh->vertex_data->diffuse(smlt::Colour::WHITE);
+            mesh->vertex_data->color(smlt::Color::white());
 
             // First texture coordinate takes into account texture_repeat setting
             mesh->vertex_data->tex_coord0(
@@ -455,7 +456,7 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
         }
 
         // Now set the normal on the vertex data
-        for(auto p: index_to_normal) {
+        for(auto& p: index_to_normal) {
             mesh->vertex_data->move_to(p.first);
             auto n = p.second.normalized();
             mesh->vertex_data->normal(n);
@@ -466,8 +467,9 @@ void HeightmapLoader::into(Loadable &resource, const LoaderOptions &options) {
     mesh->vertex_data->done();
 
     mesh->asset_manager().destroy_texture(tex->id()); //Finally delete the texture
-}
 
+    return true;
+}
 }
 }
 

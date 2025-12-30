@@ -1,10 +1,11 @@
 #pragma once
 
-#include <istream>
-#include <streambuf>
-#include <memory>
-#include <cstdio>
 #include <cassert>
+#include <cstdint>
+#include <cstdio>
+#include <istream>
+#include <memory>
+#include <streambuf>
 
 #include "../macros.h"
 
