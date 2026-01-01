@@ -190,23 +190,14 @@ void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation
 }
 
 void Mesh::rebuild_aabb() {
-    AABB& result = aabb_;
+    aabb_ = AABB();
 
-    if(!this->submesh_count()) {
-        result = AABB();
+    if(!this->submesh_count()) {    
         return;
     }
 
-    bool first = true;
-    result = AABB();
-
     for(auto& sm: submeshes_) {
-        if(first) {
-            result = sm->bounds_;
-            first = false;
-        } else {
-            result.encapsulate(sm->bounds_);
-        }
+        aabb_.encapsulate(sm->bounds_);
     }
 }
 

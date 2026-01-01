@@ -42,6 +42,11 @@ public:
         assert_close(a1.width(), 3.0f, 0.0001f);
         assert_close(a1.height(), 2.0f, 0.0001f);
         assert_close(a1.depth(), 2.0f, 0.0001f);
+
+        AABB a4;
+        a4.encapsulate(a3);
+
+        assert_close(a4.center().x, 1.0f, 0.0001f);
     }
 };
 
