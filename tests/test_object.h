@@ -56,6 +56,27 @@ public:
         assert_equal(smlt::Vec3(), obj->transform->position());
     }
 
+    void test_recursive_bounds() {
+        auto mat1 = scene->assets->create_material();
+        auto mesh =
+            scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_cube("cube", mat1, 1.0f);
+
+        auto s1 = scene->create_child<smlt::Stage>();
+        auto s2 = s1->create_child<smlt::Actor>(mesh);
+
+        assert_true(s1->aabb().has_zero_area());
+        assert_close(s2->aabb().width(), 1.0f, 0.001f);
+        assert_close(s2->aabb().height(), 1.0f, 0.001f);
+        assert_close(s2->aabb().depth(), 1.0f, 0.001f);
+        assert_close(s1->recursive_aabb().width(), 1.0f, 0.001f);
+        assert_close(s1->recursive_aabb().height(), 1.0f, 0.001f);
+        assert_close(s1->recursive_aabb().depth(), 1.0f, 0.001f);
+        assert_close(s2->recursive_aabb().width(), 1.0f, 0.001f);
+        assert_close(s2->recursive_aabb().height(), 1.0f, 0.001f);
+        assert_close(s2->recursive_aabb().depth(), 1.0f, 0.001f);
+    }
+
     void test_child_rotation() {
         auto parent = scene->create_child<smlt::Stage>();
         auto child = scene->create_child<smlt::Stage>();

@@ -1028,6 +1028,15 @@ public:
         return zero;
     }
 
+    AABB recursive_aabb() const {
+        AABB ret = aabb();
+        for(auto& node: each_descendent()) {
+            ret.encapsulate(node.aabb());
+        }
+
+        return ret;
+    }
+
     /* Control shading on the stage node (behaviour depends on the type of node)
      */
     ShadowCast shadow_cast() const {

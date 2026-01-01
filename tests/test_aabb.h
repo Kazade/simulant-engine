@@ -5,6 +5,8 @@
 
 namespace {
 
+using namespace smlt;
+
 class AABBTests : public smlt::test::SimulantTestCase {
 public:
     void test_aabb_intersects_aabb() {
@@ -22,6 +24,24 @@ public:
 
         assert_true(aabb.intersects_sphere(smlt::Vec3(1.4, 0, 0), 1.0f));
         assert_false(aabb.intersects_sphere(smlt::Vec3(1.6, 0, 0), 1.0f));
+    }
+
+    void test_aabb_encapsulate() {
+        AABB a1(Vec3(), 1.0f);
+        AABB a2(Vec3(), 2.0f);
+        AABB a3(Vec3(1, 0, 0), 2.0f);
+
+        a1.encapsulate(a2);
+
+        assert_close(a1.width(), 2.0f, 0.0001f);
+        assert_close(a1.height(), 2.0f, 0.0001f);
+        assert_close(a1.depth(), 2.0f, 0.0001f);
+
+        a1.encapsulate(a3);
+
+        assert_close(a1.width(), 3.0f, 0.0001f);
+        assert_close(a1.height(), 2.0f, 0.0001f);
+        assert_close(a1.depth(), 2.0f, 0.0001f);
     }
 };
 
