@@ -79,6 +79,7 @@ public:
                                      PhysicsMaterial::wood());
 
         box->set_parent(controller);
+
         boxes_.push_back(controller);
         controller->transform->set_position(pos);
     }
