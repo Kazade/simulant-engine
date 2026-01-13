@@ -318,8 +318,6 @@ ELSEIF(PLATFORM_DREAMCAST)
     SET(OPENGL_INCLUDE_DIRS "")
     SET(OPENGL_LIBRARIES "")
 
-    SET(THREADS_PREFER_PTHREAD_FLAG ON)
-
     # On Dreamcast we want the kospvr backend for GLdc
     add_definitions(-DBACKEND_KOSPVR)
 
@@ -342,7 +340,7 @@ ELSE()
     FIND_PACKAGE(OpenGL REQUIRED)
 ENDIF()
 
-IF(NOT PLATFORM_PSP AND NOT PLATFORM_DREAMCAST)
+IF(NOT PLATFORM_PSP)
     SET(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
     link_libraries(Threads::Threads)
