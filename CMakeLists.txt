@@ -113,7 +113,7 @@ IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wextra")
     SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
 ELSEIF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    # The /Zi option produces a separate PDB file that contains all the symbolic debugging information for use with the debugger. 
+    # The /Zi option produces a separate PDB file that contains all the symbolic debugging information for use with the debugger.
     # The debugging information isn't included in the object files or executable, which makes them much smaller.
     add_compile_options("$<$<CONFIG:Debug>:/Zi>")
 
@@ -216,14 +216,14 @@ ELSEIF(PLATFORM_PSP)
     SET(SDL2_LIBRARIES "")
 ELSEIF(MINGW)
     FIND_PACKAGE(PkgConfig REQUIRED)
-    
+
     IF(SIMULANT_CUSTOM_WINDOW)
         SET(SDL2_INCLUDE_DIR "")
         SET(SDL2_LIBRARIES "")
     ELSE()
         PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
     ENDIF()
-    
+
     PKG_CHECK_MODULES(OPENAL REQUIRED openal)
     LINK_LIBRARIES(psapi userenv)
     SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
@@ -234,7 +234,7 @@ ELSEIF(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # For OpenAL it's the path under OPENALDIR
     IF(SIMULANT_CUSTOM_WINDOW)
         SET(SDL2_INCLUDE_DIR "")
-        SET(SDL2_LIBRARIES "")    
+        SET(SDL2_LIBRARIES "")
     ELSE()
         SET(SDL2_INCLUDE_DIR $ENV{SDL2DIR}/include)
         SET(SDL2_LIBRARY $ENV{SDL2DIR}/lib/x64/SDL2.lib)
@@ -253,7 +253,7 @@ ELSEIF(WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # __declspec(dllexport) is missing everywhere, so that's not working right now
     #SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MT")  
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MT")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT")
 
     SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
@@ -318,7 +318,7 @@ ELSEIF(PLATFORM_DREAMCAST)
     SET(OPENGL_INCLUDE_DIRS "")
     SET(OPENGL_LIBRARIES "")
 
-    SET(THREADS_PREFER_PTHREAD_FLAG OFF)
+    SET(THREADS_PREFER_PTHREAD_FLAG ON)
 
     # On Dreamcast we want the kospvr backend for GLdc
     add_definitions(-DBACKEND_KOSPVR)
