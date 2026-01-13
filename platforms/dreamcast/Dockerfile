@@ -1,19 +1,19 @@
 # Dockerfile for generating a Fedora image with the full KallistiOS SDK installed so you can compile
 # Dreamcast applications
 
-FROM fedora:37 as Build
+FROM fedora:37 AS build
 MAINTAINER kazade <kazade@gmail.com>
 
-RUN dnf -y update && dnf clean all && dnf -y install automake wget make git hostname diffutils glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel meson openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim && dnf clean all && pip install -U pip
+RUN dnf -y update && dnf clean all && dnf -y install automake wget which make git hostname diffutils glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel meson openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim && dnf clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
 RUN git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos
-RUN cd /opt/toolchains/dc/kos && git fetch && git checkout c0e3d7c44c975f259b02e53eb20a7f5919853277 && cd -
+RUN cd /opt/toolchains/dc/kos && git fetch && git checkout b125c930da1a7969c5b9760da98254c666b3eeba && cd -
 RUN git clone --recursive https://github.com/KallistiOS/kos-ports.git /opt/toolchains/dc/kos-ports
 
-RUN cd /opt/toolchains/dc/kos/utils/dc-chain && cp Makefile.default.cfg Makefile.cfg 
+RUN cd /opt/toolchains/dc/kos/utils/dc-chain && cp Makefile.default.cfg Makefile.cfg
 
-# Switch to the 14.2.0 toolchain to avoid issues with LTO
-RUN sed -i 's/toolchain_profile=stable/toolchain_profile=14.2.0/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile.cfg
+# Switch to the 15.1.0 toolchain
+RUN sed -i 's/toolchain_profile=stable/toolchain_profile=15.1.0/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile.cfg
 
 # Speed up compilation
 RUN sed -i 's/makejobs=2/makejobs=8/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile.cfg
@@ -54,9 +54,8 @@ RUN dnf -y install libisofs-devel
 RUN . /etc/bash.bashrc; cd /opt/toolchains/dc/kos/utils && git clone https://gitlab.com/simulant/mkdcdisc.git && cd mkdcdisc && mkdir build && cd build && meson .. && ninja
 
 FROM fedora:37
-COPY --from=Build /opt/toolchains /opt/toolchains
-COPY --from=Build /etc/bash.bashrc /etc/bash.bashrc
-COPY --from=Build /root/.bashrc /root/.bashrc
-COPY --from=Build /opt/toolchains/dc/kos/utils/mkdcdisc/build/mkdcdisc /usr/bin/mkdcdisc
+COPY --from=build /opt/toolchains /opt/toolchains
+COPY --from=build /etc/bash.bashrc /etc/bash.bashrc
+COPY --from=build /root/.bashrc /root/.bashrc
+COPY --from=build /opt/toolchains/dc/kos/utils/mkdcdisc/build/mkdcdisc /usr/bin/mkdcdisc
 RUN dnf install -y cmake make libpng genisoimage findutils git pkgconf-pkg-config libisofs
-
