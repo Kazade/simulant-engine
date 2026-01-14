@@ -6,8 +6,6 @@
 
 namespace smlt {
 
-using half = half_float::half;
-
 struct HalfVec3 {
     half x, y, z;
 
