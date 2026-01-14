@@ -13,7 +13,7 @@ RUN git clone --recursive https://github.com/KallistiOS/kos-ports.git /opt/toolc
 RUN cd /opt/toolchains/dc/kos/utils/dc-chain && cp Makefile.default.cfg Makefile.cfg
 
 # Switch to the 15.1.0 toolchain
-RUN sed -i 's/toolchain_profile=stable/toolchain_profile=15.1.0/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile.cfg
+# RUN sed -i 's/toolchain_profile=stable/toolchain_profile=15.1.0/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile.cfg
 
 # Speed up compilation
 RUN sed -i 's/makejobs=2/makejobs=8/' /opt/toolchains/dc/kos/utils/dc-chain/Makefile.cfg
