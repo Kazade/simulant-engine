@@ -599,7 +599,7 @@ build:dreamcast-sh4-gcc:
 
 test:dreamcast-sh4-gcc:
   stage: test
-  image: fedora:33
+  image: fedora:37
   needs: ["build:dreamcast-sh4-gcc"]
   allow_failure: true
   variables:
@@ -607,7 +607,7 @@ test:dreamcast-sh4-gcc:
   dependencies:
     - build:dreamcast-sh4-gcc
   before_script:
-    - dnf install -y wget unzip libisofs libpng mesa-libGL gtk2 pulseaudio-libs && dnf clean all
+    - dnf install -y wget unzip libisofs libpng mesa-libGL gtk3 pulseaudio-libs && dnf clean all
     - wget -O artifacts.zip https://gitlab.com/simulant/community/lxdream-nitro/-/jobs/artifacts/master/download?job=linux-x64:build
     - unzip artifacts.zip
     - export PATH=$PATH:`pwd`/build
@@ -624,10 +624,10 @@ test:dreamcast-sh4-gcc:
 .deploy:deploy:
   stage: deploy
   only:
-   - main
-   - legacy
-   - next
-   - tags
+    - main
+    - legacy
+    - next
+    - tags
   variables:
     LIB_EXT: a
   image: $CI_REGISTRY_IMAGE:deploy
@@ -735,10 +735,10 @@ deploy:android-all-clang:
 deploy:assets:
   stage: deploy
   only:
-   - legacy
-   - main
-   - next
-   - tags
+    - legacy
+    - main
+    - next
+    - tags
   image: $CI_REGISTRY_IMAGE:deploy
   script:
     - mkdir -p upload
@@ -755,10 +755,10 @@ deploy:assets:
 deploy:tools:
   stage: deploy
   only:
-   - legacy
-   - main
-   - next
-   - tags
+    - legacy
+    - main
+    - next
+    - tags
   image: $CI_REGISTRY_IMAGE:deploy
   script:
     - mkdir -p upload/simulant

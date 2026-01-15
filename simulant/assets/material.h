@@ -168,11 +168,11 @@ public:
 private:    
     MaterialPass(Material* material, uint8_t pass_number);
 
-    uint8_t pass_number_;
+    uint8_t pass_number_ = 0;
     IterationType iteration_type_ = ITERATION_TYPE_ONCE;
     uint8_t max_iterations_ = 1;
     Material* material_ = nullptr;
-    GPUProgramPtr program_;
+    GPUProgramPtr program_ = nullptr;
 };
 
 typedef uint8_t PropertyIndex;
