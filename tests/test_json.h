@@ -8,7 +8,7 @@ namespace {
 
 using namespace smlt;
 
-class JSONTests: public test::TestCase {
+class JSONTests: public test::SimulantTestCase {
 public:
     void test_basic_usage() {
         std::string data = R"(
@@ -311,8 +311,8 @@ public:
     }
 
     void test_complex_example() {
-        const char* path = "assets/samples/level1.json";
-        std::ifstream t(path);
+        auto path = get_app()->vfs->locate_file("assets/samples/level1.json");
+        std::ifstream t(path.value().str());
         assert_true(t.good());
         std::string str((std::istreambuf_iterator<char>(t)),
                         std::istreambuf_iterator<char>());

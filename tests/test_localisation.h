@@ -74,7 +74,11 @@ public:
     }
 }
 )";
+#ifdef __DREAMCAST__
+        auto locale_dir = "/pc/locales";
+#else
         auto locale_dir = kfs::path::join(kfs::temp_dir(), "locales");
+#endif
         kfs::make_dirs(locale_dir);
 
         auto file = kfs::path::join(locale_dir, "fr.arb");
