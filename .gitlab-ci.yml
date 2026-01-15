@@ -601,7 +601,6 @@ test:dreamcast-sh4-gcc:
   stage: test
   image: fedora:37
   needs: ["build:dreamcast-sh4-gcc"]
-  allow_failure: true
   variables:
     TARGET: dreamcast-sh4-gcc
   dependencies:
