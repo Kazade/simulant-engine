@@ -594,7 +594,7 @@ build:dreamcast-sh4-gcc:
     paths:
       - ${TARGET}/debug/simulant/
       - ${TARGET}/debug/assets/
-      - ${TARGET}/debug/tests/simulant_tests.elf
+      - ${TARGET}/release/tests/simulant_tests.elf
       - ${TARGET}/release/simulant/
 
 test:dreamcast-sh4-gcc:
@@ -611,7 +611,7 @@ test:dreamcast-sh4-gcc:
     - unzip artifacts.zip
     - export PATH=$PATH:`pwd`/build
   script:
-    - cd ${TARGET}/debug
+    - cd ${TARGET}/release
     - lxdream-nitro --audio=null -H -b -u -C `pwd` -e tests/simulant_tests.elf
   artifacts:
     when: always
