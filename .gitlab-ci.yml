@@ -599,7 +599,7 @@ build:dreamcast-sh4-gcc:
 
 test:dreamcast-sh4-gcc:
   stage: test
-  image: fedora:37
+  image: fedora:33
   needs: ["build:dreamcast-sh4-gcc"]
   variables:
     TARGET: dreamcast-sh4-gcc
