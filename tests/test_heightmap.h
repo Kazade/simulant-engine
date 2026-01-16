@@ -13,7 +13,7 @@ public:
         auto stage = scene->create_child<smlt::Stage>();
 
         auto spec = HeightmapSpecification();
-        spec.vertex_spec = VertexSpecification::POSITION_ONLY;
+        spec.vertex_spec = VertexSpecification::POSITION_AND_DIFFUSE;
 
         /* Invalid path should return NULL */
         auto test1 =
