@@ -15,7 +15,7 @@ public:
                                      50.0f);
 
         auto a0 = scene->create_child<smlt::Actor>(mesh);
-        auto a1 = a0->create_child<smlt::Actor>(mesh);
+        a0->create_child<smlt::Actor>(mesh);
 
         // Create a prefab the nodes below and including a0
         auto prefab = scene->assets->create_prefab(a0);

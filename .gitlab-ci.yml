@@ -606,7 +606,7 @@ test:dreamcast-sh4-gcc:
   dependencies:
     - build:dreamcast-sh4-gcc
   before_script:
-    - dnf install -y wget unzip libisofs libpng mesa-libGL gtk3 pulseaudio-libs && dnf clean all
+    - dnf install -y wget unzip libisofs libpng mesa-libGL gtk3 pulseaudio-libs gdb && dnf clean all
     - wget -O artifacts.zip https://gitlab.com/simulant/community/lxdream-nitro/-/jobs/artifacts/master/download?job=linux-x64:build
     - unzip artifacts.zip
     - export PATH=$PATH:`pwd`/build
