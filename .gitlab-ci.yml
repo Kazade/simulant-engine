@@ -595,6 +595,7 @@ build:dreamcast-sh4-gcc:
       - ${TARGET}/debug/simulant/
       - ${TARGET}/debug/assets/
       - ${TARGET}/release/tests/simulant_tests.elf
+      - ${TARGET}/release/assets/
       - ${TARGET}/release/simulant/
 
 test:dreamcast-sh4-gcc:
