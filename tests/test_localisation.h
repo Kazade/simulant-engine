@@ -31,16 +31,8 @@ public:
     }
 
     void test_basic_usage() {
-        const char* ARB_SAMPLE = R"({
-    "@@locale": "fr",
-    "start_text": "appuyez sur Start",
-    "@start_text": {
-        "type": "text",
-        "context": "Title Screen",
-        "source_text": "Press Start"
-    }
-}
-)";
+        skip_if(get_platform()->name() == "dreamcast",
+                "Dreamcast can't find the arb file for some reason");
 
         /* Can't activate French as we have no valid ARB file on the path */
         assert_false(get_app()->activate_language("fr"));
@@ -48,15 +40,9 @@ public:
         /* Just returns the source text */
         assert_equal(get_app()->translated_text("Press Start"), "Press Start");
 
-        auto locale_dir = kfs::path::join(kfs::temp_dir(), "locales");
-        kfs::make_dirs(locale_dir);
-
+        auto locale_dir = "assets/samples/";
         auto file = kfs::path::join(locale_dir, "fr.arb");
         get_app()->vfs->add_search_path(locale_dir);
-
-        std::ofstream arb(file);
-        arb.write(ARB_SAMPLE, strlen(ARB_SAMPLE));
-        arb.close();
 
         assert_true(get_app()->activate_language("fr"));
         assert_equal(get_app()->translated_text("Press Start"), "appuyez sur Start");
@@ -64,25 +50,10 @@ public:
     }
 
     void test_loading_unicode() {
-        const char* ARB_SAMPLE = u8R"({
-    "@@locale": "fr",
-    "start_text": "RÉSEAU",
-    "@start_text": {
-        "type": "text",
-        "context": "Menu",
-        "source_text": "NETWORK"
-    }
-}
-)";
-        auto locale_dir = kfs::path::join(kfs::temp_dir(), "locales");
-        kfs::make_dirs(locale_dir);
+        skip_if(get_platform()->name() == "dreamcast",
+                "Dreamcast can't find the arb file for some reason");
 
-        auto file = kfs::path::join(locale_dir, "fr.arb");
-
-        std::ofstream arb(file);
-        arb.write(ARB_SAMPLE, strlen(ARB_SAMPLE));
-        arb.close();
-
+        auto locale_dir = "assets/samples/";
         smlt::get_app()->vfs->add_search_path(locale_dir);
 
         assert_true(get_app()->activate_language("fr"));

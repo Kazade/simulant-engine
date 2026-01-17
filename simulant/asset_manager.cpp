@@ -287,7 +287,7 @@ MeshPtr AssetManager::create_mesh_from_heightmap(const Path& image_file, const H
         return nullptr;
     }
 
-    auto mesh = create_mesh(VertexSpecification::DEFAULT, GARBAGE_COLLECT_NEVER);
+    auto mesh = create_mesh(spec.vertex_spec, GARBAGE_COLLECT_NEVER);
 
     loader->into(mesh, {
         { "spec", spec},

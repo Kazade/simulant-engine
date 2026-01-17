@@ -126,7 +126,7 @@ private:
                 mantissa &= ~0x400;
             }
         } else if(exponent == 31) {
-            uint16_t tmp = (sign | 0x7F800000 | (mantissa << 13));
+            uint32_t tmp = (sign | 0x7F800000 | (mantissa << 13));
             return *reinterpret_cast<const float*>(&tmp); // Inf or NaN
         }
 
