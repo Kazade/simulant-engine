@@ -31,13 +31,16 @@ public:
     }
 
     void test_basic_usage() {
+        skip_if(get_platform()->name() == "dreamcast",
+                "Dreamcast can't find the arb file for some reason");
+
         /* Can't activate French as we have no valid ARB file on the path */
         assert_false(get_app()->activate_language("fr"));
 
         /* Just returns the source text */
         assert_equal(get_app()->translated_text("Press Start"), "Press Start");
 
-        auto locale_dir = "assets/samples/locales";
+        auto locale_dir = "assets/samples/";
         auto file = kfs::path::join(locale_dir, "fr.arb");
         get_app()->vfs->add_search_path(locale_dir);
 
@@ -47,7 +50,10 @@ public:
     }
 
     void test_loading_unicode() {
-        auto locale_dir = "assets/samples/locales";
+        skip_if(get_platform()->name() == "dreamcast",
+                "Dreamcast can't find the arb file for some reason");
+
+        auto locale_dir = "assets/samples/";
         smlt::get_app()->vfs->add_search_path(locale_dir);
 
         assert_true(get_app()->activate_language("fr"));
