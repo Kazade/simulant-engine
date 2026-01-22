@@ -223,22 +223,27 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             GLCheck(glAlphaFunc, GL_GREATER, next->alpha_threshold());
             break;
         case BLEND_ADD:
+            GLCheck(glDisable, GL_ALPHA_TEST);
             GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_ONE, GL_ONE);
             break;
         case BLEND_ALPHA:
+            GLCheck(glDisable, GL_ALPHA_TEST);
             GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
         case BLEND_COLOR:
+            GLCheck(glDisable, GL_ALPHA_TEST);
             GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
             break;
         case BLEND_MODULATE:
+            GLCheck(glDisable, GL_ALPHA_TEST);
             GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
             break;
         case BLEND_ONE_ONE_MINUS_ALPHA:
+            GLCheck(glDisable, GL_ALPHA_TEST);
             GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             break;
