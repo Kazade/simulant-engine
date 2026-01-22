@@ -212,49 +212,34 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             break;
     }
 
-    GLCheck(glEnable, GL_ALPHA_TEST);
-    auto alpha_ref = next->alpha_threshold();
-    switch(next->alpha_func()) {
-        case ALPHA_FUNC_NONE:
-            GLCheck(glDisable, GL_ALPHA_TEST);
-            break;
-        case ALPHA_FUNC_EQUAL:
-            GLCheck(glAlphaFunc, GL_EQUAL, alpha_ref);
-            break;
-        case ALPHA_FUNC_GEQUAL:
-            GLCheck(glAlphaFunc, GL_GEQUAL, alpha_ref);
-            break;
-        case ALPHA_FUNC_GREATER:
-            GLCheck(glAlphaFunc, GL_GREATER, alpha_ref);
-            break;
-        case ALPHA_FUNC_LEQUAL:
-            GLCheck(glAlphaFunc, GL_LEQUAL, alpha_ref);
-            break;
-        case ALPHA_FUNC_LESS:
-            GLCheck(glAlphaFunc, GL_LESS, alpha_ref);
-            break;
-        default:
-            break;
-    }
-
-    GLCheck(glEnable, GL_BLEND);
     switch(next->blend_func()) {
         case BLEND_NONE:
             GLCheck(glDisable, GL_BLEND);
+            GLCheck(glDisable, GL_ALPHA_TEST);
+            break;
+        case BLEND_MASK:
+            GLCheck(glDisable, GL_BLEND);
+            GLCheck(glEnable, GL_ALPHA_TEST);
+            GLCheck(glAlphaFunc, GL_GREATER, next->alpha_threshold());
             break;
         case BLEND_ADD:
+            GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_ONE, GL_ONE);
             break;
         case BLEND_ALPHA:
+            GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
         case BLEND_COLOR:
+            GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
             break;
         case BLEND_MODULATE:
+            GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
             break;
         case BLEND_ONE_ONE_MINUS_ALPHA:
+            GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             break;
         default:
