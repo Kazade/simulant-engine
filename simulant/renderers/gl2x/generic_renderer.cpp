@@ -159,7 +159,7 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
 
     auto m_loc = program->locate_uniform(METALLIC_PROPERTY_NAME, true);
     if(m_loc > -1) {
-        program->set_uniform_float(m_loc, pass->roughness());
+        program->set_uniform_float(m_loc, pass->metallic());
     }
 
     auto diff_loc = program->locate_uniform(BASE_COLOR_PROPERTY_NAME, true);
