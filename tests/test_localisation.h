@@ -1,7 +1,8 @@
 #pragma once
 
-#include <simulant/test.h>
+#include "simulant/platform.h"
 #include "simulant/vfs.h"
+#include <simulant/test.h>
 
 namespace {
 
