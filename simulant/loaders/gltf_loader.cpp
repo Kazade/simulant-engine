@@ -672,10 +672,14 @@ smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
                           ? material["alphaMode"]->to_str().value_or("OPAQUE")
                           : "OPAQUE";
 
+    auto cutoff = material["alphaCutoff"].is_valid()
+                      ? material["alphaCutoff"]->to_float().value_or(0.5f)
+                      : 0.5f;
+
     ret->set_blend_func((alpha_mode == "OPAQUE") ? smlt::BLEND_NONE
                         : (alpha_mode == "MASK") ? smlt::BLEND_MASK
                                                  : smlt::BLEND_ALPHA);
-
+    ret->set_alpha_threshold(cutoff);
     ret->set_metallic(metallic);
     ret->set_roughness(roughness);
     ret->set_base_color(color);
