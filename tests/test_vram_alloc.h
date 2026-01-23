@@ -23,7 +23,7 @@ public:
     }
 
     void test_random_allocations() {
-        uint8_t buffer[1024 * 1024];
+        uint8_t buffer[1024 * 768];
 
         vram_alloc_init(buffer, sizeof(buffer));
 
