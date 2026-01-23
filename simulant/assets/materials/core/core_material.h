@@ -62,8 +62,6 @@ constexpr const MaterialPropertyNameHash FOG_DENSITY_PROPERTY_HASH = material_pr
 constexpr const MaterialPropertyNameHash FOG_START_PROPERTY_HASH = material_property_hash(FOG_START_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash FOG_END_PROPERTY_HASH = material_property_hash(FOG_END_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash FOG_COLOR_PROPERTY_HASH = material_property_hash(FOG_COLOR_PROPERTY_NAME);
-
-constexpr const MaterialPropertyNameHash ALPHA_FUNC_PROPERTY_HASH = material_property_hash(ALPHA_FUNC_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash ALPHA_THRESHOLD_PROPERTY_HASH = material_property_hash(ALPHA_THRESHOLD_PROPERTY_NAME);
 
 inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
@@ -97,7 +95,6 @@ inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
         case FOG_START_PROPERTY_HASH:
         case FOG_END_PROPERTY_HASH:
         case FOG_MODE_PROPERTY_HASH:
-        case ALPHA_FUNC_PROPERTY_HASH:
         case ALPHA_THRESHOLD_PROPERTY_HASH:
             return true;
         default:

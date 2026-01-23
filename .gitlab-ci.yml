@@ -613,7 +613,7 @@ test:dreamcast-sh4-gcc:
     - export PATH=$PATH:`pwd`/build
   script:
     - cd ${TARGET}/release
-    - lxdream-nitro --audio=null -H -b -u -C `pwd` -e tests/simulant_tests.elf
+    - lxdream-nitro --audio=null -r 32 -H -b -u -C `pwd` -e tests/simulant_tests.elf
   artifacts:
     when: always
     paths:

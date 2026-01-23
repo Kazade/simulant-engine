@@ -143,7 +143,6 @@ void Material::initialize_core_properties() {
                        (EnumType)COLOR_MATERIAL_NONE);
     set_property_value(CULL_MODE_PROPERTY_NAME, (EnumType)CULL_MODE_NONE);
     set_property_value(DEPTH_FUNC_PROPERTY_NAME, (EnumType)DEPTH_FUNC_LEQUAL);
-    set_property_value(ALPHA_FUNC_PROPERTY_NAME, (EnumType)ALPHA_FUNC_NONE);
     set_property_value(ALPHA_THRESHOLD_PROPERTY_NAME, 1.0f);
 
     set_property_value(FOG_MODE_PROPERTY_NAME, (EnumType)FOG_MODE_NONE);
