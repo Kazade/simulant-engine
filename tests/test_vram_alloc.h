@@ -9,9 +9,9 @@ namespace {
 class VRAMAllocTests: public smlt::test::SimulantTestCase {
 public:
     void test_alloc_count_contiguous() {
-        uint8_t buffer[1024 * 512];
-
-        vram_alloc_init(buffer, sizeof(buffer));
+        std::vector<uint8_t> ram(1024 * 512);
+        uint8_t* buffer = &ram[0];
+        vram_alloc_init(buffer, ram.size());
 
         // Size might be less than the buffer if the buffer wasn't aligned
         auto size = vram_alloc_pool_size(buffer);
@@ -23,12 +23,12 @@ public:
     }
 
     void test_random_allocations() {
-        skip_if(get_platform()->name() == "dreamcast",
-                "Dreamcast crashes on this test for some reason :(");
+        // skip_if(get_platform()->name() == "dreamcast",
+        //         "Dreamcast crashes on this test for some reason :(");
 
-        uint8_t buffer[1024 * 768];
-
-        vram_alloc_init(buffer, sizeof(buffer));
+        std::vector<uint8_t> ram(1024 * 768);
+        uint8_t* buffer = &ram[0];
+        vram_alloc_init(buffer, ram.size());
 
         std::vector<std::size_t> allocs = {
             32768, 174762, 174762, 174762, 43690, 2730, 10922,
