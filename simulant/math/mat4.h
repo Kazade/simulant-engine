@@ -133,8 +133,7 @@ public:
     static Mat4 as_translation(const Vec3& v);
     static Mat4 as_rotation(const Quaternion& r);
     static Mat4 as_scale(const Vec3& v);
-    static Mat4 as_transform(const Vec3& pos, const Quaternion& rot,
-                             const Vec3& scale);
+    static Mat4 as_transform(const Vec3& t, const Quaternion& r, const Vec3& s);
 
     static Mat4 as_projection(const Degrees& fov, float aspect, float near, float far);
 

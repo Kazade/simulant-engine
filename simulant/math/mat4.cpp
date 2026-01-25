@@ -98,13 +98,27 @@ Mat4 Mat4::as_scale(const smlt::Vec3& s) {
     return ret;
 }
 
-Mat4 Mat4::as_transform(const Vec3& pos, const Quaternion& rot,
-                        const Vec3& scale) {
-    Mat4 s = as_scale(scale);
-    Mat4 t = as_translation(pos);
-    Mat4 r = as_rotation(rot);
+Mat4 Mat4::as_transform(const Vec3& t, const Quaternion& r, const Vec3& s) {
+    Mat4 m;
 
-    return t * r * s;
+    m[0] = (1.0f - 2.0f * (r.y * r.y + r.z * r.z)) * s.x;
+    m[1] = (r.x * r.y + r.z * r.w) * s.x * 2.0f;
+    m[2] = (r.x * r.z - r.y * r.w) * s.x * 2.0f;
+    m[3] = 0.0f;
+    m[4] = (r.x * r.y - r.z * r.w) * s.y * 2.0f;
+    m[5] = (1.0f - 2.0f * (r.x * r.x + r.z * r.z)) * s.y;
+    m[6] = (r.y * r.z + r.x * r.w) * s.y * 2.0f;
+    m[7] = 0.0f;
+    m[8] = (r.x * r.z + r.y * r.w) * s.z * 2.0f;
+    m[9] = (r.y * r.z - r.x * r.w) * s.z * 2.0f;
+    m[10] = (1.0f - 2.0f * (r.x * r.x + r.y * r.y)) * s.z;
+    m[11] = 0.0f;
+    m[12] = t.x;
+    m[13] = t.y;
+    m[14] = t.z;
+    m[15] = 1.0f;
+
+    return m;
 }
 
 Mat4 Mat4::as_translation(const Vec3& v) {
