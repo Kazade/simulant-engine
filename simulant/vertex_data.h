@@ -158,9 +158,7 @@ public:
     }
 
     uint32_t copy_vertex_to_another(VertexData& out, uint32_t idx) {
-        if(out.vertex_specification_ != this->vertex_specification_) {
-            throw std::runtime_error("Cannot copy vertex as formats differ");
-        }
+        assert(out.vertex_specification_ == this->vertex_specification_);
 
         uint32_t start = idx * stride();
         uint32_t end = (idx + 1) * stride();
@@ -412,7 +410,7 @@ public:
             case INDEX_TYPE_16_BIT: return *((uint16_t*) ptr);
             case INDEX_TYPE_32_BIT: return *((uint32_t*) ptr);
         default:
-            throw std::logic_error("Invalid index type");
+            assert(0 && "Invalid index type passed");
         }
     }
 

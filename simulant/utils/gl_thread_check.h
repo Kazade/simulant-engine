@@ -24,6 +24,7 @@
 
 #include "../threads/thread.h"
 #include "../logging.h"
+#include "simulant/errors.h"
 
 namespace smlt {
 
@@ -70,7 +71,7 @@ private:
 
         if(thread::this_thread_id() != render_thread_id_) {
             if(raise) {
-                throw WrongThreadError();
+                FATAL_ERROR(ERROR_CODE_WRONG_THREAD_ERROR, "OpenGL called from the wrong thread");
             } else {
                 return false;
             }

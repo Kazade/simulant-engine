@@ -75,79 +75,79 @@ public:
     }
 
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const bool& value) {
+                            const bool& value) override  {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const float& value) {
+                            const float& value) override  {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const int32_t& value) {
+                            const int32_t& value) override  {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const Vec2& value) {
+                            const Vec2& value) override  {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const Vec3& value) {
+                            const Vec3& value) override  {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const Vec4& value) {
+                            const Vec4& value) override  {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const Mat3& value) {
+                            const Mat3& value) override  {
         return _set_property_value<Mat3>(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const Mat4& value) {
+                            const Mat4& value) override  {
         return _set_property_value<Mat4>(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const TexturePtr& value) {
+                            const TexturePtr& value) override {
         return _set_property_value<TexturePtr>(hsh, name, value);
     }
 
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const bool*& out) const {
+                        const bool*& out) const override  {
         return _property_value(hsh, out);
     }
 
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const float*& out) const {
+                        const float*& out) const override  {
         return _property_value(hsh, out);
     }
 
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const int32_t*& out) const {
+                        const int32_t*& out) const override  {
         return _property_value(hsh, out);
     }
 
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const Vec2*& out) const {
+                        const Vec2*& out) const override  {
         return _property_value(hsh, out);
     }
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const Vec3*& out) const {
+                        const Vec3*& out) const override  {
         return _property_value(hsh, out);
     }
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const Vec4*& out) const {
+                        const Vec4*& out) const override  {
         return _property_value(hsh, out);
     }
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const Mat3*& out) const {
+                        const Mat3*& out) const override  {
         return _property_value(hsh, out);
     }
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const Mat4*& out) const {
+                        const Mat4*& out) const override {
         return _property_value(hsh, out);
     }
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const TexturePtr*& out) const {
+                        const TexturePtr*& out) const override {
         return _property_value(hsh, out);
     }
 
@@ -165,7 +165,7 @@ public:
     bool property_type(const char* property_name,
                        MaterialPropertyType* type) const override;
 
-private:    
+private:
     MaterialPass(Material* material, uint8_t pass_number);
 
     uint8_t pass_number_ = 0;
@@ -352,79 +352,79 @@ public:
     using MaterialPropertyOverrider::set_property_value;
 
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const bool& value) {
+                            const bool& value) override {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const float& value) {
+                            const float& value) override {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const int32_t& value) {
+                            const int32_t& value) override {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const Vec2& value) {
+                            const Vec2& value) override {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const Vec3& value) {
+                            const Vec3& value) override {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const Vec4& value) {
+                            const Vec4& value) override {
         return _set_property_value(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const Mat3& value) {
+                            const Mat3& value) override {
         return _set_property_value<Mat3>(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const Mat4& value) {
+                            const Mat4& value) override {
         return _set_property_value<Mat4>(hsh, name, value);
     }
     bool set_property_value(MaterialPropertyNameHash hsh, const char* name,
-                            const TexturePtr& value) {
+                            const TexturePtr& value) override {
         return _set_property_value<TexturePtr>(hsh, name, value);
     }
 
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const bool*& out) const {
+                        const bool*& out) const override {
         return _property_value(hsh, out);
     }
 
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const float*& out) const {
+                        const float*& out) const override {
         return _property_value(hsh, out);
     }
 
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const int32_t*& out) const {
+                        const int32_t*& out) const override {
         return _property_value(hsh, out);
     }
 
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const Vec2*& out) const {
+                        const Vec2*& out) const override {
         return _property_value(hsh, out);
     }
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const Vec3*& out) const {
+                        const Vec3*& out) const override {
         return _property_value(hsh, out);
     }
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const Vec4*& out) const {
+                        const Vec4*& out) const override {
         return _property_value(hsh, out);
     }
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const Mat3*& out) const {
+                        const Mat3*& out) const override {
         return _property_value(hsh, out);
     }
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const Mat4*& out) const {
+                        const Mat4*& out) const override {
         return _property_value(hsh, out);
     }
     bool property_value(const MaterialPropertyNameHash hsh,
-                        const TexturePtr*& out) const {
+                        const TexturePtr*& out) const override {
         return _property_value(hsh, out);
     }
 
@@ -478,7 +478,7 @@ public:
         return false;
     }
 
-    bool on_check_existence(MaterialPropertyNameHash hsh) const {
+    bool on_check_existence(MaterialPropertyNameHash hsh) const override {
         auto it = find_entry(hsh);
         return it && it->entries[0];
     }

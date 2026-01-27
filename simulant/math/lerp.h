@@ -5,8 +5,8 @@
 
 namespace smlt {
 
-class Quaternion;
-class Radians;
+struct Quaternion;
+struct Radians;
 
 /** Linear interpolation from x to y with factor t, where t can be any value
  * between 0 and 1 */

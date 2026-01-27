@@ -13,24 +13,19 @@ namespace ui {
 /* We implicitly convert Px and float to int */
 struct WidgetImpl {
     static optional<ParamValue> coerce_to_int(any in) {
-        try {
+        if(in.type() == typeid(int)) {
             ParamValue ret = any_cast<int>(in);
             return ret;
-        } catch(bad_any_cast&) {
-            any result = in;
-            try {
-                auto px = any_cast<Px>(in);
-                result = (int)px.value;
-            } catch(bad_any_cast&) {
-                try {
-                    float f = any_cast<float>(in);
-                    return ParamValue(f);
-                } catch(bad_any_cast&) {
-                    return no_value;
-                }
-            }
-            return no_value;
+        } else if(in.type() == typeid(Px)) {
+            auto px = any_cast<Px>(in);
+            ParamValue ret = (int) px.value;
+            return ret;
+        } else if(in.type() == typeid(float)) {
+            float f = any_cast<float>(in);
+            return ParamValue(f);
         }
+
+        return no_value;
     }
 };
 
