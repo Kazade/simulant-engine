@@ -1,6 +1,11 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 PROJECT(simulant CXX C ASM)
 
+# Platform definitions (if they aren't set in the toolchain file)
+IF(NXDK)
+    SET(PLATFORM_XBOX TRUE)
+    ADD_DEFINITIONS("-D__XBOX__")
+ENDIF()
 
 # Set a default build type if none was specified
 IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -102,10 +107,10 @@ ENDIF()
 
 IF(NOT PLATFORM_PSP)
     IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
-    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+        SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+        SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
     ELSE()
-    SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG:NONE")
+        SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG:NONE")
     ENDIF()
 ENDIF()
 
@@ -141,10 +146,10 @@ ENDIF()
 
 
 IF(SIMULANT_ENABLE_ASAN)
-IF(CMAKE_BUILD_TYPE MATCHES Debug AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    # For some reason, I need to explicitly specify the shared file
-    # on Fedora. This is brittle, but I don't know how best to fix it
-    FIND_LIBRARY(
+    IF(CMAKE_BUILD_TYPE MATCHES Debug AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        # For some reason, I need to explicitly specify the shared file
+        # on Fedora. This is brittle, but I don't know how best to fix it
+        FIND_LIBRARY(
         ASAN_LIBRARY NAMES asan libasan.so.5 PATHS
         /usr/lib
         /usr/lib64
@@ -152,31 +157,33 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         /usr/local/lib64
     )
 
-    message(${ASAN_LIBRARY})
+        message(${ASAN_LIBRARY})
 
-    IF(NOT ASAN_LIBRARY)
-        message("libasan NOT detected. Disabling address sanitizer")
-    ELSE()
-        message("libasan found. Enabling address sanitizer")
-        SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
-        link_libraries(${ASAN_LIBRARY})
+        IF(NOT ASAN_LIBRARY)
+            message("libasan NOT detected. Disabling address sanitizer")
+        ELSE()
+            message("libasan found. Enabling address sanitizer")
+            SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+            link_libraries(${ASAN_LIBRARY})
+        ENDIF()
     ENDIF()
-ENDIF()
 ENDIF()
 
 IF(SIMULANT_ENABLE_TSAN)
-IF(CMAKE_BUILD_TYPE MATCHES Debug AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    message("Enabling thread sanitizer")
-    SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
+    IF(CMAKE_BUILD_TYPE MATCHES Debug AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        message("Enabling thread sanitizer")
+        SET (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=thread")
+    ENDIF()
 ENDIF()
-ENDIF()
-
-SET(USE_GLAD_FOR_OPENGL TRUE)
 
 IF(PLATFORM_DREAMCAST)
     SET(USE_GLAD_FOR_OPENGL FALSE)
 ELSEIF(PLATFORM_PSP)
     SET(USE_GLAD_FOR_OPENGL FALSE)
+ELSEIF(PLATFORM_XBOX)
+    SET(USE_GLAD_FOR_OPENGL FALSE)
+ELSE()
+    SET(USE_GLAD_FOR_OPENGL TRUE)
 ENDIF()
 
 IF(USE_GLAD_FOR_OPENGL)
@@ -322,6 +329,13 @@ ELSEIF(PLATFORM_DREAMCAST)
     add_definitions(-DBACKEND_KOSPVR)
 
     FILE(GENERATE OUTPUT ${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.h CONTENT "#pragma once\n#define GLDC_VERSION \"1.1-custom\"\n")
+ELSEIF(PLATFORM_XBOX)
+    MESSAGE("-- Cross-Compiling for the XBox.")
+
+    SET(OPENAL_INCLUDE_DIRS "")
+    SET(OPENAL_LIBRARY "")
+    FIND_PACKAGE(PkgConfig REQUIRED)
+    PKG_CHECK_MODULES(SDL2 REQUIRED sdl2)
 ELSE()
     FIND_PACKAGE(SDL2)  # Try cmake modules first
     IF(NOT SDL2_FOUND)
@@ -340,7 +354,7 @@ ELSE()
     FIND_PACKAGE(OpenGL REQUIRED)
 ENDIF()
 
-IF(NOT PLATFORM_PSP)
+IF(NOT PLATFORM_PSP AND NOT PLATFORM_XBOX)
     SET(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
     link_libraries(Threads::Threads)
