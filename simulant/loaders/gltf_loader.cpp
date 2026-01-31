@@ -852,6 +852,10 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
                         auto u16idx = *(uint16_t*)(d + i);
                         sm->index_data->index(u16idx + offset);
                     } break;
+                    case UNSIGNED_INT: {
+                        auto u32idx = *(uint32_t*)(d + i);
+                        sm->index_data->index(u32idx + offset);
+                    } break;
                     default:
                         S_ERROR("Unsupported index type: {0}",
                                 buffer_info.c_type);
