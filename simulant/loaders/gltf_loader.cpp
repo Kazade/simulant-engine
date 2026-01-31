@@ -796,14 +796,6 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
         auto material =
             (material_id >= 0) ? materials[material_id] : materials.back();
 
-        /* FIXME: Maybe we can reuse submeshes? */
-        auto sm = final_mesh->create_submesh(
-            sm_name, material,
-            // FIXME: Index type should be derived from the min/max index
-            INDEX_TYPE_16_BIT,
-            mode == TRIANGLES ? MESH_ARRANGEMENT_TRIANGLES
-                              : MESH_ARRANGEMENT_TRIANGLE_STRIP);
-
         int offset = final_mesh->vertex_data->count();
         final_mesh->vertex_data->move_to(offset);
 
@@ -833,11 +825,24 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
 
         auto indices_id = primitive.indexes_id;
         if(indices_id >= 0) {
+
             auto indices = accessors[indices_id];
             auto buffer_info = process_buffer(js, indices, bin_chunk);
             S_VERBOSE("Populating indices");
 
             const auto d = &buffer_info.data[0];
+
+            /* FIXME: Maybe we can reuse submeshes? */
+            auto sm = final_mesh->create_submesh(
+                sm_name, material,
+                (buffer_info.c_type == UNSIGNED_INT) ? INDEX_TYPE_32_BIT
+                : (buffer_info.c_type == UNSIGNED_SHORT ||
+                   buffer_info.c_type == SHORT)
+                    ? INDEX_TYPE_16_BIT
+                    : INDEX_TYPE_8_BIT,
+                mode == TRIANGLES ? MESH_ARRANGEMENT_TRIANGLES
+                                  : MESH_ARRANGEMENT_TRIANGLE_STRIP);
+
             for(std::size_t i = 0; i < buffer_info.data.size();
                 i += buffer_info.c_stride) {
 
