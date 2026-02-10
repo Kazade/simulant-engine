@@ -181,6 +181,23 @@ build:android-all-clang:debug:
     BUILD_TYPE: debug
     BUILD_JOB: assembleDebug
 
+build:xbox-x86-gcc:debug:
+  stage: build
+  image: kazade/xbox-sdk
+  variables:
+    TARGET: xbox-x86-gcc
+  script:
+    - mkdir -p ${TARGET}/debug
+    - cd ${TARGET}/debug
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF -DCMAKE_TOOLCHAIN_FILE=/usr/src/nxdk/share/toolchain-nxdk.cmake ../..
+    - make -j3
+  artifacts:
+    paths:
+      - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/assets/
+      - ${TARGET}/debug/tests/simulant_tests.exe
+      - ${TARGET}/debug/tests/*.dll
+
 build:psp-mips-gcc:debug:
   stage: build
   image: kazade/psp-sdk
