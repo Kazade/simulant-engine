@@ -3,10 +3,13 @@
 #include <stdexcept>
 #include "logging.h"
 
+
 #ifdef __ANDROID__
 #include <android/log.h>
 #elif defined(__PSP__)
 #include <pspdebug.h>
+#elif defined(__XBOX__)
+#include <hal/debug.h>
 #endif
 
 namespace smlt {
@@ -54,7 +57,9 @@ StdIOHandler::StdIOHandler() {
 }
 
 StdIOHandler::~StdIOHandler() {
+#ifndef __XBOX__
     std::cout.flush();
+#endif
 }
 
 void StdIOHandler::do_write_message(Logger*,
@@ -66,17 +71,23 @@ void StdIOHandler::do_write_message(Logger*,
     thread::Lock<thread::Mutex> g(lock_);
 
     if(level == "ERROR") {
-#ifndef __ANDROID__
-        std::cerr << to_string(time) << " ERROR " << message << std::endl;
-#else
+#ifdef __ANDROID__
         __android_log_write(ANDROID_LOG_ERROR, "SIMULANT", message.c_str());
+#elif defined(__XBOX__)
+        auto t = to_string(time);
+        debugPrint("%s ERROR %s\n", t.c_str(), message.c_str());
+#else
+        std::cerr << to_string(time) << " ERROR " << message << std::endl;
 #endif
     } else {
-#ifndef __ANDROID__
+#ifdef __ANROID__
+        __android_log_write(ANDROID_LOG_INFO, "SIMULANT", message.c_str());
+#elif defined(__XBOX__)
+        auto t = to_string(time);
+        debugPrint("%s %s %s\n", t.c_str(), level.c_str(), message.c_str());
+#else
         std::cout << to_string(time) << " " << level << " " << message << std::endl;
         std::cout.flush();
-#else
-        __android_log_write(ANDROID_LOG_INFO, "SIMULANT", message.c_str());
 #endif
     }
 }

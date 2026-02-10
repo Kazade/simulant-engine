@@ -1,6 +1,10 @@
 #include <iomanip>
 #include <iostream>
 
+#ifdef __XBOX__
+#include <hal/debug.h>
+#endif
+
 #include "logging.h"
 
 #include "utils/kfs.h"
@@ -31,15 +35,19 @@ void ArgParser::define_arg(const std::string& name, ArgType type, const std::str
 
 void ArgParser::print_help() const {
     auto exe = kfs::path::split(kfs::exe_path()).second;
+
+#ifdef __XBOX__
+    debugPrint("Usage: %s [OPTION] ...\n\n", exe.c_str());
+#else
     std::cout << "Usage: " << exe << " [OPTION]..." << std::endl << std::endl;
 
     for(auto& arg: defined_args_) {
         std::cout << std::left << std::setw(30) << "\t" + arg.first;
         std::cout << arg.second.help << std::endl;
-
     }
 
     std::cout << std::endl;
+#endif
 }
 
 bool ArgParser::parse_args(int argc, char* argv[]) {

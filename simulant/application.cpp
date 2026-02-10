@@ -582,7 +582,7 @@ bool Application::run_frame() {
             window_->swap_buffers();
 
             S_VERBOSE("Buffers swapped");
-        }                
+        }
     }
 
     /* We totally ignore the first frame as it can take a while and messes up
@@ -667,6 +667,9 @@ int32_t Application::run(int argc, char* argv[]) {
 ProcessID Application::process_id() const {
 #ifdef __linux__
     return getpid();
+#elif defined(__XBOX__)
+    assert(0 && "Not implemented");
+    return -1;
 #elif defined(__WIN32__)
     return GetCurrentProcessId();
 #else
@@ -757,10 +760,10 @@ void Application::shutdown() {
     //Shutdown the input controller
     window_->input_state_.reset();
 
-    std::cout << "Frames rendered: " << stats->frames_run() << std::endl;
-    std::cout << "Fixed updates run: " << stats->fixed_steps_run() << std::endl;
-    std::cout << "Total time: " << time_keeper->total_elapsed_seconds() << std::endl;
-    std::cout << "Average FPS: " << float(stats->frames_run() - 1) / (time_keeper->total_elapsed_seconds()) << std::endl;
+    S_INFO("Frames rendered: {0}", stats->frames_run());
+    S_INFO("Fixed updates run: {0}", stats->fixed_steps_run());
+    S_INFO("Total time: {0}", time_keeper->total_elapsed_seconds());
+    S_INFO("Average FPS: {0}", float(stats->frames_run() - 1) / (time_keeper->total_elapsed_seconds()));
 
     has_shutdown_ = true;
 }
