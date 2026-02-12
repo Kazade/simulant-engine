@@ -3,9 +3,15 @@
 #ifdef _MSC_VER
 #include <intrin.h>
 
+#ifdef __XBOX__
+#define SWAP_16 __builtin_bswap16
+#define SWAP_32 __builtin_bswap32
+#define SWAP_64 __builtin_bswap64
+#else
 #define SWAP_16 _byteswap_ushort
 #define SWAP_32 _byteswap_ulong
 #define SWAP_64 _byteswap_uint64
+#endif
 
 #elif defined(__DREAMCAST__)
 #include <kos.h>

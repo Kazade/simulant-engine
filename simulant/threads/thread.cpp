@@ -132,7 +132,7 @@ void* Thread::thread_runner(void* data) {
 }
 
 void sleep(size_t ms) {
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__XBOX__)
     Sleep(ms);
 #elif defined(__PSP__)
     struct timespec tim;

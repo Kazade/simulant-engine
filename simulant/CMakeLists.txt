@@ -21,17 +21,15 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/deps/bounce/include)
 LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
 
 # Include GL2x stuff on non-DC builds
-IF(NOT PLATFORM_DREAMCAST)
-    IF(NOT PLATFORM_PSP)
-        MESSAGE("-- Including GLAD in build")
-        # DC build doesn't need glad, GL1 is available directly
-        FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
-        SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
+IF(USE_GLAD_FOR_OPENGL)
+    MESSAGE("-- Including GLAD in build")
 
-        MESSAGE("-- Including GL2X in build")
-        FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
-        SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
-    ENDIF()
+    FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
+
+    MESSAGE("-- Including GL2X in build")
+    FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
 ENDIF()
 
 IF(PLATFORM_PSP)
@@ -121,6 +119,19 @@ ELSEIF(PLATFORM_PSP)
         sound/drivers/al_error.cpp
         sound/drivers/null_sound_driver.cpp
     )
+ELSEIF(PLATFORM_XBOX)
+    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/xbox/*.cpp)
+
+    IF(PLATFORM)
+        MESSAGE("-- Including platform specific files: ${PLATFORM}")
+    ENDIF()
+
+    SET(
+        SIMULANT_FILES
+        ${SIMULANT_FILES}
+        ${PLATFORM}
+        sound/drivers/null_sound_driver.cpp
+    )
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
     FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/android/*.cpp)
 
@@ -176,9 +187,9 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/bounce/include)
 
 IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
+    ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
 ELSE()
-ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
+    ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
     platforms/evercade/platform.cpp
     nodes/helpers.h
     nodes/stage_node_path.h

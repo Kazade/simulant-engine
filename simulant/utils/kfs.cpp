@@ -24,6 +24,40 @@
 #include <dirent.h>
 #include <errno.h>
 #include <kos.h>
+#elif defined(__XBOX__)
+
+typedef char TCHAR;
+
+#define _S_IFDIR 0x040000
+#define S_IFDIR _S_IFDIR
+
+#define _S_IFREG 0x100000
+#define S_IFREG _S_IFREG
+
+#if !defined S_ISDIR
+    #define S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
+#endif
+
+#if !defined S_ISREG
+    #define S_ISREG(m) (((m) & _S_IFREG) == _S_IFREG)
+#endif
+
+/* Convert Windows FILETIME to Unix time_t */
+static time_t filetime_to_time_t(const FILETIME *ft)
+{
+    /* Windows epoch (1601-01-01) to Unix epoch (1970-01-01) */
+    const ULONGLONG EPOCH_DIFF = 116444736000000000ULL;
+
+    ULARGE_INTEGER ull;
+    ull.LowPart  = ft->dwLowDateTime;
+    ull.HighPart = ft->dwHighDateTime;
+
+    if (ull.QuadPart < EPOCH_DIFF)
+        return (time_t)0;
+
+    return (time_t)((ull.QuadPart - EPOCH_DIFF) / 10000000ULL);
+}
+
 #elif defined(__PSP__)
 #include <dirent.h>
 #include <pspiofilemgr.h>
@@ -31,7 +65,7 @@
 #include <unistd.h>
 #include <utime.h>
 #elif defined(__WIN32__)
-  
+
 #if defined(_MSC_VER)
     #include <direct.h>
 
@@ -189,7 +223,33 @@ uint32_t psp_time_to_epoch(ScePspDateTime pt) {
 std::pair<Stat, bool> lstat(const Path& path) {
     Stat ret;
 
-#ifdef __WIN32__
+#if defined(__XBOX__)
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+
+    if (!GetFileAttributesExA(path.c_str(), GetFileExInfoStandard, &fad)) {
+        return std::make_pair(ret, false);
+    }
+
+    /* File size */
+    ULARGE_INTEGER size;
+    size.LowPart  = fad.nFileSizeLow;
+    size.HighPart = fad.nFileSizeHigh;
+    ret.size = (off_t)size.QuadPart;
+
+    /* Times */
+    ret.atime = filetime_to_time_t(&fad.ftLastAccessTime);
+    ret.mtime = filetime_to_time_t(&fad.ftLastWriteTime);
+    ret.ctime = filetime_to_time_t(&fad.ftCreationTime);
+
+    /* File type & permissions */
+    if (fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        ret.mode |= S_IFDIR;
+    } else {
+        ret.mode |= S_IFREG;
+    }
+
+
+#elif defined(__WIN32__)
     struct _stat result;
     if(_stat(path.c_str(), &result) == -1) {
         return std::make_pair(ret, false);
@@ -264,7 +324,7 @@ void touch(const Path& path) {
 #if defined(_arch_dreamcast) || defined(__PSP__)
     (void)(path);
     throw std::logic_error("Not implemented");
-#elif __WIN32__
+#elif defined(__WIN32__) || defined(__XBOX__)
     auto handle = CreateFile(path.c_str(), FILE_WRITE_ATTRIBUTES, 0, NULL,
                              CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -309,9 +369,10 @@ void make_dir(const Path& path, Mode mode) {
         if(ret != 0) {
             throw kfs::IOError("Error creating directory");
         }
-#elif __WIN32__
+#elif defined(__WIN32__) || defined(__XBOX__)
         _S_UNUSED(mode);
-        if(mkdir(path.c_str()) != 0) {
+
+        if(CreateDirectoryA(path.c_str(), NULL) == 0) {
             throw kfs::IOError(errno);
         }
 #else
@@ -329,6 +390,10 @@ void make_link(const Path& source, const Path& dest) {
         throw IOError("Unable to make symlink");
     }
 #elif defined(__PSP__)
+    (void)(source);
+    (void)(dest);
+    throw std::logic_error("Not Implemented");
+#elif defined(__XBOX__)
     (void)(source);
     (void)(dest);
     throw std::logic_error("Not Implemented");
@@ -395,6 +460,10 @@ void remove_dir(const Path& path) {
         if(fs_rmdir(path.c_str()) != 0) {
             throw IOError("Unable to remove directory");
         }
+#elif defined(__XBOX__)
+        if(RemoveDirectoryA(path.c_str()) == 0) {
+            throw IOError("Unable to remove directory");
+        }
 #else
         if(rmdir(path.c_str()) != 0) {
             throw IOError(errno);
@@ -449,10 +518,12 @@ std::string temp_dir() {
 }
 
 Path exe_path() {
-#ifdef __WIN32__
+#if defined(__WIN32__)
     TCHAR szFileName[MAX_PATH + 1];
     GetModuleFileName(NULL, szFileName, MAX_PATH + 1);
     return szFileName;
+#elif defined(__XBOX__)
+    return "/unknown.xbe";
 #elif defined(__APPLE__)
     char buff[1024];
     uint32_t size = sizeof(buff);
@@ -470,7 +541,7 @@ Path exe_path() {
 #elif defined(__PSP__)
     /* FIXME: This isn't ideal, could possibly result in the wrong thing */
     return std::string(get_cwd()) + "/EBOOT.PBP";
-#elif defined(__ANDRIOID__)
+#elif defined(__ANDROID__)
     return "/unknown.java";
 #else
     char buff[1024];
@@ -490,6 +561,11 @@ Path exe_dirname() {
 }
 
 Path get_cwd() {
+#if defined(__XBOX__)
+    // Xbox doesn't really have this concept, but the default
+    // location is D:
+    return Path("D:\\");
+#else
     char buf[FILENAME_MAX];
     char* succ = getcwd(buf, FILENAME_MAX);
 
@@ -498,6 +574,7 @@ Path get_cwd() {
     }
 
     throw std::runtime_error("Unable to get the current working directory");
+#endif
 }
 
 namespace path {
@@ -780,7 +857,9 @@ bool is_file(const Path& path) {
 }
 
 bool is_link(const Path& path) {
-#ifdef __WIN32__
+#if defined(__XBOX__)
+    return false;
+#elif defined(__WIN32__)
     return GetFileAttributesA(path.c_str()) == FILE_ATTRIBUTE_REPARSE_POINT;
 #else
     auto st = lstat(path);
@@ -793,7 +872,7 @@ bool is_link(const Path& path) {
 }
 
 Path real_path(const Path& path) {
-#if defined(_arch_dreamcast) | defined(__PSP__)
+#if defined(_arch_dreamcast) || defined(__PSP__) || defined(__XBOX__)
     throw std::logic_error("Not implemented");
 #else
     char* real_path = realpath(path.c_str(), NULL);
@@ -916,7 +995,7 @@ std::vector<Path> list_dir(const Path& path) {
 #endif
     }
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__XBOX__)
     std::string pattern(path.c_str());
     pattern.append("\\*");
     WIN32_FIND_DATA data;

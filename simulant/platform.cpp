@@ -1,6 +1,7 @@
 
 
 #include "platform.h"
+#include "simulant/platforms/xbox/platform.h"
 
 #ifdef __DREAMCAST__
 
@@ -41,6 +42,11 @@ typedef smlt::LinuxPlatform ThisPlatform;
 
 #include "platforms/osx/platform.h"
 typedef smlt::OSXPlatform ThisPlatform;
+
+#elif defined(__XBOX__)
+
+#include "platforms/xbox/platform.h"
+typedef smlt::XBOXPlatform ThisPlatform;
 
 #else
 #error Unrecognised platform
