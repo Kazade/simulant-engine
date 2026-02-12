@@ -18,13 +18,7 @@
 //
 
 #include "gl1x_renderer.h"
-#ifdef __DREAMCAST__
-    #include "../../../deps/libgl/include/GL/gl.h"
-#elif defined(__PSP__)
-    #include <GL/gl.h>
-#else
-    #include "../glad/glad/glad.h"
-#endif
+#include "../gl_includes.h"
 
 #include "../../utils/gl_error.h"
 #include "../../assets/material.h"
@@ -51,12 +45,10 @@ batcher::RenderGroupKey GL1XRenderer::prepare_render_group(
 }
 
 void GL1XRenderer::init_context() {
-#ifndef __DREAMCAST__
-#ifndef __PSP__
+#ifdef SIMULANT_USE_GLAD
     if(!gladLoadGL()) {
         throw std::runtime_error("Unable to intialize OpenGL 1.1");
     }
-#endif
 #endif
 
     GLRenderer::init_context();
@@ -93,5 +85,3 @@ smlt::GL1XRenderer::GL1XRenderer(smlt::Window *window):
 }
 
 }
-
-

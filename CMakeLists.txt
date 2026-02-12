@@ -332,6 +332,21 @@ ELSEIF(PLATFORM_DREAMCAST)
 ELSEIF(PLATFORM_XBOX)
     MESSAGE("-- Cross-Compiling for the XBox.")
 
+    include(FetchContent)
+
+    message(STATUS "Downloading pbgl")
+    FetchContent_Declare(
+        pbgl
+        GIT_REPOSITORY https://github.com/fgsfdsfgs/pbgl.git
+        GIT_TAG        9fbfdd63ec9040e52762bf76daccdb4158abc21f
+        GIT_PROGRESS TRUE
+    )
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_definitions(-DPBGL_DEBUG)
+    endif()
+    FetchContent_MakeAvailable(pbgl)
+    link_libraries(pbgl ${NXDK_DIR}/lib/libpbkit.lib)
+
     SET(OPENAL_INCLUDE_DIRS "")
     SET(OPENAL_LIBRARY "")
     FIND_PACKAGE(PkgConfig REQUIRED)

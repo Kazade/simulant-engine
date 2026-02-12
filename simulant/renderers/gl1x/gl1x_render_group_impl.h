@@ -2,14 +2,7 @@
 
 #include <memory>
 
-#ifdef __DREAMCAST__
-    #include "../../../deps/libgl/include/GL/gl.h"
-#elif defined(__PSP__)
-    #include <GL/gl.h>
-#else
-    #include "../glad/glad/glad.h"
-#endif
-
+#include "../gl_includes.h"
 #include "../../assets/material.h"
 #include "../gl_renderer.h"
 

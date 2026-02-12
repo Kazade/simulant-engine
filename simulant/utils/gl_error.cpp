@@ -20,14 +20,7 @@
 #include <stdexcept>
 #include "../logging.h"
 
-#ifdef __DREAMCAST__
-    #include "../../../deps/libgl/include/GL/gl.h"
-    #include "../../../deps/libgl/include/GL/glext.h"
-#elif defined(__PSP__)
-    #include <GL/gl.h>
-#else
-    #include "../renderers/glad/glad/glad.h"
-#endif
+#include "../renderers/gl_includes.h"
 
 namespace smlt {
 namespace GLChecker {

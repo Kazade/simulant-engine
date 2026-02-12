@@ -1,18 +1,6 @@
 
 #include "simulant/types.h"
-#ifdef __DREAMCAST__
-#include "../../../deps/libgl/include/GL/gl.h"
-#include "../../../deps/libgl/include/GL/glext.h"
-#elif defined(__PSP__)
-#include <GL/gl.h>
-#else
-    #include "../glad/glad/glad.h"
-
-    #if defined(_MSC_VER) && defined(APIENTRY)
-    #undef APIENTRY
-    #endif
-
-#endif
+#include "../gl_includes.h"
 
 #include "gl1x_render_group_impl.h"
 #include "gl1x_render_queue_visitor.h"
@@ -321,9 +309,9 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
 
         const Mat4& view = camera_->view_matrix();
 
-        GLCheck(glLoadMatrixf, view.data());        
+        GLCheck(glLoadMatrixf, view.data());
     }
-    
+
     for(uint8_t i = 0; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
         current = (i < count) ? lights[i] : nullptr;
 

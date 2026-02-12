@@ -2,7 +2,7 @@
 
 #include "renderer_config.h"
 
-#ifdef __DREAMCAST__
+#if defined(__DREAMCAST__) || defined(__XBOX__)
     #include "gl1x/gl1x_renderer.h"
 #elif defined(__ANDROID__) || defined(__EVERCADE__)
     #include "gl2x/generic_renderer.h"
@@ -35,7 +35,7 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
 
     if(chosen.empty()) {
         /* NULL? Then return the default for the platform */
-#if defined(__DREAMCAST__)
+#if defined(__DREAMCAST__) || defined(__XBOX__)
         return std::make_shared<GL1XRenderer>(window);
 #elif defined(__PSP__)
         return std::make_shared<PSPRenderer>(window);
@@ -58,14 +58,14 @@ Renderer::ptr new_renderer(Window* window, const std::string& name) {
         return std::make_shared<GL1XRenderer>(window);
 #endif
     } else if(chosen == "gl2x") {
-#if defined(__DREAMCAST__) || defined(PSP) || defined(__ANDROID__) || defined(__EVERCADE__)
+#if defined(__DREAMCAST__) || defined(PSP) || defined(__ANDROID__) || defined(__EVERCADE__) || defined(__XBOX__)
         S_ERROR("{0} is not a supported renderer", name);
         return NOT_SUPPORTED;
 #else
         return std::make_shared<GenericRenderer>(window, false);
 #endif
     } else if(chosen == "gles2x") {
-#if defined(__DREAMCAST__) || defined(PSP) || defined(__WIN32__)
+#if defined(__DREAMCAST__) || defined(PSP) || defined(__WIN32__)|| defined(__XBOX__)
         S_ERROR("{0} is not a supported renderer", name);
         return NOT_SUPPORTED;
 #else
