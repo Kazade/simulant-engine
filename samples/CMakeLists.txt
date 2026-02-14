@@ -79,9 +79,9 @@ foreach(sample ${SAMPLES})
     endif()
 
     IF(PLATFORM_DREAMCAST)
-    IF(SIMULANT_BUILD_SAMPLE_CDI)
-        SET(EXE ${sample})
-        ADD_CUSTOM_TARGET(
+        IF(SIMULANT_BUILD_SAMPLE_CDI)
+            SET(EXE ${sample})
+            ADD_CUSTOM_TARGET(
             ${EXE}.cdi ALL
             COMMAND $ENV{KOS_OBJCOPY} -R .stack -O binary -S -g ${CMAKE_CURRENT_BINARY_DIR}/${EXE}.elf ${CMAKE_CURRENT_BINARY_DIR}/${EXE}.bin
             COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/${EXE}
@@ -95,7 +95,39 @@ foreach(sample ${SAMPLES})
             DEPENDS ${EXE_FILENAME}.debug.target
             COMMENT "Converting ${EXE}.elf to ${EXE}.cdi"
         )
+        endif()
     endif()
+
+    if(PLATFORM_XBOX)
+        # Convert EXE to XBE
+        add_custom_target(${sample}_cxbe_convert ALL
+            COMMENT "CXBE Conversion: [EXE -> XBE]"
+            VERBATIM
+            COMMAND "${CMAKE_COMMAND}" -E env
+                    ${NXDK_DIR}/tools/cxbe/cxbe
+                    -OUT:${CMAKE_CURRENT_BINARY_DIR}/${sample}.xbe
+                    -TITLE:${sample}
+                    ${CMAKE_CURRENT_BINARY_DIR}/${sample}.exe
+        )
+
+        add_dependencies(${sample}_cxbe_convert ${sample})
+
+        set(XBOX_ISO_DIR "${CMAKE_CURRENT_BINARY_DIR}/${sample}.dir/")
+        file(MAKE_DIRECTORY ${XBOX_ISO_DIR})
+        # Convert XBE to XISO
+        add_custom_target(${sample}_xbe_iso ALL
+            COMMENT "XISO Conversion: [XBE -> XISO]"
+            COMMAND ${CMAKE_COMMAND} -E copy
+                    "${CMAKE_CURRENT_BINARY_DIR}/${sample}.xbe"
+                    "${XBOX_ISO_DIR}/${sample}.xbe"
+            COMMAND "${CMAKE_COMMAND}" -E env
+                    ${NXDK_DIR}/tools/extract-xiso/build/extract-xiso
+                    -c ${CMAKE_CURRENT_BINARY_DIR}
+                    ${XBOX_ISO_DIR}/${sample}.iso
+            WORKING_DIRECTORY ${XBOX_ISO_DIR}
+            VERBATIM
+        )
+
+        add_dependencies(${sample}_xbe_iso ${sample}_cxbe_convert)
     endif()
 endforeach()
-
