@@ -95,7 +95,7 @@ ENDIF()
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
 # Fast-math is important on DC!
-IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND NOT PLATFORM_XBOX)
     SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -O3 -g0 -ffast-math -finline-functions")
     SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -O3 -g0 -ffast-math -finline-functions")
 ENDIF()
@@ -105,7 +105,7 @@ IF(PLATFORM_DREAMCAST)
     SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mfsrra -mfsca -ffp-contract=fast")
 ENDIF()
 
-IF(NOT PLATFORM_PSP)
+IF(NOT PLATFORM_PSP AND NOT PLATFORM_XBOX)
     IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
         SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")

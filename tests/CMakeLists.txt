@@ -90,7 +90,7 @@ if(PLATFORM_XBOX)
         COMMENT "XISO Conversion: [XBE -> XISO]"
         COMMAND ${CMAKE_COMMAND} -E copy
                 "${CMAKE_CURRENT_BINARY_DIR}/simulant_tests.xbe"
-                "${XBOX_ISO_DIR}/simulant_tests.xbe"
+                "${XBOX_ISO_DIR}/default.xbe"
         COMMAND "${CMAKE_COMMAND}" -E env
                 ${NXDK_DIR}/tools/extract-xiso/build/extract-xiso
                 -c ${CMAKE_CURRENT_BINARY_DIR}

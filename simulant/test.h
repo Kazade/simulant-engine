@@ -29,6 +29,10 @@
 #include <string>
 #include <vector>
 
+#ifdef __XBOX__
+#include <hal/debug.h>
+#endif
+
 #include "application.h"
 #include "asset_manager.h"
 #include "window.h"
@@ -354,9 +358,13 @@ public:
             }
         }
 
+#ifdef __XBOX__
+        debugPrint("\nRunning %d tests", new_tests.size());
+#else
         std::cout << std::endl
                   << "Running " << new_tests.size() << " tests" << std::endl
                   << std::endl;
+#endif
 
         std::vector<std::string> junit_lines;
         std::vector<std::string> junit_suite;
@@ -420,21 +428,32 @@ public:
                     output += " ";
                 }
 
+#ifdef __XBOX__
+                debugPrint("%s", output.c_str());
+#else
                 std::cout << output << std::flush;
+#endif
                 auto start = clock::now();
                 test();
                 auto end = clock::now();
 
+#ifdef __XBOX__
+                debugPrint("   OK   \n");
+#else
                 std::cout << "\033[32m"
                           << "   OK   "
                           << "\033[0m" << std::endl;
-
+#endif
                 junit_suite.push_back(
                     gen_suite_line(new_names[ran], start, end));
             } catch(test::NotImplementedError& e) {
+#ifdef __XBOX__
+                debugPrint(" SKIPPED\n");
+#else
                 std::cout << "\033[34m"
                           << " SKIPPED"
                           << "\033[0m" << std::endl;
+#endif
                 ++skipped;
 
                 auto skip_line =
@@ -444,9 +463,13 @@ public:
                 junit_suite.push_back(
                     gen_suite_line(new_names[ran], t, t, skip_line));
             } catch(test::SkippedTestError& e) {
+#ifdef __XBOX__
+                debugPrint(" SKIPPED\n");
+#else
                 std::cout << "\033[34m"
                           << " SKIPPED"
                           << "\033[0m" << std::endl;
+#endif
                 ++skipped;
                 auto skip_line =
                     "\n        <skipped message=\"" + std::string(e.what()) +
@@ -455,14 +478,21 @@ public:
                 junit_suite.push_back(
                     gen_suite_line(new_names[ran], t, t, skip_line));
             } catch(test::AssertionError& e) {
+#ifdef __XBOX__
+                debugPrint(" FAILED \n        %s\n", e.what().c_str());
+#else
                 std::cout << "\033[33m"
                           << " FAILED "
                           << "\033[0m" << std::endl;
                 std::cout << "        " << e.what() << std::endl;
+#endif
                 if(!e.file.empty()) {
+#ifdef __XBOX__
+                    debugPrint("        %s:%d\n", e.file.c_str(), e.line);
+#else
                     std::cout << "        " << e.file << ":" << e.line
                               << std::endl;
-
+#endif
                     std::ifstream ifs(e.file);
                     if(ifs.good()) {
                         std::string buffer;
@@ -488,9 +518,13 @@ public:
                     gen_suite_line(new_names[ran], t, t, skip_line));
 
             } catch(std::exception& e) {
+#ifdef __XBOX__
+                debugPrint(" EXCEPT \n        %s\n", e.what());
+#else
                 std::cout << "\033[31m"
                           << " EXCEPT " << std::endl;
                 std::cout << "        " << e.what() << "\033[0m" << std::endl;
+#endif
                 ++crashed;
 
                 auto skip_line = "\n        <error message=\"" +
@@ -500,7 +534,9 @@ public:
                 junit_suite.push_back(
                     gen_suite_line(new_names[ran], t, t, skip_line));
             }
+#ifndef __XBOX__
             std::cout << "\033[0m";
+#endif
             ++ran;
         }
 
@@ -518,12 +554,24 @@ public:
             fclose(f);
         }
 
+#ifdef __XBOX__
+        debugPrint("-----------------------\n");
+#else
         std::cout << "-----------------------" << std::endl;
+#endif
         if(!failed && !crashed && !skipped) {
+#ifdef __XBOX__
+            debugPrint("All tests passed\n\n");
+#else
             std::cout << "All tests passed" << std::endl << std::endl;
+#endif
         } else {
             if(skipped) {
+#ifdef __XBOX__
+                debugPrint("%d tests skipped");
+#else
                 std::cout << skipped << " tests skipped";
+#endif
             }
 
             if(failed) {

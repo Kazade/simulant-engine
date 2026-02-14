@@ -113,18 +113,22 @@ foreach(sample ${SAMPLES})
         add_dependencies(${sample}_cxbe_convert ${sample})
 
         set(XBOX_ISO_DIR "${CMAKE_CURRENT_BINARY_DIR}/${sample}.dir/")
-        file(MAKE_DIRECTORY ${XBOX_ISO_DIR})
+
         # Convert XBE to XISO
         add_custom_target(${sample}_xbe_iso ALL
             COMMENT "XISO Conversion: [XBE -> XISO]"
+            COMMAND ${CMAKE_COMMAND} -E remove_directory ${XBOX_ISO_DIR}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${XBOX_ISO_DIR}
             COMMAND ${CMAKE_COMMAND} -E copy
                     "${CMAKE_CURRENT_BINARY_DIR}/${sample}.xbe"
-                    "${XBOX_ISO_DIR}/${sample}.xbe"
+                    "${XBOX_ISO_DIR}/default.xbe"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    "${CMAKE_SOURCE_DIR}/assets"
+                    "${XBOX_ISO_DIR}/assets"
             COMMAND "${CMAKE_COMMAND}" -E env
                     ${NXDK_DIR}/tools/extract-xiso/build/extract-xiso
                     -c ${CMAKE_CURRENT_BINARY_DIR}
                     ${XBOX_ISO_DIR}/${sample}.iso
-            WORKING_DIRECTORY ${XBOX_ISO_DIR}
             VERBATIM
         )
 
