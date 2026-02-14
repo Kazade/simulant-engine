@@ -69,6 +69,39 @@ IF(PLATFORM_PSP)
     )
 ENDIF()
 
+if(PLATFORM_XBOX)
+    # Convert EXE to XBE
+    add_custom_target(simulant_tests_cxbe_convert ALL
+        COMMENT "CXBE Conversion: [EXE -> XBE]"
+        VERBATIM
+        COMMAND "${CMAKE_COMMAND}" -E env
+                ${NXDK_DIR}/tools/cxbe/cxbe
+                -OUT:${CMAKE_CURRENT_BINARY_DIR}/simulant_tests.xbe
+                -TITLE:simulant_tests
+                ${CMAKE_CURRENT_BINARY_DIR}/simulant_tests.exe
+    )
+
+    add_dependencies(simulant_tests_cxbe_convert simulant_tests)
+
+    set(XBOX_ISO_DIR "${CMAKE_CURRENT_BINARY_DIR}/simulant_tests.dir/")
+    file(MAKE_DIRECTORY ${XBOX_ISO_DIR})
+    # Convert XBE to XISO
+    add_custom_target(simulant_tests_xbe_iso ALL
+        COMMENT "XISO Conversion: [XBE -> XISO]"
+        COMMAND ${CMAKE_COMMAND} -E copy
+                "${CMAKE_CURRENT_BINARY_DIR}/simulant_tests.xbe"
+                "${XBOX_ISO_DIR}/simulant_tests.xbe"
+        COMMAND "${CMAKE_COMMAND}" -E env
+                ${NXDK_DIR}/tools/extract-xiso/build/extract-xiso
+                -c ${CMAKE_CURRENT_BINARY_DIR}
+                ${XBOX_ISO_DIR}/simulant_tests.iso
+        WORKING_DIRECTORY ${XBOX_ISO_DIR}
+        VERBATIM
+    )
+
+    add_dependencies(simulant_tests_xbe_iso simulant_tests_cxbe_convert)
+endif()
+
 IF(WIN32 AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 # Necessary when compiling tests on mingw because the main.cpp file gets too large
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wa,-mbig-obj")
@@ -79,4 +112,3 @@ TARGET_LINK_LIBRARIES(
     simulant_tests
     simulant
 )
-
