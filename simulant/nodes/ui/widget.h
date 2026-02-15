@@ -48,6 +48,8 @@ struct WidgetImpl {
 namespace smlt {
 namespace ui {
 
+class Keyboard;
+
 enum WidgetLayerIndex {
     WIDGET_LAYER_INDEX_BORDER,
     WIDGET_LAYER_INDEX_BACKGROUND,

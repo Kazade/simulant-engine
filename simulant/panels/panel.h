@@ -35,8 +35,8 @@ public:
 
     virtual ~Panel() {}
 
-    bool on_init();
-    void on_clean_up();
+    bool on_init() override;
+    void on_clean_up() override;
 
     bool is_active() const { return is_active_; }
 

@@ -127,8 +127,8 @@ foreach(sample ${SAMPLES})
                     "${XBOX_ISO_DIR}/assets"
             COMMAND "${CMAKE_COMMAND}" -E env
                     ${NXDK_DIR}/tools/extract-xiso/build/extract-xiso
-                    -c ${CMAKE_CURRENT_BINARY_DIR}
-                    ${XBOX_ISO_DIR}/${sample}.iso
+                    -c ${XBOX_ISO_DIR}
+                    ${sample}.iso
             VERBATIM
         )
 

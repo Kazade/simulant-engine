@@ -244,8 +244,6 @@ private:
 
     void position_checks();
     void recalc_attributes();
-
-    friend class VertexDataTest;
 };
 
 typedef std::shared_ptr<VertexData> VertexDataPtr;

@@ -7,6 +7,7 @@
 #include "../utils/mesh/triangulate.h"
 #include "bounce/bounce.h"
 #include "bounce/collision/shapes/mesh_shape.h"
+#include "simulant/macros.h"
 #include <set>
 
 /* Need for bounce */
@@ -43,6 +44,7 @@ public:
     virtual void DrawPoint(const b3Vec3& p, scalar size, const b3Color& color,
                            bool depthEnabled = true) {
 
+        debug_->set_point_size(size);
         debug_->draw_point(_p(p), _c(color), Seconds(), depthEnabled);
     }
 
@@ -67,6 +69,7 @@ public:
                                    const b3Vec3& p2, const b3Vec3& p3,
                                    const b3Color& color,
                                    bool depthEnabled = true) {
+        _S_UNUSED(normal);
         DrawTriangle(p1, p2, p3, color, depthEnabled);
     }
 
@@ -74,6 +77,12 @@ public:
     virtual void DrawPolygon(const void* vertices, uint32 vertexStride,
                              uint32 count, const b3Color& color,
                              bool depthEnabled = true) {
+
+        _S_UNUSED(vertices);
+        _S_UNUSED(vertexStride);
+        _S_UNUSED(count);
+        _S_UNUSED(color);
+        _S_UNUSED(depthEnabled);
         S_ERROR_ONCE("DrawPolygon unimplemented");
     }
 
@@ -82,6 +91,12 @@ public:
                                   uint32 vertexStride, uint32 count,
                                   const b3Color& color,
                                   bool depthEnabled = true) {
+        _S_UNUSED(normal);
+        _S_UNUSED(vertices);
+        _S_UNUSED(vertexStride);
+        _S_UNUSED(count);
+        _S_UNUSED(color);
+        _S_UNUSED(depthEnabled);
         S_ERROR_ONCE("DrawSolidPolygon unimplemented");
     }
 
@@ -89,6 +104,11 @@ public:
     virtual void DrawCircle(const b3Vec3& normal, const b3Vec3& center,
                             scalar radius, const b3Color& color,
                             bool depthEnabled = true) {
+        _S_UNUSED(normal);
+        _S_UNUSED(center);
+        _S_UNUSED(radius);
+        _S_UNUSED(color);
+        _S_UNUSED(depthEnabled);
         S_ERROR_ONCE("DrawCircle unimplemented");
     }
 
@@ -96,6 +116,12 @@ public:
     virtual void DrawSolidCircle(const b3Vec3& normal, const b3Vec3& center,
                                  scalar radius, const b3Color& color,
                                  bool depthEnabled = true) {
+
+        _S_UNUSED(normal);
+        _S_UNUSED(center);
+        _S_UNUSED(radius);
+        _S_UNUSED(color);
+        _S_UNUSED(depthEnabled);
         S_ERROR_ONCE("DrawSolidCircle unimplemented");
     }
 
@@ -103,6 +129,11 @@ public:
     virtual void DrawPlane(const b3Vec3& normal, const b3Vec3& center,
                            scalar radius, const b3Color& color,
                            bool depthEnabled = true) {
+        _S_UNUSED(normal);
+        _S_UNUSED(center);
+        _S_UNUSED(radius);
+        _S_UNUSED(color);
+        _S_UNUSED(depthEnabled);
         S_ERROR_ONCE("DrawPlane unimplemented");
     }
 
@@ -110,12 +141,22 @@ public:
     virtual void DrawSolidPlane(const b3Vec3& normal, const b3Vec3& center,
                                 scalar radius, const b3Color& color,
                                 bool depthEnabled = true) {
+        _S_UNUSED(normal);
+        _S_UNUSED(center);
+        _S_UNUSED(radius);
+        _S_UNUSED(color);
+        _S_UNUSED(depthEnabled);
         S_ERROR_ONCE("DrawSolidPlane unimplemented");
     }
 
     // Draw a sphere with center, and radius.
     virtual void DrawSphere(const b3Vec3& center, scalar radius,
                             const b3Color& color, bool depthEnabled = true) {
+
+        _S_UNUSED(center);
+        _S_UNUSED(radius);
+        _S_UNUSED(color);
+        _S_UNUSED(depthEnabled);
         S_ERROR_ONCE("DrawSphere unimplemented");
     }
 
@@ -123,6 +164,11 @@ public:
     virtual void DrawSolidSphere(const b3Vec3& axis, const b3Vec3& center,
                                  scalar radius, const b3Color& color,
                                  bool depthEnabled = true) {
+        _S_UNUSED(axis);
+        _S_UNUSED(center);
+        _S_UNUSED(radius);
+        _S_UNUSED(color);
+        _S_UNUSED(depthEnabled);
         S_ERROR_ONCE("DrawSolidSphere unimplemented");
     }
 
@@ -130,6 +176,13 @@ public:
     virtual void DrawCylinder(const b3Vec3& axis, const b3Vec3& center,
                               scalar radius, scalar height,
                               const b3Color& color, bool depthEnabled = true) {
+
+        _S_UNUSED(axis);
+        _S_UNUSED(center);
+        _S_UNUSED(radius);
+        _S_UNUSED(height);
+        _S_UNUSED(color);
+        _S_UNUSED(depthEnabled);
         S_ERROR_ONCE("DrawCylinder unimplemented");
     }
 

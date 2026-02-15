@@ -29,7 +29,7 @@ public:
 
     FindResult<Actor> parent = FindAncestor("Some Parent", this);
 
-    bool on_create(Params) {
+    bool on_create(Params) override {
         return true;
     }
     void do_generate_renderables(batcher::RenderQueue*, const Camera*,

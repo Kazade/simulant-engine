@@ -175,6 +175,8 @@ void Debug::do_generate_renderables(batcher::RenderQueue* render_queue,
                                     const std::size_t light_count) {
 
     _S_UNUSED(detail_level);
+    _S_UNUSED(light);
+    _S_UNUSED(light_count);
 
     if(elements_.empty()) {
         return;

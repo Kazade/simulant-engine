@@ -14,6 +14,7 @@ public:
     void test_shader() {
 #ifndef _arch_dreamcast
 #ifndef PSP
+#ifndef __XBOX__
         smlt::GPUProgram::ptr program = smlt::GPUProgram::create(
             smlt::GPUProgramID(1),
             window->renderer,
@@ -43,6 +44,7 @@ public:
         auto loc = program->locate_attribute("tns");
 
         assert_equal(1, loc);
+#endif
 #endif
 #endif
     }

@@ -479,7 +479,7 @@ public:
                     gen_suite_line(new_names[ran], t, t, skip_line));
             } catch(test::AssertionError& e) {
 #ifdef __XBOX__
-                debugPrint(" FAILED \n        %s\n", e.what().c_str());
+                debugPrint(" FAILED \n        %s\n", e.what());
 #else
                 std::cout << "\033[33m"
                           << " FAILED "
@@ -503,8 +503,12 @@ public:
 
                         int line_count = lines.size();
                         if(line_count && e.line <= line_count) {
+#ifdef __XBOX__
+                            debugPrint("%d\n", lines.at(e.line - 1).c_str());
+#else
                             std::cout << lines.at(e.line - 1) << std::endl
                                       << std::endl;
+#endif
                         }
                     }
                 }
@@ -568,26 +572,38 @@ public:
         } else {
             if(skipped) {
 #ifdef __XBOX__
-                debugPrint("%d tests skipped");
+                debugPrint("%d tests skipped", skipped);
 #else
                 std::cout << skipped << " tests skipped";
 #endif
             }
 
             if(failed) {
+#ifdef __XBOX__
+                debugPrint("%s%d tests failed", (skipped) ? ", " : "", failed);
+#else
                 if(skipped) {
                     std::cout << ", ";
                 }
                 std::cout << failed << " tests failed";
+#endif
             }
 
             if(crashed) {
+#ifdef __XBOX__
+                debugPrint("%s%d tests crashed", (failed) ? ", " : "", crashed);
+#else
                 if(failed) {
                     std::cout << ", ";
                 }
                 std::cout << crashed << " tests crashed";
+#endif
             }
+#ifdef __XBOX__
+            debugPrint("\n\n");
+#else
             std::cout << std::endl << std::endl;
+#endif
         }
 
         return failed + crashed;

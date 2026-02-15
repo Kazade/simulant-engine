@@ -106,7 +106,7 @@ public:
 protected:
     friend class PhysicsService;
     friend class ContactListIterator;
-    friend class _PhysicsData;
+    friend struct _PhysicsData;
 
     PhysicsService* get_simulation() const;
 

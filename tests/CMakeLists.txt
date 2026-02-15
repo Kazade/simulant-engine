@@ -2,9 +2,7 @@ FILE(GLOB TEST_FILES *.h)
 FILE(GLOB TEST_SOURCES global.cpp)
 FILE(GLOB LIBGL_CONTAINERS ${CMAKE_SOURCE_DIR}/deps/libgl/containers/*.c)
 
-IF(PLATFORM_DREAMCAST)
-FILE(GLOB GL_TESTS gl1/*.h)
-ELSEIF(PLATFORM_PSP)
+IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR PLATFORM_XBOX)
 FILE(GLOB GL_TESTS gl1/*.h)
 ELSE()
 FILE(GLOB GL_TESTS gl2/*.h gl1/*.h)
@@ -84,18 +82,22 @@ if(PLATFORM_XBOX)
     add_dependencies(simulant_tests_cxbe_convert simulant_tests)
 
     set(XBOX_ISO_DIR "${CMAKE_CURRENT_BINARY_DIR}/simulant_tests.dir/")
-    file(MAKE_DIRECTORY ${XBOX_ISO_DIR})
+
     # Convert XBE to XISO
     add_custom_target(simulant_tests_xbe_iso ALL
         COMMENT "XISO Conversion: [XBE -> XISO]"
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${XBOX_ISO_DIR}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${XBOX_ISO_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_SOURCE_DIR}/assets"
+                "${XBOX_ISO_DIR}/assets"
         COMMAND ${CMAKE_COMMAND} -E copy
                 "${CMAKE_CURRENT_BINARY_DIR}/simulant_tests.xbe"
                 "${XBOX_ISO_DIR}/default.xbe"
         COMMAND "${CMAKE_COMMAND}" -E env
                 ${NXDK_DIR}/tools/extract-xiso/build/extract-xiso
-                -c ${CMAKE_CURRENT_BINARY_DIR}
-                ${XBOX_ISO_DIR}/simulant_tests.iso
-        WORKING_DIRECTORY ${XBOX_ISO_DIR}
+                -c ${XBOX_ISO_DIR}
+                simulant_tests.iso
         VERBATIM
     )
 

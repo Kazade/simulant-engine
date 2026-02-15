@@ -89,7 +89,6 @@ private:
     SubMesh* with_depth_ = nullptr;
 
     MeshPtr mesh_ = nullptr;
-    ActorPtr actor_ = nullptr;
     MaterialPtr material_;
     MaterialPtr material_no_depth_;
 

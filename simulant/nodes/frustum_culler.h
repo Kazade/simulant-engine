@@ -34,7 +34,7 @@ public:
     FrustumCuller(Scene* owner) :
         Partitioner(owner, STAGE_NODE_TYPE_PARTITIONER_FRUSTUM) {}
 
-    const AABB& aabb() const {
+    const AABB& aabb() const override {
         static AABB aabb;
         return aabb;
     }
