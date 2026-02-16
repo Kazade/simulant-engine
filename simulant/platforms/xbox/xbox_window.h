@@ -30,6 +30,8 @@ private:
 
     bool _init_window() override;
     bool _init_renderer(Renderer *renderer) override;
+
+    void do_swap_buffers() override;
 };
 
 }

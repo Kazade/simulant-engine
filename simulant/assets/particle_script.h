@@ -66,7 +66,6 @@ typedef std::shared_ptr<Manipulator> ManipulatorPtr;
 class ParticleScript:
     public Asset,
     public Loadable,
-    public generic::Identifiable<AssetID>,
     public RefCounted<ParticleScript>,
     public ChainNameable<ParticleScript> {
 

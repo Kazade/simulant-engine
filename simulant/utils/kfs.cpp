@@ -226,7 +226,8 @@ std::pair<Stat, bool> lstat(const Path& path) {
 #if defined(__XBOX__)
     WIN32_FILE_ATTRIBUTE_DATA fad;
 
-    if (!GetFileAttributesExA(path.c_str(), GetFileExInfoStandard, &fad)) {
+    if (GetFileAttributesExA(path.c_str(), GetFileExInfoStandard, &fad) == 0) {
+        S_VERBOSE("Couldn't find file. Err: {0}", GetLastError());
         return std::make_pair(ret, false);
     }
 
@@ -669,7 +670,7 @@ std::pair<Path, Path> split_drive(const Path& p) {
     return std::make_pair("", p);
 }
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__XBOX__)
 static Path nt_norm_path(Path path) {
     char backslash = '\\';
 
@@ -782,7 +783,7 @@ static Path posix_norm_path(const Path& path) {
 #endif
 
 Path norm_path(const Path& path) {
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__XBOX__)
     return nt_norm_path(path);
 #else
     return posix_norm_path(path);

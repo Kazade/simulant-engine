@@ -18,6 +18,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include "simulant/logging.h"
 #include "simulant/platforms/xbox/xbox_window.h"
 #include <chrono>
 #include <future>
@@ -235,6 +236,8 @@ Application::~Application() {
 }
 
 void Application::preload_default_font() {
+    S_DEBUG("Preloading default font");
+
     auto& ui = config_.ui;
 
     FontFlags flags;
@@ -243,14 +246,20 @@ void Application::preload_default_font() {
     auto fnt = shared_assets->create_font_from_memory(sweet16_ttf,
                                                       sweet16_ttf_len, flags);
     if(!fnt) {
+        S_ERROR("Unable to find the default font");
         FATAL_ERROR(ERROR_CODE_MISSING_ASSET_ERROR, "Unable to find the default font");
     }
 
+    S_VERBOSE("Generating font name");
     smlt::LimitedString<64> n;
     n = Font::generate_name(ui.font_family, flags.size, flags.weight,
                             flags.style);
+
+    S_VERBOSE("Setting font name");
     fnt->set_name(n);
+    S_VERBOSE("Setting garbage collect method");
     fnt->set_garbage_collection_method(smlt::GARBAGE_COLLECT_NEVER);
+    S_INFO("Loaded default font");
 }
 
 std::vector<std::string> Application::generate_potential_codes(const std::string &language_code) {
@@ -324,7 +333,11 @@ bool Application::construct_window(const AppConfig& config) {
         return false;
     }
 
+    S_VERBOSE("Created window");
+
     if(!config_copy.show_cursor) {
+        S_VERBOSE("Hiding cursor");
+
         // By default, don't show the cursor
         window_->show_cursor(false);
 
@@ -345,6 +358,7 @@ bool Application::construct_window(const AppConfig& config) {
             request_frame_time(frame_time);
         }
 #else
+        S_VERBOSE("Setting requested frame time");
         float frame_time = (1.0f / float(config_copy.target_frame_rate)) * 1000.0f;
         request_frame_time(frame_time);
 #endif
@@ -361,6 +375,7 @@ bool Application::construct_window(const AppConfig& config) {
         return false;
     }
 
+    S_VERBOSE("Setting window title");
     window_->set_title(config.title.encode());
 
     if(config.desktop.enable_virtual_screen) {
@@ -371,6 +386,7 @@ bool Application::construct_window(const AppConfig& config) {
             config.desktop.virtual_screen_integer_scale);
     }
 
+    S_VERBOSE("Finished construct window");
     return true;
 }
 
@@ -551,8 +567,12 @@ bool Application::run_frame() {
     {
         thread::Lock<thread::Mutex> rendering_lock(window_->context_lock());
         if(window_->has_context()) {
+            S_VERBOSE("Running fixed updates");
             run_fixed_updates();
+
+            S_VERBOSE("Running update");
             run_update(dt);
+
             if(asset_manager_) {
                 asset_manager_->update(time_keeper->delta_time());
             }
@@ -712,6 +732,7 @@ void Application::start_coroutine(std::function<void ()> func) {
 }
 
 void Application::run_coroutines_and_late_update() {
+    S_VERBOSE("Updating coroutines");
     update_coroutines();
 
     if(!late_update_enabled()) {
@@ -721,12 +742,14 @@ void Application::run_coroutines_and_late_update() {
     float dt = time_keeper_->delta_time();
 
     if(scene_manager_) {
+        S_VERBOSE("Running late update");
         scene_manager_->late_update(dt);
     }
 
     signal_late_update_(dt);
     _call_late_update(dt);
 
+    S_VERBOSE("Post late update");
     signal_post_late_update();
 }
 
@@ -855,6 +878,8 @@ void Application::on_render_context_created() {
 
     overlay_scene_.reset(new OverlayScene(window_.get()));
     overlay_scene_->init();
+
+    S_VERBOSE("Render context created");
 }
 
 void Application::on_render_context_destroyed() {
@@ -1041,7 +1066,7 @@ LoaderPtr Application::loader_for(const std::string& loader_name, const Path& fi
 }
 
 LoaderTypePtr Application::loader_type(const std::string& loader_name) const {
-    for(LoaderTypePtr loader_type: loaders_) {
+    for(const auto& loader_type: loaders_) {
         if(loader_type->name() == loader_name) {
             return loader_type;
         }

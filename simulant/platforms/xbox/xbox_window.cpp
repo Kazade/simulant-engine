@@ -1,27 +1,39 @@
+#include <hal/debug.h>
+#include <hal/video.h>
+#include <hal/xbox.h>
 
 #include "xbox_window.h"
 
+#include "../../renderers/gl_includes.h"
 #include "../../sound/drivers/null_sound_driver.h"
 
 #include "../../renderers/renderer_config.h"
 
 namespace smlt {
 
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 720
-#define SCREEN_DEPTH 32
-
-
 bool XBOXWindow::_init_window() {
-    set_width(SCREEN_WIDTH);
-    set_height(SCREEN_HEIGHT);
-
     return true;
 }
 
 bool XBOXWindow::_init_renderer(Renderer *renderer) {
     _S_UNUSED(renderer);
 
+    S_DEBUG("Initialzing video mode and pbgl");
+
+    auto w = renderer->window->width();
+    auto h = renderer->window->height();
+    XVideoSetMode(w, h, 32, REFRESH_DEFAULT);
+
+    S_DEBUG("Video mode set to {0}x{1}", w, h);
+
+    const int err = pbgl_init(GL_TRUE);
+    if (err < 0) {
+        S_DEBUG("pbgl_init() failed: {0}", err);
+        XReboot();
+        return false;
+    }
+
+    S_DEBUG("pbgl initialized successfully");
     set_has_context(true); //Mark that we have a valid GL context
     return true;
 }
@@ -57,6 +69,10 @@ std::shared_ptr<SoundDriver> XBOXWindow::create_sound_driver(const std::string& 
 
     S_DEBUG("Null sound driver activated");
     return std::make_shared<NullSoundDriver>(this);
+}
+
+void XBOXWindow::do_swap_buffers() {
+    pbgl_swap_buffers();
 }
 
 }

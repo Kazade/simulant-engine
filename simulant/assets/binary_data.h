@@ -7,16 +7,12 @@
 
 namespace smlt {
 
-class Binary:
-    public Asset,
-    public RefCounted<Binary>,
-    public generic::Identifiable<AssetID> {
+class Binary: public Asset, public RefCounted<Binary> {
 
 public:
-    Binary(AssetID id, AssetManager* asset_manager, const std::vector<uint8_t>&& data):
-        Asset(asset_manager),
-        generic::Identifiable<AssetID>(id),
-        data_(std::move(data)) {}
+    Binary(AssetID id, AssetManager* asset_manager,
+           const std::vector<uint8_t>&& data) :
+        Asset(id, asset_manager), data_(std::move(data)) {}
 
     const uint8_t* data() const {
         return &data_[0];
@@ -29,5 +25,4 @@ public:
 private:
     std::vector<uint8_t> data_;
 };
-
 }

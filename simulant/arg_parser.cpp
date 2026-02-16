@@ -37,7 +37,7 @@ void ArgParser::print_help() const {
     auto exe = kfs::path::split(kfs::exe_path()).second;
 
 #ifdef __XBOX__
-    debugPrint("Usage: %s [OPTION] ...\n\n", exe.c_str());
+    DbgPrint("Usage: %s [OPTION] ...\n\n", exe.c_str());
 #else
     std::cout << "Usage: " << exe << " [OPTION]..." << std::endl << std::endl;
 

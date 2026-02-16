@@ -70,7 +70,6 @@ class Font:
     public RefCounted<Font>,
     public Asset,
     public Loadable,
-    public generic::Identifiable<AssetID>,
     public ChainNameable<Font> {
 
 public:

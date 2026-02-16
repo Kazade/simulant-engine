@@ -44,10 +44,8 @@ const std::unordered_map<std::string, std::string> Material::BUILT_IN_NAMES = {
     {"DIFFUSE_ONLY", Material::BuiltIns::DIFFUSE_ONLY},
 };
 
-Material::Material(AssetID id, AssetManager* asset_manager):
-    Asset(asset_manager),
-    generic::Identifiable<AssetID>(id),
-    renderer_(get_app()->window->renderer) {
+Material::Material(AssetID id, AssetManager* asset_manager) :
+    Asset(id, asset_manager), renderer_(get_app()->window->renderer) {
 
     /* The core material has 4 texture properties by default */
 

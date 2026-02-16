@@ -304,29 +304,28 @@ private:
                         children_.end());
     }
 
-    void set_garbage_collection_method(const Asset* resource,
+    void set_garbage_collection_method(AssetID id,
                                        GarbageCollectMethod method) {
         // FIXME: This is ugly, but I'm struggling to think of another way to
         // get from the Resource to the right manager while keeping Resource as
         // a non-template
 
-        if(auto p = dynamic_cast<const Mesh*>(resource)) {
-            mesh_manager_.set_garbage_collection_method(p->id(), method);
-        } else if(auto p = dynamic_cast<const Material*>(resource)) {
-            material_manager_.set_garbage_collection_method(p->id(), method);
-        } else if(auto p = dynamic_cast<const Font*>(resource)) {
-            font_manager_.set_garbage_collection_method(p->id(), method);
-        } else if(auto p = dynamic_cast<const Sound*>(resource)) {
-            sound_manager_.set_garbage_collection_method(p->id(), method);
-        } else if(auto p = dynamic_cast<const Texture*>(resource)) {
-            texture_manager_.set_garbage_collection_method(p->id(), method);
-        } else if(auto p = dynamic_cast<const ParticleScript*>(resource)) {
-            particle_script_manager_.set_garbage_collection_method(p->id(),
-                                                                   method);
-        } else if(auto p = dynamic_cast<const Binary*>(resource)) {
-            binary_manager_.set_garbage_collection_method(p->id(), method);
-        } else if(auto p = dynamic_cast<const Prefab*>(resource)) {
-            prefab_manager_.set_garbage_collection_method(p->id(), method);
+        if(mesh_manager_.contains(id)) {
+            mesh_manager_.set_garbage_collection_method(id, method);
+        } else if(material_manager_.contains(id)) {
+            material_manager_.set_garbage_collection_method(id, method);
+        } else if(font_manager_.contains(id)) {
+            font_manager_.set_garbage_collection_method(id, method);
+        } else if(sound_manager_.contains(id)) {
+            sound_manager_.set_garbage_collection_method(id, method);
+        } else if(texture_manager_.contains(id)) {
+            texture_manager_.set_garbage_collection_method(id, method);
+        } else if(particle_script_manager_.contains(id)) {
+            particle_script_manager_.set_garbage_collection_method(id, method);
+        } else if(binary_manager_.contains(id)) {
+            binary_manager_.set_garbage_collection_method(id, method);
+        } else if(prefab_manager_.contains(id)) {
+            prefab_manager_.set_garbage_collection_method(id, method);
         } else {
             S_ERROR("Unhandled asset type. GC method not set");
         }

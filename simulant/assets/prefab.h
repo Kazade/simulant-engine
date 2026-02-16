@@ -58,15 +58,11 @@ struct PrefabAnimationChannel {
  * Once loaded, a `Prefab` can be added to a scene using
  * a `PrefabInstance`.
  */
-class Prefab:
-    public Asset,
-    public Loadable,
-    public RefCounted<Prefab>,
-    public generic::Identifiable<AssetID> {
+class Prefab: public Asset, public Loadable, public RefCounted<Prefab> {
 
 public:
     Prefab(AssetID id, AssetManager* asset_manager) :
-        Asset(asset_manager), generic::Identifiable<AssetID>(id) {}
+        Asset(id, asset_manager) {}
 
     void push_node(PrefabNode node, int32_t parent_id = -1);
 

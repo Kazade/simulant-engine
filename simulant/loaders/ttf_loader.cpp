@@ -11,7 +11,13 @@
 namespace smlt {
 namespace loaders {
 bool TTFLoader::into(Loadable& resource, const LoaderOptions& options) {
+    S_DEBUG("Beginning TTF font load");
     Font* font = loadable_to<Font>(resource);
+    if(!font) {
+        S_ERROR("Passed invalid object as font");
+        return false;
+    }
+    S_VERBOSE("Cast font");
 
     CharacterSet charset = smlt::any_cast<CharacterSet>(options.at("charset"));
     uint16_t font_size = smlt::any_cast<uint16_t>(options.at("size"));
@@ -22,14 +28,18 @@ bool TTFLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     stbtt_fontinfo* info = font->info_.get();
 
+    S_VERBOSE("Detecting file size");
     data_->seekg(0, std::ios::end);
     auto e = data_->tellg();
     data_->seekg(0, std::ios::beg);
 
+    S_VERBOSE("Reading content");
     std::vector<char> data(e);
     data_->read(data.data(), data.size());
 
     unsigned char* buffer = (unsigned char*)&data[0];
+
+    S_VERBOSE("Loading TTF font with stb");
     // Initialize the font data
     stbtt_InitFont(info, buffer, stbtt_GetFontOffsetForIndex(buffer, 0));
 

@@ -24,6 +24,7 @@
 #include "loader.h"
 #include "loaders/heightmap_loader.h"
 #include "procedural/mesh.h"
+#include "simulant/logging.h"
 #include "utils/gl_thread_check.h"
 #include "utils/simple_memstream.h"
 #include "vfs.h"
@@ -594,20 +595,40 @@ FontPtr AssetManager::create_font_from_memory(
     options["charset"] = flags.charset;
     options["blur_radius"] = flags.blur_radius;
 
+    S_VERBOSE("Finding loader for TTF");
+
     // FIXME: We should see if it's a ttf_font or something else not just
     // assume a TTF.
-    auto loadert = get_app()->loader_type("ttf_font");
+    auto app = get_app();
+    if(!app) {
+        S_ERROR("Couldn't find app???");
+        return nullptr;
+    }
+
+    auto loadert = app->loader_type("ttf_font");
     assert(loadert);
+    if(!loadert) {
+        S_ERROR("Failed to find loader for ttf_font");
+        return nullptr;
+    }
+
+    S_VERBOSE("Loader found, reading stream");
 
     auto stream = stream_from_memory(data, size);
+
+    S_VERBOSE("Seeking");
     stream->seekg(0);
 
+    S_VERBOSE("Loading");
+
     if(!loadert->loader_for("", stream)->into(font.get(), options)) {
+        S_ERROR("Couldn't load font");
         destroy_font(font_id);
         return nullptr;
     }
     font_manager_.set_garbage_collection_method(font_id, garbage_collect);
 
+    S_DEBUG("Font loaded");
     return font;
 }
 

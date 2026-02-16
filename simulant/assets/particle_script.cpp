@@ -19,9 +19,8 @@ bool ParticleScript::has_repeating_emitters() const {
     return false;
 }
 
-ParticleScript::ParticleScript(AssetID id, AssetManager* asset_manager):
-    Asset(asset_manager),
-    generic::Identifiable<AssetID>(id) {
+ParticleScript::ParticleScript(AssetID id, AssetManager* asset_manager) :
+    Asset(id, asset_manager) {
 
     material_ = asset_manager->clone_default_material();
 }

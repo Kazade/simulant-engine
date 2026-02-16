@@ -44,7 +44,6 @@ class Scene;
 
 class Sound :
     public RefCounted<Sound>,
-    public generic::Identifiable<AssetID>,
     public Asset,
     public Loadable,
     public ChainNameable<Sound> {

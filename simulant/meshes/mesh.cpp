@@ -34,22 +34,15 @@
 
 namespace smlt {
 
-
-Mesh::Mesh(
-    AssetID id,
-    AssetManager* asset_manager,
-    VertexDataPtr vertex_data):
-    Asset(asset_manager),
-    generic::Identifiable<AssetID>(id) {
+Mesh::Mesh(AssetID id, AssetManager* asset_manager, VertexDataPtr vertex_data) :
+    Asset(id, asset_manager) {
 
     reset(vertex_data);
 }
 
-Mesh::Mesh(AssetID id,
-    AssetManager *asset_manager,
-    VertexSpecification vertex_specification):
-        Asset(asset_manager),
-        generic::Identifiable<AssetID>(id) {
+Mesh::Mesh(AssetID id, AssetManager* asset_manager,
+           VertexSpecification vertex_specification) :
+    Asset(id, asset_manager) {
 
     reset(vertex_specification);
 }

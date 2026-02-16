@@ -23,9 +23,11 @@
 #include <chrono>
 #include <memory>
 
-#include "generic/property.h"
+#include "core/asset_id.h"
 #include "generic/data_carrier.h"
+#include "generic/identifiable.h"
 #include "generic/object_manager.h"
+#include "generic/property.h"
 #include "interfaces/nameable.h"
 #include "threads/mutex.h"
 
@@ -33,13 +35,12 @@ namespace smlt {
 
 class AssetManager;
 
-class Asset:
-    public virtual Nameable {
+class Asset: public generic::Identifiable<AssetID>, public virtual Nameable {
 
 public:
     friend class AssetManager;
 
-    Asset(AssetManager* manager);
+    Asset(AssetID id, AssetManager* manager);
 
     virtual ~Asset();
 
@@ -63,5 +64,4 @@ private:
     generic::DataCarrier data_;
 };
 
-}
-
+} // namespace smlt

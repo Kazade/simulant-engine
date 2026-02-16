@@ -32,10 +32,10 @@ private:
     static std::string get_message(int err);
 };
 
-#ifdef __WIN32__
-    const std::string SEP = "\\";
+#if defined(__WIN32__) || defined(__XBOX__)
+const std::string SEP = "\\";
 #else
-    const std::string SEP = "/";
+const std::string SEP = "/";
 #endif
 
 typedef std::string Path;

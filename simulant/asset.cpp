@@ -22,10 +22,10 @@
 
 namespace smlt {
 
-Asset::Asset(AssetManager* manager):
+Asset::Asset(AssetID id, AssetManager* manager) :
+    generic::Identifiable<AssetID>(id),
     manager_(manager),
-    created_(std::chrono::system_clock::now()) {
-}
+    created_(std::chrono::system_clock::now()) {}
 
 Asset::~Asset() {
 
@@ -38,14 +38,14 @@ int Asset::age() const {
 }
 
 void Asset::set_garbage_collection_method(GarbageCollectMethod method) {
-    manager_->set_garbage_collection_method(this, method);
+    manager_->set_garbage_collection_method(id(), method);
 }
 
-Asset::Asset(const Asset& rhs):
+Asset::Asset(const Asset& rhs) :
+    generic::Identifiable<AssetID>(rhs.id()),
     manager_(rhs.manager_),
     created_(std::chrono::system_clock::now()),
-    data_(rhs.data_) {
-}
+    data_(rhs.data_) {}
 
 Asset& Asset::operator=(const Asset& rhs) {
     if(&rhs == this) return *this;

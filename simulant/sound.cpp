@@ -29,14 +29,9 @@
 
 namespace smlt {
 
-
-
-Sound::Sound(AssetID id, AssetManager *asset_manager, SoundDriver *sound_driver):
-    generic::Identifiable<AssetID>(id),
-    Asset(asset_manager),
-    driver_(sound_driver) {
-
-}
+Sound::Sound(AssetID id, AssetManager* asset_manager,
+             SoundDriver* sound_driver) :
+    Asset(id, asset_manager), driver_(sound_driver) {}
 
 std::size_t Sound::buffer_size() const {
     /* We try to determine the optimum buffer size depending on the

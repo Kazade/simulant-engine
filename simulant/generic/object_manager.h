@@ -66,7 +66,8 @@ public:
     ObjectTypePtrType make_as(Args&&... args) {
         IDType new_id(next_id()); // Unbound
 
-        S_DEBUG("Creating a new object with ID: {0}", new_id);
+        S_DEBUG("Creating a new object {1} with ID: {0}", new_id,
+                typeid(T).name());
         auto obj = T::create(new_id, std::forward<Args>(args)...);
         objects_.insert(std::make_pair(obj->id(), obj));
         on_make(obj->id());

@@ -21,7 +21,6 @@
 
 #include "asset.h"
 #include "assets/texture_flags.h"
-#include "generic/identifiable.h"
 #include "generic/managed.h"
 #include "interfaces.h"
 #include "loadable.h"
@@ -128,7 +127,6 @@ typedef std::array<TextureChannel, 4> TextureChannelSet;
 class Texture:
     public Asset,
     public Loadable,
-    public generic::Identifiable<AssetID>,
     public RefCounted<Texture>,
     public RenderTarget,
     public ChainNameable<Texture> {

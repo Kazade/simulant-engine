@@ -122,7 +122,6 @@ class Mesh :
     public Asset,
     public Loadable,
     public RefCounted<Mesh>,
-    public generic::Identifiable<AssetID>,
     public KeyFrameAnimated,
     public ChainNameable<Mesh> {
 

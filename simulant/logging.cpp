@@ -75,7 +75,7 @@ void StdIOHandler::do_write_message(Logger*,
         __android_log_write(ANDROID_LOG_ERROR, "SIMULANT", message.c_str());
 #elif defined(__XBOX__)
         auto t = to_string(time);
-        debugPrint("%s ERROR %s\n", t.c_str(), message.c_str());
+        DbgPrint("%s ERROR %s\n", t.c_str(), message.c_str());
 #else
         std::cerr << to_string(time) << " ERROR " << message << std::endl;
 #endif
@@ -84,7 +84,7 @@ void StdIOHandler::do_write_message(Logger*,
         __android_log_write(ANDROID_LOG_INFO, "SIMULANT", message.c_str());
 #elif defined(__XBOX__)
         auto t = to_string(time);
-        debugPrint("%s %s %s\n", t.c_str(), level.c_str(), message.c_str());
+        DbgPrint("%s %s %s\n", t.c_str(), level.c_str(), message.c_str());
 #else
         std::cout << to_string(time) << " " << level << " " << message << std::endl;
         std::cout.flush();

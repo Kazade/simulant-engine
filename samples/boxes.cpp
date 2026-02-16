@@ -1,3 +1,4 @@
+#include "simulant/logging.h"
 #include "simulant/simulant.h"
 
 #include <cstdlib>
@@ -138,16 +139,8 @@ int main(int argc, char* argv[]) {
 
     smlt::AppConfig config;
     config.title = "Physics Sample";
-
-#ifdef __DREAMCAST__
-    config.width = 640;
-    config.height = 480;
-#else
-    config.width = 1280;
-    config.height = 960;
     config.fullscreen = false;
-    config.log_level = LOG_LEVEL_DEBUG;
-#endif
+    config.log_level = smlt::LOG_LEVEL_VERBOSE;
 
     // config.development.force_renderer = "gl1x";
 

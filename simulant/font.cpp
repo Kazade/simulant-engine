@@ -15,11 +15,8 @@ namespace smlt {
 
 const static char FALLBACK_CHAR = '?';
 
-Font::Font(AssetID id, AssetManager *asset_manager):
-    Asset(asset_manager),
-    generic::Identifiable<AssetID>(id) {
-
-}
+Font::Font(AssetID id, AssetManager* asset_manager) :
+    Asset(id, asset_manager) {}
 
 bool Font::on_init() {
     return true;

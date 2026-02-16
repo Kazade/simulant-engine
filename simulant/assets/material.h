@@ -193,7 +193,6 @@ struct CustomPropertyInfo {
 class Material:
     public Asset,
     public Loadable,
-    public generic::Identifiable<AssetID>,
     public RefCounted<Material>,
     public MaterialObject,
     public ChainNameable<Material> {

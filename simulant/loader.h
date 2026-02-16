@@ -96,7 +96,11 @@ protected:
 
     template<typename T>
     T* loadable_to(Loadable& loadable) {
+        #ifdef __XBOX__
+        T* thing = (T*)(&loadable);
+        #else
         T* thing = dynamic_cast<T*>(&loadable);
+        #endif
         if(!thing) {
             S_WARN("Attempted to cast resource to invalid type");
             return nullptr;
@@ -140,7 +144,7 @@ public:
     BaseTextureLoader(const Path& filename, std::shared_ptr<std::istream> data):
         Loader(filename, data) {
 
-        
+
     }
 
     bool into(Loadable& resource,

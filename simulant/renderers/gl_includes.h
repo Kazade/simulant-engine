@@ -41,7 +41,7 @@
     #define GL_INVALID_FRAMEBUFFER_OPERATION 0x0506
 
     GL_API static inline void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void *data) {
-        debugPrint("glCompressedTexImage2D unimplemented");
+        DbgPrint("glCompressedTexImage2D unimplemented");
     }
 #elif defined(SIMULANT_USE_GLAD)
     #include "./glad/glad/glad.h"

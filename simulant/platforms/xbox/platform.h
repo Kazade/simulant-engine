@@ -1,20 +1,21 @@
 #pragma once
 
 #include "../../platform.h"
+#include "simulant/errors.h"
 
 namespace smlt {
 
 class XBOXPlatform : public Platform {
 public:
+    XBOXPlatform();
     std::string name() const override {
         return "xbox";
     }
 
     Resolution native_resolution() const override {
-        /* This is the highest progressive scan, maybe go 1080i? */
         Resolution native;
-        native.width = 1280;
-        native.height = 720;
+        native.width = 640;
+        native.height = 480;
         native.refresh_rate = 60;
         return native;
     }

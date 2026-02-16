@@ -359,7 +359,7 @@ public:
         }
 
 #ifdef __XBOX__
-        debugPrint("\nRunning %d tests", new_tests.size());
+        DbgPrint("\nRunning %d tests", new_tests.size());
 #else
         std::cout << std::endl
                   << "Running " << new_tests.size() << " tests" << std::endl
@@ -429,7 +429,7 @@ public:
                 }
 
 #ifdef __XBOX__
-                debugPrint("%s", output.c_str());
+                DbgPrint("%s", output.c_str());
 #else
                 std::cout << output << std::flush;
 #endif
@@ -438,7 +438,7 @@ public:
                 auto end = clock::now();
 
 #ifdef __XBOX__
-                debugPrint("   OK   \n");
+                DbgPrint("   OK   \n");
 #else
                 std::cout << "\033[32m"
                           << "   OK   "
@@ -448,7 +448,7 @@ public:
                     gen_suite_line(new_names[ran], start, end));
             } catch(test::NotImplementedError& e) {
 #ifdef __XBOX__
-                debugPrint(" SKIPPED\n");
+                DbgPrint(" SKIPPED\n");
 #else
                 std::cout << "\033[34m"
                           << " SKIPPED"
@@ -464,7 +464,7 @@ public:
                     gen_suite_line(new_names[ran], t, t, skip_line));
             } catch(test::SkippedTestError& e) {
 #ifdef __XBOX__
-                debugPrint(" SKIPPED\n");
+                DbgPrint(" SKIPPED\n");
 #else
                 std::cout << "\033[34m"
                           << " SKIPPED"
@@ -479,7 +479,7 @@ public:
                     gen_suite_line(new_names[ran], t, t, skip_line));
             } catch(test::AssertionError& e) {
 #ifdef __XBOX__
-                debugPrint(" FAILED \n        %s\n", e.what());
+                DbgPrint(" FAILED \n        %s\n", e.what());
 #else
                 std::cout << "\033[33m"
                           << " FAILED "
@@ -488,7 +488,7 @@ public:
 #endif
                 if(!e.file.empty()) {
 #ifdef __XBOX__
-                    debugPrint("        %s:%d\n", e.file.c_str(), e.line);
+                    DbgPrint("        %s:%d\n", e.file.c_str(), e.line);
 #else
                     std::cout << "        " << e.file << ":" << e.line
                               << std::endl;
@@ -504,7 +504,7 @@ public:
                         int line_count = lines.size();
                         if(line_count && e.line <= line_count) {
 #ifdef __XBOX__
-                            debugPrint("%d\n", lines.at(e.line - 1).c_str());
+                            DbgPrint("%d\n", lines.at(e.line - 1).c_str());
 #else
                             std::cout << lines.at(e.line - 1) << std::endl
                                       << std::endl;
@@ -523,7 +523,7 @@ public:
 
             } catch(std::exception& e) {
 #ifdef __XBOX__
-                debugPrint(" EXCEPT \n        %s\n", e.what());
+                DbgPrint(" EXCEPT \n        %s\n", e.what());
 #else
                 std::cout << "\033[31m"
                           << " EXCEPT " << std::endl;
@@ -559,20 +559,20 @@ public:
         }
 
 #ifdef __XBOX__
-        debugPrint("-----------------------\n");
+        DbgPrint("-----------------------\n");
 #else
         std::cout << "-----------------------" << std::endl;
 #endif
         if(!failed && !crashed && !skipped) {
 #ifdef __XBOX__
-            debugPrint("All tests passed\n\n");
+            DbgPrint("All tests passed\n\n");
 #else
             std::cout << "All tests passed" << std::endl << std::endl;
 #endif
         } else {
             if(skipped) {
 #ifdef __XBOX__
-                debugPrint("%d tests skipped", skipped);
+                DbgPrint("%d tests skipped", skipped);
 #else
                 std::cout << skipped << " tests skipped";
 #endif
@@ -580,7 +580,7 @@ public:
 
             if(failed) {
 #ifdef __XBOX__
-                debugPrint("%s%d tests failed", (skipped) ? ", " : "", failed);
+                DbgPrint("%s%d tests failed", (skipped) ? ", " : "", failed);
 #else
                 if(skipped) {
                     std::cout << ", ";
@@ -591,7 +591,7 @@ public:
 
             if(crashed) {
 #ifdef __XBOX__
-                debugPrint("%s%d tests crashed", (failed) ? ", " : "", crashed);
+                DbgPrint("%s%d tests crashed", (failed) ? ", " : "", crashed);
 #else
                 if(failed) {
                     std::cout << ", ";
@@ -600,7 +600,7 @@ public:
 #endif
             }
 #ifdef __XBOX__
-            debugPrint("\n\n");
+            DbgPrint("\n\n");
 #else
             std::cout << std::endl << std::endl;
 #endif
