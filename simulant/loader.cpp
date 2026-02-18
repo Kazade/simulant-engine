@@ -63,7 +63,11 @@ namespace loaders {
 
 bool BaseTextureLoader::into(Loadable& resource, const LoaderOptions& options) {
     Loadable* res_ptr = &resource;
+#ifdef __XBOX__
+    Texture* tex = (Texture*)(res_ptr);
+#else
     Texture* tex = dynamic_cast<Texture*>(res_ptr);
+#endif
     assert(tex && "You passed a Resource that is not a texture to the texture loader");
 
     assert(data_);

@@ -691,10 +691,9 @@ int32_t Application::run(int argc, char* argv[]) {
 ProcessID Application::process_id() const {
 #ifdef __linux__
     return getpid();
-#elif defined(__XBOX__)
-    assert(0 && "Not implemented");
-    return -1;
-#elif defined(__WIN32__)
+#elif defined(__XBOX__) || defined(__DREAMCAST__) || defined(__PSP__)
+    return 0;
+#elif defined(__WIN32__) || defined(__XBOX__)
     return GetCurrentProcessId();
 #else
     return -1;
@@ -710,11 +709,14 @@ int64_t Application::ram_usage_in_bytes() const {
         return -1;
     }
 
+    S_VERBOSE("Getting platform");
     auto p = get_platform();
     if(!p) {
+        S_DEBUG("Couldn't get platform?");
         return -1;
     }
 
+    S_VERBOSE("Fetching process ram usage");
     return p->process_ram_usage_in_bytes(
         process_id()
     );
@@ -799,7 +801,9 @@ void Application::update_coroutines() {
     assert(thread_id() == thread::this_thread_id());  /* Must be called from the main thread */
 
     for(auto it = coroutines_.begin(); it != coroutines_.end();) {
+        S_VERBOSE("Processing coroutine");
         if(cort::resume_coroutine(*it) == cort::CO_RESULT_FINISHED) {
+            S_VERBOSE("Finished coroutine");
             cort::stop_coroutine(*it);
             it = coroutines_.erase(it);
         } else {

@@ -27,7 +27,7 @@ public:
     void set_specular_color(const Color& color);
     void set_metallic_roughness_map(TexturePtr texture);
     void set_base_color_map(TexturePtr texture);
-    void set_light_map(TexturePtr texture);    
+    void set_light_map(TexturePtr texture);
     void set_normal_map(TexturePtr texture);
 
     const Mat4& base_color_map_matrix() const;
@@ -95,10 +95,9 @@ public:
     void set_color_material(ColorMaterial cm);
 
     const MaterialObject* parent_material_object() const {
-        return dynamic_cast<const MaterialObject*>(this->parent_);
+        return (MaterialObject*) parent_;
     }
 
 };
 
 }
-

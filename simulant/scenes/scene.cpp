@@ -182,9 +182,13 @@ void Scene::load() {
         return;
     }
 
+    S_VERBOSE("Getting memory usage");
     auto memory_usage = smlt::get_app()->ram_usage_in_bytes();
 
+    S_VERBOSE("Calling pre-load");
     on_pre_load();
+
+    S_VERBOSE("Calling load");
     on_load();
 
     auto used = smlt::get_app()->ram_usage_in_bytes();
@@ -194,6 +198,7 @@ void Scene::load() {
     }
 
     is_loaded_ = true;
+    S_VERBOSE("Done loading");
 }
 
 void Scene::unload() {
@@ -257,4 +262,3 @@ void Scene::on_update(float step) {
     StageNode::on_update(step);
 }
 }
-

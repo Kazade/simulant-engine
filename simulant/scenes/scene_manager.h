@@ -183,12 +183,16 @@ public:
 
     template<typename ...Args>
     void _preload_in_background(ScenePtr scene, Args&& ...args) {
+        S_VERBOSE("Preloading scene");
         if(scene->is_loaded()) {
+            S_VERBOSE("Scene is already loaded");
             return;
         }
 
         scene->load_args.clear();
         unpack(scene->load_args, std::forward<Args>(args)...);
+
+        S_VERBOSE("Calling load");
         scene->load();
     }
 

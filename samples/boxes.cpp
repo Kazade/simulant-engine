@@ -12,6 +12,7 @@ public:
         smlt::Scene(window) {}
 
     void on_load() override {
+        S_INFO("Beginning load");
         auto physics = start_service<PhysicsService>();
 
         auto debug = create_child<smlt::Debug>();
@@ -32,10 +33,12 @@ public:
         camera_->transform->set_position(Vec3(0, 10, 50));
 
         // Create a nice skybox (not on DC, the image is too big)
+        S_DEBUG("Loading skybox");
         if(get_platform()->name() != "dreamcast") {
             create_child<Skybox>("assets/samples/skyboxes/TropicalSunnyDay");
         }
 
+        S_DEBUG("Loading crate");
         auto crate =
             app->shared_assets->load_texture("assets/samples/crate.png");
 
@@ -43,6 +46,7 @@ public:
         mat->set_base_color_map(crate);
         mat->set_lighting_enabled(false);
 
+        S_DEBUG("Loading crate mesh");
         auto box_mesh = app->shared_assets->create_mesh(
             smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
         box_mesh->create_submesh_as_cube("cube", mat, 5);
@@ -66,6 +70,7 @@ public:
         lighting->set_ambient_light(Color::white() * 0.5f);
         auto l = create_child<smlt::PointLight>();
         l->set_intensity(1000);
+        S_DEBUG("Done loading");
     }
 
     void spawn_box() {
