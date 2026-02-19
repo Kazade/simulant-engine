@@ -5,7 +5,7 @@ Simulant has a full-featured audio system that makes it easy to load and play so
 ## Loading Sounds
 
 `Sounds` are an `Asset`, like `Textures` or `Materials`, and so can be loaded using an asset manager, probably using
-`new_sound_from_file(path);`
+`load_sound(path);`
 
 Supported sound formats are .wav and .ogg.
 
@@ -72,4 +72,3 @@ sound_node->move_to(node->absolute_position());
 sound_node->play_sound(explosion);
 sound_node->destroy_after(Seconds(5));
 ```
-
