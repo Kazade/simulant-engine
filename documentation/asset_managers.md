@@ -1,18 +1,27 @@
 
 # Asset Manager
 
-Asset managers are the second kind of management class in Simulant (the other being [StageNode managers](manual_managers.md)). All assets
-in Simulant use a refcounted manager, these assets include:
+Asset managers control the lifecycle of all assets in Simulant. There are two levels of asset manager:
+
+ - Scene Asset Manager - a property of the Scene class, this is what you use for most asset loading
+ - Shared Asset Manager - a property of the Application class. This is used for assets that must live across multiple scenes
+
+All assets in Simulant are reference-counted and will disappear when all references are destroyed. 
+
+>> Note: be careful that you store the result of `load_X()` calls, otherwise the asset will be destroyed immediately. If you want to keep the asset around without storing a reference, you can pass GARBAGE_COLLECT_NEVER as the garbage collection method and later find the asset by giving it a name.
+
+The following are examples of asset types:
 
  - Textures
  - Materials
  - Sounds
  - Shaders
  - Meshes
+ - Fonts
+ - Prefabs
+ - Particle scripts
  
-In normal usage, these materials are linked just after creation to another asset (e.g. Texture -> Material) or
-to an object that has a manual manager (e.g. an Actor). A asset can obviously be linked to more than one object
-but when all linked objects/assets are destroyed, then the refcounted manager will delete the asset.
+ Assets can sometimes be linked together, for example a `Mesh` might reference a `Material` which might reference multiple `Textures`.
 
 # Garbage Collection Methods
 
@@ -28,12 +37,12 @@ will be destroyed.
 
 For example, say you load a mesh, like so:
 
-    MeshPtr my_mesh = stage->new_mesh_from_file("test.obj");
+    MeshPtr my_mesh = assets->load_mesh("test.obj");
     
 The mesh will stay loaded while `my_mesh` is in scope, but then it will be released unless you either store the
 MeshPtr somewhere persistent, or attach the mesh to a stage node. e.g.
 
-    stage->new_actor_with_mesh(my_mesh); //Links the mesh to an actor, preventing its destruction    
+    stage->create_child<Actor>(my_mesh); //Links the mesh to an actor, preventing its destruction    
     
 # Disabling collection
 
@@ -46,7 +55,7 @@ Not ideal!
 
 Fortunately, when you create a mesh, you can disable its garbage collection on a case-by-case basis:
 
-    MeshPtr torpedo_mesh = stage()->new_mesh_from_file(
+    MeshPtr torpedo_mesh = assets->load_mesh(
         "torpedo.obj", 
         MeshLoadOptions(),
         GARBAGE_COLLECT_NEVER
@@ -61,6 +70,3 @@ The torpedo will then be cleaned up at the next run of the garbage collector.
 # Default materials and fonts
 
 Simulant needs at minimum a default material, and a default font file. These are normally set to `Material::BuiltIns::DEFAULT` and Orbitron respectively but you can set them per manager by calling `AssetManager::set_default_material_filename()` and `AssetManager::set_default_font_filename()`
-
-
-
