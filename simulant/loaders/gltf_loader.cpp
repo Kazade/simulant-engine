@@ -1198,7 +1198,8 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     for(auto& node: animations_it) {
         auto node_it = node.to_iterator();
 
-        auto name = node_it["name"]->to_str().value();
+        auto name = node_it["name"]->to_str().value_or("");
+        if (name == "") continue;
         for(auto& ch_node: node_it["channels"]) {
             auto ch_node_it = ch_node.to_iterator();
             auto target = ch_node_it["target"];

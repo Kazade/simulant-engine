@@ -187,11 +187,17 @@ public:
             animation_queue_.push(index.value());
             return true;
         }
+        S_WARN("Animation index could not be found for anim " + name);
         return false;
     }
 
     void pause() {
         state_ = ANIMATION_STATE_PAUSED;
+    }
+
+    bool is_paused() {
+        if(state_ == ANIMATION_STATE_PAUSED) return true;
+        return false;
     }
 
     void resume() {
@@ -264,6 +270,8 @@ public:
 
     std::vector<std::string> animation_names() const {
         std::vector<std::string> ret;
+        if(animations_.empty()) return ret;
+
         for(auto& anim: animations_) {
             ret.push_back(anim.name.str());
         }

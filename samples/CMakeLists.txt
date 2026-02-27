@@ -11,6 +11,7 @@ SET(SAMPLES
     widgets
     cave
     anim
+    anim_skinning
 )
 
 SET(EXE_EXTENSION ".elf")
