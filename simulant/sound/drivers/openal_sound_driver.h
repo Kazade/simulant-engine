@@ -28,7 +28,9 @@ public:
 
     void queue_buffers_to_source(AudioSourceID source, uint32_t count, const std::vector<AudioBufferID>& buffers) override;
     std::vector<AudioBufferID> unqueue_buffers_from_source(AudioSourceID source, uint32_t count) override;
-    void upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, const uint8_t* data, std::size_t bytes, uint32_t frequency) override;
+    bool upload_buffer_data(AudioBufferID buffer, AudioDataFormat format,
+                            const uint8_t* data, std::size_t bytes,
+                            uint32_t frequency) override;
 
     AudioSourceState source_state(AudioSourceID source) override;
     int32_t source_buffers_processed_count(AudioSourceID source) const override;
@@ -40,6 +42,23 @@ public:
     void set_source_reference_distance(AudioSourceID id, float dist) override;
     void set_source_gain(AudioSourceID id, NormalizedFloat value) override;
     void set_source_pitch(AudioSourceID id, NormalizedFloat value) override;
+
+    bool can_persist_buffers(size_t sample_data_size) const override {
+        // FIXME: Better logic? We just make sure we can fit in no more than
+        // 4 buffers. Any more than that and we do the streaming thing.
+        return sample_data_size < (max_buffer_size() * 4);
+    }
+
+    virtual size_t max_buffer_size() const override {
+#ifdef __DREAMCAST__
+        // On DC buffers have an odd max size, we override the return
+        // value here because otherwise the default max buffer size logic
+        // will return 32k not almost 64k
+        return 65534;
+#else
+        return SoundDriver::max_buffer_size();
+#endif
+    }
 
 private:
     bool _startup() override;

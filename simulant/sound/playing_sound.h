@@ -59,6 +59,10 @@ private:
     void start();
     void do_stop();
 
+    void allocate_buffers_if_necessary();
+
+    bool using_persistent_buffers_ = false;
+
 public:
     PlayingSound(AudioSource* parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);
     virtual ~PlayingSound();

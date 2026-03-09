@@ -7,7 +7,7 @@
 
 namespace smlt {
 
-const static int BUFFER_COUNT = 4;
+const static int STREAMING_BUFFER_COUNT = 4;
 
 PlayingAssetID PlayingSound::counter_ = 0;
 
@@ -23,10 +23,53 @@ PlayingSound::PlayingSound(AudioSource* parent, std::weak_ptr<Sound> sound, Audi
     SoundDriver* driver = smlt::get_app()->sound_driver.get();
 
     source_ = driver->generate_sources(1).back();
-    buffers_ = driver->generate_buffers(BUFFER_COUNT);
 
     if(model == DISTANCE_MODEL_AMBIENT) {
         driver->set_source_as_ambient(source_);
+    }
+}
+
+void PlayingSound::allocate_buffers_if_necessary() {
+    if(!buffers_.empty()) {
+        // Buffers already allocated
+        return;
+    }
+
+    auto snd = sound_.lock();
+    if(!snd) {
+        S_WARN("Failed to lock sound");
+        return;
+    }
+
+    auto driver = snd->_driver();
+
+    if(snd->is_resident()) {
+        // Sound is already uploaded entirely to SRAM, so we just use those
+        // buffers
+        buffers_.assign(snd->resident_buffers().begin(),
+                        snd->resident_buffers().end());
+        using_persistent_buffers_ = true;
+    } else if(driver->can_persist_buffers(snd->total_samples_size())) {
+        // Sound isn't uploaded to buffers, but could theroetically be
+        // so let's try to put it in there!
+        auto buffer_count =
+            snd->total_samples_size() / driver->max_buffer_size();
+        if(snd->total_samples_size() % driver->max_buffer_size()) {
+            buffer_count++;
+        }
+
+        buffers_ = driver->allocate_persistent_buffers(snd, buffer_count);
+        if(!buffers_.empty()) {
+            using_persistent_buffers_ = true;
+        }
+    } else {
+        // Sound is too big to persist, so we use streaming
+        // directly.
+        buffers_ = driver->generate_buffers(STREAMING_BUFFER_COUNT);
+    }
+
+    if(buffers_.empty()) {
+        S_DEBUG("Failed to allocate sound buffers. Sound will not play");
     }
 }
 
@@ -48,7 +91,9 @@ void PlayingSound::start() {
 
     SoundDriver* driver = smlt::get_app()->sound_driver.get();
 
-    for(int i = 0; i < BUFFER_COUNT; ++i) {
+    allocate_buffers_if_necessary();
+
+    for(int i = 0; i < buffers_.size(); ++i) {
         auto bs = stream_func_(buffers_[i]);
         if(bs < 0) {
             /* Sound was destroyed immediately */

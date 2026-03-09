@@ -51,14 +51,8 @@ std::size_t Sound::buffer_size() const {
 
     std::size_t ret = next_power_of_two(required_size);
 
-#ifdef __DREAMCAST__
-    /* The Dreamcast sound chip only allows 65534 samples and ALdc
-     * will truncate if it's larger so this prevents us triggering
-     * an OpenAL error */
-    ret = std::min(ret, (std::size_t) 65534);
-#elif __PSP__
-    ret = std::min(ret, (std::size_t)32 * 1024);
-#endif
+    auto max_size = driver_->max_buffer_size();
+    ret = std::min(ret, max_size);
 
     return ret;
 }
@@ -69,5 +63,12 @@ void Sound::init_source(PlayingSound& source) {
     init_playing_sound_(source);
 }
 
-
+void Sound::on_clean_up() {
+    // Make sure we release any persistent buffers when
+    // the sound is destroyed
+    if(driver_) {
+        driver_->destroy_buffers(buffer_cache_);
+        buffer_cache_.clear();
+    }
+}
 }

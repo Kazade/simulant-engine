@@ -91,7 +91,9 @@ public:
 
     virtual void queue_buffers_to_source(AudioSourceID source, uint32_t count, const std::vector<AudioBufferID>& buffers) = 0;
     virtual std::vector<AudioBufferID> unqueue_buffers_from_source(AudioSourceID source, uint32_t count) = 0;
-    virtual void upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, const uint8_t* data, std::size_t bytes, uint32_t frequency) = 0;
+    virtual bool upload_buffer_data(AudioBufferID buffer,
+                                    AudioDataFormat format, const uint8_t* data,
+                                    std::size_t bytes, uint32_t frequency) = 0;
 
     virtual AudioSourceState source_state(AudioSourceID source) = 0;
     virtual int32_t source_buffers_processed_count(AudioSourceID source) const = 0;
@@ -109,6 +111,10 @@ public:
     virtual void set_source_gain(AudioSourceID id, NormalizedFloat value) = 0;
     virtual void set_source_pitch(AudioSourceID id, NormalizedFloat value) = 0;
 
+    virtual bool can_persist_buffers(size_t sample_data_size) const;
+
+    virtual size_t max_buffer_size() const;
+
 private:
     virtual bool _startup() = 0;
     virtual void _shutdown() = 0;
@@ -116,6 +122,8 @@ private:
     Window* window_ = nullptr;
 
     sig::connection source_update_;
+
+    mutable size_t max_buffer_size_cache_ = 0;
 };
 
 

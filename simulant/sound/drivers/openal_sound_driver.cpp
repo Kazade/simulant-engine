@@ -104,7 +104,11 @@ std::vector<AudioBufferID> OpenALSoundDriver::unqueue_buffers_from_source(AudioS
     return buffers;
 }
 
-void OpenALSoundDriver::upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, const uint8_t* data, std::size_t bytes, uint32_t frequency) {
+bool OpenALSoundDriver::upload_buffer_data(AudioBufferID buffer,
+                                           AudioDataFormat format,
+                                           const uint8_t* data,
+                                           std::size_t bytes,
+                                           uint32_t frequency) {
     ALenum al_format;
 
     switch(format) {
@@ -114,10 +118,15 @@ void OpenALSoundDriver::upload_buffer_data(AudioBufferID buffer, AudioDataFormat
     case AUDIO_DATA_FORMAT_STEREO16: al_format = AL_FORMAT_STEREO16; break;
     default:
         S_ERROR("Passed invalid format {0} to upload_buffer_data");
-        return;
+        return false;
     }
 
-    ALCheck(alBufferData, buffer, al_format, &data[0], bytes, frequency);
+    // Make sure there's no error
+    alGetError();
+
+    // Upload the buffer and return true if there was no error doing so
+    alBufferData(buffer, al_format, &data[0], bytes, frequency);
+    return alGetError() == AL_NO_ERROR;
 }
 
 AudioSourceState OpenALSoundDriver::source_state(AudioSourceID source) {

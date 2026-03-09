@@ -52,7 +52,16 @@ class Sound :
 public:
     Sound(AssetID id, AssetManager* asset_manager, SoundDriver* sound_driver);
 
-    uint32_t sample_rate() const { return sample_rate_; }
+    /* Returns the size in bytes required to store all samples
+     * for the entire sound */
+    size_t total_samples_size() const {
+        // FIXME: This is wrong!
+        return stream_length_;
+    }
+
+    uint32_t sample_rate() const {
+        return sample_rate_;
+    }
     void set_sample_rate(uint32_t rate) { sample_rate_ = rate; }
 
     AudioDataFormat format() { return format_; }
@@ -77,6 +86,25 @@ public:
         return stream_length_;
     }
 
+    bool can_be_resident() const {
+        // FIXME: stream_length is the size of the sound stream
+        // data which might not be the right thing. We want total size of
+        // the raw samples.
+        return driver_->can_persist_buffers(stream_length());
+    }
+
+    /** Returns true if the sound is entirely cached in resident
+     *  audio buffers */
+    bool is_resident() const {
+        return !buffer_cache_.empty();
+    }
+
+    /** If the sound has been stored persistently in sram
+     *  then this returns the list of buffer IDs */
+    const std::vector<AudioBufferID>& resident_buffers() const {
+        return buffer_cache_;
+    }
+
     template<typename Func>
     void set_playing_sound_init_function(Func&& func) {
         init_playing_sound_ = func;
@@ -87,7 +115,9 @@ public:
 private:
     void init_source(PlayingSound& source);
 
-    std::function<void (PlayingSound&)> init_playing_sound_;
+    void on_clean_up() override;
+
+    std::function<void(PlayingSound&)> init_playing_sound_;
 
     SoundDriver* driver_ = nullptr;
     std::shared_ptr<std::istream> sound_data_;
@@ -96,6 +126,10 @@ private:
     AudioDataFormat format_;
     uint8_t channels_ = 0;
     std::size_t stream_length_ = 0;
+
+    // Resident buffers, used when the entire sound
+    // can fit into memory.
+    std::vector<AudioBufferID> buffer_cache_;
 
     friend class AudioSource;
     friend class PlayingSound;
