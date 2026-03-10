@@ -184,62 +184,53 @@ private:
 
 }
 
+template<typename T, typename... Args>
+void _s_log(T&& func, const char* file, int line, const std::string& fmt,
+            Args&&... args) {
+    func(_F(fmt).format(std::forward<Args>(args)...), file, line);
+}
+
 #ifndef NDEBUG
-
-#define S_VERBOSE(str, ...) \
-    smlt::verbose(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
-
-#define S_DEBUG(str, ...) \
-    smlt::debug(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
-
-#define S_INFO(str, ...) \
-    smlt::info(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
-
-#define S_WARN(str, ...) \
-    smlt::warn(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
-
-#define S_ERROR(str, ...) \
-    smlt::error(_F(str).format(__VA_ARGS__), __FILE__, __LINE__)
-
-#define S_DEBUG_ONCE(str, ...) \
-    do { static char _done = 0; if(!_done++) smlt::debug(_F(str).format(__VA_ARGS__)); } while(0)
-
-#define S_INFO_ONCE(str, ...) \
-    do { static char _done = 0; if(!_done++) smlt::info(_F(str).format(__VA_ARGS__)); } while(0)
-
-#define S_WARN_ONCE(str, ...) \
-    do { static char _done = 0; if(!_done++) smlt::warn(_F(str).format(__VA_ARGS__)); } while(0)
-
-#define S_ERROR_ONCE(str, ...) \
-    do { static char _done = 0; if(!_done++) smlt::error(_F(str).format(__VA_ARGS__)); } while(0)
-
+#define S_VERBOSE(...) _s_log(::smlt::verbose, __FILE__, __LINE__, __VA_ARGS__)
+#define S_DEBUG(...) _s_log(::smlt::debug, __FILE__, __LINE__, __VA_ARGS__)
 #else
-
-#define S_VERBOSE(str, ...) \
-    smlt::verbose(_F(str).format(__VA_ARGS__))
-
-#define S_DEBUG(str, ...) \
-    smlt::debug(_F(str).format(__VA_ARGS__))
-
-#define S_INFO(str, ...) \
-    smlt::info(_F(str).format(__VA_ARGS__))
-
-#define S_WARN(str, ...) \
-    smlt::warn(_F(str).format(__VA_ARGS__))
-
-#define S_ERROR(str, ...) \
-    smlt::error(_F(str).format(__VA_ARGS__))
-
-#define S_DEBUG_ONCE(str, ...) \
-    do { static char _done = 0; if(!_done++) smlt::debug(_F(str).format(__VA_ARGS__)); } while(0)
-
-#define S_INFO_ONCE(str, ...) \
-    do { static char _done = 0; if(!_done++) smlt::info(_F(str).format(__VA_ARGS__)); } while(0)
-
-#define S_WARN_ONCE(str, ...) \
-    do { static char _done = 0; if(!_done++) smlt::warn(_F(str).format(__VA_ARGS__)); } while(0)
-
-#define S_ERROR_ONCE(str, ...) \
-    do { static char _done = 0; if(!_done++) smlt::error(_F(str).format(__VA_ARGS__)); } while(0)
-
+// Don't log S_VERBOSE or S_DEBUG in release builds
+#define S_VERBOSE(...)                                                         \
+    do {                                                                       \
+    } while(0)
+#define S_DEBUG(...)                                                           \
+    do {                                                                       \
+    } while(0)
 #endif
+
+#define S_INFO(...) _s_log(::smlt::info, __FILE__, __LINE__, __VA_ARGS__)
+#define S_WARN(...) _s_log(::smlt::warn, __FILE__, __LINE__, __VA_ARGS__)
+#define S_ERROR(...) _s_log(::smlt::error, __FILE__, __LINE__, __VA_ARGS__)
+
+#define S_DEBUG_ONCE(...)                                                      \
+    do {                                                                       \
+        static char _done = 0;                                                 \
+        if(!_done++)                                                           \
+            _s_log(::smlt::debug, __FILE__, __LINE__, __VA_ARGS__);            \
+    } while(0)
+
+#define S_INFO_ONCE(...)                                                       \
+    do {                                                                       \
+        static char _done = 0;                                                 \
+        if(!_done++)                                                           \
+            _s_log(::smlt::info, __FILE__, __LINE__, __VA_ARGS__);             \
+    } while(0)
+
+#define S_WARN_ONCE(...)                                                       \
+    do {                                                                       \
+        static char _done = 0;                                                 \
+        if(!_done++)                                                           \
+            _s_log(::smlt::warn, __FILE__, __LINE__, __VA_ARGS__);             \
+    } while(0)
+
+#define S_ERROR_ONCE(...)                                                      \
+    do {                                                                       \
+        static char _done = 0;                                                 \
+        if(!_done++)                                                           \
+            _s_log(::smlt::error, __FILE__, __LINE__, __VA_ARGS__);            \
+    } while(0)
