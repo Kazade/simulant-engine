@@ -1023,11 +1023,10 @@ class KeyboardPanel: public Widget, public RefCounted<KeyboardPanel> {
     friend class Keyboard;
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL,
-                             "keyboard_panel");
+    S_DEFINE_STAGE_NODE_META("keyboard_panel");
 
     KeyboardPanel(Scene* owner) :
-        Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL) {}
+        Widget(owner, Meta::node_type) {}
 
     bool on_create(Params params) override {
         if(!Widget::on_create(params)) {
@@ -1593,7 +1592,7 @@ private:
 };
 
 Keyboard::Keyboard(Scene* owner) :
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_KEYBOARD) {}
+    Widget(owner, Meta::node_type) {}
 
 bool Keyboard::on_create(Params params) {
     if(!clean_params<Keyboard>(params)) {

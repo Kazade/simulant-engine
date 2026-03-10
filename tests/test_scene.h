@@ -194,7 +194,7 @@ public:
     void test_actors_are_freed() {
         auto count = scene->count_nodes_by_type<smlt::Stage>();
         auto actor = scene->create_child<smlt::Stage>();
-        assert_equal(actor->node_type(), STAGE_NODE_TYPE_STAGE);
+        assert_equal(actor->node_type(), smlt::Stage::Meta::node_type);
         assert_equal(scene->count_nodes_by_type<smlt::Stage>(), count + 1);
 
         actor->destroy();
@@ -211,7 +211,8 @@ public:
         auto count = scene->count_nodes_by_type<DirectionalLight>();
 
         auto light = scene->create_child<DirectionalLight>();
-        assert_equal(light->node_type(), STAGE_NODE_TYPE_DIRECTIONAL_LIGHT);
+        assert_equal(light->node_type(),
+                     smlt::DirectionalLight::Meta::node_type);
         assert_equal(scene->count_nodes_by_type<DirectionalLight>(), count + 1);
 
         light->destroy();
@@ -231,7 +232,8 @@ public:
         auto count = scene->count_nodes_by_type<ParticleSystem>();
 
         auto particle_system = scene->create_child<ParticleSystem>(script);
-        assert_equal(particle_system->node_type(), STAGE_NODE_TYPE_PARTICLE_SYSTEM);
+        assert_equal(particle_system->node_type(),
+                     smlt::ParticleSystem::Meta::node_type);
 
         assert_equal(scene->count_nodes_by_type<ParticleSystem>(), count + 1);
 
@@ -251,7 +253,7 @@ public:
 
         auto geom = scene->create_child<Geom>(mesh);
 
-        assert_equal(geom->node_type(), STAGE_NODE_TYPE_GEOM);
+        assert_equal(geom->node_type(), smlt::Geom::Meta::node_type);
         assert_equal(scene->count_nodes_by_type<Geom>(), count + 1);
 
         geom->destroy();
@@ -267,7 +269,7 @@ public:
         auto count = scene->count_nodes_by_type<Camera>();
 
         auto camera = scene->create_child<smlt::Camera3D>();
-        assert_equal(camera->node_type(), STAGE_NODE_TYPE_CAMERA);
+        assert_equal(camera->node_type(), smlt::Camera::Meta::node_type);
 
         assert_equal(scene->count_nodes_by_type<Camera>(), count + 1);
         camera->destroy();
@@ -324,7 +326,7 @@ public:
         auto count = scene->count_nodes_by_type<Sprite>();
 
         auto sprite = scene->create_child<Sprite>();
-        assert_equal(sprite->node_type(), STAGE_NODE_TYPE_SPRITE);
+        assert_equal(sprite->node_type(), smlt::Sprite::Meta::node_type);
 
         assert_true(scene->count_nodes_by_type<Sprite>() >= count + 1);
 

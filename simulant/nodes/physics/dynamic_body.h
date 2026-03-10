@@ -15,13 +15,11 @@ class DynamicBody: public ReactiveBody {
 public:
     FindResult<Debug> debug = smlt::FindChild<Debug>(this);
 
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY,
-                             "dynamic_body");
+    S_DEFINE_STAGE_NODE_META("dynamic_body");
     S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(DynamicBody);
 
     DynamicBody(Scene* owner) :
-        ReactiveBody(owner, STAGE_NODE_TYPE_PHYSICS_DYNAMIC_BODY,
-                     PHYSICS_BODY_TYPE_DYNAMIC) {}
+        ReactiveBody(owner, Meta::node_type, PHYSICS_BODY_TYPE_DYNAMIC) {}
 
     const AABB& aabb() const override {
         static AABB aabb;

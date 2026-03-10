@@ -8,7 +8,7 @@ namespace smlt {
 namespace ui {
 
 ProgressBar::ProgressBar(Scene* owner) :
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR) {}
+    Widget(owner, Meta::node_type) {}
 
 ProgressBar::~ProgressBar() {}
 

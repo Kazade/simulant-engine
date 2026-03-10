@@ -27,7 +27,7 @@
 namespace smlt {
 
 Geom::Geom(Scene* owner) :
-    StageNode(owner, STAGE_NODE_TYPE_GEOM) {}
+    StageNode(owner, Meta::node_type) {}
 
 bool Geom::on_create(Params params) {
     if(!clean_params<Geom>(params)) {

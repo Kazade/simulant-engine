@@ -31,7 +31,7 @@
 namespace smlt {
 
 Actor::Actor(Scene* owner) :
-    StageNode(owner, STAGE_NODE_TYPE_ACTOR) {}
+    StageNode(owner, Meta::node_type) {}
 
 Actor::~Actor() {
     mesh_skeleton_added_.disconnect();

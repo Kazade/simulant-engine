@@ -23,6 +23,7 @@
 #include "keyboard.h"
 #include "label.h"
 #include "progress_bar.h"
+#include "text_entry.h"
 
 #include "../../application.h"
 #include "../../stage.h"
@@ -40,7 +41,7 @@ namespace ui {
 using namespace std::placeholders;
 
 UIManager::UIManager(Scene* owner, UIConfig config) :
-    StageNode(owner, STAGE_NODE_TYPE_UI_MANAGER), config_(config) {
+    StageNode(owner, Meta::node_type), config_(config) {
 
     auto window = get_app()->window.get();
     window->register_event_listener(this);
@@ -299,14 +300,14 @@ void UIManager::clear_event_queue() {
 
 std::vector<Widget*> UIManager::find_child_widgets() const {
     auto nodes = find_descendents_by_types({
-        STAGE_NODE_TYPE_WIDGET_BUTTON,
-        STAGE_NODE_TYPE_WIDGET_FRAME,
-        STAGE_NODE_TYPE_WIDGET_IMAGE,
-        STAGE_NODE_TYPE_WIDGET_KEYBOARD,
-        STAGE_NODE_TYPE_WIDGET_KEYBOARD_PANEL,
-        STAGE_NODE_TYPE_WIDGET_LABEL,
-        STAGE_NODE_TYPE_WIDGET_PROGRESS_BAR,
-        STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY,
+        ui::Button::Meta::node_type,
+        ui::Frame::Meta::node_type,
+        ui::Image::Meta::node_type,
+        ui::Keyboard::Meta::node_type,
+        S_STAGE_NODE_TYPE("keyboard_panel"),
+        ui::Label::Meta::node_type,
+        ui::ProgressBar::Meta::node_type,
+        ui::TextEntry::Meta::node_type,
     });
 
     std::vector<Widget*> widgets;

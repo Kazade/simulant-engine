@@ -153,8 +153,7 @@ enum AnimationState {
 
 class AnimationController: public StageNode {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_ANIMATION_CONTROLLER,
-                             "animation_controller");
+    S_DEFINE_STAGE_NODE_META("animation_controller");
 
     AnimationController(Scene* owner) :
         StageNode(owner, Meta::node_type) {}

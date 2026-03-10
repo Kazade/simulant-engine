@@ -31,7 +31,7 @@
 namespace smlt {
 
 Debug::Debug(Scene* owner) :
-    StageNode(owner, STAGE_NODE_TYPE_DEBUG) {
+    StageNode(owner, Meta::node_type) {
 
     frame_connection_ = get_app()->signal_frame_started().connect(
         std::bind(&Debug::reset, this));

@@ -16,8 +16,10 @@ public:
         auto destroyed_count = 0;
 
         std::set<StageNodeID> destroyed_ids;
-        sig::scoped_connection conn = scene->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
-            assert_equal(type, STAGE_NODE_TYPE_ACTOR);
+        sig::scoped_connection conn =
+            scene->signal_stage_node_destroyed().connect(
+                [&](StageNode* node, StageNodeType type) {
+            assert_equal(type, smlt::Actor::Meta::node_type);
             destroyed_count++;
             destroyed_ids.insert(node->id());
         });
@@ -44,8 +46,10 @@ public:
         auto destroyed_count = 0;
 
         std::set<StageNodeID> destroyed_ids;
-        sig::scoped_connection conn = scene->signal_stage_node_destroyed().connect([&](smlt::StageNode* node, StageNodeType type) {
-            assert_equal(type, STAGE_NODE_TYPE_CAMERA);
+        sig::scoped_connection conn =
+            scene->signal_stage_node_destroyed().connect(
+                [&](smlt::StageNode* node, StageNodeType type) {
+            assert_equal(type, smlt::Camera::Meta::node_type);
             destroyed_count++;
             destroyed_ids.insert(dynamic_cast<Camera*>(node)->id());
         });
@@ -72,10 +76,12 @@ public:
         auto destroyed_count = 0;
 
         std::set<StageNodeID> destroyed_ids;
-        sig::scoped_connection conn = scene->signal_stage_node_destroyed().connect([&](StageNode* node, StageNodeType type) {
-          assert_equal(type, STAGE_NODE_TYPE_PARTICLE_SYSTEM);
-          destroyed_count++;
-          destroyed_ids.insert(dynamic_cast<ParticleSystem*>(node)->id());
+        sig::scoped_connection conn =
+            scene->signal_stage_node_destroyed().connect(
+                [&](StageNode* node, StageNodeType type) {
+            assert_equal(type, smlt::ParticleSystem::Meta::node_type);
+            destroyed_count++;
+            destroyed_ids.insert(dynamic_cast<ParticleSystem*>(node)->id());
         });
 
         auto script = scene->assets->load_particle_script(ParticleScript::BuiltIns::FIRE);

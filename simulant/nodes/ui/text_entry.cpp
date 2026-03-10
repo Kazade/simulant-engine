@@ -7,7 +7,7 @@ namespace smlt {
 namespace ui {
 
 TextEntry::TextEntry(Scene* owner) :
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_TEXT_ENTRY) {}
+    Widget(owner, Meta::node_type) {}
 
 bool TextEntry::on_create(Params params) {
     if(!clean_params<TextEntry>(params)) {

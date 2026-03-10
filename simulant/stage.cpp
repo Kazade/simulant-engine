@@ -21,9 +21,6 @@
 
 namespace smlt {
 
-Stage::Stage(Scene* owner):
-    StageNode(owner, STAGE_NODE_TYPE_STAGE) {
-
-}
-
+Stage::Stage(Scene* owner) :
+    StageNode(owner, Meta::node_type) {}
 }

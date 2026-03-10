@@ -9,8 +9,7 @@ namespace smlt {
 
 class PrefabInstance: public StageNode {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PREFAB_INSTANCE,
-                             "prefab_instance");
+    S_DEFINE_STAGE_NODE_META("prefab_instance");
     S_DEFINE_STAGE_NODE_PARAM(PrefabInstance, "prefab", PrefabPtr, no_value,
                               "The prefab to spawn");
 

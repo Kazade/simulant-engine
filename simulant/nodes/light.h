@@ -104,12 +104,12 @@ private:
 
 class PointLight: public Light {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_POINT_LIGHT, "point_light");
+    S_DEFINE_STAGE_NODE_META("point_light");
     S_DEFINE_STAGE_NODE_PARAM(PointLight, "position", FloatArray, Vec3(),
                               "The position of the light");
 
     PointLight(Scene* owner) :
-        Light(owner, STAGE_NODE_TYPE_POINT_LIGHT) {}
+        Light(owner, Meta::node_type) {}
 
 private:
     bool on_create(Params params) override {
@@ -130,14 +130,13 @@ private:
 
 class DirectionalLight: public Light {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_DIRECTIONAL_LIGHT,
-                             "directional_light");
+    S_DEFINE_STAGE_NODE_META("directional_light");
     S_DEFINE_STAGE_NODE_PARAM(DirectionalLight, "direction", FloatArray,
                               Vec3(1, -0.5, 0),
                               "The direction the light is pointing");
 
     DirectionalLight(Scene* owner) :
-        Light(owner, STAGE_NODE_TYPE_DIRECTIONAL_LIGHT) {}
+        Light(owner, Meta::node_type) {}
 
     bool on_create(Params params) override {
         if(!clean_params<DirectionalLight>(params)) {

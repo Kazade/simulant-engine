@@ -8,11 +8,10 @@ namespace smlt {
 class SphericalBillboard: public StageNode {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_SPHERICAL_BILLBOARD,
-                             "spherical_billboard");
+    S_DEFINE_STAGE_NODE_META("spherical_billboard");
 
     SphericalBillboard(Scene* owner) :
-        StageNode(owner, STAGE_NODE_TYPE_SPHERICAL_BILLBOARD) {}
+        StageNode(owner, Meta::node_type) {}
 
     void set_target(StageNode* target) {
         target_ = target;

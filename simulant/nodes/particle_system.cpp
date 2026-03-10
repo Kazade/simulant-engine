@@ -24,7 +24,7 @@ const static VertexSpecification
     );
 
 ParticleSystem::ParticleSystem(Scene* owner) :
-    StageNode(owner, STAGE_NODE_TYPE_PARTICLE_SYSTEM),
+    StageNode(owner, Meta::node_type),
     vertex_data_(new VertexData(PS_VERTEX_SPEC)) {}
 
 ParticleSystem::~ParticleSystem() {

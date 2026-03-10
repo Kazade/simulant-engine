@@ -5,7 +5,7 @@ namespace smlt {
 namespace ui {
 
 Label::Label(Scene* owner) :
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_LABEL) {}
+    Widget(owner, Meta::node_type) {}
 
 bool Label::on_create(Params params) {
     if(!clean_params<Label>(params)) {

@@ -9,7 +9,7 @@ namespace smlt {
 uint32_t MeshInstancer::id_counter_ = 0;
 
 MeshInstancer::MeshInstancer(Scene* owner) :
-    StageNode(owner, STAGE_NODE_TYPE_MESH_INSTANCER) {}
+    StageNode(owner, Meta::node_type) {}
 
 MeshInstancer::~MeshInstancer() {}
 

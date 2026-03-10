@@ -15,7 +15,7 @@
 namespace smlt {
 
 Camera::Camera(Scene* owner) :
-    ContainerNode(owner, STAGE_NODE_TYPE_CAMERA) {
+    ContainerNode(owner, Meta::node_type) {
 
     assert(owner);
 
