@@ -14,11 +14,10 @@ struct NodeWithLookupsParams {};
 
 class NodeWithLookups : public StageNode {
 public:
-    S_DEFINE_STAGE_NODE_META((STAGE_NODE_TYPE_USER_BASE + 1),
-                             "node_with_lookups");
+    S_DEFINE_STAGE_NODE_META("node_with_lookups");
 
-    NodeWithLookups(Scene* owner):
-        StageNode(owner, STAGE_NODE_TYPE_USER_BASE + 1) {}
+    NodeWithLookups(Scene* owner) :
+        StageNode(owner, Meta::node_type) {}
 
     FindResult<Actor> child_one = FindDescendent("Child 1", this);
     FindResult<ParticleSystem> invalid_child = FindDescendent("Child 1", this);

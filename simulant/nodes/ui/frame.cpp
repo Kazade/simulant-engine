@@ -7,7 +7,7 @@ namespace smlt {
 namespace ui {
 
 Frame::Frame(Scene* owner) :
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_FRAME) {}
+    Widget(owner, Meta::node_type) {}
 
 bool Frame::on_create(Params params) {
     if(!clean_params<Frame>(params)) {

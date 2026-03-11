@@ -11,13 +11,11 @@ class Scene;
 class KinematicBody: public ReactiveBody {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_KINEMATIC_BODY,
-                             "kinematic_body");
+    S_DEFINE_STAGE_NODE_META("kinematic_body");
     S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(KinematicBody);
 
     KinematicBody(Scene* owner) :
-        ReactiveBody(owner, STAGE_NODE_TYPE_PHYSICS_KINEMATIC_BODY,
-                     PHYSICS_BODY_TYPE_KINEMATIC) {}
+        ReactiveBody(owner, Meta::node_type, PHYSICS_BODY_TYPE_KINEMATIC) {}
 
     const AABB& aabb() const override {
         static AABB aabb;

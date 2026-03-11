@@ -5,7 +5,7 @@
 namespace smlt {
 
 SmoothFollow::SmoothFollow(Scene* owner) :
-    StageNode(owner, STAGE_NODE_TYPE_SMOOTH_FOLLOW) {}
+    StageNode(owner, Meta::node_type) {}
 
 SmoothFollow::~SmoothFollow() {
     if(destroy_conn_) {

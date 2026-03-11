@@ -7,7 +7,7 @@ namespace smlt {
 namespace ui {
 
 Button::Button(Scene* owner) :
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_BUTTON) {}
+    Widget(owner, Meta::node_type) {}
 
 bool Button::on_create(Params params) {
     if(!clean_params<Button>(params)) {

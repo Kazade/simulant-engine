@@ -8,14 +8,13 @@ namespace smlt {
 class CylindricalBillboard: public StageNode {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD,
-                             "cylindrical_billboard");
+    S_DEFINE_STAGE_NODE_META("cylindrical_billboard");
     S_DEFINE_STAGE_NODE_PARAM(CylindricalBillboard, "forward", FloatArray,
                               Vec3(0, 0, -1),
                               "The forward direction of the billboard");
 
     CylindricalBillboard(Scene* owner) :
-        StageNode(owner, STAGE_NODE_TYPE_CYLINDRICAL_BILLBOARD) {}
+        StageNode(owner, Meta::node_type) {}
 
     void set_target(StageNode* target) {
         target_ = target;

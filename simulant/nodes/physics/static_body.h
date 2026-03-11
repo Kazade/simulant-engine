@@ -10,8 +10,7 @@ namespace smlt {
 class StaticBody: public PhysicsBody {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PHYSICS_STATIC_BODY,
-                             "static_body");
+    S_DEFINE_STAGE_NODE_META("static_body");
     S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(StaticBody);
 
     S_DEFINE_STAGE_NODE_PARAM(StaticBody, "mesh", MeshPtr, MeshPtr(),
@@ -27,8 +26,7 @@ public:
                               "Bounciness of the static body material");
 
     StaticBody(Scene* owner) :
-        PhysicsBody(owner, STAGE_NODE_TYPE_PHYSICS_STATIC_BODY,
-                    PHYSICS_BODY_TYPE_STATIC) {}
+        PhysicsBody(owner, Meta::node_type, PHYSICS_BODY_TYPE_STATIC) {}
 
     void add_mesh_collider(const MeshPtr& mesh,
                            const PhysicsMaterial& properties, uint16_t kind = 0,

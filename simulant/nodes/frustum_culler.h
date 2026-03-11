@@ -28,11 +28,10 @@ class SubActor;
 
 class FrustumCuller: public Partitioner {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_PARTITIONER_FRUSTUM,
-                             "frustum_culler");
+    S_DEFINE_STAGE_NODE_META("frustum_culler");
 
     FrustumCuller(Scene* owner) :
-        Partitioner(owner, STAGE_NODE_TYPE_PARTITIONER_FRUSTUM) {}
+        Partitioner(owner, Meta::node_type) {}
 
     const AABB& aabb() const {
         static AABB aabb;

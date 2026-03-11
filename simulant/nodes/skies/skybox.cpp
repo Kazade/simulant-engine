@@ -13,7 +13,7 @@
 namespace smlt {
 
 Skybox::Skybox(Scene* owner) :
-    ContainerNode(owner, STAGE_NODE_TYPE_SKYBOX) {}
+    ContainerNode(owner, Meta::node_type) {}
 
 const AABB& Skybox::aabb() const {
     return actor_->aabb();

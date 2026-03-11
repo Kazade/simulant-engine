@@ -59,7 +59,7 @@
 namespace smlt {
 
 Scene::Scene(Window* window) :
-    StageNode(this, STAGE_NODE_TYPE_SCENE),
+    StageNode(this, S_STAGE_NODE_TYPE("scene")),
     StageNodeManager(this),
     window_(window),
     input_(window->input.get()),

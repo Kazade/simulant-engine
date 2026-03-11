@@ -41,7 +41,7 @@
 namespace smlt {
 
 StatsPanel::StatsPanel(Scene* owner) :
-    Panel(owner, STAGE_NODE_TYPE_STATS_PANEL) {}
+    Panel(owner, Meta::node_type) {}
 
 bool StatsPanel::on_init() {
     if(!Panel::on_init()) {

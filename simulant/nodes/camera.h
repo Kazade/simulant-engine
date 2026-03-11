@@ -17,7 +17,7 @@ class CameraParams {};
 class Camera: public ContainerNode, public ChainNameable<Camera> {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CAMERA, "camera");
+    S_DEFINE_STAGE_NODE_META("camera");
 
     S_DEFINE_STAGE_NODE_PARAM(Camera, "projection_matrix", FloatArray, no_value,
                               "16 floats defining the projection matrix");
@@ -96,7 +96,7 @@ private:
 
 class Camera2D: public Camera {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CAMERA2D, "camera2d");
+    S_DEFINE_STAGE_NODE_META("camera2d");
 
     S_DEFINE_STAGE_NODE_PARAM(Camera2D, "xmag", float, 1.0f,
                               "Width of the view");
@@ -115,7 +115,7 @@ public:
 
 class Camera3D: public Camera {
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_CAMERA3D, "camera3d");
+    S_DEFINE_STAGE_NODE_META("camera3d");
 
     S_DEFINE_STAGE_NODE_PARAM(Camera3D, "znear", float, 1.0f,
                               "The camera near distance");

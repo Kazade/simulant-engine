@@ -1070,7 +1070,7 @@ private:
 
     AABB calculate_transformed_aabb() const;
     Scene* owner_ = nullptr;
-    StageNodeType node_type_ = STAGE_NODE_TYPE_ACTOR;
+    StageNodeType node_type_ = 0;
 
     generic::DataCarrier data_;
 
@@ -1174,14 +1174,18 @@ typedef StageNode* StageNodePtr;
 
 } // namespace smlt
 
+#include "../utils/hash/fnv1.h"
 #include "iterators/ancestor_iterator.inc"
 #include "iterators/child_iterator.inc"
 #include "iterators/descendent_iterator.inc"
 #include "iterators/sibling_iterator.inc"
 
-#define S_DEFINE_STAGE_NODE_META(node_type_id, alias)                          \
+#define S_STAGE_NODE_TYPE(alias) (smlt::fnv1<uint32_t>::hash(alias))
+
+#define S_DEFINE_STAGE_NODE_META(alias)                                        \
     struct Meta {                                                              \
-        const static smlt::StageNodeType node_type = node_type_id;             \
+        const static smlt::StageNodeType node_type =                           \
+            smlt::fnv1<uint32_t>::hash(alias);                                 \
         inline static const char* name = alias;                                \
     };                                                                         \
     const char* node_type_name() const override {                              \

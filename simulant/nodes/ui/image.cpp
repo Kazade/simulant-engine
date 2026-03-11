@@ -9,7 +9,7 @@ namespace smlt {
 namespace ui {
 
 Image::Image(Scene* owner) :
-    Widget(owner, STAGE_NODE_TYPE_WIDGET_IMAGE) {}
+    Widget(owner, Meta::node_type) {}
 
 bool Image::on_create(Params params) {
     if(!clean_params<Image>(params)) {

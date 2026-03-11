@@ -32,7 +32,7 @@ class Window;
 class StatsPanel: public Panel, public RefCounted<StatsPanel> {
 
 public:
-    S_DEFINE_STAGE_NODE_META(STAGE_NODE_TYPE_STATS_PANEL, "stats_panel");
+    S_DEFINE_STAGE_NODE_META("stats_panel");
 
     StatsPanel(Scene* owner);
 

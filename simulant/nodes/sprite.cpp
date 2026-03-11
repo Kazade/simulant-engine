@@ -29,7 +29,7 @@
 using namespace smlt;
 
 Sprite::Sprite(Scene* owner) :
-    ContainerNode(owner, STAGE_NODE_TYPE_SPRITE) {
+    ContainerNode(owner, Meta::node_type) {
 
     sprite_sheet_padding_ = std::make_pair(0, 0);
 }

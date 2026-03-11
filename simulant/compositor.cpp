@@ -334,8 +334,8 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
     _S_PROFILE_SECTION("gather-lights");
     /* Gather lights */
     StageNodeVisitorBFS light_finder(stage_node, [&](StageNode* node) {
-        if(node->node_type() == STAGE_NODE_TYPE_DIRECTIONAL_LIGHT ||
-           node->node_type() == STAGE_NODE_TYPE_POINT_LIGHT) {
+        if(node->node_type() == DirectionalLight::Meta::node_type ||
+           node->node_type() == PointLight::Meta::node_type) {
             Light* light = (Light*)node;
             if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
                 lights_visible.push_back(light);
