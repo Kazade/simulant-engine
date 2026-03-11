@@ -24,6 +24,7 @@ SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mfsrra -mfsca -ffp-cont
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer")
 
 INCLUDE_DIRECTORIES(
+    SYSTEM
     $ENV{KOS_BASE}/include
     $ENV{KOS_BASE}/kernel/arch/dreamcast/include
     $ENV{KOS_BASE}/addons/include
