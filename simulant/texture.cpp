@@ -43,22 +43,30 @@ const TextureChannelSet Texture::DEFAULT_SOURCE_CHANNELS = {{
     TEXTURE_CHANNEL_ALPHA
 }};
 
-bool texture_format_contains_mipmaps(TextureFormat format) {
+constexpr static std::size_t texture_format_stride(TextureFormat format) {
     switch(format) {
-    /* FIXME: We don't currently extract mipmap data from these formats on
-     * non-Dreamcast platforms. We should fix this! */
-#ifdef __DREAMCAST__
-        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
-        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
-        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
-            return true;
-#endif
+        case TEXTURE_FORMAT_R_1UB_8:
+            return 1;
+        case TEXTURE_FORMAT_RGB_1US_565:
+        case TEXTURE_FORMAT_RGB_1US_565_TWID:
+        case TEXTURE_FORMAT_RGBA_1US_4444:
+        case TEXTURE_FORMAT_ARGB_1US_4444:
+        case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
+        case TEXTURE_FORMAT_ARGB_1US_1555:
+        case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
+        case TEXTURE_FORMAT_RGBA_1US_5551:
+            return 2;
+        case TEXTURE_FORMAT_RGB_3UB_888:
+            return 3;
+        case TEXTURE_FORMAT_RGBA_4UB_8888:
+            return 4;
         default:
-            return false;
+            assert(0 && "Not implemented");
+            return 0;
     }
 }
 
-std::size_t texture_format_channels(TextureFormat format) {
+constexpr static std::size_t texture_format_channels(TextureFormat format) {
     switch(format) {
     case TEXTURE_FORMAT_R_1UB_8:
         return 1;
@@ -174,6 +182,7 @@ void Texture::set_format(TextureFormat format) {
     }
 
     format_ = format;
+    format_channels_ = texture_format_channels(format_);
 
     auto byte_size = required_data_size(format, width_, height_);
     resize_data(byte_size);
@@ -219,7 +228,7 @@ uint32_t Texture::palette_size() const {
 smlt::optional<Pixel> Texture::pixel(std::size_t x, std::size_t y) {
     // FIXME: this won't account for aligned formats (where rows are aligned to
     // particular boundaries) - we need to add a row_stride() to texture */
-    auto stride = texture_format_stride(format_);
+    auto stride = texel_size();
     uint8_t* src = data_ + ((y * width() * stride) + (x * stride));
     switch(format_) {
     case TEXTURE_FORMAT_R_1UB_8:
@@ -595,7 +604,7 @@ bool Texture::is_compressed() const {
 }
 
 uint8_t Texture::channels() const {
-    return texture_format_channels(format_);
+    return format_channels_;
 }
 
 const uint8_t *Texture::data() const {
@@ -604,6 +613,10 @@ const uint8_t *Texture::data() const {
 
 uint32_t Texture::data_size() const {
     return data_size_;
+}
+
+std::size_t Texture::texel_size() const {
+    return texture_format_stride(format_);
 }
 
 void Texture::set_data(const uint8_t* data, std::size_t size) {
@@ -790,25 +803,6 @@ void Texture::_set_renderer_specific_id(const uint32_t id) {
 
 uint32_t Texture::_renderer_specific_id() const {
     return renderer_id_;
-}
-
-std::size_t texture_format_stride(TextureFormat format) {
-    switch(format) {
-        case TEXTURE_FORMAT_R_1UB_8: return 1;
-        case TEXTURE_FORMAT_RGB_1US_565:
-        case TEXTURE_FORMAT_RGB_1US_565_TWID:
-        case TEXTURE_FORMAT_RGBA_1US_4444:
-        case TEXTURE_FORMAT_ARGB_1US_4444:
-        case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
-        case TEXTURE_FORMAT_ARGB_1US_1555:
-        case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
-        case TEXTURE_FORMAT_RGBA_1US_5551: return 2;
-        case TEXTURE_FORMAT_RGB_3UB_888: return 3;
-        case TEXTURE_FORMAT_RGBA_4UB_8888: return 4;
-    default:
-        assert(0 && "Not implemented");
-        return 0;
-    }
 }
 
 std::vector<uint8_t> Pixel::to_format(TextureFormat fmt) {

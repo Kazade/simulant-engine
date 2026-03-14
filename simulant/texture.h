@@ -91,13 +91,6 @@ enum TextureFormat {
     TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP
 };
 
-std::size_t texture_format_stride(TextureFormat format);
-std::size_t texture_format_channels(TextureFormat format);
-
-/** Returns true if the data in this format contains mipmap
- * data following the main texture data */
-bool texture_format_contains_mipmaps(TextureFormat format);
-
 class Renderer;
 
 enum TextureChannel {
@@ -240,6 +233,9 @@ public:
      * plus the size of the palette. */
     uint32_t data_size() const;
 
+    /** Returns the size in bytes of a single texel */
+    std::size_t texel_size() const;
+
     /** The required size that data() should be to hold a texture in this format
      * with these dimensions. For non-compressed formats this is usually the
      * width * height * stride. For compressed formats this can vary, and will
@@ -342,6 +338,7 @@ private:
     uint16_t height_ = 0;
 
     TextureFormat format_ = TEXTURE_FORMAT_INVALID;
+    uint8_t format_channels_ = 0;
 
     Path source_;
 
@@ -377,6 +374,21 @@ private:
 
     uint32_t renderer_id_ = 0;
 };
+
+constexpr static bool texture_format_contains_mipmaps(TextureFormat format) {
+    switch(format) {
+        /* FIXME: We don't currently extract mipmap data from these formats on
+         * non-Dreamcast platforms. We should fix this! */
+#ifdef __DREAMCAST__
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
+            return true;
+#endif
+        default:
+            return false;
+    }
+}
 
 } // namespace smlt
 

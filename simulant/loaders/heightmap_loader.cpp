@@ -360,7 +360,8 @@ bool HeightmapLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     std::vector<float> heights(total);
     auto tex_data = tex->data();
-    auto stride = texture_format_stride(tex->format());
+    auto stride = tex->texel_size();
+
     float m = 1.0f / 256.0f;
     for(int32_t i = 0; i < total; i++) {
         heights[i] = float(tex_data[i * stride]) * m;
