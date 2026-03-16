@@ -10,3 +10,6 @@
 [submodule "deps/libAL"]
 	path = deps/libAL
 	url = https://gitlab.com/simulant/ALdc.git
+[submodule "deps/sh4zam"]
+	path = deps/sh4zam
+	url = https://github.com/gyrovorbis/sh4zam.git
