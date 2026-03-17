@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sh4zam/shz_quat.h>
+
 #include "degrees.h"
 #include "euler.h"
 #include "lerp.h"
@@ -20,23 +22,21 @@ struct AxisAngle {
     Degrees angle;
 };
 
-struct Quaternion {
+struct Quaternion: shz_quat {
     friend struct Vec3;
     friend struct Mat4;
     friend struct Mat3;
 
-    float x;
-    float y;
-    float z;
-    float w;
-
-    Quaternion():
-        x(0), y(0), z(0), w(1) {
-
+    Quaternion() {
+        w = 1.0f;
+        x = 0.0f;
+        y = 0.0f;
+        z = 0.0f;
     }
 
-    Quaternion(const FloatArray& arr) :
-        x(arr[0]), y(arr[1]), z(arr[2]), w(arr[3]) {}
+    Quaternion(const FloatArray& arr) {
+        ((shz_quat&)*this) = shz_quat_init(arr[3], arr[0], arr[1], arr[2]);
+    }
 
     Quaternion(const Degrees& pitch, const Degrees& yaw, const Degrees& roll);
 
@@ -47,9 +47,8 @@ struct Quaternion {
     
     }
 
-    Quaternion(float x, float y, float z, float w):
-        x(x), y(y), z(z), w(w) {
-
+    Quaternion(float x, float y, float z, float w) {
+        ((shz_quat&)*this) = shz_quat_init(w, x, y, z);
     }
 
     Euler to_euler() const;
@@ -65,11 +64,7 @@ struct Quaternion {
     }
 
     void normalize() {
-        float l = fast_inverse_sqrt(length_squared());
-        x *= l;
-        y *= l;
-        z *= l;
-        w *= l;
+        ((shz_quat&)*this) = shz_quat_normalize(*this);
     }
 
     const Quaternion normalized() const {
@@ -83,7 +78,7 @@ struct Quaternion {
     }
 
     float dot(const Quaternion& rhs) const {
-        return x * rhs.x + y * rhs.y + z * rhs.z + w * rhs.w;
+        return shz_quat_dot(*this, rhs);
     }
 
     void inverse() {
@@ -159,13 +154,8 @@ struct Quaternion {
     }
 
     Vec3 axis() const {
-        auto tmp1 = 1.0f - w * w;
-        if(tmp1 <= 0.0f) {
-            return Vec3(0, 0, 1);
-        }
-
-        auto tmp2 = fast_inverse_sqrt(tmp1);
-        return Vec3(x * tmp2, y * tmp2, z * tmp2);
+        auto a = shz_quat_axis(*this);
+        return Vec3(a.x, a.y, a.z);
     }
 
     Radians angle() const {
@@ -179,64 +169,27 @@ struct Quaternion {
     }
 
     Quaternion nlerp(const Quaternion& rhs, float t) const {
-        auto z = rhs;
-        auto theta = this->dot(rhs);
-
-        if(theta < 0.0f) {
-            z = -rhs;
-        }
-
-        // Linear interpolation (result normalized)
-        return Quaternion(
-            lerp(this->x, z.x, t),
-            lerp(this->y, z.y, t),
-            lerp(this->z, z.z, t),
-            lerp(this->w, z.w, t)
-        ).normalized();
+        Quaternion ret;
+        ((shz_quat&)*this) = shz_quat_nlerp(*this, rhs, t);
+        return ret;
     }
 
     Quaternion slerp(const Quaternion& rhs, float t) const {
-        const constexpr float DOT_THRESHOLD = 0.9995f;
-        const Quaternion& v0 = *this;
-        Quaternion v1 = rhs;
-        t = smlt::clamp(t, 0.0f, 1.0f);
-
-        auto dot = v0.dot(v1);
-
-        if(dot < 0.0f) {
-            dot = -dot;
-            v1 = -v1;
-        }
-
-        if (dot > DOT_THRESHOLD) {
-            return nlerp(v1, t);
-        } else {
-            dot = clamp(dot, -1, 1);
-            float theta_0 = std::acos(dot);
-            float theta = theta_0 * t;
-
-            auto v2 = Quaternion(
-                v1.x - v0.x * dot,
-                v1.y - v0.y * dot,
-                v1.z - v0.z * dot,
-                v1.w - v0.w * dot
-            ).normalized();
-
-            return v0 * std::cos(theta) + v2 * std::sin(theta);
-        }
+        Quaternion ret;
+        ((shz_quat&)*this) = shz_quat_slerp(*this, rhs, t);
+        return ret;
     }
 
-
     const Degrees pitch() const {
-        return Radians(std::atan2(-2.0f * (y * z + w * x), w * w - x * x - y * y + z * z));
+        return Radians(shz_quat_angle_x(*this));
     }
 
     const Degrees yaw() const {
-        return Radians(std::asin(clamp(-2.0f * (x * z - w * y), -1.0f, 1.0f)));
+        return Radians(shz_quat_angle_y(*this));
     }
 
     const Degrees roll() const {
-        return Radians(std::atan2(2.0f * (x * y + w * z), w * w + x * x - y * y - z * z));
+        return Radians(shz_quat_angle_z(*this));
     }
 
     Vec3 forward() const {
