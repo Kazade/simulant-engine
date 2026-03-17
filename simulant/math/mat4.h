@@ -46,6 +46,12 @@ public:
         m[0] = m[5] = m[10] = m[15] = 1.0f;
     }
 
+    static Mat4 zero() {
+        Mat4 r;
+        memset(r.m, 0, sizeof(r.m));
+        return r;
+    }
+
     Mat4(const FloatArray& arr) {
         std::copy(arr.begin(), arr.end(), m);
     }
@@ -148,6 +154,10 @@ public:
     }
 
     Plane extract_plane(FrustumPlane plane) const;
+
+    float* ptr() {
+        return &m[0];
+    }
 
     const float* data() const {
         return &m[0];

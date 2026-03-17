@@ -1,6 +1,9 @@
 #include "prefab_instance.h"
+
 #include "../assets/prefab.h"
+#include "actor.h"
 #include "light.h"
+#include "simulant/asset_manager.h"
 
 namespace smlt {
 
@@ -20,26 +23,68 @@ bool PrefabInstance::on_create(Params params) {
 
     if(prefab_ptr->has_animations()) {
         auto anims = create_mixin<AnimationController>();
+
+        // Adding the meshes to the AnimationController for later skinning, if necessary
+        for(auto node: this->find_descendents_by_types({Actor::Meta::node_type})) {
+            auto actor_ptr = dynamic_cast<ActorPtr>(node);
+            if (!actor_ptr->base_mesh()->is_skinned || !actor_ptr->base_mesh()->skin) continue;
+
+            anims->add_target_mesh(actor_ptr->base_mesh());
+
+        }
+
         auto anim_factory =
             [&](const std::string name,
                 const std::vector<PrefabAnimationChannel>& channels) {
-            Animation anim;
-            anim.name = name;
+                Animation anim;
+                anim.name = name;
 
-            for(auto& ch: channels) {
-                auto id = node_map.at(ch.target.id)->id();
-                Channel channel;
-                channel.path = ch.path;
-                channel.target = FindDescendentByID(id, this);
-                channel.data = ch.data;
-                channel.interpolation = ch.interpolation;
-                anim.channels.push_back(channel);
-            }
+                for(auto& ch: channels) {
+                    auto id = node_map.at(ch.target.id)->id();
+                    Channel channel;
+                    channel.path = ch.path;
+                    channel.target = FindDescendentByID(id, this);
+                    channel.data = ch.data;
+                    channel.interpolation = ch.interpolation;
+                    anim.channels.push_back(channel);
+                }
 
-            anims->push_animation(anim);
+                anims->push_animation(anim);
         };
 
         prefab_ptr->each_animation(anim_factory);
+    }
+
+    // FIXME: This could be made more efficiently than to lookup on all descendents
+    for (auto actor : this->find_descendents_by_types({Actor::Meta::node_type})) {
+        auto actor_ptr = dynamic_cast<ActorPtr>(actor);
+        if (!actor_ptr->base_mesh()->is_skinned || !actor_ptr->base_mesh()->skin) continue;
+
+        auto skin = actor_ptr->base_mesh()->skin;
+        skin->bound_actor = actor_ptr;
+
+        // Create StageNode mapping
+        skin->node_indices.clear();
+        for (int gltf_node_index : skin->joint_indices) {
+            auto it = node_map.find(gltf_node_index);
+            if (it == node_map.end()) {
+                S_ERROR("Joint node " + to_string(gltf_node_index) + " not found in prefab instance");
+                skin->node_indices.push_back(nullptr);
+                continue;
+            }
+
+            StageNodePtr node = it->second;
+            skin->node_indices.push_back(node);
+        }
+        // Resolving the StageNode to reference the skeleton root onto
+        if (skin->skeleton_root_node >= 0) {
+            auto it = node_map.find(skin->skeleton_root_node);
+            if (it != node_map.end()) {
+                skin->skeleton_root_stage_node = it->second;
+                S_DEBUG("Skeleton root node successfully linked to smlt StageNode.");
+            }
+        }
+        S_DEBUG("Successfully associated " + to_string(skin->node_indices.size()) + " nodes with their respective gltf joint.");
     }
 
     return StageNode::on_create(params);

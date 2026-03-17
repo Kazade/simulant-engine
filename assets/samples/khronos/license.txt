@@ -1,9 +1,7 @@
-"Cesium Man" is provided as a sample glTF asset by the Khronos Group <https://www.khronos.org/>
+"RiggedSimple" is provided as a sample glTF asset by the Khronos Group <https://www.khronos.org/>
 under the Creative Commons Attribution (CC BY) 4.0 International license.
 
-Credit for the model itself:
-© 2017, Cesium. CC-BY 4.0 International with Trademark Limitations
-- Cesium for Everything
+Model donated by Cesium for glTF testing. CC-BY 4.0 International.
 
 The original texture of the model was omitted in order to comply with Cesium's permission
 over the usage of their logo and the trademark limitation policy of the license.
