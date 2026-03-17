@@ -155,7 +155,7 @@ public:
 
     Plane extract_plane(FrustumPlane plane) const;
 
-    float* ptr() {
+    float* data() {
         return &m[0];
     }
 

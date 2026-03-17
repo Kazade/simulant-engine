@@ -26,7 +26,7 @@ bool PrefabInstance::on_create(Params params) {
 
         // Adding the meshes to the AnimationController for later skinning, if necessary
         for(auto node: this->find_descendents_by_types({Actor::Meta::node_type})) {
-            auto actor_ptr = dynamic_cast<ActorPtr>(node);
+            auto actor_ptr = static_cast<ActorPtr>(node);
             if (!actor_ptr->base_mesh()->is_skinned || !actor_ptr->base_mesh()->skin) continue;
 
             anims->add_target_mesh(actor_ptr->base_mesh());
@@ -57,8 +57,10 @@ bool PrefabInstance::on_create(Params params) {
 
     // FIXME: This could be made more efficiently than to lookup on all descendents
     for (auto actor : this->find_descendents_by_types({Actor::Meta::node_type})) {
-        auto actor_ptr = dynamic_cast<ActorPtr>(actor);
-        if (!actor_ptr->base_mesh()->is_skinned || !actor_ptr->base_mesh()->skin) continue;
+        auto actor_ptr = static_cast<ActorPtr>(actor);
+        if (!actor_ptr->base_mesh()->is_skinned || !actor_ptr->base_mesh()->skin) {
+            continue;
+        }
 
         auto skin = actor_ptr->base_mesh()->skin;
         skin->bound_actor = actor_ptr;

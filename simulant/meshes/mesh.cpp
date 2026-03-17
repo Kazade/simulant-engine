@@ -838,7 +838,7 @@ void Mesh::update_skinning() {
 
             // Going by the engine: mapping across all 16 floats of the matrix
             // Hot path, and the Vec4 reinterpreting assumes 32B alignment!
-            Vec4* skin_rows = reinterpret_cast<Vec4*>(skin_matrix.ptr());
+            Vec4* skin_rows = reinterpret_cast<Vec4*>(skin_matrix.data());
             const Vec4* joint_rows = reinterpret_cast<const Vec4*>(&joint_matrix);
 
             skin_rows[0] = skin_rows[0] + joint_rows[0] * weight;

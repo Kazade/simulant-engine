@@ -1398,7 +1398,9 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         auto node_it = node.to_iterator();
 
         std::string name = "anim";
-        if(node_it["name"]) name = node_it["name"]->to_str().value();
+        if(node_it["name"]) {
+            name = node_it["name"]->to_str().value();
+        }
 
         for(auto& ch_node: node_it["channels"]) {
             auto ch_node_it = ch_node.to_iterator();

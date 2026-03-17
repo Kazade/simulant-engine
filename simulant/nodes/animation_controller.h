@@ -217,7 +217,7 @@ public:
         state_ = ANIMATION_STATE_PLAYING;
     }
 
-    void override_animation_speed(const float speed) {
+    void set_animation_speed(const float speed) {
         animation_speed_ = speed;
     }
 
@@ -296,7 +296,9 @@ public:
     std::vector<std::string> animation_names() const {
         std::vector<std::string> ret;
 
-        if(animations_.empty()) return ret;
+        if(animations_.empty()) {
+            return ret;
+        }
 
         for(auto& anim: animations_) {
             ret.push_back(anim.name.str());
