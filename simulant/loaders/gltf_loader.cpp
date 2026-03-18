@@ -848,7 +848,7 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
         mp.joints_id = primitive["attributes"]["JOINTS_0"]->to_int().value_or(-1);
         mp.weights_id = primitive["attributes"]["WEIGHTS_0"]->to_int().value_or(-1);
 
-        S_DEBUG("Joint on primitive: " + to_string(mp.joints_id));
+        S_DEBUG("Joint on primitive: {0}", mp.joints_id);
 
         primitives.push_back(mp);
     }
