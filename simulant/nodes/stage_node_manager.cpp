@@ -29,10 +29,12 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
         S_ERROR("Exception calling node clean_up");
     }
 
-    it->second.destructor(node);
-    aligned_free(node_data_it->second.alloc_base);
+    on_stage_node_erased(node);
 
+    it->second.destructor(node);
     all_nodes_.erase(node_data_it);
+    node_storage_.deallocate(node_data_it->second.alloc_base);
+
     S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
     return true;
 }
@@ -66,9 +68,7 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
     auto& constructor = construction_data.constructor;
     auto& destructor = construction_data.destructor;
 
-    /* Allocate aligned memory. This is temporary, in future we'll do some
-     * chunked allocation depending on the node size */
-    void* mem = smlt::aligned_alloc(alignment, size);
+    void* mem = node_storage_.allocate(size, alignment);
     StageNode* node = constructor(mem);
 
     if(!node->init()) {
@@ -93,6 +93,7 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
     S_DEBUG("Created new node of type {0} at address {1}", node->node_type(),
             node);
     all_nodes_.insert(std::make_pair(node->id(), NodeData(mem, node)));
+    on_stage_node_inserted(node);
 
     return node;
 }

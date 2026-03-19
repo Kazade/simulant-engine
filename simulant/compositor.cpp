@@ -332,24 +332,26 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
     lights_visible.resize(0);
 
     _S_PROFILE_SECTION("gather-lights");
-    /* Gather lights */
-    StageNodeVisitorBFS light_finder(stage_node, [&](StageNode* node) {
-        if(node->node_type() == DirectionalLight::Meta::node_type ||
-           node->node_type() == PointLight::Meta::node_type) {
-            Light* light = (Light*)node;
-            if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-                lights_visible.push_back(light);
-            } else {
-                if(camera->frustum().intersects_sphere(
-                       light->transform->position(), light->diameter())) {
-                    lights_visible.push_back(light);
-                }
-            }
-        }
-    });
 
-    // Traverse the tree in BFS order
-    while(light_finder.call_next()) {}
+    for(auto& node:
+        stage_node->scene->nodes_by_type(DirectionalLight::Meta::node_type)) {
+        Light* light = static_cast<Light*>(node);
+
+        assert(light->light_type() == LIGHT_TYPE_DIRECTIONAL);
+        lights_visible.push_back(light);
+    }
+
+    for(auto& node:
+        stage_node->scene->nodes_by_type(PointLight::Meta::node_type)) {
+
+        Light* light = static_cast<Light*>(node);
+        assert(light->light_type() == LIGHT_TYPE_POINT);
+
+        if(camera->frustum().intersects_sphere(light->transform->position(),
+                                               light->range())) {
+            lights_visible.push_back(light);
+        }
+    }
 
     _S_PROFILE_SECTION("reset");
     // Reset it, ready for this pipeline
