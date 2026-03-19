@@ -989,11 +989,11 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
                 }
                 skin->joint_indices.push_back(node_index);
             }
-            S_DEBUG("Loaded " + to_string(skin->joint_indices.size()) + " joint indices.");
+            S_DEBUG("Loaded {0} joint indices", skin->joint_indices.size());
 
             // Setting the skeleton root node, to be able to offset from center
             skin->skeleton_root_node = skin_node["skeleton"]->to_int().value_or(-1);
-            S_DEBUG("Skeleton root node: " + to_string(skin->skeleton_root_node));
+            S_DEBUG("Skeleton root node: {0}", skin->skeleton_root_node);
 
             int ibm_accessor_idx = skin_node["inverseBindMatrices"]->to_int().value_or(-1);
             if(ibm_accessor_idx < 0) {
@@ -1016,14 +1016,14 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
                 FloatArray arr(data + i * 16, data + (i + 1) * 16); // 16 floats per Mat4 as usual
                 skin->inverse_bind_matrices.push_back(Mat4(arr));
             }
-            S_DEBUG("Successfully loaded " + to_string(skin->inverse_bind_matrices.size()) + " inverse bind matrices");
+            S_DEBUG("Successfully loaded {0} inverse bind matrices", skin->inverse_bind_matrices.size());
 
             if (node_skin_index >= 0 && !skin->inverse_bind_matrices.empty()) {
                 final_mesh->skin = skin;
                 final_mesh->is_skinned = true;
                 final_mesh->skin_index = node_skin_index;
-                S_DEBUG("Applied skin " + to_string(node_skin_index) + " to mesh.");
-                S_DEBUG("Joint nodes: " + to_string(skin->joint_indices.size()));
+                S_DEBUG("Applied skin {0} to mesh.", node_skin_index);
+                S_DEBUG("Joint nodes: {0}", skin->joint_indices.size());
 
             } else {
                 final_mesh->is_skinned = false;

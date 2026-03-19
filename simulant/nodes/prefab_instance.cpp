@@ -86,7 +86,7 @@ bool PrefabInstance::on_create(Params params) {
                 S_DEBUG("Skeleton root node successfully linked to smlt StageNode.");
             }
         }
-        S_DEBUG("Successfully associated " + to_string(skin->node_indices.size()) + " nodes with their respective gltf joint.");
+        S_DEBUG("Successfully associated {0} nodes with their respective gltf joint.", skin->node_indices.size());
     }
 
     return StageNode::on_create(params);
