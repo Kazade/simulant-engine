@@ -97,7 +97,10 @@ std::size_t component_count(const std::string& type) {
         {"SCALAR", 1},
         {"VEC2",   2},
         {"VEC3",   3},
-        {"VEC4",   4}
+        {"VEC4",   4},
+        {"MAT2",   4},
+        {"MAT3",   9},
+        {"MAT4",  16}
     };
 
     return lookup.at(type);
@@ -268,6 +271,89 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
 
     return result;
 }
+
+void process_joints(const BufferInfo& buffer_info, JSONIterator&,
+    smlt::MeshPtr& final_mesh, const VertexSpecification& spec) {
+    const uint8_t* d = buffer_info.data.data();
+    auto start = final_mesh->vertex_data->cursor_position();
+
+#ifndef NDEBUG
+    auto t0 = smlt::get_app()->time_keeper->now_in_us();
+#endif
+
+    if (spec.joint_attribute == VERTEX_ATTRIBUTE_4UB) {
+        for(std::size_t i = 0; i < buffer_info.data.size(); i += buffer_info.stride) {
+            const uint8_t* ptr = d + i;
+
+            final_mesh->vertex_data->joints<uint8_t>(ptr[0], ptr[1], ptr[2], ptr[3]);
+            final_mesh->vertex_data->move_next();
+        }
+    } else if (spec.joint_attribute == VERTEX_ATTRIBUTE_4US) {
+        for(std::size_t i = 0; i < buffer_info.data.size(); i += buffer_info.stride) {
+            const uint16_t* ptr = reinterpret_cast<const uint16_t*>(d + i);
+
+            final_mesh->vertex_data->joints<uint16_t>(ptr[0], ptr[1], ptr[2], ptr[3]);
+            final_mesh->vertex_data->move_next();
+        }
+    } else {
+        S_ERROR("Unsupported joints component type");
+    }
+#ifndef NDEBUG
+    auto t1 = smlt::get_app()->time_keeper->now_in_us();
+
+    S_DEBUG("Joints loading took {0}us", t1 - t0);
+#endif
+    final_mesh->vertex_data->move_to(start);
+
+}
+
+void process_weights(const BufferInfo& buffer_info, JSONIterator&,
+    smlt::MeshPtr& final_mesh, const VertexSpecification& spec) {
+    // Usually floats, sometimes uint8_t
+    const uint8_t* d = buffer_info.data.data();
+    auto start = final_mesh->vertex_data->cursor_position();
+
+#ifndef NDEBUG
+    auto t0 = smlt::get_app()->time_keeper->now_in_us();
+#endif
+
+    if (spec.weight_attribute == VERTEX_ATTRIBUTE_4F) {
+        for(std::size_t i = 0; i < buffer_info.data.size(); i += buffer_info.stride) {
+            const float* ptr = reinterpret_cast<const float*>(d + i);
+            float w0 = ptr[0];
+            float w1 = ptr[1];
+            float w2 = ptr[2];
+            float w3 = ptr[3];
+
+            float sum = w0 + w1 + w2 + w3;
+            if (sum > 0.0f) { w0/=sum; w1/=sum; w2/=sum; w3/=sum; }
+
+            final_mesh->vertex_data->weights<float>(w0, w1, w2, w3);
+            final_mesh->vertex_data->move_next();
+        }
+
+    } else if (spec.weight_attribute == VERTEX_ATTRIBUTE_4UB) {
+        for(std::size_t i = 0; i < buffer_info.data.size(); i += buffer_info.stride) {
+            const uint8_t* ptr = d + i;
+            float w0 = ptr[0] / 255.0f;
+            float w1 = ptr[1] / 255.0f;
+            float w2 = ptr[2] / 255.0f;
+            float w3 = ptr[3] / 255.0f;
+
+            final_mesh->vertex_data->weights<float>(w0, w1, w2, w3);
+            final_mesh->vertex_data->move_next();
+        }
+    } else {
+        S_ERROR("Unsupported weights component type");
+    }
+#ifndef NDEBUG
+    auto t1 = smlt::get_app()->time_keeper->now_in_us();
+
+    S_DEBUG("Weights loading took {0}us", t1 - t0);
+#endif
+    final_mesh->vertex_data->move_to(start);
+}
+
 
 void process_positions(const BufferInfo& buffer_info, JSONIterator&,
                        smlt::MeshPtr& final_mesh, VertexSpecification& spec) {
@@ -699,7 +785,8 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
                                JSONIterator& mesh, int mesh_id,
                                const std::vector<Accessor>& accessors,
                                const std::vector<smlt::MaterialPtr>& materials,
-                               std::istream* bin_chunk) {
+                               std::istream* bin_chunk,
+                               int8_t node_skin_index) {
     _S_UNUSED(mesh_id);
 
     struct MeshPrimitive {
@@ -713,6 +800,9 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
         int normal_id = -1;
         int color_id = -1;
         int texcoord_id = -1;
+
+        int joints_id = -1;
+        int weights_id = -1;
     };
 
     std::vector<MeshPrimitive> primitives;
@@ -725,6 +815,8 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
         // {TypeKey(FLOAT, "SCALAR"), VERTEX_ATTRIBUTE_1F},
         {TypeKey(UNSIGNED_BYTE,  "VEC4"), VERTEX_ATTRIBUTE_4UB},
         {TypeKey(UNSIGNED_SHORT, "VEC4"), VERTEX_ATTRIBUTE_4US},
+        {TypeKey(UNSIGNED_BYTE,  "VEC4"), VERTEX_ATTRIBUTE_4UB},
+        {TypeKey(FLOAT,          "VEC4"), VERTEX_ATTRIBUTE_4F },
     };
 
     auto process_attribute = [&](int acc_id) -> VertexAttribute {
@@ -753,6 +845,10 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
         mp.texcoord_id =
             primitive["attributes"]["TEXCOORD_0"]->to_int().value_or(-1);
         mp.indexes_id = primitive["indices"]->to_int().value_or(-1);
+        mp.joints_id = primitive["attributes"]["JOINTS_0"]->to_int().value_or(-1);
+        mp.weights_id = primitive["attributes"]["WEIGHTS_0"]->to_int().value_or(-1);
+
+        S_DEBUG("Joint on primitive: {0}", mp.joints_id);
 
         primitives.push_back(mp);
     }
@@ -776,7 +872,9 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
         auto spec = VertexSpecification(
             pos, norm, tex, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
             VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
-            VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, clean_diffuse(diff));
+            VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, clean_diffuse(diff), VERTEX_ATTRIBUTE_NONE,
+            primitive.joints_id >= 0 ? (process_attribute(primitive.joints_id)) : VERTEX_ATTRIBUTE_NONE, // Joints
+            primitive.weights_id >= 0 ? (process_attribute(primitive.weights_id)) : VERTEX_ATTRIBUTE_NONE); // Weights
 
         if(!final_mesh) {
             final_mesh = assets->create_mesh(spec);
@@ -869,6 +967,80 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
             }
 
             sm->index_data->done();
+        }
+        // Getting the inverse bind matrices
+        if (node_skin_index >= 0 && !final_mesh->skin) {
+            auto skin = std::make_shared<Mesh::Skin>();
+            final_mesh->skin_index = node_skin_index;
+            final_mesh->is_skinned = true;
+
+            auto skin_node = js["skins"][node_skin_index];
+
+            // Storing the joint references in the skin to update skinning from later
+            auto joints_json = skin_node["joints"];
+            skin->joint_indices.clear();
+
+            for (auto& j : joints_json) {
+                // Not making this an int8_t for the rare event the nmb. of joints go > 127
+                int16_t node_index = j.to_int().value_or(-1);
+                if (node_index < 0) {
+                    S_ERROR("Invalid joint index in skin");
+                    continue;
+                }
+                skin->joint_indices.push_back(node_index);
+            }
+            S_DEBUG("Loaded {0} joint indices", skin->joint_indices.size());
+
+            // Setting the skeleton root node, to be able to offset from center
+            skin->skeleton_root_node = skin_node["skeleton"]->to_int().value_or(-1);
+            S_DEBUG("Skeleton root node: {0}", skin->skeleton_root_node);
+
+            int ibm_accessor_idx = skin_node["inverseBindMatrices"]->to_int().value_or(-1);
+            if(ibm_accessor_idx < 0) {
+                S_WARN("Skin has no inverse bind matrices.");
+                continue;
+            }
+            auto ibm = accessors[ibm_accessor_idx];
+            auto buffer_info = process_buffer(js, ibm, bin_chunk);
+
+            size_t ibm_count = js["accessors"][ibm_accessor_idx]["count"]->to_int().value_or(0);
+            skin->inverse_bind_matrices.reserve(ibm_count);
+
+            const float* data = reinterpret_cast<const float*>(buffer_info.data.data());
+
+            if (buffer_info.data.size() < ibm_count * 16 * sizeof(float)) {
+                S_ERROR("IBM buffer too small: expected {} floats, got {}", ibm_count * 16, buffer_info.data.size() / sizeof(float));
+                continue;
+            }
+            for (size_t i = 0; i < ibm_count; ++i) {
+                FloatArray arr(data + i * 16, data + (i + 1) * 16); // 16 floats per Mat4 as usual
+                skin->inverse_bind_matrices.push_back(Mat4(arr));
+            }
+            S_DEBUG("Successfully loaded {0} inverse bind matrices", skin->inverse_bind_matrices.size());
+
+            if (node_skin_index >= 0 && !skin->inverse_bind_matrices.empty()) {
+                final_mesh->skin = skin;
+                final_mesh->is_skinned = true;
+                final_mesh->skin_index = node_skin_index;
+                S_DEBUG("Applied skin {0} to mesh.", node_skin_index);
+                S_DEBUG("Joint nodes: {0}", skin->joint_indices.size());
+
+            } else {
+                final_mesh->is_skinned = false;
+                final_mesh->skin.reset();
+
+            }
+        }
+        if (primitive.joints_id >= 0) {
+            auto joints = accessors[primitive.joints_id];
+            auto buffer_info = process_buffer(js, joints, bin_chunk);
+            process_joints(buffer_info, js, final_mesh, spec);
+        }
+
+        if (primitive.weights_id >= 0) {
+            auto weights = accessors[primitive.weights_id];
+            auto buffer_info = process_buffer(js, weights, bin_chunk);
+            process_weights(buffer_info, js, final_mesh, spec);
         }
     }
 
@@ -996,6 +1168,8 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
             }
 
             mat.extract_rotation_and_translation(rot, trn);
+            // FIXME: Handle different axis.
+            // FIXME: This assumes axis-aligned, Y+ up!
             sf.x = mat[0];
             sf.y = mat[5];
             sf.z = mat[10];
@@ -1112,6 +1286,21 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     std::vector<MeshPtr> meshes;
     std::vector<Accessor> accessors;
 
+    std::unordered_map<int, int> mesh_to_skin;
+
+    // Looping through all the nodes for skin association
+    for (auto &node_it : js["nodes"]) {
+        auto node = node_it.to_iterator();
+
+        int mesh_id = node["mesh"]->to_int().value_or(-1);
+        int skin_id = node["skin"]->to_int().value_or(-1);
+
+        if (mesh_id >= 0 && skin_id >= 0) {
+            mesh_to_skin[mesh_id] = skin_id;
+            S_DEBUG("Mesh {} uses skin {}", mesh_id, skin_id);
+        }
+    }
+
     /* This is the most complicated part of the loader. A GLTF file has a
        heirarchy of: mesh/animation -> accessor -> bufferView -> buffer */
     for(auto& acc_node: js["accessors"]) {
@@ -1153,12 +1342,22 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     j = 0;
     for(auto& node: meshes_it) {
         auto mesh_it = node.to_iterator();
-        auto mesh = load_mesh(&prefab->asset_manager(), js, mesh_it, j++,
-                              accessors, materials, bin_chunk.get());
+        int mesh_id = j;
+        int skin_id = -1;
+
+        // Checking if this mesh has an associated skin
+        if (mesh_to_skin.count(mesh_id)) {
+            skin_id = mesh_to_skin[mesh_id];
+            S_DEBUG("Associating skin {} to mesh {}", skin_id, mesh_id);
+        }
+
+        auto mesh = load_mesh(&prefab->asset_manager(), js, mesh_it, mesh_id,
+                              accessors, materials, bin_chunk.get(), skin_id);
         prefab->push_mesh(mesh);
         meshes.push_back(mesh);
-    }
 
+        j++;
+    }
     if(options.count("root_name")) {
         auto nodes_it = js["nodes"];
         auto root_name = smlt::any_cast<std::string>(options.at("root_name"));
@@ -1198,7 +1397,11 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     for(auto& node: animations_it) {
         auto node_it = node.to_iterator();
 
-        auto name = node_it["name"]->to_str().value();
+        std::string name = "anim";
+        if(node_it["name"]) {
+            name = node_it["name"]->to_str().value();
+        }
+
         for(auto& ch_node: node_it["channels"]) {
             auto ch_node_it = ch_node.to_iterator();
             auto target = ch_node_it["target"];

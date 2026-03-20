@@ -1,4 +1,5 @@
 /* *   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
+ *     2025-2026 Niels Van Son
  *
  *     This file is part of Simulant.
  *
@@ -142,6 +143,8 @@ class VertexSpecification {
     VertexAttribute texcoord7_attribute_ = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute color_attribute_ = VERTEX_ATTRIBUTE_NONE;
     VertexAttribute specular_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute joint_attribute_ = VERTEX_ATTRIBUTE_NONE;
+    VertexAttribute weight_attribute_ = VERTEX_ATTRIBUTE_NONE;
 
     AttributeOffset position_offset_ = 0;
     AttributeOffset normal_offset_ = 0;
@@ -155,6 +158,8 @@ class VertexSpecification {
     AttributeOffset texcoord7_offset_ = 0;
     AttributeOffset color_offset_ = 0;
     AttributeOffset specular_offset_ = 0;
+    AttributeOffset joint_offset_ = 0;
+    AttributeOffset weight_offset_ = 0;
 
 public:
     static const VertexSpecification DEFAULT;
@@ -174,6 +179,8 @@ public:
     VertexAttributeProperty color_attribute = {
         this, &VertexSpecification::color_attribute_};
     VertexAttributeProperty specular_attribute = {this, &VertexSpecification::specular_attribute_};
+    VertexAttributeProperty joint_attribute = {this, &VertexSpecification::joint_attribute_};
+    VertexAttributeProperty weight_attribute = {this, &VertexSpecification::weight_attribute_};
 
     VertexSpecification() = default;
     VertexSpecification(const VertexSpecification&& rhs) :
@@ -189,6 +196,8 @@ public:
         texcoord7_attribute_(rhs.texcoord7_attribute_),
         color_attribute_(rhs.color_attribute_),
         specular_attribute_(rhs.specular_attribute_),
+        joint_attribute_(rhs.joint_attribute_),
+        weight_attribute_(rhs.weight_attribute_),
         position_attribute(this, &VertexSpecification::position_attribute_),
         normal_attribute(this, &VertexSpecification::normal_attribute_),
         texcoord0_attribute(this, &VertexSpecification::texcoord0_attribute_),
@@ -200,7 +209,9 @@ public:
         texcoord6_attribute(this, &VertexSpecification::texcoord6_attribute_),
         texcoord7_attribute(this, &VertexSpecification::texcoord7_attribute_),
         color_attribute(this, &VertexSpecification::color_attribute_),
-        specular_attribute(this, &VertexSpecification::specular_attribute_) {
+        specular_attribute(this, &VertexSpecification::specular_attribute_),
+        joint_attribute(this, &VertexSpecification::joint_attribute_),
+        weight_attribute(this, &VertexSpecification::weight_attribute_) {
 
         recalc_stride_and_offsets();
     }
@@ -218,6 +229,8 @@ public:
         texcoord7_attribute_(rhs.texcoord7_attribute_),
         color_attribute_(rhs.color_attribute_),
         specular_attribute_(rhs.specular_attribute_),
+        joint_attribute_(rhs.joint_attribute_),
+        weight_attribute_(rhs.weight_attribute_),
         position_attribute(this, &VertexSpecification::position_attribute_),
         normal_attribute(this, &VertexSpecification::normal_attribute_),
         texcoord0_attribute(this, &VertexSpecification::texcoord0_attribute_),
@@ -229,7 +242,9 @@ public:
         texcoord6_attribute(this, &VertexSpecification::texcoord6_attribute_),
         texcoord7_attribute(this, &VertexSpecification::texcoord7_attribute_),
         color_attribute(this, &VertexSpecification::color_attribute_),
-        specular_attribute(this, &VertexSpecification::specular_attribute_) {
+        specular_attribute(this, &VertexSpecification::specular_attribute_),
+        joint_attribute(this, &VertexSpecification::joint_attribute_),
+        weight_attribute(this, &VertexSpecification::weight_attribute_) {
 
         recalc_stride_and_offsets();
     }
@@ -247,6 +262,8 @@ public:
         texcoord7_attribute_ = rhs.texcoord7_attribute_;
         color_attribute_ = rhs.color_attribute_;
         specular_attribute_ = rhs.specular_attribute_;
+        joint_attribute_ = rhs.joint_attribute_;
+        weight_attribute_ = rhs.weight_attribute_;
 
         recalc_stride_and_offsets();
 
@@ -265,7 +282,9 @@ public:
         VertexAttribute texcoord6 = VERTEX_ATTRIBUTE_NONE,
         VertexAttribute texcoord7 = VERTEX_ATTRIBUTE_NONE,
         VertexAttribute diffuse = VERTEX_ATTRIBUTE_NONE,
-        VertexAttribute specular = VERTEX_ATTRIBUTE_NONE
+        VertexAttribute specular = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute joint = VERTEX_ATTRIBUTE_NONE,
+        VertexAttribute weight = VERTEX_ATTRIBUTE_NONE
     );
 
     bool operator==(const VertexSpecification& rhs) const {
@@ -280,7 +299,9 @@ public:
                texcoord6_attribute == rhs.texcoord6_attribute &&
                texcoord7_attribute == rhs.texcoord7_attribute &&
                color_attribute == rhs.color_attribute &&
-               specular_attribute == rhs.specular_attribute;
+               specular_attribute == rhs.specular_attribute &&
+               joint_attribute == rhs.joint_attribute &&
+               weight_attribute == rhs.weight_attribute;
     }
 
     bool operator!=(const VertexSpecification& rhs) const {
@@ -305,6 +326,9 @@ public:
     bool has_texcoord6() const { return bool(texcoord6_attribute_); }
     bool has_texcoord7() const { return bool(texcoord7_attribute_); }
 
+    bool has_joints() const { return bool(joint_attribute_); }
+    bool has_weights() const { return bool(weight_attribute_); }
+
     bool has_color() const {
         return bool(color_attribute_);
     }
@@ -320,6 +344,9 @@ public:
     AttributeOffset texcoord5_offset(bool check=true) const;
     AttributeOffset texcoord6_offset(bool check=true) const;
     AttributeOffset texcoord7_offset(bool check=true) const;
+
+    AttributeOffset joint_offset(bool check=true) const;
+    AttributeOffset weight_offset(bool check=true) const;
 
     AttributeOffset texcoordX_offset(uint8_t which, bool check=true) const;
 
@@ -620,8 +647,10 @@ namespace std{
             hash_combine(seed, (unsigned int) spec.texcoord5_attribute_);
             hash_combine(seed, (unsigned int) spec.texcoord6_attribute_);
             hash_combine(seed, (unsigned int) spec.texcoord7_attribute_);
-            hash_combine(seed, (unsigned int)spec.color_attribute_);
+            hash_combine(seed, (unsigned int) spec.color_attribute_);
             hash_combine(seed, (unsigned int) spec.specular_attribute_);
+            hash_combine(seed, (unsigned int) spec.joint_attribute_);
+            hash_combine(seed, (unsigned int) spec.weight_attribute_);
             return seed;
         }
     };
