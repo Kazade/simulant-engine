@@ -248,50 +248,64 @@ public:
         assert_equal(particle_system->node_type(),
                      smlt::ParticleSystem::Meta::node_type);
 
-        assert_equal(scene->count_nodes_by_type<ParticleSystem>(), count + 1);
+        assert_equal(
+            scene->count_nodes_by_type(ParticleSystem::Meta::node_type),
+            count + 1);
 
         particle_system->destroy();
 
-        assert_equal(scene->count_nodes_by_type<ParticleSystem>(true), count + 1);
+        assert_equal(
+            scene->count_nodes_by_type(ParticleSystem::Meta::node_type, true),
+            count + 1);
 
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<ParticleSystem>(true), count);
+        assert_equal(
+            scene->count_nodes_by_type(ParticleSystem::Meta::node_type, true),
+            count);
     }
 
     void test_geoms_are_freed() {
         auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
 
-        auto count = scene->count_nodes_by_type<Geom>();
+        auto count = scene->count_nodes_by_type(Geom::Meta::node_type);
 
         auto geom = scene->create_child<Geom>(mesh);
 
         assert_equal(geom->node_type(), smlt::Geom::Meta::node_type);
-        assert_equal(scene->count_nodes_by_type<Geom>(), count + 1);
+        assert_equal(scene->count_nodes_by_type(Geom::Meta::node_type),
+                     count + 1);
 
         geom->destroy();
 
-        assert_equal(scene->count_nodes_by_type<Geom>(true), count + 1);
+        assert_equal(scene->count_nodes_by_type(Geom::Meta::node_type, true),
+                     count + 1);
 
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<Geom>(true), count);
+        assert_equal(scene->count_nodes_by_type(Geom::Meta::node_type, true),
+                     count);
     }
 
     void test_cameras_are_freed() {
-        auto count = scene->count_nodes_by_type<Camera>();
+        auto count = scene->count_nodes_by_type(Camera::Meta::node_type);
 
         auto camera = scene->create_child<smlt::Camera3D>();
         assert_equal(camera->node_type(), smlt::Camera::Meta::node_type);
 
-        assert_equal(scene->count_nodes_by_type<Camera>(), count + 1);
+        assert_equal(scene->count_nodes_by_type(smlt::Camera::Meta::node_type),
+                     count + 1);
         camera->destroy();
 
-        assert_equal(scene->count_nodes_by_type<Camera>(true), count + 1);
+        assert_equal(
+            scene->count_nodes_by_type(smlt::Camera::Meta::node_type, true),
+            count + 1);
 
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<Camera>(true), count);
+        assert_equal(
+            scene->count_nodes_by_type(smlt::Camera::Meta::node_type, true),
+            count);
     }
 
     void test_pipelines_are_freed() {
@@ -308,19 +322,22 @@ public:
     }
 
     void test_stages_are_freed() {
-        auto count = scene->count_nodes_by_type<Stage>();
+        auto count = scene->count_nodes_by_type(Stage::Meta::node_type);
 
         auto stage = scene->create_child<smlt::Stage>();
 
-        assert_equal(scene->count_nodes_by_type<Stage>(), count + 1);
+        assert_equal(scene->count_nodes_by_type(Stage::Meta::node_type),
+                     count + 1);
 
         stage->destroy();
 
         assert_true(stage->is_destroyed());
-        assert_equal(scene->count_nodes_by_type<Stage>(true), count + 1);
+        assert_equal(scene->count_nodes_by_type(Stage::Meta::node_type, true),
+                     count + 1);
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<Stage>(true), count);
+        assert_equal(scene->count_nodes_by_type(Stage::Meta::node_type, true),
+                     count);
     }
 
     void test_backgrounds_are_freed() {
@@ -336,20 +353,23 @@ public:
     }
 
     void test_sprites_are_freed() {
-        auto count = scene->count_nodes_by_type<Sprite>();
+        auto count = scene->count_nodes_by_type(Sprite::Meta::node_type);
 
         auto sprite = scene->create_child<Sprite>();
         assert_equal(sprite->node_type(), smlt::Sprite::Meta::node_type);
 
-        assert_true(scene->count_nodes_by_type<Sprite>() >= count + 1);
+        assert_true(scene->count_nodes_by_type(Sprite::Meta::node_type) >=
+                    count + 1);
 
         sprite->destroy();
 
-        assert_true(scene->count_nodes_by_type<Sprite>(true) >= count + 1);
+        assert_true(scene->count_nodes_by_type(Sprite::Meta::node_type, true) >=
+                    count + 1);
 
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<Sprite>(true), count);
+        assert_equal(scene->count_nodes_by_type(Sprite::Meta::node_type, true),
+                     count);
     }
 };
 
