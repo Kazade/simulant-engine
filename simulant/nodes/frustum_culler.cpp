@@ -17,14 +17,14 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "../stage.h"
-#include "../nodes/camera.h"
+#include "frustum_culler.h"
 #include "../nodes/actor.h"
+#include "../nodes/camera.h"
+#include "../nodes/geom.h"
 #include "../nodes/light.h"
 #include "../nodes/particle_system.h"
-#include "../nodes/geom.h"
-
-#include "frustum_culler.h"
+#include "../nodes/stage_node_iterators.h"
+#include "../stage.h"
 
 namespace smlt {
 

@@ -192,36 +192,48 @@ public:
     }
 
     void test_actors_are_freed() {
-        auto count = scene->count_nodes_by_type<smlt::Stage>();
+        auto count = scene->count_nodes_by_type(smlt::Stage::Meta::node_type);
         auto actor = scene->create_child<smlt::Stage>();
         assert_equal(actor->node_type(), smlt::Stage::Meta::node_type);
-        assert_equal(scene->count_nodes_by_type<smlt::Stage>(), count + 1);
+        assert_equal(scene->count_nodes_by_type(smlt::Stage::Meta::node_type),
+                     count + 1);
 
         actor->destroy();
         // Should be the same, the original actor is still lingering
-        assert_equal(scene->count_nodes_by_type<smlt::Stage>(true), count + 1);
+        assert_equal(
+            scene->count_nodes_by_type(smlt::Stage::Meta::node_type, true),
+            count + 1);
 
         application->run_frame();
 
         // Back to where we were
-        assert_equal(scene->count_nodes_by_type<smlt::Stage>(true), count);
+        assert_equal(
+            scene->count_nodes_by_type(smlt::Stage::Meta::node_type, true),
+            count);
     }
 
     void test_lights_are_freed() {
-        auto count = scene->count_nodes_by_type<DirectionalLight>();
+        auto count =
+            scene->count_nodes_by_type(DirectionalLight::Meta::node_type);
 
         auto light = scene->create_child<DirectionalLight>();
         assert_equal(light->node_type(),
                      smlt::DirectionalLight::Meta::node_type);
-        assert_equal(scene->count_nodes_by_type<DirectionalLight>(), count + 1);
+        assert_equal(
+            scene->count_nodes_by_type(DirectionalLight::Meta::node_type),
+            count + 1);
 
         light->destroy();
 
-        assert_equal(scene->count_nodes_by_type<DirectionalLight>(true), count + 1);
+        assert_equal(
+            scene->count_nodes_by_type(DirectionalLight::Meta::node_type, true),
+            count + 1);
 
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<DirectionalLight>(true), count);
+        assert_equal(
+            scene->count_nodes_by_type(DirectionalLight::Meta::node_type, true),
+            count);
     }
 
     void test_particle_systems_are_freed() {
@@ -229,7 +241,8 @@ public:
             ParticleScript::BuiltIns::FIRE
         );
 
-        auto count = scene->count_nodes_by_type<ParticleSystem>();
+        auto count =
+            scene->count_nodes_by_type(ParticleSystem::Meta::node_type);
 
         auto particle_system = scene->create_child<ParticleSystem>(script);
         assert_equal(particle_system->node_type(),

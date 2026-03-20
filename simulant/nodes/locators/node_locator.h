@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../nodes/stage_node.h"
+#include "../../nodes/stage_node_iterators.h"
 #include "../../nodes/stage_node_watch_controller.h"
 #include "../../scenes/scene.h"
 

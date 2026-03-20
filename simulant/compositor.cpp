@@ -19,19 +19,20 @@
 
 #include <unordered_map>
 
-#include "generic/algorithm.h"
+#include "application.h"
 #include "compositor.h"
+#include "generic/algorithm.h"
+#include "loader.h"
+#include "meshes/mesh.h"
 #include "nodes/actor.h"
 #include "nodes/camera.h"
 #include "nodes/light.h"
-#include "meshes/mesh.h"
-#include "window.h"
+#include "nodes/stage_node_visitors.h"
 #include "partitioner.h"
-#include "loader.h"
-#include "application.h"
-#include "scenes/scene.h"
 #include "renderers/batching/render_queue.h"
+#include "scenes/scene.h"
 #include "tools/profiler.h"
+#include "window.h"
 
 namespace smlt {
 
