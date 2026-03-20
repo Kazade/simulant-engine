@@ -93,14 +93,14 @@ private:
 class StageNodeStorage {
 public:
     // The alignment of buffer addresses
-    constexpr static int alignment = 32;
+    constexpr static std::size_t node_alignment = 32;
 
     // Allocation sizes are rounded up to this to find a buffer
     // to insert into. Must be a multiple of alignment.
-    constexpr static int round_up_bytes = 256;
+    constexpr static std::size_t round_up_bytes = 256;
 
     void* allocate(std::size_t size, std::size_t alignment) {
-        if(this->alignment % alignment != 0) {
+        if(node_alignment % alignment != 0) {
             S_ERROR("Couldn't fulfil alignment requirements");
             return nullptr;
         }
@@ -111,7 +111,7 @@ public:
 
         if(!buffers_.count(rounded_size)) {
             buffers_.insert(std::make_pair(
-                rounded_size, SlabArray<this->alignment>(rounded_size)));
+                rounded_size, SlabArray<node_alignment>(rounded_size)));
         }
 
         void* ptr = buffers_.at(rounded_size).allocate();
