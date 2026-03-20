@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.9)
 PROJECT(simulant CXX C ASM)
 
-set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 # Platform definitions (if they aren't set in the toolchain file)
 IF(NXDK)
