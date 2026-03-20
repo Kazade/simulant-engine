@@ -186,17 +186,6 @@ public:
         }
     }
 
-    /** Connect to the callback, but disconnect after the first call */
-    Connection connect_once(const callback& func) {
-        std::shared_ptr<Connection> conn = std::make_shared<Connection>();
-        *conn = connect([func, conn]() {
-            func();
-            conn->disconnect();
-        });
-
-        return *conn;
-    }
-
     void operator()(Args... args) {
         Link* it = head_;
 
@@ -327,8 +316,45 @@ private:
 };
 
 template<typename Signature>
-class signal : public ProtoSignal<Signature> {
+class signal {
+private:
+    ProtoSignal<Signature>* pimpl_ = nullptr;
 
+public:
+    typedef std::result_of<Signature> result;
+    typedef std::function<Signature> callback;
+
+    signal() {
+        pimpl_ = new ProtoSignal<Signature>();
+    }
+
+    ~signal() {
+        delete pimpl_;
+    }
+
+    template<typename... Args>
+    void operator()(Args&&... args) {
+        (*pimpl_)(std::forward<Args>(args)...);
+    }
+
+    /** Connect to the callback, but disconnect after the first call */
+    Connection connect_once(const callback& func) {
+        std::shared_ptr<Connection> conn = std::make_shared<Connection>();
+        *conn = pimpl_->connect([func, conn]() {
+            func();
+            conn->disconnect();
+        });
+
+        return *conn;
+    }
+
+    Connection connect(const callback& func) {
+        return pimpl_->connect(func);
+    }
+
+    std::size_t connection_count() const {
+        return pimpl_->connection_count();
+    }
 };
 
 typedef Connection connection;

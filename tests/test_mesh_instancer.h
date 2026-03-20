@@ -19,20 +19,28 @@ public:
 
     void test_mesh_instancer_creation() {
         scene->create_child<smlt::MeshInstancer>(mesh_);
-        assert_equal(scene->count_nodes_by_type<smlt::MeshInstancer>(), 1u);
+        assert_equal(
+            scene->count_nodes_by_type(smlt::MeshInstancer::Meta::node_type),
+            1u);
 
         scene->create_child<smlt::MeshInstancer>(mesh_);
-        assert_equal(scene->count_nodes_by_type<smlt::MeshInstancer>(), 2u);
+        assert_equal(
+            scene->count_nodes_by_type(smlt::MeshInstancer::Meta::node_type),
+            2u);
     }
 
     void test_mesh_instancer_destruction() {
         auto instancer = scene->create_child<MeshInstancer>(mesh_);
-        assert_equal(scene->count_nodes_by_type<MeshInstancer>(), 1u);
+        assert_equal(
+            scene->count_nodes_by_type(smlt::MeshInstancer::Meta::node_type),
+            1u);
 
         instancer->destroy();
         application->run_frame();
 
-        assert_equal(scene->count_nodes_by_type<MeshInstancer>(), 0u);
+        assert_equal(
+            scene->count_nodes_by_type(smlt::MeshInstancer::Meta::node_type),
+            0u);
     }
 
     void test_find_mesh_instancer() {

@@ -256,6 +256,8 @@ private:
         return ret;
     }
 
+    friend class Compositor;
+
 protected:
     /* Returns the number of arguments passed when loading */
     std::size_t load_arg_count() const;

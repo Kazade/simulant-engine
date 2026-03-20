@@ -4,6 +4,7 @@
 #include "../stage.h"
 #include "../window.h"
 #include "camera.h"
+#include "stage_node_iterators.h"
 
 namespace smlt {
 
@@ -36,6 +37,38 @@ StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
         loader->into(new_child, lopts);
         return create_child<PrefabInstance>(new_child);
     }
+}
+
+AncestorIteratorPair StageNode::each_ancestor() {
+    return AncestorIteratorPair(this);
+}
+
+AncestorIteratorPair StageNode::each_ancestor() const {
+    return AncestorIteratorPair(this);
+}
+
+DescendentIteratorPair StageNode::each_descendent() {
+    return DescendentIteratorPair(this);
+}
+
+DescendentIteratorPair StageNode::each_descendent() const {
+    return DescendentIteratorPair(this);
+}
+
+SiblingIteratorPair StageNode::each_sibling() {
+    return SiblingIteratorPair(this);
+}
+
+SiblingIteratorPair StageNode::each_sibling() const {
+    return SiblingIteratorPair(this);
+}
+
+ChildIteratorPair StageNode::each_child() {
+    return ChildIteratorPair(this);
+}
+
+ChildIteratorPair StageNode::each_child() const {
+    return ChildIteratorPair(this);
 }
 
 StageNode* StageNode::create_mixin(const std::string& node_name,
@@ -72,6 +105,26 @@ std::vector<StageNode *> StageNode::find_descendents_by_types(std::initializer_l
     }
 
     return nodes;
+}
+
+StageNode* StageNode::find_descendent_with_id(StageNodeID id) {
+    for(auto& it: each_descendent()) {
+        if(it.id() == id) {
+            return &it;
+        }
+    }
+
+    return nullptr;
+}
+
+const StageNode* StageNode::find_descendent_with_id(StageNodeID id) const {
+    for(auto& it: each_descendent()) {
+        if(it.id() == id) {
+            return &it;
+        }
+    }
+
+    return nullptr;
 }
 
 const StageNode* StageNode::child_at(std::size_t i) const {
@@ -413,6 +466,16 @@ int16_t StageNode::precedence() const {
     return precedence_;
 }
 
+void StageNode::on_transformation_changed() {
+    mark_transformed_aabb_dirty();
+
+    /* If this node's transform changes in some way, we need
+     * to trigger updates on child transforms too */
+    for(auto& child: each_child()) {
+        child.transform->signal_change();
+    }
+}
+
 void StageNode::recalc_bounds_if_necessary() const {
     if(!transformed_aabb_dirty_) {
         return;
@@ -477,6 +540,21 @@ void StageNode::fixed_update(float step) {
     for(auto& child: each_child()) {
         child.fixed_update(step);
     }
+}
+
+std::size_t StageNode::count_nodes_by_type(StageNodeType type_id,
+                                           bool include_destroyed) const {
+    std::size_t ret = 0;
+    for(auto& node: each_descendent()) {
+        if(node.is_destroyed() && !include_destroyed) {
+            continue;
+        }
+
+        if(node.node_type() == type_id) {
+            ++ret;
+        }
+    }
+    return ret;
 }
 
 bool StageNode::parent_is_scene() const {

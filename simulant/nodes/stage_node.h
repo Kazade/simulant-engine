@@ -26,6 +26,7 @@
 #include "../utils/params.h"
 #include "builtins.h"
 #include "helpers.h"
+
 #include "stage_node_path.h"
 
 namespace smlt {
@@ -41,6 +42,11 @@ struct UIConfig;
 struct WidgetStyle;
 typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
 } // namespace ui
+
+class AncestorIteratorPair;
+class DescendentIteratorPair;
+class SiblingIteratorPair;
+class ChildIteratorPair;
 
 typedef sig::signal<void(AABB)> BoundsUpdatedSignal;
 typedef sig::signal<void()> CleanedUpSignal;
@@ -459,7 +465,7 @@ struct TreeLoadOptions {
     std::string override_texture_extension = "";
 };
 
-class StageNode:
+class alignas(32) StageNode:
     public generic::Identifiable<StageNodeID>,
     public DestroyableObject,
     public virtual Nameable,
@@ -479,12 +485,108 @@ private:
 
     friend class DescendentIterator<false>;
     friend class DescendentIterator<true>;
+    friend class StageNodeManager;
+    friend class Partitioner;
+    friend class Layer;
+    friend class SiblingIteratorPair;
+    friend class ChildIteratorPair;
+    friend class DescendentIteratorPair;
+    friend class SiblingIterator<false>;
+    friend class SiblingIterator<true>;
+
+    template<typename F, typename T, typename... Args>
+    friend T* impl::mixin_factory(F& factory, StageNode* base, Args&&... args);
 
     StageNode* parent_ = nullptr;
     StageNode* next_ = nullptr;
     StageNode* prev_ = nullptr;
     StageNode* first_child_ = nullptr;
     StageNode* last_child_ = nullptr;
+
+    Transform transform_;
+
+    // FIXME: This is potentially quite wasteful outside of the
+    // Simulant Studio editor. We can probably just optimise this
+    // away somehow during game release builds
+    Params params_;
+
+    /* Mixin handling */
+    StageNode* base_ = this;
+
+    struct MixinInfo {
+        sig::connection destroy_connection;
+        StageNode* ptr;
+    };
+
+    std::unordered_map<StageNodeType, MixinInfo> mixins_;
+
+    bool partitioner_dirty_ = false;
+    bool partitioner_added_ = false;
+
+    Scene* owner_ = nullptr;
+    StageNodeType node_type_ = 0;
+
+    generic::DataCarrier data_;
+
+    /* How many pipelines is this node the root of? */
+    uint16_t active_pipeline_count_ = 0;
+
+    bool is_visible_ = true;
+    bool self_and_parents_visible_ = true;
+
+    /* Mutable so that AABB accesses can be const, but we delay
+     * calculation until access */
+    mutable AABB transformed_aabb_;
+    mutable bool transformed_aabb_dirty_ = false;
+
+    // By default, always cast and receive shadows
+    ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;
+    ShadowReceive shadow_receive_ = SHADOW_RECEIVE_ALWAYS;
+
+    /* Whether or not this node should be culled by the partitioner (e.g. when
+     * offscreen) */
+    bool cullable_ = true;
+
+    /* Passed to coroutines and used to detect when the object has been
+     * destroyed */
+    std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
+
+    int16_t precedence_ = 0;
+
+private:
+    void recalc_visibility();
+
+    AABB calculate_transformed_aabb() const;
+    void add_mixin(StageNode* mixin);
+
+    // NVI idiom
+    bool _create(const Params& params) {
+        params_ = params;
+        return on_create(params);
+    }
+
+    void _clean_up() override;
+
+    virtual bool do_generates_renderables_for_descendents() const {
+        return false;
+    }
+
+    /* Return a list of renderables to pass into the render queue */
+    virtual void do_generate_renderables(batcher::RenderQueue* render_queue,
+                                         const Camera*,
+                                         const Viewport* viewport,
+                                         const DetailLevel detail_level,
+                                         Light** lights,
+                                         const std::size_t light_count) {
+        _S_UNUSED(render_queue);
+        _S_UNUSED(viewport);
+        _S_UNUSED(detail_level);
+        _S_UNUSED(lights);
+        _S_UNUSED(light_count);
+    }
+
+    virtual void finalize_destroy() override final;
+    virtual void finalize_destroy_immediately() final;
 
     void _on_parent_set(StageNode* oldp, StageNode* newp,
                         TransformRetainMode transform_retain) {
@@ -505,25 +607,9 @@ public:
     std::vector<StageNode*> find_descendents_by_types(
         std::initializer_list<StageNodeType> type_list) const;
 
-    StageNode* find_descendent_with_id(StageNodeID id) {
-        for(auto& it: each_descendent()) {
-            if(it.id() == id) {
-                return &it;
-            }
-        }
+    StageNode* find_descendent_with_id(StageNodeID id);
 
-        return nullptr;
-    }
-
-    const StageNode* find_descendent_with_id(StageNodeID id) const {
-        for(auto& it: each_descendent()) {
-            if(it.id() == id) {
-                return &it;
-            }
-        }
-
-        return nullptr;
-    }
+    const StageNode* find_descendent_with_id(StageNodeID id) const;
 
     bool is_root() const {
         return !has_parent();
@@ -697,20 +783,8 @@ public:
     /** This is a very-slow utility function that calls
      *  dynamic_cast on the entire subtree. Use for testing
      *  *only*. */
-    template<typename T>
-    size_t count_nodes_by_type(bool include_destroyed = false) const {
-        size_t ret = 0;
-        for(auto& node: each_descendent()) {
-            if(node.is_destroyed() && !include_destroyed) {
-                continue;
-            }
-
-            if(dynamic_cast<const T*>(&node)) {
-                ++ret;
-            }
-        }
-        return ret;
-    }
+    std::size_t count_nodes_by_type(StageNodeType type_id,
+                                    bool include_destroyed = false) const;
 
     bool is_part_of_active_pipeline() const {
         return active_pipeline_count_ > 0;
@@ -724,276 +798,21 @@ public:
 
     virtual std::set<NodeParam> node_params() const = 0;
 
-protected:
-    virtual bool on_create(Params params) {
-        auto position_maybe = params.get<FloatArray>("position");
-        if(position_maybe) {
-            transform->set_position(position_maybe.value());
-        }
-
-        auto orientation_maybe = params.get<FloatArray>("orientation");
-        if(orientation_maybe) {
-            transform->set_orientation(orientation_maybe.value());
-        }
-
-        auto scale_maybe = params.get<FloatArray>("scale");
-        if(scale_maybe) {
-            transform->set_scale(scale_maybe.value());
-        }
-
-        auto translation_maybe = params.get<FloatArray>("translation");
-        if(translation_maybe) {
-            transform->set_translation(translation_maybe.value());
-        }
-
-        auto rotation_maybe = params.get<FloatArray>("rotation");
-        if(rotation_maybe) {
-            transform->set_rotation(rotation_maybe.value());
-        }
-
-        auto scale_factor_maybe = params.get<FloatArray>("scale_factor");
-        if(scale_factor_maybe) {
-            transform->set_scale_factor(scale_factor_maybe.value());
-        }
-
-        return true;
-    }
-
-    virtual bool on_destroy() override {
-        return true;
-    }
-    virtual void on_update(float dt) override {
-        _S_UNUSED(dt);
-    }
-    virtual void on_fixed_update(float step) override {
-        _S_UNUSED(step);
-    }
-    virtual void on_late_update(float dt) override {
-        _S_UNUSED(dt);
-    }
-
-    virtual void on_parent_set(const StageNode* oldp, const StageNode* newp) {
-        _S_UNUSED(oldp);
-        _S_UNUSED(newp);
-    }
-
-    void on_transformation_changed() override {
-        mark_transformed_aabb_dirty();
-
-        /* If this node's transform changes in some way, we need
-         * to trigger updates on child transforms too */
-        for(auto& child: each_child()) {
-            child.transform->signal_change();
-        }
-    }
-
-    void on_transformation_change_attempted() override {}
-
-protected:
-    template<typename N>
-    bool clean_params(Params& params) {
-        Params cleaned;
-        for(auto param: get_node_params<N>()) {
-            auto name = param.name();
-            bool passed = params.contains(name);
-            if(!passed && !param.default_value()) {
-                // No default and not provided
-                if(param.is_required()) {
-                    return false;
-                } else {
-                    // Ignore if not required
-                    continue;
-                }
-            } else if(passed) {
-                auto v = params.raw(name).value();
-                cleaned.set(name, v);
-            } else {
-                auto v = param.default_value().value();
-                cleaned.set(name, v);
-            }
-        }
-
-        params = cleaned;
-        return true;
-    }
-
-public:
     /** Returns the parameters used to construct this node */
     const Params& create_params() const {
         return params_;
     }
 
-private:
-    friend class StageNodeManager;
+    AncestorIteratorPair each_ancestor();
+    AncestorIteratorPair each_ancestor() const;
 
-    Transform transform_;
+    DescendentIteratorPair each_descendent();
+    DescendentIteratorPair each_descendent() const;
 
-    // FIXME: This is potentially quite wasteful outside of the
-    // Simulant Studio editor. We can probably just optimise this
-    // away somehow during game release builds
-    Params params_;
-
-    // NVI idiom
-    bool _create(const Params& params) {
-        params_ = params;
-        return on_create(params);
-    }
-
-    void _clean_up() override;
-
-    virtual bool do_generates_renderables_for_descendents() const {
-        return false;
-    }
-
-    /* Return a list of renderables to pass into the render queue */
-    virtual void do_generate_renderables(batcher::RenderQueue* render_queue,
-                                         const Camera*,
-                                         const Viewport* viewport,
-                                         const DetailLevel detail_level,
-                                         Light** lights,
-                                         const std::size_t light_count) {
-        _S_UNUSED(render_queue);
-        _S_UNUSED(viewport);
-        _S_UNUSED(detail_level);
-        _S_UNUSED(lights);
-        _S_UNUSED(light_count);
-    }
-
-    virtual void finalize_destroy() override final;
-    virtual void finalize_destroy_immediately() final;
-
-private:
-    template<typename F, typename T, typename... Args>
-    friend T* impl::mixin_factory(F& factory, StageNode* base, Args&&... args);
-
-    /* Mixin handling */
-    StageNode* base_ = this;
-
-    struct MixinInfo {
-        sig::connection destroy_connection;
-        StageNode* ptr;
-    };
-
-    std::unordered_map<StageNodeType, MixinInfo> mixins_;
-    void add_mixin(StageNode* mixin);
-
-private:
-    /* This is ugly, but it's here for performance to avoid
-     * a map lookup when staging writes to the partitioner */
-    friend class Partitioner;
-    bool partitioner_dirty_ = false;
-    bool partitioner_added_ = false;
-
-public:
-    class SiblingIteratorPair {
-        friend class StageNode;
-
-        SiblingIteratorPair(const StageNode* root) :
-            root_(root) {}
-
-        const StageNode* root_;
-
-    public:
-        SiblingIterator<false> begin() {
-            if(!root_->parent()) {
-                return SiblingIterator<false>(root_, nullptr);
-            }
-
-            return SiblingIterator<false>(
-                root_, (root_->next_sibling()) ? root_->next_sibling()
-                                               : root_->parent_->first_child());
-        }
-
-        SiblingIterator<false> end() {
-            return SiblingIterator<false>(root_, nullptr);
-        }
-    };
-
-    class ChildIteratorPair {
-        friend class StageNode;
-
-        ChildIteratorPair(const StageNode* root) :
-            root_(root) {}
-
-        const StageNode* root_;
-
-    public:
-        ChildIterator<false> begin() const {
-            return ChildIterator<false>(root_, root_->first_child_);
-        }
-
-        ChildIterator<false> end() const {
-            return ChildIterator<false>(root_, nullptr);
-        }
-    };
-
-    class DescendentIteratorPair {
-        friend class StageNode;
-
-        DescendentIteratorPair(const StageNode* root) :
-            root_(root) {}
-
-        const StageNode* root_;
-
-    public:
-        DescendentIterator<false> begin() const {
-            return DescendentIterator<false>(root_);
-        }
-
-        DescendentIterator<false> end() const {
-            return DescendentIterator<false>(root_, nullptr);
-        }
-    };
-
-    class AncestorIteratorPair {
-        friend class StageNode;
-
-        AncestorIteratorPair(const StageNode* root) :
-            root_(root) {}
-
-        const StageNode* root_;
-
-    public:
-        AncestorIterator<false> begin() {
-            return AncestorIterator<false>(root_);
-        }
-
-        AncestorIterator<false> end() {
-            return AncestorIterator<false>(root_, nullptr);
-        }
-    };
-
-    AncestorIteratorPair each_ancestor() {
-        return AncestorIteratorPair(this);
-    }
-
-    AncestorIteratorPair each_ancestor() const {
-        return AncestorIteratorPair(this);
-    }
-
-    DescendentIteratorPair each_descendent() {
-        return DescendentIteratorPair(this);
-    }
-
-    DescendentIteratorPair each_descendent() const {
-        return DescendentIteratorPair(this);
-    }
-
-    SiblingIteratorPair each_sibling() {
-        return SiblingIteratorPair(this);
-    }
-
-    SiblingIteratorPair each_sibling() const {
-        return SiblingIteratorPair(this);
-    }
-
-    ChildIteratorPair each_child() {
-        return ChildIteratorPair(this);
-    }
-
-    ChildIteratorPair each_child() const {
-        return ChildIteratorPair(this);
-    }
+    SiblingIteratorPair each_sibling();
+    SiblingIteratorPair each_sibling() const;
+    ChildIteratorPair each_child();
+    ChildIteratorPair each_child() const;
 
     std::string repr() const override {
         return name();
@@ -1056,6 +875,89 @@ public:
     virtual const char* node_type_name() const = 0;
 
 protected:
+    virtual bool on_create(Params params) {
+        auto position_maybe = params.get<FloatArray>("position");
+        if(position_maybe) {
+            transform->set_position(position_maybe.value());
+        }
+
+        auto orientation_maybe = params.get<FloatArray>("orientation");
+        if(orientation_maybe) {
+            transform->set_orientation(orientation_maybe.value());
+        }
+
+        auto scale_maybe = params.get<FloatArray>("scale");
+        if(scale_maybe) {
+            transform->set_scale(scale_maybe.value());
+        }
+
+        auto translation_maybe = params.get<FloatArray>("translation");
+        if(translation_maybe) {
+            transform->set_translation(translation_maybe.value());
+        }
+
+        auto rotation_maybe = params.get<FloatArray>("rotation");
+        if(rotation_maybe) {
+            transform->set_rotation(rotation_maybe.value());
+        }
+
+        auto scale_factor_maybe = params.get<FloatArray>("scale_factor");
+        if(scale_factor_maybe) {
+            transform->set_scale_factor(scale_factor_maybe.value());
+        }
+
+        return true;
+    }
+
+    virtual bool on_destroy() override {
+        return true;
+    }
+    virtual void on_update(float dt) override {
+        _S_UNUSED(dt);
+    }
+    virtual void on_fixed_update(float step) override {
+        _S_UNUSED(step);
+    }
+    virtual void on_late_update(float dt) override {
+        _S_UNUSED(dt);
+    }
+
+    virtual void on_parent_set(const StageNode* oldp, const StageNode* newp) {
+        _S_UNUSED(oldp);
+        _S_UNUSED(newp);
+    }
+
+    void on_transformation_changed() override;
+
+    void on_transformation_change_attempted() override {}
+
+    template<typename N>
+    bool clean_params(Params& params) {
+        Params cleaned;
+        for(auto param: get_node_params<N>()) {
+            auto name = param.name();
+            bool passed = params.contains(name);
+            if(!passed && !param.default_value()) {
+                // No default and not provided
+                if(param.is_required()) {
+                    return false;
+                } else {
+                    // Ignore if not required
+                    continue;
+                }
+            } else if(passed) {
+                auto v = params.raw(name).value();
+                cleaned.set(name, v);
+            } else {
+                auto v = param.default_value().value();
+                cleaned.set(name, v);
+            }
+        }
+
+        params = cleaned;
+        return true;
+    }
+
     // Faster than properties, useful for subclasses where a clean API isn't as
     // important
     Scene* get_scene() const {
@@ -1065,74 +967,12 @@ protected:
     void recalc_bounds_if_necessary() const;
     void mark_transformed_aabb_dirty();
 
-private:
-    friend class Layer;
-
-    AABB calculate_transformed_aabb() const;
-    Scene* owner_ = nullptr;
-    StageNodeType node_type_ = 0;
-
-    generic::DataCarrier data_;
-
-    /* How many pipelines is this node the root of? */
-    uint16_t active_pipeline_count_ = 0;
-
-    bool is_visible_ = true;
-    bool self_and_parents_visible_ = true;
-    void recalc_visibility();
-
-    /* Mutable so that AABB accesses can be const, but we delay
-     * calculation until access */
-    mutable AABB transformed_aabb_;
-    mutable bool transformed_aabb_dirty_ = false;
-
-    // By default, always cast and receive shadows
-    ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;
-    ShadowReceive shadow_receive_ = SHADOW_RECEIVE_ALWAYS;
-
-    /* Whether or not this node should be culled by the partitioner (e.g. when
-     * offscreen) */
-    bool cullable_ = true;
-
-    /* Passed to coroutines and used to detect when the object has been
-     * destroyed */
-    std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
-
-    int16_t precedence_ = 0;
-
 public:
     Transform* get_transform() const {
         return &base_->transform_;
     }
 
     S_DEFINE_PROPERTY(transform, &StageNode::get_transform);
-};
-
-class StageNodeVisitorBFS {
-public:
-    template<typename Func>
-    StageNodeVisitorBFS(StageNode* start, Func&& callback) :
-        callback_(callback) {
-
-        queue_.push(start);
-    }
-
-    bool call_next() {
-        StageNode* it = queue_.front();
-        queue_.pop();
-
-        for(auto& node: it->each_child()) {
-            queue_.push(&node);
-        }
-
-        callback_(it);
-
-        return !queue_.empty();
-    }
-
-private:
-    std::function<void(StageNode*)> callback_;
-    std::queue<StageNode*> queue_;
 };
 
 class ContainerNode: public StageNode {

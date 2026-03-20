@@ -60,6 +60,7 @@ public:
 
 private:
     friend class StageNode;
+    friend class DescendentIteratorPair;
 
     DescendentIterator(const StageNode* start);
     DescendentIterator(const StageNode* start, pointer current);

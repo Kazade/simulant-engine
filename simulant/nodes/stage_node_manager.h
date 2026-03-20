@@ -3,6 +3,7 @@
 #include "../utils/params.h"
 #include "helpers.h"
 #include "stage_node.h"
+#include "stage_node_storage.h"
 #include <functional>
 
 namespace smlt {
@@ -64,16 +65,32 @@ private:
     std::unordered_map<StageNodeType, StageNodeTypeInfo> registered_nodes_;
     std::unordered_map<StageNodeID, NodeData> all_nodes_;
 
+    StageNodeStorage node_storage_;
+    std::unordered_map<StageNodeType, std::vector<StageNode*>> nodes_by_type_;
+
 protected:
     bool clean_up_node(StageNode* node);
 
     Scene* scene_;
+
+    virtual void on_stage_node_inserted(StageNode* node) {
+        nodes_by_type_[node->node_type()].push_back(node);
+    }
+
+    virtual void on_stage_node_erased(StageNode* node) {
+        auto& arr = nodes_by_type_[node->node_type()];
+        arr.erase(std::remove(arr.begin(), arr.end(), node), arr.end());
+    }
 
 public:
     StageNodeManager(Scene* scene) :
         scene_(scene) {}
 
     virtual ~StageNodeManager();
+
+    const std::vector<StageNode*>& nodes_by_type(StageNodeType type) {
+        return nodes_by_type_[type];
+    }
 
     /* Constant-time node lookup by ID */
     StageNode* get_node(StageNodeID id) const {

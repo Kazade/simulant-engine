@@ -60,6 +60,7 @@ public:
 
 private:
     friend class StageNode;
+    friend class SiblingIteratorPair;
 
     SiblingIterator(const StageNode* start, const StageNode* current);
 

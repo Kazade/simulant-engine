@@ -60,6 +60,7 @@ public:
 
 private:
     friend class StageNode;
+    friend class AncestorIteratorPair;
 
     AncestorIterator(const StageNode* start);
     AncestorIterator(const StageNode* start, const StageNode* current);
