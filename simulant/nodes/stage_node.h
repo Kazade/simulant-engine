@@ -459,7 +459,7 @@ struct TreeLoadOptions {
     std::string override_texture_extension = "";
 };
 
-class StageNode:
+class alignas(32) StageNode:
     public generic::Identifiable<StageNodeID>,
     public DestroyableObject,
     public virtual Nameable,

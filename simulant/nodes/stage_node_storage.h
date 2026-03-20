@@ -4,6 +4,73 @@
 
 namespace smlt {
 
+template<int alignment>
+class SlabArray {
+public:
+    SlabArray(std::size_t block_size) :
+        block_size_(block_size) {}
+
+    uint8_t* allocate() {
+        for(auto& slab: slabs_) {
+            if(slab.used == 0xFFFF) {
+                continue;
+            }
+
+            for(std::size_t i = 0; i < 16; ++i) {
+                if((slab.used & (1 << i)) == 0) {
+                    slab.used |= (1 << i);
+                    return slab.data + block_size_ * i;
+                }
+            }
+        }
+
+        // Create new slab
+        uint8_t* data = (uint8_t*)aligned_alloc(alignment, block_size_ * 16);
+        assert(data);
+
+        slabs_.push_back(Slab(data));
+        slabs_.back().used |= 1;
+        return data;
+    }
+
+    bool deallocate(uint8_t* ptr) {
+        for(auto& slab: slabs_) {
+            if(slab.data <= ptr && ptr < slab.data + block_size_ * 16) {
+                std::size_t offset = ptr - slab.data;
+                std::size_t index = offset / block_size_;
+                if(slab.used & (1 << index)) {
+                    slab.used &= ~(1 << index);
+                    clean_up();
+                    return true;
+                }
+            }
+        }
+
+        S_ERROR("Attempted to deallocate a pointer which was not "
+                "allocated");
+        return false;
+    }
+
+private:
+    void clean_up() {
+        while(!slabs_.empty() && slabs_.back().used == 0) {
+            aligned_free(slabs_.back().data);
+            slabs_.pop_back();
+        }
+    }
+
+    struct Slab {
+        uint16_t used = 0;
+        uint8_t* data = nullptr;
+
+        Slab(uint8_t* data) :
+            data(data) {}
+    };
+
+    std::size_t block_size_;
+    std::vector<Slab> slabs_;
+};
+
 /*
  * StageNodes are the core of the engine, and they
  * cause a lot of problems performance wise.
@@ -30,7 +97,7 @@ public:
 
     // Allocation sizes are rounded up to this to find a buffer
     // to insert into. Must be a multiple of alignment.
-    constexpr static int round_up_bytes = 64;
+    constexpr static int round_up_bytes = 256;
 
     void* allocate(std::size_t size, std::size_t alignment) {
         if(this->alignment % alignment != 0) {
@@ -42,28 +109,13 @@ public:
         std::size_t rounded_size =
             ((size + round_up_bytes - 1) / round_up_bytes) * round_up_bytes;
 
-        // Look for any free allocations that will hold this size
-        // FIXME: If there's a larger free slot, is it worth using?
-        // I'm not sure... we're approaching implementing malloc at that point
-        for(std::size_t i = 0; i < free_allocations_.size(); ++i) {
-            auto& alloc = free_allocations_[i];
-            if(alloc.size == rounded_size) {
-                // Reuse the existing allocation
-                void* ptr = buffers_[rounded_size].data() + alloc.offset;
-                used_allocations_[ptr] = alloc;
-                std::swap(free_allocations_[i], free_allocations_.back());
-                free_allocations_.pop_back();
-                return ptr;
-            }
+        if(!buffers_.count(rounded_size)) {
+            buffers_.insert(std::make_pair(
+                rounded_size, SlabArray<this->alignment>(rounded_size)));
         }
 
-        // No existing allocation, create a new one
-        auto& buffer = buffers_[rounded_size];
-        std::size_t offset = buffer.size();
-        buffer.resize(offset + rounded_size);
-        void* ptr = buffer.data() + offset;
-        used_allocations_[ptr] = {offset, rounded_size};
-        max_allocations_[rounded_size] = offset + rounded_size;
+        void* ptr = buffers_.at(rounded_size).allocate();
+        used_allocations_[ptr] = rounded_size;
         return ptr;
     }
 
@@ -74,33 +126,13 @@ public:
             return;
         }
 
-        auto alloc = it->second;
-        free_allocations_.push_back(alloc);
+        buffers_.at(it->second).deallocate((uint8_t*)ptr);
         used_allocations_.erase(it);
-
-        // FIXME: Write test for this
-        if(alloc.offset + alloc.size == max_allocations_[alloc.size]) {
-            max_allocations_[alloc.size] = alloc.offset;
-        }
-    }
-
-    void shrink_to_fit() {
-        for(auto& p: max_allocations_) {
-            buffers_[p.first].resize(p.second);
-            buffers_[p.first].shrink_to_fit();
-        }
     }
 
 private:
-    struct Allocation {
-        std::size_t offset;
-        std::size_t size;
-    };
-
-    std::unordered_map<std::size_t, std::size_t> max_allocations_;
-    std::unordered_map<void*, Allocation> used_allocations_;
-    aligned_vector<Allocation, alignment> free_allocations_;
-    std::unordered_map<std::size_t, std::vector<uint8_t>> buffers_;
+    std::unordered_map<void*, std::size_t> used_allocations_;
+    std::unordered_map<std::size_t, SlabArray<32>> buffers_;
 };
 
 } // namespace smlt
