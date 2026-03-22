@@ -1,4 +1,4 @@
-FROM fedora:28
+FROM fedora:32
 MAINTAINER kazade <kazade@gmail.com>
 
 RUN dnf install -y SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils
