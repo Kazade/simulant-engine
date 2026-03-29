@@ -473,18 +473,29 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
         // the entity
         auto rot = transform->orientation();
 
-        Vec3 dir = emitter->direction;
-        if(smlt::almost_equal(emitter->angle.to_float(), 360.0f)) {
-            dir = smlt::Vec3(
-                      RandomGenerator::instance().float_in_range(-1.0f, 1.0f),
-                      RandomGenerator::instance().float_in_range(-1.0f, 1.0f),
-                      RandomGenerator::instance().float_in_range(-1.0f, 1.0f))
-                      .normalized();
-        } else if(emitter->angle.to_float() != 0) {
-            Degrees ang(emitter->angle);
-            dir = dir.random_deviant(ang);
-            dir *= rot;
-        }
+        Vec3 dir = rot * emitter->direction;
+
+        Radians minr = Degrees(emitter->angle_range.first);
+        Radians maxr = Degrees(emitter->angle_range.second);
+
+        auto& rgen = RandomGenerator::instance();
+        float u = rgen.float_in_range(0.0f, 1.0f);
+        float cos0 = (1.0f - u) * std::cos(minr.to_float()) +
+                     u * std::cos(maxr.to_float());
+        float v = std::acos(cos0);
+        float t = rgen.float_in_range(v, 2.0f * float(M_PI));
+        Vec3 nd = {
+            std::sin(v) * std::cos(t),
+            std::sin(v) * std::sin(t),
+            std::cos(v),
+        };
+
+        Vec3 w = dir;
+        Vec3 a = (dir.y < 0.99) ? Vec3::up() : Vec3::right();
+        Vec3 uv = a.cross(w).normalized();
+        Vec3 vv = w.cross(uv);
+
+        dir = nd.x * uv + nd.y * vv + nd.z * w;
 
         p.velocity = dir *
                      random_.float_in_range(emitter->velocity_range.first,

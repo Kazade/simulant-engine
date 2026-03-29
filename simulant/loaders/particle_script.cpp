@@ -320,7 +320,12 @@ bool ParticleScriptLoader::into(Loadable& resource,
             }
 
             if(emitter->has_key("angle")) {
-                new_emitter.angle = Degrees(emitter["angle"]->to_float().value());
+                float v = emitter["angle"]->to_float().value_or(0.0f);
+                new_emitter.angle_range = std::make_pair(v, v);
+            } else {
+                float min = emitter["min_angle"]->to_float().value_or(0.0f);
+                float max = emitter["max_angle"]->to_float().value_or(0.0f);
+                new_emitter.angle_range = std::make_pair(min, max);
             }
 
             if(emitter->has_key("color")) {

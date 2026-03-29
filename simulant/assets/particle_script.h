@@ -24,8 +24,8 @@ struct Emitter {
     std::pair<float, float> repeat_delay_range = std::make_pair(0.0f, 0.0f);
     std::pair<float, float> velocity_range = std::make_pair(1.0f, 1.0f);
     std::pair<float, float> ttl_range = std::make_pair(5.0f, 5.0f);
+    std::pair<float, float> angle_range = std::make_pair(0.0f, 0.0f);
 
-    Degrees angle;
     std::vector<Color> colors = {Color::white()};
 
     float emission_rate = 10.0f;
