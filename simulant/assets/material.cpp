@@ -139,8 +139,6 @@ void Material::initialize_core_properties() {
     set_property_value(BLEND_FUNC_PROPERTY_NAME, (EnumType)BLEND_NONE);
     set_property_value(POLYGON_MODE_PROPERTY_NAME, (EnumType)POLYGON_MODE_FILL);
     set_property_value(SHADE_MODEL_PROPERTY_NAME, (EnumType)SHADE_MODEL_SMOOTH);
-    set_property_value(COLOR_MATERIAL_PROPERTY_NAME,
-                       (EnumType)COLOR_MATERIAL_NONE);
     set_property_value(CULL_MODE_PROPERTY_NAME, (EnumType)CULL_MODE_NONE);
     set_property_value(DEPTH_FUNC_PROPERTY_NAME, (EnumType)DEPTH_FUNC_LEQUAL);
     set_property_value(ALPHA_THRESHOLD_PROPERTY_NAME, 1.0f);

@@ -53,7 +53,6 @@ constexpr const MaterialPropertyNameHash
 constexpr const MaterialPropertyNameHash BLEND_FUNC_PROPERTY_HASH = material_property_hash(BLEND_FUNC_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash POLYGON_MODE_PROPERTY_HASH = material_property_hash(POLYGON_MODE_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash SHADE_MODEL_PROPERTY_HASH = material_property_hash(SHADE_MODEL_PROPERTY_NAME);
-constexpr const MaterialPropertyNameHash COLOR_MATERIAL_PROPERTY_HASH = material_property_hash(COLOR_MATERIAL_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash CULL_MODE_PROPERTY_HASH = material_property_hash(CULL_MODE_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash DEPTH_FUNC_PROPERTY_HASH = material_property_hash(DEPTH_FUNC_PROPERTY_NAME);
 
@@ -88,7 +87,6 @@ inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
         case BLEND_FUNC_PROPERTY_HASH:
         case POLYGON_MODE_PROPERTY_HASH:
         case SHADE_MODEL_PROPERTY_HASH:
-        case COLOR_MATERIAL_PROPERTY_HASH:
         case CULL_MODE_PROPERTY_HASH:
         case FOG_COLOR_PROPERTY_HASH:
         case FOG_DENSITY_PROPERTY_HASH:

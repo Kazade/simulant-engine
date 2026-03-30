@@ -91,9 +91,6 @@ public:
     void set_shade_model(ShadeModel model);
     ShadeModel shade_model() const;
 
-    ColorMaterial color_material() const;
-    void set_color_material(ColorMaterial cm);
-
     const MaterialObject* parent_material_object() const {
         return dynamic_cast<const MaterialObject*>(this->parent_);
     }

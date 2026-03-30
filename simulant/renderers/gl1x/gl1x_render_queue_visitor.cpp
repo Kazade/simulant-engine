@@ -264,25 +264,16 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     }
 
 #if _S_GL_SUPPORTS_COLOR_MATERIAL
-    switch(next->color_material()) {
-        case COLOR_MATERIAL_NONE:
-            GLCheck(glDisable, GL_COLOR_MATERIAL);
-            break;
-        case COLOR_MATERIAL_AMBIENT:
-            GLCheck(glEnable, GL_COLOR_MATERIAL);
-            GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT);
-            break;
-        case COLOR_MATERIAL_DIFFUSE:
-            GLCheck(glEnable, GL_COLOR_MATERIAL);
-            GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_DIFFUSE);
-            break;
-        case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
-            GLCheck(glEnable, GL_COLOR_MATERIAL);
-            GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-            break;
-        default:
-            break;
-    }
+    /* FIXME: When lighting is enabled we need to modulate the base
+     * color with the lighting, however, GL 1.x doesn't allow this;
+     * when you enable lighting vertex color is ignored.
+     *
+     * We force color material here and set the ambient color to the
+     * vertex color. That's really the best we can do for now
+     */
+
+    GLCheck(glEnable, GL_COLOR_MATERIAL);
+    GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT);
 #endif
 
     auto next_mode = next->fog_mode();

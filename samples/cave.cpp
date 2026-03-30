@@ -106,6 +106,10 @@ public:
                                  smlt::RENDER_PRIORITY_FOREGROUND);
 
         debug_ = scene->create_child<Debug>();
+
+        auto fire = assets->load_particle_script("particles/fire.kglp");
+        auto fire_system = scene->create_child<ParticleSystem>(fire);
+        fire_system->transform->set_position(smlt::Vec3(-5, -2, 0));
     }
 
     void on_update(float dt) override {
@@ -214,7 +218,7 @@ int main(int argc, char* argv[]) {
     config.title = "Cave Demo";
     config.fullscreen = false;
     config.log_level = smlt::LOG_LEVEL_INFO;
-    // config.development.force_renderer = "gl1x";
+    config.development.force_renderer = "gl1x";
 
 #ifdef __DREAMCAST__
     config.width = 640;

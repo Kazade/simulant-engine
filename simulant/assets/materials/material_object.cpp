@@ -375,17 +375,5 @@ ShadeModel MaterialObject::shade_model() const {
     return *(reinterpret_cast<const ShadeModel*>(ptr));
 }
 
-ColorMaterial MaterialObject::color_material() const {
-    const EnumType* ptr = nullptr;
-    bool ok = property_value(COLOR_MATERIAL_PROPERTY_HASH, ptr);
-    assert(ok);
-    _S_UNUSED(ok);
-    return *(reinterpret_cast<const ColorMaterial*>(ptr));
-}
-
-void MaterialObject::set_color_material(ColorMaterial cm) {
-    set_property_value(COLOR_MATERIAL_PROPERTY_NAME, (EnumType) cm);
-}
-
 
 }
