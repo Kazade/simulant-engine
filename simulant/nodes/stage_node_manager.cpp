@@ -53,6 +53,23 @@ StageNode* StageNodeManager::create_node(const std::string& node_type_name,
     return nullptr;
 }
 
+bool StageNodeManager::register_stage_node(const Path& script,
+                                           const char* class_name) {
+    auto lua = smlt::get_app()->ensure_lua_ready();
+
+    if(!lua->load_file(script)) {
+        return false;
+    }
+
+    auto klass = lua->get_object(class_name);
+    auto node_id =
+        lua->get_integer(_F("{0}::Meta::node_id").format(class_name));
+    auto name = lua->get_string(_F("{0}::Meta::name").format(class_name));
+    return register_stage_node(node_id, name, 0, 0,
+                               [klass](void*) -> StageNode* {},
+                               [klass](StageNode*) {});
+}
+
 StageNode* StageNodeManager::create_node(StageNodeType type,
                                          const Params& params,
                                          StageNode* base) {
@@ -68,7 +85,7 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
     auto& constructor = construction_data.constructor;
     auto& destructor = construction_data.destructor;
 
-    void* mem = node_storage_.allocate(size, alignment);
+    void* mem = (size) ? node_storage_.allocate(size, alignment) : nullptr;
     StageNode* node = constructor(mem);
 
     if(!node->init()) {

@@ -22,6 +22,8 @@
 #include <future>
 #include <cstdlib>
 
+#include "scripting/lua/interpreter.h"
+
 #define DEFINE_STAGENODEPOOL
 #include "nodes/stage_node.h"
 #include "nodes/stage_node_pool.h"
@@ -468,6 +470,7 @@ void Application::run_update(float dt) {
 
     signal_update_(dt);
     _call_update(dt);
+    update_interpreters(dt);
 }
 
 void Application::run_fixed_updates() {
@@ -723,6 +726,12 @@ void Application::run_coroutines_and_late_update() {
     signal_post_late_update();
 }
 
+void Application::update_interpreters(float dt) {
+    for(auto& i: interpreters_) {
+        i->update(dt);
+    }
+}
+
 void Application::_call_clean_up() {
     clean_up();
 
@@ -927,6 +936,16 @@ bool Application::activate_language_from_arb_data(const uint8_t* data, std::size
         active_language_ = normalize_language_code(language_code);
     }
     return ret;
+}
+
+LuaInterpreter* Application::ensure_lua_ready() {
+    if(!interpreters_.empty()) {
+        return interpreters_.back().get();
+    }
+
+    auto lua = LuaInterpreter::create();
+    interpreters_.push_back(lua);
+    return lua.get();
 }
 
 bool Application::activate_language(const std::string &language_code) {
