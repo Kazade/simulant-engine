@@ -21,8 +21,12 @@ private:
         luabridge::LuaRef instance;
     };
 
-    LuaStageNode(luabridge::LuaRef instance) :
-        StageNode(instance["scene"], instance["node_type"]),
+    LuaStageNode(Scene* scene, StageNodeType node_type,
+                 std::string node_type_name, std::set<NodeParam> params,
+                 luabridge::LuaRef instance) :
+        StageNode(scene, node_type),
+        node_type_name_(node_type_name),
+        params_(params),
         ref_(new Pimpl(instance)) {}
 
     Pimpl* ref_ = nullptr;
@@ -40,10 +44,9 @@ public:
             init();
         }
 
-    // Getters exposed to LuaBridge as properties so that Lua subclasses can
-    // read obj.scene, obj.node_type, and obj.transform, and so that the
-    // private LuaStageNode(LuaRef) constructor can read them back from the
-    // instance.
+    // Getters exposed to LuaBridge as properties so that Lua code can
+    // read obj.scene, obj.node_type, and obj.transform via the _cpp_node
+    // forwarding in define_node's __index metamethod.
     Scene* lua_get_scene() const { return get_scene(); }
     StageNodeType lua_get_node_type() const { return node_type(); }
     Transform* lua_get_transform() const { return get_transform(); }

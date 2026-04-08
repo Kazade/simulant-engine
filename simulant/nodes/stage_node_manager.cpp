@@ -87,7 +87,7 @@ bool StageNodeManager::register_stage_node(const char* script_data,
 
     return register_stage_node(node_id, name.c_str(), sizeof(LuaStageNode),
                                alignof(LuaStageNode),
-                               [L, klass_name, this](void* mem) -> StageNode* {
+                               [L, klass_name, node_id, name, this](void* mem) -> StageNode* {
         // Look the class up by name from the Lua globals each time a node
         // is constructed.  This is only ever called during normal operation
         // (never during teardown), so the state is always open here.
@@ -102,9 +102,22 @@ bool StageNodeManager::register_stage_node(const char* script_data,
 
         auto constructor = klass["new"];
         try {
+            // cls:new() returns a plain Lua wrapper table; _cpp_node is not
+            // set yet — that happens below once placement-new succeeds.
             luabridge::LuaRef instance =
                 *constructor.call<luabridge::LuaRef>(klass, scene_);
-            return new(mem) LuaStageNode(instance);
+
+            // Create the one true LuaStageNode that lives in the scene tree.
+            // Pass all params directly so the constructor no longer needs to
+            // read them back through the (not-yet-linked) Lua table.
+            LuaStageNode* node = new(mem) LuaStageNode(
+                scene_, node_id, name, std::set<NodeParam>{}, instance);
+
+            // Wire the wrapper table to the real C++ node using a raw table
+            // set so that __newindex metamethods (if any) are bypassed.
+            instance.rawsetField("_cpp_node", node);
+
+            return node;
         } catch(const std::exception& e) {
             S_ERROR("Lua error: {0}", e.what());
             return nullptr;

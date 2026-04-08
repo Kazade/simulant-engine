@@ -55,16 +55,14 @@ smlt::optional<luabridge::LuaRef>
 // The helper sets up:
 //   - the class table with __index pointing to itself
 //   - the Meta table (node_type hash + name) via smlt.stage_node_meta()
-//   - a default :new(scene) constructor that:
-//       * constructs the C++ LuaStageNode shell (smlt.StageNode)
-//       * wraps it in a plain Lua table so setmetatable() works (Lua 5.5
-//         forbids calling setmetatable on userdata)
-//       * captures the shell as a closure upvalue rather than storing it as
-//         a visible field, so C++ properties (transform, scene, node_type,
-//         …) are accessible directly as self.transform etc. with no _cpp
-//         prefix needed
-//       * installs an __index metamethod that checks for Lua-defined methods
-//         first, then transparently falls back to the C++ shell upvalue
+//   - a default :new(scene) constructor that returns a plain Lua wrapper
+//     table; the C++ factory fills in a _cpp_node field (via rawset, so
+//     metamethods are bypassed) pointing to the real LuaStageNode once
+//     placement-new succeeds.
+//   - an __index metamethod on each instance that checks for Lua-defined
+//     methods first, then forwards unknown keys to _cpp_node so that C++
+//     properties like transform, scene, and node_type are transparently
+//     accessible as self.transform etc.
 // ---------------------------------------------------------------------------
 static const char* k_define_node_helper = R"lua(
 rawset(smlt, "define_node", function(name)
@@ -74,31 +72,19 @@ rawset(smlt, "define_node", function(name)
 
     -- Default constructor.  Called by the C++ registration machinery as
     -- cls:new(scene), i.e. constructor(cls, scene_).
+    -- Returns a plain Lua wrapper table.  C++ will rawset _cpp_node on it
+    -- (bypassing __newindex) once the real LuaStageNode has been created.
     function cls:new(scene)
-        -- Build the C++ shell via the LuaBridge-registered constructor.
-        -- Dot-syntax is required here; colon-syntax would pass `self` as the
-        -- first argument and confuse LuaBridge's overload resolution.
-        local cpp = smlt.StageNode(
-            scene,
-            cls.Meta.node_type,
-            cls.Meta.name,
-            {}
-        )
-
-        -- cpp is intentionally NOT stored as a table field.  It lives only
-        -- as a closure upvalue so that it is invisible to Lua code.  This
-        -- means C++ properties (transform, scene, node_type, …) are
-        -- accessible directly as self.transform / self.scene / etc. without
-        -- any ._cpp prefix, because __index below delegates to cpp for any
-        -- key that is not a Lua-defined method.
         local wrapper = {}
         setmetatable(wrapper, {
             __index = function(t, k)
                 -- Lua-defined methods (e.g. on_update) take priority.
                 local v = cls[k]
                 if v ~= nil then return v end
-                -- Transparently fall back to the LuaBridge-bound C++ shell.
-                return cpp[k]
+                -- Forward to the real C++ node stored by the factory.
+                local cpp = rawget(t, "_cpp_node")
+                if cpp ~= nil then return cpp[k] end
+                return nil
             end
         })
         return wrapper
