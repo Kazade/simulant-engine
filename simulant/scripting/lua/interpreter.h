@@ -52,6 +52,11 @@ public:
     Transform* lua_get_transform() const { return get_transform(); }
 
     virtual bool on_create(Params params) override {
+        // Let the base class handle common position/orientation/scale params.
+        if(!StageNode::on_create(params)) {
+            return false;
+        }
+
         if(!ref_ || !ref_->instance) {
             return true;
         }
@@ -60,12 +65,56 @@ public:
         if(method.isNil() || !method.isFunction()) {
             return true;
         }
-        // Params is not registered in LuaBridge, so we do not forward it to
-        // Lua.  Scripts that need construction arguments should read them from
-        // self._cpp (scene, transform, etc.) or from a companion table passed
-        // via the node's Meta instead.
-        auto call = method.callable<bool(luabridge::LuaRef)>();
-        return *call(ref_->instance);
+
+        // Build a Lua table from the node-specific declared params.
+        // We iterate over the declared params (node_params()), apply
+        // defaults for missing optional params, fail if a required param is
+        // absent, and convert the remaining values to Lua-compatible types.
+        lua_State* L = ref_->instance.state();
+        luabridge::LuaRef params_table = luabridge::newTable(L);
+
+        for(const auto& param: node_params()) {
+            const auto& pname = param.name();
+            auto raw_val = params.raw(pname);
+
+            // Apply declared default if the caller didn't provide this param.
+            if(!raw_val && param.default_value()) {
+                raw_val = param.default_value();
+            }
+
+            if(!raw_val) {
+                if(param.is_required()) {
+                    S_ERROR("Required param '{0}' not provided for Lua node '{1}'",
+                            pname, node_type_name_);
+                    return false;
+                }
+                continue;  // Optional, no default — skip
+            }
+
+            // Convert the C++ ParamValue to a Lua-compatible type.
+            std::visit([&](auto&& v) {
+                using T = std::decay_t<decltype(v)>;
+                if constexpr(std::is_same_v<T, float>) {
+                    params_table[pname.c_str()] = v;
+                } else if constexpr(std::is_same_v<T, int>) {
+                    params_table[pname.c_str()] = v;
+                } else if constexpr(std::is_same_v<T, bool>) {
+                    params_table[pname.c_str()] = (bool)v;
+                } else if constexpr(std::is_same_v<T, std::string>) {
+                    params_table[pname.c_str()] = v;
+                } else if constexpr(std::is_same_v<T, FloatArray>) {
+                    luabridge::LuaRef arr = luabridge::newTable(L);
+                    for(int i = 0; i < (int)v.size(); ++i) {
+                        arr[i + 1] = v[i];
+                    }
+                    params_table[pname.c_str()] = arr;
+                }
+                // Complex types (MeshPtr, TexturePtr, etc.) are not converted.
+            }, raw_val.value());
+        }
+
+        auto call = method.callable<bool(luabridge::LuaRef, luabridge::LuaRef)>();
+        return call(ref_->instance, params_table).valueOr(false);
     }
 
     void on_update(float dt) override {

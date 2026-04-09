@@ -92,6 +92,16 @@ rawset(smlt, "define_node", function(name)
 
     return cls
 end)
+
+rawset(smlt, "define_node_param", function(param_type, description, default_value)
+    return {
+        __is_node_param = true,
+        param_type = param_type,
+        description = description or "",
+        default_value = default_value,
+        required = (default_value == nil)
+    }
+end)
 )lua";
 
 bool smlt::LuaInterpreter::on_init() {

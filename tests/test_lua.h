@@ -1,5 +1,7 @@
 #pragma once
 
+
+
 namespace {
 using namespace smlt;
 
@@ -112,6 +114,52 @@ end
 //          test_spawned_nodes_are_tracked_by_type
 const char* simple_node_script = R"(
 LuaSimpleNode = smlt.define_node("lua_simple_node")
+)";
+
+// Used by: test_lua_node_params_forwarded_to_on_create
+// Encodes the received params into the transform translation so the C++ test
+// can read them back without needing to read Lua globals:
+//   translation.x = distance param
+//   translation.y = height param (defaults to 5.0 if not supplied)
+const char* param_node_script = R"(
+ParamNode = smlt.define_node("param_node")
+ParamNode.params = {
+    distance = smlt.define_node_param(smlt.NodeParamType.Float, "Distance from center"),
+    height   = smlt.define_node_param(smlt.NodeParamType.Float, "Height above ground", 5.0)
+}
+
+function ParamNode:on_create(params)
+    self.transform.translation = smlt.Vec3(params.distance, params.height, 0)
+    return true
+end
+)";
+
+// Used by: test_lua_node_required_param_missing_fails_creation
+const char* required_param_node_script = R"(
+RequiredParamNode = smlt.define_node("required_param_node")
+RequiredParamNode.params = {
+    must_have = smlt.define_node_param(smlt.NodeParamType.Float, "A required float param")
+}
+
+function RequiredParamNode:on_create(params)
+    return true
+end
+)";
+
+// Used by: test_lua_node_string_param_default
+// The node asserts that the default string is applied if not supplied.
+// If the assert fires (wrong or nil value), on_create returns false and
+// create_child returns nullptr — the C++ test checks for non-null.
+const char* string_param_node_script = R"(
+StringParamNode = smlt.define_node("string_param_node")
+StringParamNode.params = {
+    label = smlt.define_node_param(smlt.NodeParamType.String, "A label", "default_label")
+}
+
+function StringParamNode:on_create(params)
+    assert(params.label == "default_label", "String default was not applied")
+    return true
+end
 )";
 
 // ---------------------------------------------------------------------------
@@ -313,6 +361,75 @@ LuaCountCheckNode = smlt.define_node("lua_count_check_node")
         auto n3 = scene->create_child("lua_count_check_node");
         assert_is_not_null(n3);
         assert_equal(3, (int)scene->nodes_by_type(type).size());
+    }
+
+    // -----------------------------------------------------------------------
+    // Parameter forwarding
+    // -----------------------------------------------------------------------
+
+    // Verifies that params declared with smlt.define_node_param() are forwarded
+    // to the Lua on_create callback as a named table.  The Lua on_create encodes
+    // the received values into the transform translation so we can read them
+    // back via the C++ node pointer without needing to read Lua globals.
+    void test_lua_node_params_forwarded_to_on_create() {
+        assert_true(scene->register_stage_node(param_node_script, "ParamNode"));
+
+        // Provide distance=2.5; height is not provided so should default to 5.0.
+        auto node = scene->create_child("param_node", {{"distance", 2.5f}});
+        assert_is_not_null(node);
+
+        // on_create wrote: self.transform.translation = Vec3(distance, height, 0)
+        auto t = node->transform->translation();
+        assert_close(2.5f, t.x, 0.01f);   // supplied distance
+        assert_close(5.0f, t.y, 0.01f);   // defaulted height
+    }
+
+    // Verifies that if a required param is not provided, node creation fails.
+    void test_lua_node_required_param_missing_fails_creation() {
+        assert_true(scene->register_stage_node(required_param_node_script,
+                                               "RequiredParamNode"));
+
+        // Omit the required "must_have" param — creation should fail.
+        auto node = scene->create_child("required_param_node");
+        assert_is_null(node);
+    }
+
+    // Verifies that a string param with a default is forwarded correctly.
+    // The Lua on_create asserts params.label == "default_label"; if the assert
+    // fires (wrong value or nil), on_create returns false → create_child returns
+    // nullptr → the C++ assert_is_not_null test fails, surfacing the bug.
+    void test_lua_node_string_param_default() {
+        assert_true(scene->register_stage_node(string_param_node_script,
+                                               "StringParamNode"));
+
+        // Do not supply the param — the string default must be applied automatically.
+        auto node = scene->create_child("string_param_node");
+        assert_is_not_null(node);  // non-null proves the Lua assert did not fire
+    }
+
+    // Verifies that node_params() reports declared Lua params.
+    void test_lua_node_params_reported_in_node_params() {
+        const char* script = R"(
+ReportParamNode = smlt.define_node("report_param_node")
+ReportParamNode.params = {
+    foo = smlt.define_node_param(smlt.NodeParamType.Int, "A foo param", 42),
+    bar = smlt.define_node_param(smlt.NodeParamType.Float, "A required bar param")
+}
+)";
+        assert_true(scene->register_stage_node(script, "ReportParamNode"));
+
+        auto node = scene->create_child("report_param_node", {{"bar", 1.0f}});
+        assert_is_not_null(node);
+
+        auto params = node->node_params();
+        // Should have "foo" and "bar"
+        bool has_foo = false, has_bar = false;
+        for(const auto& p: params) {
+            if(p.name() == "foo") has_foo = true;
+            if(p.name() == "bar") has_bar = true;
+        }
+        assert_true(has_foo);
+        assert_true(has_bar);
     }
 };
 

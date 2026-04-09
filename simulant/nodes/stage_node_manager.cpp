@@ -85,9 +85,77 @@ bool StageNodeManager::register_stage_node(const char* script_data,
     lua_State* L = lua->lua_state();
     std::string klass_name(class_name);
 
+    // Parse klass.params if defined — a table mapping param names to
+    // descriptor tables created with smlt.define_node_param().
+    std::set<NodeParam> lua_params;
+    luabridge::LuaRef params_table = klass["params"];
+    if(params_table.isTable()) {
+        int order = 0;
+        for(auto [key, val] : luabridge::pairs(params_table)) {
+            if(!key.isString() || !val.isTable()) {
+                continue;
+            }
+
+            auto marker = val["__is_node_param"];
+            if(!marker.isBool() || !marker.cast<bool>().valueOr(false)) {
+                continue;
+            }
+
+            std::string pname = key.cast<std::string>().valueOr("");
+            if(pname.empty()) continue;
+
+            int type_int = val["param_type"].cast<int>().valueOr(
+                static_cast<int>(NODE_PARAM_TYPE_INVALID));
+            NodeParamType param_type = static_cast<NodeParamType>(type_int);
+            if(param_type == NODE_PARAM_TYPE_INVALID) continue;
+
+            std::string desc = val["description"].cast<std::string>().valueOr("");
+            bool required = val["required"].cast<bool>().valueOr(true);
+
+            // Convert Lua default_value to a C++ ParamValue based on param_type.
+            optional<ParamValue> default_val;
+            auto lua_default = val["default_value"];
+            if(!lua_default.isNil()) {
+                switch(param_type) {
+                    case NODE_PARAM_TYPE_FLOAT:
+                        default_val = ParamValue(lua_default.cast<float>().valueOr(0.0f));
+                        break;
+                    case NODE_PARAM_TYPE_INT:
+                        default_val = ParamValue(
+                            (int)lua_default.cast<int>().valueOr(0));
+                        break;
+                    case NODE_PARAM_TYPE_BOOL:
+                        default_val = ParamValue(
+                            lua_default.cast<bool>().valueOr(false));
+                        break;
+                    case NODE_PARAM_TYPE_STRING:
+                        default_val = ParamValue(
+                            lua_default.cast<std::string>().valueOr(""));
+                        break;
+                    case NODE_PARAM_TYPE_FLOAT_ARRAY:
+                        if(lua_default.isTable()) {
+                            FloatArray arr;
+                            for(int i = 1; ; ++i) {
+                                auto item = lua_default[i];
+                                if(item.isNil()) break;
+                                arr.push_back(item.cast<float>().valueOr(0.0f));
+                            }
+                            default_val = ParamValue(arr);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            lua_params.insert(
+                NodeParam(order++, pname, param_type, default_val, desc, required));
+        }
+    }
+
     return register_stage_node(node_id, name.c_str(), sizeof(LuaStageNode),
                                alignof(LuaStageNode),
-                               [L, klass_name, node_id, name, this](void* mem) -> StageNode* {
+                               [L, klass_name, node_id, name, lua_params, this](void* mem) -> StageNode* {
         // Look the class up by name from the Lua globals each time a node
         // is constructed.  This is only ever called during normal operation
         // (never during teardown), so the state is always open here.
@@ -111,7 +179,7 @@ bool StageNodeManager::register_stage_node(const char* script_data,
             // Pass all params directly so the constructor no longer needs to
             // read them back through the (not-yet-linked) Lua table.
             LuaStageNode* node = new(mem) LuaStageNode(
-                scene_, node_id, name, std::set<NodeParam>{}, instance);
+                scene_, node_id, name, lua_params, instance);
 
             // Wire the wrapper table to the real C++ node using a raw table
             // set so that __newindex metamethods (if any) are bypassed.

@@ -27,6 +27,15 @@ public:
         reset();
     }
 
+    optional(optional<T>&& other) {
+        auto src = other.value_ptr();
+        if(src) {
+            set_value(std::move(*src));
+        } else {
+            reset();
+        }
+    }
+
     template<typename U>
     optional(optional<U>&& other) {
         auto src = other.value_ptr();
@@ -127,9 +136,8 @@ private:
             reset();
         }
 
-        new (data_) T();
+        new (data_) T(value);
         has_value_ = true;
-        *(value_ptr()) = value;
     }
 
     void set_value(T&& value) {
