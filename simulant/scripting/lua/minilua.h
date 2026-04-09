@@ -29,6 +29,8 @@
 #define LUA_USE_LINUX
 #elif defined(__APPLE__)
 #define LUA_USE_MACOSX
+#elif defined(__DREAMCAST__) || defined(__PSP__)
+#undef LUA_USE_DLOPEN
 #else /* probably a POSIX system */
 #define LUA_USE_POSIX
 #define LUA_USE_DLOPEN

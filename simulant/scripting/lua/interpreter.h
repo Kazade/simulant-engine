@@ -2,6 +2,10 @@
 
 // clang-format off
 #include "../interpreter.h"
+#define LUA_USE_JUMPTABLE 0
+#ifdef __DREAMCAST__
+#define LUA_32BITS 1
+#endif
 #include "minilua.h"
 #include "LuaBridge.h"
 // clang-format on
