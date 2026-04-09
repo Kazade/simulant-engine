@@ -6,6 +6,7 @@ FILE(GLOB_RECURSE TO_REMOVE
     "renderers/glad/*"
     "renderers/gl2x/*"
     "renderers/psp/*"
+    "renderers/pvr/*"
     "sound/drivers/*"
 )
 
@@ -72,6 +73,10 @@ ENDIF()
 
 IF(PLATFORM_DREAMCAST)
     MESSAGE("-- Including GLdc in build, as this is the Dreamcast")
+
+    MESSAGE("-- Including PVR renderer in build")
+    FILE(GLOB_RECURSE PVR_FILES renderers/pvr/*.c*)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${PVR_FILES})
 
     set(GLDC_VERSION "gldc-version-simulant-builtin")
     configure_file(${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.c.in ${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.c)
