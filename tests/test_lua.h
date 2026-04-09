@@ -3,9 +3,14 @@
 namespace {
 using namespace smlt;
 
+// ---------------------------------------------------------------------------
+// Lua script fixtures
+// Each fixture uses a unique node-type name so that tests can share the same
+// static application instance without registration collisions.
+// ---------------------------------------------------------------------------
+
+// Used by: test_registering_lua_stage_node, test_spawning_lua_stage_node
 const char* test_node = R"(
--- smlt.define_node() handles all the boilerplate: class table setup,
--- Meta registration, and the :new(scene) wrapper constructor.
 BallNode = smlt.define_node("ball_node")
 
 function BallNode:on_update(dt)
@@ -13,11 +18,11 @@ function BallNode:on_update(dt)
 end
 )";
 
-// Lua snippet used by test_lua_transform to exercise the math/transform
-// bindings.  It defines a node whose on_create callback:
-//   1. Creates Vec3 / Quaternion / Degrees values.
-//   2. Reads and writes transform properties (position, rotation, etc.).
-//   3. Stores results in a global table so the C++ test can inspect them.
+// Used by: test_lua_transform
+// on_create uses Lua assert() to validate the Vec3 / Quaternion / Degrees /
+// Transform bindings.  Any assertion failure propagates as a Lua error, which
+// makes on_create return false and create_child return nullptr.  A non-null
+// result therefore proves every Lua assertion passed.
 const char* test_transform_node = R"(
 TransformNode = smlt.define_node("transform_node")
 
@@ -28,31 +33,31 @@ function TransformNode:on_create()
     local v = smlt.Vec3(1, 2, 3)
     assert(v.x == 1 and v.y == 2 and v.z == 3, "Vec3 construction failed")
 
-    -- Vec3 zero / static helpers
+    -- Vec3 default constructor (zero vector)
     local z = smlt.Vec3()
     assert(z.x == 0 and z.y == 0 and z.z == 0, "Vec3 default ctor failed")
 
-    -- Vec3 single-float fill
+    -- Vec3 single-float fill constructor
     local ones = smlt.Vec3(1)
     assert(ones.x == 1 and ones.y == 1 and ones.z == 1, "Vec3(f) ctor failed")
 
-    -- Vec3 methods
+    -- Vec3 length
     local len = smlt.Vec3(3, 4, 0):length()
     assert(math.abs(len - 5) < 0.001, "Vec3:length() failed")
 
-    -- Degrees construction
+    -- Degrees
     local d = smlt.Degrees(90)
     assert(math.abs(d:to_float() - 90) < 0.001, "Degrees construction failed")
 
-    -- Quaternion construction (identity)
+    -- Quaternion identity
     local q_id = smlt.Quaternion()
     assert(math.abs(q_id.w - 1) < 0.001, "Quaternion identity ctor failed")
 
-    -- Quaternion construction (xyzw)
+    -- Quaternion explicit xyzw
     local q = smlt.Quaternion(0, 0, 0, 1)
     assert(math.abs(q.w - 1) < 0.001, "Quaternion(xyzw) ctor failed")
 
-    -- Transform: set and read back world-space position
+    -- Transform world-space position round-trip
     t.position = smlt.Vec3(10, 20, 30)
     local p = t.position
     assert(math.abs(p.x - 10) < 0.01 and
@@ -60,31 +65,74 @@ function TransformNode:on_create()
            math.abs(p.z - 30) < 0.01,
            "Transform.position round-trip failed")
 
-    -- Transform: set and read back local translation
+    -- Transform local translation round-trip
     t.translation = smlt.Vec3(5, 6, 7)
     local tr = t.translation
     assert(math.abs(tr.x - 5) < 0.01, "Transform.translation round-trip failed")
 
-    -- Transform: direction helpers exist and return Vec3-like objects
+    -- Direction helpers return non-nil values
     local fwd = t:forward()
     assert(fwd ~= nil, "Transform:forward() returned nil")
 
-    -- Store a sentinel so the C++ side can confirm on_create ran
     TransformNodeResult = { ok = true }
     return true
 end
 )";
 
+// Used by: test_cpp_sees_lua_transform_writes
+// Writes a distinctive translation in on_create so the C++ test can read it
+// back and prove that self.transform delegates to the *real* scene-tree node,
+// not an orphaned intermediate.
+const char* transform_write_script = R"(
+LuaTransformWriteNode = smlt.define_node("lua_transform_write_node")
+
+function LuaTransformWriteNode:on_create()
+    self.transform.translation = smlt.Vec3(7, 8, 9)
+    return true
+end
+)";
+
+// Used by: test_each_instance_gets_its_own_cpp_node
+// A class-level spawn counter is incremented each time on_create runs,
+// giving each consecutive instance a unique translation: index * 10 on X.
+// The C++ test reads both translations back to confirm per-instance isolation.
+const char* counted_node_script = R"(
+LuaCountedNode = smlt.define_node("lua_counted_node")
+LuaCountedNode._spawn_index = 0
+
+function LuaCountedNode:on_create()
+    LuaCountedNode._spawn_index = LuaCountedNode._spawn_index + 1
+    local idx = LuaCountedNode._spawn_index
+    self.transform.translation = smlt.Vec3(idx * 10, 0, 0)
+    return true
+end
+)";
+
+// Used by: test_cpp_transform_mutations_are_independent_between_instances,
+//          test_spawned_nodes_are_tracked_by_type
+const char* simple_node_script = R"(
+LuaSimpleNode = smlt.define_node("lua_simple_node")
+)";
+
+// ---------------------------------------------------------------------------
+
 class LuaTests: public test::SimulantTestCase {
 public:
+
+    // -----------------------------------------------------------------------
+    // Basic registration and spawning
+    // -----------------------------------------------------------------------
+
     void test_registering_lua_stage_node() {
         assert_true(scene->register_stage_node(test_node, "BallNode"));
+
         auto maybe_info = scene->registered_stage_node_info("ball_node");
         assert_true(maybe_info);
-        auto info = maybe_info.value();
-        assert_equal(info.name, std::string("ball_node"));
+        assert_equal(maybe_info.value().name, std::string("ball_node"));
     }
 
+    // test_registering_lua_stage_node is called as a helper here so that
+    // registration and spawning are covered in a single top-level test.
     void test_spawning_lua_stage_node() {
         test_registering_lua_stage_node();
 
@@ -92,19 +140,179 @@ public:
         assert_is_not_null(ball);
     }
 
+    // -----------------------------------------------------------------------
+    // Math / Transform binding smoke-test
+    // -----------------------------------------------------------------------
+
+    // Exercises Vec3, Quaternion, Degrees, and Transform Lua bindings inside
+    // on_create.  All assertions are expressed as Lua assert() calls so that
+    // any single failure surfaces as a nullptr from create_child.
     void test_lua_transform() {
-        // Register and spawn a node whose on_create exercises the
-        // Vec3 / Quaternion / Degrees / Transform Lua bindings.
-        //
-        // The Lua script uses assert() inside on_create; if any assertion
-        // fails it raises a Lua error, on_create returns false, and
-        // create_child returns nullptr.  A non-null result therefore proves
-        // every Lua assertion passed.
         assert_true(scene->register_stage_node(test_transform_node,
                                                "TransformNode"));
 
         auto node = scene->create_child("transform_node");
         assert_is_not_null(node);
+    }
+
+    // -----------------------------------------------------------------------
+    // Registration edge-cases
+    // -----------------------------------------------------------------------
+
+    // Registering the same type name a second time must be rejected.  The
+    // type identity is a hash of the name string, so a silent duplicate would
+    // overwrite the original constructor/destructor pair, corrupting the scene.
+    void test_duplicate_registration_is_rejected() {
+        const char* script = R"(
+LuaDupNode = smlt.define_node("lua_dup_node")
+)";
+        assert_true (scene->register_stage_node(script, "LuaDupNode"));
+        assert_false(scene->register_stage_node(script, "LuaDupNode"));
+    }
+
+    // A script containing syntax errors must fail gracefully during
+    // registration without crashing or leaving the engine in a bad state.
+    void test_invalid_script_fails_to_register() {
+        const char* garbage = "this is @@ not valid lua !!!";
+        assert_false(scene->register_stage_node(garbage, "Anything"));
+    }
+
+    // Supplying a class name that does not exist inside an otherwise valid
+    // script must fail — the engine must not silently register a node type
+    // whose constructor Lua cannot locate.
+    void test_unknown_class_name_fails_to_register() {
+        const char* script = R"(
+LuaRealClass = smlt.define_node("lua_real_class_node")
+)";
+        assert_false(scene->register_stage_node(script, "NonExistentClass"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Transform C++ visibility (regression test for the _cpp_node fix)
+    // -----------------------------------------------------------------------
+
+    // Proves that writing to self.transform inside Lua's on_create mutates the
+    // *real* scene-tree node's transform, not an orphaned intermediate object.
+    //
+    // Before the _cpp_node fix the Lua __index closure captured a temporary
+    // smlt.StageNode shell that was created inside cls:new() but was never
+    // inserted into the scene tree.  Transform mutations made via self.transform
+    // in Lua were therefore invisible when reading the transform back through
+    // the C++ pointer returned by create_child().
+    void test_cpp_sees_lua_transform_writes() {
+        assert_true(scene->register_stage_node(transform_write_script,
+                                               "LuaTransformWriteNode"));
+
+        auto node = scene->create_child("lua_transform_write_node");
+        assert_is_not_null(node);
+
+        // Lua's on_create set self.transform.translation = Vec3(7, 8, 9).
+        // That write must now be visible through the C++ node's transform.
+        auto t = node->transform->translation();
+        assert_close(7.0f, t.x, 0.01f);
+        assert_close(8.0f, t.y, 0.01f);
+        assert_close(9.0f, t.z, 0.01f);
+    }
+
+    // -----------------------------------------------------------------------
+    // Instance independence
+    // -----------------------------------------------------------------------
+
+    // Each spawned instance of the same Lua type must receive its own
+    // independent C++ scene-tree node and therefore its own Transform.
+    //
+    // counted_node_script uses a class-level counter so consecutive instances
+    // write different translations to self.transform during on_create.
+    // Reading both translations from C++ verifies:
+    //   (a) on_create ran once per instance (counter incremented by 1 each time)
+    //   (b) self.transform on instance A and self.transform on instance B each
+    //       addressed a distinct C++ Transform object — i.e. the _cpp_node
+    //       stored in each Lua wrapper really is a different C++ allocation.
+    void test_each_instance_gets_its_own_cpp_node() {
+        assert_true(scene->register_stage_node(counted_node_script,
+                                               "LuaCountedNode"));
+
+        // Spawn two instances sequentially.  The Lua counter increments on each
+        // on_create call, producing translations (N*10, 0, 0) and ((N+1)*10, 0, 0).
+        auto node_a = scene->create_child("lua_counted_node");
+        auto node_b = scene->create_child("lua_counted_node");
+
+        assert_is_not_null(node_a);
+        assert_is_not_null(node_b);
+
+        // The two pointers must be distinct allocations in the scene tree.
+        assert_true(node_a != node_b);
+
+        auto xa = node_a->transform->translation().x;
+        auto xb = node_b->transform->translation().x;
+
+        // node_b was spawned one counter tick after node_a, so its X must be
+        // exactly 10 units higher regardless of the absolute counter value.
+        assert_close(xa + 10.0f, xb, 0.01f);
+
+        // Y and Z must be untouched by the Lua on_create.
+        assert_close(0.0f, node_a->transform->translation().y, 0.01f);
+        assert_close(0.0f, node_a->transform->translation().z, 0.01f);
+        assert_close(0.0f, node_b->transform->translation().y, 0.01f);
+        assert_close(0.0f, node_b->transform->translation().z, 0.01f);
+    }
+
+    // Mutating one instance's transform from C++ must not affect a sibling
+    // instance of the same Lua node type.
+    void test_cpp_transform_mutations_are_independent_between_instances() {
+        assert_true(scene->register_stage_node(simple_node_script,
+                                               "LuaSimpleNode"));
+
+        auto node_a = scene->create_child("lua_simple_node");
+        auto node_b = scene->create_child("lua_simple_node");
+
+        assert_is_not_null(node_a);
+        assert_is_not_null(node_b);
+        assert_true(node_a != node_b);
+
+        node_a->transform->set_translation(Vec3(3.0f, 0.0f, 0.0f));
+        node_b->transform->set_translation(Vec3(6.0f, 0.0f, 0.0f));
+
+        // Each node must reflect only its own mutation.
+        assert_close(3.0f, node_a->transform->translation().x, 0.01f);
+        assert_close(6.0f, node_b->transform->translation().x, 0.01f);
+
+        // And must not have leaked into the other.
+        assert_close(0.0f, node_a->transform->translation().y, 0.01f);
+        assert_close(0.0f, node_b->transform->translation().y, 0.01f);
+    }
+
+    // -----------------------------------------------------------------------
+    // Scene-tree bookkeeping
+    // -----------------------------------------------------------------------
+
+    // nodes_by_type() must accurately reflect the live count of Lua nodes as
+    // they are created.  A dedicated type name is used so that nodes spawned
+    // by other tests do not skew the expected count.
+    void test_spawned_nodes_are_tracked_by_type() {
+        const char* script = R"(
+LuaCountCheckNode = smlt.define_node("lua_count_check_node")
+)";
+        assert_true(scene->register_stage_node(script, "LuaCountCheckNode"));
+
+        auto maybe_info = scene->registered_stage_node_info("lua_count_check_node");
+        assert_true(maybe_info);
+        auto type = maybe_info.value().type;
+
+        // No nodes of this type have been created yet.
+        assert_equal(0, (int)scene->nodes_by_type(type).size());
+
+        auto n1 = scene->create_child("lua_count_check_node");
+        assert_is_not_null(n1);
+        assert_equal(1, (int)scene->nodes_by_type(type).size());
+
+        auto n2 = scene->create_child("lua_count_check_node");
+        assert_is_not_null(n2);
+        assert_equal(2, (int)scene->nodes_by_type(type).size());
+
+        auto n3 = scene->create_child("lua_count_check_node");
+        assert_is_not_null(n3);
+        assert_equal(3, (int)scene->nodes_by_type(type).size());
     }
 };
 

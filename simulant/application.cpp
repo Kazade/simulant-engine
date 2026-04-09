@@ -206,9 +206,13 @@ Application::~Application() {
     shutdown();
 
     /* Tear down scripting interpreters before scenes.  lua_close triggers the
-     * Lua GC which finalises any remaining LuaStageNode shell userdatas; those
-     * shells are real StageNodes and their _clean_up() walks live scene data,
-     * so the scene must still exist at that point. */
+     * Lua GC which finalises any remaining Lua wrapper tables; each wrapper
+     * holds a _cpp_node UserdataPtr pointing at the real slab-allocated
+     * LuaStageNode.  The LuaStageNode binding has no addDestructor, so GC
+     * only frees the UserdataPtr wrapper object and never calls into the node
+     * itself.  The scene must nonetheless still be alive here so that any
+     * other Lua-side finalisation (e.g. __gc on plain userdata assets) can
+     * safely query scene data. */
     interpreters_.clear();
 
     scene_manager_->destroy_all();

@@ -244,20 +244,25 @@ void lua_bind(lua_State* state) {
         // ----------------------------------------------------------------
         // LuaStageNode — exposed to Lua as smlt.StageNode.
         //
-        // Lua 5.5 restricts setmetatable() to plain tables, so subclasses
-        // wrap the C++ userdata in a Lua table and delegate property lookups
-        // back to it via rawget(t, "_cpp")[k].  The properties below are what
-        // make that delegation work: instance["scene"], instance["node_type"],
-        // and instance["transform"] resolve through LuaBridge's __index to
-        // these registered getters, and the private LuaStageNode(LuaRef)
-        // constructor reads them back to initialise the StageNode base.
+        // Each Lua node class created with smlt.define_node() gets a plain
+        // Lua wrapper table whose __index metamethod delegates unknown key
+        // lookups to a _cpp_node field.  That field is a UserdataPtr (a
+        // non-owning raw-pointer userdata) pointing at the real slab-allocated
+        // LuaStageNode that lives in the scene tree.
+        //
+        // NO addDestructor is registered here.  Application::~Application()
+        // tears down scripting interpreters (lua_close) *before* destroying
+        // scenes, so the Lua GC runs while scene nodes are still alive.
+        // Without addDestructor, gc_metamethod only calls ~UserdataPtr(),
+        // which frees the LuaBridge wrapper object on the Lua heap without
+        // touching the slab-allocated node — which is exactly what we want.
+        // Registering a destructor here would cause it to fire on the live
+        // _cpp_node pointer during lua_close GC, calling clean_up() on a node
+        // that is mid-teardown and may be re-entered or already invalid.
         // ----------------------------------------------------------------
         .beginClass<LuaStageNode>("StageNode")
         .addConstructor<void (*)(Scene*, StageNodeType, std::string,
                                  std::set<NodeParam>)>()
-        .addDestructor ([] (LuaStageNode* r) {
-            r->clean_up();
-        })
         .addProperty("scene",     &LuaStageNode::lua_get_scene)
         .addProperty("node_type", &LuaStageNode::lua_get_node_type)
         .addProperty("transform", &LuaStageNode::lua_get_transform)
