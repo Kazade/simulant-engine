@@ -2,12 +2,33 @@
 
 // clang-format off
 #include "../interpreter.h"
+
+/* Suppress warnings from third-party headers (minilua, LuaBridge) */
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wextra"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
+#if defined(__clang__)
+#pragma GCC diagnostic ignored "-Wc++98-compat-pedantic"
+#pragma GCC diagnostic ignored "-Wreserved-identifier"
+#pragma GCC diagnostic ignored "-Wunused-macros"
+#endif
+#endif
+
 #define LUA_USE_JUMPTABLE 0
 #ifdef __DREAMCAST__
 #define LUA_32BITS 1
 #endif
 #include "minilua.h"
 #include "LuaBridge.h"
+
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 // clang-format on
 #include "../../generic/optional.h"
 #include "../../nodes/stage_node.h"

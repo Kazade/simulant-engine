@@ -1,7 +1,11 @@
 #include "bindings.h"
 #include "../../application.h"
+#include "../../asset_manager.h"
+#include "../../compositor.h"
+#include "../../input/input_manager.h"
 #include "../../nodes/stage_node.h"
 #include "../../utils/hash/fnv1.h"
+#include "../../window.h"
 #include "interpreter.h"
 
 #include <cstdint>
@@ -43,8 +47,72 @@ void lua_bind(lua_State* state) {
         .endNamespace()
         // ----------------------------------------------------------------
         // Scene (opaque handle, passed as a constructor argument)
+        //
+        //   scene.assets   -> AssetManager
+        //   scene.input    -> InputManager
         // ----------------------------------------------------------------
         .beginClass<Scene>("Scene")
+        .addProperty("assets", &Scene::assets)
+        .addProperty("input", &Scene::input)
+        .addProperty("compositor", &Scene::compositor)
+        .addProperty("app", &Scene::app)
+        .addProperty("window", &Scene::window)
+        .endClass()
+        // ----------------------------------------------------------------
+        // SceneCompositor — manages scene layers and rendering.
+        // ----------------------------------------------------------------
+        .beginClass<SceneCompositor>("SceneCompositor")
+        .endClass()
+        // ----------------------------------------------------------------
+        // Application — the running application instance.
+        // ----------------------------------------------------------------
+        .beginClass<Application>("Application")
+        .endClass()
+        // ----------------------------------------------------------------
+        // Window — the rendering window.
+        // ----------------------------------------------------------------
+        .beginClass<Window>("Window")
+        .endClass()
+        // ----------------------------------------------------------------
+        // AssetManager — access to loaded assets.
+        //
+        //   local mesh   = scene.assets:mesh(id)
+        //   local tex    = scene.assets:texture(id)
+        //   local mat    = scene.assets:material(id)
+        //   local sound  = scene.assets:sound(id)
+        //   local font   = scene.assets:font(id)
+        //   local prefab = scene.assets:prefab(id)
+        // ----------------------------------------------------------------
+        .beginClass<AssetManager>("AssetManager")
+        .addFunction("mesh",           static_cast<MeshPtr (AssetManager::*)(AssetID)>(&AssetManager::mesh))
+        .addFunction("texture",        static_cast<TexturePtr (AssetManager::*)(AssetID)>(&AssetManager::texture))
+        .addFunction("material",       static_cast<MaterialPtr (AssetManager::*)(const AssetID&)>(&AssetManager::material))
+        .addFunction("sound",          static_cast<SoundPtr (AssetManager::*)(AssetID)>(&AssetManager::sound))
+        .addFunction("font",           static_cast<FontPtr (AssetManager::*)(AssetID)>(&AssetManager::font))
+        .addFunction("prefab",         static_cast<PrefabPtr (AssetManager::*)(AssetID)>(&AssetManager::prefab))
+        .addFunction("has_mesh",       &AssetManager::has_mesh)
+        .addFunction("has_texture",    &AssetManager::has_texture)
+        .addFunction("has_material",   &AssetManager::has_material)
+        .addFunction("has_sound",      &AssetManager::has_sound)
+        .addFunction("has_font",       &AssetManager::has_font)
+        .addFunction("has_prefab",     &AssetManager::has_prefab)
+        .addFunction("mesh_count",     &AssetManager::mesh_count)
+        .addFunction("texture_count",  &AssetManager::texture_count)
+        .addFunction("material_count", &AssetManager::material_count)
+        .addFunction("sound_count",    &AssetManager::sound_count)
+        .addFunction("font_count",     &AssetManager::font_count)
+        .addFunction("prefab_count",   &AssetManager::prefab_count)
+        .endClass()
+        // ----------------------------------------------------------------
+        // InputManager — access to input state and axes.
+        //
+        //   local val = scene.input:axis_value("fire")
+        //   local pressed = scene.input:axis_was_pressed("jump")
+        // ----------------------------------------------------------------
+        .beginClass<InputManager>("InputManager")
+        .addFunction("axis_value",       &InputManager::axis_value)
+        .addFunction("axis_was_pressed", &InputManager::axis_was_pressed)
+        .addFunction("axis_was_released",&InputManager::axis_was_released)
         .endClass()
         // ----------------------------------------------------------------
         // NodeParam (opaque, used in parameter sets)
