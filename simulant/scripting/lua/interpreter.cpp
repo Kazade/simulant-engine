@@ -102,6 +102,38 @@ rawset(smlt, "define_node_param", function(param_type, description, default_valu
         required = (default_value == nil)
     }
 end)
+
+-- Helper to create a child node from a Lua script.
+-- Usage: local child = smlt.create_child_node(self, "stage", {param1 = value1})
+rawset(smlt, "create_child_node", function(parent_node, type_name, params)
+    if not parent_node or not parent_node._cpp_node then
+        return nil
+    end
+    local ok, result = pcall(function()
+        return parent_node._cpp_node:create_child(type_name, params or {})
+    end)
+    if not ok then
+        print("smlt.create_child_node error: " .. tostring(result))
+        return nil
+    end
+    return result
+end)
+
+-- Helper to create a mixin from a Lua script.
+-- Usage: local mixin = smlt.create_mixin(self, "stage", {param1 = value1})
+rawset(smlt, "create_mixin", function(host_node, type_name, params)
+    if not host_node or not host_node._cpp_node then
+        return nil
+    end
+    local ok, result = pcall(function()
+        return host_node._cpp_node:create_mixin(type_name, params or {})
+    end)
+    if not ok then
+        print("smlt.create_mixin error: " .. tostring(result))
+        return nil
+    end
+    return result
+end)
 )lua";
 
 bool smlt::LuaInterpreter::on_init() {

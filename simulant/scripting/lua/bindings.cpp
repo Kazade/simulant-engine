@@ -12,6 +12,38 @@
 
 namespace smlt {
 
+// Helper: convert a Lua table to Params
+static Params lua_table_to_params(luabridge::LuaRef table) {
+    Params params;
+    if(table.isNil() || !table.isTable()) {
+        return params;
+    }
+    
+    table.push();
+    lua_State* L = table.state();
+    lua_pushnil(L);
+    while(lua_next(L, -2) != 0) {
+        if(lua_type(L, -2) == LUA_TSTRING) {
+            std::string key = lua_tostring(L, -2);
+            if(lua_isnumber(L, -1)) {
+                double num = lua_tonumber(L, -1);
+                if(num == (int)num) {
+                    params.set(key, (int)num);
+                } else {
+                    params.set(key, (float)num);
+                }
+            } else if(lua_isboolean(L, -1)) {
+                params.set(key, (bool)lua_toboolean(L, -1));
+            } else if(lua_isstring(L, -1)) {
+                params.set(key, std::string(lua_tostring(L, -1)));
+            }
+        }
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+    return params;
+}
+
 luabridge::LuaRef stage_node_meta(std::string name) {
     auto lua = smlt::get_app()->ensure_lua_ready();
     luabridge::LuaRef table = luabridge::newTable(lua->state_);
@@ -334,6 +366,12 @@ void lua_bind(lua_State* state) {
         .addProperty("scene",     &LuaStageNode::lua_get_scene)
         .addProperty("node_type", &LuaStageNode::lua_get_node_type)
         .addProperty("transform", &LuaStageNode::lua_get_transform)
+        .addFunction("create_child", [](LuaStageNode* node, const char* name, luabridge::LuaRef params_table) -> StageNode* {
+            return node->create_child(name, lua_table_to_params(params_table));
+        })
+        .addFunction("create_mixin", [](LuaStageNode* node, const std::string& name, luabridge::LuaRef params_table) -> StageNode* {
+            return node->create_mixin(name, lua_table_to_params(params_table));
+        })
         .endClass();
 }
 } // namespace smlt
