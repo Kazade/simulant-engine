@@ -1,5 +1,10 @@
 
 #include "interpreter.h"
+#include "../../scenes/scene.h"
+
+smlt::AssetManager* smlt::LuaStageNode::lua_get_assets() const {
+    return get_scene() ? get_scene()->assets.get() : nullptr;
+}
 
 bool smlt::LuaInterpreter::load_string(const char* data) {
     int result = luaL_loadstring(state_, data);

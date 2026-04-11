@@ -35,6 +35,7 @@ namespace smlt {
 class RenderableFactory;
 class Seconds;
 class Scene;
+class LuaStageNode;
 struct GeomCullerOptions;
 struct TextureFlags;
 class StageNode;
@@ -490,6 +491,7 @@ private:
     friend class DescendentIterator<false>;
     friend class DescendentIterator<true>;
     friend class StageNodeManager;
+    friend class LuaStageNode;
     friend class Partitioner;
     friend class Layer;
     friend class SiblingIteratorPair;

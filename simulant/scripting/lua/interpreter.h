@@ -70,11 +70,12 @@ public:
         }
 
     // Getters exposed to LuaBridge as properties so that Lua code can
-    // read obj.scene, obj.node_type, and obj.transform via the _cpp_node
-    // forwarding in define_node's __index metamethod.
+    // read obj.scene, obj.node_type, obj.transform and obj.assets via the
+    // _cpp_node forwarding in define_node's __index metamethod.
     Scene* lua_get_scene() const { return get_scene(); }
     StageNodeType lua_get_node_type() const { return node_type(); }
     Transform* lua_get_transform() const { return get_transform(); }
+    AssetManager* lua_get_assets() const;
 
     virtual bool on_create(Params params) override {
         // Let the base class handle common position/orientation/scale params.
@@ -164,6 +165,72 @@ public:
             return;
         }
         method(ref_->instance, step);
+    }
+
+    void on_late_update(float dt) override {
+        if(!ref_ || !ref_->instance) {
+            StageNode::on_late_update(dt);
+            return;
+        }
+
+        luabridge::LuaRef method = ref_->instance["on_late_update"];
+        if(method.isNil() || !method.isFunction()) {
+            StageNode::on_late_update(dt);
+            return;
+        }
+        method(ref_->instance, dt);
+    }
+
+    bool on_destroy() override {
+        if(!ref_ || !ref_->instance) {
+            return StageNode::on_destroy();
+        }
+
+        luabridge::LuaRef method = ref_->instance["on_destroy"];
+        if(method.isNil() || !method.isFunction()) {
+            return StageNode::on_destroy();
+        }
+
+        auto call = method.callable<bool(luabridge::LuaRef)>();
+        return call(ref_->instance).valueOr(true);
+    }
+
+    void _clean_up() override {
+        if(ref_ && ref_->instance) {
+            luabridge::LuaRef method = ref_->instance["on_clean_up"];
+            if(!method.isNil() && method.isFunction()) {
+                method(ref_->instance);
+            }
+        }
+        StageNode::_clean_up();
+    }
+
+    void on_parent_set(const StageNode* oldp, const StageNode* newp) override {
+        if(!ref_ || !ref_->instance) {
+            StageNode::on_parent_set(oldp, newp);
+            return;
+        }
+
+        luabridge::LuaRef method = ref_->instance["on_parent_set"];
+        if(method.isNil() || !method.isFunction()) {
+            StageNode::on_parent_set(oldp, newp);
+            return;
+        }
+        method(ref_->instance);
+    }
+
+    void on_transformation_changed() override {
+        if(!ref_ || !ref_->instance) {
+            StageNode::on_transformation_changed();
+            return;
+        }
+
+        luabridge::LuaRef method = ref_->instance["on_transformation_changed"];
+        if(method.isNil() || !method.isFunction()) {
+            StageNode::on_transformation_changed();
+            return;
+        }
+        method(ref_->instance);
     }
 
     virtual const char* node_type_name() const override {

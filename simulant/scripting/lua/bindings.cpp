@@ -366,6 +366,7 @@ void lua_bind(lua_State* state) {
         .addProperty("scene",     &LuaStageNode::lua_get_scene)
         .addProperty("node_type", &LuaStageNode::lua_get_node_type)
         .addProperty("transform", &LuaStageNode::lua_get_transform)
+        .addProperty("assets",    &LuaStageNode::lua_get_assets)
         .addFunction("create_child", [](LuaStageNode* node, const char* name, luabridge::LuaRef params_table) -> StageNode* {
             return node->create_child(name, lua_table_to_params(params_table));
         })
