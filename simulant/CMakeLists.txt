@@ -176,25 +176,25 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/bounce/include)
 
 IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
+    ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
 ELSE()
-ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
-    platforms/evercade/platform.cpp
-    nodes/helpers.h
-    nodes/stage_node_path.h
-    nodes/stage_node_watch_controller.h
-    nodes/stage_node_watch_controller.cpp
-    nodes/stage_node_path.cpp
-    loaders/gltf_loader.h
-    loaders/gltf_loader.cpp
-    utils/base64.h
-    utils/base64.cpp
-    nodes/physics/private.h
-    nodes/physics/material.h
-    nodes/physics/contact_list.h
-    nodes/physics/fixture.h
-    nodes/physics/fixture.cpp
-    nodes/physics/contact_list.cpp)
+    ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
+        platforms/evercade/platform.cpp
+        nodes/helpers.h
+        nodes/stage_node_path.h
+        nodes/stage_node_watch_controller.h
+        nodes/stage_node_watch_controller.cpp
+        nodes/stage_node_path.cpp
+        loaders/gltf_loader.h
+        loaders/gltf_loader.cpp
+        utils/base64.h
+        utils/base64.cpp
+        nodes/physics/private.h
+        nodes/physics/material.h
+        nodes/physics/contact_list.h
+        nodes/physics/fixture.h
+        nodes/physics/fixture.cpp
+        nodes/physics/contact_list.cpp)
 ENDIF()
 
 if(FLTO_SUPPORTED)

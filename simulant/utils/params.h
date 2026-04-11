@@ -52,8 +52,8 @@ public:
         }
     }
 
-    bool contains(const char* name) const {
-        return dict_.count(name);
+    bool contains(const std::string& name) const {
+        return dict_.count(name.c_str());
     }
 
     template<typename T>
@@ -79,13 +79,13 @@ public:
     }
 
     template<typename T>
-    Params set(const char* name, T value) {
+    Params set(const std::string& name, T value) {
         set_arg(name, value);
         return *this;
     }
 
-    optional<ParamValue> raw(const char* name) const {
-        auto it = dict_.find(name);
+    optional<ParamValue> raw(const std::string& name) const {
+        auto it = dict_.find(name.c_str());
         if(it != dict_.end()) {
             return it->second;
         }
@@ -113,43 +113,43 @@ private:
     std::map<ParamKey, ParamValue> dict_;
 
     template<typename T>
-    bool set_arg(const char* name, T value) {
-        auto existed = dict_.count(name);
-        dict_[name] = value;
+    bool set_arg(const std::string& name, T value) {
+        auto existed = dict_.count(name.c_str());
+        dict_[name.c_str()] = value;
         return !existed;
     }
 
-    bool set_arg(const char* name, const ui::Px& px) {
+    bool set_arg(const std::string& name, const ui::Px& px) {
         return set_arg(name, px.value);
     }
 
-    bool set_arg(const char* name, const Vec2& vec) {
+    bool set_arg(const std::string& name, const Vec2& vec) {
         return set_arg(name, FloatArray({vec.x, vec.y}));
     }
 
-    bool set_arg(const char* name, const Vec3& vec) {
+    bool set_arg(const std::string& name, const Vec3& vec) {
         return set_arg(name, FloatArray({vec.x, vec.y, vec.z}));
     }
 
-    bool set_arg(const char* name, const Vec4& vec) {
+    bool set_arg(const std::string& name, const Vec4& vec) {
         return set_arg(name, FloatArray({vec.x, vec.y, vec.z, vec.w}));
     }
 
-    bool set_arg(const char* name, const Quaternion& vec) {
+    bool set_arg(const std::string& name, const Quaternion& vec) {
         return set_arg(name, FloatArray({vec.x, vec.y, vec.z, vec.w}));
     }
 
-    bool set_arg(const char* name, const char* text) {
+    bool set_arg(const std::string& name, const char* text) {
         return set_arg(name, std::string(text));
     }
 
-    bool set_arg(const char* name, const unicode& text) {
+    bool set_arg(const std::string& name, const unicode& text) {
         return set_arg(name, text.encode());
     }
 
-    bool set_arg(const char* name, ParamValue value) {
-        auto existed = dict_.count(name);
-        dict_.insert(std::make_pair(name, value));
+    bool set_arg(const std::string& name, ParamValue value) {
+        auto existed = dict_.count(name.c_str());
+        dict_.insert(std::make_pair(name.c_str(), value));
         return !existed;
     }
 };

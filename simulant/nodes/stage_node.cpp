@@ -259,6 +259,14 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
     _on_parent_set(old_parent, parent_, transform_retain);
 }
 
+StageNode* StageNode::create_child(const char* name, const Params& args) {
+    auto node = owner_->create_node(name, args, nullptr);
+    if(node) {
+        node->set_parent(this);
+    }
+    return node;
+}
+
 StageNode* StageNode::find_mixin(const std::string& name) const {
     auto it = std::find_if(mixins_.begin(), mixins_.end(), [&](const std::pair<StageNodeType, MixinInfo>& p) -> bool {
         return p.second.ptr->name() == name;

@@ -15,7 +15,7 @@ typedef std::function<void(StageNode*)> StageNodeDestructFunction;
 
 struct StageNodeTypeInfo {
     StageNodeType type;
-    const char* name;
+    std::string name;
     std::size_t size_in_bytes;
     std::size_t alignment;
 
@@ -139,6 +139,9 @@ public:
         Params args;
         return (T*)_create_node<T>(WithBase(nullptr), args);
     }
+
+    bool register_stage_node(const Path& script_file, const char* class_name);
+    bool register_stage_node(const char* script_data, const char* class_name);
 
     bool register_stage_node(StageNodeType type, const char* name,
                              std::size_t size_in_bytes, std::size_t alignment,

@@ -205,6 +205,12 @@ Application::~Application() {
     stop_running();
     shutdown();
 
+    /* Tear down scripting interpreters before scenes.  lua_close triggers the
+     * Lua GC which finalises any remaining LuaStageNode shell userdatas; those
+     * shells are real StageNodes and their _clean_up() walks live scene data,
+     * so the scene must still exist at that point. */
+    interpreters_.clear();
+
     scene_manager_->destroy_all();
 
     /* This cleans up the destroyed scenes
@@ -940,7 +946,7 @@ bool Application::activate_language_from_arb_data(const uint8_t* data, std::size
 
 LuaInterpreter* Application::ensure_lua_ready() {
     if(!interpreters_.empty()) {
-        return interpreters_.back().get();
+        return dynamic_cast<LuaInterpreter*>(interpreters_.back().get());
     }
 
     auto lua = LuaInterpreter::create();

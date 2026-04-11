@@ -168,6 +168,8 @@ enum UpdateEnabledFlags {
 
 typedef uint32_t UpdateEnabledMask;
 
+class LuaInterpreter;
+
 class Application {
     friend class Window;
 
