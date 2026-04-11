@@ -3,7 +3,11 @@
 #include "../utils/limited_string.h"
 #include "builtins.h"
 #include "locators/node_locator.h"
+#include "simulant/application.h"
+#include "simulant/meshes/mesh.h"
+#include "simulant/time_keeper.h"
 #include "stage_node.h"
+
 #include <cstdint>
 #include <vector>
 
@@ -166,9 +170,18 @@ public:
         return true;
     }
 
-    bool play(const std::string& animation, int32_t loop_count = 1) {
-        auto index = find_animation_index(animation);
-        if(index) {
+    bool add_target_mesh(const MeshPtr& target_mesh) {
+        if(!target_mesh) {
+            S_ERROR("Could not associate target mesh with anim controller: " + target_mesh->name());
+            return false;
+        }
+        target_meshes_.emplace_back(target_mesh);
+        return true;
+
+    }
+
+    bool play(const std::string& animation, const int32_t loop_count = 1) {
+        if(auto index = find_animation_index(animation)) {
             current_animation_ = index.value();
             time_ = 0.0f;
             state_ = ANIMATION_STATE_PLAYING;
@@ -186,6 +199,7 @@ public:
             animation_queue_.push(index.value());
             return true;
         }
+        S_WARN("Animation index could not be found for anim " + name);
         return false;
     }
 
@@ -193,8 +207,17 @@ public:
         state_ = ANIMATION_STATE_PAUSED;
     }
 
+    bool is_paused() const {
+        if(state_ == ANIMATION_STATE_PAUSED) return true;
+        return false;
+    }
+
     void resume() {
         state_ = ANIMATION_STATE_PLAYING;
+    }
+
+    void set_animation_speed(const float speed) {
+        animation_speed_ = speed;
     }
 
     void on_update(float dt) override {
@@ -206,7 +229,7 @@ public:
             return;
         }
 
-        time_ += dt;
+        time_ += dt * animation_speed_;
 
         auto& anim = animations_[current_animation_];
         int unfinished = 0;
@@ -234,6 +257,14 @@ public:
             }
 
             unfinished += !channel.data->finished(time_);
+
+        }
+        // If any mesh is skinned, updating the skinning
+        if(!target_meshes_.empty()) {
+            for(const auto& target_mesh : target_meshes_) {
+                if(target_mesh->is_skinned && current_animation_ < animations_.size())
+                    target_mesh->update_skinning();
+            }
         }
 
         if(!unfinished) {
@@ -241,7 +272,7 @@ public:
             // animation.
 
             if(loop_count_ > 0) {
-                // Restart                
+                // Restart
                 time_ = 0.0f;
                 loop_count_--;
             } else if(loop_count_ == 0) {
@@ -263,6 +294,11 @@ public:
 
     std::vector<std::string> animation_names() const {
         std::vector<std::string> ret;
+
+        if(animations_.empty()) {
+            return ret;
+        }
+
         for(auto& anim: animations_) {
             ret.push_back(anim.name.str());
         }
@@ -290,6 +326,10 @@ private:
     AnimationState state_ = ANIMATION_STATE_PLAYING;
     float time_ = 0.0f;
     int32_t loop_count_ = 1;
+    std::vector<MeshPtr> target_meshes_;
+
+    // By default, at 1.0f, but to be able to override animation speed at runtime
+    float animation_speed_ = 1.0f;
 };
 
 } // namespace smlt

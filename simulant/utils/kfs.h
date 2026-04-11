@@ -8,6 +8,8 @@
 
 #ifdef __WIN32__
     //#error "Must implement windows support";
+#elif defined(__XBOX__)
+
 #else
     #include <sys/stat.h>
 #endif
@@ -39,12 +41,19 @@ private:
 typedef std::string Path;
 typedef uint32_t Mode;
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__XBOX__)
     // Windows doesn't support Posix
     typedef uint32_t nlink_t;
     typedef uint32_t uid_t;
     typedef uint32_t gid_t;
     typedef uint32_t mode_t;
+
+#if defined(__XBOX__)
+    typedef uint32_t dev_t;
+    typedef uint32_t ino_t;
+    typedef uint32_t off_t;
+#endif
+
 #endif
 
 struct Stat {

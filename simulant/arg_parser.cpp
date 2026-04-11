@@ -1,4 +1,6 @@
 #include <iomanip>
+#include <iostream>
+
 #include "logging.h"
 
 #include "utils/kfs.h"

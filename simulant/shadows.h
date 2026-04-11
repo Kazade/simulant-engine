@@ -30,13 +30,7 @@ struct SilhouetteEdge {
     smlt::Vec3 second;
 
     const smlt::Vec3& operator[](std::size_t i) const {
-        if(i == 0) {
-            return first;
-        } else if(i == 1) {
-            return second;
-        } else {
-            throw std::out_of_range("Invalid edge index");
-        }
+        return (i == 0) ? first : second;
     }
 };
 

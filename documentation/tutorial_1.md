@@ -111,15 +111,15 @@ the `Scene` class template. A `Scene` represents a single portion of your game, 
 
 Scenes have a number of methods which you can override:
 
- - `load()` - This is where you build the scene. This might involve loading assets or creating
+ - `on_load()` - This is where you build the scene. This might involve loading assets or creating
    actors, particle systems etc. More on that later.
- - `unload()` - The opposite of load, this is where you tear down everything you built up.
- - `activate()` - This is called when your `Scene` becomes the active scene.
- - `deactivate()` - This is called when your `Scene` stops being the active one.
- - `update(dt)` - This is called once per frame, and passes in a delta time value. This is where you'd move objects over time.
- - `fixed_update(step)` - This is like update, but rather than being called once per frame, it's called 60 times per second. This might mean it's called more than once in a frame, or maybe not at all.
+ - `on_unload()` - The opposite of load, this is where you tear down everything you built up.
+ - `on_activate()` - This is called when your `Scene` becomes the active scene.
+ - `on_deactivate()` - This is called when your `Scene` stops being the active one.
+ - `on_update(dt)` - This is called once per frame, and passes in a delta time value. This is where you'd move objects over time.
+ - `on_fixed_update(step)` - This is like update, but rather than being called once per frame, it's called 60 times per second. This might mean it's called more than once in a frame, or maybe not at all.
  
-You must at least override `load()`, the others are optional.
+You must at least override `on_load()`, the others are optional.
 
 The `Scene` has a number of properties that you have access to:
 
@@ -127,6 +127,7 @@ The `Scene` has a number of properties that you have access to:
  - `app` - This is the application
  - `input` - The input manager
  - `scenes` - The scene manager. You can use this to activate another `Scene`
+ - `compositor` - The compositor is used to build your visual output using layers.
 
 Once you've created your `Scene` class, you need to register it in your `Application::init` method (in your main.cpp file).
 
@@ -139,86 +140,48 @@ The first argument is a name for your `Scene`, then any additional arguments are
 
 When registering, the name "main" is special. If you call a `Scene` "main" it will be the first `Scene` called when your game starts. By default the "main" `Scene` is the simulant splash screen and the default generated `Scene` is called "ingame".
 
-## Render Pipelines
+# The building blocks of a Scene
 
-Now that you have your project created and running, let's talk about how Simulant renders
-to the screen.
+A `Scene` in Simulant is a tree of StageNodes with the `Scene` class itself at the root of the tree.
 
-You control rendering in Simulant via `Pipelines`. A `Pipeline` combines the following:
+You construct your scene by creating specialised `StageNode` subclasses which perform different tasks. There are a handful of built in `StageNode` subclasses, but to build out your game logic you will likely need to create many of your own.
 
- - The ID of `Stage` you want to render.
- - The ID of a `Camera` inside the `Stage` that you want to use.
- - Optionally a `Viewport`.
- - Optionally a `Texture` to render to (rather than the window)
- - A render priority
+Some of the built-in StageNodes include:
 
-Creating a pipeline is easy:
+- `Stage` - this can be thought of as a "group" or "container" node. It effectively allows you to group other nodes together and apply transformations to them as a whole.
+- `Actor` - an actor is an instance of a `Mesh` asset.
+- `PrefabInstance` - a prefab instance is the root of an instantiated `Prefab` asset. It's effectively another "container" node, but also has animation properties to control animation of the descendent nodes.
+- `ParticleSystem` - a particle system is a node that manages a collection of particles (created from a `ParticleScript` asset).
+- `Camera` - camera is a special node that is passed to `Layers` created through the compositor.
+- `Light` - a light is a special node that is used to illuminate the scene.
 
-```
-auto stage = new_stage();  // Create a stage
-auto camera = stage->new_camera();  // Create a camera within the stage
-auto pipeline = compositor->render(stage, camera);  // Create your pipeline
-```
+You create nodes in one of two ways:
 
-It is recommended you activate and deactivate your pipeline by linking it to the scene:
+ - By calling the `create_child<T>(...)` method on an existing node (e.g. the Scene itself)
+ - By calling `create_node<T>(...)` on an existing node. This will create an "orphan" node which won't do anything unless attached to the scene tree.
 
-```
-void MyScene::load() {
-    // ...
-    
-    pipeline_ = compositor->render(stage, camera);
-    link_pipeline(pipeline_);
-}
-```
-
-This is the equivalent of doing:
+The easiest way to create a scene graph is to load a GLTF file as a prefab, and then use that to instantiate the scene. You can then render that prefab by
+creating a new layer in the compositor. The following code would live inside your `on_load()` override:
 
 ```
-void MyScene::activate() {
-    pipeline_->activate();
-}
-
-void MyScene::deactivate() {
-    pipeline_->deactivate();
-}
-
+auto camera = create_child<Camera3D>();
+auto prefab = assets->load_prefab("path/to/prefab.glb");
+auto instance = create_child<PrefabInstance>(prefab);
+auto layer = compositor->create_layer(instance, camera);
 ```
 
-You can create multiple pipelines and this gives you the control to do some cool things:
-
- - Render the same stage to different viewports with different cameras (multiplayer)
- - Render a stage to a texture, then use that texture on a mesh
- - You can prolong the life of a pipeline across `Scenes` to create transitions
-
-## Loading a 3D Model
-
-Let's now talk about the `Stage`. You created a `Stage` earlier, and a `Camera` within it so that you could build a `Pipeline`. 
-
-A `Stage` is the root of a heirarchical set of `StageNodes` which you can manipulate and render. `StageNodes` (e.g. `Actors`, `Cameras`, `Lights` etc.) can be moved around, rotated, and parented to other `StageNodes` to build up your scene.
-
-The most common object you will create is an `Actor`. An `Actor` is normally (but not always) associated with some kind of `Mesh` for rendering. In your `load()` method, it's very straightforward to load a 3D mesh, and attach it to an `Actor`:
+You can create multiple layers which are composited by priority (similar to the layers in a paint program):
 
 ```
-auto mesh_id = stage->assets->new_mesh_from_file("models/mymesh.obj");
-auto actor = stage->new_actor_with_mesh(mesh_id);
-actor->move_to(0, 0, -10);
+auto camera = create_child<Camera3D>();
+auto prefab = assets->load_prefab("path/to/prefab.glb");
+auto instance = create_child<PrefabInstance>(prefab);
+auto layer = compositor->create_layer(instance, camera);
+
+auto ui_camera = create_child<Camera2D>();
+auto ui_manager = create_child<UIManager>();
+auto layer2 = compositor->create_layer(ui_manager, ui_camera);
+layer2->set_render_priority(RENDER_PRIORITY_FOREGROUND);
 ```
 
-That's it!
-
-In Simulant the `Camera` looks down the negative Z axis by default. What we've done here is 
-loaded a 3D model asset, created an `Actor` that uses it, then moved that `Actor` so that it can be seen by the `Camera`.
-
-You'll notice that we accessed a property of the `Stage` called "assets". Every `Stage` has its own `AssetManager`, when the `Stage` is destroyed then those assets are destroyed too. Sometimes you want to share assets across `Stages` though, and you can do that with the `shared_assets` property of the `Window`.
-
-One last thing to be aware of is that assets are ref-counted. Once you access an asset, or attach it to an `Actor` it will be destroyed when all users of that asset are destroyed.
-
-You can turn this behaviour off by passing `smlt::GARBAGE_COLLECT_NEVER` as a second argument to `new_mesh_from_file`.
-
-## Summary
-
-That's quite a lot for an introduction! You've learned that Simulant is structured around `Scenes` at a high-level, the rendering system is controlled by `Pipelines`, and you build up your visible scene by manipulating `Cameras` and `Actors` within a `Stage`.
-
-Now, go ahead an experiment!
-
-
+Before building your scene it helps to plan your layers in advance, and then create `Stages` to separate them within your scene graph for individual rendering.

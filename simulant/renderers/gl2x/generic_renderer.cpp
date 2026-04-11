@@ -159,7 +159,7 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
 
     auto m_loc = program->locate_uniform(METALLIC_PROPERTY_NAME, true);
     if(m_loc > -1) {
-        program->set_uniform_float(m_loc, pass->roughness());
+        program->set_uniform_float(m_loc, pass->metallic());
     }
 
     auto diff_loc = program->locate_uniform(BASE_COLOR_PROPERTY_NAME, true);
@@ -333,27 +333,40 @@ void GenericRenderer::set_auto_attributes_on_shader(
                    &VertexSpecification::normal_offset, offset);
 }
 
-void GenericRenderer::set_blending_mode(BlendType type) {
-    if(type == BLEND_NONE) {
-        GLCheck(glDisable, GL_BLEND);
-        return;
-    }
-
-    GLCheck(glEnable, GL_BLEND);
+void GenericRenderer::set_blending_mode(BlendType type, float alpha) {
     switch(type) {
+        case BLEND_NONE:
+            GLCheck(glDisable, GL_BLEND);
+            GLCheck(glDisable, GL_ALPHA_TEST);
+            break;
+        case BLEND_MASK:
+            GLCheck(glDisable, GL_BLEND);
+            GLCheck(glEnable, GL_ALPHA_TEST);
+            GLCheck(glAlphaFunc, GL_GREATER, alpha);
+            break;
         case BLEND_ADD:
+            GLCheck(glDisable, GL_ALPHA_TEST);
+            GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_ONE, GL_ONE);
             break;
         case BLEND_ALPHA:
+            GLCheck(glDisable, GL_ALPHA_TEST);
+            GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
         case BLEND_COLOR:
+            GLCheck(glDisable, GL_ALPHA_TEST);
+            GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
             break;
         case BLEND_MODULATE:
+            GLCheck(glDisable, GL_ALPHA_TEST);
+            GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
             break;
         case BLEND_ONE_ONE_MINUS_ALPHA:
+            GLCheck(glDisable, GL_ALPHA_TEST);
+            GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             break;
         default:
@@ -561,7 +574,8 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     }
 
     if(!prev || prev->blend_func() != next->blend_func()) {
-        renderer_->set_blending_mode(next->blend_func());
+        renderer_->set_blending_mode(next->blend_func(),
+                                     next->alpha_threshold());
     }
 
     renderer_->set_stage_uniforms(next, program_, global_ambient_);

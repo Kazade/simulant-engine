@@ -1,5 +1,6 @@
 //
 //   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
+//   2025-2026 Niels Van Son
 //
 //     This file is part of Simulant.
 //
@@ -38,7 +39,8 @@ VertexSpecification::VertexSpecification(
     VertexAttribute texcoord3, VertexAttribute texcoord4,
     VertexAttribute texcoord5, VertexAttribute texcoord6,
     VertexAttribute texcoord7, VertexAttribute diffuse,
-    VertexAttribute specular) :
+    VertexAttribute specular, VertexAttribute joints,
+    VertexAttribute weights) :
     position_attribute_(position),
     normal_attribute_(normal),
     texcoord0_attribute_(texcoord0),
@@ -50,7 +52,9 @@ VertexSpecification::VertexSpecification(
     texcoord6_attribute_(texcoord6),
     texcoord7_attribute_(texcoord7),
     color_attribute_(diffuse),
-    specular_attribute_(specular) {
+    specular_attribute_(specular),
+    joint_attribute_(joints),
+    weight_attribute_(weights) {
 
     recalc_stride_and_offsets();
 }
@@ -103,9 +107,11 @@ void VertexSpecification::recalc_stride_and_offsets() {
     texcoord6_offset_ = texcoord5_offset_ + vertex_attribute_size(texcoord5_attribute_);
     texcoord7_offset_ = texcoord6_offset_ + vertex_attribute_size(texcoord6_attribute_);
     specular_offset_ = texcoord7_offset_ + vertex_attribute_size(texcoord7_attribute_);
+    joint_offset_ = specular_offset_ + vertex_attribute_size(specular_attribute_);
+    weight_offset_ = joint_offset_ + vertex_attribute_size(joint_attribute_);
 
     // On the Dreamcast with the default vertex arrangement, this should be 32 bytes
-    stride_ = round_to_bytes(specular_offset_ + vertex_attribute_size(specular_attribute_), BUFFER_STRIDE_ALIGNMENT);
+    stride_ = round_to_bytes(weight_offset_ + vertex_attribute_size(weight_attribute_), BUFFER_STRIDE_ALIGNMENT);
 }
 
 AttributeOffset VertexSpecification::position_offset(bool check) const {
@@ -156,6 +162,16 @@ AttributeOffset VertexSpecification::texcoord6_offset(bool check) const {
 AttributeOffset VertexSpecification::texcoord7_offset(bool check) const {
     if(check && !has_texcoord7()) { return INVALID_ATTRIBUTE_OFFSET; }
     return texcoord7_offset_;
+}
+
+AttributeOffset VertexSpecification::joint_offset(bool check) const {
+    if(check && !has_joints()) { return INVALID_ATTRIBUTE_OFFSET; }
+    return joint_offset_;
+}
+
+AttributeOffset VertexSpecification::weight_offset(bool check) const {
+    if(check && !has_weights()) { return INVALID_ATTRIBUTE_OFFSET; }
+    return weight_offset_;
 }
 
 AttributeOffset VertexSpecification::texcoordX_offset(uint8_t which, bool check) const {

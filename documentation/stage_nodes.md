@@ -1,6 +1,6 @@
 # Stage Nodes
 
-Each `Stage` is the root of a heirachy of `StageNodes`. Classes that inherit `StageNode` are:
+Each `Stage` is the root of a heirachy of `StageNodes`. Some classes that inherit `StageNode` are:
 
  - `Stage`
  - `Actor`
@@ -18,8 +18,8 @@ These are the basic building blocks of your scene.
 All `StageNodes` by default are children of the `Stage` they belong to. If you want to detach a node from its parent (and reparent it under the `Stage`) then simply pass a `nullptr` to `set_parent`:
 
 ```
-auto a1 = stage_->new_actor();
-auto a2 = stage_->new_actor();
+auto a1 = create_child<Actor>();
+auto a2 = create_child<Actor>();
 a2->set_parent(a1);
 
 // a1 is now a2's parent
@@ -47,9 +47,8 @@ for(auto node: stage->each_child()) {} // Iterate direct-children only
 
 # Updating of StageNode and their Behaviours
 
-`StageNodes` are only updated if the owning `Stage` is attached to an active `Pipeline`. You can check this by checking `Stage::is_part_of_active_pipeline()`. 
+`StageNodes` are only updated if the owning `Stage` is attached to an active `Layer`. You can check this by checking `Stage::is_part_of_active_pipeline()`. 
 
-It is highly recommended that if you are manipulating a `Stage` in a background thread (e.g. in the `load()` method of a `Scene`) that you do not attach the `Stage` to a pipeline until you are finished manipulating. This should prevent threading problems.
 
 # Destruction
 
@@ -65,13 +64,12 @@ When the clean-up process runs, an additional `signal_cleaned_up` signal will fi
 
 ## Finding nodes
 
-You can give stage nodes names using `StageNode::set_name`, and later search for those nodes recursively using `StageNode::find_descendent_with_name`. If a name is duplicated, only the first match found
-will be returned.
+You can give stage nodes names using `StageNode::set_name`, and later search for those nodes recursively using `StageNode::find_descendent`. If a name is duplicated, only the first match found will be returned.
 
 You can set a name during construction of a stage node by chaining using the `set_name_and_get(name)` method:
 
 ```
-auto actor = stage->new_actor()->set_name_and_get("Actor 1");
+auto actor = create_child<Actor>()->set_name_and_get("Actor 1");
 ```
 
 # Disabling Culling
@@ -83,18 +81,40 @@ node->set_cullable(false);  // Will always be renderered
 assert(!node->is_cullable());
 ```
 
-# Linking StageNode Positions
+# Mixins
 
-Sometimes it's useful for a stage node to be "attached" to another node, without forming a parent child relationship. An example would be a Skybox, which should always stay surrounding the camera, but shouldn't follow the camera's rotation - and also doesn't conceptually make sense to be a child of the camera. For this reason `StageNode::link_position(node)` exists. The following code would make `actor` synchronise its position with `camera`.
+StageNodes normally follow a parent-child hierarchy. Sometimes this needlessly complicates your scene graph when you want to combine the behaviour of multiple nodes. If a StageNode is well designed it can be used as a "mixin" with another node. For example:
 
 ```
-auto actor = stage->new_actor();
-auto camera = stage->new_camera();
-
-actor->link_position(camera);
+auto node = create_child<Actor>();
+auto mixin = node->create_mixin<MyStageNode>();
 ```
 
- > Note: the linked node will update its position at the end of `late_update` phase, therefore its possible that the position will not match what you would expect during `update`, `fixed_update`, or `late_update` but the position 
- will synchronise before rendering.
+In the above case, the Actor will be the node that is part of the scene graph, but both Actor and MyStageNode will share a `Transform` and both will have their `on_update` methods called. This is a very powerful feature that allows you to build complex nodes without cluttering up your scene tree.
 
+## Finding Dependent Nodes
 
+Often when writing a `StageNode` you'll need access to other nodes that are related to the one you are defining the behaviour for. For example, if you are writing a vehicle node, you may need to access the wheel stage nodes which are children of the main car body node. You can use "finders" for this purpose:
+
+```
+class CarBehaviour : public StageNode {
+public:
+    FindResult<Actor> front_left_wheel = FindDescendent("Front Left", this);  // passing `this` is an unfortunate necessity to allow this syntax to work
+    FindResult<Actor> front_right_wheel = FindDescendent("Front Right", this);
+}
+```
+
+These variables give you quick access to those child nodes. Likewise, `FindAncestor` will search up the stage node tree for a matching parent node. 
+
+When you access `front_left_wheel` above, a search will happen down the tree for the node named "Front Left" and the result will be cached for future accesses. If the found node is later destroyed, the cache will be invalidated and the next access will search again.
+
+## Rigid Body Physics
+
+Simulant's rigid body simulation is implemented entirely using `Behaviours`. The key `Behaviours` to examine are:
+
+ - `RigidBody` - a dynamic physics object
+ - `StaticBody` - a static physics object
+ - `KinematicBody` - a kinematic physics object
+ - `RaycastVehicle` - a work-in-progress `Behaviour` for non-realistic car physics
+
+All of these `Behaviours` require a `RigidBodySimulation` instance to function. The easiest way to get access to one of these is to make use of the `PhysicsScene` class when constructing your game scene.

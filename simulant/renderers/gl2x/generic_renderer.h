@@ -118,7 +118,7 @@ private:
     void set_stage_uniforms(const MaterialPass* pass, GPUProgram* program, const Color& global_ambient);
 
     void set_auto_attributes_on_shader(GPUProgram *program, const Renderable* buffer, GPUBuffer* buffers);
-    void set_blending_mode(BlendType type);
+    void set_blending_mode(BlendType type, float alpha);
     void send_geometry(const Renderable* renderable, GPUBuffer* buffers);
 
     /* Stashed here in prepare_to_render and used later for that renderable */

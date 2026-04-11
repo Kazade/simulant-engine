@@ -1,4 +1,5 @@
 /* *   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
+ *     2025-2026 Niels Van Son
  *
  *     This file is part of Simulant.
  *
@@ -50,7 +51,9 @@ enum VertexAttributeType {
     VERTEX_ATTRIBUTE_TYPE_TEXCOORD6,
     VERTEX_ATTRIBUTE_TYPE_TEXCOORD7,
     VERTEX_ATTRIBUTE_TYPE_COLOR,
-    VERTEX_ATTRIBUTE_TYPE_SPECULAR
+    VERTEX_ATTRIBUTE_TYPE_SPECULAR,
+    VERTEX_ATTRIBUTE_TYPE_JOINTS,
+    VERTEX_ATTRIBUTE_TYPE_WEIGHTS
 };
 
 VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec);
@@ -106,6 +109,12 @@ public:
     template<typename T>
     const T* color_at(const uint32_t index) const;
 
+    template<typename T>
+    const T* joints_at(uint32_t idx) const;
+
+    template<typename T>
+    const T* weights_at(uint32_t idx) const;
+
     /*
      * Position Non-Dimensional
      * Returns the position as a Vec4 with the remaining components
@@ -145,6 +154,44 @@ public:
     void specular(float r, float g, float b, float a);
     void specular(const Color& color);
 
+    template <typename T>
+    void joints(T j1, T j2, T j3, T j4) {
+        VertexAttribute expected = std::is_same<T, uint8_t>::value
+                                       ? VERTEX_ATTRIBUTE_4UB // uint8_t
+                                       : VERTEX_ATTRIBUTE_4US; // uint16_t
+
+        assert(vertex_specification_.joint_attribute_ == expected);
+
+        auto offset = vertex_specification_.joint_offset();
+        if (offset == INVALID_ATTRIBUTE_OFFSET) return;
+
+        T* out = reinterpret_cast<T*>(&data_[cursor_offset() + offset]);
+
+        out[0] = j1;
+        out[1] = j2;
+        out[2] = j3;
+        out[3] = j4;
+    }
+
+    template <typename T>
+    void weights(T w1, T w2, T w3, T w4) {
+        VertexAttribute expected = std::is_same<T, uint8_t>::value
+                                       ? VERTEX_ATTRIBUTE_4UB // unit8_t
+                                       : VERTEX_ATTRIBUTE_4F; // float
+
+        assert(vertex_specification_.weight_attribute_ == expected);
+
+        auto offset = vertex_specification_.weight_offset();
+        if (offset == INVALID_ATTRIBUTE_OFFSET) return;
+
+        T* out = reinterpret_cast<T*>(&data_[cursor_offset() + offset]);
+
+        out[0] = w1;
+        out[1] = w2;
+        out[2] = w3;
+        out[3] = w4;
+    }
+
     uint32_t count() const { return vertex_count_; }
 
     sig::signal<void ()>& signal_update_complete() { return signal_update_complete_; }
@@ -158,9 +205,7 @@ public:
     }
 
     uint32_t copy_vertex_to_another(VertexData& out, uint32_t idx) {
-        if(out.vertex_specification_ != this->vertex_specification_) {
-            throw std::runtime_error("Cannot copy vertex as formats differ");
-        }
+        assert(out.vertex_specification_ == this->vertex_specification_);
 
         uint32_t start = idx * stride();
         uint32_t end = (idx + 1) * stride();
@@ -291,6 +336,12 @@ const Color* VertexData::color_at(const uint32_t index) const;
 template<>
 const uint8_t* VertexData::color_at(const uint32_t index) const;
 
+template<>
+const Vec4* VertexData::weights_at<Vec4>(uint32_t idx) const;
+
+template<>
+const uint8_t* VertexData::joints_at<uint8_t>(uint32_t idx) const;
+
 typedef uint32_t Index;
 
 class IndexData;
@@ -412,7 +463,7 @@ public:
             case INDEX_TYPE_16_BIT: return *((uint16_t*) ptr);
             case INDEX_TYPE_32_BIT: return *((uint32_t*) ptr);
         default:
-            throw std::logic_error("Invalid index type");
+            assert(0 && "Invalid index type passed");
         }
     }
 

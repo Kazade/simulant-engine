@@ -4,29 +4,17 @@ Simulant is currently supported in some form on the following platforms:
 
  - Fedora (and probably other Linux distributions)
  - Windows
- - OSX
- - Dreamcast (room for improvement, performance and sound need work)
- - PSP (compiles, missing features)
- - Android (untested, needs work)
+ - OSX (should work, not regularly tested)
+ - Dreamcast (performance work needed)
+ - PSP (runs, missing audio)
+ - Android
+ - Evercade (compiles, untested)
 
 The following platforms will be targetted when possible (or when someone submits patches):
 
- - iOS
- - Web (via WASM)
-
-
-## Dreamcast
-
-Dreamcast support is currently a work in progress. The following things aren't supported yet:
-
- - Mouse input
- - Sound
- - Any kind of VMU support
- - Romdisk loading
-
-There are also the following problems:
-
- - Unsupported operations: Point particles
+ - OG XBox (WIP)
+ - PS2
+ - GameCube
  
 
 # The Platform API

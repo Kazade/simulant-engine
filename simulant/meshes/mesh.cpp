@@ -1,5 +1,6 @@
 //
 //   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
+//   2025-2026 Niels Van Son
 //
 //     This file is part of Simulant.
 //
@@ -31,6 +32,8 @@
 #include "private.h"
 
 #include "../procedural/mesh.h"
+
+#include "simulant/nodes/actor.h"
 
 namespace smlt {
 
@@ -190,23 +193,14 @@ void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation
 }
 
 void Mesh::rebuild_aabb() {
-    AABB& result = aabb_;
+    aabb_ = AABB();
 
-    if(!this->submesh_count()) {
-        result = AABB();
+    if(!this->submesh_count()) {    
         return;
     }
 
-    bool first = true;
-    result = AABB();
-
     for(auto& sm: submeshes_) {
-        if(first) {
-            result = sm->bounds_;
-            first = false;
-        } else {
-            result.encapsulate(sm->bounds_);
-        }
+        aabb_.encapsulate(sm->bounds_);
     }
 }
 
@@ -760,6 +754,116 @@ void Mesh::normalize() {
     smlt::Mat4 scale_matrix = Mat4::as_scale(smlt::Vec3(scaling));
 
     transform_vertices(scale_matrix);
+}
+
+void Mesh::update_skinning() {
+    if(!skin) return;
+
+    // Keeping in mind the rest pose to avoid skinning on top of already transformed vertices
+    if (rest_positions_.empty()) {
+        rest_positions_.reserve(vertex_data_->count());
+        rest_normals_.reserve(vertex_data_->count());
+
+        for (uint32_t i = 0; i < vertex_data_->count(); ++i) {
+            if (vertex_data_->vertex_specification().has_positions()) {
+                rest_positions_.push_back(*vertex_data_->position_at<Vec3>(i));
+            }
+            if (vertex_data_->vertex_specification().has_normals()) {
+                rest_normals_.push_back(*vertex_data_->normal_at<Vec3>(i));
+            }
+        }
+    }
+
+    Mat4 mesh_world_inverse;
+    if (skin->bound_actor) {
+        mesh_world_inverse = skin->bound_actor->transform->world_space_matrix().inversed();
+    } else {
+        mesh_world_inverse = Mat4();
+    }
+
+    vertex_data_->move_to_start();
+
+    static std::vector<Mat4, aligned_allocator<Mat4, 32>> pre_joint_matrices;
+    pre_joint_matrices.clear();
+    pre_joint_matrices.resize(skin->node_indices.size(), Mat4());
+
+    // Actually pre-allocating the transforms
+    for(size_t h = 0; h < skin->node_indices.size(); ++h) {
+        StageNodePtr joint_node = skin->node_indices[h];
+        if (!joint_node) continue;
+
+        const Mat4& joint_matrix = joint_node->transform->world_space_matrix();
+
+        alignas(32) Mat4 temp;
+        temp = mesh_world_inverse * joint_matrix;
+        pre_joint_matrices[h] = temp * skin->inverse_bind_matrices[h];
+    }
+
+    for (uint32_t i = 0; i < vertex_data_->count(); ++i) {
+        // Starting from a clean 0 Mat4, NOT identity!
+        alignas(32) Mat4 skin_matrix = Mat4::zero();
+
+        const Vec4* weights_acc = vertex_data_->weights_at<Vec4>(i);
+        float weights[4] = { weights_acc->x, weights_acc->y, weights_acc->z, weights_acc->w };
+
+        // Starting with an aligned block to branch depending on joint data signature
+        uint16_t joints[4];
+        if (vertex_data_->vertex_specification().joint_attribute == VERTEX_ATTRIBUTE_4UB) {
+            const auto* joints_acc = vertex_data_->joints_at<uint8_t>(i);
+            for (int j = 0; j < 4; ++j) joints[j] = joints_acc[j];
+        } else if (vertex_data_->vertex_specification().joint_attribute == VERTEX_ATTRIBUTE_4US) {
+            const auto* joints_acc = vertex_data_->joints_at<uint16_t>(i);
+            for (int j = 0; j < 4; ++j) joints[j] = joints_acc[j];
+        }
+
+        float sum = weights[0] + weights[1] + weights[2] + weights[3];
+        if (sum > 1.01f) {
+            for (float & weight : weights) {
+                weight /= sum;
+            }
+        }
+
+        for (int j = 0; j < 4; ++j) {
+            float weight = weights[j];
+            if (weight == 0.0f) continue;
+
+            auto joint_index = joints[j];
+            if(joint_index >= skin->node_indices.size()) continue;
+
+            StageNodePtr joint_node = skin->node_indices[joint_index];
+            if (!joint_node) continue;
+
+            // We're reusing the matrices that we pre-computed earlier
+            const Mat4& joint_matrix = pre_joint_matrices[joint_index];
+
+            // Going by the engine: mapping across all 16 floats of the matrix
+            // Hot path, and the Vec4 reinterpreting assumes 32B alignment!
+            Vec4* skin_rows = reinterpret_cast<Vec4*>(skin_matrix.data());
+            const Vec4* joint_rows = reinterpret_cast<const Vec4*>(&joint_matrix);
+
+            skin_rows[0] = skin_rows[0] + joint_rows[0] * weight;
+            skin_rows[1] = skin_rows[1] + joint_rows[1] * weight;
+            skin_rows[2] = skin_rows[2] + joint_rows[2] * weight;
+            skin_rows[3] = skin_rows[3] + joint_rows[3] * weight;
+
+        }
+
+        // Transform vertex position
+        if (vertex_data_->vertex_specification().has_positions()) {
+            const Vec3& v = rest_positions_[i];
+            vertex_data_->position(v.transformed_by(skin_matrix));
+        }
+
+
+        alignas(32) Mat4 rot(skin_matrix);
+        // Transform vertex normal
+        if (vertex_data_->vertex_specification().has_normals()) {
+            const Vec3& n = rest_normals_[i];
+            vertex_data_->normal(n.rotated_by(rot).normalized());
+        }
+        vertex_data_->move_next();
+    }
+    vertex_data_->done();
 }
 
 void Mesh::reverse_winding() {

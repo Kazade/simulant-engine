@@ -67,6 +67,7 @@ AssetID generate_alphamap(smlt::MeshPtr terrain, AlphaMapWeightFunc func);
 }
 
 struct HeightmapSpecification {
+    VertexSpecification vertex_spec = VertexSpecification::DEFAULT;
     float min_height = -64.0f;
     float max_height = 64.0f;
     float spacing = 2.5f;

@@ -54,7 +54,6 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         case material_property_hash(COLOR_MATERIAL_PROPERTY_NAME):
         case material_property_hash(CULL_MODE_PROPERTY_NAME):
         case material_property_hash(TEXTURES_ENABLED_PROPERTY_NAME):
-        case material_property_hash(ALPHA_FUNC_PROPERTY_NAME):
         case FOG_MODE_PROPERTY_HASH:
             *type = MATERIAL_PROPERTY_TYPE_INT;
         break;
@@ -100,7 +99,6 @@ const PropertyList& core_properties() {
         {COLOR_MATERIAL_PROPERTY_NAME,                MATERIAL_PROPERTY_TYPE_INT    },
         {CULL_MODE_PROPERTY_NAME,                     MATERIAL_PROPERTY_TYPE_INT    },
         {DEPTH_FUNC_PROPERTY_NAME,                    MATERIAL_PROPERTY_TYPE_INT    },
-        {ALPHA_FUNC_PROPERTY_NAME,                    MATERIAL_PROPERTY_TYPE_INT    },
         {ALPHA_THRESHOLD_PROPERTY_NAME,               MATERIAL_PROPERTY_TYPE_FLOAT  },
 
         {FOG_MODE_PROPERTY_NAME,                      MATERIAL_PROPERTY_TYPE_INT    },

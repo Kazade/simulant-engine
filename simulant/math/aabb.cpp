@@ -115,12 +115,25 @@ bool AABB::intersects_sphere(const smlt::Vec3& center, float diameter) const {
 }
 
 void AABB::encapsulate(const AABB &bounds) {
-    encapsulate(bounds.center_ - bounds.extents_);
-    encapsulate(bounds.center_ + bounds.extents_);
+    if(has_zero_area()) {
+        // If an AABB has zero area, we class it as unintialized and set it
+        // it directly
+        center_ = bounds.center_;
+        extents_ = bounds.extents_;
+    } else {
+        encapsulate(bounds.center_ - bounds.extents_);
+        encapsulate(bounds.center_ + bounds.extents_);
+    }
 }
 
 void AABB::encapsulate(const Vec3& point) {
-    set_min_max(Vec3::min(min(), point), Vec3::max(max(), point));
+    if(has_zero_area()) {
+        // If an AABB has zero area, we class it as unintialized and set it
+        // it directly
+        set_min_max(point, point);
+    } else {
+        set_min_max(Vec3::min(min(), point), Vec3::max(max(), point));
+    }
 }
 
 std::ostream& operator<<(std::ostream& stream, const AABB& aabb) {

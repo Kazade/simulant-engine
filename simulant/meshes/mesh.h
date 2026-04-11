@@ -1,4 +1,5 @@
 /* *   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
+ *     2025-2026 Niels Van Son
  *
  *     This file is part of Simulant.
  *
@@ -33,12 +34,13 @@
 #include "../generic/identifiable.h"
 #include "../generic/property.h"
 
-#include "../loadable.h"
-#include "../asset.h"
-#include "../vertex_data.h"
-#include "../types.h"
-#include "../interfaces.h"
 #include "../animation.h"
+#include "../asset.h"
+#include "../interfaces.h"
+#include "../loadable.h"
+#include "../types.h"
+#include "../vertex_data.h"
+#include "simulant/nodes/stage_node.h"
 
 namespace smlt {
 
@@ -163,6 +165,22 @@ public:
 
     /* Returns true if the Mesh has had a skeleton added */
     bool has_skeleton() const;
+
+    int skin_index = -1;
+    bool is_skinned = false;
+
+    /* For skinned animations, holds the necessary data to cross-reference
+     * with the stage nodes used as joints. */
+    struct Skin {
+        std::vector<int16_t> joint_indices;
+        std::vector<StageNodePtr> node_indices; // Keep a vector of pointers to the smlt StageNodes used as joints
+        std::vector<Mat4, aligned_allocator<Mat4, 32>> inverse_bind_matrices; // Allocated on 32B for DC performance
+        int8_t skeleton_root_node; // In case the root isn't at origin, use this to translate from it
+        StageNodePtr skeleton_root_stage_node;
+        ActorPtr bound_actor;
+    };
+
+    std::shared_ptr<Skin> skin;
 
     /**
      * @brief Create a new ranged submesh with the specified material
@@ -294,6 +312,8 @@ public:
 
     void reverse_winding(); ///< Reverse the winding of all submeshes
 
+    void update_skinning(); ///< Run the animation skinning logic on the mesh
+
     const AABB& aabb() const;
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const smlt::Mat4& transform);
@@ -329,6 +349,8 @@ private:
     friend class Actor;
 
     Skeleton* skeleton_ = nullptr;
+    std::vector<Vec3> rest_positions_;
+    std::vector<Vec3> rest_normals_;
 
     VertexDataPtr vertex_data_;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;

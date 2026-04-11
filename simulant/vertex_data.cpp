@@ -1,5 +1,6 @@
 //
 //   Copyright (c) 2011-2017 Luke Benstead https://simulant-engine.appspot.com
+//   2025-2026 Niels Van Son
 //
 //     This file is part of Simulant.
 //
@@ -80,6 +81,8 @@ const VertexSpecification VertexSpecification::DEFAULT = VertexSpecification{
 #else
     VERTEX_ATTRIBUTE_4UB_RGBA, // Diffuse
 #endif
+    VERTEX_ATTRIBUTE_NONE,
+    VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE
 };
 
@@ -116,6 +119,8 @@ VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecifi
         case VERTEX_ATTRIBUTE_TYPE_COLOR:
             return spec.color_attribute;
         case VERTEX_ATTRIBUTE_TYPE_SPECULAR: return spec.specular_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_JOINTS: return spec.joint_attribute;
+        case VERTEX_ATTRIBUTE_TYPE_WEIGHTS: return spec.weight_attribute;
     default:
         assert(0 && "Invalid vertex attribute type");
         return VERTEX_ATTRIBUTE_NONE;
@@ -404,6 +409,27 @@ const uint8_t* VertexData::color_at(const uint32_t idx) const {
            vertex_specification_.color_attribute == VERTEX_ATTRIBUTE_4UB_BGRA);
     return ((uint8_t*)&data_[(idx * stride()) +
                              vertex_specification_.color_offset()]);
+}
+
+template<>
+const Vec4* VertexData::weights_at(const uint32_t idx) const {
+    assert(vertex_specification_.weight_attribute == VERTEX_ATTRIBUTE_4F);
+    return ((Vec4*)&data_[(idx * stride()) +
+                             vertex_specification_.weight_offset()]);
+}
+
+template<>
+const uint8_t* VertexData::joints_at<uint8_t>(const uint32_t idx) const {
+    assert(vertex_specification_.joint_attribute == VERTEX_ATTRIBUTE_4UB);
+    return ((uint8_t*)&data_[(idx * stride()) +
+                             vertex_specification_.joint_offset()]);
+}
+
+template<>
+const uint16_t* VertexData::joints_at<uint16_t>(const uint32_t idx) const {
+    assert(vertex_specification_.joint_attribute == VERTEX_ATTRIBUTE_4US);
+    return ((uint16_t*)&data_[(idx * stride()) +
+                             vertex_specification_.joint_offset()]);
 }
 
 void VertexData::tex_coord1(float u, float v) {

@@ -7,7 +7,7 @@ static unsigned long systemRam = 0x00000000;
 static unsigned long elfOffset = 0x00000000;
 static unsigned long stackSize = 0x00000000;
 
-extern unsigned long end;
+extern uint8_t end[];
 extern unsigned long start;
 
 #define _end end

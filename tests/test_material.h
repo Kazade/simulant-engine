@@ -375,7 +375,7 @@ public:
         o1->set_pass_count(1);
         auto o2 = *o1->pass(0);
 
-        const float* f;
+        const float* f = nullptr;
         o1->set_property_value(SPECULAR_PROPERTY_NAME, 1.5f);
         assert_true(o2.property_value(SPECULAR_PROPERTY_NAME, f));
         assert_equal(*f, 1.5f);

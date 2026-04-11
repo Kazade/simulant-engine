@@ -153,24 +153,34 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
             break;
     }
 
-    sceGuEnable(GU_BLEND);
     switch(next->blend_func()) {
         case BLEND_NONE:
             sceGuDisable(GU_BLEND);
+            sceGuDisable(GU_ALPHA_TEST);
+            break;
+        case BLEND_MASK:
+            sceGuDisable(GU_BLEND);
+            sceGuEnable(GU_ALPHA_TEST);
+            sceGuAlphaFunc(GU_GREATER, next->alpha_threshold() * 255, 0xFF);
             break;
         case BLEND_ADD:
+            sceGuEnable(GU_BLEND);
             sceGuBlendFunc(GU_ADD, GU_FIX, GU_FIX, 0xFFFFFFFF, 0xFFFFFFFF);
             break;
         case BLEND_ALPHA:
+            sceGuEnable(GU_BLEND);
             sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
             break;
         case BLEND_COLOR:
+            sceGuEnable(GU_BLEND);
             sceGuBlendFunc(GU_ADD, GU_SRC_COLOR, GU_ONE_MINUS_SRC_COLOR, 0, 0);
             break;
         case BLEND_MODULATE:
+            sceGuEnable(GU_BLEND);
             sceGuBlendFunc(GU_ADD, GU_DST_COLOR, GU_ZERO, 0, 0);
             break;
         case BLEND_ONE_ONE_MINUS_ALPHA:
+            sceGuEnable(GU_BLEND);
             sceGuBlendFunc(GU_ADD, GU_FIX, GU_ONE_MINUS_SRC_ALPHA, 0xFFFFFFFF,
                            0);
             break;
@@ -486,5 +496,3 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
                                                   total);
 }
 }
-
-
