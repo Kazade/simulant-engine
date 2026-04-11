@@ -63,13 +63,28 @@ bool StageNodeManager::register_stage_node(const char* script_data,
         return false;
     }
 
-    auto maybe_klass = lua->get_global(class_name);
-    if(!maybe_klass) {
+    return register_stage_node_from_lua_state(lua->lua_state(), class_name);
+}
+
+bool StageNodeManager::register_stage_node(const Path& script,
+                                           const char* class_name) {
+    auto lua = smlt::get_app()->ensure_lua_ready();
+
+    if(!lua->load_file(script)) {
+        return false;
+    }
+
+    return register_stage_node_from_lua_state(lua->lua_state(), class_name);
+}
+
+bool StageNodeManager::register_stage_node_from_lua_state(lua_State* L,
+                                                          const char* class_name) {
+    luabridge::LuaRef klass = luabridge::getGlobal(L, class_name);
+    if(klass.isNil()) {
         S_ERROR("Unable to find specified class in Lua file: {0}", class_name);
         return false;
     }
 
-    auto klass = maybe_klass.value();
     luabridge::LuaRef meta = klass["Meta"];
     StageNodeType node_id = meta["node_type"].cast<uint32_t>().valueOr(0);
     std::string name = meta["name"];
@@ -82,7 +97,6 @@ bool StageNodeManager::register_stage_node(const char* script_data,
     // writes into already-freed Lua memory and corrupts the heap.
     // A raw pointer drop and a std::string drop are both no-ops, so
     // destroying the lambda after lua_close() is safe.
-    lua_State* L = lua->lua_state();
     std::string klass_name(class_name);
 
     // Parse klass.params if defined — a table mapping param names to
@@ -199,27 +213,6 @@ bool StageNodeManager::register_stage_node(const char* script_data,
         // No LuaRef is captured here for the same reason as above.
         static_cast<LuaStageNode*>(node)->~LuaStageNode();
     });
-}
-
-bool StageNodeManager::register_stage_node(const Path& script,
-                                           const char* class_name) {
-    auto lua = smlt::get_app()->ensure_lua_ready();
-
-    if(!lua->load_file(script)) {
-        return false;
-    }
-
-    auto klass = lua->get_global(class_name);
-    if(!klass) {
-        S_ERROR("Unable to find specified class in Lua file: {0}", class_name);
-        return false;
-    }
-
-    auto node_id = 1;
-    return false;
-    // return register_stage_node(node_id, name, 0, 0,
-    //                            [klass](void*) -> StageNode* {},
-    //                            [klass](StageNode*) {});
 }
 
 StageNode* StageNodeManager::create_node(StageNodeType type,

@@ -1,5 +1,9 @@
 #pragma once
 
+extern "C" {
+    struct lua_State;
+}
+
 #include "../utils/params.h"
 #include "helpers.h"
 #include "stage_node.h"
@@ -143,6 +147,12 @@ public:
     bool register_stage_node(const Path& script_file, const char* class_name);
     bool register_stage_node(const char* script_data, const char* class_name);
 
+private:
+    /* Shared implementation used by both register_stage_node overloads after
+       the Lua state has been loaded. */
+    bool register_stage_node_from_lua_state(lua_State* L, const char* class_name);
+
+public:
     bool register_stage_node(StageNodeType type, const char* name,
                              std::size_t size_in_bytes, std::size_t alignment,
                              StageNodeConstructFunction construct_func,
