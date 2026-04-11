@@ -155,7 +155,7 @@ Simulant is a cross-platform C++ game engine with support for desktop (Linux, Wi
 ## 🔧 Development
 
 - **[C++ Guidelines](reference/cpp-guidelines.md)** - Code style and best practices
-- [**Engine Structure**](reference/engine-structure.md)** - Internal architecture
+- **[Engine Structure](reference/engine-structure.md)** - Internal architecture
 - **[Testing Framework](reference/testing.md)** - Writing unit tests
 - **[Debugging Tips](reference/debugging.md)** - Debugging strategies
 - **[Platform Notes](reference/platform-notes.md)** - Cross-platform considerations
