@@ -42,85 +42,111 @@ node->rotate_to(Degrees(90), Degrees(0), Degrees(0));  // 90° around X axis
 
 ## Setting Transforms
 
+> **Important:** Simulant distinguishes between **absolute** and **relative** transform properties on the `Transform` class (accessed via `node->transform->`):
+>
+> | Property | Space | Description |
+> |----------|-------|-------------|
+> | `position` | **Absolute** (world-space) | Final world-space position |
+> | `orientation` | **Absolute** (world-space) | Final world-space rotation as quaternion |
+> | `scale` | **Absolute** (world-space) | Final world-space scale |
+> | `translation` | **Relative** (local-space) | Offset from parent |
+> | `rotation` | **Relative** (local-space) | Rotation relative to parent |
+> | `scale_factor` | **Relative** (local-space) | Scale relative to parent |
+
 ### Position
 
 ```cpp
-// Absolute position
-node->move_to(x, y, z);
-node->move_to(Vec3(x, y, z));
+// Read ABSOLUTE world-space position
+Vec3 world_pos = node->transform->position();
 
-// Relative movement
-node->move_by(dx, dy, dz);
-node->move_by(Vec3(dx, dy, dz));
+// Read RELATIVE local-space translation (offset from parent)
+Vec3 local_offset = node->transform->translation();
 
-// Get position
-Vec3 pos = node->position();          // Local position
-Vec3 world_pos = node->absolute_position();  // World position
+// Set absolute world-space position
+node->transform->set_position(Vec3(10, 5, 0));
+
+// Set relative translation (offset from parent)
+node->transform->set_translation(Vec3(2, 0, 0));  // 2 units right of parent
 ```
 
 ### Rotation
 
 ```cpp
-// Set rotation (Euler angles)
-node->rotate_to(pitch, yaw, roll);
-node->rotate_to(Degrees(90), Degrees(45), Degrees(0));
+// Read ABSOLUTE world-space orientation (quaternion)
+Quaternion world_rot = node->transform->orientation();
 
-// Relative rotation
-node->rotate_by(Degrees(10), Degrees(0), Degrees(0));
+// Read RELATIVE local-space rotation (quaternion)
+Quaternion local_rot = node->transform->rotation();
 
-// Get rotation
-Euler rotation = node->euler_angles();
-Quaternion quat = node->rotation();
+// Set absolute world-space orientation
+node->transform->set_orientation(Quaternion::from_euler(Degrees(90), Degrees(0), Degrees(0)));
 
-// Rotate to face a point
-node->look_at(target_position);
-node->look_at(target_position, up_vector);
+// Set relative rotation (local to parent)
+node->transform->set_rotation(Quaternion::from_euler(Degrees(45), Degrees(0), Degrees(0)));
 ```
 
 ### Scale
 
 ```cpp
-// Uniform scale
-node->scale_by(2.0f);  // Double size
+// Read ABSOLUTE world-space scale
+Vec3 world_scale = node->transform->scale();
 
-// Per-axis scale
-node->set_scale(sx, sy, sz);
-node->set_scale(Vec3(2.0f, 1.0f, 1.0f));  // Stretch on X
+// Read RELATIVE local-space scale factor
+Vec3 local_scale = node->transform->scale_factor();
 
-// Get scale
-Vec3 scale = node->scale();
+// Set absolute world-space scale
+node->transform->set_scale(Vec3(2.0f, 2.0f, 2.0f));
+
+// Set relative scale factor
+node->transform->set_scale_factor(Vec3(2.0f, 1.0f, 1.0f));  // Stretch on X
+```
+
+### Relative Movement Helpers
+
+```cpp
+// Translate relative to current position (adds to translation)
+node->transform->translate(Vec3(dx, dy, dz));
+
+// Rotate relative to current orientation (adds to rotation)
+node->transform->rotate(Vec3(0, 1, 0), Degrees(45));  // 45° around Y axis
+node->transform->rotate(Degrees(10), Degrees(0), Degrees(0));  // Euler angles
+
+// Scale relative to current scale
+node->transform->scale_by(2.0f);  // Double current scale
+node->transform->scale_by(Vec3(1.5f, 1.5f, 1.5f));
 ```
 
 ## Local vs World Space
 
-### Local Space
+### Understanding the Difference
 
-Local transform is relative to the parent node:
+```cpp
+// position and orientation are ALWAYS absolute (world-space)
+Vec3 world_pos = node->transform->position();
+Quaternion world_rot = node->transform->orientation();
+
+// translation and rotation are ALWAYS relative (local-space)
+Vec3 local_offset = node->transform->translation();
+Quaternion local_rot = node->transform->rotation();
+```
+
+### Example: Parent-Child Hierarchy
 
 ```cpp
 auto parent = create_child<Stage>();
-parent->move_to(10, 0, 0);
+parent->transform->set_position(Vec3(10, 0, 0));  // Absolute world position
 
 auto child = parent->create_child<Actor>();
-child->move_to(5, 0, 0);  // 5 units from parent
+child->transform->set_translation(Vec3(5, 0, 0));  // 5 units relative to parent
 
-// Local position: (5, 0, 0)
-Vec3 local = child->position();
+// Child's RELATIVE position (offset from parent): (5, 0, 0)
+Vec3 local = child->transform->translation();
 
-// World position: (15, 0, 0)
-Vec3 world = child->absolute_position();
+// Child's ABSOLUTE position (world-space): (15, 0, 0)
+Vec3 world = child->transform->position();
 ```
 
-### World Space
-
-World transform is the absolute position in the scene:
-
-```cpp
-// Convert local to world
-Vec3 world_pos = node->absolute_position();
-Quaternion world_rot = node->absolute_rotation();
-Vec3 world_scale = node->absolute_scale();
-```
+> **Key Insight:** When you change `translation`, you're setting the offset from the parent. When you read `position`, you're getting the final world-space location after all parent transforms are applied.
 
 ## Transform Retain Mode
 
@@ -154,22 +180,23 @@ actor->set_parent(new_parent, TRANSFORM_RETAIN_MODE_KEEP);
 
 ### Parent-Child Relationships
 
-When you move a parent, all children move with it:
+When you change a parent's absolute position, all children move with it:
 
 ```cpp
 auto car = create_child<Stage>();
-car->move_to(0, 0, 0);
+car->transform->set_position(Vec3(0, 0, 0));
 
 auto wheel_fl = car->create_child<Actor>();
-wheel_fl->move_to(1, 0, 1);
+wheel_fl->transform->set_translation(Vec3(1, 0, 1));
 
 auto wheel_fr = car->create_child<Actor>();
-wheel_fr->move_to(-1, 0, 1);
+wheel_fr->transform->set_translation(Vec3(-1, 0, 1));
 
-// Move the car - wheels move with it
-car->move_by(5, 0, 0);
+// Move the car in world space - wheels move with it
+car->transform->set_position(Vec3(5, 0, 0));
 
-// Wheels are now at (6, 0, 1) and (4, 0, 1) in world space
+// Wheels' world positions are now (6, 0, 1) and (4, 0, 1)
+// But their translation values remain (1, 0, 1) and (-1, 0, 1)
 ```
 
 ### Nested Hierarchies
@@ -178,16 +205,19 @@ Transforms compound through the hierarchy:
 
 ```cpp
 auto grandparent = create_child<Stage>();
-grandparent->move_to(10, 0, 0);
+grandparent->transform->set_position(Vec3(10, 0, 0));
 
 auto parent = grandparent->create_child<Stage>();
-parent->move_to(5, 0, 0);
+parent->transform->set_translation(Vec3(5, 0, 0));  // Relative to grandparent
 
 auto child = parent->create_child<Actor>();
-child->move_to(2, 0, 0);
+child->transform->set_translation(Vec3(2, 0, 0));  // Relative to parent
 
-// Child's world position: 10 + 5 + 2 = 17
-Vec3 world_pos = child->absolute_position();  // (17, 0, 0)
+// Child's ABSOLUTE position: 10 + 5 + 2 = 17
+Vec3 world_pos = child->transform->position();  // (17, 0, 0)
+
+// Child's RELATIVE translation is still just (2, 0, 0)
+Vec3 local_offset = child->transform->translation();  // (2, 0, 0)
 ```
 
 ## Direction Vectors
@@ -208,11 +238,11 @@ Vec3 up = node->up();
 These are useful for movement:
 
 ```cpp
-// Move forward
-node->move_by(node->forward() * speed * dt);
+// Move forward (modify absolute position)
+node->transform->translate(node->transform->forward() * speed * dt);
 
 // Strafe right
-node->move_by(node->right() * speed * dt);
+node->transform->translate(node->transform->right() * speed * dt);
 ```
 
 ## Common Transform Patterns
@@ -229,19 +259,20 @@ public:
 
     void on_update(float dt) override {
         angle += speed * dt;
-        
+
         if (auto self = maybe_this()) {
             float rad = angle * 3.14159f / 180.0f;
             float x = cos(rad) * radius;
             float z = sin(rad) * radius;
-            
-            self->move_to(
-                target->absolute_position().x + x,
-                target->absolute_position().y + 2,
-                target->absolute_position().z + z
-            );
-            
-            self->look_at(target->absolute_position());
+
+            // Set absolute position based on target's world position
+            self->transform->set_position(Vec3(
+                target->transform->position().x + x,
+                target->transform->position().y + 2,
+                target->transform->position().z + z
+            ));
+
+            self->transform->look_at(target->transform->position());
         }
     }
 };
@@ -250,13 +281,13 @@ public:
 ### Follow at Offset
 
 ```cpp
-// Camera follows player at offset
-camera->move_to(
-    player->absolute_position().x,
-    player->absolute_position().y + 5,
-    player->absolute_position().z - 10
-);
-camera->look_at(player->absolute_position());
+// Camera follows player at offset (modify absolute position)
+camera->transform->set_position(Vec3(
+    player->transform->position().x,
+    player->transform->position().y + 5,
+    player->transform->position().z - 10
+));
+camera->transform->look_at(player->transform->position());
 ```
 
 ### billboarding (Face Camera)
@@ -288,19 +319,19 @@ float dist_sq = node_a->distance_squared_to(node_b);
 ```cpp
 // Smooth movement
 Vec3 target_pos = Vec3(10, 0, 0);
-Vec3 current_pos = node->position();
+Vec3 current_pos = node->transform->position();  // Read absolute position
 Vec3 new_pos = lerp(current_pos, target_pos, 0.1f);
-node->move_to(new_pos);
+node->transform->set_position(new_pos);  // Set absolute position
 ```
 
 ### Clamp Position
 
 ```cpp
 // Keep node within bounds
-Vec3 pos = node->position();
+Vec3 pos = node->transform->position();  // Read absolute position
 pos.x = std::clamp(pos.x, -50.0f, 50.0f);
 pos.z = std::clamp(pos.z, -50.0f, 50.0f);
-node->move_to(pos);
+node->transform->set_position(pos);  // Set absolute position
 ```
 
 ## Debugging Transforms
@@ -308,20 +339,20 @@ node->move_to(pos);
 Enable debug drawing to visualize transforms:
 
 ```cpp
-// Draw axes at node position
+// Draw axes at node position (use absolute position for world-space drawing)
 stage->debug->draw_line(
-    node->absolute_position(),
-    node->absolute_position() + node->right() * 2,
+    node->transform->position(),
+    node->transform->position() + node->transform->right() * 2,
     Colour::RED  // X axis
 );
 stage->debug->draw_line(
-    node->absolute_position(),
-    node->absolute_position() + node->up() * 2,
+    node->transform->position(),
+    node->transform->position() + node->transform->up() * 2,
     Colour::GREEN  // Y axis
 );
 stage->debug->draw_line(
-    node->absolute_position(),
-    node->absolute_position() + node->forward() * 2,
+    node->transform->position(),
+    node->transform->position() + node->transform->forward() * 2,
     Colour::BLUE  // Z axis
 );
 ```
@@ -334,9 +365,10 @@ stage->debug->draw_line(
 // Good: Car contains wheels
 auto car = create_child<Stage>();
 auto wheel = car->create_child<Actor>();
+wheel->transform->set_translation(Vec3(1, 0, 1));  // Relative to car
 
 // Bad: Manually syncing positions
-wheel->move_to(car->position() + offset);
+wheel->transform->set_position(car->transform->position() + offset);  // Don't do this!
 ```
 
 ### 2. Cache World Transforms When Needed
@@ -344,25 +376,30 @@ wheel->move_to(car->position() + offset);
 If you access world transforms frequently, cache them:
 
 ```cpp
-// Bad: Recalculates every call
+// Bad: Accessing position repeatedly
 for (int i = 0; i < 100; ++i) {
-    Vec3 pos = node->absolute_position();
+    Vec3 pos = node->transform->position();
 }
 
 // Good: Calculate once
-Vec3 world_pos = node->absolute_position();
+Vec3 world_pos = node->transform->position();
 for (int i = 0; i < 100; ++i) {
     // Use world_pos
 }
 ```
 
-### 3. Use Local Space for Editing
+> **Note:** Simulant's `position()` and `orientation()` compute the world transform from the hierarchy, so caching is beneficial in tight loops.
 
-When building scenes, work in local space when possible:
+### 3. Use Local Space for Scene Building
+
+When building scenes, use `translation` for positioning children relative to parents:
 
 ```cpp
-// Position children relative to parent
-wheel->move_to(1, 0, 1);  // Not absolute coordinates
+// Good: Position children relative to parent
+wheel->transform->set_translation(Vec3(1, 0, 1));  // 1 unit right, 1 unit forward of car
+
+// Confusing: Using absolute positions for children
+wheel->transform->set_position(Vec3(100, 0, 100));  // Hard to reason about!
 ```
 
 ### 4. Avoid Deep Hierarchies
@@ -405,12 +442,17 @@ if (!node->is_part_of_active_pipeline()) {
 
 ### Unexpected Position
 
-Remember that transforms are hierarchical. Check parent transforms:
+Remember that `position()` is absolute and hierarchical. A node's final position depends on all parent transforms:
 
 ```cpp
+// Debug: Check ancestor positions
 for (auto ancestor : node->each_ancestor()) {
-    S_DEBUG("Ancestor at {}", ancestor->position());
+    S_DEBUG("Ancestor at {}", ancestor->transform->position());
 }
+
+// Check the relative offset
+S_DEBUG("Local translation: {}", node->transform->translation());
+S_DEBUG("Absolute position: {}", node->transform->position());
 ```
 
 ### Rotation Gimbal Lock
@@ -419,13 +461,13 @@ Use quaternions for complex rotations:
 
 ```cpp
 // Avoid multiple Euler rotations
-node->rotate_by(pitch, 0, 0);
-node->rotate_by(0, yaw, 0);  // Can cause gimbal lock
+node->transform->set_rotation(Quaternion::from_euler(Degrees(pitch), Degrees(0), Degrees(0)));
+node->transform->set_rotation(Quaternion::from_euler(Degrees(0), Degrees(yaw), Degrees(0)));  // Can cause gimbal lock
 
 // Use quaternion instead
-Quaternion rot = node->rotation();
-rot = rot * Quaternion::from_axis_angle(Vec3(0, 1, 0), yaw);
-node->set_rotation(rot);
+Quaternion rot = node->transform->orientation();
+rot = rot * Quaternion::from_axis_angle(Vec3(0, 1, 0), Degrees(yaw));
+node->transform->set_orientation(rot);
 ```
 
 ## See Also
