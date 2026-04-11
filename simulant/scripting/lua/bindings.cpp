@@ -116,18 +116,35 @@ void lua_bind(lua_State* state) {
         //   local prefab = scene.assets:prefab(id)
         // ----------------------------------------------------------------
         .beginClass<AssetManager>("AssetManager")
+        // --- load methods (path-only convenience overloads) ---
+        .addFunction("load_mesh",        [](AssetManager* am, const std::string& path) { return am->load_mesh(path); })
+        .addFunction("load_texture",     [](AssetManager* am, const std::string& path) { return am->load_texture(path); })
+        .addFunction("load_material",    [](AssetManager* am, const std::string& path) { return am->load_material(path); })
+        .addFunction("load_sound",       [](AssetManager* am, const std::string& path) { return am->load_sound(path); })
+        .addFunction("load_font",        [](AssetManager* am, const std::string& path) { return am->load_font(path); })
+        .addFunction("load_prefab",      [](AssetManager* am, const std::string& path) { return am->load_prefab(path); })
+        // --- fetch by numeric ID ---
         .addFunction("mesh",           static_cast<MeshPtr (AssetManager::*)(AssetID)>(&AssetManager::mesh))
         .addFunction("texture",        static_cast<TexturePtr (AssetManager::*)(AssetID)>(&AssetManager::texture))
         .addFunction("material",       static_cast<MaterialPtr (AssetManager::*)(const AssetID&)>(&AssetManager::material))
         .addFunction("sound",          static_cast<SoundPtr (AssetManager::*)(AssetID)>(&AssetManager::sound))
         .addFunction("font",           static_cast<FontPtr (AssetManager::*)(AssetID)>(&AssetManager::font))
         .addFunction("prefab",         static_cast<PrefabPtr (AssetManager::*)(AssetID)>(&AssetManager::prefab))
+        // --- find by name ---
+        .addFunction("find_mesh",      &AssetManager::find_mesh)
+        .addFunction("find_texture",   &AssetManager::find_texture)
+        .addFunction("find_material",  &AssetManager::find_material)
+        .addFunction("find_sound",     &AssetManager::find_sound)
+        .addFunction("find_font",      &AssetManager::find_font)
+        .addFunction("find_prefab",    &AssetManager::find_prefab)
+        // --- presence checks ---
         .addFunction("has_mesh",       &AssetManager::has_mesh)
         .addFunction("has_texture",    &AssetManager::has_texture)
         .addFunction("has_material",   &AssetManager::has_material)
         .addFunction("has_sound",      &AssetManager::has_sound)
         .addFunction("has_font",       &AssetManager::has_font)
         .addFunction("has_prefab",     &AssetManager::has_prefab)
+        // --- counts ---
         .addFunction("mesh_count",     &AssetManager::mesh_count)
         .addFunction("texture_count",  &AssetManager::texture_count)
         .addFunction("material_count", &AssetManager::material_count)
@@ -135,6 +152,53 @@ void lua_bind(lua_State* state) {
         .addFunction("font_count",     &AssetManager::font_count)
         .addFunction("prefab_count",   &AssetManager::prefab_count)
         .endClass()
+        // ----------------------------------------------------------------
+        // Asset base class — exposes name(), has_name(), set_name().
+        // Every asset type below inherits from this, but LuaBridge does not
+        // handle virtual-base inheritance so we repeat the bindings on each
+        // concrete class.
+        // ----------------------------------------------------------------
+        #define SMLT_BIND_NAMEABLE(klass) \
+            .addFunction("name",     [](klass* a) { return a->name(); }) \
+            .addFunction("has_name", [](klass* a) { return a->has_name(); }) \
+            .addFunction("set_name", [](klass* a, const std::string& n) { a->set_name(n); })
+        // ----------------------------------------------------------------
+        // Mesh — 3D geometry asset.
+        // ----------------------------------------------------------------
+        .beginClass<Mesh>("Mesh")
+        SMLT_BIND_NAMEABLE(Mesh)
+        .endClass()
+        // ----------------------------------------------------------------
+        // Texture — image data asset.
+        // ----------------------------------------------------------------
+        .beginClass<Texture>("Texture")
+        SMLT_BIND_NAMEABLE(Texture)
+        .endClass()
+        // ----------------------------------------------------------------
+        // Material — shader + parameter configuration asset.
+        // ----------------------------------------------------------------
+        .beginClass<Material>("Material")
+        SMLT_BIND_NAMEABLE(Material)
+        .endClass()
+        // ----------------------------------------------------------------
+        // Sound — audio data asset.
+        // ----------------------------------------------------------------
+        .beginClass<Sound>("Sound")
+        SMLT_BIND_NAMEABLE(Sound)
+        .endClass()
+        // ----------------------------------------------------------------
+        // Font — font data for text rendering.
+        // ----------------------------------------------------------------
+        .beginClass<Font>("Font")
+        SMLT_BIND_NAMEABLE(Font)
+        .endClass()
+        // ----------------------------------------------------------------
+        // Prefab — reusable scene subtree asset.
+        // ----------------------------------------------------------------
+        .beginClass<Prefab>("Prefab")
+        SMLT_BIND_NAMEABLE(Prefab)
+        .endClass()
+        #undef SMLT_BIND_NAMEABLE
         // ----------------------------------------------------------------
         // InputManager — access to input state and axes.
         //

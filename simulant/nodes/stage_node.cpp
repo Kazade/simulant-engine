@@ -8,6 +8,16 @@
 
 namespace smlt {
 
+AABB StageNode::recursive_aabb() const {
+    AABB ret = aabb();
+    for(auto& node: each_descendent()) {
+        ret.encapsulate(node.aabb());
+    }
+
+    return ret;
+}
+
+
 StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
     auto app = get_app();
     if(!app) {

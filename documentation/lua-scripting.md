@@ -216,40 +216,85 @@ Parameters not provided will use their declared defaults. Required parameters (n
 
 Every Lua StageNode has access to the scene's `AssetManager` through `self.assets`. This allows scripts to load meshes, textures, materials, sounds, fonts, and prefabs at runtime.
 
-### Available Asset Methods
+### Loading Assets
+
+Each asset type has a `load_*` method that takes a file path and returns the loaded asset (or `nil` if loading failed):
 
 ```lua
 function AssetNode:on_create(params)
-    -- Access the asset manager
-    local assets = self.assets
-    assert(assets ~= nil, "self.assets should not be nil")
-    
-    -- Load a mesh
-    local mesh = assets:mesh("assets/samples/cube.obj")
-    
-    -- Load a texture
-    local tex = assets:texture("assets/textures/brick.png")
-    
-    -- Load a material
-    local mat = assets:material("materials/my_material.smat")
-    
-    -- Load a sound
-    local sound = assets:sound("assets/sounds/explosion.ogg")
-    
-    -- Load a font
-    local font = assets:font("assets/fonts/Orbitron-Regular.ttf")
-    
-    -- Load a prefab
-    local prefab = assets:prefab("assets/prefabs/tree.prefab")
-    
-    -- Check if an asset is loaded
-    if assets:has_mesh("assets/samples/cube.obj") then
-        print("Cube mesh is already loaded")
+    local a = self.assets
+    assert(a ~= nil, "self.assets should not be nil")
+
+    -- Load assets by file path
+    local mesh = a:load_mesh("assets/models/player.obj")
+    local tex  = a:load_texture("assets/textures/brick.png")
+    local mat  = a:load_material("materials/player.smat")
+    local snd  = a:load_sound("assets/sounds/explosion.ogg")
+    local fnt  = a:load_font("assets/fonts/Kanit-Regular.ttf")
+    local pf   = a:load_prefab("assets/prefabs/tree.prefab")
+
+    -- Always check for nil before using loaded assets
+    if mesh then
+        print("Mesh loaded successfully")
     end
-    
+
     return true
 end
 ```
+
+### Naming and Finding Assets
+
+Loaded assets can be given a human-readable name and later retrieved by that name:
+
+```lua
+local mesh = a:load_mesh("assets/models/player.obj")
+if mesh then
+    mesh:set_name("player_mesh")
+end
+
+-- Later, find the asset by name
+local found = a:find_mesh("player_mesh")
+if found then
+    print("Found: " .. found:name())
+end
+```
+
+All asset types support `name()`, `has_name()`, and `set_name(name)`:
+
+```lua
+if tex and tex:has_name() then
+    print("Texture name: " .. tex:name())
+end
+```
+
+### Available Asset Methods
+
+| Method | Description |
+|--------|-------------|
+| `load_mesh(path)` | Load a mesh from file path |
+| `load_texture(path)` | Load a texture from file path |
+| `load_material(path)` | Load a material from file path |
+| `load_sound(path)` | Load a sound from file path |
+| `load_font(path)` | Load a font from file path |
+| `load_prefab(path)` | Load a prefab from file path |
+| `find_mesh(name)` | Find a loaded mesh by name |
+| `find_texture(name)` | Find a loaded texture by name |
+| `find_material(name)` | Find a loaded material by name |
+| `find_sound(name)` | Find a loaded sound by name |
+| `find_font(name)` | Find a loaded font by name |
+| `find_prefab(name)` | Find a loaded prefab by name |
+| `has_mesh(id)` | Check if a mesh exists by numeric ID |
+| `has_texture(id)` | Check if a texture exists by numeric ID |
+| `has_material(id)` | Check if a material exists by numeric ID |
+| `has_sound(id)` | Check if a sound exists by numeric ID |
+| `has_font(id)` | Check if a font exists by numeric ID |
+| `has_prefab(id)` | Check if a prefab exists by numeric ID |
+| `mesh_count()` | Number of loaded meshes |
+| `texture_count()` | Number of loaded textures |
+| `material_count()` | Number of loaded materials |
+| `sound_count()` | Number of loaded sounds |
+| `font_count()` | Number of loaded fonts |
+| `prefab_count()` | Number of loaded prefabs |
 
 ### Checking Asset Availability
 
