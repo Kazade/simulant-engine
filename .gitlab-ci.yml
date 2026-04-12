@@ -319,7 +319,7 @@ build:windows-x64-mingw:debug:
 
 test:windows-x64-mingw:
   stage: test
-  image: fedora:38
+  image: $CI_REGISTRY_IMAGE:windows-x64-mingw
   needs: ["build:windows-x64-mingw:debug", "build:windows-x64-mingw:release"]
   dependencies:
     - build:windows-x64-mingw:debug
