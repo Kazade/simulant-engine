@@ -205,16 +205,10 @@ Application::~Application() {
     stop_running();
     shutdown();
 
-    /* Tear down scripting interpreters before scenes.  lua_close triggers the
-     * Lua GC which finalises any remaining Lua wrapper tables; each wrapper
-     * holds a _cpp_node UserdataPtr pointing at the real slab-allocated
-     * LuaStageNode.  The LuaStageNode binding has no addDestructor, so GC
-     * only frees the UserdataPtr wrapper object and never calls into the node
-     * itself.  The scene must nonetheless still be alive here so that any
-     * other Lua-side finalisation (e.g. __gc on plain userdata assets) can
-     * safely query scene data. */
-    interpreters_.clear();
-
+    /* Destroy all scenes (and their StageNodes) before closing the Lua
+     * state.  LuaStageNode::release_lua_ref() is called during node teardown,
+     * which clears the LuaRef registry reference so that the destructor
+     * won't call luaL_unref on a closed state. */
     scene_manager_->destroy_all();
 
     /* This cleans up the destroyed scenes
@@ -225,10 +219,19 @@ Application::~Application() {
     scene_manager_->clean_up();
     scene_manager_.reset();
 
-    asset_manager_.reset();
+    /* Also clean up the overlay scene before closing Lua. */
+    if(overlay_scene_) {
+        overlay_scene_->clean_up();
+        overlay_scene_.reset();
+    }
 
-    overlay_scene_->clean_up();
-    overlay_scene_.reset();
+    /* Tear down scripting interpreters last.  lua_close triggers the Lua GC
+     * which finalises any remaining Lua wrapper tables.  All C++-side
+     * LuaRefs in LuaStageNode have been released already, so the GC won't
+     * touch any slab-allocated node memory. */
+    interpreters_.clear();
+
+    asset_manager_.reset();
 
     pool_->clear();
 
