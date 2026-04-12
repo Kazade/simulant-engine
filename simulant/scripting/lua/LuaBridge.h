@@ -4372,16 +4372,23 @@ struct Stack<unsigned int>
         if (lua_type(L, index) != LUA_TNUMBER)
             return makeErrorCode(ErrorCode::InvalidTypeCast);
 
-        if (! is_integral_representable_by<unsigned int>(L, index))
+        // Use lua_tonumber to read the value as a double, since on 32-bit
+        // platforms lua_tointeger is signed and cannot represent uint32
+        // values > INT_MAX.
+        lua_Number n = lua_tonumber(L, index);
+        if (n < 0.0 || n > 4294967295.0 || n != std::floor(n))
             return makeErrorCode(ErrorCode::IntegerDoesntFitIntoLuaInteger);
 
-        return static_cast<unsigned int>(lua_tointeger(L, index));
+        return static_cast<unsigned int>(n);
     }
 
     [[nodiscard]] static bool isInstance(lua_State* L, int index)
     {
         if (lua_type(L, index) == LUA_TNUMBER)
-            return is_integral_representable_by<unsigned int>(L, index);
+        {
+            lua_Number n = lua_tonumber(L, index);
+            return n >= 0.0 && n <= 4294967295.0 && n == std::floor(n);
+        }
 
         return false;
     }
@@ -4446,16 +4453,23 @@ struct Stack<unsigned long>
         if (lua_type(L, index) != LUA_TNUMBER)
             return makeErrorCode(ErrorCode::InvalidTypeCast);
 
-        if (! is_integral_representable_by<unsigned long>(L, index))
+        // Use lua_tonumber to read the value as a double, since on 32-bit
+        // platforms lua_tointeger is signed and cannot represent large
+        // unsigned values > INT_MAX.
+        lua_Number n = lua_tonumber(L, index);
+        if (n < 0.0 || n > static_cast<lua_Number>(18446744073709551615.0) || n != std::floor(n))
             return makeErrorCode(ErrorCode::IntegerDoesntFitIntoLuaInteger);
 
-        return static_cast<unsigned long>(lua_tointeger(L, index));
+        return static_cast<unsigned long>(n);
     }
 
     [[nodiscard]] static bool isInstance(lua_State* L, int index)
     {
         if (lua_type(L, index) == LUA_TNUMBER)
-            return is_integral_representable_by<unsigned long>(L, index);
+        {
+            lua_Number n = lua_tonumber(L, index);
+            return n >= 0.0 && n <= static_cast<lua_Number>(18446744073709551615.0) && n == std::floor(n);
+        }
 
         return false;
     }
@@ -4520,16 +4534,23 @@ struct Stack<unsigned long long>
         if (lua_type(L, index) != LUA_TNUMBER)
             return makeErrorCode(ErrorCode::InvalidTypeCast);
 
-        if (! is_integral_representable_by<unsigned long long>(L, index))
+        // Use lua_tonumber to read the value as a double, since on 32-bit
+        // platforms lua_tointeger is signed and cannot represent large
+        // unsigned values > INT_MAX.
+        lua_Number n = lua_tonumber(L, index);
+        if (n < 0.0 || n > static_cast<lua_Number>(18446744073709551615.0) || n != std::floor(n))
             return makeErrorCode(ErrorCode::IntegerDoesntFitIntoLuaInteger);
 
-        return static_cast<unsigned long long>(lua_tointeger(L, index));
+        return static_cast<unsigned long long>(n);
     }
 
     [[nodiscard]] static bool isInstance(lua_State* L, int index)
     {
         if (lua_type(L, index) == LUA_TNUMBER)
-            return is_integral_representable_by<unsigned long long>(L, index);
+        {
+            lua_Number n = lua_tonumber(L, index);
+            return n >= 0.0 && n <= static_cast<lua_Number>(18446744073709551615.0) && n == std::floor(n);
+        }
 
         return false;
     }
