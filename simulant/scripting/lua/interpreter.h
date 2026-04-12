@@ -77,6 +77,10 @@ public:
     Transform* lua_get_transform() const { return get_transform(); }
     AssetManager* lua_get_assets() const;
 
+    ~LuaStageNode() override {
+        delete ref_;
+    }
+
     virtual bool on_create(Params params) override {
         // Let the base class handle common position/orientation/scale params.
         if(!StageNode::on_create(params)) {
