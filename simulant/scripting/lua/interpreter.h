@@ -20,7 +20,7 @@
 #endif
 
 #define LUA_USE_JUMPTABLE 0
-#ifdef __DREAMCAST__
+#if defined(__DREAMCAST__) || defined(__PSP__) || defined(__XBOX__)
 #define LUA_32BITS 1
 #endif
 #include "minilua.h"
