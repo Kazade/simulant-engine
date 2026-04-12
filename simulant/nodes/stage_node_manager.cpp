@@ -86,7 +86,33 @@ bool StageNodeManager::register_stage_node_from_lua_state(lua_State* L,
     }
 
     luabridge::LuaRef meta = klass["Meta"];
-    StageNodeType node_id = meta["node_type"].cast<uint32_t>().valueOr(0);
+    if(meta.isNil()) {
+        S_ERROR("Lua class '{0}' is missing Meta table", class_name);
+        return false;
+    }
+
+    auto node_type_val = meta["node_type"];
+    if(node_type_val.isNil()) {
+        S_ERROR("Lua class '{0}' Meta table is missing node_type", class_name);
+        return false;
+    }
+
+    // Read the node_type from Lua using the raw Lua API to avoid LuaBridge
+    // cast issues on 32-bit platforms (e.g. Dreamcast).  The value was stored
+    // as a uint32_t C++ integer, which Lua holds as a double (lua_Number).
+    // We push the table and the key onto the stack, get the value, and convert
+    // it directly.
+    meta.push();
+    lua_pushstring(L, "node_type");
+    lua_gettable(L, -2);
+    StageNodeType node_id = static_cast<StageNodeType>(lua_tonumber(L, -1));
+    lua_pop(L, 2);
+
+    if(node_id == 0) {
+        S_ERROR("Lua class '{0}' has invalid node_type (got 0)", class_name);
+        return false;
+    }
+
     std::string name = meta["name"];
 
     // Capture the raw lua_State* and the class name string rather than a
