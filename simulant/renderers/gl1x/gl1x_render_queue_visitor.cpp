@@ -53,6 +53,12 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
 
     global_ambient_ = stage->scene->lighting->ambient_light();
     GLCheck(glLightModelfv, GL_LIGHT_MODEL_AMBIENT, &global_ambient_.r);
+
+    /* Upload the projection matrix once per traversal since it's constant
+     * for all renderables rendered with this camera. This avoids redundant
+     * glMatrixMode/glLoadMatrixf calls in do_visit(). */
+    GLCheck(glMatrixMode, GL_PROJECTION);
+    GLCheck(glLoadMatrixf, camera_->projection_matrix().data());
 }
 
 void GL1RenderQueueVisitor::visit(const Renderable* renderable,
@@ -495,15 +501,11 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
 
     const Mat4& model = renderable->final_transformation;
     const Mat4& view = camera_->view_matrix();
-    const Mat4& projection = camera_->projection_matrix();
 
     Mat4 modelview = view * model;
 
     GLCheck(glMatrixMode, GL_MODELVIEW);
     GLCheck(glLoadMatrixf, modelview.data());
-
-    GLCheck(glMatrixMode, GL_PROJECTION);
-    GLCheck(glLoadMatrixf, projection.data());
 
     const auto& spec = renderable->vertex_data->vertex_specification();
     const auto stride = spec.stride();
