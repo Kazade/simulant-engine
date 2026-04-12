@@ -327,6 +327,10 @@ test:windows-x64-mingw:
   variables:
     TARGET: windows-x64-mingw
     GIT_STRATEGY: none # Prevent cloning
+    # Force SDL2 to use dummy drivers so it doesn't try to create a real
+    # window or open audio devices under Wine.
+    SDL_VIDEODRIVER: dummy
+    SDL_AUDIODRIVER: dummy
   before_script:
     - dnf install -y xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers wine
     - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
@@ -334,6 +338,9 @@ test:windows-x64-mingw:
     - export LIBGL_ALWAYS_SOFTWARE=1
     - export SIMULANT_SOUND_DRIVER=null
     - export DISPLAY=:99
+    # Pre-initialise Wine non-interactively so it doesn't hang on first run.
+    - export WINEDEBUG=-all
+    - wineboot --init
   script:
     - cd ${TARGET}/debug/tests
     - ln -s ../simulant
