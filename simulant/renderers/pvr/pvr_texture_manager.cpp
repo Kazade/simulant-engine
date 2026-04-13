@@ -77,11 +77,14 @@ int PVRTextureManager::upload_texture(int id, int format, int width, int height,
     existing->filter = filter;
 
 #ifdef __DREAMCAST__
-    /* Try to allocate directly in VRAM */
+    /* Try to allocate in VRAM.
+     * Use memcpy directly instead of pvr_txr_load to avoid SQ store queue
+     * nesting issues. PVR VRAM is memory-mapped (uncached P2 area or MMU-mapped)
+     * so direct writes work correctly. Store queues are an optimization but
+     * cause recursive lock assertions when nested with other PVR functions. */
     pvr_ptr_t vram = pvr_mem_malloc(data_size);
     if(vram) {
-        /* Load texture data into VRAM via store queues for speed */
-        pvr_txr_load(data, vram, data_size);
+        memcpy(vram, data, data_size);
         existing->texture_vram = vram;
         existing->in_vram = true;
         S_DEBUG("Texture {0} ({1}x{2}) uploaded to VRAM ({3} bytes)",
@@ -186,7 +189,8 @@ bool PVRTextureManager::promote_texture(PVRTextureObject* obj) {
     pvr_ptr_t vram = pvr_mem_malloc(obj->data_size);
     if(!vram) return false;
 
-    pvr_txr_load(obj->texture_ram, vram, obj->data_size);
+    /* Use memcpy directly to avoid SQ nesting issues (see upload_texture) */
+    memcpy(vram, obj->texture_ram, obj->data_size);
     obj->texture_vram = vram;
     obj->in_vram = true;
 

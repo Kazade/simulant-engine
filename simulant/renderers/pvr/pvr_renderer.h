@@ -28,6 +28,11 @@ public:
 
     void init_context() override;
 
+    /* Override pre_render to upload textures BEFORE starting the PVR scene.
+     * This avoids recursive SQ lock acquisition since both pvr_scene_begin()
+     * and pvr_txr_load() use store queues. */
+    void pre_render() override;
+
     std::string name() const override {
         return "pvr";
     }
@@ -46,6 +51,13 @@ public:
 
     PVRTextureManager& texture_manager() { return texture_manager_; }
 
+    /* Track which PVR lists have been used in the current scene.
+     * KOS only allows one pvr_list_begin/pvr_list_finish cycle per list
+     * type per scene. The renderer tracks this across all visitor instances. */
+    bool pvr_list_used(int list_type) const { return list_used_[list_type]; }
+    void set_pvr_list_used(int list_type) { list_used_[list_type] = true; }
+    void reset_pvr_lists_used() { for(int i = 0; i < 5; i++) list_used_[i] = false; }
+
 private:
     PVRTextureManager texture_manager_;
 
@@ -59,6 +71,9 @@ private:
 
     bool scene_begun_ = false;
     uint32_t clear_colour_packed_ = 0xFF000000;
+
+    /* Track which PVR lists have been used in the current scene */
+    bool list_used_[5] = {false, false, false, false, false};
 };
 
 } // namespace smlt
