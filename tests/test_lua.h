@@ -569,23 +569,11 @@ ReportParamNode.params = {
     // Registration from file
     // -----------------------------------------------------------------------
 
-    // Writes a Lua script to a temporary file, registers it via the Path-based
+    // Reads a Lua script from samples/tests/, registers it via the Path-based
     // overload, and verifies the node type is registered correctly.
     void test_registering_lua_stage_node_from_file() {
-        const char* script = R"(
-FileBallNode = smlt.define_node("file_ball_node")
-
-function FileBallNode:on_update(dt)
-    print("Update from file Lua")
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_file_ball_node.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "FileBallNode"));
+        Path script("samples/tests/file_ball_node.lua");
+        assert_true(scene->register_stage_node(script, "FileBallNode"));
 
         auto maybe_info = scene->registered_stage_node_info("file_ball_node");
         assert_true(maybe_info);
@@ -594,34 +582,14 @@ end
         // Spawn to verify constructor works
         auto ball = scene->create_child("file_ball_node");
         assert_is_not_null(ball);
-
-        // Cleanup temp file
-        std::remove(tmp.str().c_str());
     }
 
     // Proves that the Path-based registration shares the same parsing logic
     // as the string-based one — params defined in the file script are
     // forwarded to Lua on_create.
     void test_lua_node_params_from_file() {
-        const char* script = R"(
-FileParamNode = smlt.define_node("file_param_node")
-FileParamNode.params = {
-    distance = smlt.define_node_param(smlt.NodeParamType.Float, "Distance from center"),
-    height   = smlt.define_node_param(smlt.NodeParamType.Float, "Height above ground", 5.0)
-}
-
-function FileParamNode:on_create(params)
-    self.transform.translation = smlt.Vec3(params.distance, params.height, 0)
-    return true
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_file_param_node.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "FileParamNode"));
+        Path script("samples/tests/file_param_node.lua");
+        assert_true(scene->register_stage_node(script, "FileParamNode"));
 
         auto node = scene->create_child("file_param_node", {{"distance", 2.5f}});
         assert_is_not_null(node);
@@ -629,81 +597,38 @@ end
         auto t = node->transform->translation();
         assert_close(2.5f, t.x, 0.01f);
         assert_close(5.0f, t.y, 0.01f);
-
-        std::remove(tmp.str().c_str());
     }
 
     // A nonexistent file must fail gracefully.
     void test_nonexistent_file_fails_to_register() {
-        Path nonexistent = Path::system_temp_dir().append("this_file_does_not_exist_12345.lua");
+        Path nonexistent("samples/tests/this_file_does_not_exist_12345.lua");
         assert_false(scene->register_stage_node(nonexistent, "Anything"));
     }
 
     // A file containing invalid Lua must fail to register.
     void test_invalid_lua_file_fails_to_register() {
-        const char* garbage = "this is @@ not valid lua !!!";
-        Path tmp = Path::system_temp_dir().append("test_invalid_lua.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(garbage, f);
-        fclose(f);
-
-        assert_false(scene->register_stage_node(tmp, "Anything"));
-
-        std::remove(tmp.str().c_str());
+        Path script("samples/tests/invalid_lua.lua");
+        assert_false(scene->register_stage_node(script, "Anything"));
     }
 
     // Supplying a class name that does not exist inside a valid file must fail.
     void test_unknown_class_in_file_fails_to_register() {
-        const char* script = R"(
-FileRealClass = smlt.define_node("file_real_class_node")
-)";
-        Path tmp = Path::system_temp_dir().append("test_unknown_class.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_false(scene->register_stage_node(tmp, "NonExistentClass"));
-
-        std::remove(tmp.str().c_str());
+        Path script("samples/tests/file_real_class.lua");
+        assert_false(scene->register_stage_node(script, "NonExistentClass"));
     }
 
     // Registering the same file-based type name a second time must be rejected.
     void test_duplicate_file_registration_is_rejected() {
-        const char* script = R"(
-FileDupNode = smlt.define_node("file_dup_node")
-)";
-        Path tmp = Path::system_temp_dir().append("test_file_dup.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true (scene->register_stage_node(tmp, "FileDupNode"));
-        assert_false(scene->register_stage_node(tmp, "FileDupNode"));
-
-        std::remove(tmp.str().c_str());
+        Path script("samples/tests/file_dup.lua");
+        assert_true (scene->register_stage_node(script, "FileDupNode"));
+        assert_false(scene->register_stage_node(script, "FileDupNode"));
     }
 
     // Verifies that writing to self.transform inside Lua's on_create (from a
     // file-registered node) mutates the real scene-tree node's transform.
     void test_cpp_sees_lua_transform_writes_from_file() {
-        const char* script = R"(
-FileTransformWriteNode = smlt.define_node("file_transform_write_node")
-
-function FileTransformWriteNode:on_create()
-    self.transform.translation = smlt.Vec3(7, 8, 9)
-    return true
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_transform_write.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "FileTransformWriteNode"));
+        Path script("samples/tests/file_transform_write.lua");
+        assert_true(scene->register_stage_node(script, "FileTransformWriteNode"));
 
         auto node = scene->create_child("file_transform_write_node");
         assert_is_not_null(node);
@@ -712,8 +637,6 @@ end
         assert_close(7.0f, t.x, 0.01f);
         assert_close(8.0f, t.y, 0.01f);
         assert_close(9.0f, t.z, 0.01f);
-
-        std::remove(tmp.str().c_str());
     }
 
     // -----------------------------------------------------------------------
@@ -724,29 +647,10 @@ end
     // spawn independently.  Loading the same file a second time for the second
     // class must not break the first registration.
     void test_two_classes_from_same_file() {
-        const char* script = R"(
-MultiClassA = smlt.define_node("multi_class_a")
-
-function MultiClassA:on_create()
-    self.transform.translation = smlt.Vec3(1, 0, 0)
-    return true
-end
-
-MultiClassB = smlt.define_node("multi_class_b")
-
-function MultiClassB:on_create()
-    self.transform.translation = smlt.Vec3(0, 2, 0)
-    return true
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_multi_class.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
+        Path script("samples/tests/multi_class.lua");
 
         // Register the first class and spawn an instance.
-        assert_true(scene->register_stage_node(tmp, "MultiClassA"));
+        assert_true(scene->register_stage_node(script, "MultiClassA"));
 
         auto a1 = scene->create_child("multi_class_a");
         assert_is_not_null(a1);
@@ -755,7 +659,7 @@ end
         // Now register the second class from the *same* file.  This loads the
         // file again, redefining both MultiClassA and MultiClassB in Lua.
         // The first class must remain functional.
-        assert_true(scene->register_stage_node(tmp, "MultiClassB"));
+        assert_true(scene->register_stage_node(script, "MultiClassB"));
 
         // Spawn another instance of class A — it should still work after the
         // file was reloaded for class B.
@@ -776,65 +680,34 @@ end
         assert_true(info_b);
         assert_equal(2, (int)scene->nodes_by_type(info_a.value().type).size());
         assert_equal(1, (int)scene->nodes_by_type(info_b.value().type).size());
-
-        std::remove(tmp.str().c_str());
     }
 
-    // Reloading a script file after a node has already been spawned must not
-    // corrupt existing instances.  We spawn an instance of class A, rewrite
-    // the file with modified content, then register class B from the new
-    // file.  Class A must still be functional, and class B must reflect the
-    // new script content.
+    // Loading a script file after a node has already been spawned must not
+    // corrupt existing instances.  We spawn an instance of class A, then
+    // register class B from a different file.  Class A must still be
+    // functional, and class B must reflect its own script content.
     void test_reload_script_updates_new_instances() {
-        const char* script_v1 = R"(
-ReloadNodeA = smlt.define_node("reload_node_a")
+        Path script_a("samples/tests/reload_node_a.lua");
 
-function ReloadNodeA:on_create()
-    self.transform.translation = smlt.Vec3(100, 0, 0)
-    return true
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_reload.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script_v1, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "ReloadNodeA"));
+        assert_true(scene->register_stage_node(script_a, "ReloadNodeA"));
 
         auto a = scene->create_child("reload_node_a");
         assert_is_not_null(a);
         assert_close(100.0f, a->transform->translation().x, 0.01f);
 
-        // Rewrite the file with a different class / translation.
-        const char* script_v2 = R"(
-ReloadNodeB = smlt.define_node("reload_node_b")
+        // Register the new class from a different file.
+        Path script_b("samples/tests/reload_node_b.lua");
+        assert_true(scene->register_stage_node(script_b, "ReloadNodeB"));
 
-function ReloadNodeB:on_create()
-    self.transform.translation = smlt.Vec3(200, 0, 0)
-    return true
-end
-)";
-        f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script_v2, f);
-        fclose(f);
-
-        // Register the new class from the reloaded file.
-        assert_true(scene->register_stage_node(tmp, "ReloadNodeB"));
-
-        // Class A must still be functional after the file was rewritten and
-        // reloaded for class B.
+        // Class A must still be functional after the second registration.
         auto a2 = scene->create_child("reload_node_a");
         assert_is_not_null(a2);
         assert_close(100.0f, a2->transform->translation().x, 0.01f);
 
-        // Class B should use the new script's on_create.
+        // Class B should use its own script's on_create.
         auto b = scene->create_child("reload_node_b");
         assert_is_not_null(b);
         assert_close(200.0f, b->transform->translation().x, 0.01f);
-
-        std::remove(tmp.str().c_str());
     }
 
     // -----------------------------------------------------------------------
@@ -843,20 +716,8 @@ end
 
     // Verify that on_late_update is forwarded to Lua.
     void test_lua_on_late_update_forwarded() {
-        const char* script = R"(
-LateUpdateNode = smlt.define_node("late_update_node")
-
-function LateUpdateNode:on_late_update(dt)
-    self.transform.rotation_2d = smlt.Degrees(dt * 10)
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_late_update.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "LateUpdateNode"));
+        Path script("samples/tests/late_update_node.lua");
+        assert_true(scene->register_stage_node(script, "LateUpdateNode"));
 
         auto node = scene->create_child("late_update_node");
         assert_is_not_null(node);
@@ -867,28 +728,13 @@ end
         // If on_late_update was called, the rotation should have changed from 0.
         auto rot = node->transform->rotation_2d();
         assert_true(rot.to_float() != 0.0f);
-
-        std::remove(tmp.str().c_str());
     }
 
     // Verify that on_destroy is forwarded to Lua and that returning false
     // prevents destruction.
     void test_lua_on_destroy_forwarded() {
-        const char* script = R"(
-DestroyNode = smlt.define_node("destroy_node_node")
-
-function DestroyNode:on_destroy()
-    -- Return false to cancel destruction.
-    return false
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_on_destroy.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "DestroyNode"));
+        Path script("samples/tests/on_destroy_node.lua");
+        assert_true(scene->register_stage_node(script, "DestroyNode"));
 
         auto node = scene->create_child("destroy_node_node");
         assert_is_not_null(node);
@@ -900,29 +746,13 @@ end
 
         // Node should still exist since on_destroy returned false.
         assert_true(scene->has_node(id));
-
-        std::remove(tmp.str().c_str());
     }
 
     // Verify that on_clean_up is forwarded to Lua.  The script writes to a
     // C++-readable transform field so we can verify the callback ran.
     void test_lua_on_clean_up_forwarded() {
-        const char* script = R"(
-CleanupNode = smlt.define_node("cleanup_node")
-
-function CleanupNode:on_clean_up()
-    -- Mark cleanup by setting translation to a distinctive value.
-    -- This will be visible through the C++ node if the callback ran.
-    self.transform.translation = smlt.Vec3(77, 0, 0)
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_on_cleanup.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "CleanupNode"));
+        Path script("samples/tests/on_clean_up_node.lua");
+        assert_true(scene->register_stage_node(script, "CleanupNode"));
 
         auto node = scene->create_child("cleanup_node");
         assert_is_not_null(node);
@@ -933,29 +763,13 @@ end
 
         // After cleanup, the node is destroyed. We can't read the transform
         // anymore, but the fact that we didn't crash proves the callback ran.
-        // A more thorough test would use a signal on the scene, but this is
-        // sufficient to verify no crash occurred.
         assert_false(scene->has_node(id));
-
-        std::remove(tmp.str().c_str());
     }
 
     // Verify that on_parent_set is forwarded to Lua.
     void test_lua_on_parent_set_forwarded() {
-        const char* script = R"(
-ParentSetNode = smlt.define_node("parent_set_node")
-
-function ParentSetNode:on_parent_set()
-    self.transform.translation = smlt.Vec3(99, 0, 0)
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_on_parent_set.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "ParentSetNode"));
+        Path script("samples/tests/on_parent_set_node.lua");
+        assert_true(scene->register_stage_node(script, "ParentSetNode"));
 
         auto node = scene->create_child("parent_set_node");
         assert_is_not_null(node);
@@ -968,30 +782,12 @@ end
 
         // If on_parent_set was forwarded, translation should now be (99, 0, 0).
         assert_close(99.0f, node->transform->translation().x, 0.01f);
-
-        std::remove(tmp.str().c_str());
     }
 
     // Verify that on_transformation_changed is forwarded to Lua.
     void test_lua_on_transformation_changed_forwarded() {
-        const char* script = R"(
-TransformChangeNode = smlt.define_node("transform_change_node")
-TransformChangeNode._first_change = true
-
-function TransformChangeNode:on_transformation_changed()
-    if TransformChangeNode._first_change then
-        TransformChangeNode._first_change = false
-        self.transform.scale_factor = smlt.Vec3(2, 2, 2)
-    end
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_on_transform_changed.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "TransformChangeNode"));
+        Path script("samples/tests/on_transform_changed_node.lua");
+        assert_true(scene->register_stage_node(script, "TransformChangeNode"));
 
         auto node = scene->create_child("transform_change_node");
         assert_is_not_null(node);
@@ -1006,8 +802,6 @@ end
         assert_close(2.0f, s.x, 0.01f);
         assert_close(2.0f, s.y, 0.01f);
         assert_close(2.0f, s.z, 0.01f);
-
-        std::remove(tmp.str().c_str());
     }
 
     // -----------------------------------------------------------------------
@@ -1018,114 +812,34 @@ end
     // distinctive translation value when assets is non-nil so we know the
     // binding works.
     void test_lua_node_can_access_assets() {
-        const char* script = R"(
-AssetNode = smlt.define_node("asset_node")
-
-function AssetNode:on_create()
-    local a = self.assets
-    if a ~= nil then
-        self.transform.translation = smlt.Vec3(42, 0, 0)
-        return true
-    end
-    return false
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_assets.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "AssetNode"));
+        Path script("samples/tests/asset_access_node.lua");
+        assert_true(scene->register_stage_node(script, "AssetNode"));
 
         auto node = scene->create_child("asset_node");
         assert_is_not_null(node);
         assert_close(42.0f, node->transform->translation().x, 0.01f);
-
-        std::remove(tmp.str().c_str());
     }
 
     // Verify that a Lua node can load a material via self.assets:material()
     // and that the material is a valid handle (non-nil).
     void test_lua_node_can_load_material_via_assets() {
-        const char* script = R"(
-MaterialNode = smlt.define_node("material_node")
-
-function MaterialNode:on_create()
-    -- Try to load a material. If assets is nil or material fails, this errors.
-    local a = self.assets
-    assert(a ~= nil, "self.assets is nil")
-    self.assets_ok = true
-    self.transform.translation = smlt.Vec3(1, 0, 0)
-    return true
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_material_assets.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "MaterialNode"));
+        Path script("samples/tests/material_load_node.lua");
+        assert_true(scene->register_stage_node(script, "MaterialNode"));
 
         auto node = scene->create_child("material_node");
         assert_is_not_null(node);
-
-        std::remove(tmp.str().c_str());
     }
 
     // Verify that find_X methods work from Lua for mesh, texture and sound
     // (the assets with reliable test files).  Each is loaded, renamed, and
     // found back — all from Lua.
     void test_lua_node_can_find_assets_by_name() {
-        const char* script = R"(
-FindNode = smlt.define_node("find_node")
-
-function FindNode:on_create()
-    local a = self.assets
-    assert(a ~= nil, "self.assets is nil")
-
-    -- Mesh: load, rename, find back
-    local mesh = a:load_mesh("assets/samples/cube.obj")
-    assert(mesh ~= nil, "load_mesh should return a valid mesh")
-    mesh:set_name("my_cube")
-    local found_mesh = a:find_mesh("my_cube")
-    assert(found_mesh ~= nil, "find_mesh should return the mesh")
-    assert(found_mesh:name() == "my_cube", "found mesh name should match")
-
-    -- Texture: load, rename, find back
-    local tex = a:load_texture("assets/samples/crate.png")
-    if tex ~= nil then
-        tex:set_name("my_tex")
-        local found_tex = a:find_texture("my_tex")
-        assert(found_tex ~= nil, "find_texture should return the texture")
-    end
-
-    -- Sound: load, rename, find back
-    local snd = a:load_sound("assets/sounds/simulant.ogg")
-    if snd ~= nil then
-        snd:set_name("my_sound")
-        local found_snd = a:find_sound("my_sound")
-        assert(found_snd ~= nil, "find_sound should return the sound")
-    end
-
-    self.transform.translation = smlt.Vec3(42, 0, 0)
-    return true
-end
-)";
-        Path tmp = Path::system_temp_dir().append("test_find_assets.lua");
-        FILE* f = fopen(tmp.str().c_str(), "w");
-        assert_is_not_null(f);
-        fputs(script, f);
-        fclose(f);
-
-        assert_true(scene->register_stage_node(tmp, "FindNode"));
+        Path script("samples/tests/find_assets_node.lua");
+        assert_true(scene->register_stage_node(script, "FindNode"));
 
         auto node = scene->create_child("find_node");
         assert_is_not_null(node);
         assert_close(42.0f, node->transform->translation().x, 0.01f);
-
-        std::remove(tmp.str().c_str());
     }
 };
 
