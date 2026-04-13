@@ -528,6 +528,31 @@ test:linux-x64-gcc-debug:
       - ${TARGET}/debug/simulant/
       - ${TARGET}/release/simulant/
 
+test:linux-x64-gcc-valgrind:
+  stage: test
+  image: $CI_REGISTRY_IMAGE:linux-x64-gcc
+  needs: ["build:linux-x64-gcc"]
+  dependencies:
+    - build:linux-x64-gcc
+  variables:
+    TARGET: linux-x64-gcc
+  before_script:
+    - dnf install -y valgrind || true
+    - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render -noreset
+    - sleep 2
+    - export DISPLAY=:99
+  script:
+    - cd ${TARGET}/debug
+    - export SIMULANT_SOUND_DRIVER=null
+    - export SDL_VIDEODRIVER=dummy
+    - export SDL_AUDIODRIVER=dummy
+    - valgrind --error-exitcode=1 --leak-check=full --show-leak-kinds=definite,indirect --track-origins=yes --suppressions=../../tests/valgrind.supp ./tests/simulant_tests
+  allow_failure: true
+  artifacts:
+    when: always
+    paths:
+      - ${TARGET}/debug/valgrind.log
+
 test:linux-x64-gcc-release:
   stage: test
   image: $CI_REGISTRY_IMAGE:linux-x64-gcc

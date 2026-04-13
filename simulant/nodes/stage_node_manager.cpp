@@ -33,9 +33,10 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
 
     on_stage_node_erased(node);
 
+    void* alloc_base = node_data_it->second.alloc_base;
     it->second.destructor(node);
     all_nodes_.erase(node_data_it);
-    node_storage_.deallocate(node_data_it->second.alloc_base);
+    node_storage_.deallocate(alloc_base);
 
     S_DEBUG("Destroyed node with type {0} at address {1}", type, node);
     return true;

@@ -252,7 +252,7 @@ static auto process_buffer(JSONIterator& js, const Accessor& accessor,
             return BufferInfo();
         }
         result.data.insert(result.data.begin(), decoded->begin() + byte_offset,
-                           decoded->begin() + byte_length);
+                           decoded->begin() + byte_offset + byte_length);
     } else {
         auto istream = smlt::get_app()->vfs->open_file(uri);
         istream->seekg(byte_offset);
