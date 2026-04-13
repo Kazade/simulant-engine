@@ -1,0 +1,11 @@
+{
+    "property_values": {
+    	"s_lighting_enabled": false
+    },
+    "passes": [{
+        "property_values": {
+            "s_textures_enabled": 1
+        }
+    }]
+}
+

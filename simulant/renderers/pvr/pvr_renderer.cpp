@@ -55,7 +55,9 @@ void PVRRenderer::init_context() {
         512 * 1024, /* Vertex buffer size */
         0,          /* DMA enabled */
         0,          /* FSAA */
-        0           /* Autosort (0 = enabled for TR) */
+        0,          /* Autosort (0 = enabled for TR) */
+        0,          /* OPB overflow count */
+        0           /* VBUF doublebuf disabled */
     };
 
     if(pvr_init(&params) < 0) {
@@ -113,13 +115,25 @@ void PVRRenderer::apply_viewport(const RenderTarget& target, const Viewport& vie
      * way as OpenGL. We handle viewport in the projection matrix. */
 }
 
-void PVRRenderer::on_pre_render() {
+void PVRRenderer::pre_render() {
+    /* Prepare textures BEFORE starting the PVR scene. Both pvr_scene_begin()
+     * and pvr_txr_load() use store queues, so we must not nest them. */
+    for(auto& wptr: _texture_registry()) {
+        prepare_texture(wptr.second);
+    }
+
 #ifdef __DREAMCAST__
     texture_manager_.update_priorities();
     pvr_wait_ready();
     pvr_scene_begin();
     scene_begun_ = true;
+    /* Reset list tracking for the new scene */
+    for(int i = 0; i < 5; i++) list_used_[i] = false;
 #endif
+}
+
+void PVRRenderer::on_pre_render() {
+    /* Textures are now prepared in pre_render(). Nothing to do here. */
 }
 
 void PVRRenderer::on_post_render() {

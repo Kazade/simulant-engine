@@ -73,6 +73,17 @@ bool Renderer::texture_format_is_usable(TextureFormat fmt) {
         case TEXTURE_FORMAT_RGB_1US_565_TWID:
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
+        /* These formats can be converted to 16-bit PVR formats */
+        case TEXTURE_FORMAT_RGBA_4UB_8888:
+        case TEXTURE_FORMAT_RGB_3UB_888:
+        case TEXTURE_FORMAT_R_1UB_8:
+        /* Paletted formats - need to be expanded to real color data */
+        case TEXTURE_FORMAT_RGB8_PALETTED4:
+        case TEXTURE_FORMAT_RGBA8_PALETTED4:
+        case TEXTURE_FORMAT_RGB565_PALETTED4:
+        case TEXTURE_FORMAT_RGB8_PALETTED8:
+        case TEXTURE_FORMAT_RGBA8_PALETTED8:
+        case TEXTURE_FORMAT_RGB565_PALETTED8:
             return true;
         default:
             return false;
@@ -166,6 +177,52 @@ static void decompress_16bpp(const uint8_t* src, uint8_t* dst, uint32_t w, uint3
                      ((x&32)<<5)|((x&64)<<6)|((x&128)<<7)|((x&256)<<8)|((x&512)<<9) )
 #define TWIDOUT(x, y) ( TWIDTAB((y)) | (TWIDTAB((x)) << 1) )
 
+/* Convert RGBA 8888 (4 bytes per pixel) to ARGB 4444 (2 bytes per pixel) */
+static void rgba8888_to_argb4444(const uint8_t* src, uint8_t* dst, uint32_t w, uint32_t h) {
+    uint32_t count = w * h;
+    const uint8_t* s = src;
+    uint16_t* d = (uint16_t*) dst;
+
+    for(uint32_t i = 0; i < count; ++i) {
+        uint8_t r = s[0] >> 4;
+        uint8_t g = s[1] >> 4;
+        uint8_t b = s[2] >> 4;
+        uint8_t a = s[3] >> 4;
+        d[i] = (a << 12) | (r << 8) | (g << 4) | b;
+        s += 4;
+    }
+}
+
+/* Convert RGB 888 (3 bytes per pixel) to RGB 565 (2 bytes per pixel) */
+static void rgb888_to_rgb565(const uint8_t* src, uint8_t* dst, uint32_t w, uint32_t h) {
+    uint32_t count = w * h;
+    const uint8_t* s = src;
+    uint16_t* d = (uint16_t*) dst;
+
+    for(uint32_t i = 0; i < count; ++i) {
+        uint16_t r = s[0] >> 3;
+        uint16_t g = s[1] >> 2;
+        uint16_t b = s[2] >> 3;
+        d[i] = (r << 11) | (g << 5) | b;
+        s += 3;
+    }
+}
+
+/* Convert single-channel 8-bit to RGB 565 (grayscale) */
+static void r8_to_rgb565(const uint8_t* src, uint8_t* dst, uint32_t w, uint32_t h) {
+    uint32_t count = w * h;
+    const uint8_t* s = src;
+    uint16_t* d = (uint16_t*) dst;
+
+    for(uint32_t i = 0; i < count; ++i) {
+        uint16_t v = *s++;
+        uint16_t r = v >> 3;
+        uint16_t g = v >> 2;
+        uint16_t b = v >> 3;
+        d[i] = (r << 11) | (g << 5) | b;
+    }
+}
+
 static void untwiddle_16bpp(const uint8_t* src, uint8_t* dst, uint32_t w, uint32_t h) {
     uint32_t x, y, yout, min, mask;
 
@@ -200,6 +257,10 @@ static TextureFormat uncompress_format(TextureFormat fmt) {
             return fmt;
     }
 }
+
+static TextureFormat rgba8888_format() { return TEXTURE_FORMAT_ARGB_1US_4444; }
+static TextureFormat rgb888_format() { return TEXTURE_FORMAT_RGB_1US_565; }
+static TextureFormat r8_format() { return TEXTURE_FORMAT_RGB_1US_565; }
 
 static TextureFormat untwiddle_format(TextureFormat fmt) {
     switch(fmt) {
@@ -259,6 +320,108 @@ bool Renderer::convert_if_necessary(Texture* tex) {
 
         untwiddle_16bpp(&tex->data()[0], &tmp[0], tex->width(), tex->height());
         fmt = untwiddle_format(fmt);
+        tex->set_data(&tmp[0], tmp.size());
+    }
+
+    /* Handle 32-bit RGBA → 16-bit ARGB4444 conversion */
+    if(fmt == TEXTURE_FORMAT_RGBA_4UB_8888) {
+        std::vector<uint8_t> tmp(tex->width() * tex->height() * 2);
+        rgba8888_to_argb4444(&tex->data()[0], &tmp[0], tex->width(), tex->height());
+        fmt = rgba8888_format();
+        tex->set_data(&tmp[0], tmp.size());
+    }
+
+    /* Handle 24-bit RGB → 16-bit RGB565 conversion */
+    if(fmt == TEXTURE_FORMAT_RGB_3UB_888) {
+        std::vector<uint8_t> tmp(tex->width() * tex->height() * 2);
+        rgb888_to_rgb565(&tex->data()[0], &tmp[0], tex->width(), tex->height());
+        fmt = rgb888_format();
+        tex->set_data(&tmp[0], tmp.size());
+    }
+
+    /* Handle 8-bit grayscale → 16-bit RGB565 conversion */
+    if(fmt == TEXTURE_FORMAT_R_1UB_8) {
+        std::vector<uint8_t> tmp(tex->width() * tex->height() * 2);
+        r8_to_rgb565(&tex->data()[0], &tmp[0], tex->width(), tex->height());
+        fmt = r8_format();
+        tex->set_data(&tmp[0], tmp.size());
+    }
+
+    /* Handle paletted formats - expand to actual color data then convert to RGB565 or ARGB4444 */
+    if(tex->is_paletted_format()) {
+        /* Paletted textures store the palette first, then index data.
+         * The texture class maintains this structure. We need to expand
+         * the palette indices to actual colors. */
+        auto pal_size = tex->palette_size();
+        auto data_size = tex->data_size();
+        auto w = tex->width();
+        auto h = tex->height();
+
+        /* Determine output format based on whether the palette has alpha */
+        /* For simplicity, we convert everything to ARGB4444 to preserve alpha if present */
+        std::vector<uint8_t> tmp(w * h * 2);
+        uint16_t* out = (uint16_t*)&tmp[0];
+
+        /* Get palette data - for paletted formats the data buffer starts with the palette */
+        const uint8_t* palette = &tex->data()[0];
+        const uint8_t* index_data = &tex->data()[pal_size];
+
+        /* Determine bits per index */
+        bool is_4bit = (fmt == TEXTURE_FORMAT_RGB8_PALETTED4 ||
+                        fmt == TEXTURE_FORMAT_RGBA8_PALETTED4 ||
+                        fmt == TEXTURE_FORMAT_RGB565_PALETTED4);
+
+        uint32_t pixel_count = w * h;
+        for(uint32_t i = 0; i < pixel_count; ++i) {
+            uint8_t idx;
+            if(is_4bit) {
+                /* 4 bits per pixel - 2 pixels per byte */
+                uint8_t byte = index_data[i / 2];
+                if(i & 1) {
+                    idx = byte & 0xF;  /* Low nibble */
+                } else {
+                    idx = (byte >> 4) & 0xF;  /* High nibble */
+                }
+            } else {
+                /* 8 bits per pixel */
+                idx = index_data[i];
+            }
+
+            /* Read palette entry */
+            uint8_t r, g, b, a = 255;
+            switch(fmt) {
+                case TEXTURE_FORMAT_RGB8_PALETTED4:
+                case TEXTURE_FORMAT_RGB8_PALETTED8:
+                    r = palette[idx * 3 + 0];
+                    g = palette[idx * 3 + 1];
+                    b = palette[idx * 3 + 2];
+                    break;
+                case TEXTURE_FORMAT_RGBA8_PALETTED4:
+                case TEXTURE_FORMAT_RGBA8_PALETTED8:
+                    r = palette[idx * 4 + 0];
+                    g = palette[idx * 4 + 1];
+                    b = palette[idx * 4 + 2];
+                    a = palette[idx * 4 + 3];
+                    break;
+                case TEXTURE_FORMAT_RGB565_PALETTED4:
+                case TEXTURE_FORMAT_RGB565_PALETTED8: {
+                    uint16_t rgb565 = ((uint16_t)palette[idx * 2 + 0]) |
+                                     (((uint16_t)palette[idx * 2 + 1]) << 8);
+                    r = ((rgb565 >> 11) & 0x1F) << 3;
+                    g = ((rgb565 >> 5) & 0x3F) << 2;
+                    b = (rgb565 & 0x1F) << 3;
+                    break;
+                }
+                default:
+                    r = g = b = 255;
+                    break;
+            }
+
+            /* Convert to ARGB4444 */
+            out[i] = ((a >> 4) << 12) | ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+        }
+
+        fmt = TEXTURE_FORMAT_ARGB_1US_4444;
         tex->set_data(&tmp[0], tmp.size());
     }
 

@@ -60,6 +60,14 @@ constexpr static std::size_t texture_format_stride(TextureFormat format) {
             return 3;
         case TEXTURE_FORMAT_RGBA_4UB_8888:
             return 4;
+        /* Paletted formats: stride is 1 byte (packed indices) */
+        case TEXTURE_FORMAT_RGB8_PALETTED4:
+        case TEXTURE_FORMAT_RGBA8_PALETTED4:
+        case TEXTURE_FORMAT_RGB565_PALETTED4:
+        case TEXTURE_FORMAT_RGB8_PALETTED8:
+        case TEXTURE_FORMAT_RGBA8_PALETTED8:
+        case TEXTURE_FORMAT_RGB565_PALETTED8:
+            return 1;
         default:
             assert(0 && "Not implemented");
             return 0;
@@ -75,6 +83,10 @@ constexpr static std::size_t texture_format_channels(TextureFormat format) {
     case TEXTURE_FORMAT_RGB_3UB_888:
     case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
     case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
+    case TEXTURE_FORMAT_RGB565_PALETTED4:
+    case TEXTURE_FORMAT_RGB565_PALETTED8:
+    case TEXTURE_FORMAT_RGB8_PALETTED4:
+    case TEXTURE_FORMAT_RGB8_PALETTED8:
         return 3;
     case TEXTURE_FORMAT_RGBA_4UB_8888:
     case TEXTURE_FORMAT_RGBA_1US_4444:
@@ -87,6 +99,8 @@ constexpr static std::size_t texture_format_channels(TextureFormat format) {
     case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
     case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
     case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
+    case TEXTURE_FORMAT_RGBA8_PALETTED4:
+    case TEXTURE_FORMAT_RGBA8_PALETTED8:
         return 4;
     default:
         S_ERROR("Invalid TextureFormat!");

@@ -2,6 +2,10 @@
 
 #include "../batching/render_queue.h"
 
+#ifdef __DREAMCAST__
+#include <dc/pvr.h>
+#endif
+
 namespace smlt {
 
 class PVRRenderer;
@@ -36,8 +40,10 @@ private:
 
     /* Current PVR list type based on material state */
     int current_list_type_ = 0; /* PVR_LIST_OP_POLY */
-    bool list_opened_[5] = {false, false, false, false, false};
-    bool any_list_opened_ = false;
+    int prev_list_type_ = -1;
+
+    /* Direct rendering state for the current list */
+    pvr_dr_state_t dr_state_;
 
     /* Cached polygon context state */
     bool texturing_enabled_ = false;
@@ -74,6 +80,8 @@ private:
                   batcher::Iteration iteration);
 
     void ensure_list_opened(int list_type);
+    void submit_vertex(float x, float y, float z, float u, float v,
+                       float r, float g, float b, float a);
 };
 
 } // namespace smlt
