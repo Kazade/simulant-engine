@@ -338,7 +338,6 @@ test:windows-x64-mingw:
     - sudo dnf install -y xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers wine
     - export SIMULANT_SOUND_DRIVER=null
     # Pre-initialise Wine non-interactively so it doesn't hang on first run.
-    - export WINEDEBUG=-all
     - wineboot --init
   script:
     - cd ${TARGET}/debug/tests
