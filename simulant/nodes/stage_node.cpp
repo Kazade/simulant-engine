@@ -17,7 +17,6 @@ AABB StageNode::recursive_aabb() const {
     return ret;
 }
 
-
 StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
     auto app = get_app();
     if(!app) {
