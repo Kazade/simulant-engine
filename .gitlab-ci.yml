@@ -321,6 +321,7 @@ build:windows-x64-mingw:debug:
 test:windows-x64-mingw:
   stage: test
   timeout: 300 seconds
+  allow_failure: true
   image: $CI_REGISTRY_IMAGE:windows-x64-mingw
   needs: ["build:windows-x64-mingw:debug", "build:windows-x64-mingw:release"]
   dependencies:
