@@ -100,27 +100,34 @@ KOSWindow::~KOSWindow() {
 }
 
 void KOSWindow::do_swap_buffers() {
+    /* PVR renderer handles frame flipping via pvr_scene_begin/finish */
+    if(renderer_ && renderer_->name() == "pvr") {
+        return;
+    }
     glKosSwapBuffers();
 }
 
 bool KOSWindow::_init_window() {
-    S_DEBUG("Initializing OpenGL");
-
-    static bool gl_initialized = false;
-    if(!gl_initialized) {
-        glKosInit();
-        gl_initialized = true;
-    }
-
-    S_DEBUG("OpenGL initialized");
     probe_vmus();
     return true;
 }
 
 bool KOSWindow::_init_renderer(Renderer* renderer) {
-    _S_UNUSED(renderer);
+    if(renderer->name() == "pvr") {
+        /* PVR renderer handles its own pvr_init() in init_context(),
+         * so we don't initialize GLdc here */
+        S_DEBUG("PVR renderer selected, skipping glKosInit");
+    } else {
+        S_DEBUG("Initializing OpenGL via glKosInit");
+        static bool gl_initialized = false;
+        if(!gl_initialized) {
+            glKosInit();
+            gl_initialized = true;
+        }
+        S_DEBUG("OpenGL initialized");
+    }
 
-    set_has_context(true); //Mark that we have a valid GL context
+    set_has_context(true);
 
     S_DEBUG("Renderer initialized");
 
