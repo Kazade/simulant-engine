@@ -272,7 +272,10 @@ public:
 
     void test_image_creation() {
         auto texture = scene->assets->load_texture("assets/textures/simulant-icon.png");
+        assert_true(texture);
+
         auto image = scene->create_child<ui::Image>(texture);
+        assert_true(image);
 
         assert_equal(image->width(), texture->width());
         assert_equal(image->height(), texture->height());
@@ -283,7 +286,10 @@ public:
 
     void test_set_source_rect() {
         auto texture = scene->assets->load_texture("assets/textures/simulant-icon.png");
+        assert_true(texture);
+
         auto image = scene->create_child<ui::Image>(texture);
+        assert_true(image);
 
         image->set_source_rect(smlt::ui::UICoord(ui::Px(), ui::Px()), smlt::ui::UICoord(ui::Px(128), ui::Px(128)));
 
