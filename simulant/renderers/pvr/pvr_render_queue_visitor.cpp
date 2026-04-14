@@ -121,12 +121,10 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     auto blend = next->blend_func();
     int new_list_type;
     if(blend == BLEND_NONE) {
-        /* Check for alpha test (punch-through) */
-        if(next->alpha_func() != ALPHA_FUNC_NONE) {
-            new_list_type = PVR_LIST_PT_POLY;
-        } else {
-            new_list_type = PVR_LIST_OP_POLY;
-        }
+        new_list_type = PVR_LIST_OP_POLY;
+    } else if(blend == BLEND_MASK) {
+        /* Alpha test (punch-through) */
+        new_list_type = PVR_LIST_PT_POLY;
     } else {
         new_list_type = PVR_LIST_TR_POLY;
     }
@@ -427,7 +425,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         /* Transform by MVP */
         float cx = mvp[0] * px + mvp[4] * py + mvp[8]  * pz + mvp[12];
         float cy = mvp[1] * px + mvp[5] * py + mvp[9]  * pz + mvp[13];
-        float cz = mvp[2] * px + mvp[6] * py + mvp[10] * pz + mvp[14];
+        //float cz = mvp[2] * px + mvp[6] * py + mvp[10] * pz + mvp[14];
         float cw = mvp[3] * px + mvp[7] * py + mvp[11] * pz + mvp[15];
 
         /* Apply viewport transform */
