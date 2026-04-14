@@ -399,6 +399,11 @@ bool Application::_call_init() {
     }
 
     sound_driver_ = window->create_sound_driver(config_.development.force_sound_driver);
+    if(!sound_driver_) {
+        S_ERROR("[FATAL] Unable to create sound driver. Exiting.");
+        exit(2);
+    }
+
     sound_driver_->startup();
 
     S_DEBUG("Sound driver started");
@@ -535,16 +540,20 @@ bool Application::run_frame() {
 
     S_VERBOSE("Signal finished");
 
+    assert(window_);
+
     S_PROFILE_SECTION("input-pre-update");
     window_->input_state->pre_update(dt);
 
-    S_VERBOSE("Checking events");
     S_PROFILE_SECTION("check-events");
+    S_VERBOSE("Checking events");
     window_->check_events(); // Check for any window events
 
     S_VERBOSE("Checking audio stuff");
     auto listener = window_->audio_listener();
+    S_VERBOSE("Fetched audio listener");
     if(listener) {
+        S_VERBOSE("Audio listener was not null");
         sound_driver_->set_listener_properties(
             listener->transform->position(),
             listener->transform->rotation(),
@@ -598,7 +607,7 @@ bool Application::run_frame() {
             window_->swap_buffers();
 
             S_VERBOSE("Buffers swapped");
-        }                
+        }
     }
 
     /* We totally ignore the first frame as it can take a while and messes up

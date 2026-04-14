@@ -50,9 +50,9 @@ private:
                  std::string node_type_name, std::set<NodeParam> params,
                  luabridge::LuaRef instance) :
         StageNode(scene, node_type),
+        ref_(new Pimpl(instance)),
         node_type_name_(node_type_name),
-        params_(params),
-        ref_(new Pimpl(instance)) {}
+        params_(params) {}
 
     Pimpl* ref_ = nullptr;
 

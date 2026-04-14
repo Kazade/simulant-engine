@@ -464,6 +464,7 @@ public:
             case INDEX_TYPE_32_BIT: return *((uint32_t*) ptr);
         default:
             assert(0 && "Invalid index type passed");
+            return -1;
         }
     }
 

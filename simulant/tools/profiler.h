@@ -65,12 +65,8 @@ private:
 
 class ProfileSection {
 public:
-    ProfileSection(const char* name, bool nest, const char* func_name,
-                   const int line) :
+    ProfileSection(const std::string& name, bool nest) :
         name_(name) {
-
-        _S_UNUSED(func_name);
-        _S_UNUSED(line);
 
         parent_ = current_parent;
 
@@ -107,7 +103,7 @@ public:
     }
 
     const char* name() const {
-        return name_;
+        return name_.c_str();
     }
 
     ProfileSection* parent() const {
@@ -124,7 +120,7 @@ private:
         is_finished_ = true;
     }
 
-    const char* name_;
+    std::string name_;
     uint64_t start_ = 0;
     ProfileSection* parent_ = nullptr;
     static ProfileSection* current;
@@ -137,30 +133,24 @@ private:
 #define _S_UNIQUE_NAME(prefix) _S_CONCAT(prefix, __COUNTER__)
 
 #define S_PROFILE_SECTION(name)                                                \
-    auto _S_UNIQUE_NAME(_section) =                                            \
-        ProfileSection((name), false, __FUNCTION__, __LINE__);
+    auto _S_UNIQUE_NAME(_section) = ProfileSection((name), false);
 
 #define S_PROFILE_SUBSECTION(name)                                             \
-    auto _S_UNIQUE_NAME(_section) =                                            \
-        ProfileSection((name), true, __FUNCTION__, __LINE__);
+    auto _S_UNIQUE_NAME(_section) = ProfileSection((name), true);
 
 /* Same as above, but switched based on profiling_enabled() (E.g. internal) */
 #ifdef SIMULANT_PROFILE
 #define _S_PROFILE_SECTION(name)                                               \
     S_PROFILE_SECTION(name)
 #else
-#define _S_PROFILE_SECTION(name)                                               \
-    do {                                                                       \
-    } while(0)
+#define _S_PROFILE_SECTION(name) ((void) 0)
 #endif
 
 #ifdef SIMULANT_PROFILE
 #define _S_PROFILE_SUBSECTION(name)                                            \
     S_PROFILE_SUBSECTION(name)
 #else
-#define _S_PROFILE_SUBSECTION(name)                                            \
-    do {                                                                       \
-    } while(0)
+#define _S_PROFILE_SUBSECTION(name) ((void) 0)
 #endif
 
 #define S_PROFILE_START_FRAME() ProfileRecord::get()->reset_counter()

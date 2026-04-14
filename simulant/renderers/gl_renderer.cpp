@@ -102,6 +102,12 @@ uint32_t GLRenderer::convert_format(TextureFormat format) {
             return GL_COMPRESSED_ARGB_4444_VQ_MIPMAP_TWID_KOS;
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
             return GL_COMPRESSED_RGB_565_VQ_MIPMAP_TWID_KOS;
+        case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
+            return GL_UNSIGNED_SHORT_1_5_5_5_REV_TWID_KOS;
+        case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
+            return GL_UNSIGNED_SHORT_4_4_4_4_REV_TWID_KOS;
+        case TEXTURE_FORMAT_RGB_1US_565_TWID:
+            return GL_UNSIGNED_SHORT_5_6_5_TWID_KOS;
 #endif
         default:
             S_ERROR("Unable to convert format {0}", format);
@@ -139,6 +145,9 @@ uint32_t GLRenderer::convert_type(TextureFormat format) {
     case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
     case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
     case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+    case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
+    case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
+    case TEXTURE_FORMAT_RGB_1US_565_TWID:
         /* Not used for anything, but return something sensible */
         return GL_UNSIGNED_SHORT;
 #endif
@@ -235,7 +244,7 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
         bool hardware_palettes_supported = false; // GLAD_GL_OES_compressed_paletted_texture;
 #endif
         bool paletted = texture->is_paletted_format();
-        std::vector<uint8_t> new_data;        
+        std::vector<uint8_t> new_data;
 
         if(paletted) {
             /* Paletted textures need some additional work. If we can support them
