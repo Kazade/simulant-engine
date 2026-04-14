@@ -569,10 +569,10 @@ ReportParamNode.params = {
     // Registration from file
     // -----------------------------------------------------------------------
 
-    // Reads a Lua script from samples/tests/, registers it via the Path-based
+    // Reads a Lua script from tests/, registers it via the Path-based
     // overload, and verifies the node type is registered correctly.
     void test_registering_lua_stage_node_from_file() {
-        Path script("samples/tests/file_ball_node.lua");
+        Path script("tests/file_ball_node.lua");
         assert_true(scene->register_stage_node(script, "FileBallNode"));
 
         auto maybe_info = scene->registered_stage_node_info("file_ball_node");
@@ -588,7 +588,7 @@ ReportParamNode.params = {
     // as the string-based one — params defined in the file script are
     // forwarded to Lua on_create.
     void test_lua_node_params_from_file() {
-        Path script("samples/tests/file_param_node.lua");
+        Path script("tests/file_param_node.lua");
         assert_true(scene->register_stage_node(script, "FileParamNode"));
 
         auto node = scene->create_child("file_param_node", {{"distance", 2.5f}});
@@ -601,25 +601,25 @@ ReportParamNode.params = {
 
     // A nonexistent file must fail gracefully.
     void test_nonexistent_file_fails_to_register() {
-        Path nonexistent("samples/tests/this_file_does_not_exist_12345.lua");
+        Path nonexistent("tests/this_file_does_not_exist_12345.lua");
         assert_false(scene->register_stage_node(nonexistent, "Anything"));
     }
 
     // A file containing invalid Lua must fail to register.
     void test_invalid_lua_file_fails_to_register() {
-        Path script("samples/tests/invalid_lua.lua");
+        Path script("tests/invalid_lua.lua");
         assert_false(scene->register_stage_node(script, "Anything"));
     }
 
     // Supplying a class name that does not exist inside a valid file must fail.
     void test_unknown_class_in_file_fails_to_register() {
-        Path script("samples/tests/file_real_class.lua");
+        Path script("tests/file_real_class.lua");
         assert_false(scene->register_stage_node(script, "NonExistentClass"));
     }
 
     // Registering the same file-based type name a second time must be rejected.
     void test_duplicate_file_registration_is_rejected() {
-        Path script("samples/tests/file_dup.lua");
+        Path script("tests/file_dup.lua");
         assert_true (scene->register_stage_node(script, "FileDupNode"));
         assert_false(scene->register_stage_node(script, "FileDupNode"));
     }
@@ -627,7 +627,7 @@ ReportParamNode.params = {
     // Verifies that writing to self.transform inside Lua's on_create (from a
     // file-registered node) mutates the real scene-tree node's transform.
     void test_cpp_sees_lua_transform_writes_from_file() {
-        Path script("samples/tests/file_transform_write.lua");
+        Path script("tests/file_transform_write.lua");
         assert_true(scene->register_stage_node(script, "FileTransformWriteNode"));
 
         auto node = scene->create_child("file_transform_write_node");
@@ -647,7 +647,7 @@ ReportParamNode.params = {
     // spawn independently.  Loading the same file a second time for the second
     // class must not break the first registration.
     void test_two_classes_from_same_file() {
-        Path script("samples/tests/multi_class.lua");
+        Path script("tests/multi_class.lua");
 
         // Register the first class and spawn an instance.
         assert_true(scene->register_stage_node(script, "MultiClassA"));
@@ -687,7 +687,7 @@ ReportParamNode.params = {
     // register class B from a different file.  Class A must still be
     // functional, and class B must reflect its own script content.
     void test_reload_script_updates_new_instances() {
-        Path script_a("samples/tests/reload_node_a.lua");
+        Path script_a("tests/reload_node_a.lua");
 
         assert_true(scene->register_stage_node(script_a, "ReloadNodeA"));
 
@@ -696,7 +696,7 @@ ReportParamNode.params = {
         assert_close(100.0f, a->transform->translation().x, 0.01f);
 
         // Register the new class from a different file.
-        Path script_b("samples/tests/reload_node_b.lua");
+        Path script_b("tests/reload_node_b.lua");
         assert_true(scene->register_stage_node(script_b, "ReloadNodeB"));
 
         // Class A must still be functional after the second registration.
@@ -716,7 +716,7 @@ ReportParamNode.params = {
 
     // Verify that on_late_update is forwarded to Lua.
     void test_lua_on_late_update_forwarded() {
-        Path script("samples/tests/late_update_node.lua");
+        Path script("tests/late_update_node.lua");
         assert_true(scene->register_stage_node(script, "LateUpdateNode"));
 
         auto node = scene->create_child("late_update_node");
@@ -733,7 +733,7 @@ ReportParamNode.params = {
     // Verify that on_destroy is forwarded to Lua and that returning false
     // prevents destruction.
     void test_lua_on_destroy_forwarded() {
-        Path script("samples/tests/on_destroy_node.lua");
+        Path script("tests/on_destroy_node.lua");
         assert_true(scene->register_stage_node(script, "DestroyNode"));
 
         auto node = scene->create_child("destroy_node_node");
@@ -751,7 +751,7 @@ ReportParamNode.params = {
     // Verify that on_clean_up is forwarded to Lua.  The script writes to a
     // C++-readable transform field so we can verify the callback ran.
     void test_lua_on_clean_up_forwarded() {
-        Path script("samples/tests/on_clean_up_node.lua");
+        Path script("tests/on_clean_up_node.lua");
         assert_true(scene->register_stage_node(script, "CleanupNode"));
 
         auto node = scene->create_child("cleanup_node");
@@ -768,7 +768,7 @@ ReportParamNode.params = {
 
     // Verify that on_parent_set is forwarded to Lua.
     void test_lua_on_parent_set_forwarded() {
-        Path script("samples/tests/on_parent_set_node.lua");
+        Path script("tests/on_parent_set_node.lua");
         assert_true(scene->register_stage_node(script, "ParentSetNode"));
 
         auto node = scene->create_child("parent_set_node");
@@ -786,7 +786,7 @@ ReportParamNode.params = {
 
     // Verify that on_transformation_changed is forwarded to Lua.
     void test_lua_on_transformation_changed_forwarded() {
-        Path script("samples/tests/on_transform_changed_node.lua");
+        Path script("tests/on_transform_changed_node.lua");
         assert_true(scene->register_stage_node(script, "TransformChangeNode"));
 
         auto node = scene->create_child("transform_change_node");
@@ -812,7 +812,7 @@ ReportParamNode.params = {
     // distinctive translation value when assets is non-nil so we know the
     // binding works.
     void test_lua_node_can_access_assets() {
-        Path script("samples/tests/asset_access_node.lua");
+        Path script("tests/asset_access_node.lua");
         assert_true(scene->register_stage_node(script, "AssetNode"));
 
         auto node = scene->create_child("asset_node");
@@ -823,7 +823,7 @@ ReportParamNode.params = {
     // Verify that a Lua node can load a material via self.assets:material()
     // and that the material is a valid handle (non-nil).
     void test_lua_node_can_load_material_via_assets() {
-        Path script("samples/tests/material_load_node.lua");
+        Path script("tests/material_load_node.lua");
         assert_true(scene->register_stage_node(script, "MaterialNode"));
 
         auto node = scene->create_child("material_node");
@@ -834,7 +834,7 @@ ReportParamNode.params = {
     // (the assets with reliable test files).  Each is loaded, renamed, and
     // found back — all from Lua.
     void test_lua_node_can_find_assets_by_name() {
-        Path script("samples/tests/find_assets_node.lua");
+        Path script("tests/find_assets_node.lua");
         assert_true(scene->register_stage_node(script, "FindNode"));
 
         auto node = scene->create_child("find_node");

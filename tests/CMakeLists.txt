@@ -45,7 +45,7 @@ ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} 
 
 # Copy Lua test scripts from samples/tests/ to the build output directory
 # so tests can read them instead of writing to temp directories (Dreamcast-safe)
-FILE(GLOB LUA_TEST_SCRIPTS ${CMAKE_SOURCE_DIR}/samples/tests/*.lua)
+FILE(GLOB LUA_TEST_SCRIPTS ${CMAKE_SOURCE_DIR}/tests/data/*.lua)
 FOREACH(script ${LUA_TEST_SCRIPTS})
   GET_FILENAME_COMPONENT(filename ${script} NAME)
   ADD_CUSTOM_COMMAND(
@@ -93,4 +93,3 @@ TARGET_LINK_LIBRARIES(
     simulant_tests
     simulant
 )
-
