@@ -485,6 +485,7 @@ build:linux-x64-gcc:
       - ${TARGET}/release/simulant/
       - ${TARGET}/release/assets/
       - ${TARGET}/release/tests/simulant_tests
+      - ${TARGET}/release/tests/*.*
 
 build:linux-x64-gcc11:
   stage: build
