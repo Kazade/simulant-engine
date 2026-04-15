@@ -483,7 +483,7 @@ void ParticleSystem::emit_particles(uint16_t e, float dt, uint32_t max) {
         float cos0 = (1.0f - u) * std::cos(minr.to_float()) +
                      u * std::cos(maxr.to_float());
         float v = std::acos(cos0);
-        float t = rgen.float_in_range(v, 2.0f * float(M_PI));
+        float t = rgen.float_in_range(v, 2.0f * float(PI));
         Vec3 nd = {
             std::sin(v) * std::cos(t),
             std::sin(v) * std::sin(t),
