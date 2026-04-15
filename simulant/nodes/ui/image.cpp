@@ -13,10 +13,12 @@ Image::Image(Scene* owner) :
 
 bool Image::on_create(Params params) {
     if(!clean_params<Image>(params)) {
+        S_ERROR("Image params invalid");
         return false;
     }
 
     if(!Widget::on_create(params)) {
+        S_ERROR("Widget params invalid");
         return false;
     }
 
@@ -26,6 +28,12 @@ bool Image::on_create(Params params) {
     auto theme = params.get<UIConfig>("theme").value_or(UIConfig());
     auto texture =
         params.get<TextureRef>("texture").value_or(TextureRef()).lock();
+
+    if(!texture) {
+        S_ERROR("Tried to create an image without a texture");
+        return false;
+    }
+
     if(!sstyle) {
         /* By default, images don't have a border */
         set_border_width(theme.image_border_width_);
@@ -36,9 +44,7 @@ bool Image::on_create(Params params) {
 
         set_foreground_color(theme.image_foreground_color_);
 
-        if(texture) {
-            set_texture(texture);
-        }
+        set_texture(texture);
 
         if(!Widget::set_resize_mode(RESIZE_MODE_FIXED)) {
             // Rebuild if the resize mode didn't change

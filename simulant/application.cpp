@@ -22,6 +22,8 @@
 #include <future>
 #include <cstdlib>
 
+#include "scripting/lua/interpreter.h"
+
 #define DEFINE_STAGENODEPOOL
 #include "nodes/stage_node.h"
 #include "nodes/stage_node_pool.h"
@@ -203,6 +205,10 @@ Application::~Application() {
     stop_running();
     shutdown();
 
+    /* Destroy all scenes (and their StageNodes) before closing the Lua
+     * state.  LuaStageNode::release_lua_ref() is called during node teardown,
+     * which clears the LuaRef registry reference so that the destructor
+     * won't call luaL_unref on a closed state. */
     scene_manager_->destroy_all();
 
     /* This cleans up the destroyed scenes
@@ -213,10 +219,19 @@ Application::~Application() {
     scene_manager_->clean_up();
     scene_manager_.reset();
 
-    asset_manager_.reset();
+    /* Also clean up the overlay scene before closing Lua. */
+    if(overlay_scene_) {
+        overlay_scene_->clean_up();
+        overlay_scene_.reset();
+    }
 
-    overlay_scene_->clean_up();
-    overlay_scene_.reset();
+    /* Tear down scripting interpreters last.  lua_close triggers the Lua GC
+     * which finalises any remaining Lua wrapper tables.  All C++-side
+     * LuaRefs in LuaStageNode have been released already, so the GC won't
+     * touch any slab-allocated node memory. */
+    interpreters_.clear();
+
+    asset_manager_.reset();
 
     pool_->clear();
 
@@ -384,6 +399,11 @@ bool Application::_call_init() {
     }
 
     sound_driver_ = window->create_sound_driver(config_.development.force_sound_driver);
+    if(!sound_driver_) {
+        S_ERROR("[FATAL] Unable to create sound driver. Exiting.");
+        exit(2);
+    }
+
     sound_driver_->startup();
 
     S_DEBUG("Sound driver started");
@@ -468,6 +488,7 @@ void Application::run_update(float dt) {
 
     signal_update_(dt);
     _call_update(dt);
+    update_interpreters(dt);
 }
 
 void Application::run_fixed_updates() {
@@ -519,16 +540,20 @@ bool Application::run_frame() {
 
     S_VERBOSE("Signal finished");
 
+    assert(window_);
+
     S_PROFILE_SECTION("input-pre-update");
     window_->input_state->pre_update(dt);
 
-    S_VERBOSE("Checking events");
     S_PROFILE_SECTION("check-events");
+    S_VERBOSE("Checking events");
     window_->check_events(); // Check for any window events
 
     S_VERBOSE("Checking audio stuff");
     auto listener = window_->audio_listener();
+    S_VERBOSE("Fetched audio listener");
     if(listener) {
+        S_VERBOSE("Audio listener was not null");
         sound_driver_->set_listener_properties(
             listener->transform->position(),
             listener->transform->rotation(),
@@ -582,7 +607,7 @@ bool Application::run_frame() {
             window_->swap_buffers();
 
             S_VERBOSE("Buffers swapped");
-        }                
+        }
     }
 
     /* We totally ignore the first frame as it can take a while and messes up
@@ -721,6 +746,12 @@ void Application::run_coroutines_and_late_update() {
     _call_late_update(dt);
 
     signal_post_late_update();
+}
+
+void Application::update_interpreters(float dt) {
+    for(auto& i: interpreters_) {
+        i->update(dt);
+    }
 }
 
 void Application::_call_clean_up() {
@@ -927,6 +958,16 @@ bool Application::activate_language_from_arb_data(const uint8_t* data, std::size
         active_language_ = normalize_language_code(language_code);
     }
     return ret;
+}
+
+LuaInterpreter* Application::ensure_lua_ready() {
+    if(!interpreters_.empty()) {
+        return dynamic_cast<LuaInterpreter*>(interpreters_.back().get());
+    }
+
+    auto lua = LuaInterpreter::create();
+    interpreters_.push_back(lua);
+    return lua.get();
 }
 
 bool Application::activate_language(const std::string &language_code) {

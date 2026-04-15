@@ -110,6 +110,52 @@ void Transform::set_translation_2d(const Vec2& trans) {
     set_translation(Vec3(trans, 0));
 }
 
+Vec2 Transform::position_2d() const {
+    return position_.xy();
+}
+
+Vec2 Transform::translation_2d() const {
+    return translation_.xy();
+}
+
+smlt::Degrees Transform::orientation_2d() const {
+    // In 2D (X-Y plane) the orientation is the roll — rotation around Z.
+    return orientation_.roll();
+}
+
+smlt::Degrees Transform::rotation_2d() const {
+    return rotation_.roll();
+}
+
+void Transform::set_orientation_2d(const Degrees& orientation) {
+    set_orientation(Quaternion(Vec3(0.0f, 0.0f, 1.0f), orientation));
+}
+
+void Transform::set_rotation_2d(const Degrees& rotation) {
+    set_rotation(Quaternion(Vec3(0.0f, 0.0f, 1.0f), rotation));
+}
+
+void Transform::set_scale_factor_2d(const Vec2& xy) {
+    set_scale_factor(Vec3(xy.x, xy.y, scale_factor_.z));
+}
+
+void Transform::translate_2d(const Vec2& xy) {
+    translate(Vec3(xy, 0.0f));
+}
+
+void Transform::rotate_2d(const smlt::Degrees& rot) {
+    rotate(Vec3(0.0f, 0.0f, 1.0f), rot);
+}
+
+void Transform::scale_by(const Vec3& v) {
+    signal_change_attempted();
+    set_scale_factor_if_necessary(scale_factor_ * v);
+}
+
+void Transform::scale_by(float xyz) {
+    scale_by(Vec3(xyz));
+}
+
 bool Transform::add_listener(TransformListener* listener) {
     auto it = std::find(listeners_.begin(), listeners_.end(), listener);
     if(it != listeners_.end()) {

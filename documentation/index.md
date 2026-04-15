@@ -100,6 +100,7 @@ Simulant is a cross-platform C++ game engine with support for desktop (Linux, Wi
 ## 🛠️ Scripting & Advanced Patterns
 
 - **[Coroutines](coroutines.md)** - Asynchronous game logic
+- **[Lua Scripting](lua-scripting.md)** - Define StageNode behaviours in Lua
 - **[Signals & Events](scripting/signals.md)** - Event-driven programming
 - **[Behaviours](scripting/behaviours.md)** - Reusable node components
 - **[Threading](scripting/threading.md)** - Background processing

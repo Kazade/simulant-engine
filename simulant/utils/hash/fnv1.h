@@ -19,21 +19,24 @@ struct fnv_internal<uint32_t> {
 
 template<>
 struct fnv1<uint32_t>: public fnv_internal<uint32_t> {
-    constexpr static inline uint32_t
-        hash(char const* const str, const uint32_t val = default_offset_basis) {
-        return (str[0] == '\0')
-                   ? val
-                   : hash(&str[1], (val * prime) ^ uint32_t(str[0]));
+    constexpr static uint32_t hash(const char* str, uint32_t val = default_offset_basis) {
+        while(*str) {
+            val = (val * prime) ^ uint32_t(uint8_t(*str));
+            ++str;
+        }
+        return val;
     }
 };
 
 template<>
 struct fnv1a<uint32_t>: public fnv_internal<uint32_t> {
-    constexpr static inline uint32_t
-        hash(char const* const str, const uint32_t val = default_offset_basis) {
-        return (str[0] == '\0')
-                   ? val
-                   : hash(&str[1], (val ^ uint32_t(str[0])) * prime);
+    constexpr static uint32_t hash(const char* str, uint32_t val = default_offset_basis) {
+        while(*str) {
+            val = (val ^ uint32_t(uint8_t(*str))) * prime;
+            ++str;
+        }
+        return val;
     }
 };
+
 } // namespace smlt

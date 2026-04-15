@@ -25,18 +25,18 @@
 #include <iosfwd>
 
 #include "arg_parser.h"
-#include "keycodes.h"
-#include "utils/deprecated.h"
-#include "types.h"
-#include "utils/unicode.h"
-#include "scenes/scene_manager.h"
-#include "generic/property.h"
 #include "generic/data_carrier.h"
-#include "scenes/scene_manager.h"
-#include "screen.h"
+#include "generic/property.h"
+#include "keycodes.h"
+#include "loader.h"
 #include "logging.h"
 #include "path.h"
-#include "loader.h"
+#include "scenes/scene_manager.h"
+#include "screen.h"
+#include "scripting/interpreter.h"
+#include "types.h"
+#include "utils/deprecated.h"
+#include "utils/unicode.h"
 
 #define DEFAULT_LANGUAGE_CODE "en-us"
 
@@ -167,6 +167,8 @@ enum UpdateEnabledFlags {
 };
 
 typedef uint32_t UpdateEnabledMask;
+
+class LuaInterpreter;
 
 class Application {
     friend class Window;
@@ -299,6 +301,8 @@ public:
         updates_enabled_ = mask;
     }
 
+    LuaInterpreter* ensure_lua_ready();
+
 protected:
     bool _call_init();
 
@@ -324,6 +328,8 @@ private:
 
     void run_coroutines_and_late_update();
 
+    void update_interpreters(float dt);
+
     thread::ThreadID main_thread_id_;
     bool has_shutdown_ = false;
 
@@ -336,6 +342,7 @@ private:
     std::shared_ptr<SoundDriver> sound_driver_;
     std::shared_ptr<MaterialValuePool> pool_;
     std::vector<LoaderTypePtr> loaders_;
+    std::vector<std::shared_ptr<Interpreter>> interpreters_;
 
     bool initialized_ = false;
     bool is_running_ = true;

@@ -393,8 +393,11 @@ static KeyboardCode scancode_to_keyboard_code(int32_t code) {
 }
 
 void KOSWindow::check_events() {
+    S_VERBOSE("Accessing timekeeper");
+
     float dt = app->time_keeper->delta_time();
 
+    S_VERBOSE("Accumulating time: {0}", dt);
     /* Regularly recheck the controller state */
     time_since_last_controller_update_ += dt;
     if(time_since_last_controller_update_ > 1.0f) {
@@ -402,6 +405,7 @@ void KOSWindow::check_events() {
 
         // Rescan for devices in case a controller has been added or removed
         //initialize_input_controller(*this->_input_state());
+        S_VERBOSE("Probing VMUs");
         probe_vmus();
     }
 
@@ -416,6 +420,7 @@ void KOSWindow::check_events() {
 
     /* Check controller states */
     for(int8_t i = 0; i < MAX_CONTROLLERS; ++i) {
+        S_VERBOSE("Getting inputs for controller: {0}", +i);
         auto device = maple_enum_type(i, MAPLE_FUNC_CONTROLLER);
         if(device) {
             auto id = GameControllerID(device->port);

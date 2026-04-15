@@ -24,9 +24,9 @@ public:
     void test_render_group_insertion() {
         typedef ContiguousMultiMap<batcher::RenderGroup, std::size_t> SortedRenderables;
 
-        batcher::RenderGroup key1;
-        batcher::RenderGroup key2;
-        batcher::RenderGroup key3;
+        batcher::RenderGroup key1{};
+        batcher::RenderGroup key2{};
+        batcher::RenderGroup key3{};
 
         key1.sort_key.s.pass = 0;
         key1.sort_key.s.is_blended = true;

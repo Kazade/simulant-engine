@@ -3,11 +3,11 @@ FILE(GLOB TEST_SOURCES global.cpp)
 FILE(GLOB LIBGL_CONTAINERS ${CMAKE_SOURCE_DIR}/deps/libgl/containers/*.c)
 
 IF(PLATFORM_DREAMCAST)
-FILE(GLOB GL_TESTS gl1/*.h)
+  FILE(GLOB GL_TESTS gl1/*.h)
 ELSEIF(PLATFORM_PSP)
-FILE(GLOB GL_TESTS gl1/*.h)
+  FILE(GLOB GL_TESTS gl1/*.h)
 ELSE()
-FILE(GLOB GL_TESTS gl2/*.h gl1/*.h)
+  FILE(GLOB GL_TESTS gl2/*.h gl1/*.h)
 ENDIF()
 
 # Add the root directory so that we can include from "simulant/X" in tests
@@ -25,43 +25,57 @@ ADD_CUSTOM_COMMAND(
 EXECUTE_PROCESS(COMMAND ${TEST_GENERATOR_BIN} --list-tests ${TEST_FILES} ${GL_TESTS} OUTPUT_VARIABLE TEST_LIST RESULT_VARIABLE TEST_DISCOVERY_RESULT)
 
 IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-access-control")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-access-control")
 ENDIF()
 
 IF(PLATFORM_PSP)
-    SET(PSP_TITLE "Simulant Tests")
-    SET(PSP_MAJOR_VERSION 1)
-    SET(PSP_MINOR_VERSION 0)
-    configure_file(${CMAKE_SOURCE_DIR}/conf/psp_module_info.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/psp_module_info.cpp)
-    set(TEST_SOURCES ${TEST_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/psp_module_info.cpp)
+  SET(PSP_TITLE "Simulant Tests")
+  SET(PSP_MAJOR_VERSION 1)
+  SET(PSP_MINOR_VERSION 0)
+  configure_file(${CMAKE_SOURCE_DIR}/conf/psp_module_info.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/psp_module_info.cpp)
+  set(TEST_SOURCES ${TEST_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/psp_module_info.cpp)
 endif()
 
 IF(ANDROID_API)
-    set(TEST_SOURCES ${TEST_SOURCES} ${CMAKE_SOURCE_DIR}/platforms/android/SDL_android_main.c)
+  set(TEST_SOURCES ${TEST_SOURCES} ${CMAKE_SOURCE_DIR}/platforms/android/SDL_android_main.c)
 ENDIF()
 
 ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} ${CMAKE_CURRENT_BINARY_DIR}/${TEST_MAIN_FILENAME}
     test_gltf.h)
 
+# Copy Lua test scripts from samples/tests/ to the build output directory
+# so tests can read them instead of writing to temp directories (Dreamcast-safe)
+FILE(GLOB LUA_TEST_SCRIPTS ${CMAKE_SOURCE_DIR}/tests/data/*.lua)
+FOREACH(script ${LUA_TEST_SCRIPTS})
+  GET_FILENAME_COMPONENT(filename ${script} NAME)
+  ADD_CUSTOM_COMMAND(
+        TARGET simulant_tests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${script}
+            ${CMAKE_CURRENT_BINARY_DIR}/${filename}
+        DEPENDS ${script}
+    )
+ENDFOREACH()
+
 IF(${TEST_DISCOVERY_RESULT} EQUAL 0)
-    STRING(REPLACE "\n" ";" TEST_LIST ${TEST_LIST})
-    FOREACH(test_name ${TEST_LIST})
-        STRING(STRIP "${test_name}" test_name)
-        ADD_TEST(NAME "${test_name}" COMMAND simulant_tests ${test_name} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-    ENDFOREACH()
+  STRING(REPLACE "\n" ";" TEST_LIST ${TEST_LIST})
+  FOREACH(test_name ${TEST_LIST})
+    STRING(STRIP "${test_name}" test_name)
+    ADD_TEST(NAME "${test_name}" COMMAND simulant_tests ${test_name} WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+  ENDFOREACH()
 ENDIF()
 
 IF(PLATFORM_PSP)
-    create_pbp_file(TARGET simulant_tests TITLE "Simulant Tests")
+  create_pbp_file(TARGET simulant_tests TITLE "Simulant Tests")
 
-    add_custom_command(
+  add_custom_command(
         TARGET simulant_tests POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
         ../../assets
         ${CMAKE_CURRENT_BINARY_DIR}/simulant
     )
 
-    add_custom_command(
+  add_custom_command(
         TARGET simulant_tests POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E create_symlink
         ../../samples/data
@@ -70,13 +84,12 @@ IF(PLATFORM_PSP)
 ENDIF()
 
 IF(WIN32 AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-# Necessary when compiling tests on mingw because the main.cpp file gets too large
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wa,-mbig-obj")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj")
+  # Necessary when compiling tests on mingw because the main.cpp file gets too large
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wa,-mbig-obj")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj")
 ENDIF()
 
 TARGET_LINK_LIBRARIES(
     simulant_tests
     simulant
 )
-

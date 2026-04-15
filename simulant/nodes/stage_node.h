@@ -6,6 +6,7 @@
 #include "../coroutines/helpers.h"
 #include "../generic/data_carrier.h"
 #include "../generic/manual_object.h"
+#include "../generic/optional.h"
 #include "../interfaces/boundable.h"
 #include "../interfaces/has_auto_id.h"
 #include "../interfaces/nameable.h"
@@ -34,6 +35,7 @@ namespace smlt {
 class RenderableFactory;
 class Seconds;
 class Scene;
+class LuaStageNode;
 struct GeomCullerOptions;
 struct TextureFlags;
 class StageNode;
@@ -85,6 +87,9 @@ struct stage_node_traits;
 
 namespace impl {
 
+/* I can't remember exactly why this is here, but I think it's
+ * because of a circular import between stage_node.h and scene.h
+ * so we can't call Scene->create_node directly? Maybe? */
 template<typename F, typename T, typename... Args>
 T* child_factory(F& factory, StageNode* parent, Args&&... args) {
     auto node = factory->template create_node<T>(std::forward<Args>(args)...);
@@ -268,8 +273,8 @@ constexpr bool has_spaces(const char* s) {
 
 class NodeParam {
 public:
-    NodeParam(int order, const char* name, NodeParamType type,
-              optional<ParamValue> default_value, const char* desc,
+    NodeParam(int order, std::string name, NodeParamType type,
+              smlt::optional<ParamValue> default_value, std::string desc,
               bool required) :
         order_(order),
         name_(name),
@@ -282,7 +287,7 @@ public:
         return order_ < rhs.order_;
     }
 
-    const char* name() const {
+    const std::string& name() const {
         return name_;
     }
 
@@ -290,7 +295,7 @@ public:
         return type_;
     }
 
-    const char* description() const {
+    const std::string& description() const {
         return desc_;
     }
 
@@ -304,10 +309,10 @@ public:
 
 private:
     int order_;
-    const char* name_;
+    std::string name_;
     NodeParamType type_;
     optional<ParamValue> default_value_;
-    const char* desc_;
+    std::string desc_;
     bool required_ = true;
 };
 
@@ -486,6 +491,7 @@ private:
     friend class DescendentIterator<false>;
     friend class DescendentIterator<true>;
     friend class StageNodeManager;
+    friend class LuaStageNode;
     friend class Partitioner;
     friend class Layer;
     friend class SiblingIteratorPair;
@@ -708,6 +714,8 @@ public:
             owner_, this, std::forward<Params>(args));
     }
 
+    StageNode* create_child(const char* name, const Params& args = Params());
+
     void adopt_children(StageNode* node) {
         node->set_parent(this);
     }
@@ -847,15 +855,7 @@ public:
         return zero;
     }
 
-    AABB recursive_aabb() const {
-        AABB ret = aabb();
-        for(auto& node: each_descendent()) {
-            ret.encapsulate(node.aabb());
-        }
-
-        return ret;
-    }
-
+    AABB recursive_aabb() const;
     /* Control shading on the stage node (behaviour depends on the type of node)
      */
     ShadowCast shadow_cast() const {

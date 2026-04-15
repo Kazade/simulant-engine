@@ -8,6 +8,16 @@
 
 namespace smlt {
 
+AABB StageNode::recursive_aabb() const {
+    AABB ret = aabb();
+    for(auto& node: each_descendent()) {
+        ret.encapsulate(node.aabb());
+    }
+
+    return ret;
+}
+
+
 StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
     auto app = get_app();
     if(!app) {
@@ -257,6 +267,14 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
                           STAGE_NODE_CHANGE_HIERARCHY);
 
     _on_parent_set(old_parent, parent_, transform_retain);
+}
+
+StageNode* StageNode::create_child(const char* name, const Params& args) {
+    auto node = owner_->create_node(name, args, nullptr);
+    if(node) {
+        node->set_parent(this);
+    }
+    return node;
 }
 
 StageNode* StageNode::find_mixin(const std::string& name) const {
