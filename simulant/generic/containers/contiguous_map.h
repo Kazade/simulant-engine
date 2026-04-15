@@ -6,8 +6,15 @@
  *  - Sorted on insertion
  *  - Clears without dealloc
  *  - Nodes stored in contiguous memory
+ *  - Hot/cold data split for cache-efficient lookups
  *
- *  Internally this is a red-black tree stored within a std::vector.
+ *  Internally this is a red-black tree. Search-critical data (keys
+ *  and child indices) are stored in a separate compact array from
+ *  node metadata (values, parent pointers, color bits, equal-value
+ *  lists). This means the common find() hot path only touches the
+ *  small SearchNode array, keeping more nodes resident per cache
+ *  line (critical on SH4 with its 32-byte lines and 16KB operand
+ *  cache).
  *
  *  TODO:
  *
@@ -27,23 +34,41 @@
 namespace smlt {
 
 namespace _contiguous_map {
+
+/*
+ * Search-hot data: only these fields are touched during key lookup.
+ * Keeping this struct small means more nodes fit per cache line,
+ * dramatically reducing cache misses during tree traversal.
+ */
+template<typename K>
+struct SearchNode {
+    SearchNode() = default;
+    SearchNode(const K& k) : key(k) {}
+
+    K key;
+    int32_t left_index_ = -1;
+    int32_t right_index_ = -1;
+};
+
+/*
+ * Cold data: accessed during insertion, rebalancing, and iteration.
+ * Stored in a separate array so it doesn't pollute the cache during
+ * the common find() hot path.
+ */
 template<typename K, typename V>
-struct _S_ALIGN(8) NodeMeta {
-    NodeMeta(const K& key, const V& value) :
+struct DataNode {
+    DataNode(const K& key, const V& value) :
         pair(std::make_pair(key, value)) {}
 
     std::pair<const K, V> pair;
 
+    int32_t parent_index_ = -1;
     bool is_black = false;
 
     /* If this is not -1, then this is the start
      * of a linked list of equal values */
     int32_t equal_index_ = -1;
     int32_t last_equal_index_ = -1;
-
-    int32_t parent_index_ = -1;
-    int32_t left_index_ = -1;
-    int32_t right_index_ = -1;
 };
 
 }
@@ -69,7 +94,8 @@ class ContiguousMultiMap {
 public:
     typedef K key_type;
     typedef V value_type;
-    typedef _contiguous_map::NodeMeta<K, V> node_type;
+    typedef _contiguous_map::SearchNode<K> search_node_type;
+    typedef _contiguous_map::DataNode<K, V> data_node_type;
 
     class iterator_base {
     protected:
@@ -87,9 +113,9 @@ public:
             current_node_ = index;
 
             if(index > -1) {
-                auto current = _node(current_node_);
-                if(current->left_index_ > -1) {
-                    previous_node_index_ = current->left_index_;
+                auto* search = _search_node(current_node_);
+                if(search->left_index_ > -1) {
+                    previous_node_index_ = search->left_index_;
                 }
             } else {
                 previous_node_index_ = -1;
@@ -98,61 +124,67 @@ public:
 
         iterator_base(const iterator_base& other) = default;
 
-        inline typename ContiguousMultiMap::node_type* _node(int32_t index) const {
+        inline typename ContiguousMultiMap::search_node_type* _search_node(int32_t index) const {
             assert(index > -1);
-            return &map_->nodes_[index];
+            return &map_->search_nodes_[index];
+        }
+
+        inline typename ContiguousMultiMap::data_node_type* _data_node(int32_t index) const {
+            assert(index > -1);
+            return &map_->data_nodes_[index];
         }
 
         void increment() {
             if(current_node_ < 0) return; // Do nothing
 
-            auto current = _node(current_node_);
+            auto* data = _data_node(current_node_);
 
             /* We have a pointer to an equal value node, but we haven't started iterating */
-            if(current->equal_index_ > -1 && list_head_index_ == -1) {
+            if(data->equal_index_ > -1 && list_head_index_ == -1) {
                 list_head_index_ = current_node_;
-                current_node_ = current->equal_index_;
+                current_node_ = data->equal_index_;
                 return;
             } else if(list_head_index_ > -1) {
                 /* We're iterating equal value nodes */
-                current_node_ = current->equal_index_;
+                current_node_ = data->equal_index_;
                 if(current_node_ == -1) {
                     /* We've finished iterating the list, now back to recursing */
                     current_node_ = list_head_index_; // Restore back to the head node
                     list_head_index_ = -1; // We're no longer iterating the list
-                    current = _node(current_node_); // Set current so we can continue normally
+                    data = _data_node(current_node_); // Set data so we can continue normally
                 } else {
                     /* We've updated the current node */
                     return;
                 }
             }
 
+            auto* search = _search_node(current_node_);
             auto previous = current_node_;
 
-            if(current->right_index_ == -1) {
+            if(search->right_index_ == -1) {
                 /* We've reached the end, now we go up until we come from
                  * the left branch */
 
-                current_node_ = current->parent_index_;
+                current_node_ = data->parent_index_;
                 while(current_node_ > -1) {
-                    current = _node(current_node_);
-                    if(previous == current->left_index_) {
+                    search = _search_node(current_node_);
+                    if(previous == search->left_index_) {
                         /* We came from the left, so break */
                         break;
                     } else {
                         previous = current_node_;
-                        current_node_ = current->parent_index_;
+                        current_node_ = _data_node(current_node_)->parent_index_;
                     }
                 }
 
             } else {
-                current_node_ = current->right_index_;
+                current_node_ = search->right_index_;
                 if(current_node_ > -1) {
                     /* Go down the left branch to start iterating this one */
-                    current = _node(current_node_);
-                    while(current->left_index_ > -1) {
-                        current_node_ = current->left_index_;
-                        current = _node(current_node_);
+                    search = _search_node(current_node_);
+                    while(search->left_index_ > -1) {
+                        current_node_ = search->left_index_;
+                        search = _search_node(current_node_);
                     }
                 }
             }
@@ -211,11 +243,11 @@ public:
         }
 
         reference operator*() const {
-            return this->_node(this->current_node_)->pair;
+            return this->_data_node(this->current_node_)->pair;
         }
 
         pointer operator->() const {
-            return &this->_node(this->current_node_)->pair;
+            return &this->_data_node(this->current_node_)->pair;
         }
     };
 
@@ -255,11 +287,11 @@ public:
         }
 
         reference operator*() const {
-            return this->_node(this->current_node_)->pair;
+            return this->_data_node(this->current_node_)->pair;
         }
 
         pointer operator->() const {
-            return &this->_node(this->current_node_)->pair;
+            return &this->_data_node(this->current_node_)->pair;
         }
     };
 
@@ -268,7 +300,8 @@ public:
     ContiguousMultiMap(std::size_t reserve_count):
         root_index_(-1),
         leftmost_index_(-1) {
-        nodes_.reserve(reserve_count);
+        search_nodes_.reserve(reserve_count);
+        data_nodes_.reserve(reserve_count);
     }
 
     ContiguousMultiMap(const ContiguousMultiMap& other) {
@@ -303,7 +336,8 @@ public:
     }
 
     void clear() {
-        nodes_.clear();
+        search_nodes_.clear();
+        data_nodes_.clear();
         root_index_ = -1;
         leftmost_index_ = -1;
     }
@@ -313,19 +347,21 @@ public:
     }
 
     void shrink_to_fit() {
-        nodes_.shrink_to_fit();
+        search_nodes_.shrink_to_fit();
+        data_nodes_.shrink_to_fit();
     }
 
     std::size_t size() const {
-        return nodes_.size();
+        return search_nodes_.size();
     }
 
     void reserve(std::size_t size) {
-        nodes_.reserve(size);
+        search_nodes_.reserve(size);
+        data_nodes_.reserve(size);
     }
 
     bool empty() const {
-        return nodes_.empty();
+        return search_nodes_.empty();
     }
 
     iterator find(const K& key) {
@@ -381,26 +417,27 @@ public:
      * or throws an error if the path is invalid */
 
     const K& path_key(const std::string& path) const {
-        const node_type* node = &nodes_[root_index_];
+        int32_t idx = root_index_;
 
         for(auto c: path) {
+            const auto* search = &search_nodes_[idx];
             if(c == 'L') {
-                if(node->left_index_ == -1) {
+                if(search->left_index_ == -1) {
                     throw std::logic_error("Hit end of branch");
                 }
-                node = &nodes_[node->left_index_];
+                idx = search->left_index_;
             } else if(c == 'R') {
-                if(node->right_index_ == -1) {
+                if(search->right_index_ == -1) {
                     throw std::logic_error("Hit end of branch");
                 }
-                node = &nodes_[node->right_index_];
+                idx = search->right_index_;
             } else {
                 throw std::logic_error("Invalid path");
             }
         }
 
         /* Return the key */
-        return node->pair.first;
+        return search_nodes_[idx].key;
     }
 private:
     friend class iterator_base;
@@ -410,207 +447,219 @@ private:
         const_cast<ContiguousMultiMap*>(this), -1
     );
 
+    /*
+     * _find only touches search_nodes_ for optimal cache behaviour.
+     * On SH4, SearchNode<int> is 12 bytes so ~2.5 nodes fit per
+     * 32-byte cache line vs. ~1 node with the old interleaved layout.
+     */
     int32_t _find(const K& key) const {
         if(root_index_ == -1) return -1;
 
         int32_t current_index = root_index_;
-        const node_type* current = &nodes_[current_index];
 
-        while(current) {
-            auto order = compare_(key, current->pair.first);
+        while(current_index != -1) {
+            const auto* node = &search_nodes_[current_index];
+
+            auto order = compare_(key, node->key);
 
             if(order == ThreeWayCompare<K>::RESULT_EQUAL) {
                 return current_index;
             } else if(order == ThreeWayCompare<K>::RESULT_LESS) {
-                if(current->left_index_ != -1) {
-                    current_index = current->left_index_;
-                    current = &nodes_[current_index];
-                } else {
-                    return -1;
-                }
+                current_index = node->left_index_;
             } else {
-                if(current->right_index_ != -1) {
-                    current_index = current->right_index_;
-                    current = &nodes_[current_index];
-                } else {
-                    return -1;
-                }
+                current_index = node->right_index_;
+            }
+
+            /* Prefetch the next search node to hide memory latency.
+             * On SH4 this emits the pref instruction. We prefetch
+             * after choosing the direction so we don't waste cache
+             * space loading the unused branch. */
+            if(current_index != -1) {
+                __builtin_prefetch(&search_nodes_[current_index], 0, 0);
             }
         }
 
-        return current_index;
+        return -1;
     }
 
-    void _rotate_left(node_type* node, int32_t node_index, node_type* parent=nullptr) {
-        int32_t nnew_index = node->right_index_;
+    void _rotate_left(int32_t node_index) {
+        auto& node_s = search_nodes_[node_index];
+        auto& node_d = data_nodes_[node_index];
+
+        int32_t nnew_index = node_s.right_index_;
         assert(nnew_index != -1);
 
-        /* Fetch the parent if it wasn't passed */
-        int32_t parent_index = node->parent_index_;
-        parent = (parent) ? parent : (parent_index == -1) ? nullptr : &nodes_[parent_index];
+        auto& nnew_s = search_nodes_[nnew_index];
+        auto& nnew_d = data_nodes_[nnew_index];
 
-        node_type* nnew = &nodes_[nnew_index];
+        int32_t parent_index = node_d.parent_index_;
 
-        node->right_index_ = nnew->left_index_;
-        nnew->left_index_ = node_index;
-        node->parent_index_ = nnew_index;
+        node_s.right_index_ = nnew_s.left_index_;
+        nnew_s.left_index_ = node_index;
+        node_d.parent_index_ = nnew_index;
 
-        if(node->right_index_ != -1) {
-            nodes_[node->right_index_].parent_index_ = node_index;
+        if(node_s.right_index_ != -1) {
+            data_nodes_[node_s.right_index_].parent_index_ = node_index;
         }
 
-        if(parent) {
-            if(node_index == parent->left_index_) {
-                parent->left_index_ = nnew_index;
-            } else if(node_index == parent->right_index_) {
-                parent->right_index_ = nnew_index;
+        if(parent_index != -1) {
+            auto& parent_s = search_nodes_[parent_index];
+            if(node_index == parent_s.left_index_) {
+                parent_s.left_index_ = nnew_index;
+            } else if(node_index == parent_s.right_index_) {
+                parent_s.right_index_ = nnew_index;
             }
         }
 
-        nnew->parent_index_ = parent_index;
+        nnew_d.parent_index_ = parent_index;
     }
 
-    void _rotate_right(node_type* node, int32_t node_index, node_type* parent=nullptr) {
-        int32_t nnew_index = node->left_index_;
+    void _rotate_right(int32_t node_index) {
+        auto& node_s = search_nodes_[node_index];
+        auto& node_d = data_nodes_[node_index];
+
+        int32_t nnew_index = node_s.left_index_;
         assert(nnew_index != -1);
 
-        /* Fetch the parent if it wasn't passed */
-        int32_t parent_index = node->parent_index_;
-        parent = (parent) ? parent : (parent_index == -1) ? nullptr : &nodes_[parent_index];
+        auto& nnew_s = search_nodes_[nnew_index];
+        auto& nnew_d = data_nodes_[nnew_index];
 
-        node_type* nnew = &nodes_[nnew_index];
+        int32_t parent_index = node_d.parent_index_;
 
-        node->left_index_ = nnew->right_index_;
-        nnew->right_index_ = node_index;
-        node->parent_index_ = nnew_index;
+        node_s.left_index_ = nnew_s.right_index_;
+        nnew_s.right_index_ = node_index;
+        node_d.parent_index_ = nnew_index;
 
-        if(node->left_index_ != -1) {
-            nodes_[node->left_index_].parent_index_ = node_index;
+        if(node_s.left_index_ != -1) {
+            data_nodes_[node_s.left_index_].parent_index_ = node_index;
         }
 
-        if(parent) {
-            if(node_index == parent->left_index_) {
-                parent->left_index_ = nnew_index;
-            } else if(node_index == parent->right_index_) {
-                parent->right_index_ = nnew_index;
+        if(parent_index != -1) {
+            auto& parent_s = search_nodes_[parent_index];
+            if(node_index == parent_s.left_index_) {
+                parent_s.left_index_ = nnew_index;
+            } else if(node_index == parent_s.right_index_) {
+                parent_s.right_index_ = nnew_index;
             }
         }
 
-        nnew->parent_index_ = parent_index;
+        nnew_d.parent_index_ = parent_index;
     }
 
-    void _insert_repair_tree(node_type* node, int32_t node_index) {
+    /* Iterative red-black tree repair after insertion */
+    void _insert_repair_tree(int32_t node_index) {
 
-        /* Case 1: Parent is the root, so just mark the parent as black */
-        if(node->parent_index_ == -1) {
-            node->is_black = true;
-            return;
-        }
+        while(true) {
+            auto& node_d = data_nodes_[node_index];
 
-        assert(node->parent_index_ != -1);
-        node_type* parent = &nodes_[node->parent_index_];
-
-        /* Case 2: Parent is black, we're all good */
-        if(parent->is_black) {
-            return;
-        }
-
-        node_type* grandparent = (parent->parent_index_ == -1) ?
-            nullptr : &nodes_[parent->parent_index_];
-
-        int32_t parent_sibling_index = (!grandparent) ? -1 :
-            (grandparent->left_index_ == node->parent_index_) ?
-            grandparent->right_index_ : grandparent->left_index_;
-
-        node_type* parent_sibling = (parent_sibling_index == -1) ? nullptr : &nodes_[parent_sibling_index];
-
-        /* Case 3: parent has a sibling, and it's red */
-        if(parent_sibling && !parent_sibling->is_black) {
-            /* Recolor and recurse upwards */
-            parent->is_black = true;
-            parent_sibling->is_black = true;
-            grandparent->is_black = false;
-
-            /* Recurse up! */
-            _insert_repair_tree(grandparent, parent->parent_index_);
-        } else {
-            /* Case 4: Parent is red, but the parent sibling doesn't exist, or is black */
-            if(node_index == parent->right_index_ && node->parent_index_ == grandparent->left_index_) {
-                _rotate_left(parent, node->parent_index_, grandparent);
-
-                node_index = node->left_index_;
-                node = &nodes_[node->left_index_];
-
-                assert(node->parent_index_ != -1);
-                parent = &nodes_[node->parent_index_];
-
-                assert(parent->parent_index_ != -1);
-                grandparent = &nodes_[parent->parent_index_];
-
-            } else if(node_index == parent->left_index_ && node->parent_index_ == grandparent->right_index_) {
-                _rotate_right(parent, node->parent_index_, grandparent);
-
-                node_index = node->right_index_;
-                node = &nodes_[node->right_index_];
-
-                assert(node->parent_index_ != -1);
-                parent = &nodes_[node->parent_index_];
-
-                assert(parent->parent_index_ != -1);
-                grandparent = &nodes_[parent->parent_index_];
+            /* Case 1: Parent is the root, so just mark the node as black */
+            if(node_d.parent_index_ == -1) {
+                node_d.is_black = true;
+                return;
             }
 
-            if(node_index == parent->left_index_) {
-                _rotate_right(grandparent, parent->parent_index_);
+            int32_t parent_index = node_d.parent_index_;
+            assert(parent_index != -1);
+            auto& parent_d = data_nodes_[parent_index];
+
+            /* Case 2: Parent is black, we're all good */
+            if(parent_d.is_black) {
+                return;
+            }
+
+            int32_t grandparent_index = parent_d.parent_index_;
+            if(grandparent_index == -1) {
+                /* Parent is red and root — shouldn't happen in a valid
+                 * tree but handle gracefully */
+                parent_d.is_black = true;
+                return;
+            }
+
+            auto& gp_s = search_nodes_[grandparent_index];
+            auto& gp_d = data_nodes_[grandparent_index];
+
+            int32_t uncle_index = (gp_s.left_index_ == parent_index)
+                ? gp_s.right_index_ : gp_s.left_index_;
+
+            bool uncle_is_red = (uncle_index != -1) && !data_nodes_[uncle_index].is_black;
+
+            /* Case 3: parent has a sibling (uncle), and it's red */
+            if(uncle_is_red) {
+                /* Recolor and iterate upwards (was recursive in original) */
+                parent_d.is_black = true;
+                data_nodes_[uncle_index].is_black = true;
+                gp_d.is_black = false;
+
+                node_index = grandparent_index;
+                continue;
+            }
+
+            /* Case 4: Parent is red, but the uncle doesn't exist, or is black */
+            auto& parent_s = search_nodes_[parent_index];
+
+            if(node_index == parent_s.right_index_ && parent_index == gp_s.left_index_) {
+                _rotate_left(parent_index);
+
+                node_index = search_nodes_[node_index].left_index_;
+
+                /* Re-derive parent and grandparent after rotation */
+                parent_index = data_nodes_[node_index].parent_index_;
+                assert(parent_index != -1);
+                grandparent_index = data_nodes_[parent_index].parent_index_;
+                assert(grandparent_index != -1);
+
+            } else if(node_index == parent_s.left_index_ && parent_index == gp_s.right_index_) {
+                _rotate_right(parent_index);
+
+                node_index = search_nodes_[node_index].right_index_;
+
+                /* Re-derive parent and grandparent after rotation */
+                parent_index = data_nodes_[node_index].parent_index_;
+                assert(parent_index != -1);
+                grandparent_index = data_nodes_[parent_index].parent_index_;
+                assert(grandparent_index != -1);
+            }
+
+            if(node_index == search_nodes_[parent_index].left_index_) {
+                _rotate_right(grandparent_index);
             } else {
-                _rotate_left(grandparent, parent->parent_index_);
+                _rotate_left(grandparent_index);
             }
 
-            assert(parent);
-            assert(grandparent);
+            assert(parent_index != -1);
+            assert(grandparent_index != -1);
 
-            parent->is_black = true;
-            grandparent->is_black = false;
+            data_nodes_[parent_index].is_black = true;
+            data_nodes_[grandparent_index].is_black = false;
+            return;
         }
     }
 
     bool _insert(K&& key, V&& value) {
         if(root_index_ == -1) {
             /* Root case, just set to black */
-            leftmost_index_ = root_index_ = new_node(-1, std::move(key), std::move(value));
-            nodes_.back().is_black = true;
+            leftmost_index_ = root_index_ = _new_node(-1, key, value);
+            data_nodes_.back().is_black = true;
             return true;
         } else {
             /* Returns new index, and whether or not the
              * parent is a black node */
             int32_t new_index;
-            bool is_black = _insert_recurse(
+            bool is_black = _insert_iterative(
                 root_index_, std::move(key), std::move(value), &new_index
             );
 
-            node_type* inserted = (new_index > -1) ? &nodes_[new_index] : nullptr;
-
-            auto ret = new_index > 1;
+            auto ret = new_index > -1;
             if(new_index > -1 && !is_black) {
                 /* Parent was red! rebalance! */
-                _insert_repair_tree(inserted, new_index);
+                _insert_repair_tree(new_index);
 
-                /* Reset root index */
-                if(inserted->parent_index_ == -1) {
-                    root_index_ = new_index;
-                } else {
-                    node_type* parent = inserted;
-                    while(parent->parent_index_ != -1) {
-                        node_type* next_parent = &nodes_[parent->parent_index_];
-
-                        if(next_parent->parent_index_ == -1) {
-                            root_index_ = parent->parent_index_;
-                            break;
-                        }
-
-                        parent = next_parent;
-                    }
+                /* Reset root index by walking up to the root */
+                int32_t idx = new_index;
+                while(data_nodes_[idx].parent_index_ != -1) {
+                    idx = data_nodes_[idx].parent_index_;
                 }
+                root_index_ = idx;
 
                 ret = true;
             }
@@ -619,9 +668,8 @@ private:
 
             /* If we inserted, and the parent is the leftmost index
              * then we check to see if this is now the leftmost index */
-            if(inserted && inserted->parent_index_ == leftmost_index_) {
-                node_type* p = &nodes_[inserted->parent_index_];
-                if(p && p->left_index_ == new_index) {
+            if(new_index > -1 && data_nodes_[new_index].parent_index_ == leftmost_index_) {
+                if(search_nodes_[leftmost_index_].left_index_ == new_index) {
                     leftmost_index_ = new_index;
                 }
             }
@@ -630,89 +678,93 @@ private:
         }
     }
 
-    inline int32_t new_node(int32_t parent_index, K&& key, V&& value) {
-        auto ret = (int32_t) nodes_.size();
+    inline int32_t _new_node(int32_t parent_index, const K& key, const V& value) {
+        auto ret = (int32_t) search_nodes_.size();
 
-        node_type n(key, value);
-        n.parent_index_ = parent_index;
-        nodes_.push_back(std::move(n));
+        /* Coordinate growth of both vectors to avoid separate
+         * reallocation events — halves the amortised alloc cost
+         * compared to letting each vector grow independently. */
+        if(ret >= (int32_t)search_nodes_.capacity()) {
+            auto new_cap = search_nodes_.capacity() ? search_nodes_.capacity() * 2 : 8;
+            search_nodes_.reserve(new_cap);
+            data_nodes_.reserve(new_cap);
+        }
+
+        search_nodes_.emplace_back(key);
+
+        data_nodes_.emplace_back(key, value);
+        data_nodes_.back().parent_index_ = parent_index;
+
         return ret;
     }
 
-    /* Returns inserted, parent_is_black */
-    bool _insert_recurse(int32_t root_index, K&& key, V&& value, int32_t* new_index) {
+    /* Iterative insertion — replaces the original recursive version
+     * to avoid stack frame overhead on SH4. Returns parent_is_black. */
+    bool _insert_iterative(int32_t root_index, K&& key, V&& value, int32_t* new_index) {
         assert(root_index > -1);
 
-        node_type* root = &nodes_[root_index];
+        int32_t current_index = root_index;
 
-        auto order = compare_(key, root->pair.first);
-        if(order == ThreeWayCompare<K>::RESULT_EQUAL) {
+        while(true) {
+            auto order = compare_(key, search_nodes_[current_index].key);
 
-            /* We're inserting a duplicate, so we use the equal_index_ */
+            if(order == ThreeWayCompare<K>::RESULT_EQUAL) {
+                /* We're inserting a duplicate, so we use the equal_index_ */
 
-            auto new_idx = new_node(-1, std::move(key), std::move(value));
-            root = &nodes_[root_index]; // new_node could realloc
+                auto new_idx = _new_node(-1, key, value);
+                /* _new_node could realloc, so don't hold references across it */
 
-            /* We could insert immediately after the root, but, this
-             * makes insertion unstable; iteration won't iterate in the
-             * inserted order so instead we go through to the last
-             * equal index before inserting */
-
-            auto left = root;
-            if(root->last_equal_index_ > -1) {
-                left = &nodes_[left->last_equal_index_];
-            }
-
-            left->equal_index_ = new_idx;
-            root->last_equal_index_ = new_idx;
-
-            /* We return the new node index, and we say the parent
-             * is black (because this node was added to a linked list
-             * not the tree itself and we don't want any recursive fixing
-             * of the red-black tree) */
-            if(new_index) {
-                *new_index = new_idx;
-            }
-
-            return true;
-        } else if(order == ThreeWayCompare<K>::RESULT_LESS) {
-            if(root->left_index_ == -1) {
-                auto new_idx = new_node(root_index, std::move(key), std::move(value));
-                /* The insert could have invalidated the root pointer */
-                root = &nodes_[root_index];
-                root->left_index_ = new_idx;
+                /* Insert at end of equal-value list for stable ordering */
+                auto& root_d = data_nodes_[current_index];
+                if(root_d.last_equal_index_ > -1) {
+                    data_nodes_[root_d.last_equal_index_].equal_index_ = new_idx;
+                } else {
+                    root_d.equal_index_ = new_idx;
+                }
+                root_d.last_equal_index_ = new_idx;
 
                 if(new_index) {
                     *new_index = new_idx;
                 }
 
-                return root->is_black;
-            } else {
-                return _insert_recurse(
-                    root->left_index_, std::move(key), std::move(value), new_index
-                );
-            }
-        } else {
-            if(root->right_index_ == -1) {
-                auto new_idx = new_node(root_index, std::move(key), std::move(value));
-                /* The insert could have invalidated the root pointer */
-                root = &nodes_[root_index];
-                root->right_index_ = new_idx;
+                /* Node was added to a linked list not the tree itself,
+                 * so report parent as black to skip rebalancing */
+                return true;
 
-                if(new_index) {
-                    *new_index = new_idx;
+            } else if(order == ThreeWayCompare<K>::RESULT_LESS) {
+                int32_t left = search_nodes_[current_index].left_index_;
+                if(left == -1) {
+                    auto new_idx = _new_node(current_index, key, value);
+                    /* Reindex after potential reallocation */
+                    search_nodes_[current_index].left_index_ = new_idx;
+
+                    if(new_index) {
+                        *new_index = new_idx;
+                    }
+
+                    return data_nodes_[current_index].is_black;
                 }
-
-                return root->is_black;
+                current_index = left;
             } else {
-                return _insert_recurse(
-                    root->right_index_, std::move(key), std::move(value), new_index
-                );
+                int32_t right = search_nodes_[current_index].right_index_;
+                if(right == -1) {
+                    auto new_idx = _new_node(current_index, key, value);
+                    /* Reindex after potential reallocation */
+                    search_nodes_[current_index].right_index_ = new_idx;
+
+                    if(new_index) {
+                        *new_index = new_idx;
+                    }
+
+                    return data_nodes_[current_index].is_black;
+                }
+                current_index = right;
             }
         }
     }
 
-    std::vector<node_type> nodes_;
+    std::vector<search_node_type> search_nodes_;
+    std::vector<data_node_type> data_nodes_;
 
     int32_t root_index_ = -1;
     int32_t leftmost_index_ = -1;
