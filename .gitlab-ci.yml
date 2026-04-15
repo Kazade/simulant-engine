@@ -338,16 +338,17 @@ test:windows-x64-mingw:
     - sudo dnf install -y xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers wine
     - start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 320x240x24 -ac +extension RANDR +extension GLX +render
     - sleep 3
-    - export LIBGL_ALWAYS_SOFTWARE=1-
+    - export LIBGL_ALWAYS_SOFTWARE=1
     - export SIMULANT_SOUND_DRIVER=null
     - export DISPLAY=:99
-    - GALLIUM_DRIVER=softpipe
+    - export GALLIUM_DRIVER=softpipe
     # Pre-initialise Wine non-interactively so it doesn't hang on first run.
     - wineboot --init
   script:
     - cd ${TARGET}/debug/tests
     - ln -s ../simulant
     - ln -s ../assets
+    - export WINEDEBUG=err+all,+loaddll
     - wine simulant_tests.exe --junit-xml=report.xml
   artifacts:
     reports:
@@ -657,7 +658,8 @@ test:dreamcast-sh4-gcc:
     - export PATH=$PATH:`pwd`/build
   script:
     - cd ${TARGET}/release
-    - lxdream-nitro --audio=null -r 32 -H -b -u -C `pwd` -e tests/simulant_tests.elf
+    - ls tests
+    - lxdream-nitro --audio=null -r 32 -H -b -u -C ${TARGET}/release -e tests/simulant_tests.elf
   artifacts:
     when: always
     paths:
