@@ -9,12 +9,18 @@
 #include "../../vertex_data.h"
 #include "../../assets/material.h"
 #include "../../utils/pbr.h"
+#include "../../logging.h"
 
 #ifdef __DREAMCAST__
 #include <kos.h>
 #include <dc/pvr.h>
 #include <dc/matrix.h>
 #include <dc/fmath.h>
+#else
+/* Provide fallback definitions for non-Dreamcast builds (stub compilation) */
+#define PVR_LIST_OP_POLY 0
+#define PVR_LIST_PT_POLY 4
+#define PVR_LIST_TR_POLY 2
 #endif
 
 #include <cmath>
@@ -23,9 +29,26 @@
 namespace smlt {
 
 /* ========================================================================
- * PVR Vertex type: standard 32-byte packed color format
- * Using pvr_vertex_t which matches what KOS direct rendering expects.
+ * PVR Vertex type: 64-byte floating color format (Type 5)
+ * Layout: flags, x, y, z, u, v, (padding), base_a/r/g/b, offset_a/r/g/b
  * ======================================================================== */
+#ifdef __DREAMCAST__
+typedef struct {
+    uint32_t flags;     /* TA command (vertex flags) */
+    float x, y, z;      /* Screen coordinates (x, y) and 1/w depth (z) */
+    float u, v;         /* Texture coordinates */
+    uint32_t _pad0;     /* Padding to align to 32 bytes */
+    uint32_t _pad1;     /* Padding */
+    float base_a;       /* Base color alpha (0.0-1.0) */
+    float base_r;       /* Base color red */
+    float base_g;       /* Base color green */
+    float base_b;       /* Base color blue */
+    float offset_a;     /* Offset color alpha */
+    float offset_r;     /* Offset color red */
+    float offset_g;     /* Offset color green */
+    float offset_b;     /* Offset color blue */
+} __attribute__((aligned(32))) pvr_vertex_type5_t;
+#endif
 
 /* ========================================================================
  * Constructor
@@ -35,7 +58,9 @@ PVRRenderQueueVisitor::PVRRenderQueueVisitor(PVRRenderer* renderer, CameraPtr ca
     renderer_(renderer),
     camera_(camera),
     prev_list_type_(-1) {
+#ifdef __DREAMCAST__
     memset(&dr_state_, 0, sizeof(dr_state_));
+#endif
 }
 
 /* ========================================================================
@@ -136,6 +161,9 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         ensure_list_opened(new_list_type);
     }
 
+    /* Update current_list_type_ so polygon context uses the correct list */
+    current_list_type_ = new_list_type;
+
     /* Cache material state */
     texturing_enabled_ = (next->textures_enabled() & BASE_COLOR_MAP_ENABLED) != 0;
     depth_test_enabled_ = next->is_depth_test_enabled();
@@ -174,14 +202,15 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             break;
     }
 
-    /* Map depth function */
+    /* Map depth function - INVERTED because PVR uses 1/w for depth
+     * where larger values are closer, opposite to OpenGL Z convention */
     switch(next->depth_func()) {
         case DEPTH_FUNC_NEVER: depth_func_ = PVR_DEPTHCMP_NEVER; break;
-        case DEPTH_FUNC_LESS: depth_func_ = PVR_DEPTHCMP_LESS; break;
-        case DEPTH_FUNC_LEQUAL: depth_func_ = PVR_DEPTHCMP_LEQUAL; break;
+        case DEPTH_FUNC_LESS: depth_func_ = PVR_DEPTHCMP_GREATER; break;
+        case DEPTH_FUNC_LEQUAL: depth_func_ = PVR_DEPTHCMP_GEQUAL; break;
         case DEPTH_FUNC_EQUAL: depth_func_ = PVR_DEPTHCMP_EQUAL; break;
-        case DEPTH_FUNC_GEQUAL: depth_func_ = PVR_DEPTHCMP_GEQUAL; break;
-        case DEPTH_FUNC_GREATER: depth_func_ = PVR_DEPTHCMP_GREATER; break;
+        case DEPTH_FUNC_GEQUAL: depth_func_ = PVR_DEPTHCMP_LEQUAL; break;
+        case DEPTH_FUNC_GREATER: depth_func_ = PVR_DEPTHCMP_LESS; break;
         case DEPTH_FUNC_ALWAYS: depth_func_ = PVR_DEPTHCMP_ALWAYS; break;
         default: depth_func_ = PVR_DEPTHCMP_GEQUAL; break;
     }
@@ -260,6 +289,10 @@ void PVRRenderQueueVisitor::ensure_list_opened(int list_type) {
         }
         pvr_list_begin(list_type);
         renderer_->set_pvr_list_used(list_type);
+        /* Note: pvr_dr_init() is deprecated in modern KOS (it's a no-op).
+         * The direct rendering API now uses a global address (pvr_dr_addr)
+         * that pvr_dr_target() manages automatically. We keep the call
+         * for backward compatibility with older KOS versions. */
         pvr_dr_init(&dr_state_);
         prev_list_type_ = list_type;
     }
@@ -302,6 +335,66 @@ void PVRRenderQueueVisitor::submit_vertex(float x, float y, float z,
 }
 
 /* ========================================================================
+ * Near-plane clipping support
+ * ======================================================================== */
+
+#ifdef __DREAMCAST__
+
+/* A vertex in clip space with all attributes needed for interpolation */
+struct ClipVertex {
+    float x, y, z, w;  /* Clip-space position */
+    float u, v;         /* Texture coordinates */
+    float r, g, b, a;   /* Color */
+};
+
+/* Check if a vertex is in front of the near plane (visible).
+ * In clip space, the near plane is at z = -w for the standard projection. */
+static inline bool is_vertex_visible(const ClipVertex& v) {
+    return v.z >= -v.w;
+}
+
+/* Interpolate between two vertices at the near plane intersection.
+ * Returns the t value (0..1) along the edge from v1 to v2 where it
+ * intersects the near plane (z = -w). */
+static inline float clip_edge_t(const ClipVertex& v1, const ClipVertex& v2) {
+    /* Near plane equation: z + w = 0, so z = -w
+     * We need to find t where: v1.z + t*(v2.z - v1.z) = -(v1.w + t*(v2.w - v1.w))
+     * Rearranging: v1.z + v1.w + t*(v2.z - v1.z + v2.w - v1.w) = 0
+     * t = -(v1.z + v1.w) / ((v2.z - v1.z) + (v2.w - v1.w))
+     */
+    float d1 = v1.z + v1.w;  /* Distance from v1 to near plane (negative = behind) */
+    float d2 = v2.z + v2.w;  /* Distance from v2 to near plane */
+    float denom = d2 - d1;
+    if(fabsf(denom) < 1e-7f) {
+        return 0.5f;  /* Parallel to plane, shouldn't happen but handle gracefully */
+    }
+    float t = -d1 / denom;
+    /* Clamp to valid range */
+    if(t < 0.0f) t = 0.0f;
+    if(t > 1.0f) t = 1.0f;
+    return t;
+}
+
+/* Linearly interpolate a ClipVertex from v1 to v2 at parameter t */
+static inline ClipVertex lerp_vertex(const ClipVertex& v1, const ClipVertex& v2, float t) {
+    ClipVertex out;
+    float inv_t = 1.0f - t;
+    out.x = inv_t * v1.x + t * v2.x;
+    out.y = inv_t * v1.y + t * v2.y;
+    out.z = inv_t * v1.z + t * v2.z;
+    out.w = inv_t * v1.w + t * v2.w;
+    out.u = inv_t * v1.u + t * v2.u;
+    out.v = inv_t * v1.v + t * v2.v;
+    out.r = inv_t * v1.r + t * v2.r;
+    out.g = inv_t * v1.g + t * v2.g;
+    out.b = inv_t * v1.b + t * v2.b;
+    out.a = inv_t * v1.a + t * v2.a;
+    return out;
+}
+
+#endif
+
+/* ========================================================================
  * visit - main draw call
  * ======================================================================== */
 
@@ -315,6 +408,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                                       const MaterialPass* material_pass,
                                       batcher::Iteration iteration) {
     _S_UNUSED(iteration);
+    
     if(!renderable || !material_pass) return;
 
     renderer_->prepare_to_render(renderable);
@@ -337,42 +431,49 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * ================================================================ */
     pvr_poly_cxt_t cxt;
 
+    /* Check if we have a texture */
     PVRTextureObject* tex_obj = nullptr;
-    if(texturing_enabled_ && material_pass->base_color_map()) {
-        auto tex_id = material_pass->base_color_map()->_renderer_specific_id();
-        if(tex_id) {
-            tex_obj = renderer_->texture_manager().bind_texture(tex_id);
+    if(texturing_enabled_) {
+        auto tex = material_pass->base_color_map();
+        if(tex) {
+            tex_obj = renderer_->texture_manager().bind_texture(tex->_renderer_specific_id());
         }
     }
 
-    if(tex_obj && tex_obj->in_vram && tex_obj->texture_vram) {
-        int filter;
-        switch(tex_obj->filter) {
-            case TEXTURE_FILTER_BILINEAR:
-                filter = PVR_FILTER_BILINEAR;
-                break;
-            case TEXTURE_FILTER_TRILINEAR:
-                filter = PVR_FILTER_TRILINEAR1;
-                break;
-            default:
-                filter = PVR_FILTER_NONE;
-                break;
+    if(tex_obj && tex_obj->texture_vram) {
+        /* Determine PVR texture format */
+        int pvr_format = PVR_TXRFMT_RGB565;
+        if(tex_obj->is_twiddled) {
+            pvr_format |= PVR_TXRFMT_TWIDDLED;
+        } else {
+            pvr_format |= PVR_TXRFMT_NONTWIDDLED;
+        }
+        if(tex_obj->is_compressed) {
+            pvr_format |= PVR_TXRFMT_VQ_ENABLE;
         }
 
         pvr_poly_cxt_txr(&cxt, current_list_type_,
-                          tex_obj->format,
-                          tex_obj->width, tex_obj->height,
-                          (pvr_ptr_t)tex_obj->texture_vram,
-                          filter);
+                         pvr_format,
+                         tex_obj->width, tex_obj->height,
+                         (pvr_ptr_t)tex_obj->texture_vram,
+                         (tex_obj->filter == TEXTURE_FILTER_BILINEAR) ?
+                             PVR_FILTER_BILINEAR : PVR_FILTER_NONE);
     } else {
+        /* Untextured polygon context */
         pvr_poly_cxt_col(&cxt, current_list_type_);
     }
+
+    /* Use floating point color format (Type 5) */
+    cxt.fmt.color = PVR_CLRFMT_4FLOATS;
+    cxt.fmt.uv = PVR_UVFMT_32BIT;
 
     cxt.gen.shading = shade_mode_;
     cxt.gen.culling = cull_mode_;
     cxt.gen.fog_type = fog_type_;
 
-    cxt.depth.comparison = depth_func_;
+    /* Enable proper depth testing and writing
+     * depth_func_ is already inverted in change_material_pass */
+    cxt.depth.comparison = depth_test_enabled_ ? depth_func_ : PVR_DEPTHCMP_ALWAYS;
     cxt.depth.write = depth_write_enabled_ ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE;
 
     cxt.blend.src = blend_src_;
@@ -380,21 +481,15 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
     if(current_list_type_ == PVR_LIST_TR_POLY) {
         cxt.gen.alpha = PVR_ALPHA_ENABLE;
-        if(tex_obj) {
-            cxt.txr.alpha = PVR_TXRALPHA_ENABLE;
-        }
     }
 
     pvr_poly_hdr_t hdr;
     pvr_poly_compile(&hdr, &cxt);
 
-    /* Set Col_Type to Packed Color (0) in bits 5-4 for pvr_vertex_t format */
-    hdr.cmd = (hdr.cmd & ~(3 << 4)) | (0 << 4);
-
-    /* Submit polygon header via direct rendering */
-    pvr_vertex_t* hdr_vert = pvr_dr_target(dr_state_);
-    memcpy(hdr_vert, &hdr, sizeof(hdr));
-    pvr_dr_commit(hdr_vert);
+    /* Submit polygon header via direct rendering (32 bytes) */
+    pvr_vertex_t* hdr_dest = pvr_dr_target(dr_state_);
+    memcpy(hdr_dest, &hdr, sizeof(hdr));
+    pvr_dr_commit(hdr_dest);
 
     /* ================================================================
      * Read vertex data and transform
@@ -412,10 +507,12 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     auto normal_offset = spec.normal_offset(false);
 
     auto color_mat_mode = material_pass->color_material();
+    bool lighting_enabled = material_pass->is_lighting_enabled() && normal_offset;
 
-    /* Lambda to read a vertex, transform, light, and submit */
-    auto process_and_submit_vertex = [&](uint32_t index, bool is_last) {
+    /* Lambda to read a vertex and transform to clip space with lighting */
+    auto read_and_transform_vertex = [&](uint32_t index) -> ClipVertex {
         const uint8_t* ptr = raw_data + (stride * index);
+        ClipVertex cv;
 
         /* Position */
         float px, py, pz;
@@ -424,34 +521,23 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             px = p[0]; py = p[1]; pz = p[2];
         }
 
-        /* Transform by MVP */
-        float cx = mvp[0] * px + mvp[4] * py + mvp[8]  * pz + mvp[12];
-        float cy = mvp[1] * px + mvp[5] * py + mvp[9]  * pz + mvp[13];
-        float cz = mvp[2] * px + mvp[6] * py + mvp[10] * pz + mvp[14];
-        float cw = mvp[3] * px + mvp[7] * py + mvp[11] * pz + mvp[15];
-
-        /* Apply viewport transform */
-        cx = cx * hw + hw * cw;
-        cy = -cy * hh + hh * cw;
-
-        /* Perspective divide */
-        if(cw == 0.0f) cw = FLT_EPSILON;
-        float inv_w = 1.0f / cw;
-
-        float sx = cx * inv_w;
-        float sy = cy * inv_w;
-        float sz = inv_w; /* PVR uses 1/w for depth */
+        /* Transform by MVP to clip space */
+        cv.x = mvp[0] * px + mvp[4] * py + mvp[8]  * pz + mvp[12];
+        cv.y = mvp[1] * px + mvp[5] * py + mvp[9]  * pz + mvp[13];
+        cv.z = mvp[2] * px + mvp[6] * py + mvp[10] * pz + mvp[14];
+        cv.w = mvp[3] * px + mvp[7] * py + mvp[11] * pz + mvp[15];
 
         /* UV */
-        float tu = 0.0f, tv = 0.0f;
+        cv.u = 0.0f; cv.v = 0.0f;
         if(uv_offset) {
             const float* t = (const float*)(ptr + uv_offset);
-            tu = t[0];
-            tv = t[1];
+            cv.u = t[0];
+            cv.v = t[1];
         }
 
         /* Color - start with material diffuse */
-        float cr = mat_diffuse_[0], cg = mat_diffuse_[1], cb = mat_diffuse_[2], ca = mat_diffuse_[3];
+        cv.r = mat_diffuse_[0]; cv.g = mat_diffuse_[1]; 
+        cv.b = mat_diffuse_[2]; cv.a = mat_diffuse_[3];
 
         /* Read vertex color if present */
         float vert_r = 1.0f, vert_g = 1.0f, vert_b = 1.0f, vert_a = 1.0f;
@@ -477,20 +563,15 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         /* Apply color material mode */
         switch(color_mat_mode) {
             case COLOR_MATERIAL_DIFFUSE:
-                cr = vert_r; cg = vert_g; cb = vert_b; ca = vert_a;
-                break;
-            case COLOR_MATERIAL_AMBIENT:
-                break;
             case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
-                cr = vert_r; cg = vert_g; cb = vert_b; ca = vert_a;
+                cv.r = vert_r; cv.g = vert_g; cv.b = vert_b; cv.a = vert_a;
                 break;
-            case COLOR_MATERIAL_NONE:
             default:
                 break;
         }
 
         /* Simple per-vertex directional lighting if enabled */
-        if(material_pass->is_lighting_enabled() && normal_offset) {
+        if(lighting_enabled) {
             const float* n_ptr = (const float*)(ptr + normal_offset);
             float nx = n_ptr[0], ny = n_ptr[1], nz = n_ptr[2];
 
@@ -543,41 +624,194 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 if(ndotl < 0.0f) ndotl = 0.0f;
 
                 float intensity = lights_[li].intensity * atten;
-                total_r += cr * lights_[li].color[0] * ndotl * intensity;
-                total_g += cg * lights_[li].color[1] * ndotl * intensity;
-                total_b += cb * lights_[li].color[2] * ndotl * intensity;
+                total_r += cv.r * lights_[li].color[0] * ndotl * intensity;
+                total_g += cv.g * lights_[li].color[1] * ndotl * intensity;
+                total_b += cv.b * lights_[li].color[2] * ndotl * intensity;
             }
 
-            cr = total_r;
-            cg = total_g;
-            cb = total_b;
+            cv.r = total_r;
+            cv.g = total_g;
+            cv.b = total_b;
 
-            if(cr > 1.0f) cr = 1.0f;
-            if(cg > 1.0f) cg = 1.0f;
-            if(cb > 1.0f) cb = 1.0f;
+            if(cv.r > 1.0f) cv.r = 1.0f;
+            if(cv.g > 1.0f) cv.g = 1.0f;
+            if(cv.b > 1.0f) cv.b = 1.0f;
         }
 
-        /* Submit via direct rendering */
-        pvr_vertex_t* vert = pvr_dr_target(dr_state_);
-        vert->x = sx;
-        vert->y = sy;
-        vert->z = sz;
-        vert->u = tu;
-        vert->v = tv;
+        return cv;
+    };
 
-        uint32_t argb = ((uint32_t)(ca * 255.0f) << 24) |
-                        ((uint32_t)(cr * 255.0f) << 16) |
-                        ((uint32_t)(cg * 255.0f) << 8)  |
-                        ((uint32_t)(cb * 255.0f) << 0);
-        vert->argb = argb;
-        vert->oargb = 0;
-        vert->flags = is_last ? PVR_CMD_VERTEX_EOL : PVR_CMD_VERTEX;
+    /* Lambda to do perspective divide and submit a ClipVertex to PVR
+     * Uses 64-byte Type 5 vertex format (floating point colors)
+     * with direct rendering via store queues */
+    auto submit_clip_vertex = [&](const ClipVertex& cv, bool is_last) {
+        /* Apply viewport transform (done before perspective divide for PVR) */
+        float vx = cv.x * hw + hw * cv.w;
+        float vy = -cv.y * hh + hh * cv.w;
 
-        pvr_dr_commit(vert);
+        /* Perspective divide */
+        float w = cv.w;
+        if(w == 0.0f) w = FLT_EPSILON;
+        float inv_w = 1.0f / w;
+
+        float sx = vx * inv_w;
+        float sy = vy * inv_w;
+        float sz = inv_w;  /* PVR uses 1/w for depth */
+
+        /* Clamp colors */
+        float a = cv.a > 1.0f ? 1.0f : (cv.a < 0.0f ? 0.0f : cv.a);
+        float r = cv.r > 1.0f ? 1.0f : (cv.r < 0.0f ? 0.0f : cv.r);
+        float g = cv.g > 1.0f ? 1.0f : (cv.g < 0.0f ? 0.0f : cv.g);
+        float b = cv.b > 1.0f ? 1.0f : (cv.b < 0.0f ? 0.0f : cv.b);
+
+        /* Submit 64-byte Type 5 vertex via direct rendering.
+         * Type 5 requires two 32-byte store queue writes. */
+        pvr_vertex_type5_t vert;
+        vert.flags = is_last ? PVR_CMD_VERTEX_EOL : PVR_CMD_VERTEX;
+        vert.x = sx;
+        vert.y = sy;
+        vert.z = sz;
+        vert.u = cv.u;
+        vert.v = cv.v;
+        vert._pad0 = 0;
+        vert._pad1 = 0;
+        vert.base_a = a;
+        vert.base_r = r;
+        vert.base_g = g;
+        vert.base_b = b;
+        vert.offset_a = 0.0f;
+        vert.offset_r = 0.0f;
+        vert.offset_g = 0.0f;
+        vert.offset_b = 0.0f;
+
+        /* Use direct rendering - write two 32-byte chunks via store queues */
+        pvr_vertex_t* dest1 = pvr_dr_target(dr_state_);
+        *((uint32_t*)dest1 + 0) = vert.flags;
+        *((float*)dest1 + 1) = vert.x;
+        *((float*)dest1 + 2) = vert.y;
+        *((float*)dest1 + 3) = vert.z;
+        *((float*)dest1 + 4) = vert.u;
+        *((float*)dest1 + 5) = vert.v;
+        *((uint32_t*)dest1 + 6) = 0;  /* padding */
+        *((uint32_t*)dest1 + 7) = 0;  /* padding */
+        pvr_dr_commit(dest1);
+
+        pvr_vertex_t* dest2 = pvr_dr_target(dr_state_);
+        *((float*)dest2 + 0) = vert.base_a;
+        *((float*)dest2 + 1) = vert.base_r;
+        *((float*)dest2 + 2) = vert.base_g;
+        *((float*)dest2 + 3) = vert.base_b;
+        *((float*)dest2 + 4) = vert.offset_a;
+        *((float*)dest2 + 5) = vert.offset_r;
+        *((float*)dest2 + 6) = vert.offset_g;
+        *((float*)dest2 + 7) = vert.offset_b;
+        pvr_dr_commit(dest2);
+    };
+
+    /* Lambda to process a triangle with near-plane clipping */
+    auto process_triangle = [&](const ClipVertex& v0, const ClipVertex& v1, 
+                                const ClipVertex& v2, bool is_last_tri) {
+        /* Check visibility of each vertex (z >= -w means in front of near plane) */
+        bool vis0 = is_vertex_visible(v0);
+        bool vis1 = is_vertex_visible(v1);
+        bool vis2 = is_vertex_visible(v2);
+        int visible_mask = (vis0 ? 1 : 0) | (vis1 ? 2 : 0) | (vis2 ? 4 : 0);
+
+        switch(visible_mask) {
+            case 0:  /* All behind - skip */
+                break;
+
+            case 7:  /* All visible - submit as-is */
+                submit_clip_vertex(v0, false);
+                submit_clip_vertex(v1, false);
+                submit_clip_vertex(v2, true);  /* Always EOL for triangle end */
+                break;
+
+            case 1: {  /* Only v0 visible */
+                float t01 = clip_edge_t(v0, v1);
+                float t02 = clip_edge_t(v0, v2);
+                ClipVertex c01 = lerp_vertex(v0, v1, t01);
+                ClipVertex c02 = lerp_vertex(v0, v2, t02);
+                submit_clip_vertex(v0, false);
+                submit_clip_vertex(c01, false);
+                submit_clip_vertex(c02, true);  /* Always EOL for triangle end */
+                break;
+            }
+
+            case 2: {  /* Only v1 visible */
+                float t10 = clip_edge_t(v1, v0);
+                float t12 = clip_edge_t(v1, v2);
+                ClipVertex c10 = lerp_vertex(v1, v0, t10);
+                ClipVertex c12 = lerp_vertex(v1, v2, t12);
+                submit_clip_vertex(c10, false);
+                submit_clip_vertex(v1, false);
+                submit_clip_vertex(c12, true);  /* Always EOL for triangle end */
+                break;
+            }
+
+            case 4: {  /* Only v2 visible */
+                float t20 = clip_edge_t(v2, v0);
+                float t21 = clip_edge_t(v2, v1);
+                ClipVertex c20 = lerp_vertex(v2, v0, t20);
+                ClipVertex c21 = lerp_vertex(v2, v1, t21);
+                submit_clip_vertex(c20, false);
+                submit_clip_vertex(c21, false);
+                submit_clip_vertex(v2, true);  /* Always EOL for triangle end */
+                break;
+            }
+
+            case 3: {  /* v0, v1 visible (v2 behind) - produces quad (2 triangles) */
+                float t02 = clip_edge_t(v0, v2);
+                float t12 = clip_edge_t(v1, v2);
+                ClipVertex c02 = lerp_vertex(v0, v2, t02);
+                ClipVertex c12 = lerp_vertex(v1, v2, t12);
+                /* Triangle 1: v0, v1, c02 */
+                submit_clip_vertex(v0, false);
+                submit_clip_vertex(v1, false);
+                submit_clip_vertex(c02, true);  /* EOL to end first triangle */
+                /* Triangle 2: v1, c12, c02 */
+                submit_clip_vertex(v1, false);
+                submit_clip_vertex(c12, false);
+                submit_clip_vertex(c02, true);  /* Always EOL for triangle end */
+                break;
+            }
+
+            case 5: {  /* v0, v2 visible (v1 behind) - produces quad (2 triangles) */
+                float t01 = clip_edge_t(v0, v1);
+                float t21 = clip_edge_t(v2, v1);
+                ClipVertex c01 = lerp_vertex(v0, v1, t01);
+                ClipVertex c21 = lerp_vertex(v2, v1, t21);
+                /* Triangle 1: v0, c01, v2 */
+                submit_clip_vertex(v0, false);
+                submit_clip_vertex(c01, false);
+                submit_clip_vertex(v2, true);  /* EOL to end first triangle */
+                /* Triangle 2: c01, c21, v2 */
+                submit_clip_vertex(c01, false);
+                submit_clip_vertex(c21, false);
+                submit_clip_vertex(v2, true);  /* Always EOL for triangle end */
+                break;
+            }
+
+            case 6: {  /* v1, v2 visible (v0 behind) - produces quad (2 triangles) */
+                float t10 = clip_edge_t(v1, v0);
+                float t20 = clip_edge_t(v2, v0);
+                ClipVertex c10 = lerp_vertex(v1, v0, t10);
+                ClipVertex c20 = lerp_vertex(v2, v0, t20);
+                /* Triangle 1: c10, v1, c20 */
+                submit_clip_vertex(c10, false);
+                submit_clip_vertex(v1, false);
+                submit_clip_vertex(c20, true);  /* EOL to end first triangle */
+                /* Triangle 2: v1, v2, c20 */
+                submit_clip_vertex(v1, false);
+                submit_clip_vertex(v2, false);
+                submit_clip_vertex(c20, true);  /* Always EOL for triangle end */
+                break;
+            }
+        }
     };
 
     /* ================================================================
-     * Submit geometry
+     * Submit geometry with near-plane clipping
      * ================================================================ */
     if(renderable->index_element_count > 0 && renderable->index_data) {
         /* Indexed rendering */
@@ -597,20 +831,37 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
         if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES) {
             for(std::size_t i = 0; i + 2 < icount; i += 3) {
-                process_and_submit_vertex(get_index(i + 0), false);
-                process_and_submit_vertex(get_index(i + 1), false);
-                process_and_submit_vertex(get_index(i + 2), true);
+                ClipVertex v0 = read_and_transform_vertex(get_index(i + 0));
+                ClipVertex v1 = read_and_transform_vertex(get_index(i + 1));
+                ClipVertex v2 = read_and_transform_vertex(get_index(i + 2));
+                bool is_last = (i + 5 >= icount);
+                process_triangle(v0, v1, v2, is_last);
             }
         } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
-            for(std::size_t i = 0; i < icount; i++) {
-                process_and_submit_vertex(get_index(i), i == icount - 1);
+            /* For triangle strips, each consecutive 3 vertices form a triangle.
+             * Vertices alternate winding, which we handle by swapping v1/v2. */
+            if(icount >= 3) {
+                for(std::size_t i = 0; i + 2 < icount; i++) {
+                    ClipVertex v0 = read_and_transform_vertex(get_index(i + 0));
+                    ClipVertex v1 = read_and_transform_vertex(get_index(i + 1));
+                    ClipVertex v2 = read_and_transform_vertex(get_index(i + 2));
+                    bool is_last = (i + 3 >= icount);
+                    /* Odd triangles have reversed winding */
+                    if(i & 1) {
+                        process_triangle(v1, v0, v2, is_last);
+                    } else {
+                        process_triangle(v0, v1, v2, is_last);
+                    }
+                }
             }
         } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) {
             if(icount >= 3) {
+                ClipVertex v0 = read_and_transform_vertex(get_index(0));
                 for(std::size_t i = 1; i + 1 < icount; i++) {
-                    process_and_submit_vertex(get_index(0), false);
-                    process_and_submit_vertex(get_index(i), false);
-                    process_and_submit_vertex(get_index(i + 1), i + 1 == icount - 1);
+                    ClipVertex v1 = read_and_transform_vertex(get_index(i));
+                    ClipVertex v2 = read_and_transform_vertex(get_index(i + 1));
+                    bool is_last = (i + 2 >= icount);
+                    process_triangle(v0, v1, v2, is_last);
                 }
             }
         }
@@ -624,20 +875,34 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
             if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES) {
                 for(uint32_t i = 0; i + 2 < count; i += 3) {
-                    process_and_submit_vertex(start + i + 0, false);
-                    process_and_submit_vertex(start + i + 1, false);
-                    process_and_submit_vertex(start + i + 2, true);
+                    ClipVertex v0 = read_and_transform_vertex(start + i + 0);
+                    ClipVertex v1 = read_and_transform_vertex(start + i + 1);
+                    ClipVertex v2 = read_and_transform_vertex(start + i + 2);
+                    bool is_last = (i + 5 >= count) && (ri + 1 >= range_count);
+                    process_triangle(v0, v1, v2, is_last);
                 }
             } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
-                for(uint32_t i = 0; i < count; i++) {
-                    process_and_submit_vertex(start + i, i == count - 1);
+                if(count >= 3) {
+                    for(uint32_t i = 0; i + 2 < count; i++) {
+                        ClipVertex v0 = read_and_transform_vertex(start + i + 0);
+                        ClipVertex v1 = read_and_transform_vertex(start + i + 1);
+                        ClipVertex v2 = read_and_transform_vertex(start + i + 2);
+                        bool is_last = (i + 3 >= count) && (ri + 1 >= range_count);
+                        if(i & 1) {
+                            process_triangle(v1, v0, v2, is_last);
+                        } else {
+                            process_triangle(v0, v1, v2, is_last);
+                        }
+                    }
                 }
             } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) {
                 if(count >= 3) {
+                    ClipVertex v0 = read_and_transform_vertex(start);
                     for(uint32_t i = 1; i + 1 < count; i++) {
-                        process_and_submit_vertex(start + 0, false);
-                        process_and_submit_vertex(start + i, false);
-                        process_and_submit_vertex(start + i + 1, i + 1 == count - 1);
+                        ClipVertex v1 = read_and_transform_vertex(start + i);
+                        ClipVertex v2 = read_and_transform_vertex(start + i + 1);
+                        bool is_last = (i + 2 >= count) && (ri + 1 >= range_count);
+                        process_triangle(v0, v1, v2, is_last);
                     }
                 }
             }

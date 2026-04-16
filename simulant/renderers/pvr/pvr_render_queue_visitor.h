@@ -42,8 +42,12 @@ private:
     int current_list_type_ = 0; /* PVR_LIST_OP_POLY */
     int prev_list_type_ = -1;
 
-    /* Direct rendering state for the current list */
-    pvr_dr_state_t dr_state_;
+    /* Direct rendering: the modern KOS API no longer requires dr_state_
+     * (pvr_dr_target() uses global state), but we keep a dummy for
+     * backward compatibility with older KOS versions */
+#ifdef __DREAMCAST__
+    pvr_dr_state_t dr_state_;  /* Only used for backward compatibility */
+#endif
 
     /* Cached polygon context state */
     bool texturing_enabled_ = false;
