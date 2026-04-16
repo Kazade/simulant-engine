@@ -82,8 +82,7 @@ struct Quaternion: shz_quat {
     }
 
     void inverse() {
-        float d = dot(*this);
-        *this = conjugated() / d;
+        ((shz_quat&)*this) = shz_quat_inv(*this);
     }
 
     const Quaternion inversed() const {
