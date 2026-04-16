@@ -43,7 +43,7 @@ public:
 
     static Mat4 zero() {
         Mat4 r;
-        memset(r.m, 0, sizeof(r.m));
+        shz_mat4x4_init_zero(&r.m);
         return r;
     }
 
@@ -109,7 +109,7 @@ public:
     Plane extract_plane(FrustumPlane plane) const;
 
     float* data() {
-        return &m[0];
+        return &m.elem[0];
     }
 
     const float* data() const {
