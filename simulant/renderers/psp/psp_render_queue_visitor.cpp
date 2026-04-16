@@ -79,23 +79,6 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 
     sceGuSpecular(s.shininess);
 
-    switch (next->color_material()) {
-    case COLOR_MATERIAL_NONE:
-        sceGuColorMaterial(0);
-        break;
-    case COLOR_MATERIAL_AMBIENT:
-        sceGuColorMaterial(GU_AMBIENT);
-        break;
-    case COLOR_MATERIAL_DIFFUSE:
-        sceGuColorMaterial(GU_DIFFUSE);
-        break;
-    case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
-        sceGuColorMaterial(GU_AMBIENT | GU_DIFFUSE);
-        break;
-    default:
-        break;
-    }
-
     if(next->is_lighting_enabled()) {
         sceGuEnable(GU_LIGHTING);
     } else {
