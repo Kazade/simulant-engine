@@ -32,6 +32,6 @@ ps2build
 builda
 dcnative
 evbuild
-deps*
+#deps*
 gradle
 

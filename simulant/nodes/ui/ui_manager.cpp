@@ -405,6 +405,7 @@ void UIManager::do_generate_renderables(batcher::RenderQueue* render_queue,
                                         Light** light,
                                         const std::size_t light_count) {
 
+    _S_UNUSED(render_queue);
     _S_UNUSED(detail_level);
     _S_UNUSED(light);
     _S_UNUSED(light_count);
