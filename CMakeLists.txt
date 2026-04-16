@@ -51,7 +51,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTIXML_USE_STL")
 IF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17 /W3")
 ELSE()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -Wno-variadic-macros -Wno-c++20-extensions")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -Wall -Wextra -Wno-variadic-macros -Wno-c++20-extensions")
 ENDIF()
 
 IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -189,6 +189,11 @@ ENDIF()
 IF(USE_GLAD_FOR_OPENGL)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_USE_GLAD")
 ENDIF()
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/deps/sh4zam)
+
+include_directories(${CMAKE_SOURCE_DIR}/deps/sh4zam/include)
+link_libraries(sh4zam)
 
 IF(ANDROID)
     include_directories(

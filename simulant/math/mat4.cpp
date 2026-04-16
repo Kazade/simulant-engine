@@ -9,64 +9,51 @@ namespace smlt {
 Mat4 Mat4::as_rotation(const Quaternion& rhs) {
     Mat4 m;
 
-    float yy = rhs.y * rhs.y;
-    float zz = rhs.z * rhs.z;
-    float xx = rhs.x * rhs.x;
-    float xy = rhs.x * rhs.y;
-    float xz = rhs.x * rhs.z;
-    float yz = rhs.y * rhs.z;
-    float wx = rhs.w * rhs.x;
-    float wy = rhs.w * rhs.y;
-    float wz = rhs.w * rhs.z;
+    shz_quat q;
+    q.x = rhs.x;
+    q.y = rhs.y;
+    q.z = rhs.z;
+    q.w = rhs.w;
 
-    m[0] = 1 - 2 * (yy + zz);
-    m[1] = 2 * (xy + wz);
-    m[2] = 2 * (xz - wy);
-    m[3] = 0;
-
-    m[4] = 2 * (xy - wz);
-    m[5] = 1 - 2 * (xx + zz);
-    m[6] = 2 * (yz + wx);
-    m[7] = 0;
-
-    m[8] = 2 * (xz + wy);
-    m[9] = 2 * (yz - wx);
-    m[10] = 1 - 2 * (xx + yy);
-    m[11] = 0;
-
-    m[12] = 0;
-    m[13] = 0;
-    m[14] = 0;
-    m[15] = 1;
-
+    shz_mat4x4_init_rotation_quat(&m.m, q);
     return m;
 }
 
 Vec4 Mat4::operator*(const Vec4& v) const {
-    Vec4 ret;
-    ret.x = v.x * m[0] + v.y * m[4] + v.z * m[8] + v.w * m[12];
-    ret.y = v.x * m[1] + v.y * m[5] + v.z * m[9] + v.w * m[13];
-    ret.z = v.x * m[2] + v.y * m[6] + v.z * m[10] + v.w * m[14];
-    ret.w = v.x * m[3] + v.y * m[7] + v.z * m[11] + v.w * m[15];
-    return ret;
+    shz_vec4 vec;
+    vec.x = v.x;
+    vec.y = v.y;
+    vec.z = v.z;
+    vec.w = v.w;
+
+    vec = shz_mat4x4_transform_vec4(&m, vec);
+    return Vec4(vec.x, vec.y, vec.z, vec.w);
 }
 
 Vec3 Mat4::operator*(const Vec3& v) const {
-    Vec3 ret;
-    ret.x = m[0] * v.x + m[4] * v.y + m[8] * v.z + m[12];
-    ret.y = m[1] * v.x + m[5] * v.y + m[9] * v.z + m[13];
-    ret.z = m[2] * v.x + m[6] * v.y + m[10] * v.z + m[14];
-    return ret;
+    shz_vec3 vec;
+    vec.x = v.x;
+    vec.y = v.y;
+    vec.z = v.z;
+
+    vec = shz_mat4x4_transform_vec3(&m, vec);
+    return Vec3(vec.x, vec.y, vec.z);
 }
 
 void Mat4::extract_rotation_and_translation(Quaternion& rotation,
                                             Vec3& translation) const {
-    Mat3 rot(*this);
-    rotation = Quaternion(rot);
+    shz_quat q;
+    shz_vec3 trn, scale;
+    shz_mat4x4_decompose(&m, &trn, &q, &scale);
 
-    translation.x = m[12];
-    translation.y = m[13];
-    translation.z = m[14];
+    rotation.x = q.x;
+    rotation.y = q.y;
+    rotation.z = q.z;
+    rotation.w = q.w;
+
+    translation.x = trn.x;
+    translation.y = trn.y;
+    translation.z = trn.z;
 }
 
 Mat4 Mat4::as_rotation_x(const Degrees& angle) {
@@ -92,9 +79,7 @@ Mat4 Mat4::as_rotation_xyz(const Degrees& angle_x, const Degrees& angle_y,
 
 Mat4 Mat4::as_scale(const smlt::Vec3& s) {
     Mat4 ret;
-    ret[0] = s.x;
-    ret[5] = s.y;
-    ret[10] = s.z;
+    shz_mat4x4_init_scale(&ret.m, s.x, s.y, s.z);
     return ret;
 }
 
@@ -169,79 +154,8 @@ Mat4 Mat4::as_orthographic(float left, float right, float bottom, float top,
 void Mat4::inverse() {
     Mat4 tmp;
 
-    tmp.m[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] -
-               m[9] * m[6] * m[15] + m[9] * m[7] * m[14] +
-               m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
-
-    tmp.m[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] +
-               m[8] * m[6] * m[15] - m[8] * m[7] * m[14] -
-               m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
-
-    tmp.m[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] -
-               m[8] * m[5] * m[15] + m[8] * m[7] * m[13] +
-               m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
-
-    tmp.m[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] +
-                m[8] * m[5] * m[14] - m[8] * m[6] * m[13] -
-                m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
-
-    tmp.m[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] +
-               m[9] * m[2] * m[15] - m[9] * m[3] * m[14] -
-               m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
-
-    tmp.m[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] -
-               m[8] * m[2] * m[15] + m[8] * m[3] * m[14] +
-               m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
-
-    tmp.m[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] +
-               m[8] * m[1] * m[15] - m[8] * m[3] * m[13] -
-               m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
-
-    tmp.m[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] -
-                m[8] * m[1] * m[14] + m[8] * m[2] * m[13] +
-                m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
-
-    tmp.m[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15] +
-               m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
-
-    tmp.m[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] +
-               m[4] * m[2] * m[15] - m[4] * m[3] * m[14] - m[12] * m[2] * m[7] +
-               m[12] * m[3] * m[6];
-
-    tmp.m[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] -
-                m[4] * m[1] * m[15] + m[4] * m[3] * m[13] +
-                m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
-
-    tmp.m[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] +
-                m[4] * m[1] * m[14] - m[4] * m[2] * m[13] -
-                m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
-
-    tmp.m[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] +
-               m[5] * m[2] * m[11] - m[5] * m[3] * m[10] - m[9] * m[2] * m[7] +
-               m[9] * m[3] * m[6];
-
-    tmp.m[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11] +
-               m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
-
-    tmp.m[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] +
-                m[4] * m[1] * m[11] - m[4] * m[3] * m[9] - m[8] * m[1] * m[7] +
-                m[8] * m[3] * m[5];
-
-    tmp.m[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10] +
-                m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
-
-    float det =
-        m[0] * tmp.m[0] + m[1] * tmp.m[4] + m[2] * tmp.m[8] + m[3] * tmp.m[12];
-
-    if(det == 0.0f) {
-        return;
-    }
-
-    det = fast_divide(1.0f, det);
-
-    for(uint8_t i = 0; i < 16; i++) {
-        m[i] = tmp.m[i] * det;
-    }
+    shz_mat4x4_inverse(&m, &tmp.m);
+    shz_mat4x4_copy(&m, &tmp.m);
 }
 
 Plane Mat4::extract_plane(FrustumPlane plane) const {
@@ -250,40 +164,40 @@ Plane Mat4::extract_plane(FrustumPlane plane) const {
 
     switch(plane) {
         case FRUSTUM_PLANE_RIGHT:
-            out.n.x = m[3] - m[0];
-            out.n.y = m[7] - m[4];
-            out.n.z = m[11] - m[8];
-            out.d = m[15] - m[12];
+            out.n.x = m.elem[3] - m.elem[0];
+            out.n.y = m.elem[7] - m.elem[4];
+            out.n.z = m.elem[11] - m.elem[8];
+            out.d = m.elem[15] - m.elem[12];
             break;
         case FRUSTUM_PLANE_LEFT:
-            out.n.x = m[3] + m[0];
-            out.n.y = m[7] + m[4];
-            out.n.z = m[11] + m[8];
-            out.d = m[15] + m[12];
+            out.n.x = m.elem[3] + m.elem[0];
+            out.n.y = m.elem[7] + m.elem[4];
+            out.n.z = m.elem[11] + m.elem[8];
+            out.d = m.elem[15] + m.elem[12];
             break;
         case FRUSTUM_PLANE_BOTTOM:
-            out.n.x = m[3] + m[1];
-            out.n.y = m[7] + m[5];
-            out.n.z = m[11] + m[9];
-            out.d = m[15] + m[13];
+            out.n.x = m.elem[3] + m.elem[1];
+            out.n.y = m.elem[7] + m.elem[5];
+            out.n.z = m.elem[11] + m.elem[9];
+            out.d = m.elem[15] + m.elem[13];
             break;
         case FRUSTUM_PLANE_TOP:
-            out.n.x = m[3] - m[1];
-            out.n.y = m[7] - m[5];
-            out.n.z = m[11] - m[9];
-            out.d = m[15] - m[13];
+            out.n.x = m.elem[3] - m.elem[1];
+            out.n.y = m.elem[7] - m.elem[5];
+            out.n.z = m.elem[11] - m.elem[9];
+            out.d = m.elem[15] - m.elem[13];
             break;
         case FRUSTUM_PLANE_FAR:
-            out.n.x = m[3] - m[2];
-            out.n.y = m[7] - m[6];
-            out.n.z = m[11] - m[10];
-            out.d = m[15] - m[14];
+            out.n.x = m.elem[3] - m.elem[2];
+            out.n.y = m.elem[7] - m.elem[6];
+            out.n.z = m.elem[11] - m.elem[10];
+            out.d = m.elem[15] - m.elem[14];
             break;
         case FRUSTUM_PLANE_NEAR:
-            out.n.x = m[3] + m[2];
-            out.n.y = m[7] + m[6];
-            out.n.z = m[11] + m[10];
-            out.d = m[15] + m[14];
+            out.n.x = m.elem[3] + m.elem[2];
+            out.n.y = m.elem[7] + m.elem[6];
+            out.n.z = m.elem[11] + m.elem[10];
+            out.d = m.elem[15] + m.elem[14];
             break;
         default:
             assert(0 && "Invalid plane index");
@@ -311,25 +225,25 @@ Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
 
     Mat4 ret;
 
-    ret.m[0] = s.x;
-    ret.m[1] = u.x;
-    ret.m[2] = -f.x;
-    ret.m[3] = 0.0;
+    ret.m.elem[0] = s.x;
+    ret.m.elem[1] = u.x;
+    ret.m.elem[2] = -f.x;
+    ret.m.elem[3] = 0.0;
 
-    ret.m[4] = s.y;
-    ret.m[5] = u.y;
-    ret.m[6] = -f.y;
-    ret.m[7] = 0.0;
+    ret.m.elem[4] = s.y;
+    ret.m.elem[5] = u.y;
+    ret.m.elem[6] = -f.y;
+    ret.m.elem[7] = 0.0;
 
-    ret.m[8] = s.z;
-    ret.m[9] = u.z;
-    ret.m[10] = -f.z;
-    ret.m[11] = 0.0;
+    ret.m.elem[8] = s.z;
+    ret.m.elem[9] = u.z;
+    ret.m.elem[10] = -f.z;
+    ret.m.elem[11] = 0.0;
 
-    ret.m[12] = -s.dot(eye);
-    ret.m[13] = -u.dot(eye);
-    ret.m[14] = f.dot(eye);
-    ret.m[15] = 1.0;
+    ret.m.elem[12] = -s.dot(eye);
+    ret.m.elem[13] = -u.dot(eye);
+    ret.m.elem[14] = f.dot(eye);
+    ret.m.elem[15] = 1.0;
 
     return ret;
 }

@@ -218,7 +218,7 @@ void PhysicsBody::on_transformation_changed() {
 void PhysicsBody::on_update(float dt) {
     updating_body_ = true;
 
-    raii::Finally finally([=]() {
+    raii::Finally finally([this]() {
         updating_body_ = false;
     });
 

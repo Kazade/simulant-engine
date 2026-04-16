@@ -609,16 +609,17 @@ bool InputManager::start_text_input(bool force_onscreen) {
     keyboard_->set_keyboard_integration_enabled(true);
     keyboard_->set_parent(keyboard_stage_);
 
-    keyboard_stage_->signal_destroyed().connect([=]() {
+    keyboard_stage_->signal_destroyed().connect([this]() {
         keyboard_ = nullptr;
     });
 
     /* This forward virtual keypresses to the text input received signal */
-    keyboard_->signal_key_pressed().connect([=](ui::SoftKeyPressedEvent& evt) {
+    keyboard_->signal_key_pressed().connect(
+        [this](ui::SoftKeyPressedEvent& evt) {
         TextInputEvent ctrl;
 
         switch(evt.code) {
-        case KEYBOARD_CODE_BACKSPACE:
+            case KEYBOARD_CODE_BACKSPACE:
             case KEYBOARD_CODE_DELETE:
             case KEYBOARD_CODE_RETURN:
             case KEYBOARD_CODE_SPACE:  // Space is sent as a character, but we send anyway */
@@ -628,10 +629,10 @@ bool InputManager::start_text_input(bool force_onscreen) {
             case KEYBOARD_CODE_DOWN:
             case KEYBOARD_CODE_HOME:
             case KEYBOARD_CODE_END:
-            ctrl.keyboard_code = evt.code;
-            break;
-        default:
-            break;
+                ctrl.keyboard_code = evt.code;
+                break;
+            default:
+                break;
         }
 
         signal_text_input_received_(unicode(1, evt.chr), ctrl);

@@ -294,7 +294,8 @@ public:
             &SceneManager::deleter<T>, std::placeholders::_1, std::forward<Args>(args)...
         );
 
-        _store_scene_factory(name, [=](Window* window) -> ScenePtr {
+        _store_scene_factory(name,
+                             [this, func, name](Window* window) -> ScenePtr {
             auto ret = func(window);
             if(!ret->init()) {
                 S_ERROR("Failed to initialize the Scene");
@@ -309,7 +310,7 @@ public:
 
     template<typename T>
     void register_scene(const std::string& name) {
-        _store_scene_factory(name, [=](Window* window) -> ScenePtr {
+        _store_scene_factory(name, [=, this](Window* window) -> ScenePtr {
             auto ret = SceneManager::make_scene<decltype(&SceneManager::deleter<T>), T>(&SceneManager::deleter, window);
             ret->set_name(name);
             ret->scene_manager_ = this;
