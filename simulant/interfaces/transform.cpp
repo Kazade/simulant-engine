@@ -48,8 +48,15 @@ void Transform::set_orientation(const Quaternion& orientation) {
 void Transform::set_scale(const Vec3& scale) {
     signal_change_attempted();
     if(has_parent()) {
-        auto prot = parent_->scale();
-        set_scale_factor_if_necessary(prot / scale);
+        /* World scale = parent_scale * scale_factor
+         * So scale_factor = world_scale / parent_scale */
+        auto parent_scale = parent_->scale();
+        /* Protect against division by zero */
+        Vec3 divisor = parent_scale;
+        if(divisor.x == 0.0f) divisor.x = 1.0f;
+        if(divisor.y == 0.0f) divisor.y = 1.0f;
+        if(divisor.z == 0.0f) divisor.z = 1.0f;
+        set_scale_factor_if_necessary(scale / divisor);
     } else {
         set_scale_factor_if_necessary(scale);
     }
@@ -224,7 +231,15 @@ void Transform::set_parent(Transform* new_parent,
     if(parent_ && retain_mode == TRANSFORM_RETAIN_MODE_KEEP) {
         translation_ = (position_ - new_parent->position_);
         rotation_ = (orientation_ * new_parent->orientation_.inversed());
-        scale_ = scale_factor_ / new_parent->scale_;
+        /* To keep our world scale after parent change, compute new scale_factor_
+         * such that: scale_ = parent_scale * scale_factor_
+         * therefore:  scale_factor_ = scale_ / parent_scale */
+        Vec3 parent_scale = new_parent->scale_;
+        /* Protect against division by zero which causes inf */
+        if(parent_scale.x == 0.0f) parent_scale.x = 1.0f;
+        if(parent_scale.y == 0.0f) parent_scale.y = 1.0f;
+        if(parent_scale.z == 0.0f) parent_scale.z = 1.0f;
+        scale_factor_ = scale_ / parent_scale;
     }
 
     signal_change();
