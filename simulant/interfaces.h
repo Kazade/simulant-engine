@@ -40,9 +40,19 @@ public:
     virtual uint32_t clear_every_frame_flags() const { return clear_flags_; }
     virtual smlt::Color clear_every_frame_color() const { return clear_color_; }
 
+    void set_last_frame_rendered_id(uint32_t id) {
+        last_frame_rendered_id_ = id;
+    }
+
+    const uint32_t& last_frame_rendered_id() const {
+        return last_frame_rendered_id_;
+    }
+
 private:
     uint32_t clear_flags_ = BUFFER_CLEAR_ALL;
     smlt::Color clear_color_ = smlt::Color::black();
+
+    uint32_t last_frame_rendered_id_ = 0;
 };
 
 }

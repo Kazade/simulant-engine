@@ -112,8 +112,6 @@ private:
 
     friend class Layer;
 
-    std::set<RenderTarget*> targets_rendered_this_frame_;
-
     sig::connection clean_up_connection_;
 public:
     S_DEFINE_PROPERTY(window, &Compositor::window_);

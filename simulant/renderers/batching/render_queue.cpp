@@ -100,7 +100,7 @@ void RenderQueue::insert_renderable(Renderable&& renderable) {
     auto pos = renderable.center;
     auto renderable_dist_to_camera = plane.distance_to(pos);
     auto priority = renderable.render_priority;
-
+    auto color_map = material->base_color_map();
     auto pass_count = material->pass_count();
     for(auto i = 0u; i < pass_count; ++i) {
         MaterialPass* pass = material->pass(i);
@@ -111,9 +111,7 @@ void RenderQueue::insert_renderable(Renderable&& renderable) {
         group.sort_key = render_group_factory_->prepare_render_group(
             &group, &renderable, pass, priority, i, is_blended,
             renderable_dist_to_camera,
-            material->base_color_map()
-                ? material->base_color_map()->_renderer_specific_id()
-                : 0);
+            color_map ? color_map->_renderer_specific_id() : 0);
 
         render_queue_.insert(group, std::move(renderable));
     }
