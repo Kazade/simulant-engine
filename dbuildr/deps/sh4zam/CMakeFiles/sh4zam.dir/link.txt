@@ -1,0 +1,2 @@
+/opt/toolchains/dc/sh-elf/bin/sh-elf-ar qc libsh4zam.a CMakeFiles/sh4zam.dir/source/shz_circle.c.obj CMakeFiles/sh4zam.dir/source/shz_matrix.c.obj CMakeFiles/sh4zam.dir/source/shz_xmtrx.c.obj CMakeFiles/sh4zam.dir/source/shz_quat.c.obj CMakeFiles/sh4zam.dir/source/sh4/shz_xmtrx_sh4.s.obj CMakeFiles/sh4zam.dir/source/sh4/shz_mem_sh4.s.obj
+/opt/toolchains/dc/sh-elf/bin/sh-elf-ranlib libsh4zam.a
