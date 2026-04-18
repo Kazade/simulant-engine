@@ -388,7 +388,7 @@ test:windows-x64-mingw:
 ## clang build is currently just for checking compilation
 build:linux-x64-clang:
   stage: build
-  image: fedora:32
+  image: fedora:38
   variables:
     TARGET: linux-x64-clang
   before_script:
