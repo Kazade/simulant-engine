@@ -37,7 +37,7 @@ COPY --from=Build ${ANDROID_HOME} ${ANDROID_HOME}
 COPY --from=Build ${ANDROID_NDK} ${ANDROID_NDK}
 COPY --from=Build ${GRADLE_HOME} ${GRADLE_HOME}
 COPY --from=Build /root/.android /root/.android
-RUN dnf install -y cmake make libpng genisoimage findutils git pkgconf-pkg-config libisofs java-latest-openjdk
+RUN dnf install -y cmake make libpng genisoimage findutils git pkgconf-pkg-config libisofs java-latest-openjdk-devel
 RUN mkdir -p /root/.gradle
 RUN mkdir -p /root/.android
 ENV HOME=/root
