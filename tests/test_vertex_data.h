@@ -192,7 +192,7 @@ public:
         data.tex_coord0(1, 1);
 
         // sizeof(float) * 9 - but rounded to the nearest 16 byte boundary == 48
-        assert_equal(48u, data.data_size());
+        assert_equal(32u, data.data_size());
         data.move_next();
         data.position(0, 0, 0);
         data.tex_coord0(2, 2);

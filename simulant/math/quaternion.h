@@ -169,13 +169,13 @@ struct Quaternion: shz_quat {
 
     Quaternion nlerp(const Quaternion& rhs, float t) const {
         Quaternion ret;
-        ((shz_quat&)*this) = shz_quat_nlerp(*this, rhs, t);
+        ((shz_quat&)ret) = shz_quat_nlerp(*this, rhs, t);
         return ret;
     }
 
     Quaternion slerp(const Quaternion& rhs, float t) const {
         Quaternion ret;
-        ((shz_quat&)*this) = shz_quat_slerp(*this, rhs, t);
+        ((shz_quat&)ret) = shz_quat_slerp(*this, rhs, t);
         return ret;
     }
 
