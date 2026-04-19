@@ -10,7 +10,7 @@ ENV ANDROID_NDK_HOME=/opt/android-ndk-linux
 ENV GRADLE_HOME=/opt/gradle
 ENV PATH=${PATH}:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools:${PATH}:${ANDROID_HOME}/tools:${ANDROID_NDK_HOME}:${ANDROID_HOME}/cmdline-tools/latest/bin:${GRADLE_HOME}/bin
 RUN dnf upgrade --refresh -y && dnf install -y unzip wget cmake python3 java-latest-openjdk-devel
-ENV JAVA_HOME=/usr/lib/jvm/java
+ENV JAVA_HOME=/usr/lib/jvm/java-latest-openjdk
 RUN cd /opt/android-sdk-linux/ && \
 	wget -q --output-document=sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && \
 	unzip sdk-tools.zip && \
@@ -30,7 +30,7 @@ FROM fedora:40
 ENV ANDROID_HOME=/opt/android-sdk-linux
 ENV ANDROID_NDK=/opt/android-sdk-linux/ndk/27.3.13750724
 ENV ANDROID_NDK_HOME=/opt/android-sdk-linux/ndk/27.3.13750724
-ENV JAVA_HOME=/usr/lib/jvm/java
+ENV JAVA_HOME=/usr/lib/jvm/java-latest-openjdk
 ENV GRADLE_HOME=/opt/gradle
 ENV PATH=${PATH}:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools:${PATH}:${ANDROID_HOME}/tools:${ANDROID_NDK_HOME}:${ANDROID_HOME}/cmdline-tools/latest/bin:${GRADLE_HOME}/bin
 COPY --from=Build ${ANDROID_HOME} ${ANDROID_HOME}
