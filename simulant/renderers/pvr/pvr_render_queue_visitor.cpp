@@ -83,6 +83,9 @@ void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
         ambient_[2] = 0.2f;
         ambient_[3] = 1.0f;
     }
+
+    S_INFO("Init DR state");
+    pvr_dr_init(&dr_state_);
 }
 
 void PVRRenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
@@ -94,6 +97,7 @@ void PVRRenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
     /* Mark the current list as used and finish it */
     if(prev_list_type_ >= 0 && prev_list_type_ < 5) {
         renderer_->set_pvr_list_used(prev_list_type_);
+        S_INFO("Finishing list {0}", prev_list_type_);
         pvr_list_finish();
         prev_list_type_ = -1;
     }
@@ -278,6 +282,7 @@ void PVRRenderQueueVisitor::ensure_list_opened(int list_type) {
     /* KOS only allows one pvr_list_begin/pvr_list_finish cycle per list type
      * per scene. If this list was already used, we can't reopen it. */
     if(list_type >= 0 && list_type < 5 && renderer_->pvr_list_used(list_type)) {
+        S_DEBUG("Couldn't re-open list");
         return; /* List already used this scene, skip */
     }
 
@@ -285,52 +290,17 @@ void PVRRenderQueueVisitor::ensure_list_opened(int list_type) {
         /* Close any previously opened list first */
         if(prev_list_type_ >= 0 && prev_list_type_ < 5) {
             renderer_->set_pvr_list_used(prev_list_type_);
+            S_INFO("Finishing list {0}", prev_list_type_);
             pvr_list_finish();
         }
+
+        S_INFO("Beginning list {0}", list_type);
         pvr_list_begin(list_type);
         renderer_->set_pvr_list_used(list_type);
-        /* Note: pvr_dr_init() is deprecated in modern KOS (it's a no-op).
-         * The direct rendering API now uses a global address (pvr_dr_addr)
-         * that pvr_dr_target() manages automatically. We keep the call
-         * for backward compatibility with older KOS versions. */
-        pvr_dr_init(&dr_state_);
         prev_list_type_ = list_type;
     }
 #else
     _S_UNUSED(list_type);
-#endif
-}
-
-/* ========================================================================
- * submit_vertex - Submit a vertex via direct rendering API
- * ======================================================================== */
-
-void PVRRenderQueueVisitor::submit_vertex(float x, float y, float z,
-                                           float u, float v,
-                                           float r, float g, float b, float a) {
-#ifdef __DREAMCAST__
-    pvr_vertex_t* vert = pvr_dr_target(dr_state_);
-
-    vert->x = x;
-    vert->y = y;
-    vert->z = z;
-    vert->u = u;
-    vert->v = v;
-
-    /* Pack ARGB color */
-    uint32_t argb = ((uint32_t)(a * 255.0f) << 24) |
-                    ((uint32_t)(r * 255.0f) << 16) |
-                    ((uint32_t)(g * 255.0f) << 8)  |
-                    ((uint32_t)(b * 255.0f) << 0);
-    vert->argb = argb;
-
-    vert->oargb = 0;
-
-    pvr_dr_commit(vert);
-#else
-    _S_UNUSED(x); _S_UNUSED(y); _S_UNUSED(z);
-    _S_UNUSED(u); _S_UNUSED(v);
-    _S_UNUSED(r); _S_UNUSED(g); _S_UNUSED(b); _S_UNUSED(a);
 #endif
 }
 
@@ -408,7 +378,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                                       const MaterialPass* material_pass,
                                       batcher::Iteration iteration) {
     _S_UNUSED(iteration);
-    
+
     if(!renderable || !material_pass) return;
 
     renderer_->prepare_to_render(renderable);
@@ -536,7 +506,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         }
 
         /* Color - start with material diffuse */
-        cv.r = mat_diffuse_[0]; cv.g = mat_diffuse_[1]; 
+        cv.r = mat_diffuse_[0]; cv.g = mat_diffuse_[1];
         cv.b = mat_diffuse_[2]; cv.a = mat_diffuse_[3];
 
         /* Read vertex color if present */
@@ -709,7 +679,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     };
 
     /* Lambda to process a triangle with near-plane clipping */
-    auto process_triangle = [&](const ClipVertex& v0, const ClipVertex& v1, 
+    auto process_triangle = [&](const ClipVertex& v0, const ClipVertex& v1,
                                 const ClipVertex& v2, bool is_last_tri) {
         /* Check visibility of each vertex (z >= -w means in front of near plane) */
         bool vis0 = is_vertex_visible(v0);

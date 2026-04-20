@@ -125,6 +125,8 @@ void PVRRenderer::pre_render() {
 #ifdef __DREAMCAST__
     texture_manager_.update_priorities();
     pvr_wait_ready();
+
+    S_INFO("Beginning scene");
     pvr_scene_begin();
     scene_begun_ = true;
     /* Reset list tracking for the new scene */
@@ -139,6 +141,7 @@ void PVRRenderer::on_pre_render() {
 void PVRRenderer::on_post_render() {
 #ifdef __DREAMCAST__
     if(scene_begun_) {
+        S_INFO("Finishing scene");
         pvr_scene_finish();
         scene_begun_ = false;
     }

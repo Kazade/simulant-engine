@@ -194,12 +194,14 @@ void Compositor::run() {
     renderer_->pre_render();
 
     int actors_rendered = 0;
-    {        
+    {
         _S_PROFILE_SUBSECTION("pipelines");
         for(auto& pipeline: ordered_pipelines_) {
             run_layer(pipeline, actors_rendered);
         }
     }
+
+    renderer_->post_render();
 
     _S_PROFILE_SECTION("stats-update");
     get_app()->stats->set_subactors_rendered(actors_rendered);

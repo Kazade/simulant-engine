@@ -42,11 +42,8 @@ private:
     int current_list_type_ = 0; /* PVR_LIST_OP_POLY */
     int prev_list_type_ = -1;
 
-    /* Direct rendering: the modern KOS API no longer requires dr_state_
-     * (pvr_dr_target() uses global state), but we keep a dummy for
-     * backward compatibility with older KOS versions */
 #ifdef __DREAMCAST__
-    pvr_dr_state_t dr_state_;  /* Only used for backward compatibility */
+    pvr_dr_state_t dr_state_;
 #endif
 
     /* Cached polygon context state */
@@ -84,8 +81,6 @@ private:
                   batcher::Iteration iteration);
 
     void ensure_list_opened(int list_type);
-    void submit_vertex(float x, float y, float z, float u, float v,
-                       float r, float g, float b, float a);
 };
 
 } // namespace smlt
