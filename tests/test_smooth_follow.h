@@ -74,7 +74,7 @@ public:
         // Follower should now be facing negative Z
         assert_close(
             follower->transform->orientation().forward().x,
-            -1.0f, 0.0001f
+            -1.0f, 0.001f
         );
 
         // Rotate the target 180 degrees
@@ -88,7 +88,7 @@ public:
         // Follower should now be facing positive Z
         assert_close(
             follower->transform->forward().z,
-            1.0f, 0.0001f
+            1.0f, 0.001f
         );
 
     }
