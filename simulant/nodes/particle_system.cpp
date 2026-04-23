@@ -16,11 +16,7 @@ const static VertexSpecification
                    smlt::VERTEX_ATTRIBUTE_NONE, smlt::VERTEX_ATTRIBUTE_NONE,
                    smlt::VERTEX_ATTRIBUTE_NONE, smlt::VERTEX_ATTRIBUTE_NONE,
                    smlt::VERTEX_ATTRIBUTE_NONE,
-#ifdef __DREAMCAST__
-                   smlt::VERTEX_ATTRIBUTE_4UB_BGRA // Diffuse
-#else
                    smlt::VERTEX_ATTRIBUTE_4F // Diffuse
-#endif
     );
 
 ParticleSystem::ParticleSystem(Scene* owner) :

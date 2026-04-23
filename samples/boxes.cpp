@@ -13,9 +13,6 @@ public:
     void on_load() override {
         auto physics = start_service<PhysicsService>();
 
-        auto debug = create_child<smlt::Debug>();
-        physics->set_debug(debug);
-
         camera_ = create_child<smlt::Camera3D>();
         pipeline_ = compositor->create_layer(
             this, camera_
@@ -149,7 +146,7 @@ int main(int argc, char* argv[]) {
     config.log_level = LOG_LEVEL_DEBUG;
 #endif
 
-    // config.development.force_renderer = "gl1x";
+    config.development.force_renderer = "gl1x";
 
     PhysicsDemo app(config);
     return app.run();

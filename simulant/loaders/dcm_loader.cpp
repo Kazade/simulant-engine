@@ -32,13 +32,9 @@ VertexSpecification determine_spec(const FileHeader& header) {
     vspec.normal_attribute = (header.normal_format == NORMAL_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_NONE;
 
     /* FIXME: Do something better! */
-#if defined(__ANDROID__) || defined(__LINUX__)
+#if defined(__ANDROID__) || defined(__LINUX__) || defined(__DREAMCAST__)
     if(vspec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
         vspec.color_attribute = VERTEX_ATTRIBUTE_4F;
-    }
-#elif defined(__DREAMCAST__)
-    if(vspec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
-        vspec.color_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
     }
 #endif
 
