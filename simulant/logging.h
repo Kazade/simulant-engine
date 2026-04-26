@@ -190,7 +190,15 @@ void _s_log(T&& func, const char* file, int line, const std::string& fmt,
     func(_F(fmt).format(std::forward<Args>(args)...), file, line);
 }
 
+#ifndef SIMULANT_VERBOSE_LOGGING
 #ifndef NDEBUG
+    #define SIMULANT_VERBOSE_LOGGING 1
+#else
+    #define SIMULANT_VERBOSE_LOGGING 0
+#endif
+#endif
+
+#if SIMULANT_VERBOSE_LOGGING
 #define S_VERBOSE(...) _s_log(::smlt::verbose, __FILE__, __LINE__, __VA_ARGS__)
 #define S_DEBUG(...) _s_log(::smlt::debug, __FILE__, __LINE__, __VA_ARGS__)
 #else
