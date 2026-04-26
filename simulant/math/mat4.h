@@ -32,9 +32,9 @@ enum FrustumPlane {
 
 typedef std::vector<float> FloatArray;
 
-struct Mat4 {
+struct alignas(8) Mat4 {
 private:
-    shz_mat4x4 m;
+    alignas(8) shz_mat4x4_t m;
 
 public:
     Mat4() {
