@@ -9,13 +9,7 @@ namespace smlt {
 Mat4 Mat4::as_rotation(const Quaternion& rhs) {
     Mat4 m;
 
-    shz_quat q;
-    q.x = rhs.x;
-    q.y = rhs.y;
-    q.z = rhs.z;
-    q.w = rhs.w;
-
-    shz_mat4x4_init_rotation_quat(&m.m, q);
+    shz_mat4x4_init_rotation_quat(&m.m, rhs);
     return m;
 }
 
@@ -42,14 +36,8 @@ Vec3 Mat4::operator*(const Vec3& v) const {
 
 void Mat4::extract_rotation_and_translation(Quaternion& rotation,
                                             Vec3& translation) const {
-    shz_quat q;
     shz_vec3 trn, scale;
-    shz_mat4x4_decompose(&m, &trn, &q, &scale);
-
-    rotation.x = q.x;
-    rotation.y = q.y;
-    rotation.z = q.z;
-    rotation.w = q.w;
+    shz_mat4x4_decompose(&m, &trn, &static_cast<shz_quat&>(rotation), &scale);
 
     translation.x = trn.x;
     translation.y = trn.y;
