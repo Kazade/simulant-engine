@@ -774,9 +774,11 @@ void Mesh::update_skinning() {
         }
     }
 
+    // Use the block-triangular inverse — it's faster than the general inverse
+    // and is always correct for TRS world matrices.
     Mat4 mesh_world_inverse;
     if (skin->bound_actor) {
-        mesh_world_inverse = skin->bound_actor->transform->world_space_matrix().inversed();
+        mesh_world_inverse = skin->bound_actor->transform->world_space_matrix().inversed_transform();
     } else {
         mesh_world_inverse = Mat4();
     }
@@ -787,40 +789,52 @@ void Mesh::update_skinning() {
     pre_joint_matrices.clear();
     pre_joint_matrices.resize(skin->node_indices.size(), Mat4());
 
-    // Actually pre-allocating the transforms
+    // Pre-compute joint matrices: pre[h] = mesh_world_inverse * joint_world * inverse_bind[h]
+    //
+    // Chain the three matrix multiplies through XMTRX directly, saving one full
+    // XMTRX load+store round-trip per joint compared to calling shz_mat4x4_mult twice.
     for(size_t h = 0; h < skin->node_indices.size(); ++h) {
         StageNodePtr joint_node = skin->node_indices[h];
         if (!joint_node) continue;
 
         const Mat4& joint_matrix = joint_node->transform->world_space_matrix();
 
-        alignas(32) Mat4 temp;
-        temp = mesh_world_inverse * joint_matrix;
-        pre_joint_matrices[h] = temp * skin->inverse_bind_matrices[h];
+        // XMTRX = mesh_world_inverse * joint_matrix
+        shz_xmtrx_load_apply_4x4(mesh_world_inverse.native(), joint_matrix.native());
+        // XMTRX = (mesh_world_inverse * joint_matrix) * inverse_bind_matrices[h]
+        shz_xmtrx_apply_4x4(skin->inverse_bind_matrices[h].native());
+        // Store result
+        shz_xmtrx_store_4x4(pre_joint_matrices[h].native());
     }
 
+    // Hoist the joint data-type check outside the per-vertex loop.
+    const bool use_byte_joints =
+        vertex_data_->vertex_specification().joint_attribute == VERTEX_ATTRIBUTE_4UB;
+
+    const bool has_positions = vertex_data_->vertex_specification().has_positions();
+    const bool has_normals   = vertex_data_->vertex_specification().has_normals();
+
     for (uint32_t i = 0; i < vertex_data_->count(); ++i) {
-        // Starting from a clean 0 Mat4, NOT identity!
-        alignas(32) Mat4 skin_matrix = Mat4::zero();
+        // Zero-init the skin matrix directly — avoids an unnecessary XMTRX
+        // clobber from Mat4::zero() before we're ready to use XMTRX ourselves.
+        alignas(32) Mat4 skin_matrix;
+        memset(skin_matrix.data(), 0, sizeof(float) * 16);
 
         const Vec4* weights_acc = vertex_data_->weights_at<Vec4>(i);
         float weights[4] = { weights_acc->x, weights_acc->y, weights_acc->z, weights_acc->w };
 
-        // Starting with an aligned block to branch depending on joint data signature
         uint16_t joints[4];
-        if (vertex_data_->vertex_specification().joint_attribute == VERTEX_ATTRIBUTE_4UB) {
+        if (use_byte_joints) {
             const auto* joints_acc = vertex_data_->joints_at<uint8_t>(i);
             for (int j = 0; j < 4; ++j) joints[j] = joints_acc[j];
-        } else if (vertex_data_->vertex_specification().joint_attribute == VERTEX_ATTRIBUTE_4US) {
+        } else {
             const auto* joints_acc = vertex_data_->joints_at<uint16_t>(i);
             for (int j = 0; j < 4; ++j) joints[j] = joints_acc[j];
         }
 
         float sum = weights[0] + weights[1] + weights[2] + weights[3];
         if (sum > 1.01f) {
-            for (float & weight : weights) {
-                weight /= sum;
-            }
+            for (float& weight : weights) weight /= sum;
         }
 
         for (int j = 0; j < 4; ++j) {
@@ -833,34 +847,38 @@ void Mesh::update_skinning() {
             StageNodePtr joint_node = skin->node_indices[joint_index];
             if (!joint_node) continue;
 
-            // We're reusing the matrices that we pre-computed earlier
+            // Weighted blend of pre-computed joint matrices.
+            // Treating the matrix as 4 consecutive Vec4 columns keeps the
+            // hot path to 4 SIMD-friendly fmadd operations.
             const Mat4& joint_matrix = pre_joint_matrices[joint_index];
+            Vec4* skin_cols        = reinterpret_cast<Vec4*>(skin_matrix.data());
+            const Vec4* joint_cols = reinterpret_cast<const Vec4*>(joint_matrix.data());
 
-            // Going by the engine: mapping across all 16 floats of the matrix
-            // Hot path, and the Vec4 reinterpreting assumes 32B alignment!
-            Vec4* skin_rows = reinterpret_cast<Vec4*>(skin_matrix.data());
-            const Vec4* joint_rows = reinterpret_cast<const Vec4*>(&joint_matrix);
-
-            skin_rows[0] = skin_rows[0] + joint_rows[0] * weight;
-            skin_rows[1] = skin_rows[1] + joint_rows[1] * weight;
-            skin_rows[2] = skin_rows[2] + joint_rows[2] * weight;
-            skin_rows[3] = skin_rows[3] + joint_rows[3] * weight;
-
+            skin_cols[0] = skin_cols[0] + joint_cols[0] * weight;
+            skin_cols[1] = skin_cols[1] + joint_cols[1] * weight;
+            skin_cols[2] = skin_cols[2] + joint_cols[2] * weight;
+            skin_cols[3] = skin_cols[3] + joint_cols[3] * weight;
         }
 
-        // Transform vertex position
-        if (vertex_data_->vertex_specification().has_positions()) {
+        // Load the blended skin matrix into XMTRX once, then use FTRV-backed
+        // transforms for both the position and the normal — avoids 18 scalar
+        // MACs that the old transformed_by()/rotated_by() paths used.
+        shz_xmtrx_load_4x4(skin_matrix.native());
+
+        if (has_positions) {
             const Vec3& v = rest_positions_[i];
-            vertex_data_->position(v.transformed_by(skin_matrix));
+            shz_vec3_t p = shz_xmtrx_transform_point3(shz_vec3_init(v.x, v.y, v.z));
+            vertex_data_->position(Vec3(p.x, p.y, p.z));
         }
 
-
-        alignas(32) Mat4 rot(skin_matrix);
-        // Transform vertex normal
-        if (vertex_data_->vertex_specification().has_normals()) {
+        if (has_normals) {
             const Vec3& n = rest_normals_[i];
-            vertex_data_->normal(n.rotated_by(rot).normalized());
+            shz_vec3_t r = shz_xmtrx_transform_vec3(shz_vec3_init(n.x, n.y, n.z));
+            Vec3 transformed_n(r.x, r.y, r.z);
+            transformed_n.normalize();
+            vertex_data_->normal(transformed_n);
         }
+
         vertex_data_->move_next();
     }
     vertex_data_->done();

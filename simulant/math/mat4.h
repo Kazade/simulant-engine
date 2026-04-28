@@ -116,6 +116,22 @@ public:
         return &m.elem[0];
     }
 
+    shz_mat4x4_t* native() {
+        return &m;
+    }
+
+    const shz_mat4x4_t* native() const {
+        return &m;
+    }
+
+    // Faster inverse for TRS (translation/rotation/scale) matrices.
+    // The world-space matrix of any actor is always a TRS matrix.
+    Mat4 inversed_transform() const {
+        Mat4 result;
+        shz_mat4x4_inverse_block_triangular(&m, &result.m);
+        return result;
+    }
+
     void transpose() {
         shz_mat4x4_transpose(&m, &m);
     }
