@@ -22,7 +22,7 @@ struct AxisAngle {
     Degrees angle;
 };
 
-struct Quaternion: shz_quat {
+struct alignas(8) Quaternion: shz_quat {
     friend struct Vec3;
     friend struct Mat4;
     friend struct Mat3;
@@ -44,7 +44,7 @@ struct Quaternion: shz_quat {
     Quaternion(const Mat3& rot_matrix);
 
     Quaternion(const Euler& angles) : Quaternion(Degrees(angles.x), Degrees(angles.y), Degrees(angles.z)) {
-    
+
     }
 
     Quaternion(float x, float y, float z, float w) {
