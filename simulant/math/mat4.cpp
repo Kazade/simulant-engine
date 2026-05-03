@@ -9,7 +9,7 @@ namespace smlt {
 Mat4 Mat4::as_rotation(const Quaternion& rhs) {
     Mat4 m;
 
-    shz_mat4x4_init_rotation_quat(&m.m, rhs);
+    shz_mat4x4_init_rotation_quat(m.native(), rhs);
     return m;
 }
 
@@ -20,7 +20,7 @@ Vec4 Mat4::operator*(const Vec4& v) const {
     vec.z = v.z;
     vec.w = v.w;
 
-    vec = shz_mat4x4_transform_vec4(&m, vec);
+    vec = shz_mat4x4_transform_vec4(native(), vec);
     return Vec4(vec.x, vec.y, vec.z, vec.w);
 }
 
@@ -30,14 +30,14 @@ Vec3 Mat4::operator*(const Vec3& v) const {
     vec.y = v.y;
     vec.z = v.z;
 
-    vec = shz_mat4x4_transform_vec3(&m, vec);
+    vec = shz_mat4x4_transform_vec3(native(), vec);
     return Vec3(vec.x, vec.y, vec.z);
 }
 
 void Mat4::extract_rotation_and_translation(Quaternion& rotation,
                                             Vec3& translation) const {
     shz_vec3 trn, scale;
-    shz_mat4x4_decompose(&m, &trn, &static_cast<shz_quat&>(rotation), &scale);
+    shz_mat4x4_decompose(native(), &trn, &static_cast<shz_quat&>(rotation), &scale);
 
     translation.x = trn.x;
     translation.y = trn.y;
@@ -67,7 +67,7 @@ Mat4 Mat4::as_rotation_xyz(const Degrees& angle_x, const Degrees& angle_y,
 
 Mat4 Mat4::as_scale(const smlt::Vec3& s) {
     Mat4 ret;
-    shz_mat4x4_init_scale(&ret.m, s.x, s.y, s.z);
+    shz_mat4x4_init_scale(ret.native(), s.x, s.y, s.z);
     return ret;
 }
 
@@ -142,50 +142,52 @@ Mat4 Mat4::as_orthographic(float left, float right, float bottom, float top,
 void Mat4::inverse() {
     Mat4 tmp;
 
-    shz_mat4x4_inverse(&m, &tmp.m);
-    shz_mat4x4_copy(&m, &tmp.m);
+    shz_mat4x4_inverse(native(), tmp.native());
+    shz_mat4x4_copy(native(), tmp.native());
 }
 
 Plane Mat4::extract_plane(FrustumPlane plane) const {
     float t = 1.0f;
     Plane out;
 
+    const float* elem = native()->elem;
+
     switch(plane) {
         case FRUSTUM_PLANE_RIGHT:
-            out.n.x = m.elem[3] - m.elem[0];
-            out.n.y = m.elem[7] - m.elem[4];
-            out.n.z = m.elem[11] - m.elem[8];
-            out.d = m.elem[15] - m.elem[12];
+            out.n.x = elem[3] - elem[0];
+            out.n.y = elem[7] - elem[4];
+            out.n.z = elem[11] - elem[8];
+            out.d = elem[15] - elem[12];
             break;
         case FRUSTUM_PLANE_LEFT:
-            out.n.x = m.elem[3] + m.elem[0];
-            out.n.y = m.elem[7] + m.elem[4];
-            out.n.z = m.elem[11] + m.elem[8];
-            out.d = m.elem[15] + m.elem[12];
+            out.n.x = elem[3] + elem[0];
+            out.n.y = elem[7] + elem[4];
+            out.n.z = elem[11] + elem[8];
+            out.d = elem[15] + elem[12];
             break;
         case FRUSTUM_PLANE_BOTTOM:
-            out.n.x = m.elem[3] + m.elem[1];
-            out.n.y = m.elem[7] + m.elem[5];
-            out.n.z = m.elem[11] + m.elem[9];
-            out.d = m.elem[15] + m.elem[13];
+            out.n.x = elem[3] + elem[1];
+            out.n.y = elem[7] + elem[5];
+            out.n.z = elem[11] + elem[9];
+            out.d = elem[15] + elem[13];
             break;
         case FRUSTUM_PLANE_TOP:
-            out.n.x = m.elem[3] - m.elem[1];
-            out.n.y = m.elem[7] - m.elem[5];
-            out.n.z = m.elem[11] - m.elem[9];
-            out.d = m.elem[15] - m.elem[13];
+            out.n.x = elem[3] - elem[1];
+            out.n.y = elem[7] - elem[5];
+            out.n.z = elem[11] - elem[9];
+            out.d = elem[15] - elem[13];
             break;
         case FRUSTUM_PLANE_FAR:
-            out.n.x = m.elem[3] - m.elem[2];
-            out.n.y = m.elem[7] - m.elem[6];
-            out.n.z = m.elem[11] - m.elem[10];
-            out.d = m.elem[15] - m.elem[14];
+            out.n.x = elem[3] - elem[2];
+            out.n.y = elem[7] - elem[6];
+            out.n.z = elem[11] - elem[10];
+            out.d = elem[15] - elem[14];
             break;
         case FRUSTUM_PLANE_NEAR:
-            out.n.x = m.elem[3] + m.elem[2];
-            out.n.y = m.elem[7] + m.elem[6];
-            out.n.z = m.elem[11] + m.elem[10];
-            out.d = m.elem[15] + m.elem[14];
+            out.n.x = elem[3] + elem[2];
+            out.n.y = elem[7] + elem[6];
+            out.n.z = elem[11] + elem[10];
+            out.d = elem[15] + elem[14];
             break;
         default:
             assert(0 && "Invalid plane index");
@@ -213,25 +215,27 @@ Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
 
     Mat4 ret;
 
-    ret.m.elem[0] = s.x;
-    ret.m.elem[1] = u.x;
-    ret.m.elem[2] = -f.x;
-    ret.m.elem[3] = 0.0;
+    float* elem = ret.native()->elem;
 
-    ret.m.elem[4] = s.y;
-    ret.m.elem[5] = u.y;
-    ret.m.elem[6] = -f.y;
-    ret.m.elem[7] = 0.0;
+    elem[0] = s.x;
+    elem[1] = u.x;
+    elem[2] = -f.x;
+    elem[3] = 0.0;
 
-    ret.m.elem[8] = s.z;
-    ret.m.elem[9] = u.z;
-    ret.m.elem[10] = -f.z;
-    ret.m.elem[11] = 0.0;
+    elem[4] = s.y;
+    elem[5] = u.y;
+    elem[6] = -f.y;
+    elem[7] = 0.0;
 
-    ret.m.elem[12] = -s.dot(eye);
-    ret.m.elem[13] = -u.dot(eye);
-    ret.m.elem[14] = f.dot(eye);
-    ret.m.elem[15] = 1.0;
+    elem[8] = s.z;
+    elem[9] = u.z;
+    elem[10] = -f.z;
+    elem[11] = 0.0;
+
+    elem[12] = -s.dot(eye);
+    elem[13] = -u.dot(eye);
+    elem[14] = f.dot(eye);
+    elem[15] = 1.0;
 
     return ret;
 }

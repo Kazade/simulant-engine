@@ -35,38 +35,29 @@ typedef std::vector<float> FloatArray;
 
 #include <assert.h>
 
-struct Mat4 {
+struct alignas(8) Mat4 {
 private:
-#ifdef __DREAMCAST__
-    // In some situations, GCC on SH4 won't pad to align
-    // m on an 8-byte boundary (SP alignment is 4-bytes on SuperH)
-    // Until this is fixed in GCC, we add this float here to ensure that
-    // m will either be aligned at +4 or +8 and always be aligned at a
-    // global 8-byte boundary.
-    float _alignment = 0;
-#endif
-    shz_mat4x4 __attribute__((aligned((8)))) m;
+    uint8_t m[sizeof(shz_mat4x4_t) + 4];
 
 public:
     Mat4() {
-        assert(reinterpret_cast<uintptr_t>(&m) % 8 == 0);
-        shz_mat4x4_init_identity(&m);
+        shz_mat4x4_init_identity(native());
     }
 
     static Mat4 zero() {
         Mat4 r;
-        shz_mat4x4_init_zero(&r.m);
+        shz_mat4x4_init_zero(r.native());
         return r;
     }
 
     Mat4(const FloatArray& arr) {
         std::copy(arr.begin(),
-                  arr.begin() + std::min((unsigned)arr.size(), 16u), m.elem);
+                  arr.begin() + std::min((unsigned)arr.size(), 16u), native()->elem);
     }
 
     Mat4 operator*(const Mat4& rhs) const {
         Mat4 result;
-        shz_mat4x4_mult(&result.m, &this->m, &rhs.m);
+        shz_mat4x4_mult(result.native(), native(), rhs.native());
         return result;
     }
 
@@ -74,7 +65,7 @@ public:
     Vec3 operator*(const Vec3& rhs) const;
 
     bool operator==(const Mat4& rhs) const {
-        return shz_mat4x4_equal(&m, &rhs.m);
+        return shz_mat4x4_equal(native(), rhs.native());
     }
 
     void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
@@ -86,19 +77,19 @@ public:
     static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
 
     inline const float& operator[](const uint32_t index) const {
-        return m.elem[index];
+        return native()->elem[index];
     }
 
     inline float& operator[](const uint32_t index){
-        return m.elem[index];
+        return native()->elem[index];
     }
 
     inline const float& operator[](const int index) const {
-        return m.elem[index];
+        return native()->elem[index];
     }
 
     inline float& operator[](const int index) {
-        return m.elem[index];
+        return native()->elem[index];
     }
 
     static Mat4 as_translation(const Vec3& v);
@@ -121,31 +112,31 @@ public:
     Plane extract_plane(FrustumPlane plane) const;
 
     float* data() {
-        return &m.elem[0];
+        return &native()->elem[0];
     }
 
     const float* data() const {
-        return &m.elem[0];
+        return &native()->elem[0];
     }
 
     shz_mat4x4_t* native() {
-        return &m;
+        return (shz_mat4x4_t*)(((uintptr_t(m) + 7) & ~7));
     }
 
     const shz_mat4x4_t* native() const {
-        return &m;
+        return const_cast<Mat4*>(this)->native();
     }
 
     // Faster inverse for TRS (translation/rotation/scale) matrices.
     // The world-space matrix of any actor is always a TRS matrix.
     Mat4 inversed_transform() const {
         Mat4 result;
-        shz_mat4x4_inverse_block_triangular(&m, &result.m);
+        shz_mat4x4_inverse_block_triangular(native(), result.native());
         return result;
     }
 
     void transpose() {
-        shz_mat4x4_transpose(&m, &m);
+        shz_mat4x4_transpose(native(), native());
     }
 
     Mat4 transposed() const {
