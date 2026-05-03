@@ -602,6 +602,8 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
         if(!ext.empty()) {
             uri = uri.replace_ext(ext);
         }
+
+        S_VERBOSE("Loading texture from uri: ", uri.str());
         auto tex = assets->load_texture(uri);
 
         auto wrapS = sampler["wrapS"]->to_int().value_or(10497);
@@ -650,12 +652,14 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
             auto is = std::make_shared<std::istream>(&buffer);
 
             if(mime == "image/png") {
+                S_VERBOSE("Loading png from stream");
                 auto loader = PNGLoader("something.png", is);
                 auto tex = assets->create_texture(8, 8);
                 loader.into(*tex);
                 tex->flush();
                 return tex;
             } else if(mime == "image/jpeg") {
+                S_VERBOSE("Loading jpeg from stream");
                 auto loader = TextureLoader("something.jpg", is);
                 auto tex = assets->create_texture(8, 8);
                 loader.into(*tex);

@@ -464,6 +464,8 @@ void GLRenderer::on_texture_prepare(Texture *texture) {
         texture->_set_params_clean();
     }
 
+    S_VERBOSE("Texture uploaded");
+
     if(active != (GLint) target) {
         GLCheck(glBindTexture, GL_TEXTURE_2D, active);
     }

@@ -84,7 +84,7 @@ foreach(sample ${SAMPLES})
       SET(EXE ${sample})
       ADD_CUSTOM_TARGET(
             ${EXE}.cdi ALL
-            COMMAND mkdcdisc -e ${CMAKE_CURRENT_BINARY_DIR}/${EXE}.elf -d ${CMAKE_BINARY_DIR}/assets -o ${CMAKE_CURRENT_BINARY_DIR}/${EXE}.cdi
+            COMMAND mkdcdisc -e ${CMAKE_CURRENT_BINARY_DIR}/${EXE}.elf -d ${CMAKE_SOURCE_DIR}/assets -o ${CMAKE_BINARY_DIR}/${EXE}.cdi
             DEPENDS ${EXE_FILENAME}.debug.target
             COMMENT "Converting ${EXE}.elf to ${EXE}.cdi"
         )

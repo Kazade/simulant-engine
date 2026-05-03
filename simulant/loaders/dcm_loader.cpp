@@ -76,7 +76,7 @@ bool DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     /* Add the parent directory to the search path so we can load textures */
     auto added = smlt::get_app()->vfs->insert_search_path(0, filename_.parent());
 
-    auto read_data_header = [=](DataHeader* out) {
+    auto read_data_header = [=, this](DataHeader* out) {
         data_->read((char*) &out->flags, sizeof(out->flags));
         data_->read((char*) &out->local_id, sizeof(out->local_id));
         data_->read((char*) &out->path, sizeof(out->path));

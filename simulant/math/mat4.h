@@ -5,6 +5,7 @@
 #include <cstring>
 #include <sh4zam/shz_matrix.h>
 #include <vector>
+#include <stdio.h>
 
 #if defined(_MSC_VER)
 #include "degrees.h"
@@ -32,12 +33,23 @@ enum FrustumPlane {
 
 typedef std::vector<float> FloatArray;
 
-struct alignas(8) Mat4 {
+#include <assert.h>
+
+struct Mat4 {
 private:
-    alignas(8) shz_mat4x4_t m;
+#ifdef __DREAMCAST__
+    // In some situations, GCC on SH4 won't pad to align
+    // m on an 8-byte boundary (SP alignment is 4-bytes on SuperH)
+    // Until this is fixed in GCC, we add this float here to ensure that
+    // m will either be aligned at +4 or +8 and always be aligned at a
+    // global 8-byte boundary.
+    float _alignment = 0;
+#endif
+    shz_mat4x4 __attribute__((aligned((8)))) m;
 
 public:
     Mat4() {
+        assert(reinterpret_cast<uintptr_t>(&m) % 8 == 0);
         shz_mat4x4_init_identity(&m);
     }
 
