@@ -89,6 +89,13 @@ uint32_t GLRenderer::convert_format(TextureFormat format) {
         case TEXTURE_FORMAT_RGBA8_PALETTED4:
         case TEXTURE_FORMAT_RGBA8_PALETTED8:
             return GL_RGBA;
+
+        case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
+            return GL_BGRA;
+        case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
+            return GL_BGRA;
+        case TEXTURE_FORMAT_RGB_1US_565_TWID:
+            return GL_RGB;
 #ifdef __DREAMCAST__
         case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
             return GL_COMPRESSED_ARGB_1555_VQ_TWID_KOS;
@@ -102,12 +109,6 @@ uint32_t GLRenderer::convert_format(TextureFormat format) {
             return GL_COMPRESSED_ARGB_4444_VQ_MIPMAP_TWID_KOS;
         case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
             return GL_COMPRESSED_RGB_565_VQ_MIPMAP_TWID_KOS;
-        case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
-            return GL_UNSIGNED_SHORT_1_5_5_5_REV_TWID_KOS;
-        case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
-            return GL_UNSIGNED_SHORT_4_4_4_4_REV_TWID_KOS;
-        case TEXTURE_FORMAT_RGB_1US_565_TWID:
-            return GL_UNSIGNED_SHORT_5_6_5_TWID_KOS;
 #endif
         default:
             S_ERROR("Unable to convert format {0}", format);
@@ -145,11 +146,14 @@ uint32_t GLRenderer::convert_type(TextureFormat format) {
     case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
     case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
     case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
-    case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
-    case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
-    case TEXTURE_FORMAT_RGB_1US_565_TWID:
         /* Not used for anything, but return something sensible */
         return GL_UNSIGNED_SHORT;
+    case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
+        return GL_UNSIGNED_SHORT_1_5_5_5_REV_TWID_KOS;
+    case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
+        return GL_UNSIGNED_SHORT_4_4_4_4_REV_TWID_KOS;
+    case TEXTURE_FORMAT_RGB_1US_565_TWID:
+        return GL_UNSIGNED_SHORT_5_6_5_TWID_KOS;
 #endif
     default:
         assert(0 && "Not implemented");
@@ -166,6 +170,7 @@ static constexpr GLenum texture_format_to_internal_format(TextureFormat format) 
     return (format == TEXTURE_FORMAT_R_1UB_8) ? GL_RED :
            (format == TEXTURE_FORMAT_RGB_3UB_888) ? GL_RGB :
            (format == TEXTURE_FORMAT_RGB_1US_565) ? GL_RGB :
+           (format == TEXTURE_FORMAT_RGB_1US_565_TWID) ? GL_RGB :
             GL_RGBA;
 }
 

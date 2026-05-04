@@ -22,6 +22,7 @@ struct AxisAngle {
     Degrees angle;
 };
 
+
 struct alignas(8) Quaternion: shz_quat {
     friend struct Vec3;
     friend struct Mat4;
@@ -35,7 +36,10 @@ struct alignas(8) Quaternion: shz_quat {
     }
 
     Quaternion(const FloatArray& arr) {
-        ((shz_quat&)*this) = shz_quat_init(arr[3], arr[0], arr[1], arr[2]);
+        w = arr[3];
+        x = arr[0];
+        y = arr[1];
+        z = arr[2];
     }
 
     Quaternion(const Degrees& pitch, const Degrees& yaw, const Degrees& roll);
@@ -48,7 +52,10 @@ struct alignas(8) Quaternion: shz_quat {
     }
 
     Quaternion(float x, float y, float z, float w) {
-        ((shz_quat&)*this) = shz_quat_init(w, x, y, z);
+        this->x = x;
+        this->y = y;
+        this->z = z;
+        this->w = w;
     }
 
     Euler to_euler() const;
