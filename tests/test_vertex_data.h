@@ -199,7 +199,7 @@ public:
         data.done();
 
         // sizeof(float) * 18, but rounded to the nearest 16 byte boundary == 96
-        assert_equal(64u, data.data_size());
+        assert_equal(96u, data.data_size());
     }
 };
 
