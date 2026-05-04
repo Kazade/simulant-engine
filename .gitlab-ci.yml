@@ -659,7 +659,7 @@ test:dreamcast-sh4-gcc:
   script:
     - cd ${TARGET}/release
     - ls tests
-    - lxdream-nitro --audio=null -r 32 -H -b -u -C ${TARGET}/release -e tests/simulant_tests.elf
+    - nitrocast --audio=null -r 32 -H -b -u -C ${TARGET}/release -e tests/simulant_tests.elf
   artifacts:
     when: always
     paths:
