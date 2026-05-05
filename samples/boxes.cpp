@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
 #endif
     // config.log_level = smlt::LOG_LEVEL_DEBUG;
 
-    config.development.force_renderer = "gl1x";
+    config.development.force_renderer = "pvr";
 
     PhysicsDemo app(config);
     return app.run();
