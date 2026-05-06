@@ -75,6 +75,8 @@ void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
     _S_UNUSED(stage_node);
 
     prev_list_type_ = -1;
+    deferred_pt_.clear();
+    deferred_tr_.clear();
 
     /* Get ambient light from the stage if available */
     if(stage_node) {
@@ -84,8 +86,36 @@ void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
         ambient_[3] = 1.0f;
     }
 
-    S_INFO("Init DR state");
+    S_VERBOSE("Init DR state");
     pvr_dr_init(&dr_state_);
+}
+
+void PVRRenderQueueVisitor::apply_deferred_state(const DeferredEntry& e) {
+    current_list_type_ = e.list_type;
+    texturing_enabled_ = e.texturing_enabled;
+    depth_test_enabled_ = e.depth_test_enabled;
+    depth_write_enabled_ = e.depth_write_enabled;
+    cull_mode_ = e.cull_mode;
+    blend_src_ = e.blend_src;
+    blend_dst_ = e.blend_dst;
+    depth_func_ = e.depth_func;
+    shade_mode_ = e.shade_mode;
+    fog_type_ = e.fog_type;
+    memcpy(mat_diffuse_, e.mat_diffuse, sizeof(mat_diffuse_));
+    memcpy(mat_ambient_, e.mat_ambient, sizeof(mat_ambient_));
+    memcpy(mat_specular_, e.mat_specular, sizeof(mat_specular_));
+    mat_shininess_ = e.mat_shininess;
+    memcpy(lights_, e.lights, sizeof(lights_));
+    memcpy(ambient_, e.ambient, sizeof(ambient_));
+}
+
+void PVRRenderQueueVisitor::flush_deferred(std::vector<DeferredEntry>& entries) {
+    for(const auto& e : entries) {
+        apply_deferred_state(e);
+        ensure_list_opened(e.list_type);
+        do_visit(e.renderable, e.pass, 0);
+    }
+    entries.clear();
 }
 
 void PVRRenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
@@ -94,10 +124,19 @@ void PVRRenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
     _S_UNUSED(stage_node);
 
 #ifdef __DREAMCAST__
-    /* Mark the current list as used and finish it */
-    if(prev_list_type_ >= 0 && prev_list_type_ < 5) {
-        renderer_->set_pvr_list_used(prev_list_type_);
-        S_INFO("Finishing list {0}", prev_list_type_);
+    /* Close the OP list, then submit deferred PT then TR so each PVR list
+     * is written in one contiguous block with no continuation needed. */
+    if(prev_list_type_ >= 0) {
+        S_VERBOSE("Finishing list {0}", prev_list_type_);
+        pvr_list_finish();
+        prev_list_type_ = -1;
+    }
+
+    flush_deferred(deferred_pt_);
+    flush_deferred(deferred_tr_);
+
+    if(prev_list_type_ >= 0) {
+        S_VERBOSE("Finishing list {0}", prev_list_type_);
         pvr_list_finish();
         prev_list_type_ = -1;
     }
@@ -157,12 +196,12 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         new_list_type = PVR_LIST_TR_POLY;
     }
 
-    /* If list type changed, start a new one */
-    if(new_list_type != prev_list_type_) {
+    /* OP geometry is submitted immediately; PT and TR are deferred until after
+     * all OP geometry so each PVR list is written exactly once. */
+    if(new_list_type == PVR_LIST_OP_POLY) {
         ensure_list_opened(new_list_type);
     }
 
-    /* Update current_list_type_ so polygon context uses the correct list */
     current_list_type_ = new_list_type;
 
     /* Cache material state */
@@ -271,31 +310,21 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
 }
 
 /* ========================================================================
- * ensure_list_opened - open a PVR list if needed
+ * ensure_list_opened - open a PVR list if not already open
  * ======================================================================== */
 
 void PVRRenderQueueVisitor::ensure_list_opened(int list_type) {
 #ifdef __DREAMCAST__
-    /* KOS only allows one pvr_list_begin/pvr_list_finish cycle per list type
-     * per scene. If this list was already used, we can't reopen it. */
-    if(list_type >= 0 && list_type < 5 && renderer_->pvr_list_used(list_type)) {
-        S_DEBUG("Couldn't re-open list");
-        return; /* List already used this scene, skip */
+    if(list_type == prev_list_type_) return;
+
+    if(prev_list_type_ >= 0) {
+        S_VERBOSE("Finishing list {0}", prev_list_type_);
+        pvr_list_finish();
     }
 
-    if(list_type != prev_list_type_) {
-        /* Close any previously opened list first */
-        if(prev_list_type_ >= 0 && prev_list_type_ < 5) {
-            renderer_->set_pvr_list_used(prev_list_type_);
-            S_INFO("Finishing list {0}", prev_list_type_);
-            pvr_list_finish();
-        }
-
-        S_INFO("Beginning list {0}", list_type);
-        pvr_list_begin(list_type);
-        renderer_->set_pvr_list_used(list_type);
-        prev_list_type_ = list_type;
-    }
+    S_VERBOSE("Beginning list {0}", list_type);
+    pvr_list_begin(list_type);
+    prev_list_type_ = list_type;
 #else
     _S_UNUSED(list_type);
 #endif
@@ -368,6 +397,33 @@ static inline ClipVertex lerp_vertex(const ClipVertex& v1, const ClipVertex& v2,
 void PVRRenderQueueVisitor::visit(const Renderable* renderable,
                                    const MaterialPass* pass,
                                    batcher::Iteration iteration) {
+    if(current_list_type_ != PVR_LIST_OP_POLY) {
+        DeferredEntry e;
+        e.renderable = renderable;
+        e.pass = pass;
+        e.list_type = current_list_type_;
+        e.texturing_enabled = texturing_enabled_;
+        e.depth_test_enabled = depth_test_enabled_;
+        e.depth_write_enabled = depth_write_enabled_;
+        e.cull_mode = cull_mode_;
+        e.blend_src = blend_src_;
+        e.blend_dst = blend_dst_;
+        e.depth_func = depth_func_;
+        e.shade_mode = shade_mode_;
+        e.fog_type = fog_type_;
+        memcpy(e.mat_diffuse, mat_diffuse_, sizeof(mat_diffuse_));
+        memcpy(e.mat_ambient, mat_ambient_, sizeof(mat_ambient_));
+        memcpy(e.mat_specular, mat_specular_, sizeof(mat_specular_));
+        e.mat_shininess = mat_shininess_;
+        memcpy(e.lights, lights_, sizeof(lights_));
+        memcpy(e.ambient, ambient_, sizeof(ambient_));
+        if(current_list_type_ == PVR_LIST_PT_POLY) {
+            deferred_pt_.push_back(e);
+        } else {
+            deferred_tr_.push_back(e);
+        }
+        return;
+    }
     do_visit(renderable, pass, iteration);
 }
 
@@ -409,15 +465,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
     if(tex_obj && tex_obj->texture_vram) {
         /* Determine PVR texture format */
-        int pvr_format = PVR_TXRFMT_RGB565;
-        if(tex_obj->is_twiddled) {
-            pvr_format |= PVR_TXRFMT_TWIDDLED;
-        } else {
-            pvr_format |= PVR_TXRFMT_NONTWIDDLED;
-        }
-        if(tex_obj->is_compressed) {
-            pvr_format |= PVR_TXRFMT_VQ_ENABLE;
-        }
+        int pvr_format = tex_obj->format;
 
         pvr_poly_cxt_txr(&cxt, current_list_type_,
                          pvr_format,
@@ -433,6 +481,8 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     /* Use floating point color format (Type 5) */
     cxt.fmt.color = PVR_CLRFMT_4FLOATS;
     cxt.fmt.uv = PVR_UVFMT_32BIT;
+    // Let the GPU clamp colors
+    cxt.gen.color_clamp = PVR_CLRCLAMP_ENABLE;
 
     cxt.gen.shading = shade_mode_;
     cxt.gen.culling = cull_mode_;
@@ -625,12 +675,6 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         float sy = vy * inv_w;
         float sz = inv_w;  /* PVR uses 1/w for depth */
 
-        /* Clamp colors */
-        float a = cv.a > 1.0f ? 1.0f : (cv.a < 0.0f ? 0.0f : cv.a);
-        float r = cv.r > 1.0f ? 1.0f : (cv.r < 0.0f ? 0.0f : cv.r);
-        float g = cv.g > 1.0f ? 1.0f : (cv.g < 0.0f ? 0.0f : cv.g);
-        float b = cv.b > 1.0f ? 1.0f : (cv.b < 0.0f ? 0.0f : cv.b);
-
         /* Submit 64-byte Type 5 vertex via direct rendering.
          * Type 5 requires two 32-byte store queue writes. */
         pvr_vertex_type5_t vert;
@@ -642,10 +686,10 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         vert.v = cv.v;
         vert._pad0 = 0;
         vert._pad1 = 0;
-        vert.base_a = a;
-        vert.base_r = r;
-        vert.base_g = g;
-        vert.base_b = b;
+        vert.base_a = cv.a;
+        vert.base_r = cv.r;
+        vert.base_g = cv.g;
+        vert.base_b = cv.b;
         vert.offset_a = 0.0f;
         vert.offset_r = 0.0f;
         vert.offset_g = 0.0f;

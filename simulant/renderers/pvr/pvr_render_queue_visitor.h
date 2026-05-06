@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "../batching/render_queue.h"
 
 #ifdef __DREAMCAST__
@@ -76,11 +77,32 @@ private:
     float mat_specular_[4] = {0, 0, 0, 1};
     float mat_shininess_ = 0.0f;
 
+    /* PT and TR renderables are collected during traversal and submitted
+     * after all OP geometry, so each PVR list is written exactly once. */
+    struct DeferredEntry {
+        const Renderable* renderable;
+        const MaterialPass* pass;
+        int list_type;
+        bool texturing_enabled;
+        bool depth_test_enabled;
+        bool depth_write_enabled;
+        int cull_mode, blend_src, blend_dst, depth_func, shade_mode, fog_type;
+        float mat_diffuse[4], mat_ambient[4], mat_specular[4];
+        float mat_shininess;
+        LightState lights[MAX_LIGHTS];
+        float ambient[4];
+    };
+
+    std::vector<DeferredEntry> deferred_pt_;
+    std::vector<DeferredEntry> deferred_tr_;
+
     void do_visit(const Renderable* renderable,
                   const MaterialPass* material_pass,
                   batcher::Iteration iteration);
 
     void ensure_list_opened(int list_type);
+    void apply_deferred_state(const DeferredEntry& e);
+    void flush_deferred(std::vector<DeferredEntry>& entries);
 };
 
 } // namespace smlt

@@ -51,12 +51,12 @@ void PVRRenderer::init_context() {
      * via pvr_init(). If not, we do it here. */
     pvr_init_params_t params = {
         /* Bin sizes for: OP, OP_MOD, TR, TR_MOD, PT */
-        { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_16 },
+        { PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
         512 * 1024, /* Vertex buffer size */
         0,          /* DMA enabled */
         0,          /* FSAA */
         0,          /* Autosort (0 = enabled for TR) */
-        0,          /* OPB overflow count */
+        8,          /* OPB overflow count */
         0           /* VBUF doublebuf disabled */
     };
 
@@ -126,11 +126,9 @@ void PVRRenderer::pre_render() {
     texture_manager_.update_priorities();
     pvr_wait_ready();
 
-    S_INFO("Beginning scene");
+    S_VERBOSE("Beginning scene");
     pvr_scene_begin();
     scene_begun_ = true;
-    /* Reset list tracking for the new scene */
-    for(int i = 0; i < 5; i++) list_used_[i] = false;
 #endif
 }
 
@@ -141,7 +139,7 @@ void PVRRenderer::on_pre_render() {
 void PVRRenderer::on_post_render() {
 #ifdef __DREAMCAST__
     if(scene_begun_) {
-        S_INFO("Finishing scene");
+        S_VERBOSE("Finishing scene");
         pvr_scene_finish();
         scene_begun_ = false;
     }
