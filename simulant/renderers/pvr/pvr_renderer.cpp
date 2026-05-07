@@ -14,6 +14,7 @@ PVRRenderer::PVRRenderer(Window* window):
     Renderer(window),
     texture_manager_(this) {
 
+    memset(&dr_state_, 0, sizeof(dr_state_));
 }
 
 PVRRenderer::~PVRRenderer() {
@@ -129,6 +130,14 @@ void PVRRenderer::pre_render() {
     S_VERBOSE("Beginning scene");
     pvr_scene_begin();
     scene_begun_ = true;
+
+    pt_buffer_.clear();
+    tr_buffer_.clear();
+
+    prev_list_type_ = -1;
+    current_list_type_ = PVR_LIST_OP_POLY;
+
+    ensure_list_opened(current_list_type_);
 #endif
 }
 
@@ -136,9 +145,53 @@ void PVRRenderer::on_pre_render() {
     /* Textures are now prepared in pre_render(). Nothing to do here. */
 }
 
+/* ========================================================================
+ * ensure_list_opened - open a PVR list if not already open
+ * ======================================================================== */
+
+void PVRRenderer::ensure_list_opened(int list_type) {
+#ifdef __DREAMCAST__
+    if(list_type == prev_list_type_) return;
+
+    if(prev_list_type_ >= 0) {
+        S_VERBOSE("Finishing list {0}", prev_list_type_);
+        pvr_list_finish();
+    }
+
+    S_VERBOSE("Beginning list {0}", list_type);
+    pvr_list_begin(list_type);
+    prev_list_type_ = list_type;
+#else
+    _S_UNUSED(list_type);
+#endif
+}
+
+void PVRRenderer::flush_list_buffer(std::vector<uint8_t>& buffer, int list_type) {
+#ifdef __DREAMCAST__
+    if(buffer.empty()) return;
+    ensure_list_opened(list_type);
+    const uint8_t* ptr = buffer.data();
+    std::size_t remaining = buffer.size();
+    while(remaining >= 32) {
+        pvr_vertex_t* dest = pvr_dr_target(dr_state_);
+        memcpy(dest, ptr, 32);
+        pvr_dr_commit(dest);
+        ptr += 32;
+        remaining -= 32;
+    }
+    buffer.clear();
+#else
+    _S_UNUSED(buffer);
+    _S_UNUSED(list_type);
+#endif
+}
+
 void PVRRenderer::on_post_render() {
 #ifdef __DREAMCAST__
     if(scene_begun_) {
+        flush_list_buffer(pt_buffer_, PVR_LIST_PT_POLY);
+        flush_list_buffer(tr_buffer_, PVR_LIST_TR_POLY);
+
         S_VERBOSE("Finishing scene");
         pvr_scene_finish();
         scene_begun_ = false;

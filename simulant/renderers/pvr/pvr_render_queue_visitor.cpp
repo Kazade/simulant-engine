@@ -56,10 +56,9 @@ typedef struct {
 
 PVRRenderQueueVisitor::PVRRenderQueueVisitor(PVRRenderer* renderer, CameraPtr camera):
     renderer_(renderer),
-    camera_(camera),
-    prev_list_type_(-1) {
+    camera_(camera) {
 #ifdef __DREAMCAST__
-    memset(&dr_state_, 0, sizeof(dr_state_));
+    memset(&poly_hdr_, 0, sizeof(poly_hdr_));
 #endif
 }
 
@@ -74,10 +73,6 @@ void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
     _S_UNUSED(frame_id);
     _S_UNUSED(stage_node);
 
-    prev_list_type_ = -1;
-    deferred_pt_.clear();
-    deferred_tr_.clear();
-
     /* Get ambient light from the stage if available */
     if(stage_node) {
         ambient_[0] = 0.2f;
@@ -87,60 +82,13 @@ void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
     }
 
     S_VERBOSE("Init DR state");
-    pvr_dr_init(&dr_state_);
-}
-
-void PVRRenderQueueVisitor::apply_deferred_state(const DeferredEntry& e) {
-    current_list_type_ = e.list_type;
-    texturing_enabled_ = e.texturing_enabled;
-    depth_test_enabled_ = e.depth_test_enabled;
-    depth_write_enabled_ = e.depth_write_enabled;
-    cull_mode_ = e.cull_mode;
-    blend_src_ = e.blend_src;
-    blend_dst_ = e.blend_dst;
-    depth_func_ = e.depth_func;
-    shade_mode_ = e.shade_mode;
-    fog_type_ = e.fog_type;
-    memcpy(mat_diffuse_, e.mat_diffuse, sizeof(mat_diffuse_));
-    memcpy(mat_ambient_, e.mat_ambient, sizeof(mat_ambient_));
-    memcpy(mat_specular_, e.mat_specular, sizeof(mat_specular_));
-    mat_shininess_ = e.mat_shininess;
-    memcpy(lights_, e.lights, sizeof(lights_));
-    memcpy(ambient_, e.ambient, sizeof(ambient_));
-}
-
-void PVRRenderQueueVisitor::flush_deferred(std::vector<DeferredEntry>& entries) {
-    for(const auto& e : entries) {
-        apply_deferred_state(e);
-        ensure_list_opened(e.list_type);
-        do_visit(e.renderable, e.pass, 0);
-    }
-    entries.clear();
+    pvr_dr_init(&renderer_->dr_state_);
 }
 
 void PVRRenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
                                            StageNode* stage_node) {
     _S_UNUSED(queue);
     _S_UNUSED(stage_node);
-
-#ifdef __DREAMCAST__
-    /* Close the OP list, then submit deferred PT then TR so each PVR list
-     * is written in one contiguous block with no continuation needed. */
-    if(prev_list_type_ >= 0) {
-        S_VERBOSE("Finishing list {0}", prev_list_type_);
-        pvr_list_finish();
-        prev_list_type_ = -1;
-    }
-
-    flush_deferred(deferred_pt_);
-    flush_deferred(deferred_tr_);
-
-    if(prev_list_type_ >= 0) {
-        S_VERBOSE("Finishing list {0}", prev_list_type_);
-        pvr_list_finish();
-        prev_list_type_ = -1;
-    }
-#endif
 }
 
 /* ========================================================================
@@ -187,95 +135,121 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 
     /* Determine PVR list type based on blend mode */
     auto blend = next->blend_func();
-    int new_list_type;
     if(blend == BLEND_NONE) {
-        new_list_type = PVR_LIST_OP_POLY;
+        renderer_->current_list_type_ = PVR_LIST_OP_POLY;
     } else if(blend == BLEND_MASK) {
-        new_list_type = PVR_LIST_PT_POLY;
+        renderer_->current_list_type_ = PVR_LIST_PT_POLY;
     } else {
-        new_list_type = PVR_LIST_TR_POLY;
+        renderer_->current_list_type_ = PVR_LIST_TR_POLY;
     }
-
-    /* OP geometry is submitted immediately; PT and TR are deferred until after
-     * all OP geometry so each PVR list is written exactly once. */
-    if(new_list_type == PVR_LIST_OP_POLY) {
-        ensure_list_opened(new_list_type);
-    }
-
-    current_list_type_ = new_list_type;
-
-    /* Cache material state */
-    texturing_enabled_ = (next->textures_enabled() & BASE_COLOR_MAP_ENABLED) != 0;
-    depth_test_enabled_ = next->is_depth_test_enabled();
-    depth_write_enabled_ = next->is_depth_write_enabled();
 
 #ifdef __DREAMCAST__
     /* Map blend modes to PVR blend factors */
+    int blend_src, blend_dst;
     switch(blend) {
         case BLEND_NONE:
-            blend_src_ = PVR_BLEND_ONE;
-            blend_dst_ = PVR_BLEND_ZERO;
+            blend_src = PVR_BLEND_ONE;
+            blend_dst = PVR_BLEND_ZERO;
             break;
         case BLEND_ADD:
-            blend_src_ = PVR_BLEND_SRCALPHA;
-            blend_dst_ = PVR_BLEND_ONE;
+            blend_src = PVR_BLEND_SRCALPHA;
+            blend_dst = PVR_BLEND_ONE;
             break;
         case BLEND_ALPHA:
-            blend_src_ = PVR_BLEND_SRCALPHA;
-            blend_dst_ = PVR_BLEND_INVSRCALPHA;
+            blend_src = PVR_BLEND_SRCALPHA;
+            blend_dst = PVR_BLEND_INVSRCALPHA;
             break;
         case BLEND_COLOR:
-            blend_src_ = PVR_BLEND_DESTCOLOR;
-            blend_dst_ = PVR_BLEND_ZERO;
+            blend_src = PVR_BLEND_DESTCOLOR;
+            blend_dst = PVR_BLEND_ZERO;
             break;
         case BLEND_MODULATE:
-            blend_src_ = PVR_BLEND_DESTCOLOR;
-            blend_dst_ = PVR_BLEND_ZERO;
+            blend_src = PVR_BLEND_DESTCOLOR;
+            blend_dst = PVR_BLEND_ZERO;
             break;
         case BLEND_ONE_ONE_MINUS_ALPHA:
-            blend_src_ = PVR_BLEND_ONE;
-            blend_dst_ = PVR_BLEND_INVSRCALPHA;
+            blend_src = PVR_BLEND_ONE;
+            blend_dst = PVR_BLEND_INVSRCALPHA;
             break;
         default:
-            blend_src_ = PVR_BLEND_ONE;
-            blend_dst_ = PVR_BLEND_ZERO;
+            blend_src = PVR_BLEND_ONE;
+            blend_dst = PVR_BLEND_ZERO;
             break;
     }
 
     /* Map depth function - INVERTED because PVR uses 1/w for depth
      * where larger values are closer, opposite to OpenGL Z convention */
+    int depth_func;
     switch(next->depth_func()) {
-        case DEPTH_FUNC_NEVER: depth_func_ = PVR_DEPTHCMP_NEVER; break;
-        case DEPTH_FUNC_LESS: depth_func_ = PVR_DEPTHCMP_GREATER; break;
-        case DEPTH_FUNC_LEQUAL: depth_func_ = PVR_DEPTHCMP_GEQUAL; break;
-        case DEPTH_FUNC_EQUAL: depth_func_ = PVR_DEPTHCMP_EQUAL; break;
-        case DEPTH_FUNC_GEQUAL: depth_func_ = PVR_DEPTHCMP_LEQUAL; break;
-        case DEPTH_FUNC_GREATER: depth_func_ = PVR_DEPTHCMP_LESS; break;
-        case DEPTH_FUNC_ALWAYS: depth_func_ = PVR_DEPTHCMP_ALWAYS; break;
-        default: depth_func_ = PVR_DEPTHCMP_GEQUAL; break;
+        case DEPTH_FUNC_NEVER: depth_func = PVR_DEPTHCMP_NEVER; break;
+        case DEPTH_FUNC_LESS: depth_func = PVR_DEPTHCMP_GREATER; break;
+        case DEPTH_FUNC_LEQUAL: depth_func = PVR_DEPTHCMP_GEQUAL; break;
+        case DEPTH_FUNC_EQUAL: depth_func = PVR_DEPTHCMP_EQUAL; break;
+        case DEPTH_FUNC_GEQUAL: depth_func = PVR_DEPTHCMP_LEQUAL; break;
+        case DEPTH_FUNC_GREATER: depth_func = PVR_DEPTHCMP_LESS; break;
+        case DEPTH_FUNC_ALWAYS: depth_func = PVR_DEPTHCMP_ALWAYS; break;
+        default: depth_func = PVR_DEPTHCMP_GEQUAL; break;
     }
 
     /* Map cull mode */
+    int cull_mode;
     switch(next->cull_mode()) {
-        case CULL_MODE_NONE: cull_mode_ = PVR_CULLING_NONE; break;
-        case CULL_MODE_BACK_FACE: cull_mode_ = PVR_CULLING_CW; break;
-        case CULL_MODE_FRONT_FACE: cull_mode_ = PVR_CULLING_CCW; break;
-        case CULL_MODE_FRONT_AND_BACK_FACE: cull_mode_ = PVR_CULLING_SMALL; break;
-        default: cull_mode_ = PVR_CULLING_CW; break;
+        case CULL_MODE_NONE: cull_mode = PVR_CULLING_NONE; break;
+        case CULL_MODE_BACK_FACE: cull_mode = PVR_CULLING_CW; break;
+        case CULL_MODE_FRONT_FACE: cull_mode = PVR_CULLING_CCW; break;
+        case CULL_MODE_FRONT_AND_BACK_FACE: cull_mode = PVR_CULLING_SMALL; break;
+        default: cull_mode = PVR_CULLING_CW; break;
     }
 
-    /* Shade model */
-    shade_mode_ = (next->shade_model() == SHADE_MODEL_FLAT) ?
+    int shade_mode = (next->shade_model() == SHADE_MODEL_FLAT) ?
         PVR_SHADE_FLAT : PVR_SHADE_GOURAUD;
 
-    /* Fog */
+    int fog_type;
     switch(next->fog_mode()) {
-        case FOG_MODE_NONE: fog_type_ = PVR_FOG_DISABLE; break;
-        case FOG_MODE_LINEAR: fog_type_ = PVR_FOG_TABLE; break;
-        case FOG_MODE_EXP: fog_type_ = PVR_FOG_TABLE; break;
-        case FOG_MODE_EXP2: fog_type_ = PVR_FOG_TABLE; break;
-        default: fog_type_ = PVR_FOG_DISABLE; break;
+        case FOG_MODE_NONE: fog_type = PVR_FOG_DISABLE; break;
+        case FOG_MODE_LINEAR: fog_type = PVR_FOG_TABLE; break;
+        case FOG_MODE_EXP: fog_type = PVR_FOG_TABLE; break;
+        case FOG_MODE_EXP2: fog_type = PVR_FOG_TABLE; break;
+        default: fog_type = PVR_FOG_DISABLE; break;
     }
+
+    /* Look up texture and build polygon context, then compile to poly_hdr_ */
+    pvr_poly_cxt_t cxt;
+    PVRTextureObject* tex_obj = nullptr;
+    if((next->textures_enabled() & BASE_COLOR_MAP_ENABLED) != 0) {
+        auto tex = next->base_color_map();
+        if(tex) {
+            tex_obj = renderer_->texture_manager().bind_texture(tex->_renderer_specific_id());
+        }
+    }
+
+    if(tex_obj && tex_obj->texture_vram) {
+        pvr_poly_cxt_txr(&cxt, renderer_->current_list_type_,
+                         tex_obj->format,
+                         tex_obj->width, tex_obj->height,
+                         (pvr_ptr_t)tex_obj->texture_vram,
+                         (tex_obj->filter == TEXTURE_FILTER_BILINEAR) ?
+                             PVR_FILTER_BILINEAR : PVR_FILTER_NONE);
+    } else {
+        pvr_poly_cxt_col(&cxt, renderer_->current_list_type_);
+    }
+
+    cxt.fmt.color = PVR_CLRFMT_4FLOATS;
+    cxt.fmt.uv = PVR_UVFMT_32BIT;
+    cxt.gen.color_clamp = PVR_CLRCLAMP_ENABLE;
+    cxt.gen.shading = shade_mode;
+    cxt.gen.culling = cull_mode;
+    cxt.gen.fog_type = fog_type;
+    cxt.depth.comparison = next->is_depth_test_enabled() ? depth_func : PVR_DEPTHCMP_ALWAYS;
+    cxt.depth.write = next->is_depth_write_enabled() ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE;
+    cxt.blend.src = blend_src;
+    cxt.blend.dst = blend_dst;
+
+    if(renderer_->current_list_type_ == PVR_LIST_TR_POLY) {
+        cxt.gen.alpha = PVR_ALPHA_ENABLE;
+    }
+
+    pvr_poly_compile(&poly_hdr_, &cxt);
 #endif
 }
 
@@ -309,26 +283,6 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
     }
 }
 
-/* ========================================================================
- * ensure_list_opened - open a PVR list if not already open
- * ======================================================================== */
-
-void PVRRenderQueueVisitor::ensure_list_opened(int list_type) {
-#ifdef __DREAMCAST__
-    if(list_type == prev_list_type_) return;
-
-    if(prev_list_type_ >= 0) {
-        S_VERBOSE("Finishing list {0}", prev_list_type_);
-        pvr_list_finish();
-    }
-
-    S_VERBOSE("Beginning list {0}", list_type);
-    pvr_list_begin(list_type);
-    prev_list_type_ = list_type;
-#else
-    _S_UNUSED(list_type);
-#endif
-}
 
 /* ========================================================================
  * Near-plane clipping support
@@ -397,33 +351,6 @@ static inline ClipVertex lerp_vertex(const ClipVertex& v1, const ClipVertex& v2,
 void PVRRenderQueueVisitor::visit(const Renderable* renderable,
                                    const MaterialPass* pass,
                                    batcher::Iteration iteration) {
-    if(current_list_type_ != PVR_LIST_OP_POLY) {
-        DeferredEntry e;
-        e.renderable = renderable;
-        e.pass = pass;
-        e.list_type = current_list_type_;
-        e.texturing_enabled = texturing_enabled_;
-        e.depth_test_enabled = depth_test_enabled_;
-        e.depth_write_enabled = depth_write_enabled_;
-        e.cull_mode = cull_mode_;
-        e.blend_src = blend_src_;
-        e.blend_dst = blend_dst_;
-        e.depth_func = depth_func_;
-        e.shade_mode = shade_mode_;
-        e.fog_type = fog_type_;
-        memcpy(e.mat_diffuse, mat_diffuse_, sizeof(mat_diffuse_));
-        memcpy(e.mat_ambient, mat_ambient_, sizeof(mat_ambient_));
-        memcpy(e.mat_specular, mat_specular_, sizeof(mat_specular_));
-        e.mat_shininess = mat_shininess_;
-        memcpy(e.lights, lights_, sizeof(lights_));
-        memcpy(e.ambient, ambient_, sizeof(ambient_));
-        if(current_list_type_ == PVR_LIST_PT_POLY) {
-            deferred_pt_.push_back(e);
-        } else {
-            deferred_tr_.push_back(e);
-        }
-        return;
-    }
     do_visit(renderable, pass, iteration);
 }
 
@@ -450,63 +377,18 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     float hh = 240.0f; /* Half-height */
 
     /* ================================================================
-     * Build polygon context and header
+     * Submit or buffer the pre-compiled polygon header
      * ================================================================ */
-    pvr_poly_cxt_t cxt;
-
-    /* Check if we have a texture */
-    PVRTextureObject* tex_obj = nullptr;
-    if(texturing_enabled_) {
-        auto tex = material_pass->base_color_map();
-        if(tex) {
-            tex_obj = renderer_->texture_manager().bind_texture(tex->_renderer_specific_id());
-        }
-    }
-
-    if(tex_obj && tex_obj->texture_vram) {
-        /* Determine PVR texture format */
-        int pvr_format = tex_obj->format;
-
-        pvr_poly_cxt_txr(&cxt, current_list_type_,
-                         pvr_format,
-                         tex_obj->width, tex_obj->height,
-                         (pvr_ptr_t)tex_obj->texture_vram,
-                         (tex_obj->filter == TEXTURE_FILTER_BILINEAR) ?
-                             PVR_FILTER_BILINEAR : PVR_FILTER_NONE);
+    if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
+        pvr_vertex_t* hdr_dest = pvr_dr_target(renderer_->dr_state_);
+        memcpy(hdr_dest, &poly_hdr_, sizeof(pvr_poly_hdr_t));
+        pvr_dr_commit(hdr_dest);
     } else {
-        /* Untextured polygon context */
-        pvr_poly_cxt_col(&cxt, current_list_type_);
+        auto& buf = (renderer_->current_list_type_ == PVR_LIST_PT_POLY) ? renderer_->pt_buffer_ : renderer_->tr_buffer_;
+        std::size_t off = buf.size();
+        buf.resize(off + sizeof(pvr_poly_hdr_t));
+        memcpy(buf.data() + off, &poly_hdr_, sizeof(pvr_poly_hdr_t));
     }
-
-    /* Use floating point color format (Type 5) */
-    cxt.fmt.color = PVR_CLRFMT_4FLOATS;
-    cxt.fmt.uv = PVR_UVFMT_32BIT;
-    // Let the GPU clamp colors
-    cxt.gen.color_clamp = PVR_CLRCLAMP_ENABLE;
-
-    cxt.gen.shading = shade_mode_;
-    cxt.gen.culling = cull_mode_;
-    cxt.gen.fog_type = fog_type_;
-
-    /* Enable proper depth testing and writing
-     * depth_func_ is already inverted in change_material_pass */
-    cxt.depth.comparison = depth_test_enabled_ ? depth_func_ : PVR_DEPTHCMP_ALWAYS;
-    cxt.depth.write = depth_write_enabled_ ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE;
-
-    cxt.blend.src = blend_src_;
-    cxt.blend.dst = blend_dst_;
-
-    if(current_list_type_ == PVR_LIST_TR_POLY) {
-        cxt.gen.alpha = PVR_ALPHA_ENABLE;
-    }
-
-    pvr_poly_hdr_t hdr;
-    pvr_poly_compile(&hdr, &cxt);
-
-    /* Submit polygon header via direct rendering (32 bytes) */
-    pvr_vertex_t* hdr_dest = pvr_dr_target(dr_state_);
-    memcpy(hdr_dest, &hdr, sizeof(hdr));
-    pvr_dr_commit(hdr_dest);
 
     /* ================================================================
      * Read vertex data and transform
@@ -658,9 +540,9 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         return cv;
     };
 
-    /* Lambda to do perspective divide and submit a ClipVertex to PVR
-     * Uses 64-byte Type 5 vertex format (floating point colors)
-     * with direct rendering via store queues */
+    /* Lambda to do perspective divide and emit a ClipVertex.
+     * For OP: submits directly via store queues (64-byte Type 5 format).
+     * For PT/TR: appends the vertex to the deferred buffer. */
     auto submit_clip_vertex = [&](const ClipVertex& cv, bool is_last) {
         /* Apply viewport transform (done before perspective divide for PVR) */
         float vx = cv.x * hw + hw * cv.w;
@@ -675,8 +557,6 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         float sy = vy * inv_w;
         float sz = inv_w;  /* PVR uses 1/w for depth */
 
-        /* Submit 64-byte Type 5 vertex via direct rendering.
-         * Type 5 requires two 32-byte store queue writes. */
         pvr_vertex_type5_t vert;
         vert.flags = is_last ? PVR_CMD_VERTEX_EOL : PVR_CMD_VERTEX;
         vert.x = sx;
@@ -695,28 +575,35 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         vert.offset_g = 0.0f;
         vert.offset_b = 0.0f;
 
-        /* Use direct rendering - write two 32-byte chunks via store queues */
-        pvr_vertex_t* dest1 = pvr_dr_target(dr_state_);
-        *((uint32_t*)dest1 + 0) = vert.flags;
-        *((float*)dest1 + 1) = vert.x;
-        *((float*)dest1 + 2) = vert.y;
-        *((float*)dest1 + 3) = vert.z;
-        *((float*)dest1 + 4) = vert.u;
-        *((float*)dest1 + 5) = vert.v;
-        *((uint32_t*)dest1 + 6) = 0;  /* padding */
-        *((uint32_t*)dest1 + 7) = 0;  /* padding */
-        pvr_dr_commit(dest1);
+        if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
+            /* Submit 64-byte Type 5 vertex via direct rendering (two 32-byte writes) */
+            pvr_vertex_t* dest1 = pvr_dr_target(renderer_->dr_state_);
+            *((uint32_t*)dest1 + 0) = vert.flags;
+            *((float*)dest1 + 1) = vert.x;
+            *((float*)dest1 + 2) = vert.y;
+            *((float*)dest1 + 3) = vert.z;
+            *((float*)dest1 + 4) = vert.u;
+            *((float*)dest1 + 5) = vert.v;
+            *((uint32_t*)dest1 + 6) = 0;  /* padding */
+            *((uint32_t*)dest1 + 7) = 0;  /* padding */
+            pvr_dr_commit(dest1);
 
-        pvr_vertex_t* dest2 = pvr_dr_target(dr_state_);
-        *((float*)dest2 + 0) = vert.base_a;
-        *((float*)dest2 + 1) = vert.base_r;
-        *((float*)dest2 + 2) = vert.base_g;
-        *((float*)dest2 + 3) = vert.base_b;
-        *((float*)dest2 + 4) = vert.offset_a;
-        *((float*)dest2 + 5) = vert.offset_r;
-        *((float*)dest2 + 6) = vert.offset_g;
-        *((float*)dest2 + 7) = vert.offset_b;
-        pvr_dr_commit(dest2);
+            pvr_vertex_t* dest2 = pvr_dr_target(renderer_->dr_state_);
+            *((float*)dest2 + 0) = vert.base_a;
+            *((float*)dest2 + 1) = vert.base_r;
+            *((float*)dest2 + 2) = vert.base_g;
+            *((float*)dest2 + 3) = vert.base_b;
+            *((float*)dest2 + 4) = vert.offset_a;
+            *((float*)dest2 + 5) = vert.offset_r;
+            *((float*)dest2 + 6) = vert.offset_g;
+            *((float*)dest2 + 7) = vert.offset_b;
+            pvr_dr_commit(dest2);
+        } else {
+            auto& buf = (renderer_->current_list_type_ == PVR_LIST_PT_POLY) ? renderer_->pt_buffer_ : renderer_->tr_buffer_;
+            std::size_t off = buf.size();
+            buf.resize(off + sizeof(pvr_vertex_type5_t));
+            memcpy(buf.data() + off, &vert, sizeof(pvr_vertex_type5_t));
+        }
     };
 
     /* Lambda to process a triangle with near-plane clipping */
@@ -745,7 +632,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 ClipVertex c02 = lerp_vertex(v0, v2, t02);
                 submit_clip_vertex(v0, false);
                 submit_clip_vertex(c01, false);
-                submit_clip_vertex(c02, true);  /* Always EOL for triangle end */
+                submit_clip_vertex(c02, true);
                 break;
             }
 
@@ -756,7 +643,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 ClipVertex c12 = lerp_vertex(v1, v2, t12);
                 submit_clip_vertex(c10, false);
                 submit_clip_vertex(v1, false);
-                submit_clip_vertex(c12, true);  /* Always EOL for triangle end */
+                submit_clip_vertex(c12, true);
                 break;
             }
 
@@ -767,7 +654,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 ClipVertex c21 = lerp_vertex(v2, v1, t21);
                 submit_clip_vertex(c20, false);
                 submit_clip_vertex(c21, false);
-                submit_clip_vertex(v2, true);  /* Always EOL for triangle end */
+                submit_clip_vertex(v2, true);
                 break;
             }
 
@@ -779,11 +666,11 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 /* Triangle 1: v0, v1, c02 */
                 submit_clip_vertex(v0, false);
                 submit_clip_vertex(v1, false);
-                submit_clip_vertex(c02, true);  /* EOL to end first triangle */
+                submit_clip_vertex(c02, true);
                 /* Triangle 2: v1, c12, c02 */
                 submit_clip_vertex(v1, false);
                 submit_clip_vertex(c12, false);
-                submit_clip_vertex(c02, true);  /* Always EOL for triangle end */
+                submit_clip_vertex(c02, true);
                 break;
             }
 
@@ -795,11 +682,11 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 /* Triangle 1: v0, c01, v2 */
                 submit_clip_vertex(v0, false);
                 submit_clip_vertex(c01, false);
-                submit_clip_vertex(v2, true);  /* EOL to end first triangle */
+                submit_clip_vertex(v2, true);
                 /* Triangle 2: c01, c21, v2 */
                 submit_clip_vertex(c01, false);
                 submit_clip_vertex(c21, false);
-                submit_clip_vertex(v2, true);  /* Always EOL for triangle end */
+                submit_clip_vertex(v2, true);
                 break;
             }
 
@@ -811,11 +698,11 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 /* Triangle 1: c10, v1, c20 */
                 submit_clip_vertex(c10, false);
                 submit_clip_vertex(v1, false);
-                submit_clip_vertex(c20, true);  /* EOL to end first triangle */
+                submit_clip_vertex(c20, true);
                 /* Triangle 2: v1, v2, c20 */
                 submit_clip_vertex(v1, false);
                 submit_clip_vertex(v2, false);
-                submit_clip_vertex(c20, true);  /* Always EOL for triangle end */
+                submit_clip_vertex(c20, true);
                 break;
             }
         }

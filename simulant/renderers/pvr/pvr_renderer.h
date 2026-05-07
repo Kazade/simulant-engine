@@ -52,7 +52,20 @@ public:
     PVRTextureManager& texture_manager() { return texture_manager_; }
 
 private:
+friend class PVRRenderQueueVisitor;
     PVRTextureManager texture_manager_;
+
+    int current_list_type_ = 0; /* PVR_LIST_OP_POLY */
+    int prev_list_type_ = -1;
+
+    #ifdef __DREAMCAST__
+        pvr_dr_state_t dr_state_;
+        std::vector<uint8_t> pt_buffer_; /* PT headers+vertices pending deferred submission */
+        std::vector<uint8_t> tr_buffer_; /* TR headers+vertices pending deferred submission */
+    #endif
+
+    void flush_list_buffer(std::vector<uint8_t>& buffer, int list_type);
+    void ensure_list_opened(int list_type);
 
     void on_pre_render() override;
     void on_post_render() override;
