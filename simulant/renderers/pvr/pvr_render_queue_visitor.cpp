@@ -472,23 +472,20 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     auto color_mat_mode = material_pass->color_material();
     bool lighting_enabled = material_pass->is_lighting_enabled() && normal_offset;
 
+    /* Load MVP into XMTRX once — all per-vertex position transforms use FTRV */
+    shz_xmtrx_load_4x4(mvp.native());
+
     /* Lambda to read a vertex and transform to clip space with lighting */
     auto read_and_transform_vertex = [&](uint32_t index) -> ClipVertex {
         const uint8_t* ptr = raw_data + (stride * index);
         ClipVertex cv;
 
         /* Position */
-        float px, py, pz;
-        {
-            const float* p = (const float*)(ptr + pos_offset);
-            px = p[0]; py = p[1]; pz = p[2];
-        }
+        const float* p = (const float*)(ptr + pos_offset);
 
-        /* Transform by MVP to clip space */
-        cv.x = mvp[0] * px + mvp[4] * py + mvp[8]  * pz + mvp[12];
-        cv.y = mvp[1] * px + mvp[5] * py + mvp[9]  * pz + mvp[13];
-        cv.z = mvp[2] * px + mvp[6] * py + mvp[10] * pz + mvp[14];
-        cv.w = mvp[3] * px + mvp[7] * py + mvp[11] * pz + mvp[15];
+        /* Transform by MVP using FTRV (SH4 matrix-vector multiply, 8 cycles) */
+        shz_vec4_t clip = shz_xmtrx_transform_vec4(shz_vec4_init(p[0], p[1], p[2], 1.0f));
+        cv.x = clip.x; cv.y = clip.y; cv.z = clip.z; cv.w = clip.w;
 
         /* UV */
         cv.u = 0.0f; cv.v = 0.0f;
@@ -536,11 +533,12 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         /* Simple per-vertex directional lighting if enabled */
         if(lighting_enabled) {
             const float* n_ptr = (const float*)(ptr + normal_offset);
-            float nx = n_ptr[0], ny = n_ptr[1], nz = n_ptr[2];
 
-            float mvn_x = modelview[0]*nx + modelview[4]*ny + modelview[8]*nz;
-            float mvn_y = modelview[1]*nx + modelview[5]*ny + modelview[9]*nz;
-            float mvn_z = modelview[2]*nx + modelview[6]*ny + modelview[10]*nz;
+            /* Transform normal by modelview using FIPR (does not clobber XMTRX) */
+            shz_vec3_t mvn = shz_mat4x4_transform_vec3(
+                modelview.native(),
+                shz_vec3_init(n_ptr[0], n_ptr[1], n_ptr[2]));
+            float mvn_x = mvn.x, mvn_y = mvn.y, mvn_z = mvn.z;
 
             /* Normalize - FIPR squared magnitude, FSRRA reciprocal sqrt */
             float mag_sqr = shz_mag_sqr3f(mvn_x, mvn_y, mvn_z);
