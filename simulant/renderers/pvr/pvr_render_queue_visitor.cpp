@@ -16,6 +16,7 @@
 #include <dc/pvr.h>
 #include <dc/matrix.h>
 #include <dc/fmath.h>
+#include <sh4zam/shz_sh4zam.h>
 #else
 /* Provide fallback definitions for non-Dreamcast builds (stub compilation) */
 #define PVR_LIST_OP_POLY 0
@@ -48,6 +49,85 @@ typedef struct {
     float offset_g;     /* Offset color green */
     float offset_b;     /* Offset color blue */
 } __attribute__((aligned(32))) pvr_vertex_type5_t;
+
+/* Texture size (power-of-2, 8..1024) -> PVR size index 0..7 */
+static inline uint32_t pvr_txr_size_idx(int sz) {
+    return (uint32_t)(__builtin_ctz((unsigned)sz) - 3);
+}
+
+/* Build pvr_poly_hdr_t directly without going through pvr_poly_cxt_t.
+ *
+ * Fixed for all our draw calls:
+ *   color format  = PVR_CLRFMT_4FLOATS
+ *   UV format     = PVR_UVFMT_32BIT  (= 0, contributes nothing)
+ *   color clamp   = enabled
+ *   txr_alpha     = PVR_TXRALPHA_ENABLE (= 0, contributes nothing)
+ *   uv_flip/clamp = none  (= 0)
+ *   mipmap_bias   = PVR_MIPBIAS_NORMAL (= 4)
+ *   mipmap        = disabled (= 0)
+ *   no modifier volumes, no user-clip, no specular */
+static inline void pvr_build_poly_hdr(
+    pvr_poly_hdr_t* hdr,
+    int list_type,
+    int shade_mode,
+    int depth_func,
+    int depth_write,
+    int cull_mode,
+    int blend_src,
+    int blend_dst,
+    int fog_type,
+    const PVRTextureObject* tex_obj)
+{
+    const int textured = (tex_obj != nullptr) ? 1 : 0;
+    /* alpha enabled for translucent and punch-through lists */
+    const int alpha = (list_type != PVR_LIST_OP_POLY) ? 1 : 0;
+
+    /* CMD: base | texture-enable (bit 3) | list type (26:24)
+     *          | color format (6:4) | shade mode (bit 1) */
+    hdr->cmd = PVR_CMD_POLYHDR
+             | ((uint32_t)textured   << 3)
+             | ((uint32_t)list_type  << PVR_TA_CMD_TYPE_SHIFT)
+             | (PVR_CLRFMT_4FLOATS   << PVR_TA_CMD_CLRFMT_SHIFT)
+             | ((uint32_t)shade_mode << PVR_TA_CMD_SHADE_SHIFT);
+
+    /* mode1: depth compare (31:29) | cull (28:27)
+     *        | depth write (26) | texture enable (25) */
+    hdr->mode1 = ((uint32_t)depth_func  << PVR_TA_PM1_DEPTHCMP_SHIFT)
+               | ((uint32_t)cull_mode   << PVR_TA_PM1_CULLING_SHIFT)
+               | ((uint32_t)depth_write << PVR_TA_PM1_DEPTHWRITE_SHIFT)
+               | ((uint32_t)textured    << PVR_TA_PM1_TXRENABLE_SHIFT);
+
+    /* mode2: src blend (31:29) | dst blend (28:26) | fog (23:22)
+     *        | color clamp (21) | alpha (20) */
+    hdr->mode2 = ((uint32_t)blend_src  << PVR_TA_PM2_SRCBLEND_SHIFT)
+               | ((uint32_t)blend_dst  << PVR_TA_PM2_DSTBLEND_SHIFT)
+               | ((uint32_t)fog_type   << PVR_TA_PM2_FOG_SHIFT)
+               | (PVR_CLRCLAMP_ENABLE  << PVR_TA_PM2_CLAMP_SHIFT)
+               | ((uint32_t)alpha      << PVR_TA_PM2_ALPHA_SHIFT);
+
+    hdr->mode3 = 0;
+
+    if(textured) {
+        /* env: MODULATEALPHA for alpha lists, MODULATE for opaque */
+        const int env    = alpha ? PVR_TXRENV_MODULATEALPHA : PVR_TXRENV_MODULATE;
+        const int filter = (tex_obj->filter == TEXTURE_FILTER_BILINEAR)
+                         ? PVR_FILTER_BILINEAR : PVR_FILTER_NONE;
+        const uint32_t u        = pvr_txr_size_idx(tex_obj->width);
+        const uint32_t v        = pvr_txr_size_idx(tex_obj->height);
+        const uint32_t txr_base = ((uint32_t)tex_obj->texture_vram & 0x00fffff8u) >> 3;
+
+        hdr->mode2 |= (PVR_MIPBIAS_NORMAL  << PVR_TA_PM2_MIPBIAS_SHIFT)
+                    | ((uint32_t)env        << PVR_TA_PM2_TXRENV_SHIFT)
+                    | (u                    << PVR_TA_PM2_USIZE_SHIFT)
+                    | (v                    << PVR_TA_PM2_VSIZE_SHIFT)
+                    | ((uint32_t)filter     << __builtin_ctz(PVR_TA_PM2_FILTER));
+
+        /* mode3: format bits are pre-encoded; OR in the VRAM address >> 3 */
+        hdr->mode3 = (uint32_t)tex_obj->format | txr_base;
+    }
+    /* bytes 16-31 are unused for non-modifier polygon headers;
+     * they were zeroed at construction and we leave them as-is */
+}
 #endif
 
 /* ========================================================================
@@ -103,9 +183,11 @@ void PVRRenderQueueVisitor::change_render_group(const batcher::RenderGroup* prev
 
 void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
                                                   const MaterialPass* next) {
-    _S_UNUSED(prev);
     pass_ = next;
     if(!next) return;
+
+    /* Nothing changed — poly_hdr_ and material properties are still valid */
+    if(prev == next) return;
 
     /* Convert PBR to traditional material values */
     auto values = pbr_to_traditional(
@@ -160,9 +242,6 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             blend_dst = PVR_BLEND_INVSRCALPHA;
             break;
         case BLEND_COLOR:
-            blend_src = PVR_BLEND_DESTCOLOR;
-            blend_dst = PVR_BLEND_ZERO;
-            break;
         case BLEND_MODULATE:
             blend_src = PVR_BLEND_DESTCOLOR;
             blend_dst = PVR_BLEND_ZERO;
@@ -181,75 +260,60 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
      * where larger values are closer, opposite to OpenGL Z convention */
     int depth_func;
     switch(next->depth_func()) {
-        case DEPTH_FUNC_NEVER: depth_func = PVR_DEPTHCMP_NEVER; break;
-        case DEPTH_FUNC_LESS: depth_func = PVR_DEPTHCMP_GREATER; break;
-        case DEPTH_FUNC_LEQUAL: depth_func = PVR_DEPTHCMP_GEQUAL; break;
-        case DEPTH_FUNC_EQUAL: depth_func = PVR_DEPTHCMP_EQUAL; break;
-        case DEPTH_FUNC_GEQUAL: depth_func = PVR_DEPTHCMP_LEQUAL; break;
-        case DEPTH_FUNC_GREATER: depth_func = PVR_DEPTHCMP_LESS; break;
-        case DEPTH_FUNC_ALWAYS: depth_func = PVR_DEPTHCMP_ALWAYS; break;
-        default: depth_func = PVR_DEPTHCMP_GEQUAL; break;
+        case DEPTH_FUNC_NEVER:   depth_func = PVR_DEPTHCMP_NEVER;   break;
+        case DEPTH_FUNC_LESS:    depth_func = PVR_DEPTHCMP_GREATER;  break;
+        case DEPTH_FUNC_LEQUAL:  depth_func = PVR_DEPTHCMP_GEQUAL;  break;
+        case DEPTH_FUNC_EQUAL:   depth_func = PVR_DEPTHCMP_EQUAL;   break;
+        case DEPTH_FUNC_GEQUAL:  depth_func = PVR_DEPTHCMP_LEQUAL;  break;
+        case DEPTH_FUNC_GREATER: depth_func = PVR_DEPTHCMP_LESS;    break;
+        case DEPTH_FUNC_ALWAYS:  depth_func = PVR_DEPTHCMP_ALWAYS;  break;
+        default:                 depth_func = PVR_DEPTHCMP_GEQUAL;  break;
     }
 
     /* Map cull mode */
     int cull_mode;
     switch(next->cull_mode()) {
-        case CULL_MODE_NONE: cull_mode = PVR_CULLING_NONE; break;
-        case CULL_MODE_BACK_FACE: cull_mode = PVR_CULLING_CW; break;
-        case CULL_MODE_FRONT_FACE: cull_mode = PVR_CULLING_CCW; break;
-        case CULL_MODE_FRONT_AND_BACK_FACE: cull_mode = PVR_CULLING_SMALL; break;
-        default: cull_mode = PVR_CULLING_CW; break;
+        case CULL_MODE_NONE:               cull_mode = PVR_CULLING_NONE;  break;
+        case CULL_MODE_BACK_FACE:          cull_mode = PVR_CULLING_CW;    break;
+        case CULL_MODE_FRONT_FACE:         cull_mode = PVR_CULLING_CCW;   break;
+        case CULL_MODE_FRONT_AND_BACK_FACE:cull_mode = PVR_CULLING_SMALL; break;
+        default:                           cull_mode = PVR_CULLING_CW;    break;
     }
 
-    int shade_mode = (next->shade_model() == SHADE_MODEL_FLAT) ?
-        PVR_SHADE_FLAT : PVR_SHADE_GOURAUD;
+    const int shade_mode = (next->shade_model() == SHADE_MODEL_FLAT)
+                         ? PVR_SHADE_FLAT : PVR_SHADE_GOURAUD;
 
     int fog_type;
     switch(next->fog_mode()) {
-        case FOG_MODE_NONE: fog_type = PVR_FOG_DISABLE; break;
-        case FOG_MODE_LINEAR: fog_type = PVR_FOG_TABLE; break;
-        case FOG_MODE_EXP: fog_type = PVR_FOG_TABLE; break;
-        case FOG_MODE_EXP2: fog_type = PVR_FOG_TABLE; break;
-        default: fog_type = PVR_FOG_DISABLE; break;
+        case FOG_MODE_LINEAR:
+        case FOG_MODE_EXP:
+        case FOG_MODE_EXP2: fog_type = PVR_FOG_TABLE;   break;
+        default:            fog_type = PVR_FOG_DISABLE;  break;
     }
 
-    /* Look up texture and build polygon context, then compile to poly_hdr_ */
-    pvr_poly_cxt_t cxt;
+    /* Resolve texture — bind_texture uploads if needed and returns VRAM object */
     PVRTextureObject* tex_obj = nullptr;
     if((next->textures_enabled() & BASE_COLOR_MAP_ENABLED) != 0) {
         auto tex = next->base_color_map();
         if(tex) {
             tex_obj = renderer_->texture_manager().bind_texture(tex->_renderer_specific_id());
+            if(tex_obj && !tex_obj->texture_vram)
+                tex_obj = nullptr;  /* upload failed or not ready */
         }
     }
 
-    if(tex_obj && tex_obj->texture_vram) {
-        pvr_poly_cxt_txr(&cxt, renderer_->current_list_type_,
-                         tex_obj->format,
-                         tex_obj->width, tex_obj->height,
-                         (pvr_ptr_t)tex_obj->texture_vram,
-                         (tex_obj->filter == TEXTURE_FILTER_BILINEAR) ?
-                             PVR_FILTER_BILINEAR : PVR_FILTER_NONE);
-    } else {
-        pvr_poly_cxt_col(&cxt, renderer_->current_list_type_);
-    }
-
-    cxt.fmt.color = PVR_CLRFMT_4FLOATS;
-    cxt.fmt.uv = PVR_UVFMT_32BIT;
-    cxt.gen.color_clamp = PVR_CLRCLAMP_ENABLE;
-    cxt.gen.shading = shade_mode;
-    cxt.gen.culling = cull_mode;
-    cxt.gen.fog_type = fog_type;
-    cxt.depth.comparison = next->is_depth_test_enabled() ? depth_func : PVR_DEPTHCMP_ALWAYS;
-    cxt.depth.write = next->is_depth_write_enabled() ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE;
-    cxt.blend.src = blend_src;
-    cxt.blend.dst = blend_dst;
-
-    if(renderer_->current_list_type_ == PVR_LIST_TR_POLY) {
-        cxt.gen.alpha = PVR_ALPHA_ENABLE;
-    }
-
-    pvr_poly_compile(&poly_hdr_, &cxt);
+    pvr_build_poly_hdr(
+        &poly_hdr_,
+        renderer_->current_list_type_,
+        shade_mode,
+        next->is_depth_test_enabled() ? depth_func : PVR_DEPTHCMP_ALWAYS,
+        next->is_depth_write_enabled() ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE,
+        cull_mode,
+        blend_src,
+        blend_dst,
+        fog_type,
+        tex_obj
+    );
 #endif
 }
 
@@ -478,10 +542,10 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             float mvn_y = modelview[1]*nx + modelview[5]*ny + modelview[9]*nz;
             float mvn_z = modelview[2]*nx + modelview[6]*ny + modelview[10]*nz;
 
-            /* Normalize */
-            float len = sqrtf(mvn_x*mvn_x + mvn_y*mvn_y + mvn_z*mvn_z);
-            if(len > 0.0001f) {
-                float inv_len = 1.0f / len;
+            /* Normalize - FIPR squared magnitude, FSRRA reciprocal sqrt */
+            float mag_sqr = shz_mag_sqr3f(mvn_x, mvn_y, mvn_z);
+            if(mag_sqr > 1e-8f) {
+                float inv_len = shz_inv_sqrtf_fsrra(mag_sqr);
                 mvn_x *= inv_len; mvn_y *= inv_len; mvn_z *= inv_len;
             }
 
@@ -499,9 +563,9 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     lx = -lights_[li].position[0];
                     ly = -lights_[li].position[1];
                     lz = -lights_[li].position[2];
-                    float l_len = sqrtf(lx*lx + ly*ly + lz*lz);
-                    if(l_len > 0.0001f) {
-                        float inv = 1.0f / l_len;
+                    float l_mag_sqr = shz_mag_sqr3f(lx, ly, lz);
+                    if(l_mag_sqr > 1e-8f) {
+                        float inv = shz_inv_sqrtf_fsrra(l_mag_sqr);
                         lx *= inv; ly *= inv; lz *= inv;
                     }
                 } else {
@@ -509,9 +573,11 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     lx = lights_[li].position[0] - vx;
                     ly = lights_[li].position[1] - vy;
                     lz = lights_[li].position[2] - vz;
-                    float dist = sqrtf(lx*lx + ly*ly + lz*lz);
-                    if(dist > 0.0001f) {
-                        float inv = 1.0f / dist;
+                    float l_mag_sqr = shz_mag_sqr3f(lx, ly, lz);
+                    float dist = 0.0f;
+                    if(l_mag_sqr > 1e-8f) {
+                        float inv = shz_inv_sqrtf_fsrra(l_mag_sqr);
+                        dist = l_mag_sqr * inv;  /* sqrt(mag_sqr) = mag_sqr * (1/sqrt(mag_sqr)) */
                         lx *= inv; ly *= inv; lz *= inv;
                     }
                     float range = lights_[li].range;
@@ -519,7 +585,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     if(atten < 0.0f) atten = 0.0f;
                 }
 
-                float ndotl = mvn_x * lx + mvn_y * ly + mvn_z * lz;
+                float ndotl = shz_dot6f(mvn_x, mvn_y, mvn_z, lx, ly, lz);
                 if(ndotl < 0.0f) ndotl = 0.0f;
 
                 float intensity = lights_[li].intensity * atten;
@@ -551,7 +617,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         /* Perspective divide */
         float w = cv.w;
         if(w == 0.0f) w = FLT_EPSILON;
-        float inv_w = 1.0f / w;
+        float inv_w = shz_invf(w);
 
         float sx = vx * inv_w;
         float sy = vy * inv_w;
