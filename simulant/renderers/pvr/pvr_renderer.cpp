@@ -132,7 +132,9 @@ void PVRRenderer::pre_render() {
     scene_begun_ = true;
 
     pt_buffer_.clear();
+    pt_buffer_.reserve(32 * 1024);
     tr_buffer_.clear();
+    tr_buffer_.reserve(64 * 1024);
 
     prev_list_type_ = -1;
     current_list_type_ = PVR_LIST_OP_POLY;
