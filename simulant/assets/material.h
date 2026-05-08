@@ -31,6 +31,7 @@
 #include "../utils/limited_vector.h"
 #include "materials/constants.h"
 #include "materials/material_object.h"
+#include "materials/core/core_material_props.h"
 
 namespace smlt {
 
@@ -159,11 +160,58 @@ public:
                              const T& value);
 
     bool on_clear_override(MaterialPropertyNameHash hsh) override;
-
     bool on_check_existence(MaterialPropertyNameHash hsh) const override;
 
     bool property_type(const char* property_name,
                        MaterialPropertyType* type) const override;
+
+    /* Named accessors shadowing MaterialObject — bypass virtual dispatch
+     * when called through a MaterialPass* (defined after Material below). */
+    const Color& base_color() const;
+    const Color& specular_color() const;
+    const Color& fog_color() const;
+    float metallic() const;
+    float roughness() const;
+    float specular() const;
+    float point_size() const;
+    float alpha_threshold() const;
+    float fog_density() const;
+    float fog_start() const;
+    float fog_end() const;
+    int32_t textures_enabled() const;
+    BlendType blend_func() const;
+    bool is_blending_enabled() const;
+    DepthFunc depth_func() const;
+    CullMode cull_mode() const;
+    ShadeModel shade_model() const;
+    ColorMaterial color_material() const;
+    PolygonMode polygon_mode() const;
+    FogMode fog_mode() const;
+    bool is_depth_write_enabled() const;
+    bool is_depth_test_enabled() const;
+    bool is_lighting_enabled() const;
+
+    void set_base_color(const Color& v);
+    void set_specular_color(const Color& v);
+    void set_fog_color(const Color& v);
+    void set_metallic(float v);
+    void set_roughness(float v);
+    void set_specular(float v);
+    void set_alpha_threshold(float v);
+    void set_fog_density(float v);
+    void set_fog_start(float v);
+    void set_fog_end(float v);
+    void set_textures_enabled(EnabledTextureMask v);
+    void set_blend_func(BlendType v);
+    void set_depth_func(DepthFunc v);
+    void set_cull_mode(CullMode v);
+    void set_shade_model(ShadeModel v);
+    void set_color_material(ColorMaterial v);
+    void set_polygon_mode(PolygonMode v);
+    void set_fog_mode(FogMode v);
+    void set_depth_write_enabled(bool v);
+    void set_depth_test_enabled(bool v);
+    void set_lighting_enabled(bool v);
 
 private:
     MaterialPass(Material* material, uint8_t pass_number);
@@ -173,6 +221,10 @@ private:
     uint8_t max_iterations_ = 1;
     Material* material_ = nullptr;
     GPUProgramPtr program_ = nullptr;
+
+    /* Flat override storage — no pool, no pointer chain. */
+    CoreMaterialProps pass_props_;
+    uint32_t override_mask_ = 0;
 };
 
 typedef uint8_t PropertyIndex;
@@ -239,6 +291,10 @@ public:
 private:
     Renderer* renderer_ = nullptr;
     LimitedVector<MaterialPass, MAX_MATERIAL_PASSES> passes_;
+
+    /* Flat storage for all core scalar/bool/Color/enum properties.
+     * Eliminates pool pointer chain (4 pointer hops) for hot render-state fields. */
+    CoreMaterialProps base_props_;
 
     struct MaterialPropertyEntry {
         MaterialPropertyNameHash hsh = 0;
@@ -428,10 +484,62 @@ public:
         return _property_value(hsh, out);
     }
 
+    /* Named accessors shadowing MaterialObject — direct struct read,
+     * no virtual dispatch, no hash lookup, no pool pointer chain. */
+    const Color& base_color() const     { return base_props_.base_color; }
+    const Color& specular_color() const { return base_props_.specular_color; }
+    const Color& fog_color() const      { return base_props_.fog_color; }
+    float metallic() const              { return base_props_.metallic; }
+    float roughness() const             { return base_props_.roughness; }
+    float specular() const              { return base_props_.specular; }
+    float point_size() const            { return base_props_.point_size; }
+    float alpha_threshold() const       { return base_props_.alpha_threshold; }
+    float fog_density() const           { return base_props_.fog_density; }
+    float fog_start() const             { return base_props_.fog_start; }
+    float fog_end() const               { return base_props_.fog_end; }
+    int32_t textures_enabled() const    { return base_props_.textures_enabled; }
+    BlendType blend_func() const        { return (BlendType)base_props_.blend_func; }
+    bool is_blending_enabled() const    { return base_props_.blend_func != (int32_t)BLEND_NONE; }
+    DepthFunc depth_func() const        { return (DepthFunc)base_props_.depth_func; }
+    CullMode cull_mode() const          { return (CullMode)base_props_.cull_mode; }
+    ShadeModel shade_model() const      { return (ShadeModel)base_props_.shade_model; }
+    ColorMaterial color_material() const{ return (ColorMaterial)base_props_.color_material; }
+    PolygonMode polygon_mode() const    { return (PolygonMode)base_props_.polygon_mode; }
+    FogMode fog_mode() const            { return (FogMode)base_props_.fog_mode; }
+    bool is_depth_write_enabled() const { return base_props_.depth_write_enabled; }
+    bool is_depth_test_enabled() const  { return base_props_.depth_test_enabled; }
+    bool is_lighting_enabled() const    { return base_props_.lighting_enabled; }
+
+    void set_base_color(const Color& v)        { base_props_.base_color = v; }
+    void set_specular_color(const Color& v)    { base_props_.specular_color = v; }
+    void set_fog_color(const Color& v)         { base_props_.fog_color = v; }
+    void set_metallic(float v)                 { base_props_.metallic = v; }
+    void set_roughness(float v)                { base_props_.roughness = v; }
+    void set_specular(float v)                 { base_props_.specular = v; }
+    void set_alpha_threshold(float v)          { base_props_.alpha_threshold = v; }
+    void set_fog_density(float v)              { base_props_.fog_density = v; }
+    void set_fog_start(float v)                { base_props_.fog_start = v; }
+    void set_fog_end(float v)                  { base_props_.fog_end = v; }
+    void set_textures_enabled(EnabledTextureMask v){ base_props_.textures_enabled = (int32_t)v; }
+    void set_blend_func(BlendType v)           { base_props_.blend_func = (int32_t)v; }
+    void set_depth_func(DepthFunc v)           { base_props_.depth_func = (int32_t)v; }
+    void set_cull_mode(CullMode v)             { base_props_.cull_mode = (int32_t)v; }
+    void set_shade_model(ShadeModel v)         { base_props_.shade_model = (int32_t)v; }
+    void set_color_material(ColorMaterial v)   { base_props_.color_material = (int32_t)v; }
+    void set_polygon_mode(PolygonMode v)       { base_props_.polygon_mode = (int32_t)v; }
+    void set_fog_mode(FogMode v)               { base_props_.fog_mode = (int32_t)v; }
+    void set_depth_write_enabled(bool v)       { base_props_.depth_write_enabled = v; }
+    void set_depth_test_enabled(bool v)        { base_props_.depth_test_enabled = v; }
+    void set_lighting_enabled(bool v)          { base_props_.lighting_enabled = v; }
+
     template<typename T>
     bool _property_value(const MaterialPropertyNameHash hsh,
                          const T*& out) const {
+        /* Core scalar/bool/Color/enum: direct struct read, no pool */
+        const T* core = core_scalar_ptr<T>(base_props_, hsh);
+        if(core) { out = core; return true; }
 
+        /* TexturePtr, Mat4, custom properties remain in the pool */
         auto it = find_entry(hsh);
         if(it && it->entries[0]) {
             out = it->entries[0].get<T>();
@@ -446,7 +554,11 @@ public:
     template<typename T>
     bool _set_property_value(MaterialPropertyNameHash hsh, const char* name,
                              const T& value) {
+        /* Core scalar/bool/Color/enum: write directly to struct */
+        T* core = core_scalar_mutable_ptr<T>(base_props_, hsh);
+        if(core) { *core = value; return false; }
 
+        /* TexturePtr, Mat4, custom properties use the pool */
         auto property_value_ptr = _get_pool()->get_or_create_value(value);
         auto it = find_entry_or_last_in_bucket(hsh);
         bool ret = false;
@@ -469,6 +581,11 @@ public:
                        MaterialPropertyType* type) const override {
         auto hsh = material_property_hash(name);
 
+        /* Core scalar/bool/Color/enum properties live in base_props_, not pool */
+        if(core_property_type(hsh, type)) {
+            return true;
+        }
+
         auto it = find_entry(hsh);
         if(it && it->entries[0]) {
             *type = it->entries[0].type();
@@ -479,52 +596,237 @@ public:
     }
 
     bool on_check_existence(MaterialPropertyNameHash hsh) const override {
+        /* Core properties always exist */
+        if(core_mask_for_hash(hsh)) return true;
         auto it = find_entry(hsh);
         return it && it->entries[0];
     }
 };
 
+inline bool MaterialPass::on_clear_override(MaterialPropertyNameHash hsh) {
+    uint32_t bit = core_mask_for_hash(hsh);
+    if(bit) {
+        if(override_mask_ & bit) {
+            override_mask_ &= ~bit;
+            return true;
+        }
+        return false;
+    }
+    auto material = (Material*)parent_;
+    auto it = material->find_entry(hsh);
+    if(it && it->entries[pass_number_ + 1]) {
+        it->entries[pass_number_ + 1].reset();
+        return true;
+    }
+    return false;
+}
+
+inline bool MaterialPass::on_check_existence(MaterialPropertyNameHash hsh) const {
+    uint32_t bit = core_mask_for_hash(hsh);
+    if(bit) {
+        return (override_mask_ & bit) != 0;
+    }
+    auto material = (Material*)parent_;
+    auto it = material->find_entry(hsh);
+    return it && it->entries[pass_number_ + 1];
+}
+
 template<typename T>
 bool MaterialPass::_set_property_value(MaterialPropertyNameHash hsh,
                                        const char* name, const T& value) {
+    /* Core scalar/bool/Color/enum: write to pass struct and set mask bit */
+    T* core = core_scalar_mutable_ptr<T>(pass_props_, hsh);
+    if(core) {
+        *core = value;
+        override_mask_ |= core_mask_for_hash(hsh);
+        return false;
+    }
 
+    /* TexturePtr, Mat4, custom: use pool on parent Material */
     clear_override(hsh);
 
     auto material = (Material*)parent_;
     auto it = material->find_entry(hsh);
-
     if(it == nullptr) {
-        // Material passes should not add entries if the parent material
-        // hasn't added it
         return false;
     }
 
     auto property_value_ptr = material->_get_pool()->get_or_create_value(value);
-
     it->entries[pass_number_ + 1] = property_value_ptr;
     on_override(hsh, name, property_value_ptr.type());
-
     return true;
 }
 
 template<typename T>
 bool MaterialPass::_property_value(const MaterialPropertyNameHash hsh,
                                    const T*& out) const {
+    /* Core scalar/bool/Color/enum: direct struct read, no pool */
+    uint32_t mask = core_mask_for_hash(hsh);
+    if(mask) {
+        if(override_mask_ & mask) {
+            out = core_scalar_ptr<T>(pass_props_, hsh);
+        } else {
+            out = core_scalar_ptr<T>(material_->base_props_, hsh);
+        }
+        return out != nullptr;
+    }
 
+    /* TexturePtr, Mat4, custom: pool path */
     auto it = material()->find_entry(hsh);
     if(it) {
         if(it->entries[pass_number_ + 1]) {
             out = it->entries[pass_number_ + 1].get<T>();
             return true;
         }
-
         if(it->entries[0]) {
             out = it->entries[0].get<T>();
             return true;
         }
     }
-
     return false;
+}
+
+/* MaterialPass named accessor definitions (need Material to be complete).
+ * These shadow MaterialObject methods — direct struct read, no virtual dispatch. */
+inline const Color& MaterialPass::base_color() const {
+    return (override_mask_ & CORE_MASK_BASE_COLOR) ? pass_props_.base_color : material_->base_props_.base_color;
+}
+inline const Color& MaterialPass::specular_color() const {
+    return (override_mask_ & CORE_MASK_SPECULAR_COLOR) ? pass_props_.specular_color : material_->base_props_.specular_color;
+}
+inline const Color& MaterialPass::fog_color() const {
+    return (override_mask_ & CORE_MASK_FOG_COLOR) ? pass_props_.fog_color : material_->base_props_.fog_color;
+}
+inline float MaterialPass::metallic() const {
+    return (override_mask_ & CORE_MASK_METALLIC) ? pass_props_.metallic : material_->base_props_.metallic;
+}
+inline float MaterialPass::roughness() const {
+    return (override_mask_ & CORE_MASK_ROUGHNESS) ? pass_props_.roughness : material_->base_props_.roughness;
+}
+inline float MaterialPass::specular() const {
+    return (override_mask_ & CORE_MASK_SPECULAR) ? pass_props_.specular : material_->base_props_.specular;
+}
+inline float MaterialPass::point_size() const {
+    return (override_mask_ & CORE_MASK_POINT_SIZE) ? pass_props_.point_size : material_->base_props_.point_size;
+}
+inline float MaterialPass::alpha_threshold() const {
+    return (override_mask_ & CORE_MASK_ALPHA_THRESHOLD) ? pass_props_.alpha_threshold : material_->base_props_.alpha_threshold;
+}
+inline float MaterialPass::fog_density() const {
+    return (override_mask_ & CORE_MASK_FOG_DENSITY) ? pass_props_.fog_density : material_->base_props_.fog_density;
+}
+inline float MaterialPass::fog_start() const {
+    return (override_mask_ & CORE_MASK_FOG_START) ? pass_props_.fog_start : material_->base_props_.fog_start;
+}
+inline float MaterialPass::fog_end() const {
+    return (override_mask_ & CORE_MASK_FOG_END) ? pass_props_.fog_end : material_->base_props_.fog_end;
+}
+inline int32_t MaterialPass::textures_enabled() const {
+    return (override_mask_ & CORE_MASK_TEXTURES_ENABLED) ? pass_props_.textures_enabled : material_->base_props_.textures_enabled;
+}
+inline BlendType MaterialPass::blend_func() const {
+    const int32_t v = (override_mask_ & CORE_MASK_BLEND_FUNC) ? pass_props_.blend_func : material_->base_props_.blend_func;
+    return (BlendType)v;
+}
+inline bool MaterialPass::is_blending_enabled() const {
+    return blend_func() != BLEND_NONE;
+}
+inline DepthFunc MaterialPass::depth_func() const {
+    const int32_t v = (override_mask_ & CORE_MASK_DEPTH_FUNC) ? pass_props_.depth_func : material_->base_props_.depth_func;
+    return (DepthFunc)v;
+}
+inline CullMode MaterialPass::cull_mode() const {
+    const int32_t v = (override_mask_ & CORE_MASK_CULL_MODE) ? pass_props_.cull_mode : material_->base_props_.cull_mode;
+    return (CullMode)v;
+}
+inline ShadeModel MaterialPass::shade_model() const {
+    const int32_t v = (override_mask_ & CORE_MASK_SHADE_MODEL) ? pass_props_.shade_model : material_->base_props_.shade_model;
+    return (ShadeModel)v;
+}
+inline ColorMaterial MaterialPass::color_material() const {
+    const int32_t v = (override_mask_ & CORE_MASK_COLOR_MATERIAL) ? pass_props_.color_material : material_->base_props_.color_material;
+    return (ColorMaterial)v;
+}
+inline PolygonMode MaterialPass::polygon_mode() const {
+    const int32_t v = (override_mask_ & CORE_MASK_POLYGON_MODE) ? pass_props_.polygon_mode : material_->base_props_.polygon_mode;
+    return (PolygonMode)v;
+}
+inline FogMode MaterialPass::fog_mode() const {
+    const int32_t v = (override_mask_ & CORE_MASK_FOG_MODE) ? pass_props_.fog_mode : material_->base_props_.fog_mode;
+    return (FogMode)v;
+}
+inline bool MaterialPass::is_depth_write_enabled() const {
+    return (override_mask_ & CORE_MASK_DEPTH_WRITE) ? pass_props_.depth_write_enabled : material_->base_props_.depth_write_enabled;
+}
+inline bool MaterialPass::is_depth_test_enabled() const {
+    return (override_mask_ & CORE_MASK_DEPTH_TEST) ? pass_props_.depth_test_enabled : material_->base_props_.depth_test_enabled;
+}
+inline bool MaterialPass::is_lighting_enabled() const {
+    return (override_mask_ & CORE_MASK_LIGHTING) ? pass_props_.lighting_enabled : material_->base_props_.lighting_enabled;
+}
+
+inline void MaterialPass::set_base_color(const Color& v) {
+    pass_props_.base_color = v; override_mask_ |= CORE_MASK_BASE_COLOR;
+}
+inline void MaterialPass::set_specular_color(const Color& v) {
+    pass_props_.specular_color = v; override_mask_ |= CORE_MASK_SPECULAR_COLOR;
+}
+inline void MaterialPass::set_fog_color(const Color& v) {
+    pass_props_.fog_color = v; override_mask_ |= CORE_MASK_FOG_COLOR;
+}
+inline void MaterialPass::set_metallic(float v) {
+    pass_props_.metallic = v; override_mask_ |= CORE_MASK_METALLIC;
+}
+inline void MaterialPass::set_roughness(float v) {
+    pass_props_.roughness = v; override_mask_ |= CORE_MASK_ROUGHNESS;
+}
+inline void MaterialPass::set_specular(float v) {
+    pass_props_.specular = v; override_mask_ |= CORE_MASK_SPECULAR;
+}
+inline void MaterialPass::set_alpha_threshold(float v) {
+    pass_props_.alpha_threshold = v; override_mask_ |= CORE_MASK_ALPHA_THRESHOLD;
+}
+inline void MaterialPass::set_fog_density(float v) {
+    pass_props_.fog_density = v; override_mask_ |= CORE_MASK_FOG_DENSITY;
+}
+inline void MaterialPass::set_fog_start(float v) {
+    pass_props_.fog_start = v; override_mask_ |= CORE_MASK_FOG_START;
+}
+inline void MaterialPass::set_fog_end(float v) {
+    pass_props_.fog_end = v; override_mask_ |= CORE_MASK_FOG_END;
+}
+inline void MaterialPass::set_textures_enabled(EnabledTextureMask v) {
+    pass_props_.textures_enabled = (int32_t)v; override_mask_ |= CORE_MASK_TEXTURES_ENABLED;
+}
+inline void MaterialPass::set_blend_func(BlendType v) {
+    pass_props_.blend_func = (int32_t)v; override_mask_ |= CORE_MASK_BLEND_FUNC;
+}
+inline void MaterialPass::set_depth_func(DepthFunc v) {
+    pass_props_.depth_func = (int32_t)v; override_mask_ |= CORE_MASK_DEPTH_FUNC;
+}
+inline void MaterialPass::set_cull_mode(CullMode v) {
+    pass_props_.cull_mode = (int32_t)v; override_mask_ |= CORE_MASK_CULL_MODE;
+}
+inline void MaterialPass::set_shade_model(ShadeModel v) {
+    pass_props_.shade_model = (int32_t)v; override_mask_ |= CORE_MASK_SHADE_MODEL;
+}
+inline void MaterialPass::set_color_material(ColorMaterial v) {
+    pass_props_.color_material = (int32_t)v; override_mask_ |= CORE_MASK_COLOR_MATERIAL;
+}
+inline void MaterialPass::set_polygon_mode(PolygonMode v) {
+    pass_props_.polygon_mode = (int32_t)v; override_mask_ |= CORE_MASK_POLYGON_MODE;
+}
+inline void MaterialPass::set_fog_mode(FogMode v) {
+    pass_props_.fog_mode = (int32_t)v; override_mask_ |= CORE_MASK_FOG_MODE;
+}
+inline void MaterialPass::set_depth_write_enabled(bool v) {
+    pass_props_.depth_write_enabled = v; override_mask_ |= CORE_MASK_DEPTH_WRITE;
+}
+inline void MaterialPass::set_depth_test_enabled(bool v) {
+    pass_props_.depth_test_enabled = v; override_mask_ |= CORE_MASK_DEPTH_TEST;
+}
+inline void MaterialPass::set_lighting_enabled(bool v) {
+    pass_props_.lighting_enabled = v; override_mask_ |= CORE_MASK_LIGHTING;
 }
 }
 
