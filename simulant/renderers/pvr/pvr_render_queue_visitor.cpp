@@ -461,12 +461,14 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * ================================================================ */
     if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
         pvr_vertex_t* hdr_dest = pvr_dr_target(renderer_->dr_state_);
-        memcpy(hdr_dest, &poly_hdr_, sizeof(pvr_poly_hdr_t));
+        shz_memcpy32(hdr_dest, &poly_hdr_, sizeof(pvr_poly_hdr_t));
         pvr_dr_commit(hdr_dest);
     } else {
         auto& buf = (renderer_->current_list_type_ == PVR_LIST_PT_POLY) ? renderer_->pt_buffer_ : renderer_->tr_buffer_;
         const uint8_t* hdr_bytes = reinterpret_cast<const uint8_t*>(&poly_hdr_);
-        buf.insert(buf.end(), hdr_bytes, hdr_bytes + sizeof(pvr_poly_hdr_t));
+        auto size = buf.size();
+        buf.resize(size + sizeof(pvr_poly_hdr_t));
+        shz_memcpy32(&buf[size], hdr_bytes, sizeof(pvr_poly_hdr_t));
     }
 
     /* ================================================================
