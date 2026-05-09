@@ -113,14 +113,11 @@ void RenderQueue::insert_renderable(Renderable&& renderable) {
 }
 
 void RenderQueue::clear() {
-    thread::Lock<thread::Mutex> lock(queue_lock_);
     render_queue_.clear();
     sorted_indices_.clear();
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
-    thread::Lock<thread::Mutex> lock(queue_lock_);
-
     /* Build and sort an index array — sorting uint32_t is 32x cheaper than
      * sorting Renderable structs directly. Capacity is retained across frames. */
     const uint32_t n = (uint32_t) render_queue_.size();

@@ -499,7 +499,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         return;
     }
 
-    const Mat4& model = renderable->final_transformation;
+    const Mat4& model = *renderable->final_transformation;
     const Mat4& view = camera_->view_matrix();
 
     Mat4 modelview = view * model;

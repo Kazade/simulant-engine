@@ -75,7 +75,7 @@ struct alignas(8) Renderable final {
     std::size_t vertex_range_count = 0;
 
     RenderPriority render_priority = RENDER_PRIORITY_MAIN;
-    Mat4 final_transformation;
+    const Mat4* final_transformation = nullptr;
     Material* material = nullptr;
     bool is_visible = true;
 

@@ -17,6 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <algorithm>
 #include <unordered_map>
 
 #include "application.h"
@@ -64,15 +65,18 @@ void Compositor::clean_destroyed_layers() {
 #ifndef NDEBUG
         auto c = ordered_pipelines_.size();
 #endif
-        ordered_pipelines_.remove(pip);
+        ordered_pipelines_.erase(
+            std::remove(ordered_pipelines_.begin(), ordered_pipelines_.end(), pip),
+            ordered_pipelines_.end()
+        );
 #ifndef NDEBUG
         assert(ordered_pipelines_.size() < c);
 #endif
 
         auto id = pip->id_;
-        pool_.remove_if([id](const Layer::ptr& pip) -> bool {
-            return pip->id_ == id;
-        });
+        pool_.erase(std::remove_if(pool_.begin(), pool_.end(),
+            [id](const Layer::ptr& p) { return p->id_ == id; }
+        ), pool_.end());
     }
     queued_for_destruction_.clear();
 }
@@ -145,13 +149,9 @@ bool Compositor::has_layer(const std::string& name) {
 }
 
 void Compositor::sort_layers() {
-    auto do_sort = [&]() {
-        ordered_pipelines_.sort(
-            [](LayerPtr lhs, LayerPtr rhs) { return lhs->priority() < rhs->priority(); }
-        );
-    };
-
-    do_sort();
+    std::sort(ordered_pipelines_.begin(), ordered_pipelines_.end(),
+        [](LayerPtr lhs, LayerPtr rhs) { return lhs->priority() < rhs->priority(); }
+    );
 }
 
 LayerPtr Compositor::create_layer(
@@ -188,7 +188,7 @@ void Compositor::run() {
     _S_PROFILE_SECTION("clean");
     clean_destroyed_layers();  /* Clean up any destroyed pipelines before rendering */
 
-    targets_rendered_this_frame_.clear();
+    window_cleared_this_frame_ = false;
 
     /* Perform any pre-rendering tasks */
     renderer_->pre_render();
@@ -280,11 +280,11 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
      * traversal
      */
     _S_PROFILE_SECTION("check");
-    uint64_t frame_id = generate_frame_id();
-
     if(!pipeline_stage->is_active()) {
         return;
     }
+
+    uint64_t frame_id = generate_frame_id();
 
     if(!pipeline_stage->is_complete()) {
         S_DEBUG("Stage or camera has been destroyed, disabling pipeline");
@@ -304,8 +304,7 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
      * been rendered each frame and this list is cleared at the start of run().
      */
     _S_PROFILE_SECTION("clear");
-    if(targets_rendered_this_frame_.find(&target) ==
-       targets_rendered_this_frame_.end()) {
+    if(!window_cleared_this_frame_) {
         if(target.clear_every_frame_flags()) {
             Viewport view(smlt::VIEWPORT_TYPE_FULL,
                           target.clear_every_frame_color());
@@ -314,7 +313,7 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
                              target.clear_every_frame_flags());
         }
 
-        targets_rendered_this_frame_.insert(&target);
+        window_cleared_this_frame_ = true;
     }
 
     auto& viewport = pipeline_stage->viewport;
@@ -361,18 +360,14 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
 
     _S_PROFILE_SECTION("reset");
     // Reset it, ready for this pipeline
-    render_queue_.reset(stage_node, window->renderer.get(), camera);
+    render_queue_.reset(stage_node, renderer_, camera);
 
     _S_PROFILE_SUBSECTION("build-renderables");
-    StageNodeVisitorBFS node_finder(
-        stage_node, std::bind(build_renderables, lights_visible, &render_queue_,
-                              camera, pipeline_stage, std::placeholders::_1));
-
-    while(node_finder.call_next()) {}
+    traverse_bfs(stage_node, [&](StageNode* node) {
+        build_renderables(lights_visible, &render_queue_, camera, pipeline_stage, node);
+    });
 
     actors_rendered += render_queue_.renderable_count();
-
-    using namespace std::placeholders;
 
     _S_PROFILE_SECTION("traverse");
     auto visitor = renderer_->get_render_queue_visitor(camera);
@@ -386,7 +381,6 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
                                                       stage_node);
 
     signal_layer_render_finished_(*pipeline_stage);
-    render_queue_.clear();
 }
 
 SceneCompositor::SceneCompositor(Scene* scene, Compositor* global_compositor):

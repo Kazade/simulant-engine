@@ -96,16 +96,13 @@ void Transform::rotate(const Degrees& x, const Degrees& y, const Degrees& z) {
     rotate(q);
 }
 
-Mat4 Transform::world_space_matrix() const {
-    if(!absolute_transformation_is_dirty_) {
-        return absolute_transformation_;
+const Mat4& Transform::world_space_matrix() const {
+    _ensure_clean();
+    if(absolute_transformation_is_dirty_) {
+        absolute_transformation_ =
+            smlt::Mat4::as_transform(position_, orientation_, scale_);
+        absolute_transformation_is_dirty_ = false;
     }
-
-    // auto p = (parent_) ? parent_->world_space_matrix() : Mat4();
-    absolute_transformation_ =
-        smlt::Mat4::as_transform(position_, orientation_, scale_);
-
-    absolute_transformation_is_dirty_ = false;
     return absolute_transformation_;
 }
 
@@ -118,6 +115,7 @@ void Transform::set_translation_2d(const Vec2& trans) {
 }
 
 Vec2 Transform::position_2d() const {
+    _ensure_clean();
     return position_.xy();
 }
 
@@ -126,6 +124,7 @@ Vec2 Transform::translation_2d() const {
 }
 
 smlt::Degrees Transform::orientation_2d() const {
+    _ensure_clean();
     // In 2D (X-Y plane) the orientation is the roll — rotation around Z.
     return orientation_.roll();
 }
@@ -184,24 +183,37 @@ bool Transform::remove_listener(TransformListener* listener) {
     return true;
 }
 
-void Transform::update_transformation_from_parent() {
+void Transform::update_transformation_from_parent() const {
     Transform* parent = parent_;
 
     if(!parent) {
         orientation_ = rotation_;
         position_ = translation_;
         scale_ = scale_factor_;
+        last_parent_gen_ = 0;
     } else {
-        auto parent_pos = parent->position();
-        auto parent_rot = parent->orientation();
-        auto parent_scale = parent->scale();
+        /* _ensure_clean() already resolved the parent before calling us,
+         * so reading parent->position_ etc. directly avoids a redundant
+         * recursive _ensure_clean() call through the accessor. */
+        const Vec3& parent_pos = parent->position_;
+        const Quaternion& parent_rot = parent->orientation_;
+        const Vec3& parent_scale = parent->scale_;
 
         orientation_ = parent_rot * rotation_;
         scale_ = parent_scale * scale_factor_;
         position_ = parent_pos + (parent_rot * (translation_ * parent_scale));
+        last_parent_gen_ = parent->generation_;
     }
 
+    generation_++;
     absolute_transformation_is_dirty_ = true;
+}
+
+void Transform::_ensure_clean() const {
+    if(!parent_) return;
+    if(parent_->generation_ == last_parent_gen_) return;
+    parent_->_ensure_clean();
+    update_transformation_from_parent();
 }
 
 void Transform::sync(const Transform* other) {
@@ -212,7 +224,7 @@ void Transform::sync(const Transform* other) {
 
 void Transform::look_at(const Vec3& target, const Vec3& up) {
     set_orientation(
-        Quaternion::look_rotation((target - position_).normalized(), up));
+        Quaternion::look_rotation((target - position()).normalized(), up));
 }
 
 void Transform::set_parent(Transform* new_parent,
@@ -229,17 +241,19 @@ void Transform::set_parent(Transform* new_parent,
     parent_ = new_parent;
 
     if(parent_ && retain_mode == TRANSFORM_RETAIN_MODE_KEEP) {
-        translation_ = (position_ - new_parent->position_);
-        rotation_ = (orientation_ * new_parent->orientation_.inversed());
+        /* Use lazy accessors so stale parent/self transforms are resolved
+         * before we compute the new local offsets. */
+        translation_ = (position() - new_parent->position());
+        rotation_ = (orientation() * new_parent->orientation().inversed());
         /* To keep our world scale after parent change, compute new scale_factor_
          * such that: scale_ = parent_scale * scale_factor_
          * therefore:  scale_factor_ = scale_ / parent_scale */
-        Vec3 parent_scale = new_parent->scale_;
+        Vec3 parent_scale = new_parent->scale();
         /* Protect against division by zero which causes inf */
         if(parent_scale.x == 0.0f) parent_scale.x = 1.0f;
         if(parent_scale.y == 0.0f) parent_scale.y = 1.0f;
         if(parent_scale.z == 0.0f) parent_scale.z = 1.0f;
-        scale_factor_ = scale_ / parent_scale;
+        scale_factor_ = scale() / parent_scale;
     }
 
     signal_change();
@@ -252,8 +266,10 @@ void Transform::signal_change_attempted() {
 }
 
 void Transform::signal_change() {
+    /* Ensure ancestor chain is resolved before computing our own world values,
+     * in case an ancestor was also recently moved without being propagated. */
+    if(parent_) parent_->_ensure_clean();
     update_transformation_from_parent();
-    absolute_transformation_is_dirty_ = true;
     for(auto& listener: listeners_) {
         listener->on_transformation_changed();
     }

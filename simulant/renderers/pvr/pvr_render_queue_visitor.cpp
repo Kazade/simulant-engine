@@ -444,7 +444,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     renderer_->prepare_to_render(renderable);
 
 #ifdef __DREAMCAST__
-    const auto& model = renderable->final_transformation;
+    const auto& model = *renderable->final_transformation;
     const auto& view = camera_->view_matrix();
     const auto& projection = camera_->projection_matrix();
 

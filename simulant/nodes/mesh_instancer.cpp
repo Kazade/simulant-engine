@@ -154,7 +154,7 @@ void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
         for(auto& mesh_instance: instances_) {
             auto to_insert = new_renderable; // Create a copy
             to_insert.final_transformation =
-                mesh_instance.second.abs_transformation;
+                &mesh_instance.second.abs_transformation;
             to_insert.is_visible = mesh_instance.second.is_visible;
             to_insert.center = mesh_instance.second.aabb.center();
             render_queue->insert_renderable(std::move(to_insert));

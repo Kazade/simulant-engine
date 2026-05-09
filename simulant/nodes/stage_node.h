@@ -524,7 +524,7 @@ private:
         StageNode* ptr;
     };
 
-    std::unordered_map<StageNodeType, MixinInfo> mixins_;
+    std::vector<std::pair<StageNodeType, MixinInfo>> mixins_;
 
     bool partitioner_dirty_ = false;
     bool partitioner_added_ = false;
@@ -544,6 +544,7 @@ private:
      * calculation until access */
     mutable AABB transformed_aabb_;
     mutable bool transformed_aabb_dirty_ = false;
+    mutable uint32_t last_aabb_transform_gen_ = 0;
 
     // By default, always cast and receive shadows
     ShadowCast shadow_cast_ = SHADOW_CAST_ALWAYS;
@@ -745,7 +746,8 @@ public:
     template<typename T>
     T* find_mixin() const {
         auto type = T::Meta::node_type;
-        auto it = mixins_.find(type);
+        auto it = std::find_if(mixins_.begin(), mixins_.end(),
+            [type](const std::pair<StageNodeType, MixinInfo>& p) { return p.first == type; });
         if(it != mixins_.end()) {
             return static_cast<T*>(it->second.ptr);
         }
@@ -1007,7 +1009,9 @@ T* mixin_factory(F& factory, StageNode* base, Args&&... args) {
     }
 
     auto type = T::Meta::node_type;
-    if(base->mixins_.count(type)) {
+    if(std::find_if(base->mixins_.begin(), base->mixins_.end(),
+            [type](const auto& p) { return p.first == type; })
+        != base->mixins_.end()) {
         S_WARN("Tried to create duplicate mixin");
         return nullptr;
     }

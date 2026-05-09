@@ -94,7 +94,9 @@ StageNode* StageNode::create_mixin(const std::string& node_name,
         return nullptr;
     }
 
-    if(mixins_.count(node_info->type)) {
+    if(std::find_if(mixins_.begin(), mixins_.end(),
+            [&](const std::pair<StageNodeType, MixinInfo>& p) { return p.first == node_info->type; })
+        != mixins_.end()) {
         S_WARN("Tried to create duplicate mixin");
         return nullptr;
     }
@@ -393,10 +395,15 @@ void StageNode::add_mixin(StageNode* mixin) {
     MixinInfo info;
     info.ptr = mixin;
     info.destroy_connection = mixin->signal_destroyed().connect([=]() {
-        mixins_.erase(mixin->node_type());
+        auto t = mixin->node_type();
+        mixins_.erase(
+            std::remove_if(mixins_.begin(), mixins_.end(),
+                [t](const std::pair<StageNodeType, MixinInfo>& p) { return p.first == t; }),
+            mixins_.end()
+        );
     });
 
-    mixins_.insert(std::make_pair(mixin->node_type(), info));
+    mixins_.push_back({mixin->node_type(), std::move(info)});
     auto p = node_path();
     scene->_signal_change(this, p, p, STAGE_NODE_CHANGE_MIXINS);
 }
@@ -485,16 +492,17 @@ int16_t StageNode::precedence() const {
 
 void StageNode::on_transformation_changed() {
     mark_transformed_aabb_dirty();
-
-    /* If this node's transform changes in some way, we need
-     * to trigger updates on child transforms too */
-    for(auto& child: each_child()) {
-        child.transform->signal_change();
-    }
+    /* Children detect staleness lazily via Transform::generation_ —
+     * no eager DFS needed here. */
 }
 
 void StageNode::recalc_bounds_if_necessary() const {
-    if(!transformed_aabb_dirty_) {
+    /* Lazily resolve the world transform before checking for staleness.
+     * For clean transforms this is two comparisons and a return. */
+    transform_._ensure_clean();
+
+    if(!transformed_aabb_dirty_ &&
+       transform_.generation_ == last_aabb_transform_gen_) {
         return;
     }
 
@@ -505,6 +513,7 @@ void StageNode::recalc_bounds_if_necessary() const {
     }
 
     transformed_aabb_dirty_ = false;
+    last_aabb_transform_gen_ = transform_.generation_;
 }
 
 void StageNode::mark_transformed_aabb_dirty() {

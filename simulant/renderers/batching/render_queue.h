@@ -25,7 +25,6 @@
 
 #include "../../core/aligned_allocator.h"
 #include "../../macros.h"
-#include "../../threads/shared_mutex.h"
 #include "../../types.h"
 
 namespace smlt {
@@ -195,8 +194,6 @@ private:
      * (uint32_t) so elements swapped are 32x smaller than Renderable. */
     std::vector<std::pair<RenderGroup, Renderable>> render_queue_;
     mutable std::vector<uint32_t> sorted_indices_;
-
-    mutable thread::Mutex queue_lock_;
 };
 
 }

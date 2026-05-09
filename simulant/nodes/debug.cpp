@@ -194,7 +194,8 @@ void Debug::do_generate_renderables(batcher::RenderQueue* render_queue,
         Renderable new_renderable;
 
         // Debug element positions are always absolute
-        new_renderable.final_transformation = Mat4();
+        static const Mat4 s_identity;
+        new_renderable.final_transformation = &s_identity;
         new_renderable.render_priority = render_priority();
         new_renderable.is_visible = is_visible();
         new_renderable.arrangement = submesh->arrangement();
