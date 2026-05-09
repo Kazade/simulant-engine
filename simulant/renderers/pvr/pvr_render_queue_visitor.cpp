@@ -344,6 +344,23 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
 
         state.intensity = light->intensity();
         state.range = light->range();
+
+        /* Pre-compute normalized direction for directional lights so transform_vertex
+         * doesn't normalize the same constant vector on every vertex. */
+        if(state.position[3] == 0.0f) {
+#ifdef __DREAMCAST__
+            shz_vec3_t d = shz_vec3_normalize_safe(
+                shz_vec3_init(-pos.x, -pos.y, -pos.z));
+            state.dir[0] = d.x; state.dir[1] = d.y; state.dir[2] = d.z;
+#else
+            float len = std::sqrt(pos.x*pos.x + pos.y*pos.y + pos.z*pos.z);
+            if(len > 1e-8f) {
+                state.dir[0] = -pos.x/len;
+                state.dir[1] = -pos.y/len;
+                state.dir[2] = -pos.z/len;
+            }
+#endif
+        }
     }
 }
 

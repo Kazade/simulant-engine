@@ -33,6 +33,17 @@ public:
 
     void apply_lights(const LightPtr* lights, const uint8_t count) override;
 
+    struct LightState {
+        bool enabled = false;
+        float position[4] = {0, 0, 0, 0};
+        float dir[3] = {0, 0, -1};  /* Pre-normalized direction (directional lights only) */
+        float color[4] = {1, 1, 1, 1};
+        float intensity = 1.0f;
+        float range = 100.0f;
+    };
+
+    static const int MAX_LIGHTS = 2;
+
 private:
     PVRRenderer* renderer_;
     CameraPtr camera_;
@@ -44,15 +55,6 @@ private:
     pvr_poly_hdr_t poly_hdr_; /* Compiled polygon header — the current render state */
 #endif
 
-    struct LightState {
-        bool enabled = false;
-        float position[4] = {0, 0, 0, 0};
-        float color[4] = {1, 1, 1, 1};
-        float intensity = 1.0f;
-        float range = 100.0f;
-    };
-
-    static const int MAX_LIGHTS = 2;
     LightState lights_[MAX_LIGHTS];
     float ambient_[4] = {0.2f, 0.2f, 0.2f, 1.0f};
 
