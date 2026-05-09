@@ -224,30 +224,33 @@ static bool build_renderables(
         return true;
     }
 
-    std::partial_sort(
-        lights_visible.begin(),
-        lights_visible.begin() + std::min(MAX_LIGHTS_PER_RENDERABLE, (uint32_t) lights_visible.size()),
-        lights_visible.end(),
-        [=](LightPtr lhs, LightPtr rhs) {
-            /* FIXME: Sorting by the center point is problematic. A renderable is made up
-                 * of many polygons, by choosing the light closest to the center you may find that
-                 * that polygons far away from the center aren't affected by lights when they should be.
-                 * This needs more thought, probably. */
-            if(lhs->light_type() == LIGHT_TYPE_DIRECTIONAL &&
-               rhs->light_type() != LIGHT_TYPE_DIRECTIONAL) {
-                return true;
-            } else if(rhs->light_type() == LIGHT_TYPE_DIRECTIONAL &&
-                      lhs->light_type() != LIGHT_TYPE_DIRECTIONAL) {
-                return false;
+    /* Compute AABB once — center() and distance_to_camera both need it, and
+     * the old sort lambda was calling transformed_aabb() on every comparison. */
+    const AABB node_aabb = node->transformed_aabb();
+    const Vec3 node_center = node_aabb.center();
+
+    const uint32_t n = (uint32_t) lights_visible.size();
+    const uint32_t k = std::min(MAX_LIGHTS_PER_RENDERABLE, n);
+
+    if(n > k) {
+        /* O(k*n) selection to place the k best lights in lights_visible[0..k).
+         * Directional lights always score lower (higher priority) than point lights. */
+        auto score = [&](Light* light) -> float {
+            if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) return -1.0f;
+            return (node_center - light->transform->position()).length_squared();
+        };
+        for(uint32_t i = 0; i < k; ++i) {
+            uint32_t best = i;
+            float best_score = score(lights_visible[i]);
+            for(uint32_t j = i + 1; j < n; ++j) {
+                float s = score(lights_visible[j]);
+                if(s < best_score) { best_score = s; best = j; }
             }
-
-            float lhs_dist = (node->center() - lhs->transform->position()).length_squared();
-            float rhs_dist = (node->center() - rhs->transform->position()).length_squared();
-            return lhs_dist < rhs_dist;
+            if(best != i) std::swap(lights_visible[i], lights_visible[best]);
         }
-    );
+    }
 
-    float distance_to_camera = camera->transform->position().distance_to(node->transformed_aabb());
+    float distance_to_camera = camera->transform->position().distance_to(node_aabb);
 
     /* Find the ideal detail level at this distance from the camera */
     auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);
