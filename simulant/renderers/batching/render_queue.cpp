@@ -27,6 +27,7 @@
 #include "../../partitioner.h"
 #include "../../stage.h"
 #include "../../utils/float.h"
+#include <algorithm>
 
 namespace smlt {
 namespace batcher {
@@ -72,12 +73,6 @@ void RenderQueue::reset(StageNode* stage, RenderGroupFactory* factory, CameraPtr
 }
 
 void RenderQueue::insert_renderable(Renderable&& renderable) {
-    /*
-     * Adds a renderable to the correct render groups. This goes through the
-     * material passes on the renderable, calculates the render group for each one
-     * and then adds the renderable to that pass's render queue
-     */
-
     assert(stage_node_);
     assert(camera_);
     assert(render_group_factory_);
@@ -113,17 +108,28 @@ void RenderQueue::insert_renderable(Renderable&& renderable) {
             renderable_dist_to_camera,
             color_map ? color_map->_renderer_specific_id() : 0);
 
-        render_queue_.insert(group, std::move(renderable));
+        render_queue_.emplace_back(group, std::move(renderable));
     }
 }
 
 void RenderQueue::clear() {
     thread::Lock<thread::Mutex> lock(queue_lock_);
     render_queue_.clear();
+    sorted_indices_.clear();
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
     thread::Lock<thread::Mutex> lock(queue_lock_);
+
+    /* Build and sort an index array — sorting uint32_t is 32x cheaper than
+     * sorting Renderable structs directly. Capacity is retained across frames. */
+    const uint32_t n = (uint32_t) render_queue_.size();
+    sorted_indices_.resize(n);
+    for(uint32_t i = 0; i < n; ++i) sorted_indices_[i] = i;
+    std::sort(sorted_indices_.begin(), sorted_indices_.end(),
+        [this](uint32_t a, uint32_t b) {
+            return render_queue_[a].first.sort_key.i < render_queue_[b].first.sort_key.i;
+        });
 
     visitor->start_traversal(*this, frame_id, stage_node_);
 
@@ -132,7 +138,8 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 
     const RenderGroup* last_group = nullptr;
 
-    for(auto& p: render_queue_) {
+    for(uint32_t si = 0; si < n; ++si) {
+        const auto& p = render_queue_[sorted_indices_[si]];
         const RenderGroup* current_group = &p.first;
         const Renderable* renderable = &p.second;
 
@@ -190,15 +197,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
 }
 
 Renderable* RenderQueue::renderable(std::size_t idx) {
-    std::size_t i = 0;
-    for(auto& r: render_queue_) {
-        if(i == idx) {
-            return &r.second;
-        }
-        i++;
-    }
-
-    return nullptr;
+    return idx < render_queue_.size() ? &render_queue_[idx].second : nullptr;
 }
 }
 }

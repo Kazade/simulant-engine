@@ -20,8 +20,8 @@
 
 #include <list>
 #include <set>
-
-#include "../../generic/containers/contiguous_map.h"
+#include <vector>
+#include <algorithm>
 
 #include "../../core/aligned_allocator.h"
 #include "../../macros.h"
@@ -186,19 +186,15 @@ public:
     Renderable* renderable(std::size_t idx);
 
 private:
-    // std::map is ordered, so by using the RenderGroup as the key we
-    // minimize GL state changes (e.g. if a RenderGroupImpl orders by AssetID, then ShaderID
-    // then we'll see  (TexID(1), ShaderID(1)), (TexID(1), ShaderID(2)) for example meaning the
-    // texture doesn't change even if the shader does
-    typedef ContiguousMultiMap<RenderGroup, Renderable> SortedRenderables;
-
     StageNode* stage_node_ = nullptr;
     RenderGroupFactory* render_group_factory_ = nullptr;
     CameraPtr camera_;
 
-    SortedRenderables render_queue_;
-
-    void clean_empty_batches();
+    /* Flat storage — pushed in arbitrary order, sorted at traverse time.
+     * Avoids per-frame BST rebuild; sort operates on a compact index array
+     * (uint32_t) so elements swapped are 32x smaller than Renderable. */
+    std::vector<std::pair<RenderGroup, Renderable>> render_queue_;
+    mutable std::vector<uint32_t> sorted_indices_;
 
     mutable thread::Mutex queue_lock_;
 };
