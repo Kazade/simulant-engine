@@ -389,20 +389,19 @@ static inline float clip_edge_t(const ClipVertex& v1, const ClipVertex& v2) {
     return t;
 }
 
-/* Linearly interpolate a ClipVertex from v1 to v2 at parameter t */
+/* Each shz_lerpf compiles to a single FMAC instruction on SH4. */
 static inline ClipVertex lerp_vertex(const ClipVertex& v1, const ClipVertex& v2, float t) {
     ClipVertex out;
-    float inv_t = 1.0f - t;
-    out.x = inv_t * v1.x + t * v2.x;
-    out.y = inv_t * v1.y + t * v2.y;
-    out.z = inv_t * v1.z + t * v2.z;
-    out.w = inv_t * v1.w + t * v2.w;
-    out.u = inv_t * v1.u + t * v2.u;
-    out.v = inv_t * v1.v + t * v2.v;
-    out.r = inv_t * v1.r + t * v2.r;
-    out.g = inv_t * v1.g + t * v2.g;
-    out.b = inv_t * v1.b + t * v2.b;
-    out.a = inv_t * v1.a + t * v2.a;
+    out.x = shz_lerpf(v1.x, v2.x, t);
+    out.y = shz_lerpf(v1.y, v2.y, t);
+    out.z = shz_lerpf(v1.z, v2.z, t);
+    out.w = shz_lerpf(v1.w, v2.w, t);
+    out.u = shz_lerpf(v1.u, v2.u, t);
+    out.v = shz_lerpf(v1.v, v2.v, t);
+    out.r = shz_lerpf(v1.r, v2.r, t);
+    out.g = shz_lerpf(v1.g, v2.g, t);
+    out.b = shz_lerpf(v1.b, v2.b, t);
+    out.a = shz_lerpf(v1.a, v2.a, t);
     return out;
 }
 
