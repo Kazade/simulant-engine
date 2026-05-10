@@ -789,6 +789,79 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     };
 
     /* ================================================================
+     * Strip submission state (shared by indexed and non-indexed paths)
+     *
+     * The PVR assembles triangle strips natively: only the last vertex of
+     * an entire strip needs PVR_CMD_VERTEX_EOL.  Submitting N+2 vertices is
+     * therefore cheaper than N×3 vertices.  We maintain the following state:
+     *
+     *   sp_pending  – last vertex not yet committed (its EOL flag is unknown
+     *                 until we see what the next triangle looks like)
+     *   sp_in_strip – whether the pending vertex is part of an active sub-strip
+     *
+     * Winding parity: the PVR automatically flips winding for every other
+     * triangle in a strip.  When a clip boundary forces a sub-strip restart at
+     * an ODD original strip position, we prepend a single degenerate vertex
+     * (cv0 submitted twice) so the hardware's strip counter reaches the right
+     * parity.  The degenerate triangle is zero-area and produces no pixels.
+     * ================================================================ */
+    ClipVertex sp_pending;
+    bool sp_has_pending = false;
+    bool sp_in_strip    = false;
+
+    auto sp_flush = [&](bool eol) {
+        if(sp_has_pending) {
+            submit_clip_vertex(sp_pending, eol);
+            sp_has_pending = false;
+        }
+    };
+
+    auto sp_step = [&](const ClipVertex& cv0, const ClipVertex& cv1,
+                       const ClipVertex& cv2, bool is_last, std::size_t pos) {
+        bool vis0 = is_vertex_visible(cv0);
+        bool vis1 = is_vertex_visible(cv1);
+        bool vis2 = is_vertex_visible(cv2);
+        int mask = (vis0 ? 1 : 0) | (vis1 ? 2 : 0) | (vis2 ? 4 : 0);
+
+        if(mask == 7) {
+            /* All visible. */
+            if(!sp_in_strip) {
+                /* Start a new sub-strip.  At an odd original position the PVR
+                 * strip counter is in "even" mode after EOL; prepend cv0 twice
+                 * so the first real triangle is processed with odd winding. */
+                if(pos & 1) submit_clip_vertex(cv0, false);
+                submit_clip_vertex(cv0, false);
+                submit_clip_vertex(cv1, false);
+                sp_pending    = cv2;
+                sp_has_pending = true;
+                sp_in_strip   = true;
+            } else {
+                /* Extend the strip.  cv0 and cv1 are already in the PVR strip
+                 * register from previous submissions; only cv2 is new. */
+                sp_flush(false);
+                sp_pending    = cv2;
+                sp_has_pending = true;
+            }
+            if(is_last) {
+                sp_flush(true);
+                sp_in_strip = false;
+            }
+        } else {
+            /* Clip boundary or fully invisible: end any open sub-strip. */
+            if(sp_in_strip) {
+                sp_flush(true);
+                sp_in_strip = false;
+            }
+            if(mask != 0) {
+                /* Partially visible: fall back to an individual clipped
+                 * triangle.  Odd strip positions swap cv0/cv1 for winding. */
+                if(pos & 1) process_triangle(cv1, cv0, cv2, true);
+                else        process_triangle(cv0, cv1, cv2, true);
+            }
+        }
+    };
+
+    /* ================================================================
      * Submit geometry with near-plane clipping
      * ================================================================ */
     if(renderable->index_element_count > 0 && renderable->index_data) {
@@ -816,21 +889,19 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 process_triangle(v0, v1, v2, is_last);
             }
         } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
-            /* For triangle strips, each consecutive 3 vertices form a triangle.
-             * Vertices alternate winding, which we handle by swapping v1/v2. */
             if(icount >= 3) {
+                /* Circular vertex cache: each index is looked up and transformed
+                 * exactly once, then reused for the two subsequent triangle
+                 * positions where it appears as cv0 or cv1. */
+                ClipVertex vcache[3];
+                vcache[0] = read_and_transform_vertex(get_index(0));
+                vcache[1] = read_and_transform_vertex(get_index(1));
                 for(std::size_t i = 0; i + 2 < icount; i++) {
-                    ClipVertex v0 = read_and_transform_vertex(get_index(i + 0));
-                    ClipVertex v1 = read_and_transform_vertex(get_index(i + 1));
-                    ClipVertex v2 = read_and_transform_vertex(get_index(i + 2));
-                    bool is_last = (i + 3 >= icount);
-                    /* Odd triangles have reversed winding */
-                    if(i & 1) {
-                        process_triangle(v1, v0, v2, is_last);
-                    } else {
-                        process_triangle(v0, v1, v2, is_last);
-                    }
+                    vcache[(i + 2) % 3] = read_and_transform_vertex(get_index(i + 2));
+                    sp_step(vcache[i % 3], vcache[(i + 1) % 3], vcache[(i + 2) % 3],
+                            (i + 3 >= icount), i);
                 }
+                sp_flush(true);
             }
         } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) {
             if(icount >= 3) {
@@ -861,17 +932,19 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 }
             } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
                 if(count >= 3) {
+                    /* Each range is an independent strip; reset state. */
+                    sp_has_pending = false;
+                    sp_in_strip    = false;
+                    ClipVertex vcache[3];
+                    vcache[0] = read_and_transform_vertex(start + 0);
+                    vcache[1] = read_and_transform_vertex(start + 1);
                     for(uint32_t i = 0; i + 2 < count; i++) {
-                        ClipVertex v0 = read_and_transform_vertex(start + i + 0);
-                        ClipVertex v1 = read_and_transform_vertex(start + i + 1);
-                        ClipVertex v2 = read_and_transform_vertex(start + i + 2);
+                        vcache[(i + 2) % 3] = read_and_transform_vertex(start + i + 2);
                         bool is_last = (i + 3 >= count) && (ri + 1 >= range_count);
-                        if(i & 1) {
-                            process_triangle(v1, v0, v2, is_last);
-                        } else {
-                            process_triangle(v0, v1, v2, is_last);
-                        }
+                        sp_step(vcache[i % 3], vcache[(i + 1) % 3], vcache[(i + 2) % 3],
+                                is_last, i);
                     }
+                    sp_flush(true);
                 }
             } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) {
                 if(count >= 3) {
