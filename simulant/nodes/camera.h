@@ -57,9 +57,12 @@ public:
     }
 
     Frustum& frustum() {
+        update_frustum();
         return frustum_;
     }
+
     const Frustum& frustum() const {
+        update_frustum();
         return frustum_;
     }
 
@@ -84,12 +87,14 @@ public:
 
 private:
     AABB bounds_;
-    Frustum frustum_;
+    mutable Frustum frustum_;
+    mutable bool frustum_dirty_ = true;
+    mutable uint32_t frustum_gen_ = UINT32_MAX;
 
-    Mat4 view_matrix_;
-    Mat4 projection_matrix_;
+    mutable Mat4 view_matrix_;
+    mutable Mat4 projection_matrix_;
 
-    void update_frustum();
+    void update_frustum() const;
 
     void on_transformation_changed() override;
 };

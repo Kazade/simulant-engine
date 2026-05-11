@@ -186,7 +186,7 @@ public:
         instancer->generate_renderables(&queue, camera, &viewport,
                                         DETAIL_LEVEL_NEAREST, nullptr, 0);
 
-        assert_close(queue.renderable(0)->final_transformation[12], 10.0f, 0.0001f);
+        assert_close((*queue.renderable(0)->final_transformation)[12], 10.0f, 0.0001f);
     }
 
 private:

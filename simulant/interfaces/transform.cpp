@@ -209,11 +209,17 @@ void Transform::update_transformation_from_parent() const {
     absolute_transformation_is_dirty_ = true;
 }
 
-void Transform::_ensure_clean() const {
-    if(!parent_) return;
-    if(parent_->generation_ == last_parent_gen_) return;
+bool Transform::_ensure_clean() const {
+    if(!parent_) {
+        return false;
+    }
+    if(parent_->generation_ == last_parent_gen_) {
+        return false;
+    }
+
     parent_->_ensure_clean();
     update_transformation_from_parent();
+    return true;
 }
 
 void Transform::sync(const Transform* other) {

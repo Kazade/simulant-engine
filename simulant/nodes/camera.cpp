@@ -27,28 +27,29 @@ Camera::~Camera() {}
 
 void Camera::on_transformation_changed() {
     StageNode::on_transformation_changed();
+    frustum_dirty_ = true;
     update_frustum();
 }
 
-void Camera::update_frustum() {
-    // Recalculate the view matrix
-    // view_matrix_ = Mat4::as_look_at(transform->position(),
-    //                                 transform->position() +
-    //                                     transform->orientation().forward(),
-    //                                 transform->orientation().up());
+void Camera::update_frustum() const {
+    transform->_ensure_clean();
+    if(!frustum_.initialized() || frustum_dirty_ || transform->generation() != frustum_gen_) {
+        auto rot = smlt::Mat4::as_rotation(transform->orientation());
+        auto irot = rot.inversed();
+        auto trns = smlt::Mat4::as_translation(-transform->position());
+        view_matrix_ = irot * trns;
 
-    auto rot = smlt::Mat4::as_rotation(transform->orientation());
-    auto irot = rot.inversed();
-    auto trns = smlt::Mat4::as_translation(-transform->position());
-    view_matrix_ = irot * trns;
+        Mat4 mvp = projection_matrix_ * view_matrix_;
 
-    Mat4 mvp = projection_matrix_ * view_matrix_;
-
-    frustum_.build(&mvp); // Update the frustum for this camera
+        frustum_.build(&mvp);
+        frustum_gen_ = transform->generation();
+        frustum_dirty_ = false;
+    }
 }
 
 void Camera::set_projection_matrix(const Mat4& matrix) {
     projection_matrix_ = matrix;
+    frustum_dirty_ = true;
     update_frustum();
 }
 

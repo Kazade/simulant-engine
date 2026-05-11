@@ -109,6 +109,7 @@ public:
     float height_at_distance(float distance) const;
     Degrees field_of_view() const;
     float aspect_ratio() const;
+
 private:
     bool initialized_;
 

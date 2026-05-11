@@ -173,6 +173,7 @@ public:
 private:
     /* THis is for access to set_parent primarily */
     friend class StageNode;
+    friend class Camera;
 
     bool has_parent() const { return parent_ != nullptr; }
     void set_parent(Transform* new_parent, TransformRetainMode retain_mode=TRANSFORM_RETAIN_MODE_LOSE);
@@ -185,8 +186,11 @@ private:
 
     /* Called from const accessors to lazily resolve a stale parent transform.
      * Recurses upward (O(depth)), not downward — avoids the old O(descendants)
-     * eager DFS that signal_change() used to trigger. */
-    void _ensure_clean() const;
+     * eager DFS that signal_change() used to trigger.
+     *
+     * Returns true if the transform was cleaned, false if it was already clean.
+     * */
+    bool _ensure_clean() const;
 
     Transform* parent_ = nullptr;
 
@@ -211,6 +215,11 @@ private:
      * that they need to re-sync without any eager DFS propagation. */
     mutable uint32_t generation_ = 0;
     mutable uint32_t last_parent_gen_ = 0;
+
+public:
+    uint32_t generation() const { return generation_; }
+
+private:
 
     void set_translation_if_necessary(const Vec3& trans);
     void set_rotation_if_necessary(const Quaternion& rot);
