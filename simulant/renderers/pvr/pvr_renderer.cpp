@@ -175,7 +175,7 @@ void PVRRenderer::flush_list_buffer(std::vector<uint8_t>& buffer, int list_type)
     const uint8_t* ptr = buffer.data();
     std::size_t remaining = buffer.size();
     while(remaining >= 32) {
-        pvr_vertex_t* dest = pvr_dr_target(dr_state_);
+        pvr_vertex_t* dest = static_cast<pvr_vertex_t*>(pvr_dr_target(dr_state_));
         shz_memcpy32(dest, ptr, 32);
         pvr_dr_commit(dest);
         ptr += 32;
