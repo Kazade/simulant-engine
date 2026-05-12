@@ -460,7 +460,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * Submit or buffer the pre-compiled polygon header
      * ================================================================ */
     if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
-        pvr_vertex_t* hdr_dest = pvr_dr_target(renderer_->dr_state_);
+        pvr_vertex_t* hdr_dest = static_cast<pvr_vertex_t*>(pvr_dr_target(renderer_->dr_state_));
         shz_memcpy32(hdr_dest, &poly_hdr_, sizeof(pvr_poly_hdr_t));
         pvr_dr_commit(hdr_dest);
     } else {
@@ -658,7 +658,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
         if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
             /* Submit 64-byte Type 5 vertex via direct rendering (two 32-byte writes) */
-            pvr_vertex_t* dest1 = pvr_dr_target(renderer_->dr_state_);
+            pvr_vertex_t* dest1 = static_cast<pvr_vertex_t*>(pvr_dr_target(renderer_->dr_state_));
             *((uint32_t*)dest1 + 0) = vert.flags;
             *((float*)dest1 + 1) = vert.x;
             *((float*)dest1 + 2) = vert.y;
@@ -669,7 +669,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             *((uint32_t*)dest1 + 7) = 0;  /* padding */
             pvr_dr_commit(dest1);
 
-            pvr_vertex_t* dest2 = pvr_dr_target(renderer_->dr_state_);
+            pvr_vertex_t* dest2 = static_cast<pvr_vertex_t*>(pvr_dr_target(renderer_->dr_state_));
             *((float*)dest2 + 0) = vert.base_a;
             *((float*)dest2 + 1) = vert.base_r;
             *((float*)dest2 + 2) = vert.base_g;
