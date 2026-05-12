@@ -28,6 +28,7 @@
 #include "../../stage.h"
 #include "../../utils/float.h"
 #include <algorithm>
+#include "renderable.h"
 
 namespace smlt {
 namespace batcher {
@@ -70,6 +71,10 @@ void RenderQueue::reset(StageNode* stage, RenderGroupFactory* factory, CameraPtr
     camera_ = camera;
 
     clear();
+}
+
+std::size_t RenderQueue::renderable_count() const {
+    return render_queue_.size();
 }
 
 void RenderQueue::insert_renderable(Renderable&& renderable) {

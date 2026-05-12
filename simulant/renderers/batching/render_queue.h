@@ -178,10 +178,7 @@ public:
 
     void traverse(RenderQueueVisitor* callback, uint64_t frame_id) const;
 
-    std::size_t renderable_count() const {
-        return render_queue_.size();
-    }
-
+    std::size_t renderable_count() const;
     Renderable* renderable(std::size_t idx);
 
 private:
