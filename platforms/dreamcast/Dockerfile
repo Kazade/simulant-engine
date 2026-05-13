@@ -7,13 +7,13 @@ MAINTAINER kazade <kazade@gmail.com>
 RUN dnf -y update && dnf clean all && dnf -y install automake wget which make git hostname diffutils glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel meson openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim && dnf clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
 RUN git clone https://github.com/KallistiOS/KallistiOS.git /opt/toolchains/dc/kos
-RUN cd /opt/toolchains/dc/kos && git fetch && git checkout 45b72287db497d57ee22c969905325e9422d61d4 && cd -
+RUN cd /opt/toolchains/dc/kos && git fetch && git checkout 5e89c26a2cef753c72d1a13b697335a0c639f3c4 && cd -
 RUN git clone --recursive https://github.com/KallistiOS/kos-ports.git /opt/toolchains/dc/kos-ports
 
 RUN cd /opt/toolchains/dc/kos/utils/kos-chain && cp Makefile.dreamcast.cfg Makefile.cfg
 
-# Switch to the 15.1.0 toolchain
-# RUN sed -i 's/toolchain_profile=stable/toolchain_profile=15.1.0/' /opt/toolchains/dc/kos/utils/kos-chain/Makefile.cfg
+# Switch to the 15.2.0 toolchain
+# RUN sed -i 's/toolchain_profile=stable/toolchain_profile=15.2.1-dev/' /opt/toolchains/dc/kos/utils/kos-chain/Makefile.cfg
 
 # Speed up compilation
 RUN sed -i 's/makejobs=2/makejobs=8/' /opt/toolchains/dc/kos/utils/kos-chain/Makefile.cfg

@@ -136,7 +136,7 @@ void PVRRenderer::pre_render() {
     tr_buffer_.clear();
     tr_buffer_.reserve(64 * 1024);
 
-    prev_list_type_ = -1;
+    prev_list_type_ = (pvr_list_type_t) -1;
     current_list_type_ = PVR_LIST_OP_POLY;
 
     ensure_list_opened(current_list_type_);
@@ -151,7 +151,7 @@ void PVRRenderer::on_pre_render() {
  * ensure_list_opened - open a PVR list if not already open
  * ======================================================================== */
 
-void PVRRenderer::ensure_list_opened(int list_type) {
+void PVRRenderer::ensure_list_opened(pvr_list_type_t list_type) {
 #ifdef __DREAMCAST__
     if(list_type == prev_list_type_) return;
 
@@ -168,7 +168,7 @@ void PVRRenderer::ensure_list_opened(int list_type) {
 #endif
 }
 
-void PVRRenderer::flush_list_buffer(std::vector<uint8_t>& buffer, int list_type) {
+void PVRRenderer::flush_list_buffer(std::vector<uint8_t>& buffer, pvr_list_type_t list_type) {
 #ifdef __DREAMCAST__
     if(buffer.empty()) return;
     ensure_list_opened(list_type);

@@ -55,8 +55,8 @@ private:
 friend class PVRRenderQueueVisitor;
     PVRTextureManager texture_manager_;
 
-    int current_list_type_ = 0; /* PVR_LIST_OP_POLY */
-    int prev_list_type_ = -1;
+    pvr_list_type_t current_list_type_ = PVR_LIST_OP_POLY;
+    pvr_list_type_t prev_list_type_ = (pvr_list_type_t) -1;
 
     #ifdef __DREAMCAST__
         pvr_dr_state_t dr_state_;
@@ -64,8 +64,8 @@ friend class PVRRenderQueueVisitor;
         std::vector<uint8_t> tr_buffer_; /* TR headers+vertices pending deferred submission */
     #endif
 
-    void flush_list_buffer(std::vector<uint8_t>& buffer, int list_type);
-    void ensure_list_opened(int list_type);
+    void flush_list_buffer(std::vector<uint8_t>& buffer, pvr_list_type_t list_type);
+    void ensure_list_opened(pvr_list_type_t list_type);
 
     void on_pre_render() override;
     void on_post_render() override;

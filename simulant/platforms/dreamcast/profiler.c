@@ -6,6 +6,7 @@
 #include <string.h>
 #include <dirent.h>
 
+#include <kos/version.h>
 #include <kos/thread.h>
 #include <dc/fs_dcload.h>
 
@@ -128,7 +129,11 @@ static void record_samples() {
 }
 
 /* Declared in KOS in fs_dcload.c */
+#if KOS_VERSION_ABOVE(2, 1, 0)
+int syscall_dcload_detected();
+#else
 int fs_dcload_detected();
+#endif
 extern int dcload_type;
 
 
@@ -164,7 +169,11 @@ typedef struct {
 static bool init_sample_file(const char* path) {
     printf("Detecting dcload... ");
 
+#if KOS_VERSION_ABOVE(2, 1, 0)
+    if(!syscall_dcload_detected() || dcload_type == DCLOAD_TYPE_NONE) {
+#else
     if(!fs_dcload_detected() || dcload_type == DCLOAD_TYPE_NONE) {
+#endif
         printf("[Not Found]\n");
         WRITE_TO_STDOUT = true;
         return false;
