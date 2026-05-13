@@ -617,7 +617,8 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
             S_DEBUG("Found controller at port {0} unit {1}", device->port, device->unit);
             GameControllerInfo info;
             info.id = GameControllerID(device->port);
-            std::strncpy(info.name, device->info.product_name, sizeof(info.name));
+            std::memcpy(info.name, device->info.product_name, sizeof(device->info.product_name));
+            info.name[sizeof(device->info.product_name)] = '\0';
             info.button_count = 5;
             info.axis_count = 4; //2 triggers, 2 for analog
             info.hat_count = 1; // 1 D-pad

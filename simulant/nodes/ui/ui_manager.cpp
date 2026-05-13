@@ -226,17 +226,17 @@ void UIManager::process_event_queue(const Camera* camera,
                         widget->fingerdown(evt.mouse.id.to_int8_t());
                     } else if(evt.mouse.type == MOUSE_EVENT_TYPE_BUTTON_UP) {
                         widget->fingerup(evt.mouse.id.to_int8_t());
-                    }
-                } else if(evt.mouse.type == MOUSE_EVENT_TYPE_MOTION) {
-                    // If we just moved over the widget, and we weren't already
-                    // on it then trigger a fingerenter
-                    if(!widget->is_pressed_by_finger(
-                           evt.mouse.id.to_int8_t())) {
-                        widget->fingerenter(evt.mouse.id.to_int8_t());
-                    }
+                    } else if(evt.mouse.type == MOUSE_EVENT_TYPE_MOTION) {
+                        // If we just moved over the widget, and we weren't already
+                        // on it then trigger a fingerenter
+                        if(!widget->is_pressed_by_finger(
+                               evt.mouse.id.to_int8_t())) {
+                            widget->fingerenter(evt.mouse.id.to_int8_t());
+                        }
 
-                    // notify that there was a movement on the widget
-                    widget->fingermove(evt.mouse.id.to_int8_t());
+                        // notify that there was a movement on the widget
+                        widget->fingermove(evt.mouse.id.to_int8_t());
+                    }
                 }
 
                 if(evt.mouse.type == MOUSE_EVENT_TYPE_MOTION ||

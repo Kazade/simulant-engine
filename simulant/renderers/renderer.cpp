@@ -354,6 +354,7 @@ bool Renderer::convert_if_necessary(Texture* tex) {
          * the palette indices to actual colors. */
         auto pal_size = tex->palette_size();
         auto data_size = tex->data_size();
+        (void)data_size;
         auto w = tex->width();
         auto h = tex->height();
 

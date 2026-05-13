@@ -195,7 +195,7 @@ void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation
 void Mesh::rebuild_aabb() {
     aabb_ = AABB();
 
-    if(!this->submesh_count()) {    
+    if(!this->submesh_count()) {
         return;
     }
 
@@ -264,7 +264,8 @@ SubMesh* Mesh::create_submesh(
     MeshArrangement arrangement) {
 
     if(has_submesh(name)) {
-        throw std::runtime_error("Attempted to create a duplicate submesh with name: " + name);
+        S_ERROR("Attempted to create a duplicate submesh with name: {0}", name);
+        return nullptr;
     }
 
     assert(material);

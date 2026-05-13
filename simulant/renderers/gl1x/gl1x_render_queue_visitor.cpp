@@ -98,7 +98,7 @@ _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex,
     return true;
 }
 
-void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
+void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* /*prev*/,
                                                  const MaterialPass* next) {
     pass_ = next;
 

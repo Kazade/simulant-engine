@@ -394,7 +394,7 @@ void StageNode::add_mixin(StageNode* mixin) {
 
     MixinInfo info;
     info.ptr = mixin;
-    info.destroy_connection = mixin->signal_destroyed().connect([=]() {
+    info.destroy_connection = mixin->signal_destroyed().connect([=, this]() {
         auto t = mixin->node_type();
         mixins_.erase(
             std::remove_if(mixins_.begin(), mixins_.end(),
@@ -425,7 +425,7 @@ smlt::Promise<void> StageNode::destroy_after(const Seconds& seconds) {
 
     auto p = Promise<void>::create();
 
-    *conn = smlt::get_app()->signal_update().connect([=] (float dt) mutable {
+    *conn = smlt::get_app()->signal_update().connect([=, this] (float dt) mutable {
         *counter += dt;
 
         if(*counter < seconds.to_float()) {

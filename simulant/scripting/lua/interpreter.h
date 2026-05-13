@@ -262,7 +262,7 @@ public:
 private:
     bool on_init() override;
 
-    void on_update(float dt) override {}
+    void on_update(float /*dt*/) override {}
 
     void on_clean_up() override {
         lua_close(state_);

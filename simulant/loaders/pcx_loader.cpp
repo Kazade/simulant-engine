@@ -63,6 +63,8 @@ bool PCXLoader::do_load(std::shared_ptr<FileIfstream> stream, Texture* result) {
 
     auto width = header.xmax - header.xmin + 1;
     auto height = header.ymax - header.ymin + 1;
+    (void)width;
+    (void)height;
 
     result->set_format(TEXTURE_FORMAT_RGB_3UB_888);
 

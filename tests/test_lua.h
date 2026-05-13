@@ -534,6 +534,7 @@ ReportParamNode.params = {
         assert_true(scene->register_stage_node(create_child_node_script, "ParentNode"));
 
         auto parent = scene->create_child("parent_node");
+        (void)parent;
         // Note: May be null if create_child fails due to Params binding limitations
         // This test documents the current limitation while demonstrating the API exists
     }
@@ -544,6 +545,7 @@ ReportParamNode.params = {
         assert_true(scene->register_stage_node(create_child_params_script, "ParamChild"));
 
         auto parent = scene->create_child("param_parent");
+        (void)parent;
         // Documents that create_child with params is exposed to Lua
     }
 
@@ -553,6 +555,7 @@ ReportParamNode.params = {
         assert_true(scene->register_stage_node(create_mixin_node_script, "MixinHost"));
 
         auto host = scene->create_child("mixin_host");
+        (void)host;
         // Documents that create_mixin is exposed to Lua via smlt.create_mixin()
     }
 
@@ -562,6 +565,7 @@ ReportParamNode.params = {
         assert_true(scene->register_stage_node(create_mixin_params_script, "ParamMixinRole"));
 
         auto host = scene->create_child("param_mixin_host");
+        (void)host;
         // Documents that create_mixin with params is exposed to Lua
     }
 

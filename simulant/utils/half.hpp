@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cstring>
 
 namespace smlt {
 class half {
@@ -75,7 +76,8 @@ private:
     uint16_t data_;
 
     static uint16_t float_to_half(const float a) {
-        uint32_t ia = *((uint32_t*)&a);
+        uint32_t ia;
+        std::memcpy(&ia, &a, sizeof(ia));
         uint16_t ir;
 
         ir = (ia >> 16) & 0x8000;
@@ -115,7 +117,7 @@ private:
 
         if(exponent == 0) {
             if(mantissa == 0) {
-                return *reinterpret_cast<const float*>(&sign); // Zero
+                float result; std::memcpy(&result, &sign, sizeof(result)); return result; // Zero
             } else {
                 // Subnormal
                 while((mantissa & 0x400) == 0) {
@@ -127,14 +129,14 @@ private:
             }
         } else if(exponent == 31) {
             uint32_t tmp = (sign | 0x7F800000 | (mantissa << 13));
-            return *reinterpret_cast<const float*>(&tmp); // Inf or NaN
+            float result; std::memcpy(&result, &tmp, sizeof(result)); return result; // Inf or NaN
         }
 
         exponent = exponent + (127 - 15);
         mantissa = mantissa << 13;
 
         uint32_t f_bits = sign | (exponent << 23) | mantissa;
-        return *reinterpret_cast<const float*>(&f_bits);
+        float result; std::memcpy(&result, &f_bits, sizeof(result)); return result;
     }
 };
 

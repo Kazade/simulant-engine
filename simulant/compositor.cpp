@@ -122,7 +122,7 @@ void Compositor::dump_render_trace(std::ostream *out) {
         "RENDERABLE, BLENDED?, DISTANCE, PRIORITY, Z-ORDER, TEXTURE\n";
     out->write(headings.c_str(), headings.size());
 
-    sig::Connection conn = signal_layer_render_finished().connect([=](Layer&) {
+    sig::Connection conn = signal_layer_render_finished().connect([=, this](Layer&) {
         std::string row = ", , , , ,\n";
         out->write(row.c_str(), row.size());
 
@@ -387,7 +387,7 @@ SceneCompositor::SceneCompositor(Scene* scene, Compositor* global_compositor):
     compositor_(global_compositor),
     scene_(scene) {
 
-    activate_connection_ = scene_->signal_activated().connect([=]() {
+    activate_connection_ = scene_->signal_activated().connect([=, this]() {
         for(auto& layer: layers_) {
             if(layer->activation_mode() == LAYER_ACTIVATION_MODE_AUTOMATIC) {
                 layer->activate();
@@ -395,7 +395,7 @@ SceneCompositor::SceneCompositor(Scene* scene, Compositor* global_compositor):
         }
     });
 
-    deactivate_connection_ = scene_->signal_deactivated().connect([=]() {
+    deactivate_connection_ = scene_->signal_deactivated().connect([=, this]() {
         for(auto& layer: layers_) {
             if(layer->activation_mode() == LAYER_ACTIVATION_MODE_AUTOMATIC) {
                 layer->deactivate();
