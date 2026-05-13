@@ -98,7 +98,7 @@ _S_FORCE_INLINE bool bind_texture(const GLubyte which, const TexturePtr& tex,
     return true;
 }
 
-void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* /*prev*/,
+void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
                                                  const MaterialPass* next) {
     pass_ = next;
 
@@ -198,6 +198,8 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* /*prev*/,
         default:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+#else
+    _S_UNUSED(prev);
 #endif
 
     switch(next->cull_mode()) {
