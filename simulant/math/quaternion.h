@@ -107,7 +107,7 @@ struct alignas(8) Quaternion: shz_quat {
     }
 
     bool operator==(const Quaternion& rhs) const {
-        return fast_abs(dot(rhs)) > (1.0f - EPSILON);
+        return almost_equal(x, rhs.x) && almost_equal(y, rhs.y) && almost_equal(z, rhs.z) && almost_equal(w, rhs.w);
     }
 
     bool operator!=(const Quaternion& rhs) const {
