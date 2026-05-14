@@ -110,22 +110,9 @@ Material::~Material() {
 }
 
 void Material::initialize_core_properties() {
-    set_property_value(BASE_COLOR_PROPERTY_NAME, Color::white());
-    set_property_value(ROUGHNESS_PROPERTY_NAME, 0.4f);
-    set_property_value(METALLIC_PROPERTY_NAME, 0.0f);
-    set_property_value(SPECULAR_COLOR_PROPERTY_NAME, Color(0, 0, 0, 1));
-
-    set_property_value(SPECULAR_PROPERTY_NAME, 0.0f);
-    set_property_value(POINT_SIZE_PROPERTY_NAME, 1.0f);
-
-    set_property_value(DEPTH_WRITE_ENABLED_PROPERTY_NAME, true);
-    set_property_value(DEPTH_TEST_ENABLED_PROPERTY_NAME, true);
-    set_property_value(LIGHTING_ENABLED_PROPERTY_NAME, true);
-
-    set_property_value(TEXTURES_ENABLED_PROPERTY_NAME,
-                       BASE_COLOR_MAP_ENABLED | LIGHT_MAP_ENABLED |
-                           METALLIC_ROUGHNESS_MAP_ENABLED | NORMAL_MAP_ENABLED);
-
+    /* Scalar/bool/Color/enum properties are now stored directly in base_props_
+     * (initialized by CoreMaterialProps defaults). Only texture and matrix
+     * properties still go through the pool/hash table. */
     set_property_value(BASE_COLOR_MAP_PROPERTY_NAME, TexturePtr());
     set_property_value(METALLIC_ROUGHNESS_MAP_PROPERTY_NAME, TexturePtr());
     set_property_value(LIGHT_MAP_PROPERTY_NAME, TexturePtr());
@@ -135,21 +122,6 @@ void Material::initialize_core_properties() {
     set_property_value(METALLIC_ROUGHNESS_MAP_MATRIX_PROPERTY_NAME, Mat4());
     set_property_value(LIGHT_MAP_MATRIX_PROPERTY_NAME, Mat4());
     set_property_value(NORMAL_MAP_MATRIX_PROPERTY_NAME, Mat4());
-
-    set_property_value(BLEND_FUNC_PROPERTY_NAME, (EnumType)BLEND_NONE);
-    set_property_value(POLYGON_MODE_PROPERTY_NAME, (EnumType)POLYGON_MODE_FILL);
-    set_property_value(SHADE_MODEL_PROPERTY_NAME, (EnumType)SHADE_MODEL_SMOOTH);
-    set_property_value(COLOR_MATERIAL_PROPERTY_NAME,
-                       (EnumType)COLOR_MATERIAL_NONE);
-    set_property_value(CULL_MODE_PROPERTY_NAME, (EnumType)CULL_MODE_NONE);
-    set_property_value(DEPTH_FUNC_PROPERTY_NAME, (EnumType)DEPTH_FUNC_LEQUAL);
-    set_property_value(ALPHA_THRESHOLD_PROPERTY_NAME, 1.0f);
-
-    set_property_value(FOG_MODE_PROPERTY_NAME, (EnumType)FOG_MODE_NONE);
-    set_property_value(FOG_DENSITY_PROPERTY_NAME, 1.0f);
-    set_property_value(FOG_START_PROPERTY_NAME, 100.0f);
-    set_property_value(FOG_END_PROPERTY_NAME, 1000.0f);
-    set_property_value(FOG_COLOR_PROPERTY_NAME, Color::white());
 }
 
 MaterialValuePool* Material::_get_pool() const {
@@ -203,6 +175,7 @@ Material &Material::operator=(const Material &rhs) {
     }
 
     renderer_ = rhs.renderer_;
+    base_props_ = rhs.base_props_;
     texture_properties_ = rhs.texture_properties_;
     custom_properties_ = rhs.custom_properties_;
 
@@ -230,6 +203,8 @@ Material &Material::operator=(const Material &rhs) {
 
     for(std::size_t i = 0; i < rhs.passes_.size(); ++i) {
         passes_[i].program_ = rhs.passes_[i].program_;
+        passes_[i].pass_props_ = rhs.passes_[i].pass_props_;
+        passes_[i].override_mask_ = rhs.passes_[i].override_mask_;
     }
 
     /* Make sure this material is prepped */
@@ -253,24 +228,6 @@ MaterialPass::MaterialPass(Material* material, uint8_t pass_number) :
 
 GPUProgramID MaterialPass::gpu_program_id() const {
     return program_->id();
-}
-
-bool MaterialPass::on_check_existence(MaterialPropertyNameHash hsh) const {
-    auto material = (Material*)parent_;
-    auto it = material->find_entry(hsh);
-    return it && it->entries[pass_number_ + 1];
-}
-
-bool MaterialPass::on_clear_override(MaterialPropertyNameHash hsh) {
-    auto material = (Material*)parent_;
-
-    auto it = material->find_entry(hsh);
-    if(it->entries[pass_number_ + 1]) {
-        it->entries[pass_number_ + 1].reset();
-        return true;
-    }
-
-    return false;
 }
 
 // We always just return the type of the parent

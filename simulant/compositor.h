@@ -21,7 +21,6 @@
 
 #include <vector>
 #include <memory>
-#include <list>
 
 #include "generic/managed.h"
 #include "generic/property.h"
@@ -55,11 +54,11 @@ public:
         int32_t priority=0
     );
 
-    std::list<LayerPtr>::iterator begin() {
+    std::vector<LayerPtr>::iterator begin() {
         return ordered_pipelines_.begin();
     }
 
-    std::list<LayerPtr>::iterator end() {
+    std::vector<LayerPtr>::iterator end() {
         return ordered_pipelines_.end();
     }
 
@@ -106,13 +105,13 @@ private:
     Renderer* renderer_ = nullptr;
     batcher::RenderQueue render_queue_;
 
-    std::list<std::shared_ptr<Layer>> pool_;
-    std::list<LayerPtr> ordered_pipelines_;
+    std::vector<std::shared_ptr<Layer>> pool_;
+    std::vector<LayerPtr> ordered_pipelines_;
     std::set<LayerPtr> queued_for_destruction_;
 
     friend class Layer;
 
-    std::set<RenderTarget*> targets_rendered_this_frame_;
+    bool window_cleared_this_frame_ = false;
 
     sig::connection clean_up_connection_;
 public:
@@ -156,11 +155,11 @@ public:
         }
     }
 
-    std::list<LayerPtr>::iterator begin() {
+    std::vector<LayerPtr>::iterator begin() {
         return layers_.begin();
     }
 
-    std::list<LayerPtr>::iterator end() {
+    std::vector<LayerPtr>::iterator end() {
         return layers_.end();
     }
 
@@ -168,7 +167,7 @@ private:
     Compositor* compositor_ = nullptr;
     Scene* scene_ = nullptr;
 
-    std::list<LayerPtr> layers_;
+    std::vector<LayerPtr> layers_;
 
     sig::Connection activate_connection_;
     sig::Connection deactivate_connection_;

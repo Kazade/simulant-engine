@@ -1033,7 +1033,7 @@ public:
             return false;
         }
 
-        auto load_icon = [=](const char* name, Icon* icon, int w, int h,
+        auto load_icon = [=, this](const char* name, Icon* icon, int w, int h,
                              int bpp, const uint8_t* data,
                              TextureFormat fmt = TEXTURE_FORMAT_RGB_1US_565) {
             icon->tex = scene->assets->create_texture(w, h, fmt);

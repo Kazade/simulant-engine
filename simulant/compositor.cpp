@@ -17,6 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <algorithm>
 #include <unordered_map>
 
 #include "application.h"
@@ -64,15 +65,18 @@ void Compositor::clean_destroyed_layers() {
 #ifndef NDEBUG
         auto c = ordered_pipelines_.size();
 #endif
-        ordered_pipelines_.remove(pip);
+        ordered_pipelines_.erase(
+            std::remove(ordered_pipelines_.begin(), ordered_pipelines_.end(), pip),
+            ordered_pipelines_.end()
+        );
 #ifndef NDEBUG
         assert(ordered_pipelines_.size() < c);
 #endif
 
         auto id = pip->id_;
-        pool_.remove_if([id](const Layer::ptr& pip) -> bool {
-            return pip->id_ == id;
-        });
+        pool_.erase(std::remove_if(pool_.begin(), pool_.end(),
+            [id](const Layer::ptr& p) { return p->id_ == id; }
+        ), pool_.end());
     }
     queued_for_destruction_.clear();
 }
@@ -118,7 +122,7 @@ void Compositor::dump_render_trace(std::ostream *out) {
         "RENDERABLE, BLENDED?, DISTANCE, PRIORITY, Z-ORDER, TEXTURE\n";
     out->write(headings.c_str(), headings.size());
 
-    sig::Connection conn = signal_layer_render_finished().connect([=](Layer&) {
+    sig::Connection conn = signal_layer_render_finished().connect([=, this](Layer&) {
         std::string row = ", , , , ,\n";
         out->write(row.c_str(), row.size());
 
@@ -145,13 +149,9 @@ bool Compositor::has_layer(const std::string& name) {
 }
 
 void Compositor::sort_layers() {
-    auto do_sort = [&]() {
-        ordered_pipelines_.sort(
-            [](LayerPtr lhs, LayerPtr rhs) { return lhs->priority() < rhs->priority(); }
-        );
-    };
-
-    do_sort();
+    std::sort(ordered_pipelines_.begin(), ordered_pipelines_.end(),
+        [](LayerPtr lhs, LayerPtr rhs) { return lhs->priority() < rhs->priority(); }
+    );
 }
 
 LayerPtr Compositor::create_layer(
@@ -188,18 +188,20 @@ void Compositor::run() {
     _S_PROFILE_SECTION("clean");
     clean_destroyed_layers();  /* Clean up any destroyed pipelines before rendering */
 
-    targets_rendered_this_frame_.clear();
+    window_cleared_this_frame_ = false;
 
     /* Perform any pre-rendering tasks */
     renderer_->pre_render();
 
     int actors_rendered = 0;
-    {        
+    {
         _S_PROFILE_SUBSECTION("pipelines");
         for(auto& pipeline: ordered_pipelines_) {
             run_layer(pipeline, actors_rendered);
         }
     }
+
+    renderer_->post_render();
 
     _S_PROFILE_SECTION("stats-update");
     get_app()->stats->set_subactors_rendered(actors_rendered);
@@ -222,30 +224,33 @@ static bool build_renderables(
         return true;
     }
 
-    std::partial_sort(
-        lights_visible.begin(),
-        lights_visible.begin() + std::min(MAX_LIGHTS_PER_RENDERABLE, (uint32_t) lights_visible.size()),
-        lights_visible.end(),
-        [=](LightPtr lhs, LightPtr rhs) {
-            /* FIXME: Sorting by the center point is problematic. A renderable is made up
-                 * of many polygons, by choosing the light closest to the center you may find that
-                 * that polygons far away from the center aren't affected by lights when they should be.
-                 * This needs more thought, probably. */
-            if(lhs->light_type() == LIGHT_TYPE_DIRECTIONAL &&
-               rhs->light_type() != LIGHT_TYPE_DIRECTIONAL) {
-                return true;
-            } else if(rhs->light_type() == LIGHT_TYPE_DIRECTIONAL &&
-                      lhs->light_type() != LIGHT_TYPE_DIRECTIONAL) {
-                return false;
+    /* Compute AABB once — center() and distance_to_camera both need it, and
+     * the old sort lambda was calling transformed_aabb() on every comparison. */
+    const AABB node_aabb = node->transformed_aabb();
+    const Vec3 node_center = node_aabb.center();
+
+    const uint32_t n = (uint32_t) lights_visible.size();
+    const uint32_t k = std::min(MAX_LIGHTS_PER_RENDERABLE, n);
+
+    if(n > k) {
+        /* O(k*n) selection to place the k best lights in lights_visible[0..k).
+         * Directional lights always score lower (higher priority) than point lights. */
+        auto score = [&](Light* light) -> float {
+            if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) return -1.0f;
+            return (node_center - light->transform->position()).length_squared();
+        };
+        for(uint32_t i = 0; i < k; ++i) {
+            uint32_t best = i;
+            float best_score = score(lights_visible[i]);
+            for(uint32_t j = i + 1; j < n; ++j) {
+                float s = score(lights_visible[j]);
+                if(s < best_score) { best_score = s; best = j; }
             }
-
-            float lhs_dist = (node->center() - lhs->transform->position()).length_squared();
-            float rhs_dist = (node->center() - rhs->transform->position()).length_squared();
-            return lhs_dist < rhs_dist;
+            if(best != i) std::swap(lights_visible[i], lights_visible[best]);
         }
-    );
+    }
 
-    float distance_to_camera = camera->transform->position().distance_to(node->transformed_aabb());
+    float distance_to_camera = camera->transform->position().distance_to(node_aabb);
 
     /* Find the ideal detail level at this distance from the camera */
     auto level = pipeline_stage->detail_level_at_distance(distance_to_camera);
@@ -275,11 +280,11 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
      * traversal
      */
     _S_PROFILE_SECTION("check");
-    uint64_t frame_id = generate_frame_id();
-
     if(!pipeline_stage->is_active()) {
         return;
     }
+
+    uint64_t frame_id = generate_frame_id();
 
     if(!pipeline_stage->is_complete()) {
         S_DEBUG("Stage or camera has been destroyed, disabling pipeline");
@@ -299,8 +304,7 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
      * been rendered each frame and this list is cleared at the start of run().
      */
     _S_PROFILE_SECTION("clear");
-    if(targets_rendered_this_frame_.find(&target) ==
-       targets_rendered_this_frame_.end()) {
+    if(!window_cleared_this_frame_) {
         if(target.clear_every_frame_flags()) {
             Viewport view(smlt::VIEWPORT_TYPE_FULL,
                           target.clear_every_frame_color());
@@ -309,7 +313,7 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
                              target.clear_every_frame_flags());
         }
 
-        targets_rendered_this_frame_.insert(&target);
+        window_cleared_this_frame_ = true;
     }
 
     auto& viewport = pipeline_stage->viewport;
@@ -356,18 +360,14 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
 
     _S_PROFILE_SECTION("reset");
     // Reset it, ready for this pipeline
-    render_queue_.reset(stage_node, window->renderer.get(), camera);
+    render_queue_.reset(stage_node, renderer_, camera);
 
     _S_PROFILE_SUBSECTION("build-renderables");
-    StageNodeVisitorBFS node_finder(
-        stage_node, std::bind(build_renderables, lights_visible, &render_queue_,
-                              camera, pipeline_stage, std::placeholders::_1));
-
-    while(node_finder.call_next()) {}
+    traverse_bfs(stage_node, [&](StageNode* node) {
+        build_renderables(lights_visible, &render_queue_, camera, pipeline_stage, node);
+    });
 
     actors_rendered += render_queue_.renderable_count();
-
-    using namespace std::placeholders;
 
     _S_PROFILE_SECTION("traverse");
     auto visitor = renderer_->get_render_queue_visitor(camera);
@@ -381,14 +381,13 @@ void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
                                                       stage_node);
 
     signal_layer_render_finished_(*pipeline_stage);
-    render_queue_.clear();
 }
 
 SceneCompositor::SceneCompositor(Scene* scene, Compositor* global_compositor):
     compositor_(global_compositor),
     scene_(scene) {
 
-    activate_connection_ = scene_->signal_activated().connect([=]() {
+    activate_connection_ = scene_->signal_activated().connect([=, this]() {
         for(auto& layer: layers_) {
             if(layer->activation_mode() == LAYER_ACTIVATION_MODE_AUTOMATIC) {
                 layer->activate();
@@ -396,7 +395,7 @@ SceneCompositor::SceneCompositor(Scene* scene, Compositor* global_compositor):
         }
     });
 
-    deactivate_connection_ = scene_->signal_deactivated().connect([=]() {
+    deactivate_connection_ = scene_->signal_deactivated().connect([=, this]() {
         for(auto& layer: layers_) {
             if(layer->activation_mode() == LAYER_ACTIVATION_MODE_AUTOMATIC) {
                 layer->deactivate();

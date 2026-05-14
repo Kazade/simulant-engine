@@ -615,7 +615,7 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass,
     _S_UNUSED(pass);
 
     // Calculate the modelview-projection matrix
-    const Mat4 model = renderable->final_transformation;
+    const Mat4& model = *renderable->final_transformation;
     const Mat4& view = camera->view_matrix();
     const Mat4& projection = camera->projection_matrix();
 

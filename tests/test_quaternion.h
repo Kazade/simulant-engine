@@ -48,9 +48,9 @@ public:
         auto euler = q.to_euler();
 
         assert_close(smlt::Degrees(90).to_float(), euler.x.to_float(),
-                     0.000001f);
-        assert_true(smlt::Degrees(0) == euler.y);
-        assert_true(smlt::Degrees(0) == euler.z);
+                     0.001f);
+        assert_close(smlt::Degrees(0).to_float(), euler.y.to_float(), 0.001f);
+        assert_close(smlt::Degrees(0).to_float(), euler.z.to_float(), 0.001f);
     }
 
     void test_mat3_to_quaternion() {

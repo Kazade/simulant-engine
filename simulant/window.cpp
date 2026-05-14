@@ -282,19 +282,19 @@ void Window::reset() {
 }
 
 void Window::on_mouse_down(MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device) {
-    each_event_listener([=](EventListener* listener) {
+    each_event_listener([=, this](EventListener* listener) {
         listener->handle_mouse_down(this, id, mouse_button, x, y, touch_device);
     });
 }
 
 void Window::on_mouse_up(MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device) {
-    each_event_listener([=](EventListener* listener) {
+    each_event_listener([=, this](EventListener* listener) {
         listener->handle_mouse_up(this, id, mouse_button, x, y, touch_device);
     });
 }
 
 void Window::on_mouse_move(MouseID id, int32_t x, int32_t y, bool touch_device) {
-    each_event_listener([=](EventListener* listener) {
+    each_event_listener([=, this](EventListener* listener) {
         listener->handle_mouse_move(this, id, x, y, touch_device);
     });
 }
@@ -304,13 +304,13 @@ void Window::on_key_down(KeyboardCode code, ModifierKeyState modifiers) {
         app->stop_running();
     }
 
-    each_event_listener([=](EventListener* listener) {
+    each_event_listener([=, this](EventListener* listener) {
         listener->handle_key_down(this, code, modifiers);
     });
 }
 
 void Window::on_key_up(KeyboardCode code, ModifierKeyState modifiers) {
-    each_event_listener([=](EventListener* listener) {
+    each_event_listener([=, this](EventListener* listener) {
         listener->handle_key_up(this, code, modifiers);
     });
 }

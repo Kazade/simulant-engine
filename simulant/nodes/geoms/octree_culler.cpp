@@ -102,7 +102,8 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, batcher::RenderQu
             Renderable new_renderable;
 
             new_renderable.arrangement = smlt::MESH_ARRANGEMENT_TRIANGLES;
-            new_renderable.final_transformation = Mat4();
+            static const Mat4 s_identity;
+            new_renderable.final_transformation = &s_identity;
             new_renderable.index_data = p.second.indexes.get();
             new_renderable.vertex_data = pimpl_->octree->data()->vertices.get();
             new_renderable.render_priority = this->geom()->render_priority();
@@ -123,7 +124,8 @@ void OctreeCuller::_all_renderables(batcher::RenderQueue* queue) {
             Renderable new_renderable;
 
             new_renderable.arrangement = smlt::MESH_ARRANGEMENT_TRIANGLES;
-            new_renderable.final_transformation = Mat4();
+            static const Mat4 s_identity;
+            new_renderable.final_transformation = &s_identity;
             new_renderable.index_data = p.second.indexes.get();
             new_renderable.vertex_data = pimpl_->octree->data()->vertices.get();
             new_renderable.render_priority = this->geom()->render_priority();

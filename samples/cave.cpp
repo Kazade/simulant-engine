@@ -224,6 +224,8 @@ int main(int argc, char* argv[]) {
     config.height = 960;
 #endif
 
+    // config.development.force_profiling = true;
+
     CaveDemo app(config);
     return app.run();
 }

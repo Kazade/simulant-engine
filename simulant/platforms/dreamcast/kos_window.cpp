@@ -100,27 +100,34 @@ KOSWindow::~KOSWindow() {
 }
 
 void KOSWindow::do_swap_buffers() {
+    /* PVR renderer handles frame flipping via pvr_scene_begin/finish */
+    if(renderer_ && renderer_->name() == "pvr") {
+        return;
+    }
     glKosSwapBuffers();
 }
 
 bool KOSWindow::_init_window() {
-    S_DEBUG("Initializing OpenGL");
-
-    static bool gl_initialized = false;
-    if(!gl_initialized) {
-        glKosInit();
-        gl_initialized = true;
-    }
-
-    S_DEBUG("OpenGL initialized");
     probe_vmus();
     return true;
 }
 
 bool KOSWindow::_init_renderer(Renderer* renderer) {
-    _S_UNUSED(renderer);
+    if(renderer->name() == "pvr") {
+        /* PVR renderer handles its own pvr_init() in init_context(),
+         * so we don't initialize GLdc here */
+        S_DEBUG("PVR renderer selected, skipping glKosInit");
+    } else {
+        S_DEBUG("Initializing OpenGL via glKosInit");
+        static bool gl_initialized = false;
+        if(!gl_initialized) {
+            glKosInit();
+            gl_initialized = true;
+        }
+        S_DEBUG("OpenGL initialized");
+    }
 
-    set_has_context(true); //Mark that we have a valid GL context
+    set_has_context(true);
 
     S_DEBUG("Renderer initialized");
 
@@ -610,7 +617,8 @@ void KOSWindow::initialize_input_controller(smlt::InputState &controller) {
             S_DEBUG("Found controller at port {0} unit {1}", device->port, device->unit);
             GameControllerInfo info;
             info.id = GameControllerID(device->port);
-            std::strncpy(info.name, device->info.product_name, sizeof(info.name));
+            std::memcpy(info.name, device->info.product_name, sizeof(device->info.product_name));
+            info.name[sizeof(device->info.product_name)] = '\0';
             info.button_count = 5;
             info.axis_count = 4; //2 triggers, 2 for analog
             info.hat_count = 1; // 1 D-pad

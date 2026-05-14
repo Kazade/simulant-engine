@@ -198,6 +198,8 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         default:
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+#else
+    _S_UNUSED(prev);
 #endif
 
     switch(next->cull_mode()) {
@@ -327,9 +329,9 @@ void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
 
         const Mat4& view = camera_->view_matrix();
 
-        GLCheck(glLoadMatrixf, view.data());        
+        GLCheck(glLoadMatrixf, view.data());
     }
-    
+
     for(uint8_t i = 0; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
         current = (i < count) ? lights[i] : nullptr;
 
@@ -499,7 +501,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         return;
     }
 
-    const Mat4& model = renderable->final_transformation;
+    const Mat4& model = *renderable->final_transformation;
     const Mat4& view = camera_->view_matrix();
 
     Mat4 modelview = view * model;

@@ -1269,7 +1269,7 @@ void Widget::fingerenter(uint8_t finger_id) {
     fingerdown(finger_id); // Same behaviour
 }
 
-void Widget::fingermove(uint8_t finger_id) {
+void Widget::fingermove(uint8_t /*finger_id*/) {
     // FIXME: fire signal
 }
 

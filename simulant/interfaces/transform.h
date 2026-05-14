@@ -37,14 +37,17 @@ private:
 class Transform {
 public:
     const Vec3& position() const {
+        _ensure_clean();
         return position_;
     }
 
     const Quaternion& orientation() const {
+        _ensure_clean();
         return orientation_;
     }
 
     const Vec3& scale() const {
+        _ensure_clean();
         return scale_;
     }
 
@@ -99,7 +102,7 @@ public:
 
     /* Return a matrix that can take a local point, and
      * turn it into world space */
-    Mat4 world_space_matrix() const;
+    const Mat4& world_space_matrix() const;
 
     /* 2D helpers */
     Vec2 position_2d() const;
@@ -120,14 +123,17 @@ public:
     void rotate_2d(const smlt::Degrees& rot);
 
     Vec3 forward() const {
+        _ensure_clean();
         return orientation_.forward();
     }
 
     Vec3 up() const {
+        _ensure_clean();
         return orientation_.up();
     }
 
     Vec3 right() const {
+        _ensure_clean();
         return orientation_.right();
     }
 
@@ -160,13 +166,14 @@ public:
     bool add_listener(TransformListener* listener);
     bool remove_listener(TransformListener* listener);
 
-    void update_transformation_from_parent();
+    void update_transformation_from_parent() const;
     void sync(const Transform* other);
     void look_at(const Vec3& target, const Vec3& up = Vec3::up());
 
 private:
     /* THis is for access to set_parent primarily */
     friend class StageNode;
+    friend class Camera;
 
     bool has_parent() const { return parent_ != nullptr; }
     void set_parent(Transform* new_parent, TransformRetainMode retain_mode=TRANSFORM_RETAIN_MODE_LOSE);
@@ -177,20 +184,42 @@ private:
 
     void signal_change();
 
+    /* Called from const accessors to lazily resolve a stale parent transform.
+     * Recurses upward (O(depth)), not downward — avoids the old O(descendants)
+     * eager DFS that signal_change() used to trigger.
+     *
+     * Returns true if the transform was cleaned, false if it was already clean.
+     * */
+    bool _ensure_clean() const;
+
     Transform* parent_ = nullptr;
 
     TransformSmoothing smoothing_ = TRANSFORM_SMOOTHING_NONE;
 
-    Vec3 position_;
-    Quaternion orientation_;
-    Vec3 scale_ = Vec3(1, 1, 1);
+    /* World-space values, lazily computed from parent chain + local offsets.
+     * Mutable so _ensure_clean() and update_transformation_from_parent() can
+     * update them from const accessors. */
+    mutable Vec3 position_;
+    mutable Quaternion orientation_;
+    mutable Vec3 scale_ = Vec3(1, 1, 1);
 
     Vec3 translation_;
     Quaternion rotation_;
     Vec3 scale_factor_ = Vec3(1, 1, 1);
 
     mutable Mat4 absolute_transformation_;
-    mutable bool absolute_transformation_is_dirty_ = false;
+    mutable bool absolute_transformation_is_dirty_ = true;
+
+    /* Incremented whenever this transform's world values change (direct move
+     * or lazy parent resolution). Children compare against this to detect
+     * that they need to re-sync without any eager DFS propagation. */
+    mutable uint32_t generation_ = 0;
+    mutable uint32_t last_parent_gen_ = 0;
+
+public:
+    uint32_t generation() const { return generation_; }
+
+private:
 
     void set_translation_if_necessary(const Vec3& trans);
     void set_rotation_if_necessary(const Quaternion& rot);

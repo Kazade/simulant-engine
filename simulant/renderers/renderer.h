@@ -121,7 +121,7 @@ public:
      * Returns true if the texture has been allocated, false otherwise.
      */
     bool is_texture_registered(AssetID texture_id) const;
-    void pre_render();
+    virtual void pre_render();
     void post_render();
 
     void prepare_texture(Texture *texture);
@@ -187,6 +187,12 @@ private:
     /* Called at the start of pre_render() */
     virtual void on_pre_render() {}
     virtual void on_post_render() {}
+
+protected:
+    /* Subclass access to texture registry for overriding pre_render */
+    const std::unordered_map<AssetID, Texture*>& _texture_registry() const {
+        return texture_registry_;
+    }
 
     mutable thread::Mutex texture_registry_mutex_;
     std::unordered_map<AssetID, Texture*> texture_registry_;

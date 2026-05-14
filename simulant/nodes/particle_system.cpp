@@ -16,11 +16,7 @@ const static VertexSpecification
                    smlt::VERTEX_ATTRIBUTE_NONE, smlt::VERTEX_ATTRIBUTE_NONE,
                    smlt::VERTEX_ATTRIBUTE_NONE, smlt::VERTEX_ATTRIBUTE_NONE,
                    smlt::VERTEX_ATTRIBUTE_NONE,
-#ifdef __DREAMCAST__
-                   smlt::VERTEX_ATTRIBUTE_4UB_BGRA // Diffuse
-#else
                    smlt::VERTEX_ATTRIBUTE_4F // Diffuse
-#endif
     );
 
 ParticleSystem::ParticleSystem(Scene* owner) :
@@ -128,7 +124,8 @@ void ParticleSystem::do_generate_renderables(batcher::RenderQueue* render_queue,
     Renderable new_renderable;
     new_renderable.arrangement = MESH_ARRANGEMENT_TRIANGLE_STRIP;
     new_renderable.render_priority = render_priority();
-    new_renderable.final_transformation = Mat4();
+    static const Mat4 s_identity;
+    new_renderable.final_transformation = &s_identity;
     new_renderable.index_data = nullptr;
     new_renderable.index_element_count = 0;
     new_renderable.vertex_range_count = vertex_ranges_.size();

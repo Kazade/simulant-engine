@@ -49,6 +49,14 @@ public:
         return !(*this == rhs);
     }
 
+    bool operator==(const T& rhs) const {
+        return value_ == clamp(rhs);
+    }
+
+    bool operator!=(const T& rhs) const {
+        return !(*this == rhs);
+    }
+
 private:
     T clamp(T x) const {
         // Debug assertions

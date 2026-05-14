@@ -60,10 +60,13 @@ template<>
 inline void transform_to_scalars<Quaternion>(std::vector<Quaternion>&& input,
                                              std::vector<float>& output) {
     while(!input.empty()) {
+        // Store in [w, x, y, z] order to match the shz_quat memory layout,
+        // since interpolated_value<T> reads back via a raw pointer cast into
+        // an array of Quaternion structs (which have w at offset 0).
+        output.push_back(input[0].w);
         output.push_back(input[0].x);
         output.push_back(input[0].y);
         output.push_back(input[0].z);
-        output.push_back(input[0].w);
         input.erase(input.begin());
     }
 }

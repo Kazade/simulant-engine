@@ -36,11 +36,9 @@ public:
         b3->set_parent(a2);
 
         std::set<StageNode*> visited;
-        StageNodeVisitorBFS visitor(root, [&](StageNode* node) {
+        traverse_bfs(root, [&](StageNode* node) {
             visited.insert(node);
         });
-
-        while(visitor.call_next()) {}
 
         std::set<StageNode*> expected{root, a1, a2, b1, b2, b3};
         assert_items_equal(visited, expected);
@@ -50,11 +48,9 @@ public:
         auto root = scene->create_child<smlt::Stage>();
 
         std::set<StageNode*> visited;
-        StageNodeVisitorBFS visitor(root, [&](StageNode* node) {
+        traverse_bfs(root, [&](StageNode* node) {
             visited.insert(node);
         });
-
-        while(visitor.call_next()) {}
 
         std::set<StageNode*> expected{root};
         assert_items_equal(visited, expected);
@@ -79,11 +75,9 @@ public:
         }
 
         std::set<StageNode*> visited;
-        StageNodeVisitorBFS visitor(root, [&](StageNode* node) {
+        traverse_bfs(root, [&](StageNode* node) {
             visited.insert(node);
         });
-
-        while(visitor.call_next()) {}
 
         /* Should visit root + 200 children + 50 grandchildren = 251 */
         assert_equal(251u, visited.size());
@@ -114,11 +108,9 @@ public:
         b2->set_parent(a2);
 
         std::vector<StageNode*> visited;
-        StageNodeVisitorBFS visitor(root, [&](StageNode* node) {
+        traverse_bfs(root, [&](StageNode* node) {
             visited.push_back(node);
         });
-
-        while(visitor.call_next()) {}
 
         assert_equal(5u, visited.size());
 
@@ -149,23 +141,17 @@ public:
         a1->set_parent(root);
         a2->set_parent(root);
 
+        /* Collect only the first 2 nodes via a counter guard in the callback */
         std::vector<StageNode*> visited;
-        StageNodeVisitorBFS visitor(root, [&](StageNode* node) {
-            visited.push_back(node);
-            /* Stop after visiting root and first level */
-            if(visited.size() >= 3) {
-                return; // callback finishes, loop can break
+        traverse_bfs(root, [&](StageNode* node) {
+            if(visited.size() < 2) {
+                visited.push_back(node);
             }
         });
 
-        /* Only call next 3 times (root + 2 children) */
-        for(int i = 0; i < 3; ++i) {
-            if(!visitor.call_next()) {
-                break;
-            }
-        }
-
-        assert_equal(3u, visited.size());
+        assert_equal(2u, visited.size());
+        /* Root is always first in BFS */
+        assert_equal(root, visited[0]);
     }
 
     void test_deep_tree() {
@@ -185,11 +171,9 @@ public:
         }
 
         std::set<StageNode*> visited;
-        StageNodeVisitorBFS visitor(root, [&](StageNode* node) {
+        traverse_bfs(root, [&](StageNode* node) {
             visited.insert(node);
         });
-
-        while(visitor.call_next()) {}
 
         assert_equal(301u, visited.size());
         for (auto* node : expected) {

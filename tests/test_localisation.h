@@ -58,7 +58,7 @@ public:
         smlt::get_app()->vfs->add_search_path(locale_dir);
 
         assert_true(get_app()->activate_language("fr"));
-        assert_equal(get_app()->translated_text("NETWORK").encode(), u8"RÉSEAU");
+        assert_equal(get_app()->translated_text("NETWORK").encode(), "RÉSEAU");
     }
 };
 

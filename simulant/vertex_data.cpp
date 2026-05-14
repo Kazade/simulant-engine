@@ -74,13 +74,7 @@ const VertexSpecification VertexSpecification::DEFAULT = VertexSpecification{
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
-#if defined(__PSP__) || defined(__ANDROID__)
     VERTEX_ATTRIBUTE_4F,
-#elif defined(__DREAMCAST__)
-    VERTEX_ATTRIBUTE_4UB_BGRA, // Diffuse
-#else
-    VERTEX_ATTRIBUTE_4UB_RGBA, // Diffuse
-#endif
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE,
     VERTEX_ATTRIBUTE_NONE
@@ -95,13 +89,7 @@ const VertexSpecification VertexSpecification::POSITION_AND_DIFFUSE = VertexSpec
         VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
         VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
         VERTEX_ATTRIBUTE_NONE,
-#if defined(__PSP__) || defined(__ANDROID__)
         VERTEX_ATTRIBUTE_4F,
-#elif defined(__DREAMCAST__)
-        VERTEX_ATTRIBUTE_4UB_BGRA, // Diffuse
-#else
-        VERTEX_ATTRIBUTE_4UB_RGBA, // Diffuse
-#endif
 };
 
 VertexAttribute attribute_for_type(VertexAttributeType type, const VertexSpecification& spec) {

@@ -98,7 +98,8 @@ void QuadtreeCuller::_gather_renderables(const Frustum &frustum, batcher::Render
             Renderable new_renderable;
 
             new_renderable.arrangement = smlt::MESH_ARRANGEMENT_TRIANGLES;
-            new_renderable.final_transformation = Mat4();
+            static const Mat4 s_identity;
+            new_renderable.final_transformation = &s_identity;
             new_renderable.index_data = p.second.indexes.get();
             new_renderable.vertex_data = pimpl_->quadtree->data()->vertices.get();
             new_renderable.render_priority = this->geom()->render_priority();
@@ -119,7 +120,8 @@ void QuadtreeCuller::_all_renderables(batcher::RenderQueue* render_queue) {
             Renderable new_renderable;
 
             new_renderable.arrangement = smlt::MESH_ARRANGEMENT_TRIANGLES;
-            new_renderable.final_transformation = Mat4();
+            static const Mat4 s_identity;
+            new_renderable.final_transformation = &s_identity;
             new_renderable.index_data = p.second.indexes.get();
             new_renderable.vertex_data = pimpl_->quadtree->data()->vertices.get();
             new_renderable.render_priority = this->geom()->render_priority();

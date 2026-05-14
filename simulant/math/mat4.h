@@ -3,11 +3,9 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <sh4zam/shz_matrix.h>
 #include <vector>
-
-#ifdef __DREAMCAST__
-#include "../utils/sh4_math.h"
-#endif
+#include <stdio.h>
 
 #if defined(_MSC_VER)
 #include "degrees.h"
@@ -35,73 +33,31 @@ enum FrustumPlane {
 
 typedef std::vector<float> FloatArray;
 
-struct Mat4 {
+#include <assert.h>
+
+struct alignas(8) Mat4 {
 private:
-    float m[16];
+    uint8_t m[sizeof(shz_mat4x4_t) + 4];
 
 public:
-
     Mat4() {
-        memset(m, 0, sizeof(float) * 16);
-        m[0] = m[5] = m[10] = m[15] = 1.0f;
+        shz_mat4x4_init_identity(native());
     }
 
     static Mat4 zero() {
         Mat4 r;
-        memset(r.m, 0, sizeof(r.m));
+        shz_mat4x4_init_zero(r.native());
         return r;
     }
 
     Mat4(const FloatArray& arr) {
-        std::copy(arr.begin(), arr.end(), m);
+        std::copy(arr.begin(),
+                  arr.begin() + std::min((unsigned)arr.size(), 16u), native()->elem);
     }
 
     Mat4 operator*(const Mat4& rhs) const {
-
         Mat4 result;
-        const float *m1 = &this->m[0], *m2 = &rhs.m[0];
-
-#ifdef __DREAMCAST__
-        result.m[0] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[0], m2[1], m2[2], m2[3]);
-        result.m[1] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[0], m2[1], m2[2], m2[3]);
-        result.m[2] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[0], m2[1], m2[2], m2[3]);
-        result.m[3] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[0], m2[1], m2[2], m2[3]);
-
-        result.m[4] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[4], m2[5], m2[6], m2[7]);
-        result.m[5] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[4], m2[5], m2[6], m2[7]);
-        result.m[6] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[4], m2[5], m2[6], m2[7]);
-        result.m[7] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[4], m2[5], m2[6], m2[7]);
-
-        result.m[8] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[8], m2[9], m2[10], m2[11]);
-        result.m[9] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[8], m2[9], m2[10], m2[11]);
-        result.m[10] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[8], m2[9], m2[10], m2[11]);
-        result.m[11] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[8], m2[9], m2[10], m2[11]);
-
-        result.m[12] = MATH_fipr(m1[0], m1[4], m1[8], m1[12], m2[12], m2[13], m2[14], m2[15]);
-        result.m[13] = MATH_fipr(m1[1], m1[5], m1[9], m1[13], m2[12], m2[13], m2[14], m2[15]);
-        result.m[14] = MATH_fipr(m1[2], m1[6], m1[10], m1[14], m2[12], m2[13], m2[14], m2[15]);
-        result.m[15] = MATH_fipr(m1[3], m1[7], m1[11], m1[15], m2[12], m2[13], m2[14], m2[15]);
-#else
-        result.m[0] = m1[0] * m2[0] + m1[4] * m2[1] + m1[8] * m2[2] + m1[12] * m2[3];
-        result.m[1] = m1[1] * m2[0] + m1[5] * m2[1] + m1[9] * m2[2] + m1[13] * m2[3];
-        result.m[2] = m1[2] * m2[0] + m1[6] * m2[1] + m1[10] * m2[2] + m1[14] * m2[3];
-        result.m[3] = m1[3] * m2[0] + m1[7] * m2[1] + m1[11] * m2[2] + m1[15] * m2[3];
-
-        result.m[4] = m1[0] * m2[4] + m1[4] * m2[5] + m1[8] * m2[6] + m1[12] * m2[7];
-        result.m[5] = m1[1] * m2[4] + m1[5] * m2[5] + m1[9] * m2[6] + m1[13] * m2[7];
-        result.m[6] = m1[2] * m2[4] + m1[6] * m2[5] + m1[10] * m2[6] + m1[14] * m2[7];
-        result.m[7] = m1[3] * m2[4] + m1[7] * m2[5] + m1[11] * m2[6] + m1[15] * m2[7];
-
-        result.m[8] = m1[0] * m2[8] + m1[4] * m2[9] + m1[8] * m2[10] + m1[12] * m2[11];
-        result.m[9] = m1[1] * m2[8] + m1[5] * m2[9] + m1[9] * m2[10] + m1[13] * m2[11];
-        result.m[10] = m1[2] * m2[8] + m1[6] * m2[9] + m1[10] * m2[10] + m1[14] * m2[11];
-        result.m[11] = m1[3] * m2[8] + m1[7] * m2[9] + m1[11] * m2[10] + m1[15] * m2[11];
-
-        result.m[12] = m1[0] * m2[12] + m1[4] * m2[13] + m1[8] * m2[14] + m1[12] * m2[15];
-        result.m[13] = m1[1] * m2[12] + m1[5] * m2[13] + m1[9] * m2[14] + m1[13] * m2[15];
-        result.m[14] = m1[2] * m2[12] + m1[6] * m2[13] + m1[10] * m2[14] + m1[14] * m2[15];
-        result.m[15] = m1[3] * m2[12] + m1[7] * m2[13] + m1[11] * m2[14] + m1[15] * m2[15];
-#endif
+        shz_mat4x4_mult(result.native(), native(), rhs.native());
         return result;
     }
 
@@ -109,7 +65,7 @@ public:
     Vec3 operator*(const Vec3& rhs) const;
 
     bool operator==(const Mat4& rhs) const {
-        return std::memcmp(m, rhs.m, sizeof(m)) == 0;
+        return shz_mat4x4_equal(native(), rhs.native());
     }
 
     void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
@@ -121,19 +77,19 @@ public:
     static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
 
     inline const float& operator[](const uint32_t index) const {
-        return m[index];
+        return native()->elem[index];
     }
 
     inline float& operator[](const uint32_t index){
-        return m[index];
+        return native()->elem[index];
     }
 
     inline const float& operator[](const int index) const {
-        return m[index];
+        return native()->elem[index];
     }
 
     inline float& operator[](const int index) {
-        return m[index];
+        return native()->elem[index];
     }
 
     static Mat4 as_translation(const Vec3& v);
@@ -156,19 +112,31 @@ public:
     Plane extract_plane(FrustumPlane plane) const;
 
     float* data() {
-        return &m[0];
+        return &native()->elem[0];
     }
 
     const float* data() const {
-        return &m[0];
+        return &native()->elem[0];
+    }
+
+    shz_mat4x4_t* native() {
+        return (shz_mat4x4_t*)(((uintptr_t(m) + 7) & ~7));
+    }
+
+    const shz_mat4x4_t* native() const {
+        return const_cast<Mat4*>(this)->native();
+    }
+
+    // Faster inverse for TRS (translation/rotation/scale) matrices.
+    // The world-space matrix of any actor is always a TRS matrix.
+    Mat4 inversed_transform() const {
+        Mat4 result;
+        shz_mat4x4_inverse_block_triangular(native(), result.native());
+        return result;
     }
 
     void transpose() {
-        for(int i = 0; i < 4; ++i) {
-            for(int j = 0; j < 4; ++j) {
-                (*this)[j * 4 + i] = (*this)[i * 4 + j];
-            }
-        }
+        shz_mat4x4_transpose(native(), native());
     }
 
     Mat4 transposed() const {

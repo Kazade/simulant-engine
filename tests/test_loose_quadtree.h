@@ -75,7 +75,7 @@ public:
         Frustum identity;
         identity.build(&projection);
 
-        auto cb = [=](TestQuadtree::Node* node) {
+        auto cb = [=, this](TestQuadtree::Node* node) {
             assert_equal(+node->grid[1], 0);
         };
 

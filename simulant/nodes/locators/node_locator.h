@@ -148,7 +148,7 @@ private:
 
         connection_ = node_->scene->watch(
             node_->node_path(),
-            [=](smlt::StageNodeNotification n, StageNode* node) {
+            [this](smlt::StageNodeNotification n, StageNode* node) {
             // We only care about some notifications
             if(std::find(notifications_.begin(), notifications_.end(), n) ==
                notifications_.end()) {

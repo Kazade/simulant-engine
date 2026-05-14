@@ -114,8 +114,8 @@ public:
     }
 
     void deallocate(const uint8_t* ptr) {
-        auto it =
-            std::find_if(blocks_.begin(), blocks_.end(), [=](const Block& b) {
+        auto it = std::find_if(blocks_.begin(), blocks_.end(),
+                               [this, ptr](const Block& b) {
             return (data_ + b.offset) == ptr;
         });
 

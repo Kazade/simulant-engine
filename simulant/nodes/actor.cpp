@@ -277,7 +277,7 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
     }
 
     auto rp = render_priority();
-    auto mat = transform->world_space_matrix();
+    const Mat4* mat = &transform->world_space_matrix();
     auto center = transformed_aabb().center();
 
     for(auto& submesh: mesh->each_submesh()) {

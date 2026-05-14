@@ -32,13 +32,9 @@ VertexSpecification determine_spec(const FileHeader& header) {
     vspec.normal_attribute = (header.normal_format == NORMAL_FORMAT_3F) ? VERTEX_ATTRIBUTE_3F : VERTEX_ATTRIBUTE_NONE;
 
     /* FIXME: Do something better! */
-#if defined(__ANDROID__) || defined(__LINUX__)
+#if defined(__ANDROID__) || defined(__LINUX__) || defined(__DREAMCAST__)
     if(vspec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
         vspec.color_attribute = VERTEX_ATTRIBUTE_4F;
-    }
-#elif defined(__DREAMCAST__)
-    if(vspec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA) {
-        vspec.color_attribute = VERTEX_ATTRIBUTE_4UB_BGRA;
     }
 #endif
 
@@ -80,7 +76,7 @@ bool DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
     /* Add the parent directory to the search path so we can load textures */
     auto added = smlt::get_app()->vfs->insert_search_path(0, filename_.parent());
 
-    auto read_data_header = [=](DataHeader* out) {
+    auto read_data_header = [=, this](DataHeader* out) {
         data_->read((char*) &out->flags, sizeof(out->flags));
         data_->read((char*) &out->local_id, sizeof(out->local_id));
         data_->read((char*) &out->path, sizeof(out->path));

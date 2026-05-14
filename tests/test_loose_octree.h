@@ -82,7 +82,7 @@ public:
         Frustum identity;
         identity.build(&projection);
 
-        auto cb = [=](TestOctree::Node* node) {
+        auto cb = [=, this](TestOctree::Node* node) {
             // Should only traverse nodes in the negative-Z
             assert_equal(+node->grid[2], 0);
         };

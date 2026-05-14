@@ -53,7 +53,6 @@ FOREACH(script ${LUA_TEST_SCRIPTS})
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${script}
             ${CMAKE_CURRENT_BINARY_DIR}/${filename}
-        DEPENDS ${script}
     )
 ENDFOREACH()
 

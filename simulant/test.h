@@ -362,12 +362,18 @@ public:
         std::vector<std::string> junit_suite;
         junit_lines.push_back("<testsuites>\n");
 
+        auto float_to_string = [](float v) -> std::string {
+            std::ostringstream ss;
+            ss << v;
+            return ss.str();
+        };
+
         auto gen_suite_line =
             [&](const std::string& name, clock::time_point start,
                 clock::time_point end,
                 const std::string& content = "") -> std::string {
             return "    <testcase name=\"" + name + "\" time=\"" +
-                   std::to_string(
+                   float_to_string(
                        std::chrono::duration_cast<std::chrono::duration<float>>(
                            end - start)
                            .count()) +
@@ -378,7 +384,7 @@ public:
 
         auto gen_suite = [&](const std::string& this_class) {
             auto end = clock::now();
-            auto t = std::to_string(
+            auto t = float_to_string(
                 std::chrono::duration_cast<std::chrono::duration<float>>(
                     end - suite_start)
                     .count());

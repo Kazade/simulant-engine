@@ -31,7 +31,8 @@ public:
     inline pointer address(reference r) { return &r; }
     inline const_pointer address(const_reference r) const { return &r; }
 
-    pointer allocate(size_type n, typename std::allocator<void>::const_pointer hint = 0);
+    pointer allocate(size_type n,
+                     const typename std::allocator<void>::value_type* hint = 0);
     inline void deallocate(pointer p, size_type);
 
     inline void construct(pointer p, const_reference value) { new (p) value_type(value); }
@@ -43,9 +44,9 @@ public:
     inline bool operator!=(const aligned_allocator& rhs) { return !operator==(rhs); }
 };
 
-template <class T, int N>
-typename aligned_allocator<T, N>::pointer
-aligned_allocator<T, N>::allocate(size_type n, typename std::allocator<void>::const_pointer hint) {
+template<class T, int N>
+typename aligned_allocator<T, N>::pointer aligned_allocator<T, N>::allocate(
+    size_type n, const typename std::allocator<void>::value_type* hint) {
     _S_UNUSED(hint);
 
     pointer res = reinterpret_cast<pointer>(aligned_alloc(N, sizeof(T) * n));

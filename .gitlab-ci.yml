@@ -388,7 +388,7 @@ test:windows-x64-mingw:
 ## clang build is currently just for checking compilation
 build:linux-x64-clang:
   stage: build
-  image: fedora:32
+  image: fedora:38
   variables:
     TARGET: linux-x64-clang
   before_script:
@@ -645,21 +645,21 @@ build:dreamcast-sh4-gcc:
 
 test:dreamcast-sh4-gcc:
   stage: test
-  image: fedora:33
+  image: fedora:44
   needs: ["build:dreamcast-sh4-gcc"]
   variables:
     TARGET: dreamcast-sh4-gcc
   dependencies:
     - build:dreamcast-sh4-gcc
   before_script:
-    - dnf install -y wget unzip libisofs libpng mesa-libGL gtk3 pulseaudio-libs gdb && dnf clean all
+    - dnf install -y wget unzip libisofs libpng mesa-libGL gtk3 pulseaudio-libs openal-soft gdb && dnf clean all
     - wget -O artifacts.zip https://gitlab.com/simulant/community/lxdream-nitro/-/jobs/artifacts/master/download?job=linux-x64:build
     - unzip artifacts.zip
     - export PATH=$PATH:`pwd`/build
   script:
     - cd ${TARGET}/release
     - ls tests
-    - lxdream-nitro --audio=null -r 32 -H -b -u -C ${TARGET}/release -e tests/simulant_tests.elf
+    - nitrocast --audio=null -r 32 -H -b -u -C ${TARGET}/release -e tests/simulant_tests.elf
   artifacts:
     when: always
     paths:

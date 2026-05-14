@@ -6,6 +6,7 @@
 #include <string.h>
 #include <dirent.h>
 
+#include <kos/version.h>
 #include <kos/thread.h>
 #include <dc/fs_dcload.h>
 
@@ -15,7 +16,7 @@ static volatile bool PROFILER_RUNNING = false;
 static volatile bool PROFILER_RECORDING = false;
 
 #define BASE_ADDRESS 0x8c010000
-#define BUCKET_SIZE 5000
+#define BUCKET_SIZE 10000
 
 #define INTERVAL_IN_MS 10
 
@@ -89,14 +90,15 @@ static int thd_each_cb(kthread_t* thd, void* data) {
     (void) data;
 
 
-    /* Only record the main thread (for now) */
+    /* Only record the main thread. In KOS, the initial thread running main()
+     * is labelled "[kernel]" — all other threads are system/worker threads. */
     if(strcmp(thd->label, "[kernel]") != 0) {
         return 0;
     }
 
     /* The idea is that if this code right here is running in the profiling
      * thread, then all the PCs from the other threads are
-     * current. Obviously though between iterations the
+     * current. Obviouly thought between iterations the
      * PC will change so it's not like this is a true snapshot
      * in time across threads */
     uint32_t PC = thd->context.pc;
@@ -111,8 +113,6 @@ static void record_samples() {
 
     size_t initial = ARC_COUNT;
 
-    /* Note: This is a function added to kallistios-nitro that's
-     * not yet available upstream */
     thd_each(&thd_each_cb, NULL);
 
     if(ARC_COUNT >= MAX_ARC_COUNT) {
@@ -129,7 +129,11 @@ static void record_samples() {
 }
 
 /* Declared in KOS in fs_dcload.c */
+#if KOS_VERSION_ABOVE(2, 1, 0)
+int syscall_dcload_detected();
+#else
 int fs_dcload_detected();
+#endif
 extern int dcload_type;
 
 
@@ -165,7 +169,11 @@ typedef struct {
 static bool init_sample_file(const char* path) {
     printf("Detecting dcload... ");
 
-    if(!fs_dcload_detected() && dcload_type != DCLOAD_TYPE_NONE) {
+#if KOS_VERSION_ABOVE(2, 1, 0)
+    if(!syscall_dcload_detected() || dcload_type == DCLOAD_TYPE_NONE) {
+#else
+    if(!fs_dcload_detected() || dcload_type == DCLOAD_TYPE_NONE) {
+#endif
         printf("[Not Found]\n");
         WRITE_TO_STDOUT = true;
         return false;
@@ -196,11 +204,9 @@ static bool init_sample_file(const char* path) {
 #define ROUNDUP(x,y) ((((x)+(y)-1)/(y))*(y))
 
 static bool write_samples(const char* path) {
-    /* Appends the samples to the output file in gmon format
-     *
-     * We iterate the data twice, first generating arcs, then generating
-     * basic block counts. While we do that though we calculate the data
-     * for the histogram so we don't need a third iteration */
+    /* Appends samples to the output file in gmon format.
+     * gmon requires: GmonHeader (written at init) → histogram (tag=0) → arcs (tag=1).
+     * We build the histogram bins first, write the histogram record, then write arcs. */
 
     if(WRITE_TO_STDOUT) {
         write_samples_to_stdout();
@@ -210,37 +216,62 @@ static bool write_samples(const char* path) {
     extern char _etext;
 
     const uint32_t HISTFRACTION = 8;
-
-    /* We know the lowest address, it's the same for all DC games */
     uint32_t lowest_address = ROUNDDOWN(BASE_ADDRESS, HISTFRACTION);
-
-    /* We need to calculate the highest address though */
     uint32_t highest_address = ROUNDUP((uint32_t) &_etext, HISTFRACTION);
 
-    /* Histogram data */
     const int BIN_COUNT = ((highest_address - lowest_address) / HISTFRACTION);
+    uint32_t bin_size = (highest_address - lowest_address) / BIN_COUNT;
+
     uint16_t* bins = (uint16_t*) malloc(BIN_COUNT * sizeof(uint16_t));
     memset(bins, 0, sizeof(uint16_t) * BIN_COUNT);
 
-    FILE* out = fopen(path, "r+");  /* Append, as init_sample_file would have created the file */
+    FILE* out = fopen(path, "a");  /* Append — GmonHeader already written by init_sample_file */
     if(!out) {
         fprintf(stderr, "-- Error writing samples to output file\n");
+        free(bins);
         return false;
     }
 
-    // Seek to the end of the file
-    fseek(out, 0, SEEK_END);
-
     printf("-- Writing %d arcs\n", ARC_COUNT);
 
-    uint8_t tag = 1;
+    /* Pass 1: build histogram bins from arc PCs, weighted by sample count */
+    Arc* root = ARCS;
+    for(int i = 0; i < BUCKET_SIZE; ++i) {
+        if(root->pc) {
+            bins[(root->pc - lowest_address) / bin_size] += (uint16_t) root->count;
+            Arc* s = root->next;
+            while(s) {
+                assert(s->pc);
+                bins[(s->pc - lowest_address) / bin_size] += (uint16_t) s->count;
+                s = s->next;
+            }
+        }
+        root++;
+    }
+
+    /* Write histogram record (tag=0) — must precede all arc records */
+    GmonHistHeader hist_header;
+    hist_header.low_pc = lowest_address;
+    hist_header.high_pc = highest_address;
+    hist_header.hist_size = BIN_COUNT;
+    hist_header.prof_rate = 1000 / INTERVAL_IN_MS;  /* Hz, not ms */
+    strcpy(hist_header.dimen, "seconds");
+    hist_header.dimen_abbrev = 's';
+
+    unsigned char hist_tag = 0;
+    fwrite(&hist_tag, sizeof(hist_tag), 1, out);
+    fwrite(&hist_header, sizeof(hist_header), 1, out);
+    fwrite(bins, sizeof(uint16_t), BIN_COUNT, out);
+    free(bins);
+
+    /* Pass 2: write arc records (tag=1) */
+    uint8_t arc_tag = 1;
 
 #ifndef NDEBUG
     size_t written = 0;
 #endif
 
-    /* Write arcs */
-    Arc* root = ARCS;
+    root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
         if(root->pc) {
             GmonArc arc;
@@ -248,23 +279,20 @@ static bool write_samples(const char* path) {
             arc.self_pc = root->pc;
             arc.count = root->count;
 
-            /* Write the root sample if it has a program counter */
-            fwrite(&tag, sizeof(tag), 1, out);
+            fwrite(&arc_tag, sizeof(arc_tag), 1, out);
             fwrite(&arc, sizeof(GmonArc), 1, out);
 
 #ifndef NDEBUG
             ++written;
 #endif
 
-            /* If there's a next pointer, traverse the list */
             Arc* s = root->next;
             while(s) {
                 arc.from_pc = s->pr;
                 arc.self_pc = s->pc;
                 arc.count = s->count;
 
-                /* Write the root sample if it has a program counter */
-                fwrite(&tag, sizeof(tag), 1, out);
+                fwrite(&arc_tag, sizeof(arc_tag), 1, out);
                 fwrite(&arc, sizeof(GmonArc), 1, out);
 
 #ifndef NDEBUG
@@ -274,51 +302,11 @@ static bool write_samples(const char* path) {
                 s = s->next;
             }
         }
-
         root++;
     }
-
-    uint32_t histogram_range = highest_address - lowest_address;
-    uint32_t bin_size = histogram_range / BIN_COUNT;
-
-    root = ARCS;
-    for(int i = 0; i < BUCKET_SIZE; ++i) {
-        if(root->pc) {
-            // printf("Incrementing %d for %x. ", (root->pc - lowest_address) / bin_size, (unsigned int) root->pc);
-            bins[(root->pc - lowest_address) / bin_size]++;
-            // printf("Now: %d\n", (int) bins[(root->pc - lowest_address) / bin_size]);
-
-            /* If there's a next pointer, traverse the list */
-            Arc* s = root->next;
-            while(s) {
-                assert(s->pc);
-                bins[(s->pc - lowest_address) / bin_size]++;
-                s = s->next;
-            }
-        }
-
-        root++;
-    }
-
-
-    /* Write histogram now that we have all the information we need */
-    GmonHistHeader hist_header;
-    hist_header.low_pc = lowest_address;
-    hist_header.high_pc = highest_address;
-    hist_header.hist_size = BIN_COUNT;
-    hist_header.prof_rate = INTERVAL_IN_MS;
-    strcpy(hist_header.dimen, "seconds");
-    hist_header.dimen_abbrev = 's';
-
-    unsigned char hist_tag = 0;
-    fwrite(&hist_tag, sizeof(hist_tag), 1, out);
-    fwrite(&hist_header, sizeof(hist_header), 1, out);
-    fwrite(bins, sizeof(uint16_t), BIN_COUNT, out);
 
     fclose(out);
-    free(bins);
 
-    /* We should have written all the recorded samples */
     assert(written == ARC_COUNT);
 
     clear_samples();
@@ -336,8 +324,10 @@ static bool write_samples_to_stdout() {
     Arc* root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
         Arc* s = root;
-        while(s->next) {
-            printf("\"%x\", \"%x\", \"%d\"\n", (unsigned int) s->pc, (unsigned int) s->pr, (unsigned int) s->count);
+        while(s) {
+            if(s->pc) {
+                printf("\"%x\", \"%x\", \"%d\"\n", (unsigned int) s->pc, (unsigned int) s->pr, (unsigned int) s->count);
+            }
             s = s->next;
         }
 
@@ -356,8 +346,16 @@ static void* run(void* args) {
     while(PROFILER_RUNNING){
         if(PROFILER_RECORDING) {
             record_samples();
-            usleep(INTERVAL_IN_MS * 1000); //usleep takes milliseconds
         }
+        /* originally the sleep was inside of `PROFILER_RECORDING` conditional block
+         * loop was not yielding unless `PROFILER_RECORDING` was `true`.
+         * `profiler_stop` sets `PROFILER_RECORDING` to `false`,
+         * then calls `profiler_clean_up`.
+         * At this point, the `while(PROFILER_RUNNING)` loop no longer yields the CPU.
+         * Without yielding, the high-prio prof thread starves `main`,
+         * so `profiler_clean_up` never gets to flip `PROFILER_RUNNING` to `false`.
+         * `thd_join` then hangs at exit. */
+        thd_sleep(INTERVAL_IN_MS);
     }
 
     printf("-- Profiler thread finished!\n");
@@ -366,8 +364,17 @@ static void* run(void* args) {
 }
 
 void profiler_init(const char* output) {
+    kthread_attr_t profiler_attr;
+	profiler_attr.create_detached = 0;
+    /* using kthread attribute to bump stack size */
+	profiler_attr.stack_size = 32 * 1024;
+	profiler_attr.stack_ptr = NULL;
+    /* Lower priority is... er, higher */
+	profiler_attr.prio = PRIO_DEFAULT / 2;
+	profiler_attr.label = "dcprof";
+
     /* Store the filename */
-    strncpy(OUTPUT_FILENAME, output, sizeof(OUTPUT_FILENAME) - 1);
+    strncpy(OUTPUT_FILENAME, output, sizeof(OUTPUT_FILENAME));
 
     /* Initialize the file */
     printf("Creating samples file...\n");
@@ -380,10 +387,7 @@ void profiler_init(const char* output) {
     memset(ARCS, 0, sizeof(ARCS));
 
     PROFILER_RUNNING = true;
-    THREAD = thd_create(0, run, NULL);
-
-    /* Lower priority is... er, higher */
-    thd_set_prio(THREAD, PRIO_DEFAULT / 2);
+    THREAD = thd_create_ex(&profiler_attr, run, NULL);
 
     printf("Thread started.\n");
 }

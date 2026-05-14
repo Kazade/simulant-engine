@@ -1,7 +1,9 @@
 #include <GL/glkos.h>
+#include <dc/pvr.h>
 #include <malloc.h>
 
 #include "platform.h"
+#include "../../window.h"
 
 static unsigned long systemRam = 0x00000000;
 static unsigned long elfOffset = 0x00000000;
@@ -36,6 +38,13 @@ uint64_t DreamcastPlatform::total_ram_in_bytes() const {
 }
 
 uint64_t DreamcastPlatform::available_vram_in_bytes() const {
+    /* If using the PVR renderer directly, query pvr_mem_available()
+     * instead of the GL extension which only works with GLdc */
+    uint32_t pvr_avail = pvr_mem_available();
+    if(pvr_avail > 0) {
+        return (uint64_t) pvr_avail;
+    }
+
     int value;
     glGetIntegerv(GL_FREE_TEXTURE_MEMORY_KOS, &value);
     return (uint64_t) value;

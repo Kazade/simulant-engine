@@ -213,7 +213,7 @@ public:
         auto body = scene->create_child<StaticBody>();
         body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood());
         body->register_collision_listener(&listener); // Register the listener
-        body->signal_collision_enter().connect([&](const Collision& c) {
+        body->signal_collision_enter().connect([&](const Collision& /*c*/) {
             signal_enter_called = true;
         });
 
@@ -282,7 +282,7 @@ public:
         auto body = scene->create_child<StaticBody>();
         body->add_box_collider(Vec3(1, 1, 1), PhysicsMaterial::wood());
         body->register_collision_listener(&listener);
-        body->signal_collision_exit().connect([&](const Collision& c) {
+        body->signal_collision_exit().connect([&](const Collision& /*c*/) {
             signal_leave_called = true;
         });
 
