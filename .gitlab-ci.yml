@@ -351,6 +351,7 @@ test:windows-x64-mingw:
     - export WINEDEBUG=err+all,+loaddll
     - wine simulant_tests.exe --junit-xml=report.xml
   artifacts:
+    when: always
     reports:
       junit: ${TARGET}/debug/tests/report.xml
     paths:
