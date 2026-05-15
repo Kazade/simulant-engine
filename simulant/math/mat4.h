@@ -3,7 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
-#include "sh4zam/shz_matrix.h"
+#include "../deps/sh4zam/shz_matrix.h"
 #include <vector>
 #include <stdio.h>
 

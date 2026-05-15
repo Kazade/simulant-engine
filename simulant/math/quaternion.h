@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sh4zam/shz_quat.h"
+#include "../deps/sh4zam/shz_quat.h"
 
 #include "degrees.h"
 #include "euler.h"
