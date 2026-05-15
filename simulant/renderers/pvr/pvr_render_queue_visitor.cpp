@@ -16,7 +16,7 @@
 #include <dc/pvr.h>
 #include <dc/matrix.h>
 #include <dc/fmath.h>
-#include <sh4zam/shz_sh4zam.h>
+#include "sh4zam/shz_sh4zam.h"
 #else
 /* Provide fallback definitions for non-Dreamcast builds (stub compilation) */
 #define PVR_LIST_OP_POLY 0
