@@ -33,7 +33,7 @@ public:
 
     pointer allocate(size_type n,
                      const typename std::allocator<void>::value_type* hint = 0);
-    inline void deallocate(pointer p, size_type);
+    inline void deallocate(pointer p, size_type n);
 
     inline void construct(pointer p, const_reference value) { new (p) value_type(value); }
     inline void destroy(pointer p) { p->~value_type(); }
@@ -49,14 +49,19 @@ typename aligned_allocator<T, N>::pointer aligned_allocator<T, N>::allocate(
     size_type n, const typename std::allocator<void>::value_type* hint) {
     _S_UNUSED(hint);
 
-    pointer res = reinterpret_cast<pointer>(aligned_alloc(N, sizeof(T) * n));
+    /* aligned_alloc requires size to be a multiple of alignment. Round up. */
+    size_type bytes = sizeof(T) * n;
+    bytes = (bytes + N - 1) & ~(size_type(N - 1));
+
+    pointer res = reinterpret_cast<pointer>(aligned_alloc(N, bytes));
     if(res == 0)
         throw std::bad_alloc();
     return res;
 }
 
 template <class T, int N>
-void aligned_allocator<T, N>::deallocate(pointer p, size_type) {
+void aligned_allocator<T, N>::deallocate(pointer p, size_type n) {
+    _S_UNUSED(n);
     aligned_free(p);
 }
 

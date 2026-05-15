@@ -54,7 +54,7 @@ void PVRRenderer::init_context() {
         /* Bin sizes for: OP, OP_MOD, TR, TR_MOD, PT */
         { PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
         512 * 1024, /* Vertex buffer size */
-        0,          /* DMA enabled */
+        1,          /* DMA enabled */
         0,          /* FSAA */
         0,          /* Autosort (0 = enabled for TR) */
         8,          /* OPB overflow count */
@@ -168,34 +168,37 @@ void PVRRenderer::ensure_list_opened(pvr_list_type_t list_type) {
 #endif
 }
 
-void PVRRenderer::flush_list_buffer(aligned_vector<uint8_t, 32>& buffer, pvr_list_type_t list_type) {
-#ifdef __DREAMCAST__
-    if(buffer.empty()) return;
-    ensure_list_opened(list_type);
-    const uint8_t* ptr = buffer.data();
-    std::size_t remaining = buffer.size();
-    while(remaining >= 32) {
-        pvr_vertex_t* dest = static_cast<pvr_vertex_t*>(pvr_dr_target(dr_state_));
-        shz_memcpy32(dest, ptr, 32);
-        pvr_dr_commit(dest);
-        ptr += 32;
-        remaining -= 32;
-    }
-    buffer.clear();
-#else
-    _S_UNUSED(buffer);
-    _S_UNUSED(list_type);
-#endif
-}
-
 void PVRRenderer::on_post_render() {
 #ifdef __DREAMCAST__
     if(scene_begun_) {
-        flush_list_buffer(pt_buffer_, PVR_LIST_PT_POLY);
-        flush_list_buffer(tr_buffer_, PVR_LIST_TR_POLY);
+        pvr_list_finish();
+        prev_list_type_ = (pvr_list_type_t) -1;
+
+        if(!pt_buffer_.empty()) {
+            if(pt_buffer_.size() % 64 != 0) {
+                pt_buffer_.resize((pt_buffer_.size() + 63) & ~63);
+            }
+
+            pvr_set_vertbuf(PVR_LIST_PT_POLY, &pt_buffer_[0], pt_buffer_.size());
+        } else {
+            pvr_set_vertbuf(PVR_LIST_PT_POLY, NULL, 0);
+        }
+
+        if(!tr_buffer_.empty()) {
+            if(tr_buffer_.size() % 64 != 0) {
+                tr_buffer_.resize((tr_buffer_.size() + 63) & ~63);
+            }
+            pvr_set_vertbuf(PVR_LIST_TR_POLY, &tr_buffer_[0], tr_buffer_.size());
+        } else {
+            pvr_set_vertbuf(PVR_LIST_TR_POLY, NULL, 0);
+        }
 
         S_VERBOSE("Finishing scene");
+
         pvr_scene_finish();
+
+        pt_buffer_.clear();
+        tr_buffer_.clear();
         scene_begun_ = false;
     }
 #endif

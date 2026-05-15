@@ -161,9 +161,6 @@ void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
         ambient_[1] = a.g;
         ambient_[2] = a.b;
     }
-
-    S_VERBOSE("Init DR state");
-    pvr_dr_init(&renderer_->dr_state_);
 }
 
 void PVRRenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
