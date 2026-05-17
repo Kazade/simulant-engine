@@ -20,6 +20,7 @@ stages:
   - prepare
   - build
   - test
+  - run
   - deploy
 
 variables:
@@ -557,7 +558,7 @@ test:linux-x64-gcc-valgrind:
     - export SIMULANT_SOUND_DRIVER=null
     - export SDL_VIDEODRIVER=dummy
     - export SDL_AUDIODRIVER=dummy
-    - valgrind --error-exitcode=1 --leak-check=full --show-leak-kinds=definite,indirect --track-origins=yes --suppressions=../../tests/valgrind.supp ./tests/simulant_tests
+    - valgrind --error-exitcode=1 --leak-check=full --show-leak-kinds=definite,indirect --track-origins=yes --suppressions=../../tests/valgrind.supp --log-file=valgrind.log ./tests/simulant_tests
   allow_failure: true
   artifacts:
     when: always
@@ -660,13 +661,31 @@ test:dreamcast-sh4-gcc:
   script:
     - cd ${TARGET}/release
     - ls tests
-    - nitrocast --audio=null -r 32 -H -b -u -C ${TARGET}/release -e tests/simulant_tests.elf
+    - nitrocast --audio=null -r 32 -H -b -u -C . -e tests/simulant_tests.elf
   artifacts:
     when: always
     paths:
       - ${TARGET}/debug/simulant/*.a
       - ${TARGET}/release/simulant/*.a
       - ${TARGET}/release/*.out
+
+run:dreamcast-sh4-gcc:
+  image: fedora:44
+  stage: run
+  script:
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then BRANCH="main"; else BRANCH="next"; fi
+    - python pip/simulant start myproject --branch $BRANCH -t template
+    - cd myproject
+    - simulant build dreamcast
+
+run:linux-x64-gcc11:
+  image: fedora:44
+  stage: run
+  script:
+    - if [ "$CI_COMMIT_BRANCH" == "main" ]; then BRANCH="main"; else BRANCH="next"; fi
+    - python pip/simulant start myproject --branch $BRANCH -t template
+    - cd myproject
+    - simulant build linux
 
 .deploy:deploy:
   stage: deploy
@@ -729,12 +748,8 @@ deploy:linux-x64-gcc11:
   extends: .deploy:deploy
   needs:
     - build:linux-x64-gcc11
-    - test:linux-x64-gcc-debug
-    - test:linux-x64-gcc-release
   dependencies:
     - build:linux-x64-gcc11
-    - test:linux-x64-gcc-debug
-    - test:linux-x64-gcc-release
   variables:
     TARGET: linux-x64-gcc11
     LIB_EXT: so*

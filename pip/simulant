@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
-import multiprocessing
-import requests
-from datetime import datetime, timedelta
-import os
-from os.path import splitext, join
-import sys
-import zipfile
-from clint.textui import progress
 import argparse
-import shutil
-import platform
-import subprocess
-import docker
-import docker.errors
-import logging
-import site
 import json
+import logging
+import multiprocessing
+import os
+import platform
+import shutil
+import site
+import subprocess
+import sys
+import tempfile
+import zipfile
+from datetime import datetime, timedelta
 from glob import glob
+from os.path import dirname, join, splitext
 from xml.dom.minidom import Document
 
-from os.path import dirname
-
+import docker
+import docker.errors
+import requests
+from clint.textui import progress
 
 _STR_LENGTH = 120
 _PROJECT_ROOT = None
@@ -55,7 +54,7 @@ class UnsupportedPlatformError(ValueError):
 
 def _make_executable(path):
     mode = os.stat(path).st_mode
-    mode |= (mode & 0o444) >> 2    # copy R bits to X
+    mode |= (mode & 0o444) >> 2  # copy R bits to X
     os.chmod(path, mode)
 
 
@@ -69,7 +68,7 @@ def _project_path(file_path):
 
 
 def _rename_files_and_directories(search, replacement, directory):
-    " Recursively replaces 'search' in folder and filenames with 'replacement' "
+    "Recursively replaces 'search' in folder and filenames with 'replacement'"
     for root, subdirs, files in os.walk(directory):
         for subdir in subdirs:
             if PLACEHOLDER in subdir:
@@ -84,7 +83,9 @@ def _rename_files_and_directories(search, replacement, directory):
                 shutil.move(path, dest)
 
 
-def _search_replace(search, replacement, directory, extensions=[".cpp", ".h", ".md", ".json", ".txt"]):
+def _search_replace(
+    search, replacement, directory, extensions=[".cpp", ".h", ".md", ".json", ".txt"]
+):
     "Recursively search replace text in files that match the extensions"
     for root, subdirs, files in os.walk(directory):
         for file in files:
@@ -107,9 +108,11 @@ def _find_project_root():
     while not os.path.exists(path):
         new_path = os.path.dirname(path)
         if new_path == path:
-            print("Unable to find {0}. Are you in the right directory?".format(
-                SIMULANT_CONFIG
-            ))
+            print(
+                "Unable to find {0}. Are you in the right directory?".format(
+                    SIMULANT_CONFIG
+                )
+            )
 
         path = new_path
 
@@ -128,7 +131,7 @@ def _find_shipped_path(path):
     # directory should be the prefix
     guessed_prefix = os.path.dirname(this_dir)
 
-    for prefix in (site.PREFIXES + [guessed_prefix]):
+    for prefix in site.PREFIXES + [guessed_prefix]:
         final = os.path.join(prefix, "share/simulant-tools", path)
         if os.path.exists(final):
             return final
@@ -140,17 +143,16 @@ def _download_zip_and_extract(zip_file, target_dir):
     r = requests.get(zip_file, stream=True)
     path = os.path.join(target_dir, zip_file.rsplit("/")[-1])
 
-    with open(path, 'wb') as f:
-        total_length = int(r.headers.get('content-length'))
+    with open(path, "wb") as f:
+        total_length = int(r.headers.get("content-length"))
         for chunk in progress.bar(
-            r.iter_content(chunk_size=1024),
-            expected_size=(total_length/1024) + 1
+            r.iter_content(chunk_size=1024), expected_size=(total_length / 1024) + 1
         ):
             if chunk:
                 f.write(chunk)
                 f.flush()
 
-    zip_ref = zipfile.ZipFile(path, 'r')
+    zip_ref = zipfile.ZipFile(path, "r")
     zip_ref.extractall(target_dir)
     zip_ref.close()
 
@@ -162,12 +164,12 @@ def _download_docker_image(image):
     client = docker.from_env()
 
     try:
-        print(("Checking for Docker image %s" % image).ljust(_STR_LENGTH), end='')
+        print(("Checking for Docker image %s" % image).ljust(_STR_LENGTH), end="")
         client.images.get(image)
         print("[ OK ]")
     except docker.errors.ImageNotFound:
         print("[ NOT FOUND ]")
-        print(("Downloading Docker image %s" % image).ljust(_STR_LENGTH), end='')
+        print(("Downloading Docker image %s" % image).ljust(_STR_LENGTH), end="")
         client.images.pull(image)
         print("[ OK ]")
     except requests.exceptions.ConnectionError:
@@ -177,7 +179,7 @@ def _download_docker_image(image):
 
 def _check_docker_running():
     try:
-        print("Checking Docker is running".ljust(_STR_LENGTH), end='')
+        print("Checking Docker is running".ljust(_STR_LENGTH), end="")
         client = docker.from_env()
         client.containers.list()
         print("[ OK ]")
@@ -204,19 +206,13 @@ def _start_docker_container(image, working_dir, volumes=None):
         "/bin/bash --login",
         detach=True,
         volumes={
-            _find_project_root(): {
-                "bind": _find_project_root(),
-                "mode": "Z"
-            },
-            toolchains_folder: {
-                "bind": toolchains_folder,
-                "mode": "Z"
-            },
-            **volumes
+            _find_project_root(): {"bind": _find_project_root(), "mode": "Z"},
+            toolchains_folder: {"bind": toolchains_folder, "mode": "Z"},
+            **volumes,
         },
         tty=True,
         stdin_open=True,
-        user=os.getuid()
+        user=os.getuid(),
     )
 
     return container
@@ -238,12 +234,13 @@ class Platform(object):
 
     def _run_command(self, cmd, cwd, use_docker_image=True, check_output=True):
         if use_docker_image and self.required_docker_image:
-            assert(self.container)
+            assert self.container
 
             api_client = self.container.client.api
             exec_handle = api_client.exec_create(
                 self.container.name,
-                '/bin/bash -c "source /etc/bash.bashrc; cd %s; %s"' % (cwd, " ".join(cmd))
+                '/bin/bash -c "source /etc/bash.bashrc; cd %s; %s"'
+                % (cwd, " ".join(cmd)),
             )
 
             stream = api_client.exec_start(exec_handle, stream=True)
@@ -253,9 +250,7 @@ class Platform(object):
                 print(line.decode("utf-8"), end="")
                 output += line.decode("utf-8")
 
-            exit_code = api_client.exec_inspect(
-                exec_handle['Id']
-            ).get('ExitCode')
+            exit_code = api_client.exec_inspect(exec_handle["Id"]).get("ExitCode")
 
             if exit_code:
                 if check_output:
@@ -273,9 +268,7 @@ class Platform(object):
                 output = subprocess.check_output(cmd, cwd=cwd)
                 return output.decode("utf-8")
             else:
-                return subprocess.call(
-                    cmd, cwd=cwd
-                )
+                return subprocess.call(cmd, cwd=cwd)
 
     def _generate_cmake_args(self, build_type=BuildType.DEBUG):
         libraries = _project_path("libraries")
@@ -324,13 +317,12 @@ class Platform(object):
         build_name = {
             BuildType.DEBUG: "debug",
             BuildType.RELDEBUG: "reldebug",
-            BuildType.RELEASE: "release"
+            BuildType.RELEASE: "release",
         }
 
         return os.path.abspath(
             "build/{target}/{build_type}".format(
-                target=self.target,
-                build_type=build_name[build_type]
+                target=self.target, build_type=build_name[build_type]
             )
         )
 
@@ -344,7 +336,7 @@ class Platform(object):
             self.container = _start_docker_container(
                 self.required_docker_image,
                 self._calc_build_dir(build_type=build_type),
-                volumes
+                volumes,
             )
 
         if flavour:
@@ -359,7 +351,15 @@ class Platform(object):
                     )
                     sys.exit(1)
 
-    def build(self, build_type=BuildType.DEBUG, rebuild=False, flavour="", testing=False, additional_cmake_args=None, print_output=True):
+    def build(
+        self,
+        build_type=BuildType.DEBUG,
+        rebuild=False,
+        flavour="",
+        testing=False,
+        additional_cmake_args=None,
+        print_output=True,
+    ):
         self._prepare(build_type=build_type, flavour=flavour)
 
         if rebuild:
@@ -393,7 +393,9 @@ class Platform(object):
 
         cpu_count = int(multiprocessing.cpu_count() * 1.5)
 
-        ret = self._run_command(["make", "-j%s" % cpu_count], cwd=build_dir, check_output=False)
+        ret = self._run_command(
+            ["make", "-j%s" % cpu_count], cwd=build_dir, check_output=False
+        )
         if ret:
             sys.exit(ret)
 
@@ -414,9 +416,7 @@ class Platform(object):
         env["LD_LIBRARY_PATH"] = libraries
 
         subprocess.call(
-            [os.path.abspath(os.path.join(build_dir, executable))],
-            cwd=".",
-            env=env
+            [os.path.abspath(os.path.join(build_dir, executable))], cwd=".", env=env
         )
 
     def _generate_asset_list(self, config, flavour):
@@ -426,8 +426,8 @@ class Platform(object):
                 sys.exit(1)
 
             patterns = config["flavours"][flavour].get("assets", [])
-            patterns.extend(config["flavours"][flavour].get(
-                f"assets[{self.platform_name}]", [])
+            patterns.extend(
+                config["flavours"][flavour].get(f"assets[{self.platform_name}]", [])
             )
 
             if not patterns:
@@ -471,20 +471,18 @@ class Linux(Platform):
         super(Linux, self)._prepare(build_type, flavour)
 
         if not self.is_native:
-            raise UnsupportedPlatformError(
-                "linux-x86-gcc"
-            )
+            raise UnsupportedPlatformError("linux-x86-gcc")
 
     def package(self, flavour):
         # Install flatpak sdk and runtime
         self._run_command(
             "flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo".split(),
-            cwd="."
+            cwd=".",
         )
 
         self._run_command(
             "flatpak install -y flathub org.freedesktop.Platform//22.08 org.freedesktop.Sdk//22.08".split(),
-            cwd="."
+            cwd=".",
         )
 
         package_dir = join(_project_path("packages"), self.target)
@@ -525,7 +523,9 @@ class Linux(Platform):
 
             # This is the license of the metadata file, NOT the license of the project
             root.appendChild(set_text(doc.createElement("metadata_license"), "FSFAP"))
-            root.appendChild(set_text(doc.createElement("project_license"), config["license"]))
+            root.appendChild(
+                set_text(doc.createElement("project_license"), config["license"])
+            )
 
             launchable = doc.createElement("launchable")
             launchable.setAttribute("type", "desktop-id")
@@ -585,11 +585,7 @@ class Linux(Platform):
         def _generate_manifest():
             manifest_file = os.path.join(package_tmp_dir, package_name + ".json")
 
-            libraries_dir = join(
-                _project_path("libraries"),
-                self.target,
-                "lib"
-            )
+            libraries_dir = join(_project_path("libraries"), self.target, "lib")
 
             appdata_xml = _generate_appdata_xml()
             appdata_filename = os.path.split(appdata_xml)[1]
@@ -600,75 +596,106 @@ class Linux(Platform):
                 "runtime-version": "22.08",
                 "sdk": "org.freedesktop.Sdk",
                 "command": config["executable"],
-                "modules": [{
-                    "name": "libraries",
-                    "buildsystem": "simple",
-                    "build-commands": [
-                        "mkdir -p /app/lib && install libraries/*.so* /app/lib",
-                    ],
-                    "sources": [
-                        {"type": "dir", "path": libraries_dir, "dest": "libraries"},
-                    ],
-                    "cleanup": [
-                        "libraries",
-                    ]
-                }, {
-                    "name": "appdata",
-                    "buildsystem": "simple",
-                    "build-commands": [
-                        "mkdir -p /app/share/metainfo",
-                        "mv {name} /app/share/metainfo/{name}".format(name=appdata_filename),
-                    ],
-                    "sources": [
-                        {"type": "file", "path": appdata_xml}
-                    ]
-                }, {
-                    "name": slug_name,
-                    "buildsystem": "cmake",
-                    "config-opts": [
-                        "-DCMAKE_BUILD_TYPE=Release",
-                        "-DSIMULANT_INCLUDE_FOLDER={}".format(
-                            join("/run/build/%s/libraries/" % slug_name, self.target, "include")
-                        ),
-                        "-DSIMULANT_LIBRARY_FOLDER=/app/lib",
-                        "-DSIMULANT_FLAVOUR={}".format(flavour),
-                    ],
-                    "sources": [
-                        {"type": "dir", "path": _project_path("assets"), "dest": "assets"},
-                        {"type": "dir", "path": _project_path("tools"), "dest": "tools"},
-                        {"type": "dir", "path": _project_path("libraries"), "dest": "libraries"},
-                        {"type": "dir", "path": _project_path("sources"), "dest": "sources"},
-                        {"type": "file", "path": _project_path("CMakeLists.txt")}
-                    ],
-                    "cleanup": [
-                        "assets", "tools", "libraries", "sources", "CMakeLists.txt"
-                    ]
-                }, {
-                    "name": "assets",
-                    "buildsystem": "simple",
-                    "build-commands": [
-                        "cp -r assets /app/bin/assets",
-                    ],
-                    "sources": [
-                        {"type": "dir", "path": _project_path("assets"), "dest": "assets"},
-                    ],
-                    "cleanup": [
-                        "assets"
-                    ]
-                }, {
-                    "name": "desktop-file",
-                    "buildsystem": "simple",
-                    "build-commands": [
-                        "cp %s /app/share/applications/%s.desktop" % (
-                            _generate_desktop_file(), config['package']
-                        )
-                    ]
-                }],
+                "modules": [
+                    {
+                        "name": "libraries",
+                        "buildsystem": "simple",
+                        "build-commands": [
+                            "mkdir -p /app/lib && install libraries/*.so* /app/lib",
+                        ],
+                        "sources": [
+                            {"type": "dir", "path": libraries_dir, "dest": "libraries"},
+                        ],
+                        "cleanup": [
+                            "libraries",
+                        ],
+                    },
+                    {
+                        "name": "appdata",
+                        "buildsystem": "simple",
+                        "build-commands": [
+                            "mkdir -p /app/share/metainfo",
+                            "mv {name} /app/share/metainfo/{name}".format(
+                                name=appdata_filename
+                            ),
+                        ],
+                        "sources": [{"type": "file", "path": appdata_xml}],
+                    },
+                    {
+                        "name": slug_name,
+                        "buildsystem": "cmake",
+                        "config-opts": [
+                            "-DCMAKE_BUILD_TYPE=Release",
+                            "-DSIMULANT_INCLUDE_FOLDER={}".format(
+                                join(
+                                    "/run/build/%s/libraries/" % slug_name,
+                                    self.target,
+                                    "include",
+                                )
+                            ),
+                            "-DSIMULANT_LIBRARY_FOLDER=/app/lib",
+                            "-DSIMULANT_FLAVOUR={}".format(flavour),
+                        ],
+                        "sources": [
+                            {
+                                "type": "dir",
+                                "path": _project_path("assets"),
+                                "dest": "assets",
+                            },
+                            {
+                                "type": "dir",
+                                "path": _project_path("tools"),
+                                "dest": "tools",
+                            },
+                            {
+                                "type": "dir",
+                                "path": _project_path("libraries"),
+                                "dest": "libraries",
+                            },
+                            {
+                                "type": "dir",
+                                "path": _project_path("sources"),
+                                "dest": "sources",
+                            },
+                            {"type": "file", "path": _project_path("CMakeLists.txt")},
+                        ],
+                        "cleanup": [
+                            "assets",
+                            "tools",
+                            "libraries",
+                            "sources",
+                            "CMakeLists.txt",
+                        ],
+                    },
+                    {
+                        "name": "assets",
+                        "buildsystem": "simple",
+                        "build-commands": [
+                            "cp -r assets /app/bin/assets",
+                        ],
+                        "sources": [
+                            {
+                                "type": "dir",
+                                "path": _project_path("assets"),
+                                "dest": "assets",
+                            },
+                        ],
+                        "cleanup": ["assets"],
+                    },
+                    {
+                        "name": "desktop-file",
+                        "buildsystem": "simple",
+                        "build-commands": [
+                            "cp %s /app/share/applications/%s.desktop"
+                            % (_generate_desktop_file(), config["package"])
+                        ],
+                    },
+                ],
                 "finish-args": [
-                   "--socket=wayland",
-                   "--share=network",
-                   "--device=dri",
-                   "--socket=pulseaudio"
+                    "--socket=wayland",
+                    "--share=network",
+                    "--device=dri",
+                    "--socket=pulseaudio",
                 ],
             }
 
@@ -683,21 +710,26 @@ class Linux(Platform):
 
         self._run_command(
             [
-                "flatpak-builder", "-vv",
+                "flatpak-builder",
+                "-vv",
                 "--delete-build-dirs",
                 "--repo=%s" % repo_dir,
-                "--force-clean", package_build_dir, manifest_file
+                "--force-clean",
+                package_build_dir,
+                manifest_file,
             ],
-            cwd=_project_path(".")
+            cwd=_project_path("."),
         )
 
         self._run_command(
             [
-                "flatpak", "build-bundle", repo_dir,
-                "%s/%s" % (package_dir, config['executable'] + ".flatpak"),
-                package_name
+                "flatpak",
+                "build-bundle",
+                repo_dir,
+                "%s/%s" % (package_dir, config["executable"] + ".flatpak"),
+                package_name,
             ],
-            cwd=_project_path(".")
+            cwd=_project_path("."),
         )
 
         return 0
@@ -708,22 +740,20 @@ class Windows(Platform):
     cmake_binary = "mingw64-cmake"
     executable_ext = ".exe"
 
-    def build(self, build_type=BuildType.DEBUG, rebuild=False, print_output=True, flavour=""):
+    def build(
+        self, build_type=BuildType.DEBUG, rebuild=False, print_output=True, flavour=""
+    ):
         super().build(
             build_type=build_type,
             rebuild=rebuild,
             print_output=print_output,
-            flavour=flavour
+            flavour=flavour,
         )
 
         # Copy DLLs to the build directory
         build_dir = self._calc_build_dir(build_type=build_type)
 
-        libraries_dir = join(
-            _project_path("libraries"),
-            self.target,
-            "lib"
-        )
+        libraries_dir = join(_project_path("libraries"), self.target, "lib")
 
         if build_type in (BuildType.RELEASE, BuildType.RELDEBUG):
             libraries_dir = join(libraries_dir, "release")
@@ -753,21 +783,19 @@ class Windows(Platform):
         env["LD_LIBRARY_PATH"] = libraries
 
         def is_wsl2():
-            return 'WSL' in platform.uname().release
+            return "WSL" in platform.uname().release
 
         # On WSL2 we just launch the executable, on anything else
         # we use wine to do so
         if is_wsl2():
             subprocess.call(
-                [os.path.abspath(os.path.join(build_dir, executable))],
-                cwd=".",
-                env=env
+                [os.path.abspath(os.path.join(build_dir, executable))], cwd=".", env=env
             )
         else:
             subprocess.call(
                 ["wine", os.path.abspath(os.path.join(build_dir, executable))],
                 cwd=".",
-                env=env
+                env=env,
             )
 
     def test(self, rebuild=True, build_type=BuildType.DEBUG):
@@ -781,7 +809,7 @@ class Windows(Platform):
             ["wine", test_bin + self.executable_ext],
             cwd=_project_path("."),
             check_output=False,
-            use_docker_image=False
+            use_docker_image=False,
         )
 
         if ret:
@@ -826,7 +854,9 @@ class Windows(Platform):
         shutil.copy(binary, package_tmp_dir)
 
         libraries_dir = _project_path("libraries")
-        lib_files = [join(libraries_dir, x) for x in glob("**/*/*.dll", root_dir=libraries_dir)]
+        lib_files = [
+            join(libraries_dir, x) for x in glob("**/*/*.dll", root_dir=libraries_dir)
+        ]
         for lib in lib_files:
             shutil.copy(lib, package_tmp_dir)
 
@@ -874,8 +904,12 @@ Delete "$INSTDIR\Uninstall.exe"
 RMDir "$INSTDIR"
 SectionEnd
 """.format(
-    game_name=game_name, exe_name=exe_name, co_name=co_name, game_name_slug=game_name_slug, icon=icon
-)
+            game_name=game_name,
+            exe_name=exe_name,
+            co_name=co_name,
+            game_name_slug=game_name_slug,
+            icon=icon,
+        )
         with open(join(package_tmp_dir, "installer.nsi"), "wt") as f:
             f.write(NSIS_TEMPLATE)
 
@@ -897,12 +931,16 @@ class Dreamcast(Platform):
     def _scramble_binary(self, cwd, binary, dest):
         bin_file = splitext(binary)[0] + ".bin"
         commands = [
-            "source /etc/bash.bashrc; sh-elf-objcopy -R .stack -O binary -S -g {} {}".format(binary, bin_file),
-            "source /etc/bash.bashrc; /opt/toolchains/dc/kos/utils/scramble/scramble {} {}".format(bin_file, dest),
-            "rm {}".format(bin_file)  # Remove intermediate file
+            "source /etc/bash.bashrc; sh-elf-objcopy -R .stack -O binary -S -g {} {}".format(
+                binary, bin_file
+            ),
+            "source /etc/bash.bashrc; /opt/toolchains/dc/kos/utils/scramble/scramble {} {}".format(
+                bin_file, dest
+            ),
+            "rm {}".format(bin_file),  # Remove intermediate file
         ]
 
-        print("Scrambling binary".ljust(_STR_LENGTH), end='')
+        print("Scrambling binary".ljust(_STR_LENGTH), end="")
         for command in commands:
             self._run_command(command.split(), cwd=cwd)
         print("[ OK ]")
@@ -912,7 +950,7 @@ class Dreamcast(Platform):
             template=template, dest=dest, text=text
         ).split()
 
-        print("Generating IP.BIN".ljust(_STR_LENGTH), end='')
+        print("Generating IP.BIN".ljust(_STR_LENGTH), end="")
 
         self._run_command(command, cwd=cwd)
 
@@ -959,27 +997,32 @@ class Dreamcast(Platform):
 
         command = [
             "mkdcdisc",
-            "-d", target_assets_dir,
-            "-e", binary,
-            "-n", data["name"].replace(" ", "\\ "),
-            "-a", data["author"].replace(" ", "\\ "),
-            "-o", str(os.path.join(package_dir, "%s.cdi" % data["name"])).replace(" ", "\\ "),
+            "-d",
+            target_assets_dir,
+            "-e",
+            binary,
+            "-n",
+            data["name"].replace(" ", "\\ "),
+            "-a",
+            data["author"].replace(" ", "\\ "),
+            "-o",
+            str(os.path.join(package_dir, "%s.cdi" % data["name"])).replace(" ", "\\ "),
         ]
 
         if os.path.exists("cdda"):
             abs = os.path.abspath("cdda")
             for f in sorted(os.listdir(abs)):
                 if f.endswith(".wav"):
-                    cdaudio = data.get("flavours", {}).get(flavour, {}).get("cdaudio", None)
+                    cdaudio = (
+                        data.get("flavours", {}).get(flavour, {}).get("cdaudio", None)
+                    )
                     if cdaudio is not None and f not in cdaudio:
                         continue
 
                     audio_file = os.path.join(abs, f)
-                    command.extend([
-                        "-c", audio_file
-                    ])
+                    command.extend(["-c", audio_file])
 
-        print("Generating CDI".ljust(_STR_LENGTH), end='')
+        print("Generating CDI".ljust(_STR_LENGTH), end="")
         self._run_command(command, cwd=package_dir)
         print("[ OK ]")
 
@@ -991,7 +1034,7 @@ class Dreamcast(Platform):
         commands = {
             "lxdream-nitro": "lxdream-nitro -b",
             "lxdream": "lxdream -b",
-            "redream": "redream"
+            "redream": "redream",
         }
 
         package_dir = os.path.join(_project_path("packages"), self.target)
@@ -1004,29 +1047,33 @@ class Dreamcast(Platform):
         if not os.path.exists(cdi_path) or rebuild:
             # We need to package things up to run the dreamcast build
             ret_code = self.package(flavour=flavour)
-            assert(ret_code == 0)
+            assert ret_code == 0
 
         for emu in supported_emulators:
             try:
                 self._run_command(
                     ("%s --help" % emu).split(),
                     cwd=os.path.dirname(cdi_path),
-                    use_docker_image=False
+                    use_docker_image=False,
                 )
                 break
-            except (subprocess.CalledProcessError, FileNotFoundError,):
+            except (
+                subprocess.CalledProcessError,
+                FileNotFoundError,
+            ):
                 print("Unable to find %s" % emu)
                 continue
         else:
             print(
-                "Unable to find a supported emulator. Install one of %s" % supported_emulators
+                "Unable to find a supported emulator. Install one of %s"
+                % supported_emulators
             )
             sys.exit(1)
 
         self._run_command(
             ("%s %s" % (commands[emu], cdi_path)).split(),
             cwd=os.path.dirname(cdi_path),
-            use_docker_image=False
+            use_docker_image=False,
         )
 
 
@@ -1037,18 +1084,20 @@ class Android(Platform):
     def _calc_gradle_dir(self):
         return os.path.abspath("gradle")
 
-    def build(self, build_type=BuildType.DEBUG, rebuild=False, print_output=True, flavour="", testing=False):
+    def build(
+        self,
+        build_type=BuildType.DEBUG,
+        rebuild=False,
+        print_output=True,
+        flavour="",
+        testing=False,
+    ):
         gradle_cache_dir = join(_find_project_root(), "cache")
 
         if not os.path.exists(gradle_cache_dir):
             os.makedirs(gradle_cache_dir)
 
-        volumes = {
-            gradle_cache_dir: {
-                "bind": "/root/.gradle",
-                "mode": "Z"
-            }
-        }
+        volumes = {gradle_cache_dir: {"bind": "/root/.gradle", "mode": "Z"}}
 
         self._prepare(build_type=build_type, flavour=flavour, volumes=volumes)
 
@@ -1067,13 +1116,11 @@ class Android(Platform):
         architecture = self.target.split("-", 1)[1].rsplit("-", 1)[0].strip()
 
         gradle_args = [
-            "bundle%s" % (
-                "Debug" if build_type == BuildType.DEBUG else "Release"
-            ),
+            "bundle%s" % ("Debug" if build_type == BuildType.DEBUG else "Release"),
             "--build-cache",
             "--parallel",
             "--gradle-user-home",
-            _project_path(".gradle/")
+            _project_path(".gradle/"),
         ]
         if flavour:
             print("Android builds currently don't support flavors")
@@ -1088,13 +1135,11 @@ class Android(Platform):
         gradle_cmd = [
             f"GRADLE_OPTS=-Dorg.gradle.project.buildDir={build_dir}",
             f"ABI_FILTERS='{architecture}'",
-            gradle_wrapper
+            gradle_wrapper,
         ] + gradle_args
 
         ret = self._run_command(
-            gradle_cmd,
-            cwd=self._calc_gradle_dir(),
-            check_output=False
+            gradle_cmd, cwd=self._calc_gradle_dir(), check_output=False
         )
 
         if ret:
@@ -1102,18 +1147,18 @@ class Android(Platform):
 
     def package(self, flavour=""):
         """
-            Android apps have to be packaged as APK files to run, so package and build are the same
-            (except package prefers a release build)
+        Android apps have to be packaged as APK files to run, so package and build are the same
+        (except package prefers a release build)
         """
         self.target = "android-all-clang"
         self.build(rebuild=True, build_type=BuildType.RELEASE, flavour=flavour)
 
     def _check_prerequisites(self):
         """
-            To run Android builds we need:
+        To run Android builds we need:
 
-            - avdmanager - To create the AVD
-            - emulator - to start the AVD and run the APK
+        - avdmanager - To create the AVD
+        - emulator - to start the AVD and run the APK
         """
 
         if not shutil.which("avdmanager"):
@@ -1130,9 +1175,9 @@ class Android(Platform):
 
         output = ""
         try:
-            output = subprocess.check_output(
-                ["avdmanager", "list", "avd"]
-            ).decode("utf-8", "ignore")
+            output = subprocess.check_output(["avdmanager", "list", "avd"]).decode(
+                "utf-8", "ignore"
+            )
         except subprocess.CalledProcessError:
             print("Error checking AVD status")
             exit(1)
@@ -1148,41 +1193,42 @@ class Android(Platform):
 
             if platform_name not in output:
                 print("Installing required system image...")
-                subprocess.check_call([
-                    "sdkmanager", "--install", platform_name
-                ])
+                subprocess.check_call(["sdkmanager", "--install", platform_name])
 
         print("Creating AVD: %s..." % (avd_name))
-        subprocess.check_call([
-            f'echo no | avdmanager create avd -n {avd_name} -k "{platform_name}" -f'
-        ], shell=True)
+        subprocess.check_call(
+            [f'echo no | avdmanager create avd -n {avd_name} -k "{platform_name}" -f'],
+            shell=True,
+        )
 
     def run(self, rebuild=False, build_type=BuildType.DEBUG, flavour=""):
         self._check_prerequisites()
         self._create_avd_if_necessary()
 
-        print("\nWaiting for an Android emulator / device. Try running 'emulator -avd Simulant-28'")
+        print(
+            "\nWaiting for an Android emulator / device. Try running 'emulator -avd Simulant-28'"
+        )
         subprocess.check_call(["adb", "wait-for-device"])
 
         print("Detecting architecture...", end=None)
-        architecture = subprocess.check_output(["adb", "shell", "getprop", "ro.product.cpu.abi"])
+        architecture = subprocess.check_output(
+            ["adb", "shell", "getprop", "ro.product.cpu.abi"]
+        )
         architecture = architecture.decode("ascii").strip()
         print(architecture)
 
         self.target = f"android-{architecture}-clang"
 
         if rebuild:
-            self.build(
-                build_type=build_type,
-                rebuild=rebuild,
-                flavour=flavour
-            )
+            self.build(build_type=build_type, rebuild=rebuild, flavour=flavour)
 
         build_dir = self._calc_build_dir(build_type=build_type)
 
         deadline = datetime.now() + timedelta(seconds=120)
         while datetime.now() < deadline:
-            output = subprocess.check_output(["adb", "shell", "getprop", "dev.bootcomplete"])
+            output = subprocess.check_output(
+                ["adb", "shell", "getprop", "dev.bootcomplete"]
+            )
             if output.decode("ascii").strip() == "1":
                 break
         else:
@@ -1200,16 +1246,12 @@ class Android(Platform):
             os.remove(apk_temp)
 
         print("Unpacking AAB: %s..." % (aab_path,))
-        subprocess.check_call([
-            "bundletool", "build-apks",
-            "--bundle", aab_path, "--output", apk_temp
-        ])
+        subprocess.check_call(
+            ["bundletool", "build-apks", "--bundle", aab_path, "--output", apk_temp]
+        )
 
         print("Installing apks...")
-        subprocess.check_call([
-            "bundletool", "install-apks",
-            "--apks", apk_temp
-        ])
+        subprocess.check_call(["bundletool", "install-apks", "--apks", apk_temp])
 
 
 class PSP(Platform):
@@ -1222,7 +1264,7 @@ class PSP(Platform):
             build_type=BuildType.RELEASE,
             rebuild=True,
             flavour=flavour,
-            additional_cmake_args=["-DBUILD_PRX=1"]
+            additional_cmake_args=["-DBUILD_PRX=1"],
         )
 
         package_dir = os.path.join(_project_path("packages"), self.target)
@@ -1295,10 +1337,7 @@ def update(branch, update_libraries=True, **kwargs):
         os.makedirs(assets_dir_tmp)
 
     # Download and extract
-    _download_zip_and_extract(
-        _DOWNLOAD_ROOT + f"/{branch}/assets.zip",
-        assets_dir_tmp
-    )
+    _download_zip_and_extract(_DOWNLOAD_ROOT + f"/{branch}/assets.zip", assets_dir_tmp)
 
     # Overwrite the simulant dir in the assets folder
     if os.path.exists(join(assets_dir, "simulant")):
@@ -1316,8 +1355,7 @@ def update(branch, update_libraries=True, **kwargs):
     os.makedirs(tools_dir)
 
     _download_zip_and_extract(
-        _DOWNLOAD_ROOT + f"/{branch}/tools.zip",
-        os.path.dirname(tools_dir)
+        _DOWNLOAD_ROOT + f"/{branch}/tools.zip", os.path.dirname(tools_dir)
     )
 
     # Make the test generate executable
@@ -1349,46 +1387,57 @@ def update(branch, update_libraries=True, **kwargs):
             shutil.rmtree(target_path)
 
         _download_zip_and_extract(
-            _DOWNLOAD_ROOT + f"/{branch}/{target}.zip".format(
-                target=target
-            ), lib_dir
+            _DOWNLOAD_ROOT + f"/{branch}/{target}.zip".format(target=target), lib_dir
         )
 
 
-def start(name, branch, target_folder, force=False):
+def start(name, branch, target_folder, force=False, template=None):
     def _sanitize_name(name):
         return name.replace("/", "_")
 
     name = _sanitize_name(name)
-
-    template_folder = _find_shipped_path(f"templates/{branch}")
-
     output_folder = os.path.join(target_folder, name)
 
-    if os.path.exists(output_folder) and not force:
-        result = input("The target folder already exists and will be replaced, this cannot be undone. Continue? [y/N] ")
-        if result.lower() != "y":
-            return 0
-        else:
-            # Remove the directory before replacing it
-            shutil.rmtree(output_folder)
+    if template is None:
+        with tempfile.TemporaryDirectory() as template_folder:
+            _download_zip_and_extract(
+                _DOWNLOAD_ROOT + f"/{branch}/template.zip", template_folder
+            )
+
+            if os.path.exists(output_folder) and not force:
+                result = input(
+                    "The target folder already exists and will be replaced, this cannot be undone. Continue? [y/N] "
+                )
+                if result.lower() != "y":
+                    return 0
+                else:
+                    # Remove the directory before replacing it
+                    shutil.rmtree(output_folder)
+    else:
+        template_folder = template
 
     shutil.copytree(template_folder, output_folder)
 
     # Rename any files that have the project name in them
     _rename_files_and_directories(
-        "__project_name__",
-        name.replace(" ", "_").lower(),
-        output_folder
+        "__project_name__", name.replace(" ", "_").lower(), output_folder
     )
 
     # Replace the project name throughout
     _search_replace("__project_name__", name, output_folder)
 
     # These two replace with project_name or PROJECT_NAME respectively
-    _search_replace("__project_name_lower__", name.lower().replace(" ", "_"), output_folder)
-    _search_replace("__project_name_upper__", name.upper().replace(" ", "_"), output_folder)
-    _search_replace("__project_name_slug__", name.lower().replace(" ", "_").replace("-", "_"), output_folder)
+    _search_replace(
+        "__project_name_lower__", name.lower().replace(" ", "_"), output_folder
+    )
+    _search_replace(
+        "__project_name_upper__", name.upper().replace(" ", "_"), output_folder
+    )
+    _search_replace(
+        "__project_name_slug__",
+        name.lower().replace(" ", "_").replace("-", "_"),
+        output_folder,
+    )
 
     # Replace the active branch (in simulant.json)
     _search_replace("__branch__", branch, output_folder)
@@ -1409,15 +1458,18 @@ def scan_translations(source_language):
         return
 
     found = set()
-    strings = {
-        "@@locale": source_language
-    }
+    strings = {"@@locale": source_language}
 
     for root, subdirs, files in os.walk(sources_dir):
         for file in files:
             if os.path.splitext(file)[-1].lower() in (".c", ".h", ".cxx", ".cpp"):
                 match_counter = 0
-                key_prefix = os.path.splitext(file)[0].upper().replace(" ", "_").replace("-", "_")
+                key_prefix = (
+                    os.path.splitext(file)[0]
+                    .upper()
+                    .replace(" ", "_")
+                    .replace("-", "_")
+                )
 
                 full_path = os.path.join(root, file)
                 with open(full_path, "r") as f:
@@ -1425,13 +1477,13 @@ def scan_translations(source_language):
 
                 start = contents.find('_T("')
                 while start > -1:
-                    contents = contents[start + 4:]
+                    contents = contents[start + 4 :]
                     in_quotes = True
                     match = ""
                     for i, c in enumerate(contents):
                         if c == '"':
                             in_quotes = not in_quotes
-                        elif c == ')' and not in_quotes:
+                        elif c == ")" and not in_quotes:
                             end = i + 1
                             contents = contents[end:]
 
@@ -1442,9 +1494,7 @@ def scan_translations(source_language):
                                 found.add(match)
 
                                 strings[key] = match
-                                strings["@" + key] = {
-                                    "source_text": match
-                                }
+                                strings["@" + key] = {"source_text": match}
 
                             match_counter += 1
                             break
@@ -1475,46 +1525,67 @@ def _build_args():
     subs = parser.add_subparsers(dest="subcommand")
 
     build = subs.add_parser("build", help="Build your project")
-    build.add_argument("platform", default="native", nargs="?",
-        choices=["native"] + _SUPPORTED_TARGETS
+    build.add_argument(
+        "platform", default="native", nargs="?", choices=["native"] + _SUPPORTED_TARGETS
     )
     build.add_argument("--rebuild", default=False, action="store_true")
     build.add_argument("--release", default=False, action="store_true")
     build.add_argument("--reldebug", default=False, action="store_true")
-    build.add_argument("--flavour", default="", nargs="?", help="Specific flavour of the build")
     build.add_argument(
-        "--use-global-simulant", default=False, action="store_true",
-        help="When specified, search the system for the Simulant includes and libraries"
+        "--flavour", default="", nargs="?", help="Specific flavour of the build"
+    )
+    build.add_argument(
+        "--use-global-simulant",
+        default=False,
+        action="store_true",
+        help="When specified, search the system for the Simulant includes and libraries",
     )
 
-    package = subs.add_parser("package", help="Package your project for a particular platform")
-    package.add_argument("platform", default="native", nargs="?",
-        choices=["native"] + _SUPPORTED_TARGETS
+    package = subs.add_parser(
+        "package", help="Package your project for a particular platform"
     )
-    package.add_argument("--flavour", default="", nargs="?", help="Specific flavour of the build")
+    package.add_argument(
+        "platform", default="native", nargs="?", choices=["native"] + _SUPPORTED_TARGETS
+    )
+    package.add_argument(
+        "--flavour", default="", nargs="?", help="Specific flavour of the build"
+    )
 
-    start = subs.add_parser("start", help="Start a new Simulant project from a template")
+    start = subs.add_parser(
+        "start", help="Start a new Simulant project from a template"
+    )
     start.add_argument("project", action="store", type=str)
     start.add_argument("target", default=".", nargs="?", type=str)
     start.add_argument("-f", "--force", dest="force", action="store_true")
     start.add_argument("-b", "--branch", dest="branch", default="main")
+    start.add_argument(
+        "-t",
+        "--template",
+        dest="template",
+        default=None,
+        help="Template to use for the project",
+    )
 
     test = subs.add_parser("test", help="Test your Simulant project")
-    test.add_argument("platform", default="native", nargs="?",
-        choices=["native"] + _SUPPORTED_TARGETS
+    test.add_argument(
+        "platform", default="native", nargs="?", choices=["native"] + _SUPPORTED_TARGETS
     )
     test.add_argument("--release", default=False, action="store_true")
     test.add_argument("--reldebug", default=False, action="store_true")
-    test.add_argument("--flavour", default="", nargs="?", help="Specific flavour of the build")
+    test.add_argument(
+        "--flavour", default="", nargs="?", help="Specific flavour of the build"
+    )
 
     run = subs.add_parser("run", help="Run your application")
-    run.add_argument("platform", default="native", nargs="?",
-        choices=["native"] + _SUPPORTED_TARGETS
+    run.add_argument(
+        "platform", default="native", nargs="?", choices=["native"] + _SUPPORTED_TARGETS
     )
     run.add_argument("--rebuild", default=False, action="store_true")
     run.add_argument("--release", default=False, action="store_true")
     run.add_argument("--reldebug", default=False, action="store_true")
-    run.add_argument("--flavour", default="", nargs="?", help="Specific flavour of the build to run")
+    run.add_argument(
+        "--flavour", default="", nargs="?", help="Specific flavour of the build to run"
+    )
 
     update = subs.add_parser("update", help="Update Simulant library")
     update.add_argument("--assets-only", default=False, action="store_true")
@@ -1561,20 +1632,20 @@ def _normalize_target(target):
 
 def _native_target():
     def in_wsl() -> bool:
-        return 'microsoft-standard' in platform.uname().release
+        return "microsoft-standard" in platform.uname().release
 
-    if platform.system() == 'Linux':
-        if platform.machine() == 'x86_64':
+    if platform.system() == "Linux":
+        if platform.machine() == "x86_64":
             output = subprocess.check_output(["gcc", "-dumpversion"])
             output = int(output.decode("ascii").split(".")[0])
             if output >= 11:
-                return 'linux-x64-gcc11'
+                return "linux-x64-gcc11"
             else:
-                return 'linux-x64-gcc'
-    elif platform.system() == 'Darwin':
-        return 'darwin-x64-gcc'
+                return "linux-x64-gcc"
+    elif platform.system() == "Darwin":
+        return "darwin-x64-gcc"
     elif in_wsl():
-        return 'windows-x64-mingw'
+        return "windows-x64-mingw"
 
     raise UnsupportedPlatformError(platform.system())
 
@@ -1594,8 +1665,8 @@ _PLATFORMS = {
 def main():
     args = sys.argv
     if "--" in args:
-        cmake_args = args[args.index("--") + 1:]
-        sys.argv[:] = args[:args.index("--")]
+        cmake_args = args[args.index("--") + 1 :]
+        sys.argv[:] = args[: args.index("--")]
     else:
         cmake_args = []
 
@@ -1603,12 +1674,15 @@ def main():
 
     # Start and update aren't platform specific
     if opts.subcommand == "start":
-        return start(opts.project, opts.branch, opts.target, force=opts.force)
-    elif opts.subcommand == "update":
-        return update(
+        return start(
+            opts.project,
             opts.branch,
-            update_libraries=(not opts.assets_only)
+            opts.target,
+            force=opts.force,
+            template=opts.template,
         )
+    elif opts.subcommand == "update":
+        return update(opts.branch, update_libraries=(not opts.assets_only))
     elif opts.subcommand == "scan":
         if opts.scan_type == "translations":
             scan_translations(opts.source_language)
@@ -1661,5 +1735,5 @@ def main():
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
