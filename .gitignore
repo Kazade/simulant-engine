@@ -35,3 +35,9 @@ evbuild
 #deps*
 gradle
 
+*build.sh
+*build*/
+*.user.*
+.zed
+.qwen
+.claude
