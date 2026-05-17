@@ -1,14 +1,14 @@
 import os
-from setuptools import setup, find_packages
 
+from setuptools import find_packages, setup
 
 NAME = "simulant-tools"
 PACKAGES = find_packages()
 DESCRIPTION = "Tools to harness the Simulant Game Engine"
-URL = "https://simulant-engine.appspot.com/"
+URL = "https://simulant.dev/"
 LONG_DESCRIPTION = open(os.path.join(os.path.dirname(__file__), "README.md")).read()
 AUTHOR = "Luke Benstead"
-VERSION = "0.3a"
+VERSION = "0.4"
 
 data_files = [
     ("share/simulant-tools/toolchains", ["toolchains/Dreamcast.cmake"]),
@@ -16,7 +16,6 @@ data_files = [
     ("share/simulant-tools/toolchains", ["toolchains/Evercade.cmake"]),
     ("share/simulant-tools/toolchains", ["toolchains/RaspberryPi.cmake"]),
     ("share/simulant-tools/toolchains", ["toolchains/CreatePBP.cmake"]),
-    ("share/simulant-tools/toolchains", ["toolchains/IP.TMPL"]),
 ]
 
 
@@ -74,7 +73,7 @@ setup(
     url=URL,
     install_requires=["docker", "clint", "requests"],
     classifiers=[
-        "Environment :: Console" "Development Status :: 3 - Beta",
+        "Environment :: ConsoleDevelopment Status :: 3 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
         "Operating System :: OS Independent",
