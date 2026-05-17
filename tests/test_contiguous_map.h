@@ -2,6 +2,7 @@
 
 #include "../simulant/generic/containers/contiguous_map.h"
 #include <simulant/test.h>
+#include <time.h>
 
 namespace {
 
@@ -12,15 +13,17 @@ public:
     template<typename F, typename... Args>
     float time_execution(uint32_t iterations, const F& function,
                          Args&&... args) {
-        auto start = std::chrono::high_resolution_clock::now();
+        struct timespec start, end;
+        clock_gettime(CLOCK_MONOTONIC, &start);
         auto i = iterations;
         while(i--) {
             function(std::forward<Args>(args)...);
         }
-        auto end = std::chrono::high_resolution_clock::now();
+        clock_gettime(CLOCK_MONOTONIC, &end);
 
-        std::chrono::duration<float, std::milli> diff = end - start;
-        return diff.count();
+        float ms = (end.tv_sec - start.tv_sec) * 1000.0f
+                   + (end.tv_nsec - start.tv_nsec) / 1000000.0f;
+        return ms;
     }
 
     void test_copying() {
