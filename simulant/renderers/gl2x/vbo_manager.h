@@ -38,7 +38,6 @@ struct GPUBuffer {
     VBOSlot vertex_vbo_slot;
     VBOSlot index_vbo_slot;
 
-    void sync_data_from_renderable(Renderable* renderable);
     void bind_vbos();
 };
 
