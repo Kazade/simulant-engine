@@ -29,37 +29,27 @@ std::pair<VBO*, VBOSlot> VBOManager::perform_fetch_or_upload(const Data* vdata, 
     bool upload_vdata = false;
 
     if(vit == data_slots.end()) {
-        /* Could be dedicated? */
-        auto dvit = dedicated_vbos.find(vid);
-        if(dvit != dedicated_vbos.end()) {
-            vvbo = dvit->second.get();
-            vslot = 0;
-        } else {
-            /* OK, first time we've seen this vertex data, let's allocate! */
-            auto vpair = allocate_slot(vdata);
-            vvbo = vpair.first;
-            vslot = vpair.second;
-
-            upload_vdata = true;
-        }
+        /* First time we've seen this data — allocate a slot.
+         * allocate_slot always inserts into both data_slots and (if dedicated)
+         * dedicated_vbos, so there is no need to check dedicated_vbos
+         * separately here. */
+        auto vpair = allocate_slot(vdata);
+        vvbo = vpair.first;
+        vslot = vpair.second;
+        upload_vdata = true;
     } else {
-        /* We've seen this before... does it need updating? */
         vvbo = vit->second.first;
         vslot = vit->second.second;
     }
 
     if(vdata->data_size() > vvbo->slot_size_in_bytes()) {
-        /* Data size increased past the slot size, we need to free and reallocate */
-        /* Data size increased past the slot size, we need to free and reallocate */
+        /* Data size grew past the slot size — free and reallocate. */
         release_slot(vdata);
         auto vpair = allocate_slot(vdata);
         vvbo = vpair.first;
         vslot = vpair.second;
         upload_vdata = true;
     }
-
-    // FIXME: What if the vertex buffer reduces in size to below the next slot, do we
-    // bother reallocating?
 
     if(vdata->last_updated() > vvbo->slot_last_updated(vslot)) {
         upload_vdata = true;
@@ -68,8 +58,7 @@ std::pair<VBO*, VBOSlot> VBOManager::perform_fetch_or_upload(const Data* vdata, 
     assert(vvbo);
 
     if(upload_vdata) {
-        /* Vertex data changed since previous upload, so upload again */
-        vvbo->bind(vslot);
+        /* upload() binds the VBO internally before writing. */
         vvbo->upload(vslot, vdata);
     }
 
@@ -157,10 +146,7 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const VertexData *vertex_dat
         auto& entry = shared_vertex_vbos_[idx];
         auto it = entry.find(spec);
         if(it == entry.end()) {
-            // Create new VBO
-            auto new_vbo = SharedVBO::create(size, spec);
-            entry.insert(std::make_pair(spec, new_vbo));
-            it = entry.find(spec);
+            it = entry.insert(std::make_pair(spec, SharedVBO::create(size, spec))).first;
         }
 
         connect_destruction_signal(vertex_data);
@@ -228,10 +214,7 @@ std::pair<VBO *, VBOSlot> VBOManager::allocate_slot(const IndexData *index_data)
         auto& entry = shared_index_vbos_[idx];
         auto it = entry.find(index_type);
         if(it == entry.end()) {
-            // Create new VBO
-            auto new_vbo = SharedVBO::create(size, index_type);
-            entry.insert(std::make_pair(index_type, new_vbo));
-            it = entry.find(index_type);
+            it = entry.insert(std::make_pair(index_type, SharedVBO::create(size, index_type))).first;
         }
 
         connect_destruction_signal(index_data);
@@ -343,13 +326,13 @@ void SharedVBO::bind(VBOSlot slot) {
 
 void DedicatedVBO::upload(VBOSlot, const VertexData* vertex_data) {
     bind(0);
-    GLCheck(glBufferData, type_, vertex_data->data_size(), vertex_data->data(), GL_STATIC_DRAW);
+    GLCheck(glBufferData, type_, vertex_data->data_size(), vertex_data->data(), GL_DYNAMIC_DRAW);
     last_updated_ = TimeKeeper::now_in_us();
 }
 
 void DedicatedVBO::upload(VBOSlot, const IndexData* index_data) {
     bind(0);
-    GLCheck(glBufferData, type_, index_data->data_size(), index_data->data(), GL_STATIC_DRAW);
+    GLCheck(glBufferData, type_, index_data->data_size(), index_data->data(), GL_DYNAMIC_DRAW);
     last_updated_ = TimeKeeper::now_in_us();
 }
 
@@ -386,11 +369,10 @@ void SharedVBO::allocate_new_gl_buffer() {
     GLCheck(glGenBuffers, 1, &buffer);
     GLCheck(glBindBuffer, type_, buffer);
 
-    // Upload VBO_SIZE of zeros so we an use buffersubdata afterwards
-    std::vector<uint8_t> init_data(VBO_SIZE, 0);
-
-    /* FIXME: usage needs to change based on, well usage */
-    GLCheck(glBufferData, type_, VBO_SIZE, &init_data[0], GL_DYNAMIC_DRAW);
+    /* Allocate GPU storage without uploading CPU data. glBufferSubData is
+     * always used for individual slot writes, so the initial content is never
+     * read before being overwritten. */
+    GLCheck(glBufferData, type_, VBO_SIZE, nullptr, GL_DYNAMIC_DRAW);
 
     const auto slots_per_buffer = VBO_SIZE / slot_size_;
 

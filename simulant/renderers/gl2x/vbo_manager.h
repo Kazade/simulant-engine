@@ -35,8 +35,8 @@ struct GPUBuffer {
     VBO* vertex_vbo = nullptr;
     VBO* index_vbo = nullptr;
 
-    VBOSlot vertex_vbo_slot;
-    VBOSlot index_vbo_slot;
+    VBOSlot vertex_vbo_slot = 0;
+    VBOSlot index_vbo_slot = 0;
 
     void bind_vbos();
 };
@@ -54,7 +54,7 @@ enum VBOSlotSize {
     VBO_SLOT_SIZE_512K = (1 << 19)
 };
 
-const int VBO_SLOT_SIZE_COUNT = 11;
+const int VBO_SLOT_SIZE_COUNT = 10;
 
 class VBO {
 public:
@@ -152,6 +152,12 @@ public:
         index_type_(type),
         type_(GL_ELEMENT_ARRAY_BUFFER) {}
 
+    ~SharedVBO() {
+        if(!gl_ids_.empty()) {
+            glDeleteBuffers((GLsizei)gl_ids_.size(), gl_ids_.data());
+        }
+    }
+
     uint64_t slot_last_updated(VBOSlot slot) {
         assert(slot < metas_.size());
         return metas_[slot].last_updated;
@@ -197,7 +203,6 @@ private:
 
     struct SlotMeta {
         uint64_t last_updated = 0;
-        uint32_t uploaded_size = 0;
     };
 
     std::vector<SlotMeta> metas_;
