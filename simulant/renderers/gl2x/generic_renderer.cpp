@@ -182,6 +182,11 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
         program->set_uniform_float(ps_loc, pass->point_size());
     }
 
+    auto le_loc = program->locate_uniform(LIGHTING_ENABLED_PROPERTY_NAME, true);
+    if(le_loc > -1) {
+        program->set_uniform_int(le_loc, pass->is_lighting_enabled() ? 1 : 0);
+    }
+
     /* Alpha testing — replaces GL_ALPHA_TEST / glAlphaFunc which are absent
      * from GLES2 and GL core profiles. The shader convention mirrors the GL
      * enum values: 0=off, 1=LESS, 2=LEQUAL, 3=EQUAL, 4=GEQUAL, 5=GREATER. */
