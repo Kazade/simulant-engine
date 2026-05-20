@@ -179,23 +179,16 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
 
     auto ps_loc = program->locate_uniform(POINT_SIZE_PROPERTY_NAME, true);
     if(ps_loc > -1) {
-        program->set_uniform_float(POINT_SIZE_PROPERTY_NAME,
-                                   pass->point_size());
+        program->set_uniform_float(ps_loc, pass->point_size());
     }
 
-    /* Each texture property has a counterpart matrix, this passes those down if
-     * they exist */
+    /* Each texture property has a counterpart matrix uniform; pass those down
+     * if they exist. Sampler uniforms are written in change_material_pass
+     * where texture binding also happens, so they are not written here to
+     * avoid a texture-unit counter mismatch. */
     const auto& texture_props = mat->texture_properties();
-    uint8_t texture_unit = 0;
     for(auto& tex_prop: texture_props) {
         auto& info = tex_prop.second;
-
-        auto tloc = program->locate_uniform(info.texture_property_name, true);
-
-        if(tloc > -1) {
-            // This texture is being used
-            program->set_uniform_int(tloc, texture_unit++);
-        }
 
         auto loc = program->locate_uniform(info.matrix_property_name, true);
         if(loc > -1) {
@@ -296,7 +289,15 @@ void GenericRenderer::set_auto_attributes_on_shader(
      * functions we need to provide the attribute and just makes the whole thing
      * generic. Before this was 100s of lines of boilerplate. Thank god for
      * templates!
+     *
+     *  Disable all previously-enabled attribute arrays first. Without this,
+     *  switching between shaders that place attributes at different locations
+     *  leaves stale enabled arrays pointing into the previous VBO slot.
      */
+    for(uint8_t i = 0; i < 8; ++i) {
+        disable_vertex_attribute(i);
+    }
+
     const VertexSpecification& vertex_spec =
         renderable->vertex_data->vertex_specification();
     auto offset = buffers->vertex_vbo->byte_offset(buffers->vertex_vbo_slot);
@@ -624,30 +625,28 @@ void GenericRenderer::set_renderable_uniforms(const MaterialPass* pass,
 
     auto v_loc = program->locate_uniform(VIEW_MATRIX_PROPERTY, true);
     if(v_loc > -1) {
-        program->set_uniform_mat4x4(VIEW_MATRIX_PROPERTY, view);
+        program->set_uniform_mat4x4(v_loc, view);
     }
 
     auto mvp_loc =
         program->locate_uniform(MODELVIEW_PROJECTION_MATRIX_PROPERTY, true);
     if(mvp_loc > -1) {
-        program->set_uniform_mat4x4(MODELVIEW_PROJECTION_MATRIX_PROPERTY,
-                                    modelview_projection);
+        program->set_uniform_mat4x4(mvp_loc, modelview_projection);
     }
 
     auto mv_loc = program->locate_uniform(MODELVIEW_MATRIX_PROPERTY, true);
     if(mv_loc > -1) {
-        program->set_uniform_mat4x4(MODELVIEW_MATRIX_PROPERTY, modelview);
+        program->set_uniform_mat4x4(mv_loc, modelview);
     }
 
     auto p_loc = program->locate_uniform(PROJECTION_MATRIX_PROPERTY, true);
     if(p_loc > -1) {
-        program->set_uniform_mat4x4(PROJECTION_MATRIX_PROPERTY, projection);
+        program->set_uniform_mat4x4(p_loc, projection);
     }
 
     auto itmv_loc = program->locate_uniform(
         INVERSE_TRANSPOSE_MODELVIEW_MATRIX_PROPERTY, true);
     if(itmv_loc > -1) {
-        // PERF: Recalculating every frame will be costly!
         Mat3 inverse_transpose_modelview(modelview);
         inverse_transpose_modelview.inverse();
         inverse_transpose_modelview.transpose();
