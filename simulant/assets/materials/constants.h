@@ -90,6 +90,7 @@ DepthFunc depth_func_from_name(const char* name);
 #define DEPTH_FUNC_PROPERTY_NAME "s_depth_func"
 #define BLEND_FUNC_PROPERTY_NAME "s_blend_func"
 #define ALPHA_THRESHOLD_PROPERTY_NAME "s_alpha_threshold"
+#define ALPHA_FUNC_PROPERTY_NAME "s_alpha_func"
 #define CULL_MODE_PROPERTY_NAME "s_cull_mode"
 #define SHADE_MODEL_PROPERTY_NAME "s_shade_model"
 #define LIGHTING_ENABLED_PROPERTY_NAME "s_lighting_enabled"
