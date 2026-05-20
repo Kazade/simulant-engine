@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstdint>
 #include "../batching/render_queue.h"
+#include "../../utils/vertex_lighting.h"
 
 #ifdef __DREAMCAST__
 #include <dc/pvr.h>
@@ -33,15 +34,6 @@ public:
 
     void apply_lights(const LightPtr* lights, const uint8_t count) override;
 
-    struct LightState {
-        bool enabled = false;
-        float position[4] = {0, 0, 0, 0};
-        float dir[3] = {0, 0, -1};  /* Pre-normalized direction (directional lights only) */
-        float color[4] = {1, 1, 1, 1};
-        float intensity = 1.0f;
-        float range = 100.0f;
-    };
-
     static const int MAX_LIGHTS = 2;
 
 private:
@@ -55,13 +47,13 @@ private:
     pvr_poly_hdr_t poly_hdr_; /* Compiled polygon header — the current render state */
 #endif
 
-    LightState lights_[MAX_LIGHTS];
-    float ambient_[4] = {0.2f, 0.2f, 0.2f, 1.0f};
+    VertexLightState lights_[MAX_LIGHTS];
+    float ambient_[3] = {0.2f, 0.2f, 0.2f};
 
-    float mat_diffuse_[4] = {1, 1, 1, 1};
-    float mat_ambient_[4] = {0.1f, 0.1f, 0.1f, 1.0f};
-    float mat_specular_[4] = {0, 0, 0, 1};
-    float mat_shininess_ = 0.0f;
+    /* PBR material properties stored directly (no Phong conversion) */
+    float mat_base_color_[4] = {1, 1, 1, 1};
+    float mat_metallic_  = 0.0f;
+    float mat_roughness_ = 0.4f;
 
     void do_visit(const Renderable* renderable,
                   const MaterialPass* material_pass,

@@ -1,8 +1,10 @@
 #pragma once
 
+#include <vector>
 #include "../../assets/material.h"
 #include "../batching/renderable.h"
 #include "../gl_renderer.h"
+#include "../../utils/vertex_lighting.h"
 
 namespace smlt {
 
@@ -61,35 +63,18 @@ private:
 
     uint32_t default_texture_name_ = 0;
 
-    struct LightState {
-        bool initialized = false;
-        bool enabled = false;
-        Vec4 position;
-        Color color;
-        float intensity = 0.0f;
-        float range = 0.0f;
+    /* Software per-vertex PBR lighting state */
+    VertexLightState vl_lights_[MAX_LIGHTS_PER_RENDERABLE];
+    uint8_t vl_light_count_ = 0;
 
-        LightState() = default;
-        LightState(bool enabled, Vec4 pos, Color color, float intensity,
-                   float range) :
-            enabled(enabled),
-            position(pos),
-            color(color),
-            intensity(intensity),
-            range(range) {}
+    /* PBR material properties (stored from change_material_pass) */
+    float mat_base_color_[4] = {1, 1, 1, 1};
+    float mat_metallic_  = 0.0f;
+    float mat_roughness_ = 0.4f;
+    bool  mat_lighting_enabled_ = false;
 
-        bool operator!=(const LightState& rhs) const {
-            return !(*this == rhs);
-        }
-
-        bool operator==(const LightState& rhs) const {
-            return (enabled == rhs.enabled && position == rhs.position &&
-                    color == rhs.color && intensity == rhs.intensity &&
-                    range == rhs.range);
-        }
-    };
-
-    LightState light_states_[MAX_LIGHTS_PER_RENDERABLE];
+    /* Temporary buffer for computed per-vertex colours (RGBA floats) */
+    std::vector<float> soft_color_buf_;
 };
 
 

@@ -28,8 +28,7 @@ public:
 
     "property_values": {
         "base_color_map": "assets/textures/simulant-icon.png",
-        "s_material_base_color": "1 0 1 0",
-        "s_material_specular_color": "1 1 1 1"
+        "s_material_base_color": "1 0 1 0"
     },
 
     "passes": [
@@ -56,7 +55,6 @@ public:
 //        assert_equal(mat->property(prop_id)->type, smlt::MATERIAL_PROPERTY_TYPE_TEXTURE);
         assert_equal(mat->pass(0)->iteration_type(), smlt::ITERATION_TYPE_ONCE);
         assert_equal(mat->base_color(), smlt::Color(1, 0, 1, 0));
-        assert_equal(mat->specular_color(), smlt::Color(1, 1, 1, 1));
 
         script.clean_up();
     }

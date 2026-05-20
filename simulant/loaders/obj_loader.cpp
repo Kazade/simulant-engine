@@ -83,8 +83,6 @@ struct ObjMaterial {
         mat->set_base_color(s.base_color);
         mat->set_metallic(s.metallic);
         mat->set_roughness(s.roughness);
-        mat->set_specular(s.specular);
-        mat->set_specular_color(s.specular_color);
         mat->set_base_color_map(map_Kd);
         mat->set_cull_mode(cull_mode);
         mat->set_blend_func(blend_func);

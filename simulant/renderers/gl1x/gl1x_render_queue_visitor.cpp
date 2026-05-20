@@ -24,7 +24,7 @@
 #include "../../nodes/light.h"
 #include "../../stage.h"
 #include "../../utils/gl_error.h"
-#include "../../utils/pbr.h"
+#include "../../utils/vertex_lighting.h"
 #include "../../vertex_data.h"
 #include "../../window.h"
 
@@ -102,15 +102,15 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
                                                  const MaterialPass* next) {
     pass_ = next;
 
-    auto s = pbr_to_traditional(next->base_color(), next->metallic(),
-                                next->roughness(), next->specular_color(),
-                                next->specular());
-
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_DIFFUSE, &s.diffuse.r);
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_AMBIENT, &s.ambient.r);
-    // GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_EMISSION, &s.emission.r);
-    GLCheck(glMaterialfv, GL_FRONT_AND_BACK, GL_SPECULAR, &s.specular.r);
-    GLCheck(glMaterialf, GL_FRONT_AND_BACK, GL_SHININESS, s.shininess);
+    /* Store PBR material properties for software per-vertex lighting */
+    const Color& bc = next->base_color();
+    mat_base_color_[0] = bc.r;
+    mat_base_color_[1] = bc.g;
+    mat_base_color_[2] = bc.b;
+    mat_base_color_[3] = bc.a;
+    mat_metallic_  = next->metallic();
+    mat_roughness_ = next->roughness();
+    mat_lighting_enabled_ = next->is_lighting_enabled();
 
     if(next->is_depth_test_enabled()) {
         GLCheck(glEnable, GL_DEPTH_TEST);
@@ -148,12 +148,8 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             break;
     }
 
-    /* Enable lighting on the pass appropriately */
-    if(next->is_lighting_enabled()) {
-        GLCheck(glEnable, GL_LIGHTING);
-    } else {
-        GLCheck(glDisable, GL_LIGHTING);
-    }
+    /* Software per-vertex PBR handles all lighting; keep GL lighting off */
+    GLCheck(glDisable, GL_LIGHTING);
 
     auto enabled = next->textures_enabled();
 
@@ -266,25 +262,8 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     }
 
 #if _S_GL_SUPPORTS_COLOR_MATERIAL
-    switch(next->color_material()) {
-        case COLOR_MATERIAL_NONE:
-            GLCheck(glDisable, GL_COLOR_MATERIAL);
-            break;
-        case COLOR_MATERIAL_AMBIENT:
-            GLCheck(glEnable, GL_COLOR_MATERIAL);
-            GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT);
-            break;
-        case COLOR_MATERIAL_DIFFUSE:
-            GLCheck(glEnable, GL_COLOR_MATERIAL);
-            GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_DIFFUSE);
-            break;
-        case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
-            GLCheck(glEnable, GL_COLOR_MATERIAL);
-            GLCheck(glColorMaterial, GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-            break;
-        default:
-            break;
-    }
+    /* Disable color-material: vertex colours are PBR-computed and used directly */
+    GLCheck(glDisable, GL_COLOR_MATERIAL);
 #endif
 
     auto next_mode = next->fog_mode();
@@ -318,74 +297,43 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 
 void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,
                                          const uint8_t count) {
-
-    LightState disabled_state;
-
-    Light* current = nullptr;
-
-    if(count) {
-        GLCheck(glMatrixMode, GL_MODELVIEW);
-        GLCheck(glPushMatrix);
-
-        const Mat4& view = camera_->view_matrix();
-
-        GLCheck(glLoadMatrixf, view.data());
-    }
-
+    vl_light_count_ = 0;
     for(uint8_t i = 0; i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
-        current = (i < count) ? lights[i] : nullptr;
-
-        smlt::Vec3 pos;
-        LightState state = disabled_state;
-
-        if(current) {
-            pos = (current->light_type()) == LIGHT_TYPE_DIRECTIONAL
-                      ? current->direction()
-                      : current->transform->position();
-
-            state = LightState(
-                true,
-                Vec4(pos,
-                     (current->light_type() == LIGHT_TYPE_DIRECTIONAL) ? 0 : 1),
-
-                current->color(), current->intensity(), current->range());
-        }
-
-        /* No need to update this light */
-        if(light_states_[i].initialized && light_states_[i] == state) {
-            continue;
-        }
-
-        if(state.enabled) {
-            GLCheck(glEnable, GL_LIGHT0 + i);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_POSITION, &state.position.x);
-
-            auto ambient = state.color * state.intensity * 0.1;
-            auto diffuse = state.color * state.intensity;
-            auto specular = state.color * state.intensity * 0.1;
-
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_AMBIENT, &ambient.r);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_DIFFUSE, &diffuse.r);
-            GLCheck(glLightfv, GL_LIGHT0 + i, GL_SPECULAR, &specular.r);
-
-            // Approximate the GLTF lighting formula:
-            // attenuation = max( min( 1.0 - ( current_distance / range )4, 1 ),
-            // 0 ) / current_distance2
-            GLCheck(glLightf, GL_LIGHT0 + i, GL_CONSTANT_ATTENUATION, 0.1f);
-            GLCheck(glLightf, GL_LIGHT0 + i, GL_LINEAR_ATTENUATION,
-                    -1.0f / state.range);
-            GLCheck(glLightf, GL_LIGHT0 + i, GL_QUADRATIC_ATTENUATION, 1.0f);
-
-        } else {
-            GLCheck(glDisable, GL_LIGHT0 + i);
-        }
-
-        light_states_[i] = state;
-        light_states_[i].initialized = true;
+        vl_lights_[i].enabled = false;
     }
 
-    if(count) {
-        GLCheck(glPopMatrix);
+    const Mat4& view = camera_->view_matrix();
+
+    for(uint8_t i = 0; i < count && i < MAX_LIGHTS_PER_RENDERABLE; ++i) {
+        if(!lights[i]) continue;
+
+        auto light = lights[i];
+        VertexLightState& state = vl_lights_[i];
+        state.enabled = true;
+        vl_light_count_ = i + 1;
+
+        auto pos = view * light->transform->position();
+        state.position[0] = pos.x;
+        state.position[1] = pos.y;
+        state.position[2] = pos.z;
+        state.position[3] = (light->light_type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0f : 1.0f;
+
+        state.color[0] = light->color().r;
+        state.color[1] = light->color().g;
+        state.color[2] = light->color().b;
+
+        state.intensity = light->intensity();
+        state.range = light->range();
+
+        /* Pre-normalise toward-light direction for directional lights */
+        if(state.position[3] < 0.5f) {
+            float len = std::sqrt(pos.x*pos.x + pos.y*pos.y + pos.z*pos.z);
+            if(len > 1e-8f) {
+                state.dir[0] = -pos.x / len;
+                state.dir[1] = -pos.y / len;
+                state.dir[2] = -pos.z / len;
+            }
+        }
     }
 }
 
@@ -530,27 +478,6 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
         disable_vertex_arrays();
     }
 
-    const auto has_color = spec.has_color();
-    if(has_color) {
-        S_VERBOSE("Enabling colors");
-        enable_color_arrays();
-        GLCheck(glColorPointer,
-                (spec.color_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
-                : (spec.color_attribute == VERTEX_ATTRIBUTE_3F) ? 3
-                : (spec.color_attribute == VERTEX_ATTRIBUTE_4F ||
-                   spec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA)
-                    ? 4
-                    : GL_BGRA, // This weirdness is an extension apparently
-                (spec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
-                 spec.color_attribute == VERTEX_ATTRIBUTE_4UB_BGRA)
-                    ? GL_UNSIGNED_BYTE
-                    : GL_FLOAT,
-                stride,
-                ((const uint8_t*)vertex_data) + spec.color_offset(false));
-    } else {
-        disable_color_arrays();
-    }
-
     const auto has_normals = spec.has_normals();
     if(has_normals) {
         enable_normal_arrays();
@@ -575,6 +502,90 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
                 ((const uint8_t*)vertex_data) + spec.normal_offset(false));
     } else {
         disable_normal_arrays();
+    }
+
+    /* --- Software per-vertex PBR lighting ---
+     * When lighting is enabled and normals are present, compute PBR colour
+     * for every vertex into soft_color_buf_ and use that as the colour array.
+     * When conditions aren't met, fall back to the raw vertex colour data. */
+    const bool do_soft_lighting = mat_lighting_enabled_ && has_normals
+                                  && vl_light_count_ > 0;
+    const float global_amb[3] = {global_ambient_.r, global_ambient_.g, global_ambient_.b};
+
+    if(do_soft_lighting) {
+        uint32_t vcount = renderable->vertex_data->count();
+        soft_color_buf_.resize(vcount * 4);
+
+        auto pos_off    = spec.has_positions() ? spec.position_offset(false) : 0;
+        auto normal_off = spec.normal_offset(false);
+        auto color_off  = spec.has_color() ? spec.color_offset(false) : 0;
+
+        for(uint32_t vi = 0; vi < vcount; ++vi) {
+            const uint8_t* vp = ((const uint8_t*)vertex_data) + vi * stride;
+
+            /* Read model-space position */
+            const float* p_raw = (const float*)(vp + pos_off);
+            float px = p_raw[0], py = p_raw[1], pz = (spec.position_attribute != VERTEX_ATTRIBUTE_2F) ? p_raw[2] : 0.0f;
+
+            /* Transform to eye space */
+            Vec4 ep = modelview * Vec4(px, py, pz, 1.0f);
+            float eye_pos[3] = {ep.x, ep.y, ep.z};
+
+            /* Read and transform normal (Mat4*Vec3 uses upper-3x3, no translation) */
+            const float* n_raw = (const float*)(vp + normal_off);
+            Vec3 nv = (modelview * Vec3(n_raw[0], n_raw[1], n_raw[2])).normalized();
+            float N[3] = {nv.x, nv.y, nv.z};
+
+            /* Effective base colour = material base_color modulated by vertex colour */
+            float base_c[4] = {mat_base_color_[0], mat_base_color_[1],
+                                mat_base_color_[2], mat_base_color_[3]};
+            if(color_off) {
+                const uint8_t* c = vp + color_off;
+                float vc_r, vc_g, vc_b, vc_a;
+                VertexAttribute attr = spec.color_attribute;
+                if(attr == VERTEX_ATTRIBUTE_4F) {
+                    const float* fc = (const float*)c;
+                    vc_r=fc[0]; vc_g=fc[1]; vc_b=fc[2]; vc_a=fc[3];
+                } else if(attr == VERTEX_ATTRIBUTE_3F) {
+                    const float* fc = (const float*)c;
+                    vc_r=fc[0]; vc_g=fc[1]; vc_b=fc[2]; vc_a=1.0f;
+                } else if(attr == VERTEX_ATTRIBUTE_4UB_RGBA || attr == VERTEX_ATTRIBUTE_4UB) {
+                    vc_r=c[0]/255.0f; vc_g=c[1]/255.0f; vc_b=c[2]/255.0f; vc_a=c[3]/255.0f;
+                } else if(attr == VERTEX_ATTRIBUTE_4UB_BGRA) {
+                    vc_b=c[0]/255.0f; vc_g=c[1]/255.0f; vc_r=c[2]/255.0f; vc_a=c[3]/255.0f;
+                } else { vc_r=vc_g=vc_b=vc_a=1.0f; }
+                base_c[0]*=vc_r; base_c[1]*=vc_g; base_c[2]*=vc_b; base_c[3]*=vc_a;
+            }
+
+            compute_pbr_vertex_color(N, eye_pos, base_c, mat_metallic_, mat_roughness_,
+                                     global_amb, vl_lights_, vl_light_count_,
+                                     &soft_color_buf_[vi * 4]);
+        }
+
+        enable_color_arrays();
+        GLCheck(glColorPointer, 4, GL_FLOAT, 0, soft_color_buf_.data());
+    } else {
+        /* No software lighting — use vertex colour array or disable */
+        const bool has_color = spec.has_color();
+        if(has_color) {
+            S_VERBOSE("Enabling colors");
+            enable_color_arrays();
+            GLCheck(glColorPointer,
+                    (spec.color_attribute == VERTEX_ATTRIBUTE_2F)   ? 2
+                    : (spec.color_attribute == VERTEX_ATTRIBUTE_3F) ? 3
+                    : (spec.color_attribute == VERTEX_ATTRIBUTE_4F ||
+                       spec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA)
+                        ? 4
+                        : GL_BGRA,
+                    (spec.color_attribute == VERTEX_ATTRIBUTE_4UB_RGBA ||
+                     spec.color_attribute == VERTEX_ATTRIBUTE_4UB_BGRA)
+                        ? GL_UNSIGNED_BYTE
+                        : GL_FLOAT,
+                    stride,
+                    ((const uint8_t*)vertex_data) + spec.color_offset(false));
+        } else {
+            disable_color_arrays();
+        }
     }
 
     for(uint8_t i = 0; i < _S_GL_MAX_TEXTURE_UNITS; ++i) {

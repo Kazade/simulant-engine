@@ -23,8 +23,6 @@ public:
     void set_base_color(const Color& color);
     void set_metallic(float metallic);
     void set_roughness(float roughness);
-    void set_specular(float specular);
-    void set_specular_color(const Color& color);
     void set_metallic_roughness_map(TexturePtr texture);
     void set_base_color_map(TexturePtr texture);
     void set_light_map(TexturePtr texture);    
@@ -59,10 +57,8 @@ public:
 
     float metallic() const;
     float roughness() const;
-    const Color& specular_color() const;
     const Color& base_color() const;
 
-    float specular() const;
     bool is_blending_enabled() const;
     void set_blend_func(BlendType b);
     BlendType blend_func() const;

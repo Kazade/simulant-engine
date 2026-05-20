@@ -111,8 +111,6 @@ bool DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
         new_mat->set_base_color(s.base_color);
         new_mat->set_metallic(s.metallic);
         new_mat->set_roughness(s.roughness);
-        new_mat->set_specular_color(s.specular_color);
-        new_mat->set_specular(s.specular);
 
         new_mat->set_name(
             std::string(mat.data_header.path, sizeof(mat.data_header.path))

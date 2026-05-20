@@ -14,16 +14,8 @@ MaterialObject::~MaterialObject() {
 
 }
 
-void MaterialObject::set_specular_color(const Color& color) {
-    set_property_value(SPECULAR_COLOR_PROPERTY_NAME, (const Vec4&)color);
-}
-
 void MaterialObject::set_base_color(const Color& color) {
     set_property_value(BASE_COLOR_PROPERTY_NAME, (const Vec4&)color);
-}
-
-void MaterialObject::set_specular(float specular) {
-    set_property_value(SPECULAR_PROPERTY_NAME, specular);
 }
 
 void MaterialObject::set_base_color_map(TexturePtr texture) {
@@ -138,15 +130,6 @@ const Mat4& MaterialObject::metallic_roughness_map_matrix() const {
     return *ptr;
 }
 
-const Color& MaterialObject::specular_color() const {
-    // FIXME: Naughty cast from Vec4& -> Color&
-    const Color* ptr = nullptr;
-    bool ok = property_value(SPECULAR_COLOR_PROPERTY_HASH, ptr);
-    assert(ok);
-    _S_UNUSED(ok);
-    return *ptr;
-}
-
 const Color& MaterialObject::base_color() const {
     const Color* ptr = nullptr;
     bool ok = property_value(BASE_COLOR_PROPERTY_HASH, ptr);
@@ -166,14 +149,6 @@ float MaterialObject::metallic() const {
 float MaterialObject::roughness() const {
     const float* ptr = nullptr;
     bool ok = property_value(ROUGHNESS_PROPERTY_HASH, ptr);
-    assert(ok);
-    _S_UNUSED(ok);
-    return *ptr;
-}
-
-float MaterialObject::specular() const {
-    const float* ptr = nullptr;
-    bool ok = property_value(SPECULAR_PROPERTY_HASH, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;

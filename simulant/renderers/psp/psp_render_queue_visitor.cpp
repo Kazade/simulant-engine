@@ -8,8 +8,8 @@
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../stage.h"
-#include "../../utils/pbr.h"
 #include "../../vertex_data.h"
+#include "../../math/mat4.h"
 #include "../../window.h"
 #include "psp_render_group_impl.h"
 #include "psp_render_queue_visitor.h"
@@ -31,6 +31,8 @@ void PSPRenderQueueVisitor::start_traversal(const batcher::RenderQueue &queue,
     _S_UNUSED(frame_id);
 
     auto l = stage_node->scene->lighting->ambient_light();
+    ambient_[0] = l.r; ambient_[1] = l.g; ambient_[2] = l.b;
+    /* Hardware ambient is left set but lighting is disabled for the soft path */
     sceGuAmbient(l.to_abgr_8888());
 }
 
@@ -61,46 +63,18 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         return;
     }
 
-    auto s = pbr_to_traditional(next->base_color(), next->metallic(),
-                                next->roughness(), next->specular_color(),
-                                next->specular());
+    /* Store PBR properties for software per-vertex lighting */
+    const Color& bc = next->base_color();
+    mat_base_color_[0] = bc.r;
+    mat_base_color_[1] = bc.g;
+    mat_base_color_[2] = bc.b;
+    mat_base_color_[3] = bc.a;
+    mat_metallic_  = next->metallic();
+    mat_roughness_ = next->roughness();
+    mat_lighting_enabled_ = next->is_lighting_enabled();
 
-    const auto& diffuse = s.diffuse;
-    sceGuMaterial(GU_DIFFUSE,
-                  GU_COLOR(diffuse.r, diffuse.g, diffuse.b, diffuse.a));
-
-    const auto& ambient = s.ambient;
-    sceGuMaterial(GU_AMBIENT,
-                  GU_COLOR(ambient.r, ambient.g, ambient.b, ambient.a));
-
-    const auto& specular = s.specular;
-    sceGuMaterial(GU_SPECULAR,
-                  GU_COLOR(specular.r, specular.g, specular.b, specular.a));
-
-    sceGuSpecular(s.shininess);
-
-    switch (next->color_material()) {
-    case COLOR_MATERIAL_NONE:
-        sceGuColorMaterial(0);
-        break;
-    case COLOR_MATERIAL_AMBIENT:
-        sceGuColorMaterial(GU_AMBIENT);
-        break;
-    case COLOR_MATERIAL_DIFFUSE:
-        sceGuColorMaterial(GU_DIFFUSE);
-        break;
-    case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
-        sceGuColorMaterial(GU_AMBIENT | GU_DIFFUSE);
-        break;
-    default:
-        break;
-    }
-
-    if(next->is_lighting_enabled()) {
-        sceGuEnable(GU_LIGHTING);
-    } else {
-        sceGuDisable(GU_LIGHTING);
-    }
+    /* Software per-vertex PBR handles lighting; disable hardware lighting */
+    sceGuDisable(GU_LIGHTING);
 
     if(next->is_depth_test_enabled()) {
         sceGuEnable(GU_DEPTH_TEST);
@@ -206,39 +180,38 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
 }
 
 void PSPRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t count) {
-    if(!count) {
-        return;
-    }
+    light_count_ = 0;
+    for(int i = 0; i < 4; ++i) lights_[i].enabled = false;
 
-    for(uint8_t i = 0; i < 4; ++i) {
+    for(uint8_t i = 0; i < count && i < 4; ++i) {
+        if(!lights[i]) continue;
+
         auto light = lights[i];
-        bool enabled = i < count;
+        VertexLightState& state = lights_[i];
+        state.enabled = true;
+        light_count_ = i + 1;
 
-        if(enabled) {
-            auto pos = camera_->view_matrix() * light->transform->position();
+        auto pos = camera_->view_matrix() * light->transform->position();
+        state.position[0] = pos.x;
+        state.position[1] = pos.y;
+        state.position[2] = pos.z;
+        state.position[3] = (light->light_type() == LIGHT_TYPE_DIRECTIONAL) ? 0.0f : 1.0f;
 
-            ScePspFVector3 light_pos = {pos.x, pos.y, -pos.z};
-            sceGuEnable(GU_LIGHT0 + i);
+        state.color[0] = light->color().r;
+        state.color[1] = light->color().g;
+        state.color[2] = light->color().b;
 
-            if (light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-                sceGuLight(i, GU_DIRECTIONAL, GU_DIFFUSE_AND_SPECULAR,
-                           &light_pos);
-            } else {
-                sceGuLight(i, GU_POINTLIGHT, GU_DIFFUSE_AND_SPECULAR,
-                           &light_pos);
+        state.intensity = light->intensity();
+        state.range = light->range();
+
+        /* Pre-normalise direction for directional lights */
+        if(state.position[3] < 0.5f) {
+            float len = sqrtf(pos.x*pos.x + pos.y*pos.y + pos.z*pos.z);
+            if(len > 1e-8f) {
+                state.dir[0] = -pos.x / len;
+                state.dir[1] = -pos.y / len;
+                state.dir[2] = -pos.z / len;
             }
-
-            auto a = light->color() * light->intensity() * 0.1f;
-            auto d = light->color() * light->intensity();
-            auto s = light->color() * light->intensity() * 0.1f;
-
-            sceGuLightColor(i, GU_DIFFUSE, d.to_abgr_8888());
-            sceGuLightColor(i, GU_AMBIENT, a.to_abgr_8888());
-            sceGuLightColor(i, GU_SPECULAR, s.to_abgr_8888());
-
-            sceGuLightAtt(i, 0.1f, -1.0f / light->range(), 1.0f);
-        } else {
-            sceGuDisable(GU_LIGHT0 + i);
         }
     }
 }
@@ -315,19 +288,29 @@ void convert_normal(int16_t* vout, const uint8_t* vin, VertexAttribute type) {
     }
 }
 
-static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
-                             const VertexSpecification& spec) {
-    auto pos_off = spec.position_offset(false);
-    auto uv_off = (spec.has_texcoord0())
-                      ? spec.texcoord0_offset(false)
-                      : 0; // FIXME: 0 assumes not first attribute
-    auto color_off = (spec.has_color()) ? spec.color_offset(false) : 0;
-    auto normal_off = (spec.has_normals()) ? spec.normal_offset(false) : 0;
+struct PSPLightingContext {
+    const smlt::VertexLightState* lights;
+    int light_count;
+    float ambient[3];
+    float base_color[4];
+    float metallic;
+    float roughness;
+    const Mat4* modelview;
+    bool  lighting_enabled;
+};
 
-    int i = buffer.size();
+static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
+                             const VertexSpecification& spec,
+                             const PSPLightingContext& lctx) {
+    auto pos_off    = spec.position_offset(false);
+    auto uv_off     = spec.has_texcoord0() ? spec.texcoord0_offset(false) : 0;
+    auto color_off  = spec.has_color()     ? spec.color_offset(false)     : 0;
+    auto normal_off = spec.has_normals()   ? spec.normal_offset(false)    : 0;
+
+    int idx = buffer.size();
     buffer.push_back(PSPVertex());
 
-    PSPVertex* v = &buffer[i];
+    PSPVertex* v = &buffer[idx];
     memset(v, 0, sizeof(PSPVertex));
     v->color = 0xFFFF;
 
@@ -335,15 +318,72 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
         convert_uv(&v->u, it + uv_off, spec.texcoord0_attribute);
     }
 
+    /* Base colour from material (or vertex colour if present) */
+    float base_r = lctx.base_color[0];
+    float base_g = lctx.base_color[1];
+    float base_b = lctx.base_color[2];
+    float base_a = lctx.base_color[3];
+
     if(color_off) {
-        convert_color(&v->color, it + color_off, spec.color_attribute);
+        float vc_r, vc_g, vc_b, vc_a;
+        const uint8_t* c = it + color_off;
+        VertexAttribute attr = spec.color_attribute;
+        if(attr == smlt::VERTEX_ATTRIBUTE_4F) {
+            const float* fc = (const float*)c;
+            vc_r = fc[0]; vc_g = fc[1]; vc_b = fc[2]; vc_a = fc[3];
+        } else if(attr == smlt::VERTEX_ATTRIBUTE_3F) {
+            const float* fc = (const float*)c;
+            vc_r = fc[0]; vc_g = fc[1]; vc_b = fc[2]; vc_a = 1.0f;
+        } else if(attr == smlt::VERTEX_ATTRIBUTE_4UB_RGBA || attr == smlt::VERTEX_ATTRIBUTE_4UB) {
+            vc_r = c[0]/255.0f; vc_g = c[1]/255.0f; vc_b = c[2]/255.0f; vc_a = c[3]/255.0f;
+        } else if(attr == smlt::VERTEX_ATTRIBUTE_4UB_BGRA) {
+            vc_b = c[0]/255.0f; vc_g = c[1]/255.0f; vc_r = c[2]/255.0f; vc_a = c[3]/255.0f;
+        } else {
+            vc_r = vc_g = vc_b = vc_a = 1.0f;
+        }
+        base_r *= vc_r; base_g *= vc_g; base_b *= vc_b; base_a *= vc_a;
     }
 
-    if(normal_off) {
-        convert_normal(&v->nx, it + normal_off, spec.normal_attribute);
-    }
+    float pos[3] = {0, 0, 0};
+    convert_position(pos, it + pos_off, spec.position_attribute);
+    v->x = pos[0]; v->y = pos[1]; v->z = pos[2];
 
-    convert_position(&v->x, it + pos_off, spec.position_attribute);
+    if(lctx.lighting_enabled && normal_off && lctx.light_count > 0) {
+        /* Transform position to eye space */
+        Vec4 ep = *lctx.modelview * Vec4(pos[0], pos[1], pos[2], 1.0f);
+        float eye_pos[3] = {ep.x, ep.y, ep.z};
+
+        /* Transform normal to eye space (direction — Mat4*Vec3 uses upper-3x3) */
+        const uint8_t* n_raw = it + normal_off;
+        float nx_model = ((float*)n_raw)[0];
+        float ny_model = ((float*)n_raw)[1];
+        float nz_model = ((float*)n_raw)[2];
+        Vec3 nv = (*lctx.modelview * Vec3(nx_model, ny_model, nz_model)).normalized();
+        float N[3] = {nv.x, nv.y, nv.z};
+
+        /* Vertex colour modulates base_color BEFORE PBR (same as GL2X shader) */
+        float combined[4] = {base_r, base_g, base_b, base_a};
+        float lit_color[4];
+        smlt::compute_pbr_vertex_color(N, eye_pos, combined, lctx.metallic,
+                                       lctx.roughness, lctx.ambient,
+                                       lctx.lights, lctx.light_count, lit_color);
+
+        v->color = smlt::Color(lit_color[0], lit_color[1], lit_color[2], base_a).to_abgr_4444();
+
+        /* Store normals for format compatibility (hardware lighting is disabled) */
+        if(spec.normal_attribute == smlt::VERTEX_ATTRIBUTE_3F) {
+            v->nx = (int16_t)(nx_model * 32767.0f);
+            v->ny = (int16_t)(ny_model * 32767.0f);
+            v->nz = (int16_t)(nz_model * 32767.0f);
+        }
+    } else {
+        /* No lighting: use base colour directly */
+        v->color = smlt::Color(base_r, base_g, base_b, base_a).to_abgr_4444();
+
+        if(normal_off) {
+            convert_normal(&v->nx, it + normal_off, spec.normal_attribute);
+        }
+    }
 }
 
 static std::vector<PSPVertex> buffer;
@@ -351,13 +391,14 @@ static std::vector<PSPVertex> buffer;
 static void zclip_tristrips_and_submit_range(const VertexRange* range,
                                              const VertexSpecification& spec,
                                              const uint8_t* data,
-                                             std::size_t stride) {
+                                             std::size_t stride,
+                                             const PSPLightingContext& lctx) {
     buffer.clear();
 
     const uint8_t* it = data + (stride * range->start);
 
     for(std::size_t i = 0; i < range->count; ++i) {
-        convert_and_push(buffer, it, spec);
+        convert_and_push(buffer, it, spec, lctx);
         it += stride;
     }
 
@@ -374,13 +415,14 @@ static void zclip_tristrips_and_submit_range(const VertexRange* range,
 static void zclip_triangles_and_submit_range(const VertexRange* range,
                                              const VertexSpecification& spec,
                                              const uint8_t* data,
-                                             std::size_t stride) {
+                                             std::size_t stride,
+                                             const PSPLightingContext& lctx) {
     buffer.clear();
 
     const uint8_t* it = data + (stride * range->start);
 
     for(std::size_t i = 0; i < range->count; ++i) {
-        convert_and_push(buffer, it, spec);
+        convert_and_push(buffer, it, spec, lctx);
         it += stride;
     }
 
@@ -411,6 +453,9 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     const auto& view = camera_->view_matrix();
     const auto& projection = camera_->projection_matrix();
 
+    /* Build modelview for software per-vertex lighting */
+    Mat4 modelview = view * model;
+
     ScePspFMatrix4* psp_model =
         (ScePspFMatrix4*)sceGuGetMemory(3 * sizeof(ScePspFMatrix4));
     ScePspFMatrix4* psp_view = psp_model + 1;
@@ -428,6 +473,22 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     sceGuSetMatrix(GU_MODEL, psp_model);
     sceGuSetMatrix(GU_VIEW, psp_view);
     sceGuSetMatrix(GU_PROJECTION, psp_proj);
+
+    /* Build lighting context for per-vertex PBR */
+    PSPLightingContext lctx;
+    lctx.lights          = lights_;
+    lctx.light_count     = light_count_;
+    lctx.ambient[0]      = ambient_[0];
+    lctx.ambient[1]      = ambient_[1];
+    lctx.ambient[2]      = ambient_[2];
+    lctx.base_color[0]   = mat_base_color_[0];
+    lctx.base_color[1]   = mat_base_color_[1];
+    lctx.base_color[2]   = mat_base_color_[2];
+    lctx.base_color[3]   = mat_base_color_[3];
+    lctx.metallic        = mat_metallic_;
+    lctx.roughness       = mat_roughness_;
+    lctx.modelview       = &modelview;
+    lctx.lighting_enabled = mat_lighting_enabled_;
 
     auto total = 0;
 
@@ -453,12 +514,12 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
             case MESH_ARRANGEMENT_TRIANGLE_STRIP:
                 zclip_tristrips_and_submit_range(
                     &range, renderable->vertex_data->vertex_specification(),
-                    &buffer[0], stride);
+                    &buffer[0], stride, lctx);
                 break;
             case MESH_ARRANGEMENT_TRIANGLES:
                 zclip_triangles_and_submit_range(
                     &range, renderable->vertex_data->vertex_specification(),
-                    &buffer[0], stride);
+                    &buffer[0], stride, lctx);
                 break;
             default:
                 break;
@@ -467,22 +528,19 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         total += range.count;
     } else {
         auto range = renderable->vertex_ranges;
+        auto spec_stride = renderable->vertex_data->vertex_specification().stride();
 
         for(std::size_t i = 0; i < renderable->vertex_range_count; ++i, ++range) {
             switch(renderable->arrangement) {
                 case MESH_ARRANGEMENT_TRIANGLE_STRIP:
                     zclip_tristrips_and_submit_range(
                         range, renderable->vertex_data->vertex_specification(),
-                        renderable->vertex_data->data(),
-                        renderable->vertex_data->vertex_specification()
-                            .stride());
+                        renderable->vertex_data->data(), spec_stride, lctx);
                     break;
                 case MESH_ARRANGEMENT_TRIANGLES:
                     zclip_triangles_and_submit_range(
                         range, renderable->vertex_data->vertex_specification(),
-                        renderable->vertex_data->data(),
-                        renderable->vertex_data->vertex_specification()
-                            .stride());
+                        renderable->vertex_data->data(), spec_stride, lctx);
                     break;
                 default:
                     break;

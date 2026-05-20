@@ -8,8 +8,6 @@ struct PBRValues {
     smlt::Color base_color;
     float metallic;
     float roughness;
-    smlt::Color specular_color;
-    float specular;
 };
 
 struct TraditionalValues {
@@ -24,8 +22,6 @@ PBRValues traditional_to_pbr(const smlt::Color& ambient,
                              const smlt::Color& specular, float shininess);
 
 TraditionalValues pbr_to_traditional(const smlt::Color& base_color,
-                                     float metallic, float roughness,
-                                     const smlt::Color& specular_color,
-                                     float specular);
+                                     float metallic, float roughness);
 
 } // namespace smlt

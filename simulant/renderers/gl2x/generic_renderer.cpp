@@ -167,16 +167,6 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
         program->set_uniform_color(diff_loc, pass->base_color());
     }
 
-    auto spec_loc = program->locate_uniform(SPECULAR_COLOR_PROPERTY_NAME, true);
-    if(spec_loc > -1) {
-        program->set_uniform_color(spec_loc, pass->specular_color());
-    }
-
-    auto shin_loc = program->locate_uniform(SPECULAR_PROPERTY_NAME, true);
-    if(shin_loc > -1) {
-        program->set_uniform_float(shin_loc, pass->specular());
-    }
-
     auto ps_loc = program->locate_uniform(POINT_SIZE_PROPERTY_NAME, true);
     if(ps_loc > -1) {
         program->set_uniform_float(ps_loc, pass->point_size());
@@ -200,6 +190,25 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
         if(at_loc > -1) {
             program->set_uniform_float(at_loc, is_mask ? pass->alpha_threshold() : 0.0f);
         }
+    }
+
+    /* Send s_textures_enabled: a bitmask reflecting which texture slots
+     * actually have a non-null texture bound (BASE_COLOR=1, LIGHT=2,
+     * NORMAL=4, METALLIC_ROUGHNESS=8).  The shader uses this to gate
+     * sampling — without it the normal/MR maps would never be applied. */
+    auto te_loc = program->locate_uniform(TEXTURES_ENABLED_PROPERTY_NAME, true);
+    if(te_loc > -1) {
+        int32_t tex_enabled = 0;
+        const TexturePtr* tex = nullptr;
+        if(pass->property_value(BASE_COLOR_MAP_PROPERTY_HASH, tex) && tex && *tex)
+            tex_enabled |= BASE_COLOR_MAP_ENABLED;
+        if(pass->property_value(LIGHT_MAP_PROPERTY_HASH, tex) && tex && *tex)
+            tex_enabled |= LIGHT_MAP_ENABLED;
+        if(pass->property_value(NORMAL_MAP_PROPERTY_HASH, tex) && tex && *tex)
+            tex_enabled |= NORMAL_MAP_ENABLED;
+        if(pass->property_value(METALLIC_ROUGHNESS_MAP_PROPERTY_HASH, tex) && tex && *tex)
+            tex_enabled |= METALLIC_ROUGHNESS_MAP_ENABLED;
+        program->set_uniform_int(te_loc, tex_enabled);
     }
 
     /* Each texture property has a counterpart matrix uniform; pass those down

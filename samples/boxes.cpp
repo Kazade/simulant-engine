@@ -34,10 +34,13 @@ public:
 
         auto crate =
             app->shared_assets->load_texture("assets/samples/crate.png");
+        auto crate_normal =
+            app->shared_assets->load_texture("assets/samples/crate_normal.png");
 
         auto mat = assets->clone_default_material();
         mat->set_base_color_map(crate);
-        mat->set_lighting_enabled(false);
+        mat->set_normal_map(crate_normal);
+        mat->set_lighting_enabled(true);
 
         auto box_mesh = app->shared_assets->create_mesh(
             smlt::VertexSpecification::DEFAULT, smlt::GARBAGE_COLLECT_NEVER);
@@ -60,8 +63,9 @@ public:
                             PhysicsMaterial::stone());
 
         lighting->set_ambient_light(Color::white() * 0.5f);
-        auto l = create_child<smlt::PointLight>();
-        l->set_intensity(1000);
+        auto l = create_child<smlt::DirectionalLight>();
+        l->set_direction(Vec3(0, -1, 0.5).normalized());
+        l->set_intensity(1);
     }
 
     void spawn_box() {

@@ -168,11 +168,9 @@ public:
     /* Named accessors shadowing MaterialObject — bypass virtual dispatch
      * when called through a MaterialPass* (defined after Material below). */
     const Color& base_color() const;
-    const Color& specular_color() const;
     const Color& fog_color() const;
     float metallic() const;
     float roughness() const;
-    float specular() const;
     float point_size() const;
     float alpha_threshold() const;
     float fog_density() const;
@@ -192,11 +190,9 @@ public:
     bool is_lighting_enabled() const;
 
     void set_base_color(const Color& v);
-    void set_specular_color(const Color& v);
     void set_fog_color(const Color& v);
     void set_metallic(float v);
     void set_roughness(float v);
-    void set_specular(float v);
     void set_alpha_threshold(float v);
     void set_fog_density(float v);
     void set_fog_start(float v);
@@ -487,11 +483,9 @@ public:
     /* Named accessors shadowing MaterialObject — direct struct read,
      * no virtual dispatch, no hash lookup, no pool pointer chain. */
     const Color& base_color() const     { return base_props_.base_color; }
-    const Color& specular_color() const { return base_props_.specular_color; }
     const Color& fog_color() const      { return base_props_.fog_color; }
     float metallic() const              { return base_props_.metallic; }
     float roughness() const             { return base_props_.roughness; }
-    float specular() const              { return base_props_.specular; }
     float point_size() const            { return base_props_.point_size; }
     float alpha_threshold() const       { return base_props_.alpha_threshold; }
     float fog_density() const           { return base_props_.fog_density; }
@@ -511,11 +505,9 @@ public:
     bool is_lighting_enabled() const    { return base_props_.lighting_enabled; }
 
     void set_base_color(const Color& v)        { base_props_.base_color = v; }
-    void set_specular_color(const Color& v)    { base_props_.specular_color = v; }
     void set_fog_color(const Color& v)         { base_props_.fog_color = v; }
     void set_metallic(float v)                 { base_props_.metallic = v; }
     void set_roughness(float v)                { base_props_.roughness = v; }
-    void set_specular(float v)                 { base_props_.specular = v; }
     void set_alpha_threshold(float v)          { base_props_.alpha_threshold = v; }
     void set_fog_density(float v)              { base_props_.fog_density = v; }
     void set_fog_start(float v)                { base_props_.fog_start = v; }
@@ -691,9 +683,6 @@ bool MaterialPass::_property_value(const MaterialPropertyNameHash hsh,
 inline const Color& MaterialPass::base_color() const {
     return (override_mask_ & CORE_MASK_BASE_COLOR) ? pass_props_.base_color : material_->base_props_.base_color;
 }
-inline const Color& MaterialPass::specular_color() const {
-    return (override_mask_ & CORE_MASK_SPECULAR_COLOR) ? pass_props_.specular_color : material_->base_props_.specular_color;
-}
 inline const Color& MaterialPass::fog_color() const {
     return (override_mask_ & CORE_MASK_FOG_COLOR) ? pass_props_.fog_color : material_->base_props_.fog_color;
 }
@@ -702,9 +691,6 @@ inline float MaterialPass::metallic() const {
 }
 inline float MaterialPass::roughness() const {
     return (override_mask_ & CORE_MASK_ROUGHNESS) ? pass_props_.roughness : material_->base_props_.roughness;
-}
-inline float MaterialPass::specular() const {
-    return (override_mask_ & CORE_MASK_SPECULAR) ? pass_props_.specular : material_->base_props_.specular;
 }
 inline float MaterialPass::point_size() const {
     return (override_mask_ & CORE_MASK_POINT_SIZE) ? pass_props_.point_size : material_->base_props_.point_size;
@@ -768,9 +754,6 @@ inline bool MaterialPass::is_lighting_enabled() const {
 inline void MaterialPass::set_base_color(const Color& v) {
     pass_props_.base_color = v; override_mask_ |= CORE_MASK_BASE_COLOR;
 }
-inline void MaterialPass::set_specular_color(const Color& v) {
-    pass_props_.specular_color = v; override_mask_ |= CORE_MASK_SPECULAR_COLOR;
-}
 inline void MaterialPass::set_fog_color(const Color& v) {
     pass_props_.fog_color = v; override_mask_ |= CORE_MASK_FOG_COLOR;
 }
@@ -779,9 +762,6 @@ inline void MaterialPass::set_metallic(float v) {
 }
 inline void MaterialPass::set_roughness(float v) {
     pass_props_.roughness = v; override_mask_ |= CORE_MASK_ROUGHNESS;
-}
-inline void MaterialPass::set_specular(float v) {
-    pass_props_.specular = v; override_mask_ |= CORE_MASK_SPECULAR;
 }
 inline void MaterialPass::set_alpha_threshold(float v) {
     pass_props_.alpha_threshold = v; override_mask_ |= CORE_MASK_ALPHA_THRESHOLD;

@@ -19,10 +19,6 @@ typedef uint32_t MaterialPropertyNameHash;
 
 constexpr const MaterialPropertyNameHash BASE_COLOR_PROPERTY_HASH =
     material_property_hash(BASE_COLOR_PROPERTY_NAME);
-constexpr const MaterialPropertyNameHash SPECULAR_COLOR_PROPERTY_HASH =
-    material_property_hash(SPECULAR_COLOR_PROPERTY_NAME);
-constexpr const MaterialPropertyNameHash SPECULAR_PROPERTY_HASH =
-    material_property_hash(SPECULAR_PROPERTY_NAME);
 constexpr const MaterialPropertyNameHash POINT_SIZE_PROPERTY_HASH = material_property_hash(POINT_SIZE_PROPERTY_NAME);
 
 constexpr const MaterialPropertyNameHash ROUGHNESS_PROPERTY_HASH =
@@ -67,8 +63,6 @@ constexpr const MaterialPropertyNameHash ALPHA_THRESHOLD_PROPERTY_HASH = materia
 inline constexpr bool is_core_property(const MaterialPropertyNameHash hsh) {
     switch(hsh) {
         case BASE_COLOR_PROPERTY_HASH:
-        case SPECULAR_COLOR_PROPERTY_HASH:
-        case SPECULAR_PROPERTY_HASH:
         case ROUGHNESS_PROPERTY_HASH:
         case METALLIC_PROPERTY_HASH:
         case POINT_SIZE_PROPERTY_HASH:
