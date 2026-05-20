@@ -343,8 +343,6 @@ bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         mat->set_metallic(s.metallic);
         mat->set_roughness(s.roughness);
         mat->set_base_color(s.base_color);
-        mat->set_specular(s.specular);
-        mat->set_specular_color(s.specular_color);
 
         auto texname = kfs::path::norm_path(material.texture);
         if(texname[0] == '.' && texname[1] == '\\') {

@@ -23,11 +23,6 @@ public:
             smlt::Color::white() ==
             mat->pass(0)->base_color()); // this->assert_true the default pass
                                          // sets white as the default
-        this->assert_true(
-            smlt::Color::black() ==
-            mat->pass(0)->specular_color()); // this->assert_true the default
-                                             // pass sets black as the default
-        this->assert_equal(0.0f, mat->pass(0)->specular());
     }
 
     void test_material_applies_to_mesh() {
@@ -48,12 +43,6 @@ public:
 
         mat->set_roughness(0.5f);
         assert_equal(mat->roughness(), 0.5f);
-
-        mat->set_specular(0.5f);
-        assert_equal(mat->specular(), 0.5f);
-
-        mat->set_specular_color(smlt::Color::white());
-        assert_equal(mat->specular_color(), smlt::Color::white());
 
         mat->set_metallic_roughness_map(
             application->shared_assets->create_texture(8, 8));
@@ -110,7 +99,7 @@ public:
         };
 
         std::vector<std::string> color_props = {BASE_COLOR_PROPERTY_NAME,
-                                                SPECULAR_COLOR_PROPERTY_NAME};
+                                                FOG_COLOR_PROPERTY_NAME};
 
         std::vector<std::string> bool_props = {
             DEPTH_TEST_ENABLED_PROPERTY_NAME, DEPTH_WRITE_ENABLED_PROPERTY_NAME,
@@ -364,8 +353,6 @@ public:
         assert_true(is_core_property(BASE_COLOR_PROPERTY_NAME));
         assert_true(is_core_property(ROUGHNESS_PROPERTY_NAME));
         assert_true(is_core_property(METALLIC_PROPERTY_NAME));
-        assert_true(is_core_property(SPECULAR_COLOR_PROPERTY_NAME));
-        assert_true(is_core_property(SPECULAR_PROPERTY_NAME));
 
         assert_false(is_core_property("my_property"));
     }
@@ -376,16 +363,16 @@ public:
         auto o2 = *o1->pass(0);
 
         const float* f = nullptr;
-        o1->set_property_value(SPECULAR_PROPERTY_NAME, 1.5f);
-        assert_true(o2.property_value(SPECULAR_PROPERTY_NAME, f));
+        o1->set_property_value(ROUGHNESS_PROPERTY_NAME, 1.5f);
+        assert_true(o2.property_value(ROUGHNESS_PROPERTY_NAME, f));
         assert_equal(*f, 1.5f);
 
-        o2.set_property_value(SPECULAR_PROPERTY_NAME, 2.5f);
-        assert_true(o2.property_value(SPECULAR_PROPERTY_NAME, f));
+        o2.set_property_value(ROUGHNESS_PROPERTY_NAME, 2.5f);
+        assert_true(o2.property_value(ROUGHNESS_PROPERTY_NAME, f));
         assert_equal(*f, 2.5f);
 
-        o2.clear_override(SPECULAR_PROPERTY_NAME);
-        assert_true(o2.property_value(SPECULAR_PROPERTY_NAME, f));
+        o2.clear_override(ROUGHNESS_PROPERTY_NAME);
+        assert_true(o2.property_value(ROUGHNESS_PROPERTY_NAME, f));
         assert_equal(*f, 1.5f);
     }
 };

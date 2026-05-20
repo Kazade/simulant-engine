@@ -2,6 +2,7 @@
 
 #include "../../assets/material.h"
 #include "../batching/renderable.h"
+#include "../../utils/vertex_lighting.h"
 
 namespace smlt {
 
@@ -40,6 +41,17 @@ private:
     LightPtr light_;
 
     PSPRenderGroupImpl* current_group_ = nullptr;
+
+    /* Software per-vertex PBR lighting state */
+    VertexLightState lights_[4];
+    uint8_t light_count_ = 0;
+    float ambient_[3] = {0.2f, 0.2f, 0.2f};
+
+    /* PBR material properties */
+    float mat_base_color_[4] = {1, 1, 1, 1};
+    float mat_metallic_  = 0.0f;
+    float mat_roughness_ = 0.4f;
+    bool  mat_lighting_enabled_ = false;
 
     void do_visit(const Renderable* renderable,
                   const MaterialPass* material_pass,

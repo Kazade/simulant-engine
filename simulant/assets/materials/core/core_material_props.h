@@ -9,11 +9,9 @@ namespace smlt {
  * allocations for the hottest render-state fields. */
 struct CoreMaterialProps {
     Color   base_color          = Color::white();
-    Color   specular_color      = {0.0f, 0.0f, 0.0f, 1.0f};
     Color   fog_color           = Color::white();
     float   metallic            = 0.0f;
     float   roughness           = 0.4f;
-    float   specular            = 0.0f;
     float   point_size          = 1.0f;
     float   alpha_threshold     = 1.0f;
     float   fog_density         = 1.0f;
@@ -37,11 +35,9 @@ struct CoreMaterialProps {
  * through to the parent Material's CoreMaterialProps. */
 enum CorePropMask : uint32_t {
     CORE_MASK_BASE_COLOR       = 1u << 0,
-    CORE_MASK_SPECULAR_COLOR   = 1u << 1,
     CORE_MASK_FOG_COLOR        = 1u << 2,
     CORE_MASK_METALLIC         = 1u << 3,
     CORE_MASK_ROUGHNESS        = 1u << 4,
-    CORE_MASK_SPECULAR         = 1u << 5,
     CORE_MASK_POINT_SIZE       = 1u << 6,
     CORE_MASK_ALPHA_THRESHOLD  = 1u << 7,
     CORE_MASK_FOG_DENSITY      = 1u << 8,
@@ -63,11 +59,9 @@ enum CorePropMask : uint32_t {
 inline uint32_t core_mask_for_hash(MaterialPropertyNameHash hsh) {
     switch(hsh) {
         case BASE_COLOR_PROPERTY_HASH:          return CORE_MASK_BASE_COLOR;
-        case SPECULAR_COLOR_PROPERTY_HASH:      return CORE_MASK_SPECULAR_COLOR;
         case FOG_COLOR_PROPERTY_HASH:           return CORE_MASK_FOG_COLOR;
         case METALLIC_PROPERTY_HASH:            return CORE_MASK_METALLIC;
         case ROUGHNESS_PROPERTY_HASH:           return CORE_MASK_ROUGHNESS;
-        case SPECULAR_PROPERTY_HASH:            return CORE_MASK_SPECULAR;
         case POINT_SIZE_PROPERTY_HASH:          return CORE_MASK_POINT_SIZE;
         case ALPHA_THRESHOLD_PROPERTY_HASH:     return CORE_MASK_ALPHA_THRESHOLD;
         case FOG_DENSITY_PROPERTY_HASH:         return CORE_MASK_FOG_DENSITY;
@@ -100,7 +94,6 @@ inline const float* core_scalar_ptr<float>(const CoreMaterialProps& p, MaterialP
     switch(hsh) {
         case METALLIC_PROPERTY_HASH:        return &p.metallic;
         case ROUGHNESS_PROPERTY_HASH:       return &p.roughness;
-        case SPECULAR_PROPERTY_HASH:        return &p.specular;
         case POINT_SIZE_PROPERTY_HASH:      return &p.point_size;
         case ALPHA_THRESHOLD_PROPERTY_HASH: return &p.alpha_threshold;
         case FOG_DENSITY_PROPERTY_HASH:     return &p.fog_density;
@@ -153,7 +146,6 @@ template<>
 inline const Vec4* core_scalar_ptr<Vec4>(const CoreMaterialProps& p, MaterialPropertyNameHash hsh) {
     switch(hsh) {
         case BASE_COLOR_PROPERTY_HASH:     return reinterpret_cast<const Vec4*>(&p.base_color);
-        case SPECULAR_COLOR_PROPERTY_HASH: return reinterpret_cast<const Vec4*>(&p.specular_color);
         case FOG_COLOR_PROPERTY_HASH:      return reinterpret_cast<const Vec4*>(&p.fog_color);
         default: return nullptr;
     }

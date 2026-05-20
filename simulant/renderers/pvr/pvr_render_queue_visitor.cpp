@@ -5,10 +5,10 @@
 #include "../../meshes/submesh.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
+#include "../../scenes/scene.h"
 #include "../../types.h"
 #include "../../vertex_data.h"
 #include "../../assets/material.h"
-#include "../../utils/pbr.h"
 #include "../../logging.h"
 
 #ifdef __DREAMCAST__
@@ -155,10 +155,10 @@ void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
 
     /* Get ambient light from the stage if available */
     if(stage_node) {
-        ambient_[0] = 0.2f;
-        ambient_[1] = 0.2f;
-        ambient_[2] = 0.2f;
-        ambient_[3] = 1.0f;
+        auto a = stage_node->scene->lighting->ambient_light();
+        ambient_[0] = a.r;
+        ambient_[1] = a.g;
+        ambient_[2] = a.b;
     }
 
     S_VERBOSE("Init DR state");
@@ -189,31 +189,14 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     /* Nothing changed — poly_hdr_ and material properties are still valid */
     if(prev == next) return;
 
-    /* Convert PBR to traditional material values */
-    auto values = pbr_to_traditional(
-        next->base_color(),
-        next->metallic(),
-        next->roughness(),
-        next->specular_color(),
-        next->specular()
-    );
-
-    mat_diffuse_[0] = values.diffuse.r;
-    mat_diffuse_[1] = values.diffuse.g;
-    mat_diffuse_[2] = values.diffuse.b;
-    mat_diffuse_[3] = values.diffuse.a;
-
-    mat_ambient_[0] = values.ambient.r;
-    mat_ambient_[1] = values.ambient.g;
-    mat_ambient_[2] = values.ambient.b;
-    mat_ambient_[3] = values.ambient.a;
-
-    mat_specular_[0] = values.specular.r;
-    mat_specular_[1] = values.specular.g;
-    mat_specular_[2] = values.specular.b;
-    mat_specular_[3] = values.specular.a;
-
-    mat_shininess_ = values.shininess;
+    /* Store PBR material properties directly */
+    const Color& bc = next->base_color();
+    mat_base_color_[0] = bc.r;
+    mat_base_color_[1] = bc.g;
+    mat_base_color_[2] = bc.b;
+    mat_base_color_[3] = bc.a;
+    mat_metallic_  = next->metallic();
+    mat_roughness_ = next->roughness();
 
     /* Determine PVR list type based on blend mode */
     auto blend = next->blend_func();
@@ -318,7 +301,6 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 }
 
 void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t count) {
-    /* Reset all lights */
     for(int i = 0; i < MAX_LIGHTS; i++) {
         lights_[i].enabled = false;
     }
@@ -326,11 +308,10 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
     for(uint8_t i = 0; i < count && i < MAX_LIGHTS; i++) {
         if(!lights[i]) continue;
 
-        auto& state = lights_[i];
+        VertexLightState& state = lights_[i];
         state.enabled = true;
 
         auto light = lights[i];
-        /* Store light position in view space */
         auto pos = camera_->view_matrix() * light->transform->position();
         state.position[0] = pos.x;
         state.position[1] = pos.y;
@@ -340,14 +321,12 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
         state.color[0] = light->color().r;
         state.color[1] = light->color().g;
         state.color[2] = light->color().b;
-        state.color[3] = 1.0f;
 
         state.intensity = light->intensity();
         state.range = light->range();
 
-        /* Pre-compute normalized direction for directional lights so transform_vertex
-         * doesn't normalize the same constant vector on every vertex. */
-        if(state.position[3] == 0.0f) {
+        /* Pre-normalised toward-light direction for directional lights */
+        if(state.position[3] < 0.5f) {
 #ifdef __DREAMCAST__
             shz_vec3_t d = shz_vec3_normalize_safe(
                 shz_vec3_init(-pos.x, -pos.y, -pos.z));
@@ -512,110 +491,154 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             cv.v = t[1];
         }
 
-        /* Color - start with material diffuse */
-        cv.r = mat_diffuse_[0]; cv.g = mat_diffuse_[1];
-        cv.b = mat_diffuse_[2]; cv.a = mat_diffuse_[3];
+        /* Build per-vertex base colour: material base_color modulated by vertex colour */
+        float base_r = mat_base_color_[0];
+        float base_g = mat_base_color_[1];
+        float base_b = mat_base_color_[2];
+        cv.a = mat_base_color_[3];
 
-        /* Read vertex color if present */
-        float vert_r = 1.0f, vert_g = 1.0f, vert_b = 1.0f, vert_a = 1.0f;
+        /* Read and apply vertex colour */
         if(color_offset) {
+            float vc_r = 1.0f, vc_g = 1.0f, vc_b = 1.0f, vc_a = 1.0f;
             VertexAttribute attr = spec.color_attribute;
             if(attr == VERTEX_ATTRIBUTE_4F) {
                 const float* c = (const float*)(ptr + color_offset);
-                vert_r = c[0]; vert_g = c[1]; vert_b = c[2]; vert_a = c[3];
+                vc_r = c[0]; vc_g = c[1]; vc_b = c[2]; vc_a = c[3];
             } else if(attr == VERTEX_ATTRIBUTE_3F) {
                 const float* c = (const float*)(ptr + color_offset);
-                vert_r = c[0]; vert_g = c[1]; vert_b = c[2]; vert_a = 1.0f;
+                vc_r = c[0]; vc_g = c[1]; vc_b = c[2];
             } else if(attr == VERTEX_ATTRIBUTE_4UB_RGBA || attr == VERTEX_ATTRIBUTE_4UB) {
                 const uint8_t* c = ptr + color_offset;
-                vert_r = c[0] / 255.0f; vert_g = c[1] / 255.0f;
-                vert_b = c[2] / 255.0f; vert_a = c[3] / 255.0f;
+                vc_r = c[0]/255.0f; vc_g = c[1]/255.0f; vc_b = c[2]/255.0f; vc_a = c[3]/255.0f;
             } else if(attr == VERTEX_ATTRIBUTE_4UB_BGRA) {
                 const uint8_t* c = ptr + color_offset;
-                vert_b = c[0] / 255.0f; vert_g = c[1] / 255.0f;
-                vert_r = c[2] / 255.0f; vert_a = c[3] / 255.0f;
+                vc_b = c[0]/255.0f; vc_g = c[1]/255.0f; vc_r = c[2]/255.0f; vc_a = c[3]/255.0f;
+            }
+            switch(color_mat_mode) {
+                case COLOR_MATERIAL_DIFFUSE:
+                case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
+                    base_r = vc_r; base_g = vc_g; base_b = vc_b; cv.a = vc_a;
+                    break;
+                default:
+                    /* Modulate */
+                    base_r *= vc_r; base_g *= vc_g; base_b *= vc_b; cv.a *= vc_a;
+                    break;
             }
         }
 
-        /* Apply color material mode */
-        switch(color_mat_mode) {
-            case COLOR_MATERIAL_DIFFUSE:
-            case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
-                cv.r = vert_r; cv.g = vert_g; cv.b = vert_b; cv.a = vert_a;
-                break;
-            default:
-                break;
-        }
-
-        /* Simple per-vertex directional lighting if enabled */
+        /* Per-vertex PBR lighting */
         if(lighting_enabled) {
             const float* n_ptr = (const float*)(ptr + normal_offset);
 
-            /* Transform normal by modelview using FIPR (does not clobber XMTRX) */
-            shz_vec3_t mvn = shz_mat4x4_transform_vec3(
-                modelview.native(),
-                shz_vec3_init(n_ptr[0], n_ptr[1], n_ptr[2]));
-            float mvn_x = mvn.x, mvn_y = mvn.y, mvn_z = mvn.z;
+            /* Transform normal by modelview upper-3x3 (Mat4*Vec3 = direction, no translation) */
+            Vec3 Nv = (modelview * Vec3(n_ptr[0], n_ptr[1], n_ptr[2])).normalized();
+            float Nx = Nv.x, Ny = Nv.y, Nz = Nv.z;
 
-            /* Normalize - FIPR squared magnitude, FSRRA reciprocal sqrt */
-            float mag_sqr = shz_mag_sqr3f(mvn_x, mvn_y, mvn_z);
-            if(mag_sqr > 1e-8f) {
-                float inv_len = shz_inv_sqrtf_fsrra(mag_sqr);
-                mvn_x *= inv_len; mvn_y *= inv_len; mvn_z *= inv_len;
+            /* Transform vertex position to eye space */
+            Vec4 ep = modelview * Vec4(p[0], p[1], p[2], 1.0f);
+            float pos_ex = ep.x, pos_ey = ep.y, pos_ez = ep.z;
+
+            /* View direction (eye at origin in view space) */
+            float Vx = -pos_ex, Vy = -pos_ey, Vz = -pos_ez;
+            float v_mag_sq = shz_mag_sqr3f(Vx, Vy, Vz);
+            if(v_mag_sq > 1e-8f) {
+                float inv = shz_inv_sqrtf_fsrra(v_mag_sq);
+                Vx *= inv; Vy *= inv; Vz *= inv;
             }
+            float NdotV = Nx*Vx + Ny*Vy + Nz*Vz;
+            if(NdotV < 0.0001f) NdotV = 0.0001f;
 
-            float total_r = mat_ambient_[0] * ambient_[0];
-            float total_g = mat_ambient_[1] * ambient_[1];
-            float total_b = mat_ambient_[2] * ambient_[2];
+            /* F0 and roughness terms */
+            const float F0_r = 0.04f + (base_r - 0.04f) * mat_metallic_;
+            const float F0_g = 0.04f + (base_g - 0.04f) * mat_metallic_;
+            const float F0_b = 0.04f + (base_b - 0.04f) * mat_metallic_;
+            const float alpha   = mat_roughness_ * mat_roughness_;
+            const float alphaSq = alpha * alpha;
+            const float k       = alpha * 0.5f;
+            const float nm      = 1.0f - mat_metallic_;
+
+            /* Ambient */
+            float total_r = base_r * ambient_[0];
+            float total_g = base_g * ambient_[1];
+            float total_b = base_b * ambient_[2];
 
             for(int li = 0; li < MAX_LIGHTS; li++) {
                 if(!lights_[li].enabled) continue;
 
-                float lx, ly, lz;
-                float atten = 1.0f;
+                float Lx, Ly, Lz;
+                float att = 1.0f;
 
-                if(lights_[li].position[3] == 0.0f) {
-                    lx = -lights_[li].position[0];
-                    ly = -lights_[li].position[1];
-                    lz = -lights_[li].position[2];
-                    float l_mag_sqr = shz_mag_sqr3f(lx, ly, lz);
-                    if(l_mag_sqr > 1e-8f) {
-                        float inv = shz_inv_sqrtf_fsrra(l_mag_sqr);
-                        lx *= inv; ly *= inv; lz *= inv;
-                    }
+                if(lights_[li].position[3] < 0.5f) {
+                    Lx = lights_[li].dir[0];
+                    Ly = lights_[li].dir[1];
+                    Lz = lights_[li].dir[2];
                 } else {
-                    float vx = modelview[12], vy = modelview[13], vz = modelview[14];
-                    lx = lights_[li].position[0] - vx;
-                    ly = lights_[li].position[1] - vy;
-                    lz = lights_[li].position[2] - vz;
-                    float l_mag_sqr = shz_mag_sqr3f(lx, ly, lz);
-                    float dist = 0.0f;
-                    if(l_mag_sqr > 1e-8f) {
-                        float inv = shz_inv_sqrtf_fsrra(l_mag_sqr);
-                        dist = l_mag_sqr * inv;  /* sqrt(mag_sqr) = mag_sqr * (1/sqrt(mag_sqr)) */
-                        lx *= inv; ly *= inv; lz *= inv;
+                    Lx = lights_[li].position[0] - pos_ex;
+                    Ly = lights_[li].position[1] - pos_ey;
+                    Lz = lights_[li].position[2] - pos_ez;
+                    float l_sq = shz_mag_sqr3f(Lx, Ly, Lz);
+                    if(l_sq > 1e-8f) {
+                        float inv = shz_inv_sqrtf_fsrra(l_sq);
+                        float dist = l_sq * inv; /* dist = sqrt(l_sq) */
+                        Lx *= inv; Ly *= inv; Lz *= inv;
+                        att = 1.0f - dist / (lights_[li].range + 1e-8f);
+                        if(att < 0.0f) att = 0.0f;
                     }
-                    float range = lights_[li].range;
-                    atten = 1.0f - (dist / range);
-                    if(atten < 0.0f) atten = 0.0f;
                 }
 
-                float ndotl = shz_dot6f(mvn_x, mvn_y, mvn_z, lx, ly, lz);
-                if(ndotl < 0.0f) ndotl = 0.0f;
+                float NdotL = shz_dot6f(Nx, Ny, Nz, Lx, Ly, Lz);
+                if(NdotL <= 0.0f) continue;
 
-                float intensity = lights_[li].intensity * atten;
-                total_r += cv.r * lights_[li].color[0] * ndotl * intensity;
-                total_g += cv.g * lights_[li].color[1] * ndotl * intensity;
-                total_b += cv.b * lights_[li].color[2] * ndotl * intensity;
+                /* Half-vector */
+                float Hx = Lx + Vx, Hy = Ly + Vy, Hz = Lz + Vz;
+                float h_sq = shz_mag_sqr3f(Hx, Hy, Hz);
+                if(h_sq > 1e-8f) {
+                    float inv = shz_inv_sqrtf_fsrra(h_sq);
+                    Hx *= inv; Hy *= inv; Hz *= inv;
+                }
+                float NdotH = Nx*Hx + Ny*Hy + Nz*Hz;
+                if(NdotH < 0.0f) NdotH = 0.0f;
+                float HdotV = Hx*Vx + Hy*Vy + Hz*Vz;
+                if(HdotV < 0.0f) HdotV = 0.0f;
+
+                /* Fresnel (Schlick) */
+                float omHdotV = 1.0f - HdotV;
+                float pow5 = omHdotV * omHdotV; pow5 *= pow5; pow5 *= omHdotV;
+                float Fr = F0_r + (1.0f - F0_r) * pow5;
+                float Fg = F0_g + (1.0f - F0_g) * pow5;
+                float Fb = F0_b + (1.0f - F0_b) * pow5;
+
+                /* Diffuse */
+                float kD_r = (1.0f - Fr) * nm;
+                float kD_g = (1.0f - Fg) * nm;
+                float kD_b = (1.0f - Fb) * nm;
+
+                /* GGX NDF */
+                float d = NdotH * NdotH * (alphaSq - 1.0f) + 1.0f;
+                float D = alphaSq / (d * d + 1e-7f);
+
+                /* Smith Schlick-GGX geometry */
+                float GV = NdotV / (NdotV * (1.0f - k) + k);
+                float GL = NdotL / (NdotL * (1.0f - k) + k + 1e-7f);
+                float G  = GV * GL;
+
+                float denom = 4.0f * NdotV * NdotL;
+                if(denom < 0.0001f) denom = 0.0001f;
+                float spec = D * G / denom;
+
+                float scale = NdotL * lights_[li].intensity * att;
+                total_r += (kD_r * base_r + spec * Fr) * scale * lights_[li].color[0];
+                total_g += (kD_g * base_g + spec * Fg) * scale * lights_[li].color[1];
+                total_b += (kD_b * base_b + spec * Fb) * scale * lights_[li].color[2];
             }
 
-            cv.r = total_r;
-            cv.g = total_g;
-            cv.b = total_b;
-
-            if(cv.r > 1.0f) cv.r = 1.0f;
-            if(cv.g > 1.0f) cv.g = 1.0f;
-            if(cv.b > 1.0f) cv.b = 1.0f;
+            cv.r = total_r > 1.0f ? 1.0f : total_r;
+            cv.g = total_g > 1.0f ? 1.0f : total_g;
+            cv.b = total_b > 1.0f ? 1.0f : total_b;
+        } else {
+            cv.r = base_r;
+            cv.g = base_g;
+            cv.b = base_b;
         }
 
         return cv;

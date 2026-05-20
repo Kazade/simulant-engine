@@ -16,13 +16,11 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
 
     switch(hsh) {
         case material_property_hash(BASE_COLOR_PROPERTY_NAME):
-        case material_property_hash(SPECULAR_COLOR_PROPERTY_NAME):
         case FOG_COLOR_PROPERTY_HASH:
             *type = MATERIAL_PROPERTY_TYPE_VEC4;
         break;
         case material_property_hash(METALLIC_PROPERTY_NAME):
         case material_property_hash(ROUGHNESS_PROPERTY_NAME):
-        case material_property_hash(SPECULAR_PROPERTY_NAME):
         case material_property_hash(POINT_SIZE_PROPERTY_NAME):
         case ALPHA_THRESHOLD_PROPERTY_HASH:
         case FOG_DENSITY_PROPERTY_HASH:
@@ -71,9 +69,7 @@ bool core_property_type(const char* name, MaterialPropertyType* type) {
 const PropertyList& core_properties() {
     static const PropertyList core_properties = {
         {BASE_COLOR_PROPERTY_NAME,                    MATERIAL_PROPERTY_TYPE_VEC4   },
-        {SPECULAR_COLOR_PROPERTY_NAME,                MATERIAL_PROPERTY_TYPE_VEC4   },
 
-        {SPECULAR_PROPERTY_NAME,                      MATERIAL_PROPERTY_TYPE_FLOAT  },
         {POINT_SIZE_PROPERTY_NAME,                    MATERIAL_PROPERTY_TYPE_FLOAT  },
 
         {METALLIC_PROPERTY_NAME,                      MATERIAL_PROPERTY_TYPE_FLOAT  },

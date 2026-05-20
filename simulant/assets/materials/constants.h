@@ -77,8 +77,6 @@ BlendType blend_type_from_name(const char* name);
 DepthFunc depth_func_from_name(const char* name);
 
 #define BASE_COLOR_PROPERTY_NAME "s_material_base_color"
-#define SPECULAR_COLOR_PROPERTY_NAME "s_material_specular_color"
-#define SPECULAR_PROPERTY_NAME "s_material_specular"
 #define ROUGHNESS_PROPERTY_NAME "s_material_roughness"
 #define METALLIC_PROPERTY_NAME "s_material_metallic"
 #define BASE_COLOR_MAP_PROPERTY_NAME "s_base_color_map"
