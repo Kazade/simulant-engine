@@ -182,6 +182,21 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
         program->set_uniform_float(ps_loc, pass->point_size());
     }
 
+    /* Alpha testing — replaces GL_ALPHA_TEST / glAlphaFunc which are absent
+     * from GLES2 and GL core profiles. The shader convention mirrors the GL
+     * enum values: 0=off, 1=LESS, 2=LEQUAL, 3=EQUAL, 4=GEQUAL, 5=GREATER. */
+    auto af_loc = program->locate_uniform(ALPHA_FUNC_PROPERTY_NAME, true);
+    auto at_loc = program->locate_uniform(ALPHA_THRESHOLD_PROPERTY_NAME, true);
+    if(af_loc > -1 || at_loc > -1) {
+        const bool is_mask = (pass->blend_func() == BLEND_MASK);
+        if(af_loc > -1) {
+            program->set_uniform_int(af_loc, is_mask ? 5 : 0); // 5 = GREATER
+        }
+        if(at_loc > -1) {
+            program->set_uniform_float(at_loc, is_mask ? pass->alpha_threshold() : 0.0f);
+        }
+    }
+
     /* Each texture property has a counterpart matrix uniform; pass those down
      * if they exist. Sampler uniforms are written in change_material_pass
      * where texture binding also happens, so they are not written here to
@@ -334,39 +349,34 @@ void GenericRenderer::set_auto_attributes_on_shader(
                    &VertexSpecification::normal_offset, offset);
 }
 
-void GenericRenderer::set_blending_mode(BlendType type, float alpha) {
+void GenericRenderer::set_blending_mode(BlendType type) {
+    /* Note: GL_ALPHA_TEST / glAlphaFunc are not used here — they are absent
+     * from GLES2 and GL core profiles. Alpha testing is handled in the
+     * fragment shader via the s_alpha_func / s_alpha_threshold uniforms. */
     switch(type) {
         case BLEND_NONE:
             GLCheck(glDisable, GL_BLEND);
-            GLCheck(glDisable, GL_ALPHA_TEST);
             break;
         case BLEND_MASK:
             GLCheck(glDisable, GL_BLEND);
-            GLCheck(glEnable, GL_ALPHA_TEST);
-            GLCheck(glAlphaFunc, GL_GREATER, alpha);
             break;
         case BLEND_ADD:
-            GLCheck(glDisable, GL_ALPHA_TEST);
             GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_ONE, GL_ONE);
             break;
         case BLEND_ALPHA:
-            GLCheck(glDisable, GL_ALPHA_TEST);
             GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
         case BLEND_COLOR:
-            GLCheck(glDisable, GL_ALPHA_TEST);
             GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
             break;
         case BLEND_MODULATE:
-            GLCheck(glDisable, GL_ALPHA_TEST);
             GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_DST_COLOR, GL_ZERO);
             break;
         case BLEND_ONE_ONE_MINUS_ALPHA:
-            GLCheck(glDisable, GL_ALPHA_TEST);
             GLCheck(glEnable, GL_BLEND);
             GLCheck(glBlendFunc, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             break;
@@ -575,8 +585,7 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     }
 
     if(!prev || prev->blend_func() != next->blend_func()) {
-        renderer_->set_blending_mode(next->blend_func(),
-                                     next->alpha_threshold());
+        renderer_->set_blending_mode(next->blend_func());
     }
 
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
