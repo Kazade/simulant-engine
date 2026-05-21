@@ -147,4 +147,29 @@ public:
 };
 
 
+/* A class used to optimise multiple operations using the same matrix. On
+ * some platforms this uses special CPU instructions.
+ *
+ * Do not create multiple instances of this class at the same time.
+ */
+class Mat4Scratch {
+public:
+    Mat4Scratch(const Mat4& m);
+#ifndef NDEBUG
+    ~Mat4Scratch() {
+        assert(current_ == this);
+        current_ = nullptr;
+    }
+#endif
+
+    Vec3 transform_point(const Vec3& in) const;
+    Vec3 transform_vector(const Vec3& in) const;
+
+private:
+#ifndef NDEBUG
+    static Mat4Scratch* current_;
+#endif
+};
+
+
 }

@@ -240,4 +240,27 @@ Mat4 Mat4::as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up) {
     return ret;
 }
 
+#ifndef NDEBUG
+Mat4Scratch* Mat4Scratch::current_ = nullptr;
+#endif
+
+Mat4Scratch::Mat4Scratch(const Mat4& m) {
+#ifndef NDEBUG
+    assert(current_ == nullptr);
+    current_ = this;
+#endif
+    shz_xmtrx_load_4x4(m.native());
+}
+
+Vec3 Mat4Scratch::transform_point(const Vec3& in) const {
+    shz_vec3_t p = shz_xmtrx_transform_point3(shz_vec3_init(in.x, in.y, in.z));
+    return Vec3(p.x, p.y, p.z);
+}
+
+Vec3 Mat4Scratch::transform_vector(const Vec3& in) const {
+    shz_vec3_t r = shz_xmtrx_transform_vec3(shz_vec3_init(in.x, in.y, in.z));
+    return Vec3(r.x, r.y, r.z);
+}
+
+
 } // namespace smlt

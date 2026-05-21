@@ -818,7 +818,7 @@ void Mesh::update_skinning() {
     for (uint32_t i = 0; i < vertex_data_->count(); ++i) {
         // Zero-init the skin matrix directly — avoids an unnecessary XMTRX
         // clobber from Mat4::zero() before we're ready to use XMTRX ourselves.
-        alignas(32) Mat4 skin_matrix;
+        Mat4 skin_matrix;
         memset(skin_matrix.data(), 0, sizeof(float) * 16);
 
         const Vec4* weights_acc = vertex_data_->weights_at<Vec4>(i);
@@ -861,23 +861,16 @@ void Mesh::update_skinning() {
             skin_cols[3] = skin_cols[3] + joint_cols[3] * weight;
         }
 
-        // Load the blended skin matrix into XMTRX once, then use FTRV-backed
-        // transforms for both the position and the normal — avoids 18 scalar
-        // MACs that the old transformed_by()/rotated_by() paths used.
-        shz_xmtrx_load_4x4(skin_matrix.native());
+        Mat4Scratch scratch(skin_matrix);
 
         if (has_positions) {
             const Vec3& v = rest_positions_[i];
-            shz_vec3_t p = shz_xmtrx_transform_point3(shz_vec3_init(v.x, v.y, v.z));
-            vertex_data_->position(Vec3(p.x, p.y, p.z));
+            vertex_data_->position(scratch.transform_point(v));
         }
 
         if (has_normals) {
             const Vec3& n = rest_normals_[i];
-            shz_vec3_t r = shz_xmtrx_transform_vec3(shz_vec3_init(n.x, n.y, n.z));
-            Vec3 transformed_n(r.x, r.y, r.z);
-            transformed_n.normalize();
-            vertex_data_->normal(transformed_n);
+            vertex_data_->normal(scratch.transform_vector(n).normalized());
         }
 
         vertex_data_->move_next();
