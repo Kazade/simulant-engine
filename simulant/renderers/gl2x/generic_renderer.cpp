@@ -42,15 +42,19 @@
 
 namespace smlt {
 
-/* These are bare minimal shaders so that *something* is displayed, they're only
- * used when the Material is incomplete (no shaders provided) */
+/* Fallback shaders used when a Material has no shaders assigned. They apply
+ * the standard transform so geometry still appears in the right place, and
+ * emit bright magenta — the de-facto "missing shader" colour — so renderables
+ * that slip through with the placeholder are immediately visible rather than
+ * appearing untransformed at the origin. */
 
 static const char* default_vertex_shader = R"(
 #version {0}
 
-attribute vec4 s_position;
+attribute vec3 s_position;
+uniform mat4 s_modelview_projection;
 void main(void) {
-    gl_Position = s_position;
+    gl_Position = s_modelview_projection * vec4(s_position, 1.0);
 }
 
 )";
@@ -59,7 +63,7 @@ static const char* default_fragment_shader = R"(
 #version {0}
 
 void main(void) {
-    gl_FragColor = vec4(0.4,0.4,0.8,1.0);
+    gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
 }
 
 )";
@@ -491,6 +495,14 @@ void GL2RenderQueueVisitor::apply_lights(const LightPtr* lights,
 void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
                                                  const MaterialPass* next) {
     pass_ = next;
+
+    auto def = renderer_->default_gpu_program();
+    if(def && next->gpu_program_id() == def->id()) {
+        S_WARN_ONCE(
+            "Material '{0}' is rendering with the default placeholder GPU "
+            "program — its pass has no shaders assigned",
+            next->material()->name());
+    }
 
     // Active the new program, if this render group uses a different one
     if(!prev || prev->gpu_program_id() != next->gpu_program_id()) {
