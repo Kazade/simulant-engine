@@ -407,9 +407,29 @@ std::shared_ptr<batcher::RenderQueueVisitor>
 smlt::GPUProgramPtr smlt::GenericRenderer::new_or_existing_gpu_program(
     const std::string& vertex_shader_source,
     const std::string& fragment_shader_source) {
-    /* FIXME: This doesn't do what the function implies... it should either be
-     * called new_gpu_program, or it should try to return an existing progra if
-     * the source matches */
+
+    /* GPUProgram stores formatted sources (with the GLSL version substituted),
+     * so format our inputs the same way before comparing. */
+    const char* shader_version = (name() == "gles2x") ? "100" : "120";
+    const std::string vert_formatted = _F(vertex_shader_source).format(shader_version);
+    const std::string frag_formatted = _F(fragment_shader_source).format(shader_version);
+
+    GPUProgramPtr existing;
+    program_manager_.each([&](uint32_t, GPUProgramPtr prog) {
+        if(existing) return;
+        auto infos = prog->shader_infos();
+        auto vit = infos.find(SHADER_TYPE_VERTEX);
+        auto fit = infos.find(SHADER_TYPE_FRAGMENT);
+        if(vit != infos.end() && fit != infos.end() &&
+           vit->second.source == vert_formatted &&
+           fit->second.source == frag_formatted) {
+            existing = prog;
+        }
+    });
+
+    if(existing) {
+        return existing;
+    }
 
     auto program = program_manager_.make(this, vertex_shader_source,
                                          fragment_shader_source);
