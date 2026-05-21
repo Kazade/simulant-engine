@@ -355,7 +355,10 @@ void DedicatedVBO::release_slot(VBOSlot slot) {
     assert(allocated_);
     allocated_ = false;
 
-    // FIXME? Should we delete the GL buffer here?
+    if(gl_id_) {
+        GLCheck(glDeleteBuffers, 1, &gl_id_);
+        gl_id_ = 0;
+    }
 }
 
 void SharedVBO::allocate_new_gl_buffer() {

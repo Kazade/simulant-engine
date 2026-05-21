@@ -243,10 +243,10 @@ void GenericRenderer::set_stage_uniforms(const MaterialPass* pass,
 }
 
 /* Shadows GL state to avoid unnecessary GL calls */
-static uint8_t enabled_vertex_attributes_ = 0;
+static uint32_t enabled_vertex_attributes_ = 0;
 
 void enable_vertex_attribute(uint8_t i) {
-    uint8_t v = 1 << i;
+    uint32_t v = 1u << i;
     if((enabled_vertex_attributes_ & v) == v) {
         return;
     }
@@ -257,7 +257,7 @@ void enable_vertex_attribute(uint8_t i) {
 }
 
 void disable_vertex_attribute(uint8_t i) {
-    uint8_t v = 1 << i;
+    uint32_t v = 1u << i;
 
     if((enabled_vertex_attributes_ & v) != v) {
         return;
@@ -323,7 +323,7 @@ void GenericRenderer::set_auto_attributes_on_shader(
      *  switching between shaders that place attributes at different locations
      *  leaves stale enabled arrays pointing into the previous VBO slot.
      */
-    for(uint8_t i = 0; i < 8; ++i) {
+    for(uint8_t i = 0; i < 32; ++i) {
         disable_vertex_attribute(i);
     }
 

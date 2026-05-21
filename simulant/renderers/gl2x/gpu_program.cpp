@@ -161,7 +161,9 @@ void GPUProgram::set_uniform_color(const std::string& uniform_name, const Color&
 
 void GPUProgram::set_uniform_mat4x4_array(const std::string& uniform_name, const std::vector<Mat4>& matrices) {
     int32_t loc = locate_uniform(uniform_name);
-    GLCheck(glUniformMatrix4fv, loc, matrices.size(), false, (GLfloat*) &matrices[0]);
+    if(loc > -1 && !matrices.empty()) {
+        GLCheck(glUniformMatrix4fv, loc, matrices.size(), false, (GLfloat*) &matrices[0]);
+    }
 }
 
 void GPUProgram::rebuild_uniform_info() {
