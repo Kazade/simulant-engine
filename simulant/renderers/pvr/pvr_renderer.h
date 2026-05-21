@@ -3,6 +3,8 @@
 #include "../renderer.h"
 #include "pvr_texture_manager.h"
 
+#include "../../core/aligned_vector.h"
+
 #ifdef __DREAMCAST__
 #include <kos.h>
 #endif
@@ -60,11 +62,12 @@ friend class PVRRenderQueueVisitor;
 
     #ifdef __DREAMCAST__
         pvr_dr_state_t dr_state_;
-        std::vector<uint8_t> pt_buffer_; /* PT headers+vertices pending deferred submission */
-        std::vector<uint8_t> tr_buffer_; /* TR headers+vertices pending deferred submission */
     #endif
 
-    void flush_list_buffer(std::vector<uint8_t>& buffer, pvr_list_type_t list_type);
+    aligned_vector<uint8_t, 32> pt_buffer_; /* PT headers+vertices pending deferred submission */
+    aligned_vector<uint8_t, 32> tr_buffer_; /* TR headers+vertices pending deferred submission */
+
+    void flush_list_buffer(aligned_vector<uint8_t, 32>& buffer, pvr_list_type_t list_type);
     void ensure_list_opened(pvr_list_type_t list_type);
 
     void on_pre_render() override;

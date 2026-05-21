@@ -168,7 +168,7 @@ void PVRRenderer::ensure_list_opened(pvr_list_type_t list_type) {
 #endif
 }
 
-void PVRRenderer::flush_list_buffer(std::vector<uint8_t>& buffer, pvr_list_type_t list_type) {
+void PVRRenderer::flush_list_buffer(aligned_vector<uint8_t, 32>& buffer, pvr_list_type_t list_type) {
 #ifdef __DREAMCAST__
     if(buffer.empty()) return;
     ensure_list_opened(list_type);
