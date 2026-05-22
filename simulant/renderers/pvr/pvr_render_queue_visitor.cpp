@@ -9,6 +9,7 @@
 #include "../../types.h"
 #include "../../vertex_data.h"
 #include "../../assets/material.h"
+#include "../../core/aligned_vector.h"
 #include "../../logging.h"
 
 #ifdef __DREAMCAST__
@@ -468,181 +469,240 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     auto color_mat_mode = material_pass->color_material();
     bool lighting_enabled = material_pass->is_lighting_enabled() && normal_offset;
 
-    /* Load MVP into XMTRX once — all per-vertex position transforms use FTRV */
-    shz_xmtrx_load_4x4(mvp.native());
+    /* ================================================================
+     * Three-pass vertex transformation
+     * Each pass below uses a narrow working set, so the SH4 register file
+     * is largely sufficient.  Pass 1 only needs the loaded MVP in xmtrx
+     * and the FTRV inputs; pass 2 does no floating-point work besides a
+     * handful of multiplies; pass 3 uses xmtrx for modelview transforms
+     * and computes lighting against a fixed-size light table.
+     * ================================================================ */
+    static aligned_vector<ClipVertex, 32> work_vertices_;
 
-    /* Lambda to read a vertex and transform to clip space with lighting */
-    auto read_and_transform_vertex = [&](uint32_t index) -> ClipVertex {
-        const uint8_t* ptr = raw_data + (stride * index);
-        ClipVertex cv;
+    /* Transform a contiguous batch of `count` vertices starting at source
+     * vertex `base`.  On entry MVP must be loaded into xmtrx.  On exit:
+     *   - work_vertices_[i] corresponds to source vertex (base + i)
+     *   - x,y,z,w = clip-space position
+     *   - u,v     = texture coordinates
+     *   - r,g,b   = lit colour (lighting on) or base colour (lighting off)
+     *   - a       = final alpha
+     * If lighting was applied xmtrx is restored to MVP before return. */
+    auto transform_batch = [&](uint32_t base, uint32_t count) {
+        if(!count) return;
+        work_vertices_.resize(count);
 
-        /* Position */
-        const float* p = (const float*)(ptr + pos_offset);
-
-        /* Transform by MVP using FTRV (SH4 matrix-vector multiply, 8 cycles) */
-        shz_vec4_t clip = shz_xmtrx_transform_vec4(shz_vec4_init(p[0], p[1], p[2], 1.0f));
-        cv.x = clip.x; cv.y = clip.y; cv.z = clip.z; cv.w = clip.w;
-
-        /* UV */
-        cv.u = 0.0f; cv.v = 0.0f;
-        if(uv_offset) {
-            const float* t = (const float*)(ptr + uv_offset);
-            cv.u = t[0];
-            cv.v = t[1];
-        }
-
-        /* Build per-vertex base colour: material base_color modulated by vertex colour */
-        float base_r = mat_base_color_[0];
-        float base_g = mat_base_color_[1];
-        float base_b = mat_base_color_[2];
-        cv.a = mat_base_color_[3];
-
-        /* Read and apply vertex colour */
-        if(color_offset) {
-            float vc_r = 1.0f, vc_g = 1.0f, vc_b = 1.0f, vc_a = 1.0f;
-            VertexAttribute attr = spec.color_attribute;
-            if(attr == VERTEX_ATTRIBUTE_4F) {
-                const float* c = (const float*)(ptr + color_offset);
-                vc_r = c[0]; vc_g = c[1]; vc_b = c[2]; vc_a = c[3];
-            } else if(attr == VERTEX_ATTRIBUTE_3F) {
-                const float* c = (const float*)(ptr + color_offset);
-                vc_r = c[0]; vc_g = c[1]; vc_b = c[2];
-            } else if(attr == VERTEX_ATTRIBUTE_4UB_RGBA || attr == VERTEX_ATTRIBUTE_4UB) {
-                const uint8_t* c = ptr + color_offset;
-                vc_r = c[0]/255.0f; vc_g = c[1]/255.0f; vc_b = c[2]/255.0f; vc_a = c[3]/255.0f;
-            } else if(attr == VERTEX_ATTRIBUTE_4UB_BGRA) {
-                const uint8_t* c = ptr + color_offset;
-                vc_b = c[0]/255.0f; vc_g = c[1]/255.0f; vc_r = c[2]/255.0f; vc_a = c[3]/255.0f;
-            }
-            switch(color_mat_mode) {
-                case COLOR_MATERIAL_DIFFUSE:
-                case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
-                    base_r = vc_r; base_g = vc_g; base_b = vc_b; cv.a = vc_a;
-                    break;
-                default:
-                    /* Modulate */
-                    base_r *= vc_r; base_g *= vc_g; base_b *= vc_b; cv.a *= vc_a;
-                    break;
+        /* ------------------------------------------------------------
+         * Pass 1: position × MVP via FTRV.
+         * ------------------------------------------------------------ */
+        {
+            const uint8_t* row = raw_data + stride * base;
+            for(uint32_t i = 0; i < count; ++i) {
+                const float* p = (const float*)(row + pos_offset);
+                shz_vec4_t clip = shz_xmtrx_transform_vec4(
+                    shz_vec4_init(p[0], p[1], p[2], 1.0f));
+                ClipVertex& cv = work_vertices_[i];
+                cv.x = clip.x; cv.y = clip.y; cv.z = clip.z; cv.w = clip.w;
+                row += stride;
             }
         }
 
-        /* Per-vertex PBR lighting */
-        if(lighting_enabled) {
-            const float* n_ptr = (const float*)(ptr + normal_offset);
+        /* ------------------------------------------------------------
+         * Pass 2: UVs and base colour (material × per-vertex colour).
+         * Stores the *base* colour in cv.r/g/b — pass 3 reads it back
+         * out and replaces it with the lit colour if lighting is on.
+         * ------------------------------------------------------------ */
+        {
+            const VertexAttribute color_attr = spec.color_attribute;
+            const uint8_t* row = raw_data + stride * base;
+            for(uint32_t i = 0; i < count; ++i) {
+                ClipVertex& cv = work_vertices_[i];
 
-            /* Transform normal by modelview upper-3x3 (Mat4*Vec3 = direction, no translation) */
-            Vec3 Nv = (modelview * Vec3(n_ptr[0], n_ptr[1], n_ptr[2])).normalized();
-            float Nx = Nv.x, Ny = Nv.y, Nz = Nv.z;
-
-            /* Transform vertex position to eye space */
-            Vec4 ep = modelview * Vec4(p[0], p[1], p[2], 1.0f);
-            float pos_ex = ep.x, pos_ey = ep.y, pos_ez = ep.z;
-
-            /* View direction (eye at origin in view space) */
-            float Vx = -pos_ex, Vy = -pos_ey, Vz = -pos_ez;
-            float v_mag_sq = shz_mag_sqr3f(Vx, Vy, Vz);
-            if(v_mag_sq > 1e-8f) {
-                float inv = shz_inv_sqrtf_fsrra(v_mag_sq);
-                Vx *= inv; Vy *= inv; Vz *= inv;
-            }
-            float NdotV = Nx*Vx + Ny*Vy + Nz*Vz;
-            if(NdotV < 0.0001f) NdotV = 0.0001f;
-
-            /* F0 and roughness terms */
-            const float F0_r = 0.04f + (base_r - 0.04f) * mat_metallic_;
-            const float F0_g = 0.04f + (base_g - 0.04f) * mat_metallic_;
-            const float F0_b = 0.04f + (base_b - 0.04f) * mat_metallic_;
-            const float alpha   = mat_roughness_ * mat_roughness_;
-            const float alphaSq = alpha * alpha;
-            const float k       = alpha * 0.5f;
-            const float nm      = 1.0f - mat_metallic_;
-
-            /* Ambient */
-            float total_r = base_r * ambient_[0];
-            float total_g = base_g * ambient_[1];
-            float total_b = base_b * ambient_[2];
-
-            for(int li = 0; li < MAX_LIGHTS; li++) {
-                if(!lights_[li].enabled) continue;
-
-                float Lx, Ly, Lz;
-                float att = 1.0f;
-
-                if(lights_[li].position[3] < 0.5f) {
-                    Lx = lights_[li].dir[0];
-                    Ly = lights_[li].dir[1];
-                    Lz = lights_[li].dir[2];
+                if(uv_offset) {
+                    const float* t = (const float*)(row + uv_offset);
+                    cv.u = t[0];
+                    cv.v = t[1];
                 } else {
-                    Lx = lights_[li].position[0] - pos_ex;
-                    Ly = lights_[li].position[1] - pos_ey;
-                    Lz = lights_[li].position[2] - pos_ez;
-                    float l_sq = shz_mag_sqr3f(Lx, Ly, Lz);
-                    if(l_sq > 1e-8f) {
-                        float inv = shz_inv_sqrtf_fsrra(l_sq);
-                        float dist = l_sq * inv; /* dist = sqrt(l_sq) */
-                        Lx *= inv; Ly *= inv; Lz *= inv;
-                        att = 1.0f - dist / (lights_[li].range + 1e-8f);
-                        if(att < 0.0f) att = 0.0f;
+                    cv.u = 0.0f; cv.v = 0.0f;
+                }
+
+                float br = mat_base_color_[0];
+                float bg = mat_base_color_[1];
+                float bb = mat_base_color_[2];
+                float ba = mat_base_color_[3];
+
+                if(color_offset) {
+                    float vc_r = 1.0f, vc_g = 1.0f, vc_b = 1.0f, vc_a = 1.0f;
+                    if(color_attr == VERTEX_ATTRIBUTE_4F) {
+                        const float* c = (const float*)(row + color_offset);
+                        vc_r = c[0]; vc_g = c[1]; vc_b = c[2]; vc_a = c[3];
+                    } else if(color_attr == VERTEX_ATTRIBUTE_3F) {
+                        const float* c = (const float*)(row + color_offset);
+                        vc_r = c[0]; vc_g = c[1]; vc_b = c[2];
+                    } else if(color_attr == VERTEX_ATTRIBUTE_4UB_RGBA ||
+                              color_attr == VERTEX_ATTRIBUTE_4UB) {
+                        const uint8_t* c = row + color_offset;
+                        vc_r = c[0]/255.0f; vc_g = c[1]/255.0f;
+                        vc_b = c[2]/255.0f; vc_a = c[3]/255.0f;
+                    } else if(color_attr == VERTEX_ATTRIBUTE_4UB_BGRA) {
+                        const uint8_t* c = row + color_offset;
+                        vc_b = c[0]/255.0f; vc_g = c[1]/255.0f;
+                        vc_r = c[2]/255.0f; vc_a = c[3]/255.0f;
+                    }
+                    switch(color_mat_mode) {
+                        case COLOR_MATERIAL_DIFFUSE:
+                        case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
+                            br = vc_r; bg = vc_g; bb = vc_b; ba = vc_a;
+                            break;
+                        default:
+                            br *= vc_r; bg *= vc_g; bb *= vc_b; ba *= vc_a;
+                            break;
                     }
                 }
 
-                float NdotL = shz_dot6f(Nx, Ny, Nz, Lx, Ly, Lz);
-                if(NdotL <= 0.0f) continue;
-
-                /* Half-vector */
-                float Hx = Lx + Vx, Hy = Ly + Vy, Hz = Lz + Vz;
-                float h_sq = shz_mag_sqr3f(Hx, Hy, Hz);
-                if(h_sq > 1e-8f) {
-                    float inv = shz_inv_sqrtf_fsrra(h_sq);
-                    Hx *= inv; Hy *= inv; Hz *= inv;
-                }
-                float NdotH = Nx*Hx + Ny*Hy + Nz*Hz;
-                if(NdotH < 0.0f) NdotH = 0.0f;
-                float HdotV = Hx*Vx + Hy*Vy + Hz*Vz;
-                if(HdotV < 0.0f) HdotV = 0.0f;
-
-                /* Fresnel (Schlick) */
-                float omHdotV = 1.0f - HdotV;
-                float pow5 = omHdotV * omHdotV; pow5 *= pow5; pow5 *= omHdotV;
-                float Fr = F0_r + (1.0f - F0_r) * pow5;
-                float Fg = F0_g + (1.0f - F0_g) * pow5;
-                float Fb = F0_b + (1.0f - F0_b) * pow5;
-
-                /* Diffuse */
-                float kD_r = (1.0f - Fr) * nm;
-                float kD_g = (1.0f - Fg) * nm;
-                float kD_b = (1.0f - Fb) * nm;
-
-                /* GGX NDF */
-                float d = NdotH * NdotH * (alphaSq - 1.0f) + 1.0f;
-                float D = alphaSq / (d * d + 1e-7f);
-
-                /* Smith Schlick-GGX geometry */
-                float GV = NdotV / (NdotV * (1.0f - k) + k);
-                float GL = NdotL / (NdotL * (1.0f - k) + k + 1e-7f);
-                float G  = GV * GL;
-
-                float denom = 4.0f * NdotV * NdotL;
-                if(denom < 0.0001f) denom = 0.0001f;
-                float spec = D * G / denom;
-
-                float scale = NdotL * lights_[li].intensity * att;
-                total_r += (kD_r * base_r + spec * Fr) * scale * lights_[li].color[0];
-                total_g += (kD_g * base_g + spec * Fg) * scale * lights_[li].color[1];
-                total_b += (kD_b * base_b + spec * Fb) * scale * lights_[li].color[2];
+                cv.r = br;
+                cv.g = bg;
+                cv.b = bb;
+                cv.a = ba;
+                row += stride;
             }
-
-            cv.r = total_r > 1.0f ? 1.0f : total_r;
-            cv.g = total_g > 1.0f ? 1.0f : total_g;
-            cv.b = total_b > 1.0f ? 1.0f : total_b;
-        } else {
-            cv.r = base_r;
-            cv.g = base_g;
-            cv.b = base_b;
         }
 
-        return cv;
+        /* ------------------------------------------------------------
+         * Pass 3: per-vertex PBR lighting.
+         * Loads modelview into xmtrx so the normal and eye-space
+         * position transforms can also use FTRV.
+         * ------------------------------------------------------------ */
+        if(lighting_enabled) {
+            shz_xmtrx_load_4x4(modelview.native());
+
+            const float roughness_alpha   = mat_roughness_ * mat_roughness_;
+            const float roughness_alphaSq = roughness_alpha * roughness_alpha;
+            const float k                 = roughness_alpha * 0.5f;
+            const float nm                = 1.0f - mat_metallic_;
+
+            const uint8_t* row = raw_data + stride * base;
+            for(uint32_t i = 0; i < count; ++i) {
+                ClipVertex& cv = work_vertices_[i];
+
+                /* Recover base colour stashed by pass 2. */
+                const float br = cv.r;
+                const float bg = cv.g;
+                const float bb = cv.b;
+
+                const float* p     = (const float*)(row + pos_offset);
+                const float* n_ptr = (const float*)(row + normal_offset);
+
+                /* Normal × modelview (w=0 drops translation). */
+                shz_vec4_t nv = shz_xmtrx_transform_vec4(
+                    shz_vec4_init(n_ptr[0], n_ptr[1], n_ptr[2], 0.0f));
+                float Nx = nv.x, Ny = nv.y, Nz = nv.z;
+                float n_sq = shz_mag_sqr3f(Nx, Ny, Nz);
+                if(n_sq > 1e-8f) {
+                    float invn = shz_inv_sqrtf_fsrra(n_sq);
+                    Nx *= invn; Ny *= invn; Nz *= invn;
+                }
+
+                /* Position × modelview → eye-space. */
+                shz_vec4_t ev = shz_xmtrx_transform_vec4(
+                    shz_vec4_init(p[0], p[1], p[2], 1.0f));
+                float pos_ex = ev.x, pos_ey = ev.y, pos_ez = ev.z;
+
+                /* View direction (eye at origin in view space). */
+                float Vx = -pos_ex, Vy = -pos_ey, Vz = -pos_ez;
+                float v_mag_sq = shz_mag_sqr3f(Vx, Vy, Vz);
+                if(v_mag_sq > 1e-8f) {
+                    float invv = shz_inv_sqrtf_fsrra(v_mag_sq);
+                    Vx *= invv; Vy *= invv; Vz *= invv;
+                }
+                float NdotV = Nx*Vx + Ny*Vy + Nz*Vz;
+                if(NdotV < 0.0001f) NdotV = 0.0001f;
+
+                const float F0_r = 0.04f + (br - 0.04f) * mat_metallic_;
+                const float F0_g = 0.04f + (bg - 0.04f) * mat_metallic_;
+                const float F0_b = 0.04f + (bb - 0.04f) * mat_metallic_;
+
+                float total_r = br * ambient_[0];
+                float total_g = bg * ambient_[1];
+                float total_b = bb * ambient_[2];
+
+                for(int li = 0; li < MAX_LIGHTS; ++li) {
+                    if(!lights_[li].enabled) continue;
+
+                    float Lx, Ly, Lz;
+                    float att = 1.0f;
+
+                    if(lights_[li].position[3] < 0.5f) {
+                        Lx = lights_[li].dir[0];
+                        Ly = lights_[li].dir[1];
+                        Lz = lights_[li].dir[2];
+                    } else {
+                        Lx = lights_[li].position[0] - pos_ex;
+                        Ly = lights_[li].position[1] - pos_ey;
+                        Lz = lights_[li].position[2] - pos_ez;
+                        float l_sq = shz_mag_sqr3f(Lx, Ly, Lz);
+                        if(l_sq > 1e-8f) {
+                            float inv = shz_inv_sqrtf_fsrra(l_sq);
+                            float dist = l_sq * inv;
+                            Lx *= inv; Ly *= inv; Lz *= inv;
+                            att = 1.0f - dist / (lights_[li].range + 1e-8f);
+                            if(att < 0.0f) att = 0.0f;
+                        }
+                    }
+
+                    float NdotL = shz_dot6f(Nx, Ny, Nz, Lx, Ly, Lz);
+                    if(NdotL <= 0.0f) continue;
+
+                    float Hx = Lx + Vx, Hy = Ly + Vy, Hz = Lz + Vz;
+                    float h_sq = shz_mag_sqr3f(Hx, Hy, Hz);
+                    if(h_sq > 1e-8f) {
+                        float inv = shz_inv_sqrtf_fsrra(h_sq);
+                        Hx *= inv; Hy *= inv; Hz *= inv;
+                    }
+                    float NdotH = Nx*Hx + Ny*Hy + Nz*Hz;
+                    if(NdotH < 0.0f) NdotH = 0.0f;
+                    float HdotV = Hx*Vx + Hy*Vy + Hz*Vz;
+                    if(HdotV < 0.0f) HdotV = 0.0f;
+
+                    float omHdotV = 1.0f - HdotV;
+                    float pow5 = omHdotV * omHdotV; pow5 *= pow5; pow5 *= omHdotV;
+                    float Fr = F0_r + (1.0f - F0_r) * pow5;
+                    float Fg = F0_g + (1.0f - F0_g) * pow5;
+                    float Fb = F0_b + (1.0f - F0_b) * pow5;
+
+                    float kD_r = (1.0f - Fr) * nm;
+                    float kD_g = (1.0f - Fg) * nm;
+                    float kD_b = (1.0f - Fb) * nm;
+
+                    float d = NdotH * NdotH * (roughness_alphaSq - 1.0f) + 1.0f;
+                    float D = roughness_alphaSq / (d * d + 1e-7f);
+
+                    float GV = NdotV / (NdotV * (1.0f - k) + k);
+                    float GL = NdotL / (NdotL * (1.0f - k) + k + 1e-7f);
+                    float G  = GV * GL;
+
+                    float denom = 4.0f * NdotV * NdotL;
+                    if(denom < 0.0001f) denom = 0.0001f;
+                    float spec = D * G / denom;
+
+                    float scale = NdotL * lights_[li].intensity * att;
+                    total_r += (kD_r * br + spec * Fr) * scale * lights_[li].color[0];
+                    total_g += (kD_g * bg + spec * Fg) * scale * lights_[li].color[1];
+                    total_b += (kD_b * bb + spec * Fb) * scale * lights_[li].color[2];
+                }
+
+                cv.r = total_r > 1.0f ? 1.0f : total_r;
+                cv.g = total_g > 1.0f ? 1.0f : total_g;
+                cv.b = total_b > 1.0f ? 1.0f : total_b;
+                row += stride;
+            }
+
+            /* Restore MVP for any subsequent batch. */
+            shz_xmtrx_load_4x4(mvp.native());
+        }
     };
+
+    /* MVP is loaded once here; transform_batch keeps it loaded across calls. */
+    shz_xmtrx_load_4x4(mvp.native());
 
     /* Lambda to do perspective divide and emit a ClipVertex.
      * For OP: submits directly via store queues (64-byte Type 5 format).
@@ -885,10 +945,14 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     };
 
     /* ================================================================
-     * Submit geometry with near-plane clipping
+     * Submit geometry with near-plane clipping.
+     *
+     * Both paths first run transform_batch over the source vertex range
+     * that they need, then walk the topology referencing the cached
+     * ClipVertex slots in work_vertices_.
      * ================================================================ */
     if(renderable->index_element_count > 0 && renderable->index_data) {
-        /* Indexed rendering */
+        /* Indexed rendering. */
         const auto* idata = renderable->index_data;
         auto itype = idata->index_type();
         auto icount = renderable->index_element_count;
@@ -903,53 +967,66 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             }
         };
 
+        /* Scan once to find the tight [min, max] range of indices.  We
+         * transform exactly that contiguous slice, so each vertex hits
+         * FTRV / lighting once even when the strip cache would have
+         * otherwise re-fetched the same source vertex repeatedly. */
+        if(icount == 0) return;
+        uint32_t base = 0xFFFFFFFFu;
+        uint32_t high = 0;
+        for(std::size_t i = 0; i < icount; ++i) {
+            uint32_t v = get_index(i);
+            if(v < base) base = v;
+            if(v > high) high = v;
+        }
+        transform_batch(base, high - base + 1);
+
         if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES) {
             for(std::size_t i = 0; i + 2 < icount; i += 3) {
-                ClipVertex v0 = read_and_transform_vertex(get_index(i + 0));
-                ClipVertex v1 = read_and_transform_vertex(get_index(i + 1));
-                ClipVertex v2 = read_and_transform_vertex(get_index(i + 2));
+                const ClipVertex& v0 = work_vertices_[get_index(i + 0) - base];
+                const ClipVertex& v1 = work_vertices_[get_index(i + 1) - base];
+                const ClipVertex& v2 = work_vertices_[get_index(i + 2) - base];
                 bool is_last = (i + 5 >= icount);
                 process_triangle(v0, v1, v2, is_last);
             }
         } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
             if(icount >= 3) {
-                /* Circular vertex cache: each index is looked up and transformed
-                 * exactly once, then reused for the two subsequent triangle
-                 * positions where it appears as cv0 or cv1. */
-                ClipVertex vcache[3];
-                vcache[0] = read_and_transform_vertex(get_index(0));
-                vcache[1] = read_and_transform_vertex(get_index(1));
                 for(std::size_t i = 0; i + 2 < icount; i++) {
-                    vcache[(i + 2) % 3] = read_and_transform_vertex(get_index(i + 2));
-                    sp_step(vcache[i % 3], vcache[(i + 1) % 3], vcache[(i + 2) % 3],
-                            (i + 3 >= icount), i);
+                    const ClipVertex& cv0 = work_vertices_[get_index(i + 0) - base];
+                    const ClipVertex& cv1 = work_vertices_[get_index(i + 1) - base];
+                    const ClipVertex& cv2 = work_vertices_[get_index(i + 2) - base];
+                    sp_step(cv0, cv1, cv2, (i + 3 >= icount), i);
                 }
                 sp_flush(true);
             }
         } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) {
             if(icount >= 3) {
-                ClipVertex v0 = read_and_transform_vertex(get_index(0));
+                const ClipVertex& v0 = work_vertices_[get_index(0) - base];
                 for(std::size_t i = 1; i + 1 < icount; i++) {
-                    ClipVertex v1 = read_and_transform_vertex(get_index(i));
-                    ClipVertex v2 = read_and_transform_vertex(get_index(i + 1));
+                    const ClipVertex& v1 = work_vertices_[get_index(i) - base];
+                    const ClipVertex& v2 = work_vertices_[get_index(i + 1) - base];
                     bool is_last = (i + 2 >= icount);
                     process_triangle(v0, v1, v2, is_last);
                 }
             }
         }
     } else {
-        /* Non-indexed range-based rendering */
+        /* Non-indexed range-based rendering: each range is independent so
+         * we transform it as its own batch. */
         const VertexRange* ranges = renderable->vertex_ranges;
         std::size_t range_count = renderable->vertex_range_count;
         for(std::size_t ri = 0; ri < range_count; ++ri) {
             uint32_t start = ranges[ri].start;
             uint32_t count = ranges[ri].count;
+            if(!count) continue;
+
+            transform_batch(start, count);
 
             if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES) {
                 for(uint32_t i = 0; i + 2 < count; i += 3) {
-                    ClipVertex v0 = read_and_transform_vertex(start + i + 0);
-                    ClipVertex v1 = read_and_transform_vertex(start + i + 1);
-                    ClipVertex v2 = read_and_transform_vertex(start + i + 2);
+                    const ClipVertex& v0 = work_vertices_[i + 0];
+                    const ClipVertex& v1 = work_vertices_[i + 1];
+                    const ClipVertex& v2 = work_vertices_[i + 2];
                     bool is_last = (i + 5 >= count) && (ri + 1 >= range_count);
                     process_triangle(v0, v1, v2, is_last);
                 }
@@ -958,23 +1035,21 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     /* Each range is an independent strip; reset state. */
                     sp_has_pending = false;
                     sp_in_strip    = false;
-                    ClipVertex vcache[3];
-                    vcache[0] = read_and_transform_vertex(start + 0);
-                    vcache[1] = read_and_transform_vertex(start + 1);
                     for(uint32_t i = 0; i + 2 < count; i++) {
-                        vcache[(i + 2) % 3] = read_and_transform_vertex(start + i + 2);
+                        const ClipVertex& cv0 = work_vertices_[i + 0];
+                        const ClipVertex& cv1 = work_vertices_[i + 1];
+                        const ClipVertex& cv2 = work_vertices_[i + 2];
                         bool is_last = (i + 3 >= count) && (ri + 1 >= range_count);
-                        sp_step(vcache[i % 3], vcache[(i + 1) % 3], vcache[(i + 2) % 3],
-                                is_last, i);
+                        sp_step(cv0, cv1, cv2, is_last, i);
                     }
                     sp_flush(true);
                 }
             } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) {
                 if(count >= 3) {
-                    ClipVertex v0 = read_and_transform_vertex(start);
+                    const ClipVertex& v0 = work_vertices_[0];
                     for(uint32_t i = 1; i + 1 < count; i++) {
-                        ClipVertex v1 = read_and_transform_vertex(start + i);
-                        ClipVertex v2 = read_and_transform_vertex(start + i + 1);
+                        const ClipVertex& v1 = work_vertices_[i];
+                        const ClipVertex& v2 = work_vertices_[i + 1];
                         bool is_last = (i + 2 >= count) && (ri + 1 >= range_count);
                         process_triangle(v0, v1, v2, is_last);
                     }
