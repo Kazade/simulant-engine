@@ -140,12 +140,17 @@ private:
         std::stringstream s;
         s << thread::this_thread_id() << ": ";
 
+#ifndef NDEBUG
         if(line > -1) {
             s << text << " (" << file << ":" << line << ")";
         } else {
             s << text;
         }
-
+#else
+        _S_UNUSED(file);
+        _S_UNUSED(line);
+        s << text;
+#endif
         for(uint32_t i = 0; i < handlers_.size(); ++i) {
             handlers_[i]->write_message(this, std::chrono::system_clock::now(), level, s.str());
         }
