@@ -195,6 +195,11 @@ void _s_log(T&& func, const char* file, int line, const std::string& fmt,
     func(_F(fmt).format(std::forward<Args>(args)...), file, line);
 }
 
+template<typename T, typename... Args>
+void _s_log_no_loc(T&& func, const std::string& fmt, Args&&... args) {
+    func(_F(fmt).format(std::forward<Args>(args)...), "None", -1);
+}
+
 #ifndef SIMULANT_VERBOSE_LOGGING
 #ifndef NDEBUG
     #define SIMULANT_VERBOSE_LOGGING 1
@@ -203,9 +208,18 @@ void _s_log(T&& func, const char* file, int line, const std::string& fmt,
 #endif
 #endif
 
+/* In release builds (NDEBUG), strip __FILE__ / __LINE__ from log call sites
+ * so the binary doesn't carry the path literals and the call is two
+ * arguments shorter. */
+#ifdef NDEBUG
+#define _S_LOG_CALL(fn, ...) _s_log_no_loc(fn, __VA_ARGS__)
+#else
+#define _S_LOG_CALL(fn, ...) _s_log(fn, __FILE__, __LINE__, __VA_ARGS__)
+#endif
+
 #if SIMULANT_VERBOSE_LOGGING
-#define S_VERBOSE(...) _s_log(::smlt::verbose, __FILE__, __LINE__, __VA_ARGS__)
-#define S_DEBUG(...) _s_log(::smlt::debug, __FILE__, __LINE__, __VA_ARGS__)
+#define S_VERBOSE(...) _S_LOG_CALL(::smlt::verbose, __VA_ARGS__)
+#define S_DEBUG(...) _S_LOG_CALL(::smlt::debug, __VA_ARGS__)
 #else
 // Don't log S_VERBOSE or S_DEBUG in release builds
 #define S_VERBOSE(...)                                                         \
@@ -216,34 +230,34 @@ void _s_log(T&& func, const char* file, int line, const std::string& fmt,
     } while(0)
 #endif
 
-#define S_INFO(...) _s_log(::smlt::info, __FILE__, __LINE__, __VA_ARGS__)
-#define S_WARN(...) _s_log(::smlt::warn, __FILE__, __LINE__, __VA_ARGS__)
-#define S_ERROR(...) _s_log(::smlt::error, __FILE__, __LINE__, __VA_ARGS__)
+#define S_INFO(...) _S_LOG_CALL(::smlt::info, __VA_ARGS__)
+#define S_WARN(...) _S_LOG_CALL(::smlt::warn, __VA_ARGS__)
+#define S_ERROR(...) _S_LOG_CALL(::smlt::error, __VA_ARGS__)
 
 #define S_DEBUG_ONCE(...)                                                      \
     do {                                                                       \
         static char _done = 0;                                                 \
         if(!_done++)                                                           \
-            _s_log(::smlt::debug, __FILE__, __LINE__, __VA_ARGS__);            \
+            _S_LOG_CALL(::smlt::debug, __VA_ARGS__);                           \
     } while(0)
 
 #define S_INFO_ONCE(...)                                                       \
     do {                                                                       \
         static char _done = 0;                                                 \
         if(!_done++)                                                           \
-            _s_log(::smlt::info, __FILE__, __LINE__, __VA_ARGS__);             \
+            _S_LOG_CALL(::smlt::info, __VA_ARGS__);                            \
     } while(0)
 
 #define S_WARN_ONCE(...)                                                       \
     do {                                                                       \
         static char _done = 0;                                                 \
         if(!_done++)                                                           \
-            _s_log(::smlt::warn, __FILE__, __LINE__, __VA_ARGS__);             \
+            _S_LOG_CALL(::smlt::warn, __VA_ARGS__);                            \
     } while(0)
 
 #define S_ERROR_ONCE(...)                                                      \
     do {                                                                       \
         static char _done = 0;                                                 \
         if(!_done++)                                                           \
-            _s_log(::smlt::error, __FILE__, __LINE__, __VA_ARGS__);            \
+            _S_LOG_CALL(::smlt::error, __VA_ARGS__);                           \
     } while(0)
