@@ -705,9 +705,13 @@ deploy:psp-mips-gcc:
 
 deploy:windows-x64-mingw:
   extends: .deploy:deploy
-  needs: ["test:windows-x64-mingw"]
-  dependencies:
+  needs:
     - test:windows-x64-mingw
+    - build:windows-x64-mingw:debug
+    - build:windows-x64-mingw:release
+  dependencies:
+    - build:windows-x64-mingw:debug
+    - build:windows-x64-mingw:release
   variables:
     TARGET: windows-x64-mingw
     LIB_EXT: dll
