@@ -14,7 +14,7 @@ float bell_curve(float initial, float t, float s, float peak, float deviation) {
 
     const float y = a * expf(-(powf(x - b, 2) / powf(2 * c, 2)));
 
-    return initial + y;
+    return initial * y;
 }
 
 float linear_curve(float initial, float t, float s, float rate) {
