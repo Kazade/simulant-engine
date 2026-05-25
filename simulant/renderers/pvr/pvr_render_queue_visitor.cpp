@@ -441,7 +441,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         shz_memcpy32(hdr_dest, &poly_hdr_, sizeof(pvr_poly_hdr_t));
         pvr_dr_commit(hdr_dest);
     } else {
-        auto& buf = (renderer_->current_list_type_ == PVR_LIST_PT_POLY) ? renderer_->pt_buffer_ : renderer_->tr_buffer_;
+        auto& buf = renderer_->buffer(renderer_->current_list_type_).buffers[renderer_->current_buffer_index_];
         const uint8_t* hdr_bytes = reinterpret_cast<const uint8_t*>(&poly_hdr_);
         auto size = buf.size();
         buf.resize(size + sizeof(pvr_poly_hdr_t));
@@ -760,7 +760,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             *((float*)dest2 + 7) = vert.offset_b;
             pvr_dr_commit(dest2);
         } else {
-            auto& buf = (renderer_->current_list_type_ == PVR_LIST_PT_POLY) ? renderer_->pt_buffer_ : renderer_->tr_buffer_;
+            auto& buf = renderer_->buffer(renderer_->current_list_type_).buffers[renderer_->current_buffer_index_];
             const uint8_t* vert_bytes = reinterpret_cast<const uint8_t*>(&vert);
             buf.insert(buf.end(), vert_bytes, vert_bytes + sizeof(pvr_vertex_type5_t));
         }

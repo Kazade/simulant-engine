@@ -6,6 +6,8 @@
 #include <kos.h>
 #include <dc/pvr.h>
 #include <dc/video.h>
+
+extern struct pvr_state_t pvr_state;
 #endif
 
 namespace smlt {
@@ -125,16 +127,10 @@ void PVRRenderer::pre_render() {
 
 #ifdef __DREAMCAST__
     texture_manager_.update_priorities();
-    pvr_wait_ready();
 
     S_VERBOSE("Beginning scene");
     pvr_scene_begin();
     scene_begun_ = true;
-
-    pt_buffer_.clear();
-    pt_buffer_.reserve(32 * 1024);
-    tr_buffer_.clear();
-    tr_buffer_.reserve(64 * 1024);
 
     prev_list_type_ = (pvr_list_type_t) -1;
     current_list_type_ = PVR_LIST_OP_POLY;
@@ -169,39 +165,51 @@ void PVRRenderer::ensure_list_opened(pvr_list_type_t list_type) {
 }
 
 void PVRRenderer::on_post_render() {
+
+    // pvr_state is internal, ram_target is 9 uint32_t things in
+    uint32_t* ram_target = ((uint32_t*) &pvr_state) + 9;
+
 #ifdef __DREAMCAST__
     if(scene_begun_) {
         pvr_list_finish();
         prev_list_type_ = (pvr_list_type_t) -1;
 
-        if(!pt_buffer_.empty()) {
-            if(pt_buffer_.size() % 64 != 0) {
-                pt_buffer_.resize((pt_buffer_.size() + 63) & ~63);
-            }
+        for(auto list_type: { PVR_LIST_PT_POLY, PVR_LIST_TR_POLY }) {
+            auto& buf = buffer(list_type);
+            auto& b = buf.buffers[current_buffer_index_];
+            auto count = b.size();
 
-            pvr_set_vertbuf(PVR_LIST_PT_POLY, &pt_buffer_[0], pt_buffer_.size());
-        } else {
-            pvr_set_vertbuf(PVR_LIST_PT_POLY, NULL, 0);
-        }
+            /* Reserve room for KOS's 32-byte zero terminator (appended
+             * in pvr_scene_finish), then round up to 64. */
+            size_t buf_size = (count + 32 + 63) & ~63;
+            if(buf_size < 64) buf_size = 64;
+            b.resize(buf_size);
 
-        if(!tr_buffer_.empty()) {
-            if(tr_buffer_.size() % 64 != 0) {
-                tr_buffer_.resize((tr_buffer_.size() + 63) & ~63);
-            }
-            pvr_set_vertbuf(PVR_LIST_TR_POLY, &tr_buffer_[0], tr_buffer_.size());
-        } else {
-            pvr_set_vertbuf(PVR_LIST_TR_POLY, NULL, 0);
+            /* This is a hack! KOS assumes we're using the same buffer for both
+             * front and back ram targets. We instead use two different dynamic buffers so we:
+             *
+             * 1. Tell KOS the buffers are twice the size they are (kos halves it)
+             * 2. force the ram target to 0 (first half)
+             */
+
+            *ram_target = 0;  // HACK
+            pvr_set_vertbuf(buf.list_type, &b[0], b.size() * 2);
+            pvr_vertbuf_written(buf.list_type, count);
         }
 
         S_VERBOSE("Finishing scene");
 
         pvr_scene_finish();
 
-        pt_buffer_.clear();
-        tr_buffer_.clear();
+        for(auto& buf: buffers_) {
+            buf.buffers[current_buffer_index_].clear();
+        }
+
         scene_begun_ = false;
     }
 #endif
+
+    current_buffer_index_ = (current_buffer_index_ + 1) % 2;
 }
 
 void PVRRenderer::do_swap_buffers() {
