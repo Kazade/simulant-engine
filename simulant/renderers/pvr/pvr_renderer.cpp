@@ -70,8 +70,8 @@ void PVRRenderer::init_context() {
     /* Set default background color to black */
     pvr_set_bg_color(0.0f, 0.0f, 0.0f);
 
-    S_INFO("PVR direct rendering context initialized");
-    S_INFO("PVR VRAM available: {0} bytes", pvr_mem_available());
+    S_VERBOSE("PVR direct rendering context initialized");
+    S_VERBOSE("PVR VRAM available: {0} bytes", pvr_mem_available());
 #endif
 }
 

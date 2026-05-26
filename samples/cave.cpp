@@ -225,7 +225,6 @@ int main(int argc, char* argv[]) {
 #endif
 
     // config.development.force_profiling = true;
-    config.log_level = smlt::LOG_LEVEL_VERBOSE;
 
     CaveDemo app(config);
     return app.run();
