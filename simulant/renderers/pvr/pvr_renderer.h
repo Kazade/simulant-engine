@@ -2,7 +2,6 @@
 
 #include "../renderer.h"
 #include "pvr_texture_manager.h"
-
 #include "../../core/aligned_vector.h"
 
 #ifdef __DREAMCAST__
@@ -64,10 +63,26 @@ friend class PVRRenderQueueVisitor;
         pvr_dr_state_t dr_state_;
     #endif
 
-    aligned_vector<uint8_t, 32> pt_buffer_; /* PT headers+vertices pending deferred submission */
-    aligned_vector<uint8_t, 32> tr_buffer_; /* TR headers+vertices pending deferred submission */
+    struct ListDMABuffer {
+        pvr_list_type_t list_type = PVR_LIST_OP_POLY;
+        aligned_vector<uint8_t, 32> buffers[2];
+    };
 
-    void flush_list_buffer(aligned_vector<uint8_t, 32>& buffer, pvr_list_type_t list_type);
+    ListDMABuffer buffers_[4] = {
+        { PVR_LIST_OP_MOD, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } },
+        { PVR_LIST_TR_POLY, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } },
+        { PVR_LIST_TR_MOD, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } },
+        { PVR_LIST_PT_POLY, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } }
+    };
+
+    uint8_t current_buffer_index_ = 0;
+
+    ListDMABuffer& buffer(pvr_list_type_t t) {
+        int idx = t;
+        idx--;
+        return buffers_[idx];
+    }
+
     void ensure_list_opened(pvr_list_type_t list_type);
 
     void on_pre_render() override;

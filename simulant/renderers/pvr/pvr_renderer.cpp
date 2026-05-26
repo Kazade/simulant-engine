@@ -6,6 +6,8 @@
 #include <kos.h>
 #include <dc/pvr.h>
 #include <dc/video.h>
+
+extern struct pvr_state_t pvr_state;
 #endif
 
 namespace smlt {
@@ -54,7 +56,7 @@ void PVRRenderer::init_context() {
         /* Bin sizes for: OP, OP_MOD, TR, TR_MOD, PT */
         { PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
         512 * 1024, /* Vertex buffer size */
-        0,          /* DMA enabled */
+        1,          /* DMA enabled */
         0,          /* FSAA */
         0,          /* Autosort (0 = enabled for TR) */
         8,          /* OPB overflow count */
@@ -68,8 +70,8 @@ void PVRRenderer::init_context() {
     /* Set default background color to black */
     pvr_set_bg_color(0.0f, 0.0f, 0.0f);
 
-    S_INFO("PVR direct rendering context initialized");
-    S_INFO("PVR VRAM available: {0} bytes", pvr_mem_available());
+    S_VERBOSE("PVR direct rendering context initialized");
+    S_VERBOSE("PVR VRAM available: {0} bytes", pvr_mem_available());
 #endif
 }
 
@@ -125,16 +127,10 @@ void PVRRenderer::pre_render() {
 
 #ifdef __DREAMCAST__
     texture_manager_.update_priorities();
-    pvr_wait_ready();
 
     S_VERBOSE("Beginning scene");
     pvr_scene_begin();
     scene_begun_ = true;
-
-    pt_buffer_.clear();
-    pt_buffer_.reserve(32 * 1024);
-    tr_buffer_.clear();
-    tr_buffer_.reserve(64 * 1024);
 
     prev_list_type_ = (pvr_list_type_t) -1;
     current_list_type_ = PVR_LIST_OP_POLY;
@@ -168,37 +164,52 @@ void PVRRenderer::ensure_list_opened(pvr_list_type_t list_type) {
 #endif
 }
 
-void PVRRenderer::flush_list_buffer(aligned_vector<uint8_t, 32>& buffer, pvr_list_type_t list_type) {
-#ifdef __DREAMCAST__
-    if(buffer.empty()) return;
-    ensure_list_opened(list_type);
-    const uint8_t* ptr = buffer.data();
-    std::size_t remaining = buffer.size();
-    while(remaining >= 32) {
-        pvr_vertex_t* dest = static_cast<pvr_vertex_t*>(pvr_dr_target(dr_state_));
-        shz_memcpy32(dest, ptr, 32);
-        pvr_dr_commit(dest);
-        ptr += 32;
-        remaining -= 32;
-    }
-    buffer.clear();
-#else
-    _S_UNUSED(buffer);
-    _S_UNUSED(list_type);
-#endif
-}
-
 void PVRRenderer::on_post_render() {
+
+    // pvr_state is internal, ram_target is 9 uint32_t things in
+    uint32_t* ram_target = ((uint32_t*) &pvr_state) + 9;
+
 #ifdef __DREAMCAST__
     if(scene_begun_) {
-        flush_list_buffer(pt_buffer_, PVR_LIST_PT_POLY);
-        flush_list_buffer(tr_buffer_, PVR_LIST_TR_POLY);
+        pvr_list_finish();
+        prev_list_type_ = (pvr_list_type_t) -1;
+
+        for(auto list_type: { PVR_LIST_PT_POLY, PVR_LIST_TR_POLY }) {
+            auto& buf = buffer(list_type);
+            auto& b = buf.buffers[current_buffer_index_];
+            auto count = b.size();
+
+            /* Reserve room for KOS's 32-byte zero terminator (appended
+             * in pvr_scene_finish), then round up to 64. */
+            size_t buf_size = (count + 32 + 63) & ~63;
+            if(buf_size < 64) buf_size = 64;
+            b.resize(buf_size);
+
+            /* This is a hack! KOS assumes we're using the same buffer for both
+             * front and back ram targets. We instead use two different dynamic buffers so we:
+             *
+             * 1. Tell KOS the buffers are twice the size they are (kos halves it)
+             * 2. force the ram target to 0 (first half)
+             */
+
+            *ram_target = 0;  // HACK
+            pvr_set_vertbuf(buf.list_type, &b[0], b.size() * 2);
+            pvr_vertbuf_written(buf.list_type, count);
+        }
 
         S_VERBOSE("Finishing scene");
+
         pvr_scene_finish();
+
+        for(auto& buf: buffers_) {
+            buf.buffers[current_buffer_index_].clear();
+        }
+
         scene_begun_ = false;
     }
 #endif
+
+    current_buffer_index_ = (current_buffer_index_ + 1) % 2;
 }
 
 void PVRRenderer::do_swap_buffers() {
