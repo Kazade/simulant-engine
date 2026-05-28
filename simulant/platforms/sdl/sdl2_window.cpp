@@ -779,6 +779,17 @@ bool SDL2Window::_init_window() {
         flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     }
 
+    /* Framebuffer attributes must be set *before* the window is created, as
+     * the pixel format is locked at SDL_CreateWindow time. Context version
+     * attributes are renderer-specific and are set later in _init_renderer. */
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
     screen_ =
         SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                          this->width(), this->height(), flags);
@@ -826,17 +837,6 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
                             SDL_GL_CONTEXT_PROFILE_ES);
     }
 
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
-
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-
     context_ = SDL_GL_CreateContext(screen_);
 
     if(!context_) {
@@ -845,6 +845,13 @@ bool SDL2Window::_init_renderer(Renderer* renderer) {
 
     SDL_GL_MakeCurrent(screen_, context_);
     SDL_GL_SetSwapInterval((vsync_enabled()) ? 1 : 0);
+
+    int got_depth = -1, got_stencil = -1, got_ms = -1;
+    SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &got_depth);
+    SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &got_stencil);
+    SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &got_ms);
+    S_INFO("GL context buffers: depth={0} stencil={1} msaa={2}",
+           got_depth, got_stencil, got_ms);
 
     set_has_context(true); // Mark that we have a valid GL context
     return true;

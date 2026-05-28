@@ -13,6 +13,8 @@ public:
     void on_load() override {
         auto physics = start_service<PhysicsService>();
 
+        shadows_ = create_child<smlt::ShadowCaster>();
+
         camera_ = create_child<smlt::Camera3D>();
         pipeline_ = compositor->create_layer(
             this, camera_
@@ -75,7 +77,7 @@ public:
             smlt::RandomGenerator::instance().float_in_range(20.0f, 30.0f),
             smlt::RandomGenerator::instance().float_in_range(-10.0f, 10.0f));
 
-        auto controller = create_child<smlt::DynamicBody>(pos);
+        auto controller = shadows_->create_child<smlt::DynamicBody>(pos);
         controller->add_box_collider(box->aabb().dimensions(),
                                      PhysicsMaterial::wood());
 
@@ -103,6 +105,7 @@ public:
 private:
     std::vector<StageNodePtr> boxes_;
 
+    ShadowCasterPtr shadows_;
     LayerPtr pipeline_;
     StagePtr stage_;
     CameraPtr camera_;

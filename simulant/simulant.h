@@ -77,6 +77,7 @@
 #include "nodes/ui/progress_bar.h"
 #include "nodes/ui/text_entry.h"
 #include "nodes/ui/ui_manager.h"
+#include "nodes/shadow_caster.h"
 
 #include "sound.h"
 #include "utils/random.h"

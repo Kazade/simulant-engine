@@ -502,6 +502,9 @@ class Window;
 class Stage;
 typedef Stage* StagePtr;
 
+class ShadowCaster;
+typedef ShadowCaster* ShadowCasterPtr;
+
 namespace ui {
 
 class Widget;

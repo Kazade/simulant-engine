@@ -634,6 +634,65 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         renderer_->set_blending_mode(next->blend_func());
     }
 
+    /* Color write mask */
+    if(!prev || prev->is_color_write_enabled() != next->is_color_write_enabled()) {
+        if(next->is_color_write_enabled()) {
+            GLCheck(glColorMask, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        } else {
+            GLCheck(glColorMask, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+        }
+    }
+
+    /* Stencil test */
+    if(!prev || prev->is_stencil_test_enabled() != next->is_stencil_test_enabled() ||
+       (next->is_stencil_test_enabled() && (
+           prev->stencil_func()          != next->stencil_func()          ||
+           prev->stencil_ref()           != next->stencil_ref()           ||
+           prev->stencil_mask()          != next->stencil_mask()          ||
+           prev->stencil_fail_op()       != next->stencil_fail_op()       ||
+           prev->stencil_depth_fail_op() != next->stencil_depth_fail_op() ||
+           prev->stencil_pass_op()       != next->stencil_pass_op()))) {
+        if(next->is_stencil_test_enabled()) {
+            GLCheck(glEnable, GL_STENCIL_TEST);
+
+            static auto to_gl_func = [](StencilFunc f) -> GLenum {
+                switch(f) {
+                    case STENCIL_FUNC_NEVER:     return GL_NEVER;
+                    case STENCIL_FUNC_LESS:      return GL_LESS;
+                    case STENCIL_FUNC_LEQUAL:    return GL_LEQUAL;
+                    case STENCIL_FUNC_GREATER:   return GL_GREATER;
+                    case STENCIL_FUNC_GEQUAL:    return GL_GEQUAL;
+                    case STENCIL_FUNC_EQUAL:     return GL_EQUAL;
+                    case STENCIL_FUNC_NOT_EQUAL: return GL_NOTEQUAL;
+                    case STENCIL_FUNC_ALWAYS:
+                    default:                     return GL_ALWAYS;
+                }
+            };
+            static auto to_gl_op = [](StencilOp o) -> GLenum {
+                switch(o) {
+                    case STENCIL_OP_ZERO:      return GL_ZERO;
+                    case STENCIL_OP_REPLACE:   return GL_REPLACE;
+                    case STENCIL_OP_INCR:      return GL_INCR;
+                    case STENCIL_OP_INCR_WRAP: return GL_INCR_WRAP;
+                    case STENCIL_OP_DECR:      return GL_DECR;
+                    case STENCIL_OP_DECR_WRAP: return GL_DECR_WRAP;
+                    case STENCIL_OP_INVERT:    return GL_INVERT;
+                    case STENCIL_OP_KEEP:
+                    default:                   return GL_KEEP;
+                }
+            };
+
+            GLCheck(glStencilFunc, to_gl_func(next->stencil_func()),
+                    next->stencil_ref(), (GLuint)next->stencil_mask());
+            GLCheck(glStencilOp,
+                    to_gl_op(next->stencil_fail_op()),
+                    to_gl_op(next->stencil_depth_fail_op()),
+                    to_gl_op(next->stencil_pass_op()));
+        } else {
+            GLCheck(glDisable, GL_STENCIL_TEST);
+        }
+    }
+
     renderer_->set_stage_uniforms(next, program_, global_ambient_);
     renderer_->set_material_uniforms(next, program_);
 

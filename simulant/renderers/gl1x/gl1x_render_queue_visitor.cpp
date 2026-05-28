@@ -293,6 +293,56 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             GLCheck(glFogfv, GL_FOG_COLOR, &next->fog_color().r);
         } break;
     }
+
+    /* Color write mask */
+    if(next->is_color_write_enabled()) {
+        GLCheck(glColorMask, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    } else {
+        GLCheck(glColorMask, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    }
+
+#if !defined(__PSP__)
+    /* Stencil test (not supported on PSP) */
+    if(next->is_stencil_test_enabled()) {
+        GLCheck(glEnable, GL_STENCIL_TEST);
+
+        static auto to_gl_func = [](StencilFunc f) -> GLenum {
+            switch(f) {
+                case STENCIL_FUNC_NEVER:     return GL_NEVER;
+                case STENCIL_FUNC_LESS:      return GL_LESS;
+                case STENCIL_FUNC_LEQUAL:    return GL_LEQUAL;
+                case STENCIL_FUNC_GREATER:   return GL_GREATER;
+                case STENCIL_FUNC_GEQUAL:    return GL_GEQUAL;
+                case STENCIL_FUNC_EQUAL:     return GL_EQUAL;
+                case STENCIL_FUNC_NOT_EQUAL: return GL_NOTEQUAL;
+                case STENCIL_FUNC_ALWAYS:
+                default:                     return GL_ALWAYS;
+            }
+        };
+        static auto to_gl_op = [](StencilOp o) -> GLenum {
+            switch(o) {
+                case STENCIL_OP_ZERO:      return GL_ZERO;
+                case STENCIL_OP_REPLACE:   return GL_REPLACE;
+                case STENCIL_OP_INCR:      return GL_INCR;
+                case STENCIL_OP_INCR_WRAP: return GL_INCR_WRAP;
+                case STENCIL_OP_DECR:      return GL_DECR;
+                case STENCIL_OP_DECR_WRAP: return GL_DECR_WRAP;
+                case STENCIL_OP_INVERT:    return GL_INVERT;
+                case STENCIL_OP_KEEP:
+                default:                   return GL_KEEP;
+            }
+        };
+
+        GLCheck(glStencilFunc, to_gl_func(next->stencil_func()),
+                next->stencil_ref(), (GLuint)next->stencil_mask());
+        GLCheck(glStencilOp,
+                to_gl_op(next->stencil_fail_op()),
+                to_gl_op(next->stencil_depth_fail_op()),
+                to_gl_op(next->stencil_pass_op()));
+    } else {
+        GLCheck(glDisable, GL_STENCIL_TEST);
+    }
+#endif
 }
 
 void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,

@@ -1,0 +1,68 @@
+#pragma once
+
+#include "stage_node.h"
+#include "../shadows.h"
+#include "../assets/material.h"
+#include "../vertex_data.h"
+
+namespace smlt {
+
+/*
+ * ShadowCaster is a node that generates stencil shadow volumes for all its
+ * descendant Actor nodes. Lights are supplied by the render pipeline.
+ *
+ * Usage:
+ *   auto caster = stage->create_child<ShadowCaster>();
+ *   auto actor  = caster->create_child<Actor>(mesh);
+ *   auto light  = stage->create_child<DirectionalLight>();
+ *
+ * On desktop (GL1/GL2) this uses the depth-pass stencil shadow volume method.
+ * On Dreamcast (PVR) modifier volumes should be used instead (TODO).
+ *
+ * The scene's clear pass must clear the stencil buffer for correct results.
+ *
+ * Note: depth-pass only works correctly when the camera is outside all shadow
+ * volumes. For a more robust but complex implementation, depth-fail (Carmack's
+ * Reverse) with front/back caps can be added later.
+ */
+class ShadowCaster : public StageNode {
+public:
+    S_DEFINE_STAGE_NODE_META("shadow_caster");
+
+    ShadowCaster(Scene* owner) : StageNode(owner, Meta::node_type) {}
+
+protected:
+    bool on_create(Params params) override;
+
+private:
+    bool do_generates_renderables_for_descendents() const override {
+        return true;
+    }
+
+    void do_generate_renderables(batcher::RenderQueue* render_queue,
+                                 const Camera* camera,
+                                 const Viewport* viewport,
+                                 const DetailLevel detail_level,
+                                 Light** lights,
+                                 const std::size_t light_count) override;
+
+    void generate_shadow_geometry(const MeshPtr& mesh,
+                                  const Mat4& world_mat,
+                                  LightPtr light,
+                                  const Vec3& ext_dir_world);
+
+    MaterialPtr sv_mat_incr_; // Shadow volume: cull back, incr stencil on depth-pass
+    MaterialPtr sv_mat_decr_; // Shadow volume: cull front, decr stencil on depth-pass
+    MaterialPtr overlay_mat_; // Dark overlay where stencil != 0
+
+    std::unique_ptr<VertexData> sv_verts_;
+    std::unique_ptr<IndexData>  sv_idx_;
+
+    std::unique_ptr<VertexData> overlay_verts_;
+    std::unique_ptr<IndexData>  overlay_idx_;
+
+    Mat4 sv_identity_;     // Identity matrix — shadow verts are in world space
+    Mat4 overlay_transform_; // Recomputed from camera each frame
+};
+
+} // namespace smlt

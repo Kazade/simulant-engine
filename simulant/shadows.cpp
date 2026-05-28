@@ -95,7 +95,7 @@ void MeshSilhouette::calculate_directional_silhouette() {
         // store the edge as a silhouette
         if(d1 >= 0 && d2 < 0) {
             edge_list_.push_back(SilhouetteEdge(*v1, *v2));
-        } else if(d1 < 0 && d1 >= 0) {
+        } else if(d1 < 0 && d2 >= 0) {
             edge_list_.push_back(SilhouetteEdge(*v2, *v1));
         }
     });
