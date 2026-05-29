@@ -142,6 +142,14 @@ void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
         new_renderable.vertex_ranges = submesh->vertex_ranges();
         new_renderable.vertex_range_count = submesh->vertex_range_count();
 
+        /* All instances share this submesh's fixed geometry, differing only by
+         * transform, so a stable key lets derived data (e.g. shadow adjacency)
+         * be cached once and shared across every instance. */
+        new_renderable.key =
+            (new_renderable.index_data)
+                ? (int64_t)new_renderable.index_data->uuid()
+                : -1;
+
         new_renderable.light_count = light_count;
         for(std::size_t i = 0; i < light_count; ++i) {
             new_renderable.lights_affecting_this_frame[i] = lights[i];
