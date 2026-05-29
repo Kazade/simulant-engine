@@ -65,6 +65,16 @@ private:
 };
 
 struct alignas(8) Renderable final {
+    /* A stable identifier for persistent renderables. If != -1, this renderable
+     * is expected to be returned again on subsequent frames with the same
+     * geometry, so derived data (e.g. shadow adjacency) may be cached against
+     * this key. If == -1 the renderable is transient and must not be cached.
+     *
+     * The key must be globally unique amongst persistent renderables. Nodes
+     * backed by fixed geometry (e.g. Actor) should return the same key for the
+     * same geometry every frame. */
+    int64_t key = -1;
+
     MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES;
     const VertexData* vertex_data = nullptr;
 

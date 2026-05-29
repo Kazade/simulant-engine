@@ -1,13 +1,12 @@
 #include "shadow_caster.h"
 
-#include "actor.h"
 #include "light.h"
 #include "camera.h"
 #include "../scenes/scene.h"
 #include "../asset_manager.h"
 #include "../renderers/batching/render_queue.h"
+#include "../renderers/batching/renderable.h"
 #include "../shadows.h"
-#include "../meshes/mesh.h"
 
 namespace smlt {
 
@@ -72,13 +71,17 @@ bool ShadowCaster::on_create(Params params) {
     sv_idx_   = std::make_unique<IndexData>(INDEX_TYPE_16_BIT);
 
     // Full-screen triangle for the shadow overlay
-    // Vertices in NDC: combined with overlay_transform_ they cover the whole screen
-    overlay_verts_ = std::make_unique<VertexData>(VertexSpecification::POSITION_ONLY);
+    // Vertices in NDC: combined with overlay_transform_ they cover the whole screen.
+    // The dark colour is baked into the vertices (not just base_color) because the
+    // fixed-function (gl1x) path uses the vertex colour directly for unlit geometry;
+    // relying on base_color alone leaves it white there.
+    overlay_verts_ = std::make_unique<VertexData>(VertexSpecification::POSITION_AND_DIFFUSE);
     overlay_idx_   = std::make_unique<IndexData>(INDEX_TYPE_8_BIT);
 
-    overlay_verts_->position(Vec3(-1.0f, -1.0f, 0.0f)); overlay_verts_->move_next();
-    overlay_verts_->position(Vec3( 3.0f, -1.0f, 0.0f)); overlay_verts_->move_next();
-    overlay_verts_->position(Vec3(-1.0f,  3.0f, 0.0f)); overlay_verts_->move_next();
+    const Color overlay_color(0.0f, 0.0f, 0.0f, 0.5f);
+    overlay_verts_->position(Vec3(-1.0f, -1.0f, 0.0f)); overlay_verts_->color(overlay_color); overlay_verts_->move_next();
+    overlay_verts_->position(Vec3( 3.0f, -1.0f, 0.0f)); overlay_verts_->color(overlay_color); overlay_verts_->move_next();
+    overlay_verts_->position(Vec3(-1.0f,  3.0f, 0.0f)); overlay_verts_->color(overlay_color); overlay_verts_->move_next();
     overlay_verts_->done();
 
     overlay_idx_->index(0); overlay_idx_->index(1); overlay_idx_->index(2);
@@ -89,18 +92,64 @@ bool ShadowCaster::on_create(Params params) {
     return true;
 }
 
-void ShadowCaster::generate_shadow_geometry(const MeshPtr& mesh,
-                                             const Mat4& world_mat,
+const std::vector<EdgeInfo>& ShadowCaster::adjacency_for(const Renderable& r) {
+    if(r.key != -1) {
+        AdjacencyCacheEntry& entry = adjacency_cache_[r.key];
+
+        const uint64_t vstamp = r.vertex_data->last_updated();
+        const uint64_t istamp = r.index_data ? r.index_data->last_updated() : 0;
+
+        const bool fresh = (entry.last_seen == 0);
+
+        // Topology only changes if the index data changes (the connectivity is
+        // invariant under transform and deformation). A full rebuild also
+        // produces fresh normals.
+        if(fresh || entry.idata_stamp != istamp) {
+            build_silhouette_adjacency(r.vertex_data, r.index_data,
+                                       r.index_element_count, r.arrangement,
+                                       entry.edges);
+            entry.idata_stamp = istamp;
+        }
+        // Normals depend on the vertex positions, so refresh them if the vertex
+        // data object differs (e.g. another animated instance of the same mesh)
+        // or its contents changed (e.g. a new animation frame).
+        else if(entry.vdata_ptr != r.vertex_data || entry.vdata_stamp != vstamp) {
+            recompute_silhouette_normals(r.vertex_data, entry.edges);
+        }
+
+        entry.vdata_ptr = r.vertex_data;
+        entry.vdata_stamp = vstamp;
+        entry.last_seen = cache_generation_;
+        return entry.edges;
+    }
+
+    // Transient renderable: rebuild into the reused scratch buffer each frame.
+    build_silhouette_adjacency(r.vertex_data, r.index_data,
+                               r.index_element_count, r.arrangement,
+                               transient_adjacency_);
+    return transient_adjacency_;
+}
+
+void ShadowCaster::generate_shadow_geometry(const Renderable& renderable,
+                                             const std::vector<EdgeInfo>& edges,
                                              LightPtr light,
                                              const Vec3& ext_dir_world) {
-    MeshSilhouette silhouette(mesh, world_mat, light);
-    const auto& edges = silhouette.edge_list();
-    if(edges.empty()) {
+    if(!renderable.vertex_data || edges.empty()) {
         return;
     }
 
-    for(const auto& edge : edges) {
-        // Transform edge vertices from mesh-local to world space
+    const Mat4& world_mat = (renderable.final_transformation)
+                                ? *renderable.final_transformation
+                                : sv_identity_;
+
+    MeshSilhouette silhouette(renderable.vertex_data, edges, world_mat, light);
+    const auto& sil_edges = silhouette.edge_list();
+    if(sil_edges.empty()) {
+        return;
+    }
+
+    for(const auto& edge : sil_edges) {
+        // Transform edge vertices from local to world space
         Vec3 v1w = edge.first.transformed_by(world_mat);
         Vec3 v2w = edge.second.transformed_by(world_mat);
         Vec3 v1e = v1w + ext_dir_world * SHADOW_EXTRUSION_DISTANCE;
@@ -126,66 +175,90 @@ void ShadowCaster::do_generate_renderables(batcher::RenderQueue* render_queue,
                                             const DetailLevel detail_level,
                                             Light** lights,
                                             const std::size_t light_count) {
-    // First, let all descendants generate their own renderables normally
-    for(StageNode& node: each_descendent()) {
-        if(node.is_visible() && !node.is_destroyed() &&
-           !node.generates_renderables_for_descendents()) {
-            node.generate_renderables(render_queue, camera, viewport,
-                                      detail_level, lights, light_count);
-        }
-    }
-
-    if(!light_count) {
-        return;
-    }
-
     // Rebuild shadow volume geometry for this frame
     sv_verts_->clear();
     sv_idx_->clear();
 
-    // Find all shadow-casting Actor descendants
-    auto actors = find_descendents_by_types({Actor::Meta::node_type});
+    const bool do_shadows = (light_count > 0);
+    if(do_shadows) {
+        ++cache_generation_;
+    }
 
-    for(auto* node : actors) {
-        auto* actor = static_cast<Actor*>(node);
-        if(!actor->is_visible() || actor->is_destroyed()) continue;
-        if(actor->shadow_cast() == SHADOW_CAST_NEVER) continue;
-        if(!actor->has_any_mesh()) continue;
+    // Let each descendant generate its renderables into the queue. We track the
+    // range of renderables each node produced so that we can build shadow
+    // volumes from the actual geometry, regardless of the node's type.
+    for(StageNode& node: each_descendent()) {
+        if(!node.is_visible() || node.is_destroyed() ||
+           node.generates_renderables_for_descendents()) {
+            continue;
+        }
 
-        const MeshPtr& mesh = actor->base_mesh();
-        if(!mesh) continue;
+        const std::size_t start = render_queue->renderable_count();
+        node.generate_renderables(render_queue, camera, viewport,
+                                  detail_level, lights, light_count);
+        const std::size_t end = render_queue->renderable_count();
 
-        const Mat4& world_mat = actor->transform->world_space_matrix();
+        if(!light_count || node.shadow_cast() == SHADOW_CAST_NEVER) {
+            continue;
+        }
 
-        for(std::size_t i = 0; i < light_count; ++i) {
-            Light* light = lights[i];
-            if(!light) continue;
+        // A single renderable is inserted once per material pass, so skip
+        // consecutive duplicates that share geometry and transform.
+        const VertexData* last_vd = nullptr;
+        const IndexData* last_id = nullptr;
+        const Mat4* last_xf = nullptr;
 
-            Vec3 ext_dir;
-            if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
+        for(std::size_t idx = start; idx < end; ++idx) {
+            const Renderable* r = render_queue->renderable(idx);
+            if(!r || !r->vertex_data) continue;
+
+            if(r->vertex_data == last_vd && r->index_data == last_id &&
+               r->final_transformation == last_xf) {
+                continue;
+            }
+            last_vd = r->vertex_data;
+            last_id = r->index_data;
+            last_xf = r->final_transformation;
+
+            // Edge adjacency depends only on the geometry, so fetch it once
+            // (from the cache for persistent renderables) and reuse it across
+            // every light affecting this renderable.
+            const std::vector<EdgeInfo>& edges = adjacency_for(*r);
+            if(edges.empty()) {
+                continue;
+            }
+
+            for(std::size_t i = 0; i < light_count; ++i) {
+                Light* light = lights[i];
+                if(!light) continue;
+
+                // Only directional shadow volumes are supported for now. Point
+                // lights need per-vertex extrusion; spotlights aren't handled.
+                if(light->light_type() != LIGHT_TYPE_DIRECTIONAL) {
+                    continue;
+                }
+
                 // direction() is the vector *towards* the light (w=0 lighting
                 // convention). The silhouette is computed in the travel-direction
-                // frame, so we must extrude along travel direction too.
-                ext_dir = -light->direction();
+                // frame, so we must extrude along the travel direction too.
+                Vec3 ext_dir = -light->direction();
                 if(ext_dir.length_squared() < 1e-6f) continue;
                 ext_dir.normalize();
-            } else if(light->light_type() == LIGHT_TYPE_POINT) {
-                // For point lights, extrusion direction is per-vertex; we use the
-                // mesh centre as an approximation for the silhouette calculation
-                // (MeshSilhouette handles the actual per-edge direction internally)
-                // The extrusion direction stored here is unused for point lights;
-                // we generate separate geometry per silhouette edge below.
-                // TODO: per-edge extrusion for point light shadow volumes
-                ext_dir = Vec3(); // not used
-            } else {
-                continue; // Spotlights not yet supported
-            }
 
-            if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-                generate_shadow_geometry(mesh, world_mat, light, ext_dir);
+                generate_shadow_geometry(*r, edges, light, ext_dir);
             }
-            // Point light shadow volumes require per-vertex extrusion and
-            // are not yet implemented.
+        }
+    }
+
+    // Evict cached adjacency for persistent renderables that were not seen this
+    // frame (the geometry stopped being returned, e.g. node destroyed/hidden).
+    if(do_shadows) {
+        for(auto it = adjacency_cache_.begin(); it != adjacency_cache_.end();) {
+            if(it->second.last_seen != cache_generation_) {
+                it = adjacency_cache_.erase(it);
+            } else {
+                ++it;
+            }
         }
     }
 

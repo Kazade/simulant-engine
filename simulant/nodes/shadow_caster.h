@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "stage_node.h"
 #include "../shadows.h"
 #include "../assets/material.h"
@@ -8,8 +10,10 @@
 namespace smlt {
 
 /*
- * ShadowCaster is a node that generates stencil shadow volumes for all its
- * descendant Actor nodes. Lights are supplied by the render pipeline.
+ * ShadowCaster is a node that generates stencil shadow volumes for the
+ * renderables produced by all of its descendant nodes (of any type). A
+ * descendant contributes a shadow volume when its shadow_cast() is
+ * SHADOW_CAST_ALWAYS. Lights are supplied by the render pipeline.
  *
  * Usage:
  *   auto caster = stage->create_child<ShadowCaster>();
@@ -46,10 +50,30 @@ private:
                                  Light** lights,
                                  const std::size_t light_count) override;
 
-    void generate_shadow_geometry(const MeshPtr& mesh,
-                                  const Mat4& world_mat,
+    void generate_shadow_geometry(const Renderable& renderable,
+                                  const std::vector<EdgeInfo>& edges,
                                   LightPtr light,
                                   const Vec3& ext_dir_world);
+
+    /* Cached edge adjacency for persistent (key != -1) renderables. The
+     * topology is transform- and deformation-invariant, so it's only rebuilt
+     * when the index data changes. The face normals depend on vertex positions,
+     * so they're refreshed whenever the vertex data (object or contents)
+     * changes — cheap compared to a full rebuild, which is what lets animated
+     * meshes share cached topology. */
+    struct AdjacencyCacheEntry {
+        std::vector<EdgeInfo> edges;
+        const VertexData* vdata_ptr = nullptr;
+        uint64_t vdata_stamp = 0;
+        uint64_t idata_stamp = 0;
+        uint64_t last_seen = 0; // generation in which this entry was last used
+    };
+
+    const std::vector<EdgeInfo>& adjacency_for(const Renderable& renderable);
+
+    std::unordered_map<int64_t, AdjacencyCacheEntry> adjacency_cache_;
+    std::vector<EdgeInfo> transient_adjacency_; // scratch for key == -1
+    uint64_t cache_generation_ = 0;
 
     MaterialPtr sv_mat_incr_; // Shadow volume: cull back, incr stencil on depth-pass
     MaterialPtr sv_mat_decr_; // Shadow volume: cull front, decr stencil on depth-pass

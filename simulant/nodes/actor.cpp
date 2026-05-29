@@ -297,6 +297,15 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
             submesh->material_at_slot(material_slot_, true).get();
         new_renderable.center = center;
 
+        /* Indexed submeshes have fixed connectivity, so expose a stable key (the
+         * index data's uuid) to allow derived data to be cached. This holds even
+         * for animated meshes: the topology is invariant under deformation, and
+         * only the per-frame normals need refreshing. */
+        new_renderable.key =
+            (new_renderable.index_data)
+                ? (int64_t)new_renderable.index_data->uuid()
+                : -1;
+
         new_renderable.light_count = light_count;
         for(auto i = 0u; i < light_count; ++i) {
             new_renderable.lights_affecting_this_frame[i] = lights[i];
