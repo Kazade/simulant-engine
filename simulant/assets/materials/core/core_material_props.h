@@ -37,6 +37,7 @@ struct CoreMaterialProps {
     int32_t stencil_fail         = (int32_t)STENCIL_OP_KEEP;
     int32_t stencil_depth_fail   = (int32_t)STENCIL_OP_KEEP;
     int32_t stencil_pass         = (int32_t)STENCIL_OP_KEEP;
+    int32_t polygon_list_target  = (int32_t)POLYGON_LIST_TARGET_NONE;
 };
 
 /* Bitmask tracking which properties a MaterialPass overrides vs. falling

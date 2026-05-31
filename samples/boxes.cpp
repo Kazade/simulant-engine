@@ -32,6 +32,8 @@ public:
         // Create a nice skybox (not on DC, the image is too big)
         if(get_platform()->name() != "dreamcast") {
             create_child<Skybox>("assets/samples/skyboxes/TropicalSunnyDay");
+        } else {
+            create_child<Skybox>("assets/samples/skyboxes/dreamcast/TropicalSunnyDay");
         }
 
         auto crate =

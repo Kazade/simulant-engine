@@ -64,6 +64,11 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
 void GL1RenderQueueVisitor::visit(const Renderable* renderable,
                                   const MaterialPass* pass,
                                   batcher::Iteration iteration) {
+    /* Modifier-volume passes are only meaningful on renderers that target a
+     * non-default polygon list (e.g. the PVR). Skip them here. */
+    if(pass->polygon_list_target() != POLYGON_LIST_TARGET_NONE) {
+        return;
+    }
     do_visit(renderable, pass, iteration);
 }
 
@@ -301,8 +306,11 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         GLCheck(glColorMask, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
     }
 
-#if !defined(__PSP__)
-    /* Stencil test (not supported on PSP) */
+#if !defined(__PSP__) && !defined(__DREAMCAST__)
+    /* Stencil test — not supported on PSP, and gldc on the Dreamcast doesn't
+     * expose the stencil constants. The PVR has its own (modifier-volume)
+     * shadow path, so stencil-shadow passes are skipped at the visitor level
+     * on the Dreamcast. */
     if(next->is_stencil_test_enabled()) {
         GLCheck(glEnable, GL_STENCIL_TEST);
 

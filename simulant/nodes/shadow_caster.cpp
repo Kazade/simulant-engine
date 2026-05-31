@@ -49,6 +49,23 @@ bool ShadowCaster::on_create(Params params) {
         p->set_stencil_ops(STENCIL_OP_KEEP, STENCIL_OP_KEEP, STENCIL_OP_DECR_WRAP);
     }
 
+    // PVR: cheap-shadow modifier volume. The PVR renderer routes polygons
+    // tagged with POLYGON_LIST_TARGET_MODIFIER to its modifier list; GL
+    // renderers skip the pass at the visitor level.
+    sv_mat_modifier_ = scene->assets->clone_default_material(GARBAGE_COLLECT_NEVER);
+    sv_mat_modifier_->set_pass_count(1);
+    {
+        auto* p = sv_mat_modifier_->pass(0);
+        p->set_cull_mode(CULL_MODE_NONE);
+        p->set_depth_write_enabled(false);
+        p->set_depth_test_enabled(true);
+        p->set_lighting_enabled(false);
+        p->set_textures_enabled(0);
+        p->set_color_write_enabled(false);
+        p->set_blend_func(BLEND_NONE);
+        p->set_polygon_list_target(POLYGON_LIST_TARGET_MODIFIER);
+    }
+
     // Overlay: dark semi-transparent quad where stencil != 0
     overlay_mat_ = scene->assets->clone_default_material(GARBAGE_COLLECT_NEVER);
     overlay_mat_->set_pass_count(1);
@@ -133,7 +150,8 @@ const std::vector<EdgeInfo>& ShadowCaster::adjacency_for(const Renderable& r) {
 void ShadowCaster::generate_shadow_geometry(const Renderable& renderable,
                                              const std::vector<EdgeInfo>& edges,
                                              LightPtr light,
-                                             const Vec3& ext_dir_world) {
+                                             const Vec3& ext_dir_world,
+                                             const Mat4& view_proj) {
     if(!renderable.vertex_data || edges.empty()) {
         return;
     }
@@ -148,12 +166,38 @@ void ShadowCaster::generate_shadow_geometry(const Renderable& renderable,
         return;
     }
 
+    /* Per-unit-extrusion rate of change in the clip-space near-plane test
+     * value (z + w). If the extrusion direction has a component toward the
+     * camera this is negative, and we'll clamp the per-vertex distance so
+     * the extruded vertex never crosses the near plane — that keeps the
+     * shadow volume side quads from straddling the near plane (which would
+     * otherwise leave a hole that the open-volume parity counts can't fill
+     * in, manifesting as half-shadows or missing shadows for casters near
+     * the camera). */
+    Vec4 ed4 = view_proj * Vec4(ext_dir_world.x, ext_dir_world.y,
+                                ext_dir_world.z, 0.0f);
+    const float dB = ed4.z + ed4.w;
+
+    auto extrude_clamped = [&](const Vec3& v_w) -> Vec3 {
+        if(dB >= 0.0f) {
+            // Extrusion stays in front (or parallel to the near plane).
+            return v_w + ext_dir_world * SHADOW_EXTRUSION_DISTANCE;
+        }
+        Vec4 cv = view_proj * Vec4(v_w.x, v_w.y, v_w.z, 1.0f);
+        const float A = cv.z + cv.w;          // clip-space near-plane signed distance
+        const float margin = 0.001f;          // keep just in front of the plane
+        float t = (margin - A) / dB;          // distance at which we'd hit the plane
+        if(t > SHADOW_EXTRUSION_DISTANCE) t = SHADOW_EXTRUSION_DISTANCE;
+        if(t < 0.0f) t = 0.0f;                // silhouette itself is behind the plane
+        return v_w + ext_dir_world * t;
+    };
+
     for(const auto& edge : sil_edges) {
         // Transform edge vertices from local to world space
         Vec3 v1w = edge.first.transformed_by(world_mat);
         Vec3 v2w = edge.second.transformed_by(world_mat);
-        Vec3 v1e = v1w + ext_dir_world * SHADOW_EXTRUSION_DISTANCE;
-        Vec3 v2e = v2w + ext_dir_world * SHADOW_EXTRUSION_DISTANCE;
+        Vec3 v1e = extrude_clamped(v1w);
+        Vec3 v2e = extrude_clamped(v2w);
 
         // Shadow volume side quad (two triangles, CCW winding)
         auto base = (uint32_t)sv_verts_->count();
@@ -178,11 +222,16 @@ void ShadowCaster::do_generate_renderables(batcher::RenderQueue* render_queue,
     // Rebuild shadow volume geometry for this frame
     sv_verts_->clear();
     sv_idx_->clear();
+    sv_volumes_.clear();
 
     const bool do_shadows = (light_count > 0);
     if(do_shadows) {
         ++cache_generation_;
     }
+
+    /* projection * view — used to clamp the per-vertex extrusion in clip
+     * space (see generate_shadow_geometry). Computed once per frame. */
+    const Mat4 view_proj = camera->projection_matrix() * camera->view_matrix();
 
     // Let each descendant generate its renderables into the queue. We track the
     // range of renderables each node produced so that we can build shadow
@@ -245,7 +294,12 @@ void ShadowCaster::do_generate_renderables(batcher::RenderQueue* render_queue,
                 if(ext_dir.length_squared() < 1e-6f) continue;
                 ext_dir.normalize();
 
-                generate_shadow_geometry(*r, edges, light, ext_dir);
+                const uint32_t vol_start = (uint32_t)sv_idx_->count();
+                generate_shadow_geometry(*r, edges, light, ext_dir, view_proj);
+                const uint32_t vol_end = (uint32_t)sv_idx_->count();
+                if(vol_end > vol_start) {
+                    sv_volumes_.emplace_back(vol_start, vol_end - vol_start);
+                }
             }
         }
     }
@@ -302,6 +356,30 @@ void ShadowCaster::do_generate_renderables(batcher::RenderQueue* render_queue,
         r.render_priority       = RENDER_PRIORITY_NEAR;
         r.final_transformation  = &sv_identity_;
         r.material              = sv_mat_decr_.get();
+        r.is_visible            = true;
+        r.light_count           = 0;
+        r.center                = sv_center;
+        render_queue->insert_renderable(std::move(r));
+    }
+
+    // PVR modifier-volume pass — one renderable per shadow caster × light
+    // pair. The PVR closes a modifier volume on each INCLUDE_LAST_POLY and
+    // resets per-volume parity, so submitting separate volumes is what makes
+    // overlapping shadows from different casters union (rather than XOR
+    // themselves out). GL renderers skip these passes at the visitor level
+    // because they target POLYGON_LIST_TARGET_MODIFIER.
+    for(const auto& vol : sv_volumes_) {
+        Renderable r;
+        r.arrangement           = MESH_ARRANGEMENT_TRIANGLES;
+        r.vertex_data           = sv_verts_.get();
+        r.index_data            = sv_idx_.get();
+        r.first_index           = vol.first;
+        r.index_element_count   = vol.second;
+        r.vertex_ranges         = nullptr;
+        r.vertex_range_count    = 0;
+        r.render_priority       = RENDER_PRIORITY_NEAR;
+        r.final_transformation  = &sv_identity_;
+        r.material              = sv_mat_modifier_.get();
         r.is_visible            = true;
         r.light_count           = 0;
         r.center                = sv_center;

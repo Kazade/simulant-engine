@@ -53,7 +53,8 @@ private:
     void generate_shadow_geometry(const Renderable& renderable,
                                   const std::vector<EdgeInfo>& edges,
                                   LightPtr light,
-                                  const Vec3& ext_dir_world);
+                                  const Vec3& ext_dir_world,
+                                  const Mat4& view_proj);
 
     /* Cached edge adjacency for persistent (key != -1) renderables. The
      * topology is transform- and deformation-invariant, so it's only rebuilt
@@ -75,12 +76,20 @@ private:
     std::vector<EdgeInfo> transient_adjacency_; // scratch for key == -1
     uint64_t cache_generation_ = 0;
 
-    MaterialPtr sv_mat_incr_; // Shadow volume: cull back, incr stencil on depth-pass
-    MaterialPtr sv_mat_decr_; // Shadow volume: cull front, decr stencil on depth-pass
-    MaterialPtr overlay_mat_; // Dark overlay where stencil != 0
+    MaterialPtr sv_mat_incr_;     // GL: cull back, incr stencil on depth-pass
+    MaterialPtr sv_mat_decr_;     // GL: cull front, decr stencil on depth-pass
+    MaterialPtr overlay_mat_;     // GL: dark overlay where stencil != 0
+    MaterialPtr sv_mat_modifier_; // PVR: cheap-shadow modifier volume
 
     std::unique_ptr<VertexData> sv_verts_;
     std::unique_ptr<IndexData>  sv_idx_;
+
+    /* Per-volume slices of sv_idx_. Each entry is (first_index, index_count).
+     * One entry per shadow caster × light pair, so PVR can submit each as its
+     * own inclusion modifier volume — the hardware's per-volume parity is
+     * reset on every closing INCLUDE_LAST poly, so overlapping shadows from
+     * different casters correctly union rather than XOR. */
+    std::vector<std::pair<uint32_t, uint32_t>> sv_volumes_;
 
     std::unique_ptr<VertexData> overlay_verts_;
     std::unique_ptr<IndexData>  overlay_idx_;

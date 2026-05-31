@@ -207,6 +207,10 @@ void Debug::do_generate_renderables(batcher::RenderQueue* render_queue,
         new_renderable.material = submesh->material().get();
         new_renderable.center = Vec3();
 
+        if(shadow_receive() == SHADOW_RECEIVE_ALWAYS) {
+            new_renderable.flags |= RENDERABLE_FLAG_RECEIVES_SHADOWS;
+        }
+
         render_queue->insert_renderable(std::move(new_renderable));
     }
 }

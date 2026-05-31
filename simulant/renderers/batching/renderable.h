@@ -64,6 +64,15 @@ private:
     }
 };
 
+/* Renderer-agnostic per-renderable hints. Renderers that don't recognise a
+ * given flag simply ignore it. */
+enum RenderableFlags : uint32_t {
+    /* This renderable receives shadows. On the PVR (Dreamcast) it causes the
+     * polygon header to be patched with the modifier-enable bit so cheap-shadow
+     * modifier volumes darken it. Other renderers currently ignore it. */
+    RENDERABLE_FLAG_RECEIVES_SHADOWS = 1u << 0,
+};
+
 struct alignas(8) Renderable final {
     /* A stable identifier for persistent renderables. If != -1, this renderable
      * is expected to be returned again on subsequent frames with the same
@@ -75,11 +84,20 @@ struct alignas(8) Renderable final {
      * same geometry every frame. */
     int64_t key = -1;
 
+    /* Bitmask of RenderableFlags. Populated by the producing node. */
+    uint32_t flags = 0;
+
     MeshArrangement arrangement = MESH_ARRANGEMENT_TRIANGLES;
     const VertexData* vertex_data = nullptr;
 
     const IndexData* index_data = nullptr;
     std::size_t index_element_count = 0;
+    /* Offset (in index elements, not bytes) into index_data at which this
+     * renderable's draw begins. Lets several renderables share one index buffer
+     * by pointing at different slices — used by e.g. ShadowCaster to submit
+     * each shadow caster as a separate PVR modifier volume. Default 0 means
+     * "start at the beginning", which matches every existing producer. */
+    std::size_t first_index = 0;
 
     const VertexRange* vertex_ranges = nullptr;
     std::size_t vertex_range_count = 0;

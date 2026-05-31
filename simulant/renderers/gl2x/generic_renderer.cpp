@@ -461,6 +461,11 @@ GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer,
 void GL2RenderQueueVisitor::visit(const Renderable* renderable,
                                   const MaterialPass* material_pass,
                                   batcher::Iteration iteration) {
+    /* Modifier-volume passes are only meaningful on renderers that target a
+     * non-default polygon list (e.g. the PVR). Skip them here. */
+    if(material_pass->polygon_list_target() != POLYGON_LIST_TARGET_NONE) {
+        return;
+    }
     do_visit(renderable, material_pass, iteration);
 }
 

@@ -196,6 +196,7 @@ public:
     StencilOp stencil_fail_op() const;
     StencilOp stencil_depth_fail_op() const;
     StencilOp stencil_pass_op() const;
+    PolygonListTarget polygon_list_target() const;
 
     void set_base_color(const Color& v);
     void set_fog_color(const Color& v);
@@ -220,6 +221,7 @@ public:
     void set_color_write_enabled(bool v);
     void set_stencil_func(StencilFunc func, int32_t ref = 0, int32_t mask = 0xFF);
     void set_stencil_ops(StencilOp fail, StencilOp depth_fail, StencilOp pass);
+    void set_polygon_list_target(PolygonListTarget v);
 
 private:
     MaterialPass(Material* material, uint8_t pass_number);
@@ -859,6 +861,12 @@ inline void MaterialPass::set_stencil_ops(StencilOp fail, StencilOp depth_fail, 
     pass_props_.stencil_fail       = (int32_t)fail;
     pass_props_.stencil_depth_fail = (int32_t)depth_fail;
     pass_props_.stencil_pass       = (int32_t)pass;
+}
+inline PolygonListTarget MaterialPass::polygon_list_target() const {
+    return (PolygonListTarget)pass_props_.polygon_list_target;
+}
+inline void MaterialPass::set_polygon_list_target(PolygonListTarget v) {
+    pass_props_.polygon_list_target = (int32_t)v;
 }
 }
 

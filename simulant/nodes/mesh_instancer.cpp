@@ -150,6 +150,10 @@ void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
                 ? (int64_t)new_renderable.index_data->uuid()
                 : -1;
 
+        if(shadow_receive() == SHADOW_RECEIVE_ALWAYS) {
+            new_renderable.flags |= RENDERABLE_FLAG_RECEIVES_SHADOWS;
+        }
+
         new_renderable.light_count = light_count;
         for(std::size_t i = 0; i < light_count; ++i) {
             new_renderable.lights_affecting_this_frame[i] = lights[i];

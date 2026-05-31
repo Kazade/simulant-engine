@@ -82,6 +82,16 @@ enum StencilOp : EnumType {
     STENCIL_OP_INVERT,
 };
 
+/* Which display-list a pass's polygons are submitted to. NONE is normal
+ * geometry (the opaque/punch-through/translucent list is chosen by blend func).
+ * MODIFIER routes the polygons to the matching modifier-volume list — used on
+ * the PVR (Dreamcast) for hardware modifier volumes / cheap shadows. Renderers
+ * without modifier-volume support ignore this. */
+enum PolygonListTarget : EnumType {
+    POLYGON_LIST_TARGET_NONE,
+    POLYGON_LIST_TARGET_MODIFIER,
+};
+
 enum EnabledTexture : EnumType {
     BASE_COLOR_MAP_ENABLED = 1,
     LIGHT_MAP_ENABLED = 2,
