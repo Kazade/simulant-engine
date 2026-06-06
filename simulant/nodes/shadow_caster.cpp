@@ -166,29 +166,31 @@ void ShadowCaster::generate_shadow_geometry(const Renderable& renderable,
         return;
     }
 
-    /* Per-unit-extrusion rate of change in the clip-space near-plane test
-     * value (z + w). If the extrusion direction has a component toward the
-     * camera this is negative, and we'll clamp the per-vertex distance so
-     * the extruded vertex never crosses the near plane — that keeps the
-     * shadow volume side quads from straddling the near plane (which would
-     * otherwise leave a hole that the open-volume parity counts can't fill
-     * in, manifesting as half-shadows or missing shadows for casters near
-     * the camera). */
+    /* Per-unit-extrusion rate of change in clip.w. If the extrusion has a
+     * component toward the camera this is negative, and we clamp the per-vertex
+     * distance so the extruded vertex retains a reasonable view-space depth
+     * (clip.w >= MIN_CLIP_W). Just keeping it "in front of the near plane" is
+     * not enough: a vertex with clip.w ≈ near projects to NDC = clip.xy/near,
+     * which for any sideways offset puts it dozens of screen-widths off-screen,
+     * making each modifier triangle bin into a huge sweep of central tiles and
+     * exhausting the PVR's OPB chain. Holding clip.w well above the near plane
+     * keeps the projections sane. */
     Vec4 ed4 = view_proj * Vec4(ext_dir_world.x, ext_dir_world.y,
                                 ext_dir_world.z, 0.0f);
-    const float dB = ed4.z + ed4.w;
+    const float dW = ed4.w;
+    const float MIN_CLIP_W = 10.0f;
 
     auto extrude_clamped = [&](const Vec3& v_w) -> Vec3 {
-        if(dB >= 0.0f) {
-            // Extrusion stays in front (or parallel to the near plane).
+        if(dW >= 0.0f) {
+            // Extrusion stays at the same view-space depth or moves away.
             return v_w + ext_dir_world * SHADOW_EXTRUSION_DISTANCE;
         }
         Vec4 cv = view_proj * Vec4(v_w.x, v_w.y, v_w.z, 1.0f);
-        const float A = cv.z + cv.w;          // clip-space near-plane signed distance
-        const float margin = 0.001f;          // keep just in front of the plane
-        float t = (margin - A) / dB;          // distance at which we'd hit the plane
+        // Solve clip.w(v_w + t*ext) = A + t*dW >= MIN_CLIP_W for max t.
+        const float A = cv.w;
+        float t = (MIN_CLIP_W - A) / dW;
         if(t > SHADOW_EXTRUSION_DISTANCE) t = SHADOW_EXTRUSION_DISTANCE;
-        if(t < 0.0f) t = 0.0f;                // silhouette itself is behind the plane
+        if(t < 0.0f) t = 0.0f;
         return v_w + ext_dir_world * t;
     };
 
