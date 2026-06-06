@@ -140,8 +140,6 @@ bool VirtualFileSystem::add_search_path(const Path& path) {
         kfs::path::norm_path(ANDROID_ASSET_DIR_PREFIX_SLASH + new_path.str());
 #endif
 
-    S_INFO("Adding path: {0}", new_path);
-
     if(path.str().empty() || path.str() == "/") {
         return false;
     }
@@ -150,6 +148,8 @@ bool VirtualFileSystem::add_search_path(const Path& path) {
        resource_path_.end()) {
         return false;
     }
+
+    S_INFO("Adding path: {0}", new_path);
 
     resource_path_.push_back(new_path);
     clear_location_cache();
@@ -285,7 +285,11 @@ optional<Path> VirtualFileSystem::locate_file(const Path& filename,
 #endif
 
             S_DEBUG("Trying path: {0}", full_path);
-            if(kfs::path::exists(full_path)) {
+
+            FILE* f = fopen(full_path.c_str(), "r");
+            if(f) {
+                fclose(f);
+
                 S_INFO("Located file: {0}", full_path);
 
                 if(use_cache) {
