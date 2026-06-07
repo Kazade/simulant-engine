@@ -20,9 +20,13 @@ bool ShadowCaster::on_create(Params params) {
     // Pass 1: cull back faces (draw front), increment stencil on depth pass
     sv_mat_incr_ = scene->assets->clone_default_material(GARBAGE_COLLECT_NEVER);
     sv_mat_incr_->set_pass_count(1);
+    // Carmack's Reverse (depth-fail / Z-fail) — works correctly even when the
+    // camera is inside the shadow volume, but requires the volume to be a
+    // closed manifold (front + back caps + side quads). generate_shadow_geometry
+    // emits those caps for both directional and point lights.
     {
         auto* p = sv_mat_incr_->pass(0);
-        p->set_cull_mode(CULL_MODE_BACK_FACE);
+        p->set_cull_mode(CULL_MODE_FRONT_FACE);   // draw back-facing surfaces
         p->set_depth_write_enabled(false);
         p->set_depth_test_enabled(true);
         p->set_lighting_enabled(false);
@@ -30,15 +34,17 @@ bool ShadowCaster::on_create(Params params) {
         p->set_color_write_enabled(false);
         p->set_stencil_test_enabled(true);
         p->set_stencil_func(STENCIL_FUNC_ALWAYS);
-        p->set_stencil_ops(STENCIL_OP_KEEP, STENCIL_OP_KEEP, STENCIL_OP_INCR_WRAP);
+        // (sfail, dpfail, dppass): increment on depth FAIL — i.e. count back
+        // faces that the scene geometry occludes.
+        p->set_stencil_ops(STENCIL_OP_KEEP, STENCIL_OP_INCR_WRAP, STENCIL_OP_KEEP);
     }
 
-    // Pass 2: cull front faces (draw back), decrement stencil on depth pass
+    // Pass 2: front-facing surfaces, decrement stencil on depth fail.
     sv_mat_decr_ = scene->assets->clone_default_material(GARBAGE_COLLECT_NEVER);
     sv_mat_decr_->set_pass_count(1);
     {
         auto* p = sv_mat_decr_->pass(0);
-        p->set_cull_mode(CULL_MODE_FRONT_FACE);
+        p->set_cull_mode(CULL_MODE_BACK_FACE);    // draw front-facing surfaces
         p->set_depth_write_enabled(false);
         p->set_depth_test_enabled(true);
         p->set_lighting_enabled(false);
@@ -46,7 +52,7 @@ bool ShadowCaster::on_create(Params params) {
         p->set_color_write_enabled(false);
         p->set_stencil_test_enabled(true);
         p->set_stencil_func(STENCIL_FUNC_ALWAYS);
-        p->set_stencil_ops(STENCIL_OP_KEEP, STENCIL_OP_KEEP, STENCIL_OP_DECR_WRAP);
+        p->set_stencil_ops(STENCIL_OP_KEEP, STENCIL_OP_DECR_WRAP, STENCIL_OP_KEEP);
     }
 
     // PVR: cheap-shadow modifier volume. The PVR renderer routes polygons
@@ -150,7 +156,6 @@ const std::vector<EdgeInfo>& ShadowCaster::adjacency_for(const Renderable& r) {
 void ShadowCaster::generate_shadow_geometry(const Renderable& renderable,
                                              const std::vector<EdgeInfo>& edges,
                                              LightPtr light,
-                                             const Vec3& ext_dir_world,
                                              const Mat4& view_proj) {
     if(!renderable.vertex_data || edges.empty()) {
         return;
@@ -166,32 +171,76 @@ void ShadowCaster::generate_shadow_geometry(const Renderable& renderable,
         return;
     }
 
-    /* Per-unit-extrusion rate of change in clip.w. If the extrusion has a
-     * component toward the camera this is negative, and we clamp the per-vertex
-     * distance so the extruded vertex retains a reasonable view-space depth
-     * (clip.w >= MIN_CLIP_W). Just keeping it "in front of the near plane" is
-     * not enough: a vertex with clip.w ≈ near projects to NDC = clip.xy/near,
-     * which for any sideways offset puts it dozens of screen-widths off-screen,
-     * making each modifier triangle bin into a huge sweep of central tiles and
-     * exhausting the PVR's OPB chain. Holding clip.w well above the near plane
-     * keeps the projections sane. */
-    Vec4 ed4 = view_proj * Vec4(ext_dir_world.x, ext_dir_world.y,
-                                ext_dir_world.z, 0.0f);
-    const float dW = ed4.w;
+    const bool is_point = (light->light_type() == LIGHT_TYPE_POINT);
+
+    /* Per-light precomputation. Directional lights share a single extrusion
+     * direction (and therefore a single clip.w rate of change). Point lights
+     * extrude each silhouette vertex along its own ray from the light, so the
+     * direction and rate are computed per-vertex below. */
+    Vec3 dir_ext_dir;
+    float dir_dW = 0.0f;
+    Vec3 point_light_pos;
+    float point_range = 0.0f;
+    if(is_point) {
+        point_light_pos = light->transform->position();
+        point_range = light->range();
+    } else {
+        // direction() returns the toward-light vector; travel direction (which
+        // is what we want for extrusion) is its negation.
+        dir_ext_dir = -light->direction();
+        if(dir_ext_dir.length_squared() < 1e-6f) {
+            return;
+        }
+        dir_ext_dir.normalize();
+        Vec4 ed4 = view_proj * Vec4(dir_ext_dir.x, dir_ext_dir.y,
+                                    dir_ext_dir.z, 0.0f);
+        dir_dW = ed4.w;
+    }
+
+    /* MIN_CLIP_W: keep the extruded vertex well in front of the camera so the
+     * modifier triangles project to reasonable screen-space extents. See the
+     * comment in the diff that introduced this clamp for the OPB-overflow
+     * reasoning. */
     const float MIN_CLIP_W = 10.0f;
 
     auto extrude_clamped = [&](const Vec3& v_w) -> Vec3 {
-        if(dW >= 0.0f) {
-            // Extrusion stays at the same view-space depth or moves away.
-            return v_w + ext_dir_world * SHADOW_EXTRUSION_DISTANCE;
+        Vec3 ext_dir;
+        float dW;
+        float max_t = SHADOW_EXTRUSION_DISTANCE;
+
+        if(is_point) {
+            // Per-vertex radial extrusion away from the light.
+            ext_dir = v_w - point_light_pos;
+            const float d_v_sq = ext_dir.length_squared();
+            if(d_v_sq < 1e-6f) return v_w; // silhouette at the light; degenerate
+            const float d_v = std::sqrt(d_v_sq);
+            ext_dir = ext_dir * (1.0f / d_v);
+
+            /* Don't extrude past the light's range — beyond that distance
+             * there's no light, so no receivers can be in shadow from this
+             * caster's contribution. range == 0 is treated as "unbounded". */
+            if(point_range > 0.0f) {
+                const float range_t = point_range - d_v;
+                if(range_t < max_t) max_t = range_t;
+            }
+
+            Vec4 ed4 = view_proj * Vec4(ext_dir.x, ext_dir.y, ext_dir.z, 0.0f);
+            dW = ed4.w;
+        } else {
+            ext_dir = dir_ext_dir;
+            dW = dir_dW;
         }
-        Vec4 cv = view_proj * Vec4(v_w.x, v_w.y, v_w.z, 1.0f);
-        // Solve clip.w(v_w + t*ext) = A + t*dW >= MIN_CLIP_W for max t.
-        const float A = cv.w;
-        float t = (MIN_CLIP_W - A) / dW;
-        if(t > SHADOW_EXTRUSION_DISTANCE) t = SHADOW_EXTRUSION_DISTANCE;
-        if(t < 0.0f) t = 0.0f;
-        return v_w + ext_dir_world * t;
+
+        if(dW < 0.0f) {
+            // Solve clip.w(v_w + t*ext) = A + t*dW >= MIN_CLIP_W for max t.
+            Vec4 cv = view_proj * Vec4(v_w.x, v_w.y, v_w.z, 1.0f);
+            const float A = cv.w;
+            const float clip_t = (MIN_CLIP_W - A) / dW;
+            if(clip_t < max_t) max_t = clip_t;
+        }
+
+        if(max_t < 0.0f) max_t = 0.0f;
+        return v_w + ext_dir * max_t;
     };
 
     for(const auto& edge : sil_edges) {
@@ -212,6 +261,103 @@ void ShadowCaster::generate_shadow_geometry(const Renderable& renderable,
         sv_idx_->index(base);     sv_idx_->index(base + 1); sv_idx_->index(base + 2);
         // Triangle 2: v1w, v2e, v1e
         sv_idx_->index(base);     sv_idx_->index(base + 2); sv_idx_->index(base + 3);
+    }
+
+    /* ====================================================================
+     * Front and back caps.
+     *
+     * Z-fail (Carmack's Reverse) stencil shadowing requires the shadow volume
+     * to be a closed manifold. Side quads alone leave it open at both the
+     * silhouette and the extruded end, so when the camera enters the volume
+     * the counting breaks down. Closing the volume with caps fixes that.
+     *
+     * Front cap = the lit-facing triangles of the caster in world space.
+     * Back cap  = the same triangles extruded along the light direction with
+     *             reversed winding so they face outward from the volume.
+     * ==================================================================== */
+    const auto* vdata = renderable.vertex_data;
+    const auto* idata = renderable.index_data;
+    if(!idata) return; // can't iterate triangles without an index buffer
+    const auto& spec = vdata->vertex_specification();
+    if(spec.position_attribute != VERTEX_ATTRIBUTE_3F) return;
+
+    std::size_t index_count = renderable.index_element_count;
+    if(index_count == 0) index_count = idata->count();
+    const std::size_t i_start = renderable.first_index;
+    const std::size_t i_end   = i_start + index_count;
+
+    auto fetch = [&](std::size_t i) -> uint32_t {
+        return idata->at((uint32_t)i);
+    };
+
+    auto emit_caps_for_triangle = [&](uint32_t i0, uint32_t i1, uint32_t i2) {
+        const Vec3* lp0 = vdata->position_at<Vec3>(i0);
+        const Vec3* lp1 = vdata->position_at<Vec3>(i1);
+        const Vec3* lp2 = vdata->position_at<Vec3>(i2);
+        if(!lp0 || !lp1 || !lp2) return;
+
+        Vec3 p0 = lp0->transformed_by(world_mat);
+        Vec3 p1 = lp1->transformed_by(world_mat);
+        Vec3 p2 = lp2->transformed_by(world_mat);
+
+        // World-space face normal (unnormalised — only the sign of the dot
+        // product matters for the lit test, so no sqrt needed).
+        const Vec3 e_a = p1 - p0;
+        const Vec3 e_b = p2 - p0;
+        const Vec3 n = e_a.cross(e_b);
+        if(n.length_squared() < 1e-12f) return; // degenerate
+
+        // Lit test: triangle is lit when its normal points toward the light.
+        //   directional: dot(normal, light->direction()) > 0   (direction()
+        //     already returns the toward-light vector)
+        //   point:       dot(normal, light_pos - p0)   > 0
+        Vec3 to_light = is_point ? (point_light_pos - p0) : light->direction();
+        if(n.dot(to_light) <= 0.0f) return;
+
+        // Front cap — original winding (faces the light).
+        const auto base_f = (uint32_t)sv_verts_->count();
+        sv_verts_->position(p0); sv_verts_->move_next();
+        sv_verts_->position(p1); sv_verts_->move_next();
+        sv_verts_->position(p2); sv_verts_->move_next();
+        sv_idx_->index(base_f);
+        sv_idx_->index(base_f + 1);
+        sv_idx_->index(base_f + 2);
+
+        // Back cap — extruded, REVERSED winding so its outward face points
+        // away from the light (i.e. outward from the volume).
+        const Vec3 e0 = extrude_clamped(p0);
+        const Vec3 e1 = extrude_clamped(p1);
+        const Vec3 e2 = extrude_clamped(p2);
+        const auto base_b = (uint32_t)sv_verts_->count();
+        sv_verts_->position(e0); sv_verts_->move_next();
+        sv_verts_->position(e1); sv_verts_->move_next();
+        sv_verts_->position(e2); sv_verts_->move_next();
+        sv_idx_->index(base_b);
+        sv_idx_->index(base_b + 2);
+        sv_idx_->index(base_b + 1);
+    };
+
+    if(renderable.arrangement == MESH_ARRANGEMENT_TRIANGLES) {
+        for(std::size_t i = i_start; i + 3 <= i_end; i += 3) {
+            emit_caps_for_triangle(fetch(i), fetch(i + 1), fetch(i + 2));
+        }
+    } else if(renderable.arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
+        for(std::size_t i = i_start + 2; i < i_end; ++i) {
+            // Even-indexed triangles use the natural strip winding; odd ones
+            // are flipped to keep CCW.
+            if(((i - i_start) & 1) == 0) {
+                emit_caps_for_triangle(fetch(i - 2), fetch(i - 1), fetch(i));
+            } else {
+                emit_caps_for_triangle(fetch(i), fetch(i - 1), fetch(i - 2));
+            }
+        }
+    } else if(renderable.arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) {
+        if(index_count >= 3) {
+            const uint32_t hub = fetch(i_start);
+            for(std::size_t i = i_start + 2; i < i_end; ++i) {
+                emit_caps_for_triangle(hub, fetch(i - 1), fetch(i));
+            }
+        }
     }
 }
 
@@ -283,21 +429,15 @@ void ShadowCaster::do_generate_renderables(batcher::RenderQueue* render_queue,
                 Light* light = lights[i];
                 if(!light) continue;
 
-                // Only directional shadow volumes are supported for now. Point
-                // lights need per-vertex extrusion; spotlights aren't handled.
-                if(light->light_type() != LIGHT_TYPE_DIRECTIONAL) {
+                // Directional and point shadow volumes are supported.
+                // Spotlights aren't handled yet.
+                if(light->light_type() != LIGHT_TYPE_DIRECTIONAL &&
+                   light->light_type() != LIGHT_TYPE_POINT) {
                     continue;
                 }
 
-                // direction() is the vector *towards* the light (w=0 lighting
-                // convention). The silhouette is computed in the travel-direction
-                // frame, so we must extrude along the travel direction too.
-                Vec3 ext_dir = -light->direction();
-                if(ext_dir.length_squared() < 1e-6f) continue;
-                ext_dir.normalize();
-
                 const uint32_t vol_start = (uint32_t)sv_idx_->count();
-                generate_shadow_geometry(*r, edges, light, ext_dir, view_proj);
+                generate_shadow_geometry(*r, edges, light, view_proj);
                 const uint32_t vol_end = (uint32_t)sv_idx_->count();
                 if(vol_end > vol_start) {
                     sv_volumes_.emplace_back(vol_start, vol_end - vol_start);

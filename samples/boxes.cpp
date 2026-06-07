@@ -67,8 +67,9 @@ public:
                             PhysicsMaterial::stone());
 
         lighting->set_ambient_light(Color::white() * 0.5f);
-        auto l = create_child<smlt::DirectionalLight>();
-        l->set_direction(Vec3(0, -1, 0.5).normalized());
+        auto l = create_child<smlt::PointLight>();
+        // l->set_direction(Vec3(0, -1, 0.5).normalized());
+        l->transform->set_position(smlt::Vec3(0, 5, 0));
         l->set_intensity(1);
     }
 

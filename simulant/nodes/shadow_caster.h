@@ -35,6 +35,24 @@ public:
 
     ShadowCaster(Scene* owner) : StageNode(owner, Meta::node_type) {}
 
+    /* Appends a closed shadow volume (silhouette side quads + lit-face front
+     * cap + extruded back cap) for `renderable` lit by `light` into the
+     * internal sv_verts_/sv_idx_ buffers. `edges` is the pre-built adjacency
+     * for the renderable's geometry. `view_proj` is used for the per-vertex
+     * extrusion clamp.
+     *
+     * Public so tests can exercise it without going through the full render
+     * pipeline. The internal buffer accessors below let tests read the result.
+     */
+    void generate_shadow_geometry(const Renderable& renderable,
+                                  const std::vector<EdgeInfo>& edges,
+                                  LightPtr light,
+                                  const Mat4& view_proj);
+
+    /* Internal accessors for the shadow-volume buffers, intended for tests. */
+    const VertexData* _shadow_volume_vertex_data() const { return sv_verts_.get(); }
+    const IndexData*  _shadow_volume_index_data() const  { return sv_idx_.get();   }
+
 protected:
     bool on_create(Params params) override;
 
@@ -49,12 +67,6 @@ private:
                                  const DetailLevel detail_level,
                                  Light** lights,
                                  const std::size_t light_count) override;
-
-    void generate_shadow_geometry(const Renderable& renderable,
-                                  const std::vector<EdgeInfo>& edges,
-                                  LightPtr light,
-                                  const Vec3& ext_dir_world,
-                                  const Mat4& view_proj);
 
     /* Cached edge adjacency for persistent (key != -1) renderables. The
      * topology is transform- and deformation-invariant, so it's only rebuilt

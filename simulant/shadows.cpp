@@ -227,8 +227,12 @@ void MeshSilhouette::calculate_directional_silhouette() {
 void MeshSilhouette::calculate_point_silhouette() {
     auto light_position = light_direction_or_position_;
 
-    // Move the light into the geometry's local space (to prevent transforming vertex data)
+    // Move the light into the geometry's local space (to avoid transforming the
+    // vertex data). For a model matrix T*R, world->local is R⁻¹·(world − T), so
+    // we need both the inverse translation and the inverse rotation. Translation
+    // alone was wrong for rotated casters.
     light_position += inverse_mesh_position_;
+    light_position = light_position.rotated_by(inverse_mesh_rotation_);
 
     // Cull the whole piece of geometry if it's outside the light's range.
     // intersects_sphere takes a diameter, range is a radius.
