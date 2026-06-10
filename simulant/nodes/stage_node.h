@@ -578,18 +578,27 @@ private:
         return false;
     }
 
-    /* Return a list of renderables to pass into the render queue */
+    /* Return a list of renderables to pass into the render queue.
+     *
+     * respect_visibility: when true (the default), nodes whose is_visible() is
+     * false should skip producing renderables. When false, nodes must produce
+     * their renderables regardless of their own visibility but mark each
+     * Renderable's is_visible field accordingly so renderers can skip them at
+     * draw time. ShadowCaster passes false so that an invisible low-poly child
+     * can still cast a shadow without being drawn. */
     virtual void do_generate_renderables(batcher::RenderQueue* render_queue,
                                          const Camera*,
                                          const Viewport* viewport,
                                          const DetailLevel detail_level,
                                          Light** lights,
-                                         const std::size_t light_count) {
+                                         const std::size_t light_count,
+                                         bool respect_visibility = true) {
         _S_UNUSED(render_queue);
         _S_UNUSED(viewport);
         _S_UNUSED(detail_level);
         _S_UNUSED(lights);
         _S_UNUSED(light_count);
+        _S_UNUSED(respect_visibility);
     }
 
     virtual void finalize_destroy() override final;
@@ -779,12 +788,14 @@ public:
     }
 
     /** Populates the render queue with a list of renderables to send to be
-     *  rendered by the render pipelines */
+     *  rendered by the render pipelines.
+     *  @param respect_visibility see do_generate_renderables. */
     std::size_t generate_renderables(batcher::RenderQueue* render_queue,
                                      const Camera*, const Viewport* viewport,
                                      const DetailLevel detail_level,
                                      Light** lights,
-                                     const std::size_t light_count);
+                                     const std::size_t light_count,
+                                     bool respect_visibility = true);
 
     void update(float dt) override final;
     void late_update(float dt) override final;
@@ -994,7 +1005,7 @@ public:
     /* Containers don't directly have renderables, but their children do */
     void do_generate_renderables(batcher::RenderQueue*, const Camera*,
                                  const Viewport*, const DetailLevel, Light**,
-                                 const std::size_t) override {}
+                                 const std::size_t, bool) override {}
 
     virtual ~ContainerNode() {}
 };

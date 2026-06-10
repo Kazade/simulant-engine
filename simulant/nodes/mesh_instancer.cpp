@@ -119,7 +119,16 @@ void MeshInstancer::do_generate_renderables(batcher::RenderQueue* render_queue,
                                             const Viewport*,
                                             const DetailLevel detail_level,
                                             Light** lights,
-                                            const std::size_t light_count) {
+                                            const std::size_t light_count,
+                                            bool respect_visibility) {
+
+    /* Drop out only when normal rendering AND the instancer itself is hidden.
+     * When called from a ShadowCaster with respect_visibility=false we still
+     * want to enumerate instances so their geometry can drive shadow volumes;
+     * each per-instance renderable carries its own is_visible flag below. */
+    if(respect_visibility && !is_visible()) {
+        return;
+    }
 
     /* No instances or mesh, no renderables */
     if(instances_.empty() || !mesh_) {

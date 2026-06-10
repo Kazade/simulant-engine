@@ -403,12 +403,14 @@ void UIManager::do_generate_renderables(batcher::RenderQueue* render_queue,
                                         const Viewport* viewport,
                                         const DetailLevel detail_level,
                                         Light** light,
-                                        const std::size_t light_count) {
+                                        const std::size_t light_count,
+                                        bool respect_visibility) {
 
     _S_UNUSED(render_queue);
     _S_UNUSED(detail_level);
     _S_UNUSED(light);
     _S_UNUSED(light_count);
+    _S_UNUSED(respect_visibility);
 
     /* Each time the scene is rendered with a camera and viewport, we need to
      * process any queued events so that (for example) we can interact with the

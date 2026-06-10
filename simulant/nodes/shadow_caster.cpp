@@ -366,7 +366,15 @@ void ShadowCaster::do_generate_renderables(batcher::RenderQueue* render_queue,
                                             const Viewport* viewport,
                                             const DetailLevel detail_level,
                                             Light** lights,
-                                            const std::size_t light_count) {
+                                            const std::size_t light_count,
+                                            bool respect_visibility) {
+    // Honour our own visibility — if the ShadowCaster is hidden, produce
+    // nothing. Descendants are then handled with respect_visibility=false so
+    // an invisible low-poly shadow mesh under us still casts.
+    if(respect_visibility && !is_visible()) {
+        return;
+    }
+
     // Rebuild shadow volume geometry for this frame
     sv_verts_->clear();
     sv_idx_->clear();
@@ -384,15 +392,22 @@ void ShadowCaster::do_generate_renderables(batcher::RenderQueue* render_queue,
     // Let each descendant generate its renderables into the queue. We track the
     // range of renderables each node produced so that we can build shadow
     // volumes from the actual geometry, regardless of the node's type.
+    //
+    // We deliberately do NOT skip invisible descendants here — an invisible
+    // low-poly shadow proxy is a valid pattern. We pass respect_visibility=
+    // false so the descendant still emits its renderables; they'll be marked
+    // is_visible=false on each Renderable so the renderer's visit() will skip
+    // them at draw time even though we use their geometry for shadows.
     for(StageNode& node: each_descendent()) {
-        if(!node.is_visible() || node.is_destroyed() ||
+        if(node.is_destroyed() ||
            node.generates_renderables_for_descendents()) {
             continue;
         }
 
         const std::size_t start = render_queue->renderable_count();
         node.generate_renderables(render_queue, camera, viewport,
-                                  detail_level, lights, light_count);
+                                  detail_level, lights, light_count,
+                                  /*respect_visibility=*/false);
         const std::size_t end = render_queue->renderable_count();
 
         if(!light_count || node.shadow_cast() == SHADOW_CAST_NEVER) {

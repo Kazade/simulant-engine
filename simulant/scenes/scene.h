@@ -246,7 +246,7 @@ private:
 
     void do_generate_renderables(batcher::RenderQueue*, const Camera*,
                                  const Viewport*, const DetailLevel, Light**,
-                                 const std::size_t) override final {
+                                 const std::size_t, bool) override final {
         /* Do nothing, Scenes don't create renderables.. for now */
     }
 

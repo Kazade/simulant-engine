@@ -38,6 +38,12 @@ void PSPRenderQueueVisitor::start_traversal(const batcher::RenderQueue &queue,
 
 void PSPRenderQueueVisitor::visit(const Renderable* renderable, const MaterialPass* pass, batcher::Iteration iteration) {
     S_VERBOSE("visit");
+    /* Invisible renderables are still in the queue so consumers like
+     * ShadowCaster can read them back to generate shadow geometry from a
+     * hidden low-poly proxy. Skip the actual draw here. */
+    if(renderable && !renderable->is_visible) {
+        return;
+    }
     /* Modifier-volume passes (e.g. the PVR cheap-shadow material on
      * ShadowCaster) are only meaningful for renderers with a modifier list.
      * The PSP uses stencil shadows instead, so skip these passes here. */

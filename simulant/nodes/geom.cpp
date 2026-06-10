@@ -77,10 +77,15 @@ void Geom::do_generate_renderables(batcher::RenderQueue* render_queue,
                                    const Camera* camera, const Viewport*,
                                    const DetailLevel detail_level,
                                    Light** lights,
-                                   const std::size_t light_count) {
+                                   const std::size_t light_count,
+                                   bool respect_visibility) {
     _S_UNUSED(detail_level);
     _S_UNUSED(lights);
     _S_UNUSED(light_count);
+
+    if(respect_visibility && !is_visible()) {
+        return;
+    }
 
     culler_->renderables_visible(camera->frustum(), render_queue);
 }

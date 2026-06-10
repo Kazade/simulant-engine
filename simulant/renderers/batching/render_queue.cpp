@@ -82,9 +82,11 @@ void RenderQueue::insert_renderable(Renderable&& renderable) {
     assert(camera_);
     assert(render_group_factory_);
 
-    if(!renderable.is_visible) {
-        return;
-    }
+    // NOTE: invisible renderables are still inserted; renderers must check
+    // renderable->is_visible in their visit() method and skip the draw.
+    // This is needed so that consumers like ShadowCaster, which generate
+    // shadows from descendants' geometry regardless of visibility, can still
+    // read back those invisible renderables from the queue.
 
     if(!renderable.vertex_range_count && !renderable.index_element_count &&
        !renderable.vertex_data->count()) {

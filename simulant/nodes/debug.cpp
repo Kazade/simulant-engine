@@ -172,9 +172,14 @@ void Debug::do_generate_renderables(batcher::RenderQueue* render_queue,
                                     const Camera* camera, const Viewport*,
                                     const DetailLevel detail_level,
                                     Light** /*light*/,
-                                    const std::size_t /*light_count*/) {
+                                    const std::size_t /*light_count*/,
+                                    bool respect_visibility) {
 
     _S_UNUSED(detail_level);
+
+    if(respect_visibility && !is_visible()) {
+        return;
+    }
 
     if(elements_.empty()) {
         return;

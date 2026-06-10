@@ -46,7 +46,7 @@ public:
 private:
     void do_generate_renderables(batcher::RenderQueue*, const Camera*,
                                  const Viewport*, DetailLevel, Light**,
-                                 const std::size_t) override {}
+                                 const std::size_t, bool) override {}
 };
 
 } // namespace smlt

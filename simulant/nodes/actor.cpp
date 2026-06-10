@@ -233,8 +233,17 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
                                     const Camera* camera, const Viewport*,
                                     const DetailLevel detail_level,
                                     Light** lights,
-                                    const std::size_t light_count) {
+                                    const std::size_t light_count,
+                                    bool respect_visibility) {
     _S_UNUSED(camera);
+
+    // If the caller respects visibility (the normal-rendering path), drop out
+    // early when this actor is hidden. ShadowCaster passes false to force
+    // shadow-only invisible meshes to still produce renderables (which will
+    // be marked is_visible=false so renderers skip the actual draw call).
+    if(respect_visibility && !is_visible()) {
+        return;
+    }
 
     auto mesh = find_mesh(detail_level);
     if(!mesh) {
@@ -272,19 +281,16 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
 
     int i = mesh->submesh_count();
 
-    if(!is_visible()) {
-        return;
-    }
-
     auto rp = render_priority();
     const Mat4* mat = &transform->world_space_matrix();
     auto center = transformed_aabb().center();
+    const bool visible = is_visible();
 
     for(auto& submesh: mesh->each_submesh()) {
         Renderable new_renderable;
         new_renderable.final_transformation = mat;
         new_renderable.render_priority = rp;
-        new_renderable.is_visible = true;
+        new_renderable.is_visible = visible;
         new_renderable.arrangement = submesh->arrangement();
         new_renderable.vertex_data = vdata;
         new_renderable.index_data = submesh->index_data.get();

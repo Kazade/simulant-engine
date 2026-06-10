@@ -55,7 +55,8 @@ private:
     void do_generate_renderables(batcher::RenderQueue* render_queue,
                                  const Camera* camera, const Viewport*,
                                  const DetailLevel detail_level, Light** light,
-                                 const std::size_t light_count) override;
+                                 const std::size_t light_count,
+                                 bool respect_visibility = true) override;
 
     void reset();
     void build_mesh(const Camera* camera);

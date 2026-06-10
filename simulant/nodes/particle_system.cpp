@@ -106,10 +106,12 @@ void ParticleSystem::do_generate_renderables(batcher::RenderQueue* render_queue,
                                              const Viewport*,
                                              const DetailLevel detail_level,
                                              Light** lights,
-                                             const std::size_t light_count) {
+                                             const std::size_t light_count,
+                                             bool respect_visibility) {
     _S_UNUSED(detail_level);
 
-    if(!is_visible()) {
+    const bool visible = is_visible();
+    if(respect_visibility && !visible) {
         return;
     }
 
@@ -131,7 +133,7 @@ void ParticleSystem::do_generate_renderables(batcher::RenderQueue* render_queue,
     new_renderable.vertex_range_count = vertex_ranges_.size();
     new_renderable.vertex_ranges = vertex_ranges_.data();
     new_renderable.vertex_data = vertex_data_;
-    new_renderable.is_visible = true;
+    new_renderable.is_visible = visible;
     new_renderable.material = script_->material().get();
     new_renderable.center = transformed_aabb().center();
 

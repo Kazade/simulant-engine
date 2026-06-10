@@ -64,6 +64,12 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
 void GL1RenderQueueVisitor::visit(const Renderable* renderable,
                                   const MaterialPass* pass,
                                   batcher::Iteration iteration) {
+    /* Invisible renderables are still in the queue so consumers like
+     * ShadowCaster can read them back to generate shadow geometry from a
+     * hidden low-poly proxy. Skip the actual draw here. */
+    if(renderable && !renderable->is_visible) {
+        return;
+    }
     /* Modifier-volume passes are only meaningful on renderers that target a
      * non-default polygon list (e.g. the PVR). Skip them here. */
     if(pass->polygon_list_target() != POLYGON_LIST_TARGET_NONE) {

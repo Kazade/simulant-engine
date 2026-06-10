@@ -66,7 +66,8 @@ private:
                                  const Viewport* viewport,
                                  const DetailLevel detail_level,
                                  Light** lights,
-                                 const std::size_t light_count) override;
+                                 const std::size_t light_count,
+                                 bool respect_visibility = true) override;
 
     /* Cached edge adjacency for persistent (key != -1) renderables. The
      * topology is transform- and deformation-invariant, so it's only rebuilt

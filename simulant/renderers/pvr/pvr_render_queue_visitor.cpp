@@ -439,6 +439,12 @@ static inline ClipVertex lerp_vertex(const ClipVertex& v1, const ClipVertex& v2,
 void PVRRenderQueueVisitor::visit(const Renderable* renderable,
                                    const MaterialPass* pass,
                                    batcher::Iteration iteration) {
+    /* Invisible renderables are still in the queue so consumers like
+     * ShadowCaster can read them back to generate shadow geometry from a
+     * hidden low-poly proxy. Skip the actual draw here. */
+    if(renderable && !renderable->is_visible) {
+        return;
+    }
     /* The PVR has no stencil hardware; stencil-enabled passes exist only for
      * the GL stencil-shadow-volume technique. Skip them here. */
     if(pass && pass->is_stencil_test_enabled()) {

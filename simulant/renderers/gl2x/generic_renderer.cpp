@@ -461,6 +461,12 @@ GL2RenderQueueVisitor::GL2RenderQueueVisitor(GenericRenderer* renderer,
 void GL2RenderQueueVisitor::visit(const Renderable* renderable,
                                   const MaterialPass* material_pass,
                                   batcher::Iteration iteration) {
+    /* Invisible renderables are still in the queue so consumers like
+     * ShadowCaster can read them back to generate shadow geometry from a
+     * hidden low-poly proxy. Skip the actual draw here. */
+    if(renderable && !renderable->is_visible) {
+        return;
+    }
     /* Modifier-volume passes are only meaningful on renderers that target a
      * non-default polygon list (e.g. the PVR). Skip them here. */
     if(material_pass->polygon_list_target() != POLYGON_LIST_TARGET_NONE) {
