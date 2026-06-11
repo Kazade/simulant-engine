@@ -25,18 +25,32 @@ enum ShadowReceive {
 };
 
 struct SilhouetteEdge {
-    SilhouetteEdge(const smlt::Vec3& v1, const smlt::Vec3& v2):
-        first(v1), second(v2) {
+    SilhouetteEdge(const smlt::Vec3& v1, const smlt::Vec3& v2,
+                   uint32_t i1 = 0, uint32_t i2 = 0):
+        first(v1), second(v2), first_index(i1), second_index(i2) {
 
     }
 
     smlt::Vec3 first;
     smlt::Vec3 second;
+    /* Canonical (welded) vertex indices in the source VertexData.
+     * Used by MeshSilhouette to walk silhouette edges into ordered closed
+     * loops; consumers like ShadowCaster fan-triangulate the cap from those
+     * loops rather than iterating every lit triangle. */
+    uint32_t first_index = 0;
+    uint32_t second_index = 0;
 
     const smlt::Vec3& operator[](std::size_t i) const {
         return (i == 0) ? first : second;
     }
 };
+
+/* A closed silhouette loop — ordered vertices in mesh-local space, where the
+ * last vertex implicitly connects back to the first. Each loop is a single
+ * "boundary" of the lit region as seen from the light. For most casters there
+ * is one loop; meshes with topological holes (e.g. a torus) can produce more
+ * than one. */
+typedef std::vector<smlt::Vec3> SilhouetteLoop;
 
 /*
  * Builds the edge adjacency for a piece of triangle geometry (vertex + index
@@ -92,13 +106,38 @@ public:
      */
     const std::vector<SilhouetteEdge>& edge_list() const { return edge_list_; }
 
+    /*
+     * Returns the silhouette edges stitched into ordered closed loops.
+     *
+     * For a closed (manifold) caster mesh the lit/unlit boundary is a closed
+     * curve, so the edge list always forms one or more closed loops. ShadowCaster
+     * uses these to fan-triangulate the front / back caps in O(N_silhouette)
+     * instead of iterating every mesh triangle.
+     *
+     * Edges that don't stitch into a closed loop (e.g. degenerate open meshes)
+     * are dropped from this list but remain in edge_list().
+     */
+    const std::vector<SilhouetteLoop>& loops() const { return loops_; }
+
+    /*
+     * True if at least one real (non-phantom) triangle that contributed to the
+     * silhouette was lit. Open meshes hit by light from the back produce
+     * boundary silhouette edges via the missing-neighbour rule but no actual
+     * lit triangles — in that case the caller should emit side quads only,
+     * not caps, to match the open-mesh "no shadow" convention.
+     */
+    bool has_lit_face() const { return has_lit_face_; }
+
 private:
     void calculate_directional_silhouette();
     void calculate_point_silhouette();
+    void compute_loops();
 
     const VertexData* vertices_ = nullptr;
     const std::vector<EdgeInfo>* edges_ = nullptr;
     std::vector<SilhouetteEdge> edge_list_;
+    std::vector<SilhouetteLoop> loops_;
+    bool has_lit_face_ = false;
 
     smlt::Vec3 inverse_mesh_position_;
     smlt::Quaternion inverse_mesh_rotation_;

@@ -243,120 +243,77 @@ void ShadowCaster::generate_shadow_geometry(const Renderable& renderable,
         return v_w + ext_dir * max_t;
     };
 
-    for(const auto& edge : sil_edges) {
-        // Transform edge vertices from local to world space
-        Vec3 v1w = edge.first.transformed_by(world_mat);
-        Vec3 v2w = edge.second.transformed_by(world_mat);
-        Vec3 v1e = extrude_clamped(v1w);
-        Vec3 v2e = extrude_clamped(v2w);
-
-        // Shadow volume side quad (two triangles, CCW winding)
-        auto base = (uint32_t)sv_verts_->count();
-        sv_verts_->position(v1w); sv_verts_->move_next();
-        sv_verts_->position(v2w); sv_verts_->move_next();
-        sv_verts_->position(v2e); sv_verts_->move_next();
-        sv_verts_->position(v1e); sv_verts_->move_next();
-
-        // Triangle 1: v1w, v2w, v2e
-        sv_idx_->index(base);     sv_idx_->index(base + 1); sv_idx_->index(base + 2);
-        // Triangle 2: v1w, v2e, v1e
-        sv_idx_->index(base);     sv_idx_->index(base + 2); sv_idx_->index(base + 3);
-    }
-
     /* ====================================================================
-     * Front and back caps.
+     * Loop-based volume emission.
      *
-     * Z-fail (Carmack's Reverse) stencil shadowing requires the shadow volume
-     * to be a closed manifold. Side quads alone leave it open at both the
-     * silhouette and the extruded end, so when the camera enters the volume
-     * the counting breaks down. Closing the volume with caps fixes that.
+     * For each closed silhouette loop we emit:
+     *   - N world-space loop vertices, then N extruded versions (so each
+     *     loop vertex is written exactly twice instead of once per adjacent
+     *     edge / cap triangle);
+     *   - N side quads from consecutive loop pairs;
+     *   - if has_lit_face, fan-triangulated front + back caps from loop[0].
      *
-     * Front cap = the lit-facing triangles of the caster in world space.
-     * Back cap  = the same triangles extruded along the light direction with
-     *             reversed winding so they face outward from the volume.
+     * Skipping caps for entirely-unlit open meshes matches the legacy
+     * per-triangle behaviour where only triangles facing the light produced
+     * cap geometry.
+     *
+     * Z-fail (Carmack's Reverse) needs the volume to be a closed manifold; the
+     * caps close it whenever there is a real lit region.
      * ==================================================================== */
-    const auto* vdata = renderable.vertex_data;
-    const auto* idata = renderable.index_data;
-    if(!idata) return; // can't iterate triangles without an index buffer
-    const auto& spec = vdata->vertex_specification();
-    if(spec.position_attribute != VERTEX_ATTRIBUTE_3F) return;
+    const bool emit_caps = silhouette.has_lit_face();
 
-    std::size_t index_count = renderable.index_element_count;
-    if(index_count == 0) index_count = idata->count();
-    const std::size_t i_start = renderable.first_index;
-    const std::size_t i_end   = i_start + index_count;
+    for(const auto& loop : silhouette.loops()) {
+        const std::size_t N = loop.size();
+        if(N < 3) continue;
 
-    auto fetch = [&](std::size_t i) -> uint32_t {
-        return idata->at((uint32_t)i);
-    };
-
-    auto emit_caps_for_triangle = [&](uint32_t i0, uint32_t i1, uint32_t i2) {
-        const Vec3* lp0 = vdata->position_at<Vec3>(i0);
-        const Vec3* lp1 = vdata->position_at<Vec3>(i1);
-        const Vec3* lp2 = vdata->position_at<Vec3>(i2);
-        if(!lp0 || !lp1 || !lp2) return;
-
-        Vec3 p0 = lp0->transformed_by(world_mat);
-        Vec3 p1 = lp1->transformed_by(world_mat);
-        Vec3 p2 = lp2->transformed_by(world_mat);
-
-        // World-space face normal (unnormalised — only the sign of the dot
-        // product matters for the lit test, so no sqrt needed).
-        const Vec3 e_a = p1 - p0;
-        const Vec3 e_b = p2 - p0;
-        const Vec3 n = e_a.cross(e_b);
-        if(n.length_squared() < 1e-12f) return; // degenerate
-
-        // Lit test: triangle is lit when its normal points toward the light.
-        //   directional: dot(normal, light->direction()) > 0   (direction()
-        //     already returns the toward-light vector)
-        //   point:       dot(normal, light_pos - p0)   > 0
-        Vec3 to_light = is_point ? (point_light_pos - p0) : light->direction();
-        if(n.dot(to_light) <= 0.0f) return;
-
-        // Front cap — original winding (faces the light).
-        const auto base_f = (uint32_t)sv_verts_->count();
-        sv_verts_->position(p0); sv_verts_->move_next();
-        sv_verts_->position(p1); sv_verts_->move_next();
-        sv_verts_->position(p2); sv_verts_->move_next();
-        sv_idx_->index(base_f);
-        sv_idx_->index(base_f + 1);
-        sv_idx_->index(base_f + 2);
-
-        // Back cap — extruded, REVERSED winding so its outward face points
-        // away from the light (i.e. outward from the volume).
-        const Vec3 e0 = extrude_clamped(p0);
-        const Vec3 e1 = extrude_clamped(p1);
-        const Vec3 e2 = extrude_clamped(p2);
-        const auto base_b = (uint32_t)sv_verts_->count();
-        sv_verts_->position(e0); sv_verts_->move_next();
-        sv_verts_->position(e1); sv_verts_->move_next();
-        sv_verts_->position(e2); sv_verts_->move_next();
-        sv_idx_->index(base_b);
-        sv_idx_->index(base_b + 2);
-        sv_idx_->index(base_b + 1);
-    };
-
-    if(renderable.arrangement == MESH_ARRANGEMENT_TRIANGLES) {
-        for(std::size_t i = i_start; i + 3 <= i_end; i += 3) {
-            emit_caps_for_triangle(fetch(i), fetch(i + 1), fetch(i + 2));
+        // Compute world + extruded positions once per loop vertex. The loop
+        // is typically small (a handful of dozen entries at most) so a local
+        // buffer is fine.
+        std::vector<Vec3> world_pos(N);
+        std::vector<Vec3> extruded(N);
+        for(std::size_t i = 0; i < N; ++i) {
+            world_pos[i] = loop[i].transformed_by(world_mat);
+            extruded[i]  = extrude_clamped(world_pos[i]);
         }
-    } else if(renderable.arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
-        for(std::size_t i = i_start + 2; i < i_end; ++i) {
-            // Even-indexed triangles use the natural strip winding; odd ones
-            // are flipped to keep CCW.
-            if(((i - i_start) & 1) == 0) {
-                emit_caps_for_triangle(fetch(i - 2), fetch(i - 1), fetch(i));
-            } else {
-                emit_caps_for_triangle(fetch(i), fetch(i - 1), fetch(i - 2));
-            }
+
+        const auto base_w = (uint32_t)sv_verts_->count();
+        for(std::size_t i = 0; i < N; ++i) {
+            sv_verts_->position(world_pos[i]); sv_verts_->move_next();
         }
-    } else if(renderable.arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) {
-        if(index_count >= 3) {
-            const uint32_t hub = fetch(i_start);
-            for(std::size_t i = i_start + 2; i < i_end; ++i) {
-                emit_caps_for_triangle(hub, fetch(i - 1), fetch(i));
-            }
+        const auto base_e = base_w + (uint32_t)N;
+        for(std::size_t i = 0; i < N; ++i) {
+            sv_verts_->position(extruded[i]); sv_verts_->move_next();
+        }
+
+        // Side quads. With the silhouette convention (lit face on the right
+        // of the stored edge direction), (v1w, v2w, v2e) and (v1w, v2e, v1e)
+        // wind outward.
+        for(std::size_t i = 0; i < N; ++i) {
+            const std::size_t j = (i + 1) % N;
+            const uint32_t v1w = base_w + (uint32_t)i;
+            const uint32_t v2w = base_w + (uint32_t)j;
+            const uint32_t v2e = base_e + (uint32_t)j;
+            const uint32_t v1e = base_e + (uint32_t)i;
+            sv_idx_->index(v1w); sv_idx_->index(v2w); sv_idx_->index(v2e);
+            sv_idx_->index(v1w); sv_idx_->index(v2e); sv_idx_->index(v1e);
+        }
+
+        if(!emit_caps) continue;
+
+        // Front cap fan — REVERSED winding so the cap's outward normal faces
+        // the light. The natural fan winding produces a normal aligned with
+        // the away-from-light direction under our silhouette convention.
+        for(std::size_t i = 1; i + 1 < N; ++i) {
+            sv_idx_->index(base_w);
+            sv_idx_->index(base_w + (uint32_t)(i + 1));
+            sv_idx_->index(base_w + (uint32_t)i);
+        }
+        // Back cap fan — natural winding so the cap's outward normal faces
+        // away from the light.
+        for(std::size_t i = 1; i + 1 < N; ++i) {
+            sv_idx_->index(base_e);
+            sv_idx_->index(base_e + (uint32_t)i);
+            sv_idx_->index(base_e + (uint32_t)(i + 1));
         }
     }
 }

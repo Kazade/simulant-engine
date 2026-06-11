@@ -49,9 +49,9 @@ private:
 
 public:
     // Light facing the rectangle's front (+Z normal). Both rectangle triangles
-    // are lit, so we expect side quads + a 2-triangle front cap + a 2-triangle
-    // back cap. The rectangle has 4 boundary silhouette edges, each emitting a
-    // quad of 4 verts and 6 indices.
+    // are lit, so we expect side quads + a 2-triangle front cap fan + a
+    // 2-triangle back cap fan around the rectangle's 4-vertex silhouette loop.
+    // Vertices are shared between sides and caps: 4 world + 4 extruded = 8.
     void test_directional_lit_produces_sides_and_caps() {
         auto caster = scene->create_child<ShadowCaster>();
         auto g = make_rect();
@@ -70,11 +70,12 @@ public:
         const auto verts_added = caster->_shadow_volume_vertex_data()->count() - verts_before;
         const auto idx_added   = caster->_shadow_volume_index_data()->count() - idx_before;
 
-        // 4 silhouette edges  → 4 side quads (4 verts, 6 indices each) = 16 verts, 24 indices
-        // 2 lit triangles     → front cap (3 verts, 3 indices each)    =  6 verts,  6 indices
-        // 2 lit triangles     → back cap  (3 verts, 3 indices each)    =  6 verts,  6 indices
-        // Totals                                                        = 28 verts, 36 indices
-        assert_equal(28u, verts_added);
+        // 1 silhouette loop of 4 verts → 8 shared verts (4 world + 4 extruded).
+        // 4 side quads × 6 indices                                  = 24 indices.
+        // Front cap fan (N-2 = 2 triangles × 3 indices)             =  6 indices.
+        // Back  cap fan (N-2 = 2 triangles × 3 indices)             =  6 indices.
+        // Totals                                                    =  8 verts, 36 indices.
+        assert_equal(8u, verts_added);
         assert_equal(36u, idx_added);
     }
 
@@ -99,8 +100,8 @@ public:
         const auto verts_added = caster->_shadow_volume_vertex_data()->count() - verts_before;
         const auto idx_added   = caster->_shadow_volume_index_data()->count() - idx_before;
 
-        // 4 side quads only; no caps.
-        assert_equal(16u, verts_added);
+        // 4 side quads only; no caps. Loop is 4 shared verts (world+extruded).
+        assert_equal(8u, verts_added);
         assert_equal(24u, idx_added);
     }
 
@@ -123,7 +124,7 @@ public:
         const auto verts_added = caster->_shadow_volume_vertex_data()->count() - verts_before;
         const auto idx_added   = caster->_shadow_volume_index_data()->count() - idx_before;
 
-        assert_equal(28u, verts_added);
+        assert_equal(8u, verts_added);
         assert_equal(36u, idx_added);
     }
 

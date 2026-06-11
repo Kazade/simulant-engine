@@ -195,6 +195,8 @@ MeshSilhouette::MeshSilhouette(const VertexData* vertices,
         calculate_point_silhouette();
     }
     /* Spotlights are not yet supported */
+
+    compute_loops();
 }
 
 void MeshSilhouette::calculate_directional_silhouette() {
@@ -211,15 +213,22 @@ void MeshSilhouette::calculate_directional_silhouette() {
         // is part of the silhouette)
         auto d2 = (edge.triangle_count == 2) ? edge.normals[1].dot(light_direction) : -d1;
 
+        // d < 0 means the face normal opposes the away-from-light direction —
+        // i.e. it faces the light. Track whether ANY real triangle is lit, so
+        // ShadowCaster can suppress cap emission for entirely-unlit open meshes
+        // (whose silhouette comes only from phantom neighbours).
+        if(d1 < 0.0f) has_lit_face_ = true;
+        if(edge.triangle_count == 2 && d2 < 0.0f) has_lit_face_ = true;
+
         auto v1 = vertices_->position_at<smlt::Vec3>(edge.indexes[0]);
         auto v2 = vertices_->position_at<smlt::Vec3>(edge.indexes[1]);
 
         // If one normal is facing the light and one isn't then
         // store the edge as a silhouette
         if(d1 >= 0 && d2 < 0) {
-            edge_list_.push_back(SilhouetteEdge(*v1, *v2));
+            edge_list_.push_back(SilhouetteEdge(*v1, *v2, edge.indexes[0], edge.indexes[1]));
         } else if(d1 < 0 && d2 >= 0) {
-            edge_list_.push_back(SilhouetteEdge(*v2, *v1));
+            edge_list_.push_back(SilhouetteEdge(*v2, *v1, edge.indexes[1], edge.indexes[0]));
         }
     }
 }
@@ -253,10 +262,92 @@ void MeshSilhouette::calculate_point_silhouette() {
         auto d1 = edge.normals[0].dot(light_direction);
         auto d2 = (edge.triangle_count == 2) ? edge.normals[1].dot(light_direction) : -d1;
 
+        // For point lights light_direction points TOWARDS the light, so d > 0
+        // means the face is lit. Track whether any real triangle is lit so the
+        // caller can decide whether to emit caps.
+        if(d1 > eps) has_lit_face_ = true;
+        if(edge.triangle_count == 2 && d2 > eps) has_lit_face_ = true;
+
         if(d1 > eps && d2 <= 0) {
-            edge_list_.push_back(SilhouetteEdge(*v1, *v2));
+            edge_list_.push_back(SilhouetteEdge(*v1, *v2, edge.indexes[0], edge.indexes[1]));
         } else if(d1 <= 0 && d2 > eps) {
-            edge_list_.push_back(SilhouetteEdge(*v2, *v1));
+            edge_list_.push_back(SilhouetteEdge(*v2, *v1, edge.indexes[1], edge.indexes[0]));
+        }
+    }
+}
+
+void MeshSilhouette::compute_loops() {
+    /* Walk the silhouette edges into ordered closed loops. Each canonical
+     * vertex in a manifold silhouette appears in exactly two silhouette edges,
+     * so the walk is O(N_edges) using a vertex-to-edges index. Edges that
+     * don't stitch into a closed cycle are skipped. */
+    if(edge_list_.empty()) {
+        return;
+    }
+
+    std::unordered_map<uint32_t, std::vector<uint32_t>> vtx_to_edges;
+    vtx_to_edges.reserve(edge_list_.size() * 2);
+    for(uint32_t i = 0; i < (uint32_t)edge_list_.size(); ++i) {
+        vtx_to_edges[edge_list_[i].first_index].push_back(i);
+        vtx_to_edges[edge_list_[i].second_index].push_back(i);
+    }
+
+    std::vector<bool> visited(edge_list_.size(), false);
+
+    for(uint32_t start = 0; start < (uint32_t)edge_list_.size(); ++start) {
+        if(visited[start]) continue;
+
+        SilhouetteLoop loop;
+        const uint32_t start_vtx = edge_list_[start].first_index;
+        uint32_t prev_vtx = start_vtx;
+        uint32_t cur_vtx  = edge_list_[start].second_index;
+        loop.push_back(edge_list_[start].first);
+        loop.push_back(edge_list_[start].second);
+        visited[start] = true;
+
+        bool closed = false;
+        while(true) {
+            if(cur_vtx == start_vtx) {
+                // The last pushed vertex was a duplicate of the loop's start;
+                // drop it so the loop's last element isn't a repeat.
+                loop.pop_back();
+                closed = true;
+                break;
+            }
+
+            auto it = vtx_to_edges.find(cur_vtx);
+            if(it == vtx_to_edges.end()) break;
+
+            uint32_t next_edge = UINT32_MAX;
+            uint32_t next_vtx  = UINT32_MAX;
+            Vec3     next_pos;
+            for(uint32_t e: it->second) {
+                if(visited[e]) continue;
+                const auto& ed = edge_list_[e];
+                if(ed.first_index == cur_vtx && ed.second_index != prev_vtx) {
+                    next_edge = e;
+                    next_vtx  = ed.second_index;
+                    next_pos  = ed.second;
+                    break;
+                }
+                if(ed.second_index == cur_vtx && ed.first_index != prev_vtx) {
+                    next_edge = e;
+                    next_vtx  = ed.first_index;
+                    next_pos  = ed.first;
+                    break;
+                }
+            }
+
+            if(next_edge == UINT32_MAX) break; // dead end (open chain)
+
+            visited[next_edge] = true;
+            prev_vtx = cur_vtx;
+            cur_vtx  = next_vtx;
+            loop.push_back(next_pos);
+        }
+
+        if(closed && loop.size() >= 3) {
+            loops_.push_back(std::move(loop));
         }
     }
 }
