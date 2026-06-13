@@ -341,11 +341,15 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
         state.enabled = true;
 
         auto light = lights[i];
-        auto pos = camera_->view_matrix() * light->transform->position();
-        state.position[0] = pos.x;
-        state.position[1] = pos.y;
-        state.position[2] = pos.z;
-        state.position[3] = (light->light_type() == smlt::LIGHT_TYPE_DIRECTIONAL) ? 0.0f : 1.0f;
+        const float w = (light->light_type() == smlt::LIGHT_TYPE_DIRECTIONAL) ? 0.0f : 1.0f;
+        auto lp = light->transform->position();
+        /* Use w=1 for point lights so the view translation is included;
+         * w=0 for directional lights treats it as a direction vector. */
+        auto pos4 = camera_->view_matrix() * smlt::Vec4(lp.x, lp.y, lp.z, w);
+        state.position[0] = pos4.x;
+        state.position[1] = pos4.y;
+        state.position[2] = pos4.z;
+        state.position[3] = w;
 
         state.color[0] = light->color().r;
         state.color[1] = light->color().g;
@@ -354,18 +358,21 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
         state.intensity = light->intensity();
         state.range = light->range();
 
-        /* Pre-normalised toward-light direction for directional lights */
+        /* Pre-normalised toward-light direction for directional lights.
+         * position already stores -pointing_dir (set_direction negates on write),
+         * so pos4.xyz = view_rot * (-pointing_dir) = toward_light in eye space.
+         * No further negation needed. */
         if(state.position[3] < 0.5f) {
 #ifdef __DREAMCAST__
             shz_vec3_t d = shz_vec3_normalize_safe(
-                shz_vec3_init(-pos.x, -pos.y, -pos.z));
+                shz_vec3_init(pos4.x, pos4.y, pos4.z));
             state.dir[0] = d.x; state.dir[1] = d.y; state.dir[2] = d.z;
 #else
-            float len = std::sqrt(pos.x*pos.x + pos.y*pos.y + pos.z*pos.z);
+            float len = std::sqrt(pos4.x*pos4.x + pos4.y*pos4.y + pos4.z*pos4.z);
             if(len > 1e-8f) {
-                state.dir[0] = -pos.x/len;
-                state.dir[1] = -pos.y/len;
-                state.dir[2] = -pos.z/len;
+                state.dir[0] = pos4.x/len;
+                state.dir[1] = pos4.y/len;
+                state.dir[2] = pos4.z/len;
             }
 #endif
         }
