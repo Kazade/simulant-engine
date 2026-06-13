@@ -59,8 +59,12 @@ VirtualFileSystem::VirtualFileSystem() {
 
 #ifdef __DREAMCAST__
     // On the Dreamcast, always add the CD and pc folder as a search path
-    add_search_path("/cd");
+    // We add PC first so that you can override files on an inserted disc.
+    // but also because fopen() on /cd when there is not cd inserted will
+    // cause a hang on Nitrocast (not sure if the same is true on hardware... I dunno
+    // how you can test that)
     add_search_path("/pc");
+    add_search_path("/cd");
 #endif
 
 #ifdef __PSP__
