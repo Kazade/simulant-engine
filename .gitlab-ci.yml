@@ -645,6 +645,10 @@ build:dreamcast-sh4-gcc:
       - ${TARGET}/release/simulant/
 
 test:dreamcast-sh4-gcc:
+  # Nitrocast is failing on stack unwinding and until that is fixed
+  # (whether it's KOS, toolchain, or Nitrocast) we need to allow
+  # failure
+  allow_failure: true
   stage: test
   image: fedora:44
   needs: ["build:dreamcast-sh4-gcc"]
