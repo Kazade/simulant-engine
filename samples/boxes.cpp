@@ -73,7 +73,7 @@ public:
         // l->set_intensity(1);
 
         auto l = create_child<smlt::DirectionalLight>();
-        l->set_direction(Vec3(0, -1, 0.5).normalized());
+        l->set_direction(Vec3(0.2, -0.5, 0.75).normalized());
         l->set_intensity(1);
     }
 

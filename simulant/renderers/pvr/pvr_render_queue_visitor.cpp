@@ -569,8 +569,19 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
          * clipping may produce a variable number of output triangles per
          * input triangle (0, 1, or 2), so we don't know which one is "last"
          * until we run out of input — emit each pending triangle as OTHER
-         * once we see another after it, and the final pending triangle as
-         * INCLUDE_LAST when the renderable ends. */
+         * once we see another after it.
+         *
+         * The actual InsideLastPolygon OP is a SEPARATE synthetic triangle
+         * appended after staging (see the closure block below). Tagging one
+         * of the volume's own triangles wouldn't work: on the PVR the
+         * InsideLast OP is only registered in its bbox tiles, but the
+         * volume's parity is set by every side quad / cap triangle, so any
+         * tile reached by the volume but missed by the chosen closer would
+         * leak orphan STENCIL_VOLPAR into AREA1 (and contaminate the next
+         * volume in the list). */
+        float sb_min_x = FLT_MAX, sb_min_y = FLT_MAX;
+        float sb_max_x = -FLT_MAX, sb_max_y = -FLT_MAX;
+
         bool has_prev = false;
         bool emitted_other_hdr = false;
         alignas(32) pvr_modifier_vol_t prev_vol;
@@ -582,6 +593,21 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             to_screen(b, vol.bx, vol.by, vol.bz);
             to_screen(c, vol.cx, vol.cy, vol.cz);
             vol.d1 = vol.d2 = vol.d3 = vol.d4 = vol.d5 = vol.d6 = 0;
+
+            /* Expand the screen-space bbox covering every tile the synthetic
+             * closer must reach. */
+            if(vol.ax < sb_min_x) sb_min_x = vol.ax;
+            if(vol.bx < sb_min_x) sb_min_x = vol.bx;
+            if(vol.cx < sb_min_x) sb_min_x = vol.cx;
+            if(vol.ax > sb_max_x) sb_max_x = vol.ax;
+            if(vol.bx > sb_max_x) sb_max_x = vol.bx;
+            if(vol.cx > sb_max_x) sb_max_x = vol.cx;
+            if(vol.ay < sb_min_y) sb_min_y = vol.ay;
+            if(vol.by < sb_min_y) sb_min_y = vol.by;
+            if(vol.cy < sb_min_y) sb_min_y = vol.cy;
+            if(vol.ay > sb_max_y) sb_max_y = vol.ay;
+            if(vol.by > sb_max_y) sb_max_y = vol.by;
+            if(vol.cy > sb_max_y) sb_max_y = vol.cy;
 
             if(has_prev) {
                 /* The previously-staged triangle is now known not to be last:
@@ -657,15 +683,47 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             }
         }
 
-        /* Close the volume: the last staged triangle gets the INCLUDE_LAST
-         * header which both contributes its parity flips and triggers the
-         * hardware's combine_modifier_volume step. If clipping discarded
-         * every triangle we emit nothing — the volume is empty. */
+        /* Close the volume.
+         *
+         * Flush the still-pending staged triangle as OTHER (it stayed in
+         * prev_vol so we could potentially have used it as the closer; we
+         * deliberately don't, see the bbox comment above). Then append a
+         * synthetic closure triangle whose 3 vertices span the bbox of every
+         * staged triangle, so its OP is registered in every tile the volume
+         * touches and combine_modifier_volume fires there.
+         *
+         * The closer's z is fixed at a tiny positive value, well below KOS's
+         * default ISP_BACKGND_D (0.0001f) and any opaque polygon's stored
+         * 1/W. rasterize_modifier_triangle only flips STENCIL_VOLPAR where
+         * z >= depth_buf, so this triangle never alters parity — it exists
+         * purely to drive the per-tile fold. If clipping discarded every
+         * input triangle (has_prev == false), the volume is empty and we
+         * emit nothing. */
         if(has_prev) {
+            if(!emitted_other_hdr) {
+                append_hdr(mod_hdr_other_);
+                emitted_other_hdr = true;
+            }
+            {
+                std::size_t pos = buf.size();
+                buf.resize(pos + sizeof(pvr_modifier_vol_t));
+                shz_memcpy32(&buf[pos], &prev_vol, sizeof(pvr_modifier_vol_t));
+            }
+
+            alignas(32) pvr_modifier_vol_t closer;
+            closer.flags = PVR_CMD_VERTEX_EOL;
+            const float close_z = 1.0e-10f;
+            closer.ax = sb_min_x; closer.ay = sb_min_y; closer.az = close_z;
+            closer.bx = sb_max_x; closer.by = sb_min_y; closer.bz = close_z;
+            closer.cx = sb_min_x; closer.cy = sb_max_y; closer.cz = close_z;
+            closer.d1 = closer.d2 = closer.d3 = closer.d4 = closer.d5 = closer.d6 = 0;
+
             append_hdr(mod_hdr_include_);
-            std::size_t pos = buf.size();
-            buf.resize(pos + sizeof(pvr_modifier_vol_t));
-            shz_memcpy32(&buf[pos], &prev_vol, sizeof(pvr_modifier_vol_t));
+            {
+                std::size_t pos = buf.size();
+                buf.resize(pos + sizeof(pvr_modifier_vol_t));
+                shz_memcpy32(&buf[pos], &closer, sizeof(pvr_modifier_vol_t));
+            }
         }
 
         return;
