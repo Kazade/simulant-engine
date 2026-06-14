@@ -45,7 +45,16 @@ private:
 
 #ifdef __DREAMCAST__
     pvr_poly_hdr_t poly_hdr_; /* Compiled polygon header — the current render state */
+    /* Compiled modifier-volume headers — used when the active material pass
+     * targets the modifier list. The two variants distinguish "more polys
+     * to follow" from the closing poly of a volume. */
+    pvr_mod_hdr_t mod_hdr_other_;
+    pvr_mod_hdr_t mod_hdr_include_;
 #endif
+
+    /* Set in change_material_pass when the current pass targets the modifier
+     * list, so do_visit can branch to the modifier-volume submission path. */
+    bool emitting_modifier_volume_ = false;
 
     VertexLightState lights_[MAX_LIGHTS];
     float ambient_[3] = {0.2f, 0.2f, 0.2f};

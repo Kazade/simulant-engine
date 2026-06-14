@@ -645,6 +645,10 @@ build:dreamcast-sh4-gcc:
       - ${TARGET}/release/simulant/
 
 test:dreamcast-sh4-gcc:
+  # Nitrocast is failing on stack unwinding and until that is fixed
+  # (whether it's KOS, toolchain, or Nitrocast) we need to allow
+  # failure
+  allow_failure: true
   stage: test
   image: fedora:44
   needs: ["build:dreamcast-sh4-gcc"]
@@ -660,7 +664,7 @@ test:dreamcast-sh4-gcc:
   script:
     - cd ${TARGET}/release
     - ls tests
-    - nitrocast --audio=null -r 32 -H -b -u -C ${TARGET}/release -e tests/simulant_tests.elf
+    - nitrocast --audio=null -r 32 -H -b -u -C . -e tests/simulant_tests.elf
   artifacts:
     when: always
     paths:

@@ -38,6 +38,7 @@
 #include "../nodes/physics/kinematic_body.h"
 #include "../nodes/physics/static_body.h"
 #include "../nodes/prefab_instance.h"
+#include "../nodes/shadow_caster.h"
 #include "../nodes/skies/skybox.h"
 #include "../nodes/smooth_follow.h"
 #include "../nodes/spherical_billboard.h"
@@ -102,6 +103,7 @@ void Scene::register_builtin_nodes() {
     register_stage_node<SmoothFollow>();
     register_stage_node<FlyController>();
     register_stage_node<PrefabInstance>();
+    register_stage_node<ShadowCaster>();
     register_stage_node<AnimationController>();
 
     register_stage_node<StaticBody>();

@@ -33,7 +33,7 @@ public:
     }
     void do_generate_renderables(batcher::RenderQueue*, const Camera*,
                                  const Viewport*, const DetailLevel, Light**,
-                                 const std::size_t) override {}
+                                 const std::size_t, bool) override {}
     const AABB& aabb() const {
         static AABB aabb;
         return aabb;

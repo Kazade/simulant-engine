@@ -59,8 +59,12 @@ VirtualFileSystem::VirtualFileSystem() {
 
 #ifdef __DREAMCAST__
     // On the Dreamcast, always add the CD and pc folder as a search path
-    add_search_path("/cd");
+    // We add PC first so that you can override files on an inserted disc.
+    // but also because fopen() on /cd when there is not cd inserted will
+    // cause a hang on Nitrocast (not sure if the same is true on hardware... I dunno
+    // how you can test that)
     add_search_path("/pc");
+    add_search_path("/cd");
 #endif
 
 #ifdef __PSP__
@@ -140,8 +144,6 @@ bool VirtualFileSystem::add_search_path(const Path& path) {
         kfs::path::norm_path(ANDROID_ASSET_DIR_PREFIX_SLASH + new_path.str());
 #endif
 
-    S_INFO("Adding path: {0}", new_path);
-
     if(path.str().empty() || path.str() == "/") {
         return false;
     }
@@ -150,6 +152,8 @@ bool VirtualFileSystem::add_search_path(const Path& path) {
        resource_path_.end()) {
         return false;
     }
+
+    S_INFO("Adding path: {0}", new_path);
 
     resource_path_.push_back(new_path);
     clear_location_cache();
@@ -285,7 +289,11 @@ optional<Path> VirtualFileSystem::locate_file(const Path& filename,
 #endif
 
             S_DEBUG("Trying path: {0}", full_path);
-            if(kfs::path::exists(full_path)) {
+
+            FILE* f = fopen(full_path.c_str(), "r");
+            if(f) {
+                fclose(f);
+
                 S_INFO("Located file: {0}", full_path);
 
                 if(use_cache) {

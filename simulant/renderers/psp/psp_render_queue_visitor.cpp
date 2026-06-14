@@ -38,6 +38,18 @@ void PSPRenderQueueVisitor::start_traversal(const batcher::RenderQueue &queue,
 
 void PSPRenderQueueVisitor::visit(const Renderable* renderable, const MaterialPass* pass, batcher::Iteration iteration) {
     S_VERBOSE("visit");
+    /* Invisible renderables are still in the queue so consumers like
+     * ShadowCaster can read them back to generate shadow geometry from a
+     * hidden low-poly proxy. Skip the actual draw here. */
+    if(renderable && !renderable->is_visible) {
+        return;
+    }
+    /* Modifier-volume passes (e.g. the PVR cheap-shadow material on
+     * ShadowCaster) are only meaningful for renderers with a modifier list.
+     * The PSP uses stencil shadows instead, so skip these passes here. */
+    if(pass && pass->polygon_list_target() != POLYGON_LIST_TARGET_NONE) {
+        return;
+    }
     do_visit(renderable, pass, iteration);
 }
 
@@ -176,6 +188,60 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
         renderer_->texture_manager_.bind_texture(id);
     } else {
         sceGuDisable(GU_TEXTURE_2D);
+    }
+
+    /* Color write mask. sceGuPixelMask uses inverted semantics: bits that
+     * are ON in the mask are *not* written. For "color writes off, leave the
+     * alpha/stencil channel writable", mask the RGB bits (0x00FFFFFF). */
+    if(next->is_color_write_enabled()) {
+        sceGuPixelMask(0x00000000);
+    } else {
+        sceGuPixelMask(0x00FFFFFF);
+    }
+
+    /* Stencil test. The PSP draw buffer is GU_PSM_8888 so we have a real
+     * 8-bit stencil sharing the alpha channel of the framebuffer. */
+    if(next->is_stencil_test_enabled()) {
+        sceGuEnable(GU_STENCIL_TEST);
+
+        static auto to_gu_func = [](StencilFunc f) -> int {
+            switch(f) {
+                case STENCIL_FUNC_NEVER:     return GU_NEVER;
+                case STENCIL_FUNC_LESS:      return GU_LESS;
+                case STENCIL_FUNC_LEQUAL:    return GU_LEQUAL;
+                case STENCIL_FUNC_GREATER:   return GU_GREATER;
+                case STENCIL_FUNC_GEQUAL:    return GU_GEQUAL;
+                case STENCIL_FUNC_EQUAL:     return GU_EQUAL;
+                case STENCIL_FUNC_NOT_EQUAL: return GU_NOTEQUAL;
+                case STENCIL_FUNC_ALWAYS:
+                default:                     return GU_ALWAYS;
+            }
+        };
+
+        /* The PSP has no _WRAP variant of INCR/DECR; behaviour wraps
+         * implicitly at the framebuffer's alpha/stencil bit-depth (8 bits
+         * here), which is fine for the shadow-volume incr/decr pair. */
+        static auto to_gu_op = [](StencilOp o) -> int {
+            switch(o) {
+                case STENCIL_OP_ZERO:    return GU_ZERO;
+                case STENCIL_OP_REPLACE: return GU_REPLACE;
+                case STENCIL_OP_INVERT:  return GU_INVERT;
+                case STENCIL_OP_INCR:
+                case STENCIL_OP_INCR_WRAP: return GU_INCR;
+                case STENCIL_OP_DECR:
+                case STENCIL_OP_DECR_WRAP: return GU_DECR;
+                case STENCIL_OP_KEEP:
+                default:                   return GU_KEEP;
+            }
+        };
+
+        sceGuStencilFunc(to_gu_func(next->stencil_func()),
+                         next->stencil_ref(), next->stencil_mask());
+        sceGuStencilOp(to_gu_op(next->stencil_fail_op()),
+                       to_gu_op(next->stencil_depth_fail_op()),
+                       to_gu_op(next->stencil_pass_op()));
+    } else {
+        sceGuDisable(GU_STENCIL_TEST);
     }
 }
 

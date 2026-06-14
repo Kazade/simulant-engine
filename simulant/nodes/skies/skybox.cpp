@@ -13,7 +13,10 @@
 namespace smlt {
 
 Skybox::Skybox(Scene* owner) :
-    ContainerNode(owner, Meta::node_type) {}
+    ContainerNode(owner, Meta::node_type) {
+
+        set_shadow_receive(smlt::SHADOW_RECEIVE_NEVER);
+    }
 
 const AABB& Skybox::aabb() const {
     return actor_->aabb();

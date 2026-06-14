@@ -53,8 +53,10 @@ void PVRRenderer::init_context() {
     /* PVR should already be initialized by the KOS window init
      * via pvr_init(). If not, we do it here. */
     pvr_init_params_t params = {
-        /* Bin sizes for: OP, OP_MOD, TR, TR_MOD, PT */
-        { PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
+        /* Bin sizes for: OP, OP_MOD, TR, TR_MOD, PT.
+         * OP_MOD is bumped from BINSIZE_0 so cheap-shadow modifier volumes
+         * (submitted by ShadowCaster) have somewhere to land. */
+        { PVR_BINSIZE_32, PVR_BINSIZE_32, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
         512 * 1024, /* Vertex buffer size */
         1,          /* DMA enabled */
         0,          /* FSAA */
@@ -69,6 +71,11 @@ void PVRRenderer::init_context() {
 
     /* Set default background color to black */
     pvr_set_bg_color(0.0f, 0.0f, 0.0f);
+
+    /* Enable cheap-shadow mode. Modifier-enabled receiver polygons whose
+     * pixels fall inside a submitted modifier volume are darkened by this
+     * scale factor (smaller = darker shadow). */
+    pvr_set_shadow_scale(true, 0.5f);
 
     S_VERBOSE("PVR direct rendering context initialized");
     S_VERBOSE("PVR VRAM available: {0} bytes", pvr_mem_available());
@@ -174,7 +181,7 @@ void PVRRenderer::on_post_render() {
         pvr_list_finish();
         prev_list_type_ = (pvr_list_type_t) -1;
 
-        for(auto list_type: { PVR_LIST_PT_POLY, PVR_LIST_TR_POLY }) {
+        for(auto list_type: { PVR_LIST_OP_MOD, PVR_LIST_PT_POLY, PVR_LIST_TR_POLY }) {
             auto& buf = buffer(list_type);
             auto& b = buf.buffers[current_buffer_index_];
             auto count = b.size();

@@ -295,10 +295,11 @@ std::size_t StageNode::generate_renderables(batcher::RenderQueue* render_queue,
                                             const smlt::Viewport* viewport,
                                             const DetailLevel detail_level,
                                             Light** lights,
-                                            const std::size_t light_count) {
+                                            const std::size_t light_count,
+                                            bool respect_visibility) {
     auto before = render_queue->renderable_count();
     do_generate_renderables(render_queue, camera, viewport, detail_level,
-                            lights, light_count);
+                            lights, light_count, respect_visibility);
     return render_queue->renderable_count() - before;
 }
 

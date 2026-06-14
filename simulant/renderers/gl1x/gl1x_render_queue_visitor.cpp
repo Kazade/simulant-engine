@@ -64,6 +64,17 @@ void GL1RenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
 void GL1RenderQueueVisitor::visit(const Renderable* renderable,
                                   const MaterialPass* pass,
                                   batcher::Iteration iteration) {
+    /* Invisible renderables are still in the queue so consumers like
+     * ShadowCaster can read them back to generate shadow geometry from a
+     * hidden low-poly proxy. Skip the actual draw here. */
+    if(renderable && !renderable->is_visible) {
+        return;
+    }
+    /* Modifier-volume passes are only meaningful on renderers that target a
+     * non-default polygon list (e.g. the PVR). Skip them here. */
+    if(pass->polygon_list_target() != POLYGON_LIST_TARGET_NONE) {
+        return;
+    }
     do_visit(renderable, pass, iteration);
 }
 
@@ -293,6 +304,59 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             GLCheck(glFogfv, GL_FOG_COLOR, &next->fog_color().r);
         } break;
     }
+
+    /* Color write mask */
+    if(next->is_color_write_enabled()) {
+        GLCheck(glColorMask, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    } else {
+        GLCheck(glColorMask, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    }
+
+#if !defined(__PSP__) && !defined(__DREAMCAST__)
+    /* Stencil test — not supported on PSP, and gldc on the Dreamcast doesn't
+     * expose the stencil constants. The PVR has its own (modifier-volume)
+     * shadow path, so stencil-shadow passes are skipped at the visitor level
+     * on the Dreamcast. */
+    if(next->is_stencil_test_enabled()) {
+        GLCheck(glEnable, GL_STENCIL_TEST);
+
+        static auto to_gl_func = [](StencilFunc f) -> GLenum {
+            switch(f) {
+                case STENCIL_FUNC_NEVER:     return GL_NEVER;
+                case STENCIL_FUNC_LESS:      return GL_LESS;
+                case STENCIL_FUNC_LEQUAL:    return GL_LEQUAL;
+                case STENCIL_FUNC_GREATER:   return GL_GREATER;
+                case STENCIL_FUNC_GEQUAL:    return GL_GEQUAL;
+                case STENCIL_FUNC_EQUAL:     return GL_EQUAL;
+                case STENCIL_FUNC_NOT_EQUAL: return GL_NOTEQUAL;
+                case STENCIL_FUNC_ALWAYS:
+                default:                     return GL_ALWAYS;
+            }
+        };
+        static auto to_gl_op = [](StencilOp o) -> GLenum {
+            switch(o) {
+                case STENCIL_OP_ZERO:      return GL_ZERO;
+                case STENCIL_OP_REPLACE:   return GL_REPLACE;
+                case STENCIL_OP_INCR:      return GL_INCR;
+                case STENCIL_OP_INCR_WRAP: return GL_INCR_WRAP;
+                case STENCIL_OP_DECR:      return GL_DECR;
+                case STENCIL_OP_DECR_WRAP: return GL_DECR_WRAP;
+                case STENCIL_OP_INVERT:    return GL_INVERT;
+                case STENCIL_OP_KEEP:
+                default:                   return GL_KEEP;
+            }
+        };
+
+        GLCheck(glStencilFunc, to_gl_func(next->stencil_func()),
+                next->stencil_ref(), (GLuint)next->stencil_mask());
+        GLCheck(glStencilOp,
+                to_gl_op(next->stencil_fail_op()),
+                to_gl_op(next->stencil_depth_fail_op()),
+                to_gl_op(next->stencil_pass_op()));
+    } else {
+        GLCheck(glDisable, GL_STENCIL_TEST);
+    }
+#endif
 }
 
 void GL1RenderQueueVisitor::apply_lights(const LightPtr* lights,

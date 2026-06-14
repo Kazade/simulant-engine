@@ -188,6 +188,15 @@ public:
     bool is_depth_write_enabled() const;
     bool is_depth_test_enabled() const;
     bool is_lighting_enabled() const;
+    bool is_stencil_test_enabled() const;
+    bool is_color_write_enabled() const;
+    StencilFunc stencil_func() const;
+    int32_t stencil_ref() const;
+    int32_t stencil_mask() const;
+    StencilOp stencil_fail_op() const;
+    StencilOp stencil_depth_fail_op() const;
+    StencilOp stencil_pass_op() const;
+    PolygonListTarget polygon_list_target() const;
 
     void set_base_color(const Color& v);
     void set_fog_color(const Color& v);
@@ -208,6 +217,11 @@ public:
     void set_depth_write_enabled(bool v);
     void set_depth_test_enabled(bool v);
     void set_lighting_enabled(bool v);
+    void set_stencil_test_enabled(bool v);
+    void set_color_write_enabled(bool v);
+    void set_stencil_func(StencilFunc func, int32_t ref = 0, int32_t mask = 0xFF);
+    void set_stencil_ops(StencilOp fail, StencilOp depth_fail, StencilOp pass);
+    void set_polygon_list_target(PolygonListTarget v);
 
 private:
     MaterialPass(Material* material, uint8_t pass_number);
@@ -807,6 +821,52 @@ inline void MaterialPass::set_depth_test_enabled(bool v) {
 }
 inline void MaterialPass::set_lighting_enabled(bool v) {
     pass_props_.lighting_enabled = v; override_mask_ |= CORE_MASK_LIGHTING;
+}
+inline bool MaterialPass::is_stencil_test_enabled() const {
+    return pass_props_.stencil_test_enabled;
+}
+inline bool MaterialPass::is_color_write_enabled() const {
+    return pass_props_.color_write_enabled;
+}
+inline StencilFunc MaterialPass::stencil_func() const {
+    return (StencilFunc)pass_props_.stencil_func;
+}
+inline int32_t MaterialPass::stencil_ref() const {
+    return pass_props_.stencil_ref;
+}
+inline int32_t MaterialPass::stencil_mask() const {
+    return pass_props_.stencil_mask;
+}
+inline StencilOp MaterialPass::stencil_fail_op() const {
+    return (StencilOp)pass_props_.stencil_fail;
+}
+inline StencilOp MaterialPass::stencil_depth_fail_op() const {
+    return (StencilOp)pass_props_.stencil_depth_fail;
+}
+inline StencilOp MaterialPass::stencil_pass_op() const {
+    return (StencilOp)pass_props_.stencil_pass;
+}
+inline void MaterialPass::set_stencil_test_enabled(bool v) {
+    pass_props_.stencil_test_enabled = v;
+}
+inline void MaterialPass::set_color_write_enabled(bool v) {
+    pass_props_.color_write_enabled = v;
+}
+inline void MaterialPass::set_stencil_func(StencilFunc func, int32_t ref, int32_t mask) {
+    pass_props_.stencil_func = (int32_t)func;
+    pass_props_.stencil_ref  = ref;
+    pass_props_.stencil_mask = mask;
+}
+inline void MaterialPass::set_stencil_ops(StencilOp fail, StencilOp depth_fail, StencilOp pass) {
+    pass_props_.stencil_fail       = (int32_t)fail;
+    pass_props_.stencil_depth_fail = (int32_t)depth_fail;
+    pass_props_.stencil_pass       = (int32_t)pass;
+}
+inline PolygonListTarget MaterialPass::polygon_list_target() const {
+    return (PolygonListTarget)pass_props_.polygon_list_target;
+}
+inline void MaterialPass::set_polygon_list_target(PolygonListTarget v) {
+    pass_props_.polygon_list_target = (int32_t)v;
 }
 }
 

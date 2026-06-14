@@ -110,6 +110,12 @@ void OctreeCuller::_gather_renderables(const Frustum &frustum, batcher::RenderQu
             new_renderable.index_element_count = new_renderable.index_data->count();
             new_renderable.is_visible = this->geom()->is_visible();
             new_renderable.material = p.second.material;
+            // Geom geometry is static; the per-node/material index buffers are
+            // persistent, so their uuid is a stable cache key.
+            new_renderable.key = (int64_t)p.second.indexes->uuid();
+            if(this->geom()->shadow_receive() == SHADOW_RECEIVE_ALWAYS) {
+                new_renderable.flags |= RENDERABLE_FLAG_RECEIVES_SHADOWS;
+            }
 
             render_queue->insert_renderable(std::move(new_renderable));
         }
@@ -132,6 +138,12 @@ void OctreeCuller::_all_renderables(batcher::RenderQueue* queue) {
             new_renderable.index_element_count = new_renderable.index_data->count();
             new_renderable.is_visible = this->geom()->is_visible();
             new_renderable.material = p.second.material;
+            // Geom geometry is static; the per-node/material index buffers are
+            // persistent, so their uuid is a stable cache key.
+            new_renderable.key = (int64_t)p.second.indexes->uuid();
+            if(this->geom()->shadow_receive() == SHADOW_RECEIVE_ALWAYS) {
+                new_renderable.flags |= RENDERABLE_FLAG_RECEIVES_SHADOWS;
+            }
 
             queue->insert_renderable(std::move(new_renderable));
         }

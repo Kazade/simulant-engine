@@ -26,9 +26,18 @@ struct CoreMaterialProps {
     int32_t color_material      = (int32_t)COLOR_MATERIAL_NONE;
     int32_t polygon_mode        = (int32_t)POLYGON_MODE_FILL;
     int32_t fog_mode            = (int32_t)FOG_MODE_NONE;
-    bool    depth_write_enabled = true;
-    bool    depth_test_enabled  = true;
-    bool    lighting_enabled    = true;
+    bool    depth_write_enabled  = true;
+    bool    depth_test_enabled   = true;
+    bool    lighting_enabled     = true;
+    bool    stencil_test_enabled = false;
+    bool    color_write_enabled  = true;
+    int32_t stencil_func         = (int32_t)STENCIL_FUNC_ALWAYS;
+    int32_t stencil_ref          = 0;
+    int32_t stencil_mask         = 0xFF;
+    int32_t stencil_fail         = (int32_t)STENCIL_OP_KEEP;
+    int32_t stencil_depth_fail   = (int32_t)STENCIL_OP_KEEP;
+    int32_t stencil_pass         = (int32_t)STENCIL_OP_KEEP;
+    int32_t polygon_list_target  = (int32_t)POLYGON_LIST_TARGET_NONE;
 };
 
 /* Bitmask tracking which properties a MaterialPass overrides vs. falling

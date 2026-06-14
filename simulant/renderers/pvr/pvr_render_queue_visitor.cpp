@@ -21,8 +21,10 @@
 #else
 /* Provide fallback definitions for non-Dreamcast builds (stub compilation) */
 #define PVR_LIST_OP_POLY 0
-#define PVR_LIST_PT_POLY 4
+#define PVR_LIST_OP_MOD  1
 #define PVR_LIST_TR_POLY 2
+#define PVR_LIST_TR_MOD  3
+#define PVR_LIST_PT_POLY 4
 #endif
 
 #include <cmath>
@@ -196,14 +198,23 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     mat_metallic_  = next->metallic();
     mat_roughness_ = next->roughness();
 
-    /* Determine PVR list type based on blend mode */
+    /* Determine PVR list type based on blend mode, then redirect to the
+     * matching modifier-volume list if this pass targets it. Punch-through has
+     * no modifier list, so it falls back to the opaque modifier list. */
     auto blend = next->blend_func();
+    const bool to_modifier =
+        (next->polygon_list_target() == POLYGON_LIST_TARGET_MODIFIER);
+    emitting_modifier_volume_ = to_modifier;
+
     if(blend == BLEND_NONE) {
-        renderer_->current_list_type_ = PVR_LIST_OP_POLY;
+        renderer_->current_list_type_ =
+            to_modifier ? PVR_LIST_OP_MOD : PVR_LIST_OP_POLY;
     } else if(blend == BLEND_MASK) {
-        renderer_->current_list_type_ = PVR_LIST_PT_POLY;
+        renderer_->current_list_type_ =
+            to_modifier ? PVR_LIST_OP_MOD : PVR_LIST_PT_POLY;
     } else {
-        renderer_->current_list_type_ = PVR_LIST_TR_POLY;
+        renderer_->current_list_type_ =
+            to_modifier ? PVR_LIST_TR_MOD : PVR_LIST_TR_POLY;
     }
 
 #ifdef __DREAMCAST__
@@ -283,18 +294,38 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         }
     }
 
-    pvr_build_poly_hdr(
-        &poly_hdr_,
-        renderer_->current_list_type_,
-        shade_mode,
-        next->is_depth_test_enabled() ? depth_func : PVR_DEPTHCMP_ALWAYS,
-        next->is_depth_write_enabled() ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE,
-        cull_mode,
-        blend_src,
-        blend_dst,
-        fog_type,
-        tex_obj
-    );
+    if(emitting_modifier_volume_) {
+        /* Modifier-volume passes use a completely different header format
+         * (pvr_mod_hdr_t). Compile both variants up-front: do_visit emits
+         * mod_hdr_other_ before all but the last triangle of the volume, and
+         * mod_hdr_include_ before the last one (which is what marks an
+         * inclusion modifier volume — pixels inside get darkened). */
+        pvr_mod_compile(
+            &mod_hdr_other_,
+            renderer_->current_list_type_,
+            PVR_MODIFIER_OTHER_POLY,
+            PVR_CULLING_NONE
+        );
+        pvr_mod_compile(
+            &mod_hdr_include_,
+            renderer_->current_list_type_,
+            PVR_MODIFIER_INCLUDE_LAST_POLY,
+            PVR_CULLING_NONE
+        );
+    } else {
+        pvr_build_poly_hdr(
+            &poly_hdr_,
+            renderer_->current_list_type_,
+            shade_mode,
+            next->is_depth_test_enabled() ? depth_func : PVR_DEPTHCMP_ALWAYS,
+            next->is_depth_write_enabled() ? PVR_DEPTHWRITE_ENABLE : PVR_DEPTHWRITE_DISABLE,
+            cull_mode,
+            blend_src,
+            blend_dst,
+            fog_type,
+            tex_obj
+        );
+    }
 #endif
 }
 
@@ -310,11 +341,15 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
         state.enabled = true;
 
         auto light = lights[i];
-        auto pos = camera_->view_matrix() * light->transform->position();
-        state.position[0] = pos.x;
-        state.position[1] = pos.y;
-        state.position[2] = pos.z;
-        state.position[3] = (light->light_type() == smlt::LIGHT_TYPE_DIRECTIONAL) ? 0.0f : 1.0f;
+        const float w = (light->light_type() == smlt::LIGHT_TYPE_DIRECTIONAL) ? 0.0f : 1.0f;
+        auto lp = light->transform->position();
+        /* Use w=1 for point lights so the view translation is included;
+         * w=0 for directional lights treats it as a direction vector. */
+        auto pos4 = camera_->view_matrix() * smlt::Vec4(lp.x, lp.y, lp.z, w);
+        state.position[0] = pos4.x;
+        state.position[1] = pos4.y;
+        state.position[2] = pos4.z;
+        state.position[3] = w;
 
         state.color[0] = light->color().r;
         state.color[1] = light->color().g;
@@ -323,18 +358,21 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
         state.intensity = light->intensity();
         state.range = light->range();
 
-        /* Pre-normalised toward-light direction for directional lights */
+        /* Pre-normalised toward-light direction for directional lights.
+         * position already stores -pointing_dir (set_direction negates on write),
+         * so pos4.xyz = view_rot * (-pointing_dir) = toward_light in eye space.
+         * No further negation needed. */
         if(state.position[3] < 0.5f) {
 #ifdef __DREAMCAST__
             shz_vec3_t d = shz_vec3_normalize_safe(
-                shz_vec3_init(-pos.x, -pos.y, -pos.z));
+                shz_vec3_init(pos4.x, pos4.y, pos4.z));
             state.dir[0] = d.x; state.dir[1] = d.y; state.dir[2] = d.z;
 #else
-            float len = std::sqrt(pos.x*pos.x + pos.y*pos.y + pos.z*pos.z);
+            float len = std::sqrt(pos4.x*pos4.x + pos4.y*pos4.y + pos4.z*pos4.z);
             if(len > 1e-8f) {
-                state.dir[0] = -pos.x/len;
-                state.dir[1] = -pos.y/len;
-                state.dir[2] = -pos.z/len;
+                state.dir[0] = pos4.x/len;
+                state.dir[1] = pos4.y/len;
+                state.dir[2] = pos4.z/len;
             }
 #endif
         }
@@ -408,6 +446,17 @@ static inline ClipVertex lerp_vertex(const ClipVertex& v1, const ClipVertex& v2,
 void PVRRenderQueueVisitor::visit(const Renderable* renderable,
                                    const MaterialPass* pass,
                                    batcher::Iteration iteration) {
+    /* Invisible renderables are still in the queue so consumers like
+     * ShadowCaster can read them back to generate shadow geometry from a
+     * hidden low-poly proxy. Skip the actual draw here. */
+    if(renderable && !renderable->is_visible) {
+        return;
+    }
+    /* The PVR has no stencil hardware; stencil-enabled passes exist only for
+     * the GL stencil-shadow-volume technique. Skip them here. */
+    if(pass && pass->is_stencil_test_enabled()) {
+        return;
+    }
     do_visit(renderable, pass, iteration);
 }
 
@@ -421,6 +470,265 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     renderer_->prepare_to_render(renderable);
 
 #ifdef __DREAMCAST__
+    /* ================================================================
+     * Modifier-volume submission path
+     *
+     * When the active material pass targets the modifier list, the geometry
+     * is submitted as pvr_modifier_vol_t triangles (each carrying its three
+     * world-space-screen-coords) preceded by a pvr_mod_hdr_t. The pattern is:
+     *   [OTHER hdr][vol_0]...[vol_{N-2}][INCLUDE_LAST hdr][vol_{N-1}]
+     * which makes the whole batch one inclusion volume (pixels inside are
+     * affected — what cheap-shadow uses to darken receivers).
+     * ================================================================ */
+    if(emitting_modifier_volume_) {
+        const auto* vdata = renderable->vertex_data;
+        const auto* idata = renderable->index_data;
+        if(!vdata || !idata) return;
+        if(renderable->arrangement != MESH_ARRANGEMENT_TRIANGLES) {
+            /* TODO: support strip/fan; for now only TRIANGLES (what
+             * ShadowCaster emits). */
+            return;
+        }
+
+        std::size_t index_count = renderable->index_element_count;
+        if(index_count == 0) index_count = idata->count();
+        const std::size_t tri_count = index_count / 3;
+        if(tri_count == 0) return;
+
+        /* MVP for transforming the volume vertices to clip space. */
+        const auto& model = *renderable->final_transformation;
+        const auto& view = camera_->view_matrix();
+        const auto& projection = camera_->projection_matrix();
+        Mat4 mvp = projection * (view * model);
+
+        const float hw = 320.0f;
+        const float hh = 240.0f;
+
+        const auto& spec = vdata->vertex_specification();
+        const auto stride = vdata->stride();
+        const auto pos_offset = spec.position_offset(false);
+        const uint8_t* raw_data = vdata->data();
+
+        auto& buf = renderer_->buffer(renderer_->current_list_type_)
+                        .buffers[renderer_->current_buffer_index_];
+
+        shz_xmtrx_load_4x4(mvp.native());
+
+        /* Position-only clip-space vertex. */
+        struct ModVtx { float x, y, z, w; };
+
+        auto load_clip = [&](uint32_t vi) -> ModVtx {
+            const float* p = (const float*)(raw_data + stride * vi + pos_offset);
+            shz_vec4_t c = shz_xmtrx_transform_vec4(
+                shz_vec4_init(p[0], p[1], p[2], 1.0f));
+            return {c.x, c.y, c.z, c.w};
+        };
+
+        /* Linear interpolation in clip space. */
+        auto lerp_clip = [](const ModVtx& a, const ModVtx& b, float t) -> ModVtx {
+            return {
+                a.x + (b.x - a.x) * t,
+                a.y + (b.y - a.y) * t,
+                a.z + (b.z - a.z) * t,
+                a.w + (b.w - a.w) * t,
+            };
+        };
+
+        /* Find the t (0..1) along edge a→b where it crosses the near plane
+         * (z + w = 0 in clip space). Callers only invoke this when the edge
+         * actually crosses, so the denominator is non-zero. */
+        auto near_clip_t = [](const ModVtx& a, const ModVtx& b) -> float {
+            float da = a.z + a.w;
+            float db = b.z + b.w;
+            float denom = db - da;
+            if(fabsf(denom) < 1e-7f) return 0.5f;
+            float t = -da / denom;
+            if(t < 0.0f) t = 0.0f;
+            if(t > 1.0f) t = 1.0f;
+            return t;
+        };
+
+        /* Perspective divide + viewport transform → screen-space + 1/w. */
+        auto to_screen = [&](const ModVtx& v, float& sx, float& sy, float& sz) {
+            float w = v.w;
+            if(w < FLT_EPSILON) w = FLT_EPSILON; /* defensive; post-clip should be > 0 */
+            float inv_w = shz_invf(w);
+            sx = (v.x * hw + hw * w) * inv_w;
+            sy = (-v.y * hh + hh * w) * inv_w;
+            sz = inv_w;
+        };
+
+        auto append_hdr = [&](const pvr_mod_hdr_t& hdr) {
+            std::size_t pos = buf.size();
+            buf.resize(pos + sizeof(pvr_mod_hdr_t));
+            shz_memcpy32(&buf[pos], &hdr, sizeof(pvr_mod_hdr_t));
+        };
+
+        /* Build a pvr_modifier_vol_t from three clip-space vertices and
+         * stage it through the deferred emission mechanism below. Near-plane
+         * clipping may produce a variable number of output triangles per
+         * input triangle (0, 1, or 2), so we don't know which one is "last"
+         * until we run out of input — emit each pending triangle as OTHER
+         * once we see another after it.
+         *
+         * The actual InsideLastPolygon OP is a SEPARATE synthetic triangle
+         * appended after staging (see the closure block below). Tagging one
+         * of the volume's own triangles wouldn't work: on the PVR the
+         * InsideLast OP is only registered in its bbox tiles, but the
+         * volume's parity is set by every side quad / cap triangle, so any
+         * tile reached by the volume but missed by the chosen closer would
+         * leak orphan STENCIL_VOLPAR into AREA1 (and contaminate the next
+         * volume in the list). */
+        float sb_min_x = FLT_MAX, sb_min_y = FLT_MAX;
+        float sb_max_x = -FLT_MAX, sb_max_y = -FLT_MAX;
+
+        bool has_prev = false;
+        bool emitted_other_hdr = false;
+        alignas(32) pvr_modifier_vol_t prev_vol;
+
+        auto stage_triangle = [&](const ModVtx& a, const ModVtx& b, const ModVtx& c) {
+            alignas(32) pvr_modifier_vol_t vol;
+            vol.flags = PVR_CMD_VERTEX_EOL;
+            to_screen(a, vol.ax, vol.ay, vol.az);
+            to_screen(b, vol.bx, vol.by, vol.bz);
+            to_screen(c, vol.cx, vol.cy, vol.cz);
+            vol.d1 = vol.d2 = vol.d3 = vol.d4 = vol.d5 = vol.d6 = 0;
+
+            /* Expand the screen-space bbox covering every tile the synthetic
+             * closer must reach. */
+            if(vol.ax < sb_min_x) sb_min_x = vol.ax;
+            if(vol.bx < sb_min_x) sb_min_x = vol.bx;
+            if(vol.cx < sb_min_x) sb_min_x = vol.cx;
+            if(vol.ax > sb_max_x) sb_max_x = vol.ax;
+            if(vol.bx > sb_max_x) sb_max_x = vol.bx;
+            if(vol.cx > sb_max_x) sb_max_x = vol.cx;
+            if(vol.ay < sb_min_y) sb_min_y = vol.ay;
+            if(vol.by < sb_min_y) sb_min_y = vol.by;
+            if(vol.cy < sb_min_y) sb_min_y = vol.cy;
+            if(vol.ay > sb_max_y) sb_max_y = vol.ay;
+            if(vol.by > sb_max_y) sb_max_y = vol.by;
+            if(vol.cy > sb_max_y) sb_max_y = vol.cy;
+
+            if(has_prev) {
+                /* The previously-staged triangle is now known not to be last:
+                 * emit it as OTHER. */
+                if(!emitted_other_hdr) {
+                    append_hdr(mod_hdr_other_);
+                    emitted_other_hdr = true;
+                }
+                std::size_t pos = buf.size();
+                buf.resize(pos + sizeof(pvr_modifier_vol_t));
+                shz_memcpy32(&buf[pos], &prev_vol, sizeof(pvr_modifier_vol_t));
+            }
+            prev_vol = vol;
+            has_prev = true;
+        };
+
+        for(std::size_t t = 0; t < tri_count; ++t) {
+            const std::size_t base = renderable->first_index + t * 3;
+            const ModVtx v0 = load_clip(idata->at((uint32_t)(base + 0)));
+            const ModVtx v1 = load_clip(idata->at((uint32_t)(base + 1)));
+            const ModVtx v2 = load_clip(idata->at((uint32_t)(base + 2)));
+
+            const bool vis0 = (v0.z >= -v0.w);
+            const bool vis1 = (v1.z >= -v1.w);
+            const bool vis2 = (v2.z >= -v2.w);
+            const int mask = (vis0 ? 1 : 0) | (vis1 ? 2 : 0) | (vis2 ? 4 : 0);
+
+            switch(mask) {
+                case 0: /* All behind the near plane: discard. */
+                    break;
+                case 7: /* All in front: emit as-is. */
+                    stage_triangle(v0, v1, v2);
+                    break;
+                case 1: { /* Only v0 in front. */
+                    ModVtx a = lerp_clip(v0, v1, near_clip_t(v0, v1));
+                    ModVtx b = lerp_clip(v0, v2, near_clip_t(v0, v2));
+                    stage_triangle(v0, a, b);
+                    break;
+                }
+                case 2: { /* Only v1 in front. */
+                    ModVtx a = lerp_clip(v1, v0, near_clip_t(v1, v0));
+                    ModVtx b = lerp_clip(v1, v2, near_clip_t(v1, v2));
+                    stage_triangle(a, v1, b);
+                    break;
+                }
+                case 4: { /* Only v2 in front. */
+                    ModVtx a = lerp_clip(v2, v1, near_clip_t(v2, v1));
+                    ModVtx b = lerp_clip(v2, v0, near_clip_t(v2, v0));
+                    stage_triangle(a, v2, b);
+                    break;
+                }
+                case 3: { /* v0, v1 in front; v2 behind — produces a quad. */
+                    ModVtx a = lerp_clip(v1, v2, near_clip_t(v1, v2));
+                    ModVtx b = lerp_clip(v0, v2, near_clip_t(v0, v2));
+                    stage_triangle(v0, v1, a);
+                    stage_triangle(v0, a, b);
+                    break;
+                }
+                case 5: { /* v0, v2 in front; v1 behind — produces a quad. */
+                    ModVtx a = lerp_clip(v0, v1, near_clip_t(v0, v1));
+                    ModVtx b = lerp_clip(v2, v1, near_clip_t(v2, v1));
+                    stage_triangle(v0, a, b);
+                    stage_triangle(v0, b, v2);
+                    break;
+                }
+                case 6: { /* v1, v2 in front; v0 behind — produces a quad. */
+                    ModVtx a = lerp_clip(v1, v0, near_clip_t(v1, v0));
+                    ModVtx b = lerp_clip(v2, v0, near_clip_t(v2, v0));
+                    stage_triangle(a, v1, v2);
+                    stage_triangle(a, v2, b);
+                    break;
+                }
+            }
+        }
+
+        /* Close the volume.
+         *
+         * Flush the still-pending staged triangle as OTHER (it stayed in
+         * prev_vol so we could potentially have used it as the closer; we
+         * deliberately don't, see the bbox comment above). Then append a
+         * synthetic closure triangle whose 3 vertices span the bbox of every
+         * staged triangle, so its OP is registered in every tile the volume
+         * touches and combine_modifier_volume fires there.
+         *
+         * The closer's z is fixed at a tiny positive value, well below KOS's
+         * default ISP_BACKGND_D (0.0001f) and any opaque polygon's stored
+         * 1/W. rasterize_modifier_triangle only flips STENCIL_VOLPAR where
+         * z >= depth_buf, so this triangle never alters parity — it exists
+         * purely to drive the per-tile fold. If clipping discarded every
+         * input triangle (has_prev == false), the volume is empty and we
+         * emit nothing. */
+        if(has_prev) {
+            if(!emitted_other_hdr) {
+                append_hdr(mod_hdr_other_);
+                emitted_other_hdr = true;
+            }
+            {
+                std::size_t pos = buf.size();
+                buf.resize(pos + sizeof(pvr_modifier_vol_t));
+                shz_memcpy32(&buf[pos], &prev_vol, sizeof(pvr_modifier_vol_t));
+            }
+
+            alignas(32) pvr_modifier_vol_t closer;
+            closer.flags = PVR_CMD_VERTEX_EOL;
+            const float close_z = 1.0e-10f;
+            closer.ax = sb_min_x; closer.ay = sb_min_y; closer.az = close_z;
+            closer.bx = sb_max_x; closer.by = sb_min_y; closer.bz = close_z;
+            closer.cx = sb_min_x; closer.cy = sb_max_y; closer.cz = close_z;
+            closer.d1 = closer.d2 = closer.d3 = closer.d4 = closer.d5 = closer.d6 = 0;
+
+            append_hdr(mod_hdr_include_);
+            {
+                std::size_t pos = buf.size();
+                buf.resize(pos + sizeof(pvr_modifier_vol_t));
+                shz_memcpy32(&buf[pos], &closer, sizeof(pvr_modifier_vol_t));
+            }
+        }
+
+        return;
+    }
+
     const auto& model = *renderable->final_transformation;
     const auto& view = camera_->view_matrix();
     const auto& projection = camera_->projection_matrix();
@@ -434,15 +742,34 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     float hh = 240.0f; /* Half-height */
 
     /* ================================================================
-     * Submit or buffer the pre-compiled polygon header
+     * Submit or buffer the pre-compiled polygon header.
+     *
+     * If this renderable receives shadows (and is rendering as a normal
+     * polygon, not a modifier volume), patch the header's modifier-enable
+     * bit (PVR_TA_CMD_MODIFIER = bit 7) so cheap-shadow modifier volumes
+     * darken its pixels. Cheap-shadow mode is selected by leaving
+     * PVR_TA_CMD_MODIFIERMODE (bit 6) clear, which pvr_build_poly_hdr
+     * already does. KOS keeps the header at 32 bytes in this mode.
      * ================================================================ */
+    const bool patch_receiver =
+        (renderable->flags & RENDERABLE_FLAG_RECEIVES_SHADOWS) &&
+        (material_pass->polygon_list_target() == POLYGON_LIST_TARGET_NONE);
+
+    pvr_poly_hdr_t hdr_local;
+    const pvr_poly_hdr_t* hdr_src = &poly_hdr_;
+    if(patch_receiver) {
+        hdr_local = poly_hdr_;
+        hdr_local.cmd |= (1u << 7); /* PVR_TA_CMD_MODIFIER */
+        hdr_src = &hdr_local;
+    }
+
     if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
         pvr_vertex_t* hdr_dest = static_cast<pvr_vertex_t*>(pvr_dr_target(renderer_->dr_state_));
-        shz_memcpy32(hdr_dest, &poly_hdr_, sizeof(pvr_poly_hdr_t));
+        shz_memcpy32(hdr_dest, hdr_src, sizeof(pvr_poly_hdr_t));
         pvr_dr_commit(hdr_dest);
     } else {
         auto& buf = renderer_->buffer(renderer_->current_list_type_).buffers[renderer_->current_buffer_index_];
-        const uint8_t* hdr_bytes = reinterpret_cast<const uint8_t*>(&poly_hdr_);
+        const uint8_t* hdr_bytes = reinterpret_cast<const uint8_t*>(hdr_src);
         auto size = buf.size();
         buf.resize(size + sizeof(pvr_poly_hdr_t));
         shz_memcpy32(&buf[size], hdr_bytes, sizeof(pvr_poly_hdr_t));

@@ -122,6 +122,11 @@ void PSPRenderer::clear(const RenderTarget &target, const Color &color, uint32_t
         flags |= GU_DEPTH_BUFFER_BIT;
     }
 
+    if(clear_flags & BUFFER_CLEAR_STENCIL_BUFFER) {
+        flags |= GU_STENCIL_BUFFER_BIT;
+        sceGuClearStencil(0);
+    }
+
     sceGuClearColor(c);
     sceGuClear(flags);
 }

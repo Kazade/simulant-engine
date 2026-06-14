@@ -60,6 +60,38 @@ enum FogMode : EnumType {
     FOG_MODE_EXP2
 };
 
+enum StencilFunc : EnumType {
+    STENCIL_FUNC_NEVER,
+    STENCIL_FUNC_LESS,
+    STENCIL_FUNC_LEQUAL,
+    STENCIL_FUNC_GREATER,
+    STENCIL_FUNC_GEQUAL,
+    STENCIL_FUNC_EQUAL,
+    STENCIL_FUNC_NOT_EQUAL,
+    STENCIL_FUNC_ALWAYS,
+};
+
+enum StencilOp : EnumType {
+    STENCIL_OP_KEEP,
+    STENCIL_OP_ZERO,
+    STENCIL_OP_REPLACE,
+    STENCIL_OP_INCR,
+    STENCIL_OP_INCR_WRAP,
+    STENCIL_OP_DECR,
+    STENCIL_OP_DECR_WRAP,
+    STENCIL_OP_INVERT,
+};
+
+/* Which display-list a pass's polygons are submitted to. NONE is normal
+ * geometry (the opaque/punch-through/translucent list is chosen by blend func).
+ * MODIFIER routes the polygons to the matching modifier-volume list — used on
+ * the PVR (Dreamcast) for hardware modifier volumes / cheap shadows. Renderers
+ * without modifier-volume support ignore this. */
+enum PolygonListTarget : EnumType {
+    POLYGON_LIST_TARGET_NONE,
+    POLYGON_LIST_TARGET_MODIFIER,
+};
+
 enum EnabledTexture : EnumType {
     BASE_COLOR_MAP_ENABLED = 1,
     LIGHT_MAP_ENABLED = 2,

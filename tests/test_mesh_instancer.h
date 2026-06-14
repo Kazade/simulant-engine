@@ -114,15 +114,23 @@ public:
                                         DETAIL_LEVEL_NEAREST, nullptr, 0);
 
         assert_equal(queue.renderable_count(), mesh_->submesh_count());
+        for(std::size_t i = 0; i < queue.renderable_count(); ++i) {
+            assert_true(queue.renderable(i)->is_visible);
+        }
         queue.clear();
 
-        /* Hide the only instance */
+        /* Hide the only instance. The renderable is still inserted into the
+         * queue — that's required so consumers like ShadowCaster can read it
+         * back to generate shadow geometry — but it must be marked
+         * is_visible=false so renderers skip the actual draw. */
         instancer->hide_mesh_instance(iid);
         instancer->generate_renderables(&queue, camera, &viewport,
                                         DETAIL_LEVEL_NEAREST, nullptr, 0);
 
-        /* Not returned */
-        assert_equal(queue.renderable_count(), 0u);
+        assert_equal(queue.renderable_count(), mesh_->submesh_count());
+        for(std::size_t i = 0; i < queue.renderable_count(); ++i) {
+            assert_false(queue.renderable(i)->is_visible);
+        }
     }
 
     void test_set_mesh_changes_aabb() {

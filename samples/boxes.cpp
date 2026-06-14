@@ -13,6 +13,8 @@ public:
     void on_load() override {
         auto physics = start_service<PhysicsService>();
 
+        shadows_ = create_child<smlt::ShadowCaster>();
+
         camera_ = create_child<smlt::Camera3D>();
         pipeline_ = compositor->create_layer(
             this, camera_
@@ -30,6 +32,8 @@ public:
         // Create a nice skybox (not on DC, the image is too big)
         if(get_platform()->name() != "dreamcast") {
             create_child<Skybox>("assets/samples/skyboxes/TropicalSunnyDay");
+        } else {
+            create_child<Skybox>("assets/samples/skyboxes/dreamcast/TropicalSunnyDay");
         }
 
         auto crate =
@@ -63,8 +67,13 @@ public:
                             PhysicsMaterial::stone());
 
         lighting->set_ambient_light(Color::white() * 0.5f);
+        // auto l = create_child<smlt::PointLight>();
+        // // l->set_direction(Vec3(0, -1, 0.5).normalized());
+        // l->transform->set_position(smlt::Vec3(0, 5, 0));
+        // l->set_intensity(1);
+
         auto l = create_child<smlt::DirectionalLight>();
-        l->set_direction(Vec3(0, -1, 0.5).normalized());
+        l->set_direction(Vec3(0.2, -0.5, 0.75).normalized());
         l->set_intensity(1);
     }
 
@@ -75,7 +84,7 @@ public:
             smlt::RandomGenerator::instance().float_in_range(20.0f, 30.0f),
             smlt::RandomGenerator::instance().float_in_range(-10.0f, 10.0f));
 
-        auto controller = create_child<smlt::DynamicBody>(pos);
+        auto controller = shadows_->create_child<smlt::DynamicBody>(pos);
         controller->add_box_collider(box->aabb().dimensions(),
                                      PhysicsMaterial::wood());
 
@@ -103,6 +112,7 @@ public:
 private:
     std::vector<StageNodePtr> boxes_;
 
+    ShadowCasterPtr shadows_;
     LayerPtr pipeline_;
     StagePtr stage_;
     CameraPtr camera_;

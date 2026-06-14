@@ -33,22 +33,27 @@ void FrustumCuller::do_generate_renderables(batcher::RenderQueue* render_queue,
                                             const Viewport* viewport,
                                             const DetailLevel detail_level,
                                             Light** lights,
-                                            const std::size_t light_count) {
+                                            const std::size_t light_count,
+                                            bool respect_visibility) {
 
     _apply_writes();
 
     auto& frustum = camera->frustum();
 
     for(StageNode& node: each_descendent()) {
-        /* Check that the node is supposed to
-         * be visible (otherwise we could end up doing work for nothing) */
-        if(node.is_visible() && !node.is_destroyed()) {
-            auto aabb = node.transformed_aabb();
+        if(node.is_destroyed()) continue;
+        // When we're respecting visibility, skip hidden subtrees up-front to
+        // avoid the per-node transformed_aabb()/frustum work. Otherwise (the
+        // ShadowCaster path) we let every descendant through and rely on each
+        // producer to mark the resulting Renderables is_visible=false so the
+        // renderer skips them at draw time.
+        if(respect_visibility && !node.is_visible()) continue;
 
-            if(!node.is_cullable() || frustum.intersects_aabb(aabb)) {
-                node.generate_renderables(render_queue, camera, viewport,
-                                          detail_level, lights, light_count);
-            }
+        auto aabb = node.transformed_aabb();
+        if(!node.is_cullable() || frustum.intersects_aabb(aabb)) {
+            node.generate_renderables(render_queue, camera, viewport,
+                                      detail_level, lights, light_count,
+                                      respect_visibility);
         }
     }
 }

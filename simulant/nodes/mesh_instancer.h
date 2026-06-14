@@ -86,7 +86,8 @@ public:
     void do_generate_renderables(batcher::RenderQueue* render_queue,
                                  const Camera* camera, const Viewport* viewport,
                                  const DetailLevel detail_level, Light** lights,
-                                 const std::size_t light_count) override;
+                                 const std::size_t light_count,
+                                 bool respect_visibility = true) override;
 
 private:
     MeshPtr mesh_;
