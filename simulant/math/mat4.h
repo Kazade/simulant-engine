@@ -3,7 +3,6 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
-#include "../deps/sh4zam/shz_matrix.h"
 #include <vector>
 #include <stdio.h>
 
@@ -37,36 +36,25 @@ typedef std::vector<float> FloatArray;
 
 struct alignas(8) Mat4 {
 private:
-    uint8_t m[sizeof(shz_mat4x4_t) + 4];
+    // We need some data that is *always* 8 byte aligned. Unfortunately
+    // GCC on sh4 doesn't always do this on stack variables even if we specify
+    // alignas! We work around this by adding 4-byte extra space and manually
+    // aligning.
+    uint8_t m[sizeof(float) * (16 + 4)];
 
 public:
-    Mat4() {
-        shz_mat4x4_init_identity(native());
-    }
-
-    static Mat4 zero() {
-        Mat4 r;
-        shz_mat4x4_init_zero(r.native());
-        return r;
-    }
+    Mat4();
+    static Mat4 zero();
 
     Mat4(const FloatArray& arr) {
         std::copy(arr.begin(),
-                  arr.begin() + std::min((unsigned)arr.size(), 16u), native()->elem);
+                  arr.begin() + std::min((unsigned)arr.size(), 16u), data());
     }
 
-    Mat4 operator*(const Mat4& rhs) const {
-        Mat4 result;
-        shz_mat4x4_mult(result.native(), native(), rhs.native());
-        return result;
-    }
-
+    Mat4 operator*(const Mat4& rhs) const;
     Vec4 operator*(const Vec4& rhs) const;
     Vec3 operator*(const Vec3& rhs) const;
-
-    bool operator==(const Mat4& rhs) const {
-        return shz_mat4x4_equal(native(), rhs.native());
-    }
+    bool operator==(const Mat4& rhs) const;
 
     void extract_rotation_and_translation(Quaternion& rotation, Vec3& translation) const;
 
@@ -77,19 +65,19 @@ public:
     static Mat4 as_look_at(const Vec3& eye, const Vec3& target, const Vec3& up);
 
     inline const float& operator[](const uint32_t index) const {
-        return native()->elem[index];
+        return data()[index];
     }
 
     inline float& operator[](const uint32_t index){
-        return native()->elem[index];
+        return data()[index];
     }
 
     inline const float& operator[](const int index) const {
-        return native()->elem[index];
+        return data()[index];
     }
 
     inline float& operator[](const int index) {
-        return native()->elem[index];
+        return data()[index];
     }
 
     static Mat4 as_translation(const Vec3& v);
@@ -112,32 +100,17 @@ public:
     Plane extract_plane(FrustumPlane plane) const;
 
     float* data() {
-        return &native()->elem[0];
+        return (float*) (((uintptr_t(m) + 7) & ~7));
     }
 
     const float* data() const {
-        return &native()->elem[0];
-    }
-
-    shz_mat4x4_t* native() {
-        return (shz_mat4x4_t*)(((uintptr_t(m) + 7) & ~7));
-    }
-
-    const shz_mat4x4_t* native() const {
-        return const_cast<Mat4*>(this)->native();
+        return const_cast<Mat4*>(this)->data();
     }
 
     // Faster inverse for TRS (translation/rotation/scale) matrices.
     // The world-space matrix of any actor is always a TRS matrix.
-    Mat4 inversed_transform() const {
-        Mat4 result;
-        shz_mat4x4_inverse_block_triangular(native(), result.native());
-        return result;
-    }
-
-    void transpose() {
-        shz_mat4x4_transpose(native(), native());
-    }
+    Mat4 inversed_transform() const;
+    void transpose();
 
     Mat4 transposed() const {
         auto cpy = *this;

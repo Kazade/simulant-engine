@@ -23,24 +23,24 @@ LIST(REMOVE_ITEM SIMULANT_FILES ${TO_REMOVE})
 
 # Include GL2x stuff on non-DC builds
 IF(NOT PLATFORM_DREAMCAST)
-    IF(NOT PLATFORM_PSP)
-        MESSAGE("-- Including GLAD in build")
-        # DC build doesn't need glad, GL1 is available directly
-        FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
-        SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
+  IF(NOT PLATFORM_PSP)
+    MESSAGE("-- Including GLAD in build")
+    # DC build doesn't need glad, GL1 is available directly
+    FILE(GLOB_RECURSE GLAD1_FILES renderers/glad/*.c)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${GLAD1_FILES})
 
-        MESSAGE("-- Including GL2X in build")
-        FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
-        SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
-    ENDIF()
+    MESSAGE("-- Including GL2X in build")
+    FILE(GLOB_RECURSE GL2_FILES renderers/gl2x/*.c*)
+    SET(SIMULANT_FILES ${SIMULANT_FILES} ${GL2_FILES})
+  ENDIF()
 ENDIF()
 
 IF(PLATFORM_PSP)
-    MESSAGE("-- Including PSP renderer in build")
-    FILE(GLOB_RECURSE PSP_FILES renderers/psp/*.c*)
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${PSP_FILES})
+  MESSAGE("-- Including PSP renderer in build")
+  FILE(GLOB_RECURSE PSP_FILES renderers/psp/*.c*)
+  SET(SIMULANT_FILES ${SIMULANT_FILES} ${PSP_FILES})
 
-    link_libraries(
+  link_libraries(
         pspdebug
         pspdisplay
         pspge
@@ -53,7 +53,7 @@ IF(PLATFORM_PSP)
 ENDIF()
 
 IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR SIMULANT_USE_ALDC)
-    SET(
+  SET(
         LIBAL
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/buffer.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/core.c
@@ -65,45 +65,45 @@ IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR SIMULANT_USE_ALDC)
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/source.c
     )
 
-    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libAL/include)
+  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libAL/include)
 
-    MESSAGE("-- Including ALdc in build")
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${LIBAL})
+  MESSAGE("-- Including ALdc in build")
+  SET(SIMULANT_FILES ${SIMULANT_FILES} ${LIBAL})
 ENDIF()
 
 IF(PLATFORM_DREAMCAST)
-    MESSAGE("-- Including GLdc in build, as this is the Dreamcast")
+  MESSAGE("-- Including GLdc in build, as this is the Dreamcast")
 
-    MESSAGE("-- Including PVR renderer in build")
-    FILE(GLOB_RECURSE PVR_FILES renderers/pvr/*.c*)
-    SET(SIMULANT_FILES ${SIMULANT_FILES} ${PVR_FILES})
+  MESSAGE("-- Including PVR renderer in build")
+  FILE(GLOB_RECURSE PVR_FILES renderers/pvr/*.c*)
+  SET(SIMULANT_FILES ${SIMULANT_FILES} ${PVR_FILES})
 
-    set(GLDC_VERSION "gldc-version-simulant-builtin")
-    configure_file(${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.c.in ${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.c)
+  set(GLDC_VERSION "gldc-version-simulant-builtin")
+  configure_file(${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.c.in ${CMAKE_SOURCE_DIR}/deps/libgl/GL/version.c)
 
-    # We build in GLdc and ALdc directly (as it's all under the Simulant umbrella)
-    FILE(GLOB_RECURSE LIBGL ${CMAKE_SOURCE_DIR}/deps/libgl/*.c)
-    FILE(GLOB_RECURSE LIBGL_SAMPLES ${CMAKE_SOURCE_DIR}/deps/libgl/samples/*.c)
-    LIST(REMOVE_ITEM LIBGL ${LIBGL_SAMPLES})
+  # We build in GLdc and ALdc directly (as it's all under the Simulant umbrella)
+  FILE(GLOB_RECURSE LIBGL ${CMAKE_SOURCE_DIR}/deps/libgl/*.c)
+  FILE(GLOB_RECURSE LIBGL_SAMPLES ${CMAKE_SOURCE_DIR}/deps/libgl/samples/*.c)
+  LIST(REMOVE_ITEM LIBGL ${LIBGL_SAMPLES})
 
-    # Remove the software renderer from GLdc
-    LIST(REMOVE_ITEM LIBGL ${CMAKE_SOURCE_DIR}/deps/libgl/GL/platforms/software.c)
+  # Remove the software renderer from GLdc
+  LIST(REMOVE_ITEM LIBGL ${CMAKE_SOURCE_DIR}/deps/libgl/GL/platforms/software.c)
 
-    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/dreamcast/*.c ${CMAKE_CURRENT_SOURCE_DIR}/platforms/dreamcast/*.cpp)
+  FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/dreamcast/*.c ${CMAKE_CURRENT_SOURCE_DIR}/platforms/dreamcast/*.cpp)
 
-    IF(PLATFORM)
-        MESSAGE("-- Including platform specific files: ${PLATFORM}")
-    ENDIF()
+  IF(PLATFORM)
+    MESSAGE("-- Including platform specific files: ${PLATFORM}")
+  ENDIF()
 
-    INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libgl/include)
+  INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/libgl/include)
 
-    SET(SIMULANT_FILES ${SIMULANT_FILES}
+  SET(SIMULANT_FILES ${SIMULANT_FILES}
         ${LIBGL}
         ${LIBGL_ASM}
         ${PLATFORM}
     )
 
-    SET(
+  SET(
         SIMULANT_FILES
         ${SIMULANT_FILES}
         platforms/dreamcast/kos_window.cpp
@@ -112,13 +112,13 @@ IF(PLATFORM_DREAMCAST)
         sound/drivers/null_sound_driver.cpp
     )
 ELSEIF(PLATFORM_PSP)
-    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/psp/*.cpp)
+  FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/psp/*.cpp)
 
-    IF(PLATFORM)
-        MESSAGE("-- Including platform specific files: ${PLATFORM}")
-    ENDIF()
+  IF(PLATFORM)
+    MESSAGE("-- Including platform specific files: ${PLATFORM}")
+  ENDIF()
 
-    SET(
+  SET(
         SIMULANT_FILES
         ${SIMULANT_FILES}
         ${PLATFORM}
@@ -127,13 +127,13 @@ ELSEIF(PLATFORM_PSP)
         sound/drivers/null_sound_driver.cpp
     )
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
-    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/android/*.cpp)
+  FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/android/*.cpp)
 
-    IF(PLATFORM)
-        MESSAGE("-- Including platform specific files: ${PLATFORM}")
-    ENDIF()
+  IF(PLATFORM)
+    MESSAGE("-- Including platform specific files: ${PLATFORM}")
+  ENDIF()
 
-    SET(
+  SET(
         SIMULANT_FILES
         ${SIMULANT_FILES}
         ${PLATFORM}
@@ -143,29 +143,29 @@ ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
     )
 ELSE()
 
-    IF(PLATFORM_EVERCADE)
-        FILE(GLOB_RECURSE PLATFORM1 ${CMAKE_CURRENT_SOURCE_DIR}/platforms/evercade/*.cpp)
-        FILE(GLOB_RECURSE PLATFORM2 ${CMAKE_CURRENT_SOURCE_DIR}/platforms/linux/*.cpp)
-        SET(PLATFORM ${PLATFORM1} ${PLATFORM2})
-    ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-        FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/linux/*.cpp)
-    ELSEIF(WIN32)
-        FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/windows/*.cpp)
+  IF(PLATFORM_EVERCADE)
+    FILE(GLOB_RECURSE PLATFORM1 ${CMAKE_CURRENT_SOURCE_DIR}/platforms/evercade/*.cpp)
+    FILE(GLOB_RECURSE PLATFORM2 ${CMAKE_CURRENT_SOURCE_DIR}/platforms/linux/*.cpp)
+    SET(PLATFORM ${PLATFORM1} ${PLATFORM2})
+  ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/linux/*.cpp)
+  ELSEIF(WIN32)
+    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/windows/*.cpp)
 
-        IF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-            set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-            source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SIMULANT_FILES})
-            source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORM})
-        ENDIF()
-    ELSEIF(APPLE)
-        FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/osx/*.cpp)
+    IF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+      set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+      source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SIMULANT_FILES})
+      source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORM})
     ENDIF()
+  ELSEIF(APPLE)
+    FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/osx/*.cpp)
+  ENDIF()
 
-    IF(PLATFORM)
-        MESSAGE("-- Including platform specific files: ${PLATFORM}")
-    ENDIF()
+  IF(PLATFORM)
+    MESSAGE("-- Including platform specific files: ${PLATFORM}")
+  ENDIF()
 
-    SET(
+  SET(
         SIMULANT_FILES
         ${SIMULANT_FILES}
         ${PLATFORM}
@@ -181,9 +181,9 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/bounce/include)
 
 IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
+  ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
 ELSE()
-    ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
+  ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}
         platforms/evercade/platform.cpp
         nodes/helpers.h
         nodes/stage_node_path.h
@@ -202,11 +202,13 @@ ELSE()
         nodes/physics/contact_list.cpp)
 ENDIF()
 
+target_link_libraries(simulant PRIVATE sh4zam)
+
 if(FLTO_SUPPORTED)
-    message(STATUS "IPO / LTO enabled")
-    set_property(TARGET simulant PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  message(STATUS "IPO / LTO enabled")
+  set_property(TARGET simulant PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 else()
-    message(STATUS "IPO / LTO DISABLED")
+  message(STATUS "IPO / LTO DISABLED")
 endif()
 
 SET_TARGET_PROPERTIES(simulant
@@ -230,11 +232,11 @@ SET(DEPS
 )
 
 FOREACH(DEP ${DEPS})
-    SET(DEP_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/${DEP}")
-    SET(DEP_INSTALL_PATH include/simulant/deps/${DEP})
-    FILE(GLOB DEP_INCLUDES FOLLOW_SYMLINKS ${DEP_PATH}/*.h ${DEP_PATH}/*.inl)
-    INSTALL(DIRECTORY DESTINATION ${DEP_INSTALL_PATH})
-    INSTALL(FILES ${DEP_INCLUDES} DESTINATION ${DEP_INSTALL_PATH})
+  SET(DEP_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/${DEP}")
+  SET(DEP_INSTALL_PATH include/simulant/deps/${DEP})
+  FILE(GLOB DEP_INCLUDES FOLLOW_SYMLINKS ${DEP_PATH}/*.h ${DEP_PATH}/*.inl)
+  INSTALL(DIRECTORY DESTINATION ${DEP_INSTALL_PATH})
+  INSTALL(FILES ${DEP_INCLUDES} DESTINATION ${DEP_INSTALL_PATH})
 ENDFOREACH()
 
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../cmake_modules/simulant-config.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/simulant)

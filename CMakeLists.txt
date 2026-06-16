@@ -200,7 +200,6 @@ ENDIF()
 add_subdirectory(${CMAKE_SOURCE_DIR}/deps/sh4zam)
 
 include_directories(${CMAKE_SOURCE_DIR}/deps/sh4zam/include)
-link_libraries(sh4zam)
 
 IF(ANDROID)
   include_directories(

@@ -33,7 +33,8 @@
 
 #include "../procedural/mesh.h"
 
-#include "simulant/nodes/actor.h"
+#include "../deps/sh4zam/shz_matrix.h"
+#include "../nodes/actor.h"
 
 namespace smlt {
 
@@ -801,11 +802,11 @@ void Mesh::update_skinning() {
         const Mat4& joint_matrix = joint_node->transform->world_space_matrix();
 
         // XMTRX = mesh_world_inverse * joint_matrix
-        shz_xmtrx_load_apply_4x4(mesh_world_inverse.native(), joint_matrix.native());
+        shz_xmtrx_load_apply_4x4((shz_mat4x4_t*) mesh_world_inverse.data(), (shz_mat4x4_t*) joint_matrix.data());
         // XMTRX = (mesh_world_inverse * joint_matrix) * inverse_bind_matrices[h]
-        shz_xmtrx_apply_4x4(skin->inverse_bind_matrices[h].native());
+        shz_xmtrx_apply_4x4((shz_mat4x4_t*) skin->inverse_bind_matrices[h].data());
         // Store result
-        shz_xmtrx_store_4x4(pre_joint_matrices[h].native());
+        shz_xmtrx_store_4x4((shz_mat4x4_t*) pre_joint_matrices[h].data());
     }
 
     // Hoist the joint data-type check outside the per-vertex loop.
