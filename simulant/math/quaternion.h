@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../deps/sh4zam/shz_quat.h"
-
 #include "degrees.h"
 #include "euler.h"
 #include "lerp.h"
@@ -23,10 +21,12 @@ struct AxisAngle {
 };
 
 
-struct alignas(8) Quaternion: shz_quat {
+struct alignas(8) Quaternion {
     friend struct Vec3;
     friend struct Mat4;
     friend struct Mat3;
+
+    float w, x, y, z;
 
     Quaternion() {
         w = 1.0f;
@@ -70,9 +70,7 @@ struct alignas(8) Quaternion: shz_quat {
         return fast_sqrt(length_squared());
     }
 
-    void normalize() {
-        ((shz_quat&)*this) = shz_quat_normalize(*this);
-    }
+    void normalize();
 
     const Quaternion normalized() const {
         Quaternion result = *this;
@@ -84,13 +82,9 @@ struct alignas(8) Quaternion: shz_quat {
         return Quaternion(-x, -y, -z, w);
     }
 
-    float dot(const Quaternion& rhs) const {
-        return shz_quat_dot(*this, rhs);
-    }
+    float dot(const Quaternion& rhs) const;
 
-    void inverse() {
-        ((shz_quat&)*this) = shz_quat_inv(*this);
-    }
+    void inverse();
 
     const Quaternion inversed() const {
         Quaternion result(*this);
@@ -159,10 +153,7 @@ struct alignas(8) Quaternion: shz_quat {
         return Quaternion(*this) *= l;
     }
 
-    Vec3 axis() const {
-        auto a = shz_quat_axis(*this);
-        return Vec3(a.x, a.y, a.z);
-    }
+    Vec3 axis() const;
 
     Radians angle() const {
         return Radians(std::acos(w) * 2.0f);
@@ -174,29 +165,12 @@ struct alignas(8) Quaternion: shz_quat {
         );
     }
 
-    Quaternion nlerp(const Quaternion& rhs, float t) const {
-        Quaternion ret;
-        ((shz_quat&)ret) = shz_quat_nlerp(*this, rhs, t);
-        return ret;
-    }
+    Quaternion nlerp(const Quaternion& rhs, float t) const;
+    Quaternion slerp(const Quaternion& rhs, float t) const;
 
-    Quaternion slerp(const Quaternion& rhs, float t) const {
-        Quaternion ret;
-        ((shz_quat&)ret) = shz_quat_slerp(*this, rhs, t);
-        return ret;
-    }
-
-    const Degrees pitch() const {
-        return Radians(shz_quat_angle_x(*this));
-    }
-
-    const Degrees yaw() const {
-        return Radians(shz_quat_angle_y(*this));
-    }
-
-    const Degrees roll() const {
-        return Radians(shz_quat_angle_z(*this));
-    }
+    const Degrees pitch() const;
+    const Degrees yaw() const;
+    const Degrees roll() const;
 
     Vec3 forward() const {
         // OpenGL coordinate system has Neg-z as "forward"

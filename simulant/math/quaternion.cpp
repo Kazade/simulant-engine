@@ -1,11 +1,63 @@
 #include "../types.h"
 #include "quaternion.h"
+#include "../deps/sh4zam/shz_quat.h"
 
 namespace smlt {
 
 std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
     stream << "(" << quat.x << "," << quat.y << "," << quat.z << "," << quat.w << ")";
     return stream;
+}
+
+void Quaternion::normalize() {
+    auto self = (shz_quat_t*) this;
+    ((shz_quat&) *self) = shz_quat_normalize(*self);
+}
+
+float Quaternion::dot(const Quaternion& rhs) const {
+    auto self = (shz_quat_t*) this;
+    return shz_quat_dot(*self, (shz_quat_t&) rhs);
+}
+
+Vec3 Quaternion::axis() const {
+    auto self = (shz_quat_t*) this;
+    auto a = shz_quat_axis(*self);
+    return Vec3(a.x, a.y, a.z);
+}
+
+Quaternion Quaternion::nlerp(const Quaternion& rhs, float t) const {
+    auto self = (shz_quat_t*) this;
+    Quaternion ret;
+    ((shz_quat&)ret) = shz_quat_nlerp(*self, (shz_quat_t&) rhs, t);
+    return ret;
+}
+
+Quaternion Quaternion::slerp(const Quaternion& rhs, float t) const {
+    Quaternion ret;
+    auto self = (shz_quat_t*) this;
+    ((shz_quat&)ret) = shz_quat_slerp(*self, (shz_quat_t&) rhs, t);
+    return ret;
+}
+
+const Degrees Quaternion::pitch() const {
+    auto self = (shz_quat_t*) this;
+    return Radians(shz_quat_angle_x(*self));
+}
+
+const Degrees Quaternion::yaw() const {
+    auto self = (shz_quat_t*) this;
+    return Radians(shz_quat_angle_y(*self));
+}
+
+const Degrees Quaternion::roll() const {
+    auto self = (shz_quat_t*) this;
+    return Radians(shz_quat_angle_z(*self));
+}
+
+void Quaternion::inverse() {
+    auto self = (shz_quat_t*) this;
+
+    ((shz_quat&) *self) = shz_quat_inv(*self);
 }
 
 Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up) {
