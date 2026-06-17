@@ -23,13 +23,11 @@ Open a terminal and install the required packages:
 
 ```bash
 sudo dnf install \
-    gcc-c++ cmake make \
-    mesa-libGL-devel mesa-libGLU-devel \
-    openal-soft-devel \
-    libpng-devel \
-    freetype-devel \
-    glfw-devel \
-    git
+     cmake make \
+     gcc-c++ SDL2-devel \
+     openal-soft-devel \
+     zlib-devel mesa-libGL-devel \
+     docker
 ```
 
 ### 2. Install Simulant CLI
@@ -37,17 +35,7 @@ sudo dnf install \
 The Simulant CLI tool helps you create, build, and manage projects:
 
 ```bash
-# Clone the Simulant repository
-git clone https://gitlab.com/simulant/simulant.git
-cd simulant
-
-# Build the engine
-mkdir build && cd build
-cmake ..
-make -j$(nproc)
-
-# Install system-wide
-sudo make install
+pip3 install -U --user git+https://gitlab.com/simulant/simulant-tools.git
 ```
 
 ### 3. Verify Installation
@@ -72,19 +60,25 @@ Ubuntu and Linux Mint are also well-supported.
 
 ```bash
 sudo apt update
-sudo apt install \
-    build-essential cmake \
-    libgl1-mesa-dev libglu1-mesa-dev \
+sudo apt-get install \
+    python3-pip git \
+    python3-setuptools \
+    cmake build-essential \
+    libsdl2-dev \
     libopenal-dev \
-    libpng-dev \
-    libfreetype-dev \
-    libglfw3-dev \
-    git
+    docker.io
 ```
 
 ### 2. Install Simulant
 
-Follow the same steps as the Fedora installation above (clone, build, install).
+Follow the same steps as the Fedora installation above.
+
+You may need to fix the PATH variable to find the command: 
+
+```
+echo "PATH=$HOME/.local/bin:$PATH" >> ~/.profile
+source ~/.profile
+```
 
 ---
 
@@ -108,14 +102,13 @@ Inside your WSL2 terminal:
 
 ```bash
 sudo apt update
-sudo apt install \
-    build-essential cmake \
-    libgl1-mesa-dev libglu1-mesa-dev \
+sudo apt-get install \
+    python3-pip git \
+    python3-setuptools \
+    cmake build-essential \
+    libsdl2-dev \
     libopenal-dev \
-    libpng-dev \
-    libfreetype-dev \
-    libglfw3-dev \
-    git
+    docker.io
 
 # Enable WSLg for GUI support (Windows 11)
 # On Windows 10, you may need to install an X server like VcXsrv
@@ -141,9 +134,9 @@ See [Manual DreamSDK Installation](install_manual_dreamsdk.md) for details.
 
 ---
 
-## Docker (Optional)
+## Docker
 
-Docker is **not required** for basic development, but it enables:
+Docker is **required** when using the simulant cli to allow:
 
 - Cross-compilation for Dreamcast and Windows
 - Reproducible builds
