@@ -2,6 +2,7 @@
 #include "../types.h"
 #include "mat3.h"
 #include "../deps/sh4zam/shz_matrix.h"
+#include "../deps/sh4zam/shz_quat.h"
 #include "quaternion.h"
 #include "utils.h"
 
@@ -30,7 +31,7 @@ bool Mat4::operator==(const Mat4& rhs) const {
 Mat4 Mat4::as_rotation(const Quaternion& rhs) {
     Mat4 m;
     auto n = (shz_mat4x4_t*) m.data();
-    shz_mat4x4_init_rotation_quat(n, (shz_quat_t&) rhs);
+    shz_mat4x4_init_rotation_quat(n, shz_quat_init(rhs.w, rhs.x, rhs.y, rhs.z));
     return m;
 }
 
@@ -74,7 +75,13 @@ Vec3 Mat4::operator*(const Vec3& v) const {
 void Mat4::extract_rotation_and_translation(Quaternion& rotation,
                                             Vec3& translation) const {
     shz_vec3 trn, scale;
-    shz_mat4x4_decompose((shz_mat4x4_t*) data(), &trn, (shz_quat_t*) &rotation, &scale);
+    shz_quat_t rot_q;
+    shz_mat4x4_decompose((shz_mat4x4_t*) data(), &trn, &rot_q, &scale);
+
+    rotation.w = rot_q.w;
+    rotation.x = rot_q.x;
+    rotation.y = rot_q.y;
+    rotation.z = rot_q.z;
 
     translation.x = trn.x;
     translation.y = trn.y;

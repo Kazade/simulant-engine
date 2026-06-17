@@ -21,12 +21,20 @@ struct AxisAngle {
 };
 
 
-struct alignas(8) Quaternion {
+struct Quaternion {
     friend struct Vec3;
     friend struct Mat4;
     friend struct Mat3;
 
-    float w, x, y, z;
+    union {
+        struct {
+            float w;
+            float x;
+            float y;
+            float z;
+        };
+        float wxyz[4];
+    };
 
     Quaternion() {
         w = 1.0f;

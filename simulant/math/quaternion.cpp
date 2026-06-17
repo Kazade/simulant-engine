@@ -10,54 +10,44 @@ std::ostream& operator<<(std::ostream& stream, const Quaternion& quat) {
 }
 
 void Quaternion::normalize() {
-    auto self = (shz_quat_t*) this;
-    ((shz_quat&) *self) = shz_quat_normalize(*self);
+    auto result = shz_quat_normalize(shz_quat_init(w, x, y, z));
+    w = result.w; x = result.x; y = result.y; z = result.z;
 }
 
 float Quaternion::dot(const Quaternion& rhs) const {
-    auto self = (shz_quat_t*) this;
-    return shz_quat_dot(*self, (shz_quat_t&) rhs);
+    return shz_quat_dot(shz_quat_init(w, x, y, z), shz_quat_init(rhs.w, rhs.x, rhs.y, rhs.z));
 }
 
 Vec3 Quaternion::axis() const {
-    auto self = (shz_quat_t*) this;
-    auto a = shz_quat_axis(*self);
+    auto a = shz_quat_axis(shz_quat_init(w, x, y, z));
     return Vec3(a.x, a.y, a.z);
 }
 
 Quaternion Quaternion::nlerp(const Quaternion& rhs, float t) const {
-    auto self = (shz_quat_t*) this;
-    Quaternion ret;
-    ((shz_quat&)ret) = shz_quat_nlerp(*self, (shz_quat_t&) rhs, t);
-    return ret;
+    auto result = shz_quat_nlerp(shz_quat_init(w, x, y, z), shz_quat_init(rhs.w, rhs.x, rhs.y, rhs.z), t);
+    return Quaternion(result.x, result.y, result.z, result.w);
 }
 
 Quaternion Quaternion::slerp(const Quaternion& rhs, float t) const {
-    Quaternion ret;
-    auto self = (shz_quat_t*) this;
-    ((shz_quat&)ret) = shz_quat_slerp(*self, (shz_quat_t&) rhs, t);
-    return ret;
+    auto result = shz_quat_slerp(shz_quat_init(w, x, y, z), shz_quat_init(rhs.w, rhs.x, rhs.y, rhs.z), t);
+    return Quaternion(result.x, result.y, result.z, result.w);
 }
 
 const Degrees Quaternion::pitch() const {
-    auto self = (shz_quat_t*) this;
-    return Radians(shz_quat_angle_x(*self));
+    return Radians(shz_quat_angle_x(shz_quat_init(w, x, y, z)));
 }
 
 const Degrees Quaternion::yaw() const {
-    auto self = (shz_quat_t*) this;
-    return Radians(shz_quat_angle_y(*self));
+    return Radians(shz_quat_angle_y(shz_quat_init(w, x, y, z)));
 }
 
 const Degrees Quaternion::roll() const {
-    auto self = (shz_quat_t*) this;
-    return Radians(shz_quat_angle_z(*self));
+    return Radians(shz_quat_angle_z(shz_quat_init(w, x, y, z)));
 }
 
 void Quaternion::inverse() {
-    auto self = (shz_quat_t*) this;
-
-    ((shz_quat&) *self) = shz_quat_inv(*self);
+    auto result = shz_quat_inv(shz_quat_init(w, x, y, z));
+    w = result.w; x = result.x; y = result.y; z = result.z;
 }
 
 Quaternion Quaternion::look_rotation(const Vec3& direction, const Vec3& up) {
