@@ -1,3 +1,4 @@
+#include <cassert>
 #include "mat4.h"
 #include "../types.h"
 #include "mat3.h"

@@ -1,3 +1,4 @@
+#include <cassert>
 #include "../types.h"
 #include "quaternion.h"
 #include "../deps/sh4zam/shz_quat.h"
