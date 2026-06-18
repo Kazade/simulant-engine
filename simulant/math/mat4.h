@@ -34,13 +34,13 @@ typedef std::vector<float> FloatArray;
 
 #include <assert.h>
 
-struct alignas(8) Mat4 {
+struct Mat4 {
 private:
     // We need some data that is *always* 8 byte aligned. Unfortunately
     // GCC on sh4 doesn't always do this on stack variables even if we specify
     // alignas! We work around this by adding 4-byte extra space and manually
     // aligning.
-    uint8_t m[sizeof(float) * (16 + 4)];
+    alignas(8) uint8_t m[(sizeof(float) * 16) + 4];
 
 public:
     Mat4();
@@ -100,11 +100,20 @@ public:
     Plane extract_plane(FrustumPlane plane) const;
 
     float* data() {
-        return (float*) (((uintptr_t(m) + 7) & ~7));
+        void* n = _native();
+        return (float*) n;
     }
 
     const float* data() const {
         return const_cast<Mat4*>(this)->data();
+    }
+
+    void* _native() {
+        return (void*) (((uintptr_t(m) + 7) & ~7));
+    }
+
+    const void* _native() const {
+        return const_cast<Mat4*>(this)->_native();
     }
 
     // Faster inverse for TRS (translation/rotation/scale) matrices.

@@ -802,11 +802,11 @@ void Mesh::update_skinning() {
         const Mat4& joint_matrix = joint_node->transform->world_space_matrix();
 
         // XMTRX = mesh_world_inverse * joint_matrix
-        shz_xmtrx_load_apply_4x4((shz_mat4x4_t*) mesh_world_inverse.data(), (shz_mat4x4_t*) joint_matrix.data());
+        shz_xmtrx_load_apply_4x4((shz_mat4x4_t*) mesh_world_inverse._native(), (shz_mat4x4_t*) joint_matrix._native());
         // XMTRX = (mesh_world_inverse * joint_matrix) * inverse_bind_matrices[h]
-        shz_xmtrx_apply_4x4((shz_mat4x4_t*) skin->inverse_bind_matrices[h].data());
+        shz_xmtrx_apply_4x4((shz_mat4x4_t*) skin->inverse_bind_matrices[h]._native());
         // Store result
-        shz_xmtrx_store_4x4((shz_mat4x4_t*) pre_joint_matrices[h].data());
+        shz_xmtrx_store_4x4((shz_mat4x4_t*) pre_joint_matrices[h]._native());
     }
 
     // Hoist the joint data-type check outside the per-vertex loop.

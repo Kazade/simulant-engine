@@ -9,44 +9,39 @@
 namespace smlt {
 
 Mat4::Mat4() {
-    shz_mat4x4_init_identity((shz_mat4x4_t*) data());
+    shz_mat4x4_init_identity((shz_mat4x4_t*) _native());
 }
 
 Mat4 Mat4::zero() {
     Mat4 r;
-    shz_mat4x4_init_zero((shz_mat4x4_t*) r.data());
+    shz_mat4x4_init_zero((shz_mat4x4_t*) r._native());
     return r;
 }
 
 Mat4 Mat4::operator*(const Mat4& rhs) const {
     Mat4 result;
-    shz_mat4x4_mult((shz_mat4x4_t*) result.data(), (shz_mat4x4_t*)data(), (shz_mat4x4_t*)rhs.data());
+    shz_mat4x4_mult((shz_mat4x4_t*) result._native(), (shz_mat4x4_t*) _native(), (shz_mat4x4_t*) rhs._native());
     return result;
 }
 
 bool Mat4::operator==(const Mat4& rhs) const {
-    return shz_mat4x4_equal((shz_mat4x4_t*)data(), (shz_mat4x4_t*)rhs.data());
+    return shz_mat4x4_equal((shz_mat4x4_t*) _native(), (shz_mat4x4_t*) rhs._native());
 }
 
 Mat4 Mat4::as_rotation(const Quaternion& rhs) {
     Mat4 m;
-    auto n = (shz_mat4x4_t*) m.data();
-    shz_mat4x4_init_rotation_quat(n, shz_quat_init(rhs.w, rhs.x, rhs.y, rhs.z));
+    shz_mat4x4_init_rotation_quat((shz_mat4x4_t*) m._native(), shz_quat_init(rhs.w, rhs.x, rhs.y, rhs.z));
     return m;
 }
 
 Mat4 Mat4::inversed_transform() const {
     Mat4 result;
-
-    auto n = (shz_mat4x4_t*) data();
-    auto rn = (shz_mat4x4_t*) result.data();
-
-    shz_mat4x4_inverse_block_triangular(n, rn);
+    shz_mat4x4_inverse_block_triangular((shz_mat4x4_t*) _native(), (shz_mat4x4_t*) result._native());
     return result;
 }
 
 void Mat4::transpose() {
-    auto n = (shz_mat4x4_t*) data();
+    auto n = (shz_mat4x4_t*) _native();
     shz_mat4x4_transpose(n, n);
 }
 
@@ -57,8 +52,7 @@ Vec4 Mat4::operator*(const Vec4& v) const {
     vec.y = v.y;
     vec.z = v.z;
     vec.w = v.w;
-
-    vec = shz_mat4x4_transform_vec4((shz_mat4x4_t*) data(), vec);
+    vec = shz_mat4x4_transform_vec4((shz_mat4x4_t*) _native(), vec);
     return Vec4(vec.x, vec.y, vec.z, vec.w);
 }
 
@@ -67,8 +61,7 @@ Vec3 Mat4::operator*(const Vec3& v) const {
     vec.x = v.x;
     vec.y = v.y;
     vec.z = v.z;
-
-    vec = shz_mat4x4_transform_vec3((shz_mat4x4_t*) data(), vec);
+    vec = shz_mat4x4_transform_vec3((shz_mat4x4_t*) _native(), vec);
     return Vec3(vec.x, vec.y, vec.z);
 }
 
@@ -76,7 +69,7 @@ void Mat4::extract_rotation_and_translation(Quaternion& rotation,
                                             Vec3& translation) const {
     shz_vec3 trn, scale;
     shz_quat_t rot_q;
-    shz_mat4x4_decompose((shz_mat4x4_t*) data(), &trn, &rot_q, &scale);
+    shz_mat4x4_decompose((shz_mat4x4_t*) _native(), &trn, &rot_q, &scale);
 
     rotation.w = rot_q.w;
     rotation.x = rot_q.x;
@@ -111,7 +104,7 @@ Mat4 Mat4::as_rotation_xyz(const Degrees& angle_x, const Degrees& angle_y,
 
 Mat4 Mat4::as_scale(const smlt::Vec3& s) {
     Mat4 ret;
-    shz_mat4x4_init_scale((shz_mat4x4_t*) ret.data(), s.x, s.y, s.z);
+    shz_mat4x4_init_scale((shz_mat4x4_t*) ret._native(), s.x, s.y, s.z);
     return ret;
 }
 
@@ -185,9 +178,8 @@ Mat4 Mat4::as_orthographic(float left, float right, float bottom, float top,
 
 void Mat4::inverse() {
     Mat4 tmp;
-
-    shz_mat4x4_inverse((shz_mat4x4_t*) data(), (shz_mat4x4_t*) tmp.data());
-    shz_mat4x4_copy((shz_mat4x4_t*) data(), (shz_mat4x4_t*) tmp.data());
+    shz_mat4x4_inverse((shz_mat4x4_t*) _native(), (shz_mat4x4_t*) tmp._native());
+    shz_mat4x4_copy((shz_mat4x4_t*) _native(), (shz_mat4x4_t*) tmp._native());
 }
 
 Plane Mat4::extract_plane(FrustumPlane plane) const {
@@ -293,7 +285,7 @@ Mat4Scratch::Mat4Scratch(const Mat4& m) {
     assert(current_ == nullptr);
     current_ = this;
 #endif
-    shz_xmtrx_load_4x4((shz_mat4x4_t*) m.data());
+    shz_xmtrx_load_4x4((shz_mat4x4_t*) m._native());
 }
 
 Vec3 Mat4Scratch::transform_point(const Vec3& in) const {

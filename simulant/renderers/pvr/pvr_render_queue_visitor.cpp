@@ -512,7 +512,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         auto& buf = renderer_->buffer(renderer_->current_list_type_)
                         .buffers[renderer_->current_buffer_index_];
 
-        shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp.data());
+        shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp._native());
 
         /* Position-only clip-space vertex. */
         struct ModVtx { float x, y, z, w; };
@@ -897,7 +897,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
          * position transforms can also use FTRV.
          * ------------------------------------------------------------ */
         if(lighting_enabled) {
-            shz_xmtrx_load_4x4((shz_mat4x4_t*) modelview.data());
+            shz_xmtrx_load_4x4((shz_mat4x4_t*) modelview._native());
 
             const float roughness_alpha   = mat_roughness_ * mat_roughness_;
             const float roughness_alphaSq = roughness_alpha * roughness_alpha;
@@ -1021,12 +1021,12 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             }
 
             /* Restore MVP for any subsequent batch. */
-            shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp.data());
+            shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp._native());
         }
     };
 
     /* MVP is loaded once here; transform_batch keeps it loaded across calls. */
-    shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp.data());
+    shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp._native());
 
     /* Lambda to do perspective divide and emit a ClipVertex.
      * For OP: submits directly via store queues (64-byte Type 5 format).
