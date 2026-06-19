@@ -203,6 +203,7 @@ ELSE()
 ENDIF()
 
 target_link_libraries(simulant PRIVATE sh4zam)
+target_include_directories(simulant PRIVATE ${CMAKE_SOURCE_DIR}/deps/sh4zam/include)
 
 if(FLTO_SUPPORTED)
   message(STATUS "IPO / LTO enabled")

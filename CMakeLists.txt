@@ -199,8 +199,6 @@ ENDIF()
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/deps/sh4zam)
 
-include_directories(${CMAKE_SOURCE_DIR}/deps/sh4zam/include)
-
 IF(ANDROID)
   include_directories(
         ${ANDROID_NDK}/sources/android/native_app_glue
