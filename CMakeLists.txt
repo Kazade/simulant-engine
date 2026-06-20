@@ -197,6 +197,10 @@ IF(USE_GLAD_FOR_OPENGL)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_USE_GLAD")
 ENDIF()
 
+# Build sh4zam as an OBJECT library so its object files are baked into
+# libsimulant directly. This keeps sh4zam an internal implementation detail:
+# users only need to link simulant, not sh4zam.
+set(SHZ_LIBRARY_TYPE OBJECT)
 add_subdirectory(${CMAKE_SOURCE_DIR}/deps/sh4zam)
 
 IF(ANDROID)
