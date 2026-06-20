@@ -188,7 +188,7 @@ void PVRRenderer::on_post_render() {
 
             /* Reserve room for KOS's 32-byte zero terminator (appended
              * in pvr_scene_finish), then round up to 64. */
-            size_t buf_size = (count + 32 + 63) & ~63;
+            size_t buf_size = (count + 64 + 63) & ~63;
             if(buf_size < 64) buf_size = 64;
             b.resize(buf_size);
 
