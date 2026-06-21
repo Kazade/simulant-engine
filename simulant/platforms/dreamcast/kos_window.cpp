@@ -108,6 +108,8 @@ void KOSWindow::do_swap_buffers() {
 }
 
 bool KOSWindow::_init_window() {
+    set_width(SCREEN_WIDTH);
+    set_height(SCREEN_HEIGHT);
     probe_vmus();
     return true;
 }
