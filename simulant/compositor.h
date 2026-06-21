@@ -19,6 +19,7 @@
 #ifndef PIPELINE_H
 #define PIPELINE_H
 
+#include <algorithm>
 #include <vector>
 #include <memory>
 
@@ -136,6 +137,18 @@ public:
     LayerPtr create_layer(StageNode* subtree, Camera* camera, int32_t priority=0) {
         auto ret = compositor_->create_layer(subtree, camera, Viewport(), nullptr, priority);
         layers_.push_back(ret);
+
+        /* The layer is owned by the global compositor; we only hold a raw
+         * pointer. If it's destroyed out from under us (e.g. a scene calls
+         * layer->destroy() during unload) we must drop our pointer, otherwise
+         * destroy_all_layers() would later dereference freed memory. */
+        ret->signal_destroyed().connect([this, ret]() {
+            layers_.erase(
+                std::remove(layers_.begin(), layers_.end(), ret),
+                layers_.end()
+            );
+        });
+
         return ret;
     }
 
@@ -150,8 +163,14 @@ public:
     }
 
     void destroy_all_layers() {
-        for(auto& layer: layers_) {
-            layer->destroy();
+        /* Move out first: destroy() fires signal_destroyed, whose handler
+         * erases from layers_, which would otherwise invalidate iteration. */
+        auto layers = std::move(layers_);
+        layers_.clear();
+        for(auto& layer: layers) {
+            if(layer) {
+                layer->destroy();
+            }
         }
     }
 

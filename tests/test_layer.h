@@ -96,6 +96,30 @@ public:
         assert_not_equal(p->camera(), camera);
     }
 
+    void test_destroyed_layer_removed_from_scene_compositor() {
+        /* Regression test: a SceneCompositor only holds raw Layer* pointers
+         * into the global compositor's pool. If a layer is destroyed while the
+         * scene is still alive (as the Splash scene does in on_unload), the
+         * SceneCompositor must drop its pointer. Otherwise destroy_all_layers()
+         * (run from ~SceneCompositor) later dereferences freed memory. */
+        smlt::SceneCompositor sc(scene, window->compositor);
+
+        auto layer = sc.create_layer(stage, camera);
+        assert_is_not_null(layer);
+        assert_equal(std::distance(sc.begin(), sc.end()), 1);
+
+        /* Destroying the layer must immediately remove it from the scene
+         * compositor's list... */
+        layer->destroy();
+        assert_equal(std::distance(sc.begin(), sc.end()), 0);
+
+        /* ...and once a frame runs the global compositor frees the underlying
+         * Layer. The dangling pointer must already be gone, so neither this
+         * frame nor sc going out of scope (destroy_all_layers) touches freed
+         * memory. */
+        application->run_frame();
+    }
+
 private:
     StagePtr stage;
     CameraPtr camera;
