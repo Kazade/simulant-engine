@@ -23,6 +23,7 @@
 #include <cstdlib>
 
 #include "color.h"
+#include "logging.h"
 
 namespace smlt {
 
@@ -44,16 +45,33 @@ std::string Color::to_hex_string() const {
 }
 
 Color Color::from_hex_string(const std::string& hex_string) {
-    std::string rpart(hex_string.begin(), hex_string.begin() + 2);
-    std::string gpart(hex_string.begin() + 2, hex_string.begin() + 4);
-    std::string bpart(hex_string.begin() + 4, hex_string.begin() + 6);
-    std::string apart(hex_string.begin() + 6, hex_string.end());
+    auto start = hex_string.begin();
+    if(start != hex_string.end() && *start == '#') {
+        ++start;
+    }
+
+    auto len = std::distance(start, hex_string.end());
+
+    if(len < 6) {
+        S_WARN("Invalid hex color string: {0}", hex_string);
+        return Color::white();
+    }
+
+    std::string rpart(start, start + 2);
+    std::string gpart(start + 2, start + 4);
+    std::string bpart(start + 4, start + 6);
+
+    float a = 1.0f;
+    if(len >= 8) {
+        std::string apart(start + 6, start + 8);
+        a = float(strtoul(apart.c_str(), nullptr, 16)) / 255.0f;
+    }
 
     return Color(
         float(strtoul(rpart.c_str(), nullptr, 16)) / 255.0f,
         float(strtoul(gpart.c_str(), nullptr, 16)) / 255.0f,
         float(strtoul(bpart.c_str(), nullptr, 16)) / 255.0f,
-        float(strtoul(apart.c_str(), nullptr, 16)) / 255.0f
+        a
     );
 }
 

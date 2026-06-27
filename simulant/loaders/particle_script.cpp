@@ -75,22 +75,25 @@ static smlt::Manipulator* spawn_size_manipulator(ParticleScript* ps, JSONIterato
 static auto parse_color = [](const std::string& color) -> smlt::Color {
     auto parts = unicode(color).split(" ");
     if(parts.size() == 3) {
-        return smlt::Color(
+        return Color(
             parts[0].to_float(),
             parts[1].to_float(),
             parts[2].to_float(),
             1.0f
         );
     } else if(parts.size() == 4) {
-        return smlt::Color(
+        return Color(
             parts[0].to_float(),
             parts[1].to_float(),
             parts[2].to_float(),
             parts[3].to_float()
         );
+    } else if(parts.size() == 1 && parts[0][0] == '#') {
+        // Hex color
+        return Color::from_hex_string(parts[0].encode());
     } else {
         S_WARN("Invalid number of color components to color fader");
-        return smlt::Color::white();
+        return Color::white();
     }
 };
 
@@ -366,4 +369,3 @@ bool ParticleScriptLoader::into(Loadable& resource,
 }
 }
 }
-

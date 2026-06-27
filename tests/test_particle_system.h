@@ -104,6 +104,220 @@ public:
 
         assert_true(p1.position.y < p0.position.y);
     }
+
+    void test_hex_color_parsing() {
+        auto tmpdir = kfs::temp_dir();
+        auto test_file = kfs::path::join(tmpdir, "hex_color_test.kglp");
+
+        {
+            std::ofstream out(test_file);
+            out << R"({
+                "name": "hex_test",
+                "quota": 10,
+                "emitters": [{
+                    "emission_rate": 5,
+                    "ttl": 1.0,
+                    "direction": "0.0 1.0 0.0",
+                    "color": "#FF8000"
+                }]
+            })";
+        }
+
+        auto vfs = application->vfs.get();
+        vfs->add_search_path(tmpdir);
+
+        auto script = scene->assets->load_particle_script("hex_color_test.kglp");
+        assert_is_not_null(script.get());
+
+        auto emitter = script->emitter(0);
+        assert_is_not_null(emitter);
+        assert_equal(emitter->colors.size(), 1u);
+
+        auto c = emitter->colors[0];
+        assert_close(c.r, 1.0f, 0.01f);
+        assert_close(c.g, 0.502f, 0.01f);
+        assert_close(c.b, 0.0f, 0.01f);
+        assert_close(c.a, 1.0f, 0.01f);
+
+        vfs->remove_search_path(tmpdir);
+        std::remove(test_file.c_str());
+    }
+
+    void test_hex_color_lowercase() {
+        auto tmpdir = kfs::temp_dir();
+        auto test_file = kfs::path::join(tmpdir, "hex_lower_test.kglp");
+
+        {
+            std::ofstream out(test_file);
+            out << R"({
+                "name": "hex_lower_test",
+                "quota": 10,
+                "emitters": [{
+                    "emission_rate": 5,
+                    "ttl": 1.0,
+                    "direction": "0.0 1.0 0.0",
+                    "color": "#00ff80"
+                }]
+            })";
+        }
+
+        auto vfs = application->vfs.get();
+        vfs->add_search_path(tmpdir);
+
+        auto script = scene->assets->load_particle_script("hex_lower_test.kglp");
+        assert_is_not_null(script.get());
+
+        auto emitter = script->emitter(0);
+        auto c = emitter->colors[0];
+        assert_close(c.r, 0.0f, 0.01f);
+        assert_close(c.g, 1.0f, 0.01f);
+        assert_close(c.b, 0.502f, 0.01f);
+        assert_close(c.a, 1.0f, 0.01f);
+
+        vfs->remove_search_path(tmpdir);
+        std::remove(test_file.c_str());
+    }
+
+    void test_hex_color_mixed_case() {
+        auto tmpdir = kfs::temp_dir();
+        auto test_file = kfs::path::join(tmpdir, "hex_mixed_test.kglp");
+
+        {
+            std::ofstream out(test_file);
+            out << R"({
+                "name": "hex_mixed_test",
+                "quota": 10,
+                "emitters": [{
+                    "emission_rate": 5,
+                    "ttl": 1.0,
+                    "direction": "0.0 1.0 0.0",
+                    "color": "#AbCDeF"
+                }]
+            })";
+        }
+
+        auto vfs = application->vfs.get();
+        vfs->add_search_path(tmpdir);
+
+        auto script = scene->assets->load_particle_script("hex_mixed_test.kglp");
+        assert_is_not_null(script.get());
+
+        auto emitter = script->emitter(0);
+        auto c = emitter->colors[0];
+        assert_close(c.r, 0.671f, 0.01f);
+        assert_close(c.g, 0.804f, 0.01f);
+        assert_close(c.b, 0.937f, 0.01f);
+        assert_close(c.a, 1.0f, 0.01f);
+
+        vfs->remove_search_path(tmpdir);
+        std::remove(test_file.c_str());
+    }
+
+    void test_hex_color_with_alpha() {
+        auto tmpdir = kfs::temp_dir();
+        auto test_file = kfs::path::join(tmpdir, "hex_alpha_test.kglp");
+
+        {
+            std::ofstream out(test_file);
+            out << R"({
+                "name": "hex_alpha_test",
+                "quota": 10,
+                "emitters": [{
+                    "emission_rate": 5,
+                    "ttl": 1.0,
+                    "direction": "0.0 1.0 0.0",
+                    "color": "#FF800080"
+                }]
+            })";
+        }
+
+        auto vfs = application->vfs.get();
+        vfs->add_search_path(tmpdir);
+
+        auto script = scene->assets->load_particle_script("hex_alpha_test.kglp");
+        assert_is_not_null(script.get());
+
+        auto emitter = script->emitter(0);
+        auto c = emitter->colors[0];
+        assert_close(c.r, 1.0f, 0.01f);
+        assert_close(c.g, 0.502f, 0.01f);
+        assert_close(c.b, 0.0f, 0.01f);
+        assert_close(c.a, 0.502f, 0.01f);
+
+        vfs->remove_search_path(tmpdir);
+        std::remove(test_file.c_str());
+    }
+
+    void test_hex_color_invalid_too_short() {
+        auto tmpdir = kfs::temp_dir();
+        auto test_file = kfs::path::join(tmpdir, "hex_short_test.kglp");
+
+        {
+            std::ofstream out(test_file);
+            out << R"({
+                "name": "hex_short_test",
+                "quota": 10,
+                "emitters": [{
+                    "emission_rate": 5,
+                    "ttl": 1.0,
+                    "direction": "0.0 1.0 0.0",
+                    "color": "#FFF"
+                }]
+            })";
+        }
+
+        auto vfs = application->vfs.get();
+        vfs->add_search_path(tmpdir);
+
+        auto script = scene->assets->load_particle_script("hex_short_test.kglp");
+        assert_is_not_null(script.get());
+
+        auto emitter = script->emitter(0);
+        auto c = emitter->colors[0];
+        // Should fall back to white
+        assert_close(c.r, 1.0f, 0.01f);
+        assert_close(c.g, 1.0f, 0.01f);
+        assert_close(c.b, 1.0f, 0.01f);
+
+        vfs->remove_search_path(tmpdir);
+        std::remove(test_file.c_str());
+    }
+
+    void test_hex_color_invalid_no_hash() {
+        auto tmpdir = kfs::temp_dir();
+        auto test_file = kfs::path::join(tmpdir, "hex_nohash_test.kglp");
+
+        {
+            std::ofstream out(test_file);
+            out << R"({
+                "name": "hex_nohash_test",
+                "quota": 10,
+                "emitters": [{
+                    "emission_rate": 5,
+                    "ttl": 1.0,
+                    "direction": "0.0 1.0 0.0",
+                    "color": "FF8000"
+                }]
+            })";
+        }
+
+        auto vfs = application->vfs.get();
+        vfs->add_search_path(tmpdir);
+
+        auto script = scene->assets->load_particle_script("hex_nohash_test.kglp");
+        assert_is_not_null(script.get());
+
+        auto emitter = script->emitter(0);
+        auto c = emitter->colors[0];
+        // Without #, it's parsed as space-separated floats: "FF8000" has 1 part
+        // but no # prefix, so it falls through to the else branch -> white
+        assert_close(c.r, 1.0f, 0.01f);
+        assert_close(c.g, 1.0f, 0.01f);
+        assert_close(c.b, 1.0f, 0.01f);
+
+        vfs->remove_search_path(tmpdir);
+        std::remove(test_file.c_str());
+    }
 };
 
 }
