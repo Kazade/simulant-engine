@@ -14,17 +14,16 @@
             "ttl_min": 0.1,
             "ttl_max": 0.3,
             "angle": 90,
-            "colour": "1 0 0 1",
+            "color": "1 0 0 1",
             "emission_rate": 30
         }
     ],
 
-    "affectors": [
+    "manipulators": [
         {
-            "type": "colour_fader",
-            "red": -0.25,
-            "green": -0.25,
-            "blue": -0.25
+            "type": "color_fader",
+            "colors": ["1 0 0 1", "0 0 0 0"],
+            "interpolate": true
         }
     ]
 }

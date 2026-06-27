@@ -13,7 +13,7 @@
             "ttl_min": 0.1,
             "ttl_max": 1.0,
             "angle": 180,
-            "colour": "1 1 1 1",
+            "color": "1 1 1 1",
             "emission_rate": 500,
             "duration": 0.1
         },
@@ -24,18 +24,17 @@
             "ttl_min": 0.1,
             "ttl_max": 1.0,
             "angle": 180,
-            "colour": "1 1 1 1",
+            "color": "1 1 1 1",
             "emission_rate": 500,
             "duration": 0.1
         }
     ],
 
-    "affectors": [
+    "manipulators": [
         {
-            "type": "colour_fader",
-            "red": -0.25,
-            "green": -0.25,
-            "blue": -0.25
+            "type": "color_fader",
+            "colors": ["1 1 1 1", "0 0 0 0"],
+            "interpolate": true
         }
     ]
 }
