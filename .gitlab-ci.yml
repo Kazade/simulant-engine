@@ -462,6 +462,7 @@ build:linux-x64-gcc11:
       - ${TARGET}/release/simulant/
       - ${TARGET}/release/assets/
       - ${TARGET}/release/tests/simulant_tests
+      - ${TARGET}/release/tests/*.*
 
 test:linux-x64-gcc11-debug:
   stage: test
