@@ -16,7 +16,7 @@
         "ttl_min": 1.0,
         "ttl_max": 1.0,
         "direction": "0.0 1.0 0.0",
-        "colour": "0.3 0.05 0.0 0.0"
+        "color": "0.3 0.05 0.0 0.0"
     }],
 
     "manipulators": [{

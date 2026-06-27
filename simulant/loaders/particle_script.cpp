@@ -48,7 +48,7 @@ static smlt::Manipulator* spawn_size_manipulator(ParticleScript* ps, JSONIterato
             S_WARN("Invalid curve specification {0}. Ignoring.", spec);
         } else {
             auto kind = spec.substr(0, first_brace);
-            auto args = spec.substr(first_brace + 1, spec.size() - 1);
+            auto args = spec.substr(first_brace + 1, spec.size() - first_brace - 2);
             if(kind == "linear") {
                 auto parts = unicode(args).split(",");
                 if(parts.size() > 1) {
@@ -165,10 +165,14 @@ bool ParticleScriptLoader::into(Loadable& resource,
     _S_UNUSED(options);
 
     ParticleScript* ps = loadable_to<ParticleScript>(resource);
+    if(!ps) {
+        S_ERROR("Resource is not a ParticleScript");
+        return false;
+    }
 
     auto js = json_read(this->data_);
 
-    ps->set_name(js["name"]->to_str().value());
+    ps->set_name(js["name"]->to_str().value_or("unnamed"));
 
     if(js->has_key("quota")) {
         ps->set_quota(js["quota"]->to_int().value_or(0));
@@ -217,13 +221,15 @@ bool ParticleScriptLoader::into(Loadable& resource,
                         }
                     } else if(type == MATERIAL_PROPERTY_TYPE_TEXTURE) {
                         auto dirname = kfs::path::dir_name(filename_.str());
-                        /* Add the local directory for image lookups */
-                        auto remove = vfs->add_search_path(dirname);
-                        auto tex = ps->asset_manager().load_texture(js[key]->to_str().value());
-                        mat->set_property_value(property_name.c_str(), tex);
-                        if(remove) {
-                            // Remove the path if necessary
-                            vfs->remove_search_path(dirname);
+                        if(vfs) {
+                            auto remove = vfs->add_search_path(dirname);
+                            auto tex = ps->asset_manager().load_texture(js[key]->to_str().value());
+                            mat->set_property_value(property_name.c_str(), tex);
+                            if(remove) {
+                                vfs->remove_search_path(dirname);
+                            }
+                        } else {
+                            S_ERROR("No VFS available to resolve texture path");
                         }
                     } else {
                         S_ERROR(
@@ -253,12 +259,15 @@ bool ParticleScriptLoader::into(Loadable& resource,
 
             if(emitter->has_key("direction")) {
                 auto parts = unicode(emitter["direction"]->to_str().value_or("0 1 0")).split(" ");
-                //FIXME: check length
-                new_emitter.direction = smlt::Vec3(
-                    parts.at(0).to_float(),
-                    parts.at(1).to_float(),
-                    parts.at(2).to_float()
-                );
+                if(parts.size() >= 3) {
+                    new_emitter.direction = smlt::Vec3(
+                        parts[0].to_float(),
+                        parts[1].to_float(),
+                        parts[2].to_float()
+                    );
+                } else {
+                    S_WARN("Invalid direction string, expected 3 components");
+                }
             }
 
             if(emitter->has_key("velocity")) {
@@ -327,13 +336,13 @@ bool ParticleScriptLoader::into(Loadable& resource,
             }
 
             if(emitter->has_key("color")) {
-                auto color = parse_color(emitter["color"]->to_str().value_or("0 0 0 0"));
+                auto color = parse_color(emitter["color"]->to_str().value_or("1 1 1 1"));
                 new_emitter.colors = {color};
             } else if(emitter->has_key("colors")) {
                 auto colors = emitter["colors"];
                 new_emitter.colors.clear();
                 for(std::size_t c = 0; c < colors->size(); ++c) {
-                    auto color = parse_color(colors[c]->to_str().value_or("0 0 0 0"));
+                    auto color = parse_color(colors[c]->to_str().value_or("1 1 1 1"));
                     new_emitter.colors.push_back(color);
                 }
             }
