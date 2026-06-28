@@ -78,11 +78,11 @@ KeyFrameAnimationState::KeyFrameAnimationState(KeyFrameAnimated* animatable, Ani
     );
 }
 
-void KeyFrameAnimationState::play_first_animation() {
-    play_animation(animatable_->first_animation_);
+void KeyFrameAnimationState::play_first_animation(AnimationRepeat repeat) {
+    play_animation(animatable_->first_animation_, repeat);
 }
 
-void KeyFrameAnimationState::play_animation(const std::string& name) {
+void KeyFrameAnimationState::play_animation(const std::string& name, AnimationRepeat repeat) {
     auto animatable = animatable_;
     if(!animatable) {
         S_WARN("Animatable has been destroyed, not animating");
@@ -101,7 +101,8 @@ void KeyFrameAnimationState::play_animation(const std::string& name) {
 
     current_animation_ = anim;
     current_animation_duration_ = current_animation_->duration;
-    next_animation_ = nullptr; //Wipe out the next animation, otherwise we'll get unexpected behaviour
+    next_animation_ = nullptr; // Clear any queued animation
+    repeat_mode_ = repeat;
 
     //Set the current frame and next frame appropriately
     current_frame_ = current_animation_->frames.first;
@@ -157,8 +158,12 @@ void KeyFrameAnimationState::update(float dt) {
                     current_animation_ = next_animation_;
                     current_animation_duration_ = next_animation_->duration;
                     next_animation_ = nullptr;
+                    next_frame_ = current_animation_->frames.first;
+                } else if(repeat_mode_ == ANIMATION_REPEAT_FOREVER) {
+                    next_frame_ = current_animation_->frames.first;
+                } else {
+                    current_animation_ = nullptr;
                 }
-                next_frame_ = current_animation_->frames.first;
             }
         }
     }

@@ -37,6 +37,11 @@ class KeyFrameAnimated;
 
 typedef sig::signal<void (KeyFrameAnimated*, const std::string&)> SignalAnimationAdded;
 
+enum AnimationRepeat {
+    ANIMATION_REPEAT_NONE,
+    ANIMATION_REPEAT_FOREVER
+};
+
 class KeyFrameAnimated {
     DEFINE_SIGNAL(SignalAnimationAdded, signal_animation_added);
 public:
@@ -96,8 +101,8 @@ public:
         on_animation_added_.disconnect();
     }
 
-    void play_first_animation();
-    void play_animation(const std::string& name);
+    void play_first_animation(AnimationRepeat repeat = ANIMATION_REPEAT_FOREVER);
+    void play_animation(const std::string& name, AnimationRepeat repeat = ANIMATION_REPEAT_FOREVER);
     void queue_next_animation(const std::string& name);
     void play_sequence(const std::string& name);
 
@@ -114,6 +119,8 @@ private:
     KeyFrameAnimated::Animation* current_animation_ = nullptr;
     KeyFrameAnimated::Animation* next_animation_ = nullptr;
     float current_animation_duration_ = 0.0f;
+
+    AnimationRepeat repeat_mode_ = ANIMATION_REPEAT_FOREVER;
 
     uint32_t current_frame_ = 0;
     uint32_t next_frame_ = 0;
