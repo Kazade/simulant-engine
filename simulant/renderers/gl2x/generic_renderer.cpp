@@ -340,10 +340,19 @@ void GenericRenderer::set_auto_attributes_on_shader(
                    &VertexSpecification::has_positions,
                    &VertexSpecification::position_offset, offset);
 
-    send_attribute(program->locate_attribute("s_color", true),
+    auto color_loc = program->locate_attribute("s_color", true);
+    send_attribute(color_loc,
                    VERTEX_ATTRIBUTE_TYPE_COLOR, vertex_spec,
                    &VertexSpecification::has_color,
                    &VertexSpecification::color_offset, offset);
+
+    /* When the mesh has no vertex colours, the s_color attribute array is
+     * disabled and the shader receives the current generic attribute value,
+     * which defaults to (0,0,0,1) — black.  Set it to white so that the
+     * fragment shader's `base_color *= frag_color.rgb` is a no-op. */
+    if(color_loc > -1 && !vertex_spec.has_color()) {
+        GLCheck(glVertexAttrib4f, color_loc, 1.0f, 1.0f, 1.0f, 1.0f);
+    }
 
     send_attribute(program->locate_attribute("s_texcoord0", true),
                    VERTEX_ATTRIBUTE_TYPE_TEXCOORD0, vertex_spec,
