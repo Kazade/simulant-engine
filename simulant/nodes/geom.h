@@ -44,7 +44,6 @@ class GeomCuller;
 class Geom:
     public StageNode,
     public virtual Boundable,
-    public HasMutableRenderPriority,
     public ChainNameable<Geom> {
 
 public:

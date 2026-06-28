@@ -473,6 +473,7 @@ struct TreeLoadOptions {
 class alignas(32) StageNode:
     public generic::Identifiable<StageNodeID>,
     public DestroyableObject,
+    public HasMutableRenderPriority,
     public virtual Nameable,
     public Printable,
     public Updateable,

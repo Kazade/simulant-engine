@@ -37,7 +37,6 @@ typedef std::size_t MeshInstanceID;
 class MeshInstancer:
     public StageNode,
     public virtual Boundable,
-    public HasMutableRenderPriority,
     public ChainNameable<MeshInstancer> {
 
 public:

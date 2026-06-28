@@ -25,7 +25,7 @@
 
 namespace smlt {
 
-class Debug: public StageNode, public HasMutableRenderPriority {
+class Debug: public StageNode {
 public:
     S_DEFINE_STAGE_NODE_META("debug");
 

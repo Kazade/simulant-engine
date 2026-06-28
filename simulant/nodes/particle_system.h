@@ -31,7 +31,6 @@ typedef sig::signal<void(ParticleSystem*, AssetID, AssetID)>
 
 class ParticleSystem:
     public StageNode,
-    public HasMutableRenderPriority,
     public ChainNameable<ParticleSystem> {
 
     DEFINE_SIGNAL(ParticleSystemMaterialChangedSignal, signal_material_changed);

@@ -122,7 +122,6 @@ typedef std::shared_ptr<WidgetStyle> WidgetStylePtr;
 
 class Widget:
     public ContainerNode,
-    public HasMutableRenderPriority,
     public ChainNameable<Widget> {
 
     DEFINE_SIGNAL(WidgetPressedSignal, signal_pressed);

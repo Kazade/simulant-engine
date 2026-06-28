@@ -49,7 +49,6 @@ struct ActorParams {
 class Actor:
     public StageNode,
     public virtual Boundable,
-    public HasMutableRenderPriority,
     public ChainNameable<Actor> {
 
 public:
