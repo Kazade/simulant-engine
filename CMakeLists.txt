@@ -24,6 +24,12 @@ ELSE()
   OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
 ENDIF()
 
+IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR PLATFORM_XBOX OR ANDROID)
+  OPTION(SIMULANT_BUILD_TOOLS "Build Simulant host tools (e.g. optimise_gltf)" OFF)
+ELSE()
+  OPTION(SIMULANT_BUILD_TOOLS "Build Simulant host tools (e.g. optimise_gltf)" ON)
+ENDIF()
+
 OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
 OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
 OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" OFF)
@@ -416,6 +422,10 @@ ENDIF()
 
 IF(SIMULANT_BUILD_SAMPLES)
   ADD_SUBDIRECTORY(samples)
+ENDIF()
+
+IF(SIMULANT_BUILD_TOOLS)
+  ADD_SUBDIRECTORY(tools/optimise_gltf)
 ENDIF()
 
 

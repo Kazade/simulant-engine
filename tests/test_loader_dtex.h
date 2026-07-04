@@ -1,6 +1,10 @@
 #pragma once
 
+#include <fstream>
+#include <sstream>
+
 #include <simulant/test.h>
+#include <simulant/loaders/dtex_loader.h>
 
 namespace {
 
@@ -150,6 +154,36 @@ public:
 #endif
         uint16_t texel = *((uint16_t*) &tex->data()[0]);
         assert_equal(texel, 0xF81F);
+    }
+
+    /* Embedded (data-uri) .dtex textures, as produced by the SMLT_dtex_texture
+     * gltf extension, are loaded from an in-memory stream rather than a file.
+     * This exercises DTEXLoader's memory do_load() overload directly. */
+    void test_load_from_memory() {
+        std::ifstream file("assets/samples/4444.dtex", std::ios::binary);
+        std::string bytes((std::istreambuf_iterator<char>(file)),
+                          std::istreambuf_iterator<char>());
+        assert_true(!bytes.empty());
+
+        auto stream = std::make_shared<std::istringstream>(bytes, std::ios::binary);
+        smlt::loaders::DTEXLoader loader(smlt::Path("memory.dtex"), stream);
+
+        auto tex = application->shared_assets->create_texture(8, 8);
+        assert_true(loader.into(*tex));
+
+        tex->set_free_data_mode(smlt::TEXTURE_FREE_DATA_NEVER);
+        tex->flush();
+
+        assert_equal(tex->width(), 8);
+        assert_equal(tex->height(), 8);
+
+#ifndef __DREAMCAST__
+        assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_4444);
+#else
+        assert_equal(tex->format(), smlt::TEXTURE_FORMAT_ARGB_1US_4444_TWID);
+#endif
+        uint16_t texel = *((uint16_t*) &tex->data()[0]);
+        assert_equal(texel, 0xFF0F);
     }
 };
 

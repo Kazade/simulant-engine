@@ -1,12 +1,16 @@
 #include "gltf_loader.h"
 
+#include <sstream>
+
 #include "../asset_manager.h"
 #include "../assets/prefab.h"
 #include "../generic/raii.h"
+#include "../platform.h"
 #include "../time_keeper.h"
 #include "../utils/base64.h"
 #include "../utils/random.h"
 #include "../vfs.h"
+#include "dtex_loader.h"
 #include "png_loader.h"
 #include "texture_loader.h"
 
@@ -596,16 +600,8 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
     if(!sampler.is_valid() || !image.is_valid()) {
         return smlt::TexturePtr();
     }
-    auto keys = image->keys();
-    smlt::Path uri = image["uri"]->to_str().value_or("");
-    if(!uri.str().empty()) {
-        if(!ext.empty()) {
-            uri = uri.replace_ext(ext);
-        }
 
-        S_VERBOSE("Loading texture from uri: ", uri.str());
-        auto tex = assets->load_texture(uri);
-
+    auto apply_sampler_settings = [&sampler](const smlt::TexturePtr& tex) {
         auto wrapS = sampler["wrapS"]->to_int().value_or(10497);
         auto wrapT = sampler["wrapT"]->to_int().value_or(10497);
         auto magFilter = sampler["magFilter"]->to_int().value_or(9729);
@@ -638,6 +634,51 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
         tex->set_texture_filter(calculate_filter(magFilter, minFilter));
         tex->set_texture_wrap(u, v, TEXTURE_WRAP_REPEAT);
         tex->flush();
+    };
+
+    /* On Dreamcast, prefer a pre-converted .dtex texture if the source gltf
+     * was processed with the SMLT_dtex_texture extension (see tools/optimise_gltf).
+     * .dtex textures are in the native PowerVR2 format so require no runtime
+     * conversion, unlike PNG/JPEG. */
+    if(get_platform()->name() == "dreamcast") {
+        auto dtex_uri =
+            image["extensions"]["SMLT_dtex_texture"]["uri"]->to_str().value_or("");
+        if(!dtex_uri.empty()) {
+            const char* b64_marker = ";base64,";
+            auto marker_pos = dtex_uri.find(b64_marker);
+            if(marker_pos != std::string::npos) {
+                auto decoded =
+                    smlt::base64_decode(dtex_uri.substr(marker_pos + strlen(b64_marker)));
+                if(decoded) {
+                    auto is = std::make_shared<std::istringstream>(*decoded, std::ios::binary);
+                    auto loader = DTEXLoader("embedded.dtex", is);
+                    auto tex = assets->create_texture(8, 8);
+                    if(loader.into(*tex)) {
+                        apply_sampler_settings(tex);
+                        return tex;
+                    }
+                    S_ERROR("Failed to load embedded .dtex texture");
+                } else {
+                    S_ERROR("Failed to base64 decode embedded .dtex texture");
+                }
+            } else {
+                S_VERBOSE("Loading dreamcast .dtex texture from uri: ", dtex_uri);
+                auto tex = assets->load_texture(smlt::Path(dtex_uri));
+                apply_sampler_settings(tex);
+                return tex;
+            }
+        }
+    }
+
+    smlt::Path uri = image["uri"]->to_str().value_or("");
+    if(!uri.str().empty()) {
+        if(!ext.empty()) {
+            uri = uri.replace_ext(ext);
+        }
+
+        S_VERBOSE("Loading texture from uri: ", uri.str());
+        auto tex = assets->load_texture(uri);
+        apply_sampler_settings(tex);
         return tex;
     } else {
         Accessor acc;

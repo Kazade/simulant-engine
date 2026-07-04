@@ -5,6 +5,7 @@
 build/*
 dbuild*
 pbuild*
+xbuild*
 tests/main.cpp
 tests/main-dc.cpp
 tests/main-psp.cpp
@@ -34,4 +35,5 @@ dcnative
 evbuild
 #deps*
 gradle
-
+tools/**/build
+**/PLAN.md
