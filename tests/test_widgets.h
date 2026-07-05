@@ -421,6 +421,131 @@ public:
         assert_true(hint_top_after < hint_top_before);
     }
 
+    void test_title_wider_than_children_grows_frame() {
+        // A title that's wider than every packed child must still fit -
+        // the frame needs to be at least as wide as its own title text.
+        smlt::ui::Frame* frame = scene->create_child<ui::Frame>("");
+        frame->set_font("Orbitron", smlt::ui::Px(22));
+        frame->set_text("A really quite long title that dwarfs the child");
+
+        auto child = scene->create_child<ui::Label>(" ");
+        child->resize(smlt::ui::Px(10), smlt::ui::Px(10));
+        frame->pack_child(child);
+
+        auto title_width = frame->content_width(); // includes title now
+        assert_true(title_width > smlt::ui::Px(10));
+    }
+
+    void test_full_name_dialog_repro() {
+        // Faithful reproduction of sinksub's name-entry dialog: a titled
+        // vertical Frame containing a headline, a prompt, a nested
+        // horizontal "reel" Frame of fixed-size slots, and a hint - with
+        // the headline resized to real (taller, multi-line) text only
+        // after everything has already been packed.
+        smlt::ui::Frame* dialog = scene->create_child<ui::Frame>("");
+        dialog->set_text("Log Yer Name, Pirate!");
+        dialog->set_border_width(smlt::ui::Px(3));
+        dialog->set_font("Orbitron", smlt::ui::Px(22));
+        dialog->set_padding(smlt::ui::Px(16));
+        dialog->set_space_between(smlt::ui::Px(10));
+        dialog->set_anchor_point(0.5f, 0.5f);
+
+        auto headline = scene->create_child<ui::Label>("");
+        headline->resize(smlt::ui::Px(360), smlt::ui::Px(-1));
+        dialog->pack_child(headline);
+
+        auto prompt = scene->create_child<ui::Label>("Spin the reels:");
+        prompt->resize(smlt::ui::Px(360), smlt::ui::Px(-1));
+        dialog->pack_child(prompt);
+
+        smlt::ui::Frame* reel = scene->create_child<ui::Frame>("");
+        reel->set_background_color(smlt::Color::none());
+        reel->set_border_width(smlt::ui::Px(0));
+        reel->set_layout_direction(smlt::ui::LAYOUT_DIRECTION_LEFT_TO_RIGHT);
+        reel->set_space_between(smlt::ui::Px(3));
+        dialog->pack_child(reel);
+
+        std::vector<smlt::ui::Label*> slots;
+        for(int i = 0; i < 4; ++i) {
+            auto slot = scene->create_child<ui::Label>(" ");
+            slot->resize(smlt::ui::Px(26), smlt::ui::Px(32));
+            slot->set_border_width(smlt::ui::Px(1));
+            reel->pack_child(slot);
+            slots.push_back(slot);
+        }
+
+        auto hint = scene->create_child<ui::Label>("Left/Right: slot");
+        hint->resize(smlt::ui::Px(360), smlt::ui::Px(-1));
+        dialog->pack_child(hint);
+
+        // Simulate show_name_dialog(): headline gets real 2-line text after
+        // everything else is already packed.
+        headline->set_text("Ye conquered the seven seas!\nYe made rank 1st!");
+
+        // The title text must fit within the frame (no space-for-title bug).
+        assert_true(dialog->content_width() >= smlt::ui::Px(360));
+
+        // The headline (now two lines tall) must sit below the title bar.
+        auto title_bottom = (dialog->outer_height().value / 2.0f) -
+                             dialog->line_height().value;
+        auto headline_top = headline->transform->translation_2d().y;
+        assert_true(headline_top <= title_bottom);
+
+        // All four reel slots must be distinctly, evenly spaced (26px wide,
+        // 3px apart -> 29px between consecutive left edges), not stacked
+        // on top of each other.
+        for(std::size_t i = 1; i < slots.size(); ++i) {
+            auto prev_x = slots[i - 1]->transform->translation_2d().x;
+            auto cur_x = slots[i]->transform->translation_2d().x;
+            assert_equal(int(cur_x - prev_x), 29);
+        }
+    }
+
+    void test_leaderboard_repro() {
+        // Faithful reproduction of sinksub's leaderboard dialog: a titled
+        // vertical Frame with 10 rows packed with empty placeholder text,
+        // then a hint, then every row is given real text afterwards
+        // (exactly like populate_leaderboard_labels()).
+        smlt::ui::Frame* dialog = scene->create_child<ui::Frame>("");
+        dialog->set_text("Hall o' Legends");
+        dialog->set_border_width(smlt::ui::Px(3));
+        dialog->set_font("Orbitron", smlt::ui::Px(22));
+        dialog->set_padding(smlt::ui::Px(16));
+        dialog->set_space_between(smlt::ui::Px(4));
+        dialog->set_anchor_point(0.5f, 0.5f);
+
+        std::vector<smlt::ui::Label*> rows;
+        for(int i = 0; i < 10; ++i) {
+            auto label = scene->create_child<ui::Label>("");
+            label->resize(smlt::ui::Px(320), smlt::ui::Px(-1));
+            dialog->pack_child(label);
+            rows.push_back(label);
+        }
+
+        auto hint = scene->create_child<ui::Label>("Press START to continue");
+        hint->resize(smlt::ui::Px(320), smlt::ui::Px(-1));
+        dialog->pack_child(hint);
+
+        for(int i = 0; i < 10; ++i) {
+            rows[i]->set_text("1st. SomePlayerName - 123456");
+        }
+
+        // Title must fit, and rows must not overlap the title bar.
+        assert_true(dialog->content_width() >= smlt::ui::Px(320));
+        auto title_bar_bottom =
+            (dialog->outer_height().value / 2.0f) - dialog->line_height().value;
+        assert_true(rows.front()->transform->translation_2d().y <= title_bar_bottom);
+
+        // Rows must be evenly spaced with no overlap: each row is
+        // line_height() tall (single line), 4px apart.
+        auto row_height = rows.front()->outer_height().value;
+        for(std::size_t i = 1; i < rows.size(); ++i) {
+            auto prev_y = rows[i - 1]->transform->translation_2d().y;
+            auto cur_y = rows[i]->transform->translation_2d().y;
+            assert_equal(int(prev_y - cur_y), row_height + 4);
+        }
+    }
+
     void test_widgets_are_orphaned_if_retained() {
         smlt::ui::Frame* frame = _setup_frame();
         auto& children = frame->packed_children();

@@ -198,7 +198,6 @@ Widget::WidgetBounds
 }
 
 UIDim Frame::calculate_content_dimensions(Px text_width, Px text_height) {
-    _S_UNUSED(text_width);
     _S_UNUSED(text_height);
 
     Px content_width, content_height;
@@ -223,8 +222,10 @@ UIDim Frame::calculate_content_dimensions(Px text_width, Px text_height) {
         content_width += (space_between() * gap_count);
     }
 
-    /* Titlebar */
+    /* Titlebar: reserve enough width for the title text too, since it isn't
+     * one of the packed children and so wouldn't otherwise be considered. */
     if(!text().empty()) {
+        content_width = std::max(content_width, text_width);
         content_height += line_height();
     }
 
