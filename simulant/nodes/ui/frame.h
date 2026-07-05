@@ -28,6 +28,8 @@ enum ChildCleanup {
 
 class Frame: public Widget, public RefCounted<Frame> {
 
+    friend class FrameTests;
+
 public:
     S_DEFINE_STAGE_NODE_META("frame");
     S_DEFINE_CORE_WIDGET_PROPERTIES(Frame);

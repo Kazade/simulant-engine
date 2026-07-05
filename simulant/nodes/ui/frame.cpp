@@ -80,11 +80,13 @@ void Frame::finalize_build() {
 
         auto vdata = mesh()->vertex_data.get();
 
-        Px line_height_shift = (text_height_ - font_->size()) / 2;
-        line_height_shift += padding().top;
-
-        Px shift = Px((oh.value * 0.5f) - line_height().value +
-                      (line_height_shift.value));
+        /* The titlebar sits flush against the top of the frame (padding()
+         * only applies between the titlebar and the first child, handled
+         * above), so the text should be centred within a line_height()-tall
+         * strip starting at the very top of the box. */
+        Px baseline_shift = (text_height_ - font_->size()) / 2;
+        Px shift = Px((oh.value * 0.5f) - (line_height().value * 0.5f) +
+                      baseline_shift.value);
 
         for(auto& sm: submeshes) {
             if(!sm) {

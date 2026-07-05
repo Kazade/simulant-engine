@@ -421,6 +421,59 @@ public:
         assert_true(hint_top_after < hint_top_before);
     }
 
+    void test_title_text_stays_within_frame_bounds() {
+        // The title text is repositioned into the titlebar by hand in
+        // Frame::finalize_build() (it isn't a packed child, so isn't laid
+        // out by the normal child loop). Verify it actually ends up inside
+        // the frame's own box instead of poking out past the top border.
+        smlt::ui::Frame* dialog = scene->create_child<ui::Frame>("");
+        dialog->set_text("Log Yer Name, Pirate!");
+        dialog->set_border_width(smlt::ui::Px(3));
+        dialog->set_font("Orbitron", smlt::ui::Px(22));
+        dialog->set_padding(smlt::ui::Px(16));
+        dialog->set_space_between(smlt::ui::Px(10));
+        dialog->set_anchor_point(0.5f, 0.5f);
+
+        auto headline = scene->create_child<ui::Label>("");
+        headline->resize(smlt::ui::Px(360), smlt::ui::Px(-1));
+        dialog->pack_child(headline);
+
+        auto prompt = scene->create_child<ui::Label>("Spin the reels:");
+        prompt->resize(smlt::ui::Px(360), smlt::ui::Px(-1));
+        dialog->pack_child(prompt);
+
+        auto hint = scene->create_child<ui::Label>("Left/Right: slot");
+        hint->resize(smlt::ui::Px(360), smlt::ui::Px(-1));
+        dialog->pack_child(hint);
+
+        // Headline growing to two lines after everything is packed is what
+        // triggers the dialog to grow and re-run the titlebar positioning.
+        headline->set_text("Ye conquered the seven seas!\nYe made rank 1st!");
+
+        float min_y = 1e9f, max_y = -1e9f;
+        auto vdata = dialog->mesh()->vertex_data.get();
+        for(const char* name: {"text-0", "text-1", "text-2", "text-3"}) {
+            auto sm = dialog->mesh()->find_submesh(name);
+            if(!sm) {
+                continue;
+            }
+            for(std::size_t i = 0; i < sm->vertex_range_count(); ++i) {
+                auto& range = sm->vertex_ranges()[i];
+                for(auto idx = range.start; idx < range.start + range.count;
+                    ++idx) {
+                    auto pos = *vdata->position_at<smlt::Vec3>(idx);
+                    min_y = std::min(min_y, pos.y);
+                    max_y = std::max(max_y, pos.y);
+                }
+            }
+        }
+
+        auto box_top = (dialog->outer_height().value / 2.0f);
+        auto box_bottom = -box_top;
+        assert_true(max_y <= box_top);
+        assert_true(min_y >= box_bottom);
+    }
+
     void test_title_wider_than_children_grows_frame() {
         // A title that's wider than every packed child must still fit -
         // the frame needs to be at least as wide as its own title text.
