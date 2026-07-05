@@ -857,17 +857,22 @@ Widget::WidgetBounds
     Px box_width, box_height;
 
     // FIXME: Clipping + other modes
+    /* requested_width_/height_ (when set) describe the final outer
+     * (border-box) size, matching outer_width()/outer_height(). rebuild()
+     * unconditionally expands the background box outwards by border_width_
+     * to produce the border, so we shrink here to compensate - otherwise
+     * the rendered border would overhang past the requested size. */
     if(resize_mode() == RESIZE_MODE_FIXED) {
-        box_width = requested_width_;
-        box_height = requested_height_;
+        box_width = requested_width_ - (style_->border_width_ * 2);
+        box_height = requested_height_ - (style_->border_width_ * 2);
     } else if(resize_mode_ == RESIZE_MODE_FIXED_WIDTH) {
-        box_width = requested_width_;
+        box_width = requested_width_ - (style_->border_width_ * 2);
         box_height = content_dimensions.height + style_->padding_.top +
                      style_->padding_.bottom;
     } else if(resize_mode_ == RESIZE_MODE_FIXED_HEIGHT) {
         box_width = content_dimensions.width + style_->padding_.left +
                     style_->padding_.right;
-        box_height = requested_height_;
+        box_height = requested_height_ - (style_->border_width_ * 2);
     } else {
         /* Fit content */
         box_width = content_dimensions.width + style_->padding_.left +
@@ -957,6 +962,14 @@ TextAlignment Widget::text_alignment() const {
 
 void Widget::on_size_changed() {
     rebuild();
+    notify_parent_of_size_change();
+}
+
+void Widget::notify_parent_of_size_change() {
+    auto parent_widget = dynamic_cast<Widget*>(parent());
+    if(parent_widget) {
+        parent_widget->on_child_size_changed(this);
+    }
 }
 
 bool Widget::border_active() const {

@@ -347,6 +347,17 @@ protected:
 
     virtual void on_size_changed();
 
+    /* Called on a widget when one of its packed/reparented children has
+     * resized itself. Containers (e.g. Frame) override this to re-run
+     * their layout; the default does nothing. */
+    virtual void on_child_size_changed(Widget* child) {
+        _S_UNUSED(child);
+    }
+
+    /* Tells our parent widget (if we have one) that our size has changed,
+     * so that it can re-run its layout if it needs to. */
+    void notify_parent_of_size_change();
+
     /* Only called on construction, it just makes sure that
      * active_layers_ is in sync with whatever the default layer
      * colors are. If we change a layer color we manually alter

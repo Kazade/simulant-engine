@@ -64,6 +64,15 @@ private:
                                                Px text_height) override;
 
     virtual void finalize_build() override;
+
+    /* A packed child resized itself after being packed (e.g. its text or
+     * requested size changed) - re-run our layout to account for it, and
+     * propagate further up if that changed our own size in turn. */
+    void on_child_size_changed(Widget* child) override;
+
+    /* Rebuilds, then notifies our own parent (if any) if that rebuild
+     * changed our outer size - so nested frames re-flow correctly. */
+    void rebuild_and_propagate_resize();
 };
 
 } // namespace ui

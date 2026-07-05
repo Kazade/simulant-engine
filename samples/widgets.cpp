@@ -8,7 +8,7 @@ public:
         smlt::Scene(window) {}
 
     void on_load() override {
-        camera_ = create_child<smlt::Camera>();
+        camera_ = create_child<smlt::Camera2D>();
         camera_->set_orthographic_projection(0, window->width(), 0, window->height());
 
         auto pipeline = compositor->create_layer(

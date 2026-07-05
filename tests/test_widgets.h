@@ -354,6 +354,73 @@ public:
         assert_equal(frame->outer_width(), expected_width);
     }
 
+    void test_relayout_when_packed_child_resizes() {
+        // Reproduces sinksub's setup_leaderboard_ui() pattern: labels are
+        // packed with placeholder text, then given real (taller) text later.
+        smlt::ui::Frame* frame = scene->create_child<ui::Frame>("");
+        frame->set_space_between(smlt::ui::Px(10));
+        frame->set_anchor_point(0.5f, 0.5f);
+
+        auto headline = scene->create_child<ui::Label>("");
+        headline->resize(smlt::ui::Px(100), smlt::ui::Px(-1));
+        frame->pack_child(headline);
+
+        auto prompt = scene->create_child<ui::Label>("");
+        prompt->resize(smlt::ui::Px(100), smlt::ui::Px(-1));
+        frame->pack_child(prompt);
+
+        auto prompt_top_before =
+            prompt->transform->translation_2d().y + prompt->outer_height().value / 2;
+
+        // Headline grows from empty (near zero height) to two lines.
+        headline->set_text("line one\nline two");
+
+        auto headline_bottom_after =
+            headline->transform->translation_2d().y - headline->outer_height().value / 2;
+        auto prompt_top_after =
+            prompt->transform->translation_2d().y + prompt->outer_height().value / 2;
+
+        // The frame should have re-flowed: prompt must have moved down to
+        // stay below the now-taller headline, and there should be no
+        // overlap between them.
+        assert_true(prompt_top_after < prompt_top_before);
+        assert_true(headline_bottom_after >= prompt_top_after);
+    }
+
+    void test_nested_frame_resize_propagates_to_ancestor() {
+        // Reproduces sinksub packing an empty horizontal Frame into a
+        // vertical Frame, then adding children to the inner Frame afterward.
+        smlt::ui::Frame* outer = scene->create_child<ui::Frame>("");
+        outer->set_space_between(smlt::ui::Px(10));
+        outer->set_anchor_point(0.5f, 0.5f);
+
+        auto prompt = scene->create_child<ui::Label>(" ");
+        prompt->resize(smlt::ui::Px(100), smlt::ui::Px(20));
+        outer->pack_child(prompt);
+
+        smlt::ui::Frame* inner = scene->create_child<ui::Frame>("");
+        inner->set_border_width(smlt::ui::Px(0));
+        inner->set_layout_direction(smlt::ui::LAYOUT_DIRECTION_LEFT_TO_RIGHT);
+        outer->pack_child(inner);
+
+        auto hint = scene->create_child<ui::Label>(" ");
+        hint->resize(smlt::ui::Px(100), smlt::ui::Px(20));
+        outer->pack_child(hint);
+
+        auto hint_top_before =
+            hint->transform->translation_2d().y + hint->outer_height().value / 2;
+
+        // Growing the (already-packed) inner frame should push hint down.
+        auto slot = scene->create_child<ui::Label>(" ");
+        slot->resize(smlt::ui::Px(26), smlt::ui::Px(60));
+        inner->pack_child(slot);
+
+        auto hint_top_after =
+            hint->transform->translation_2d().y + hint->outer_height().value / 2;
+
+        assert_true(hint_top_after < hint_top_before);
+    }
+
     void test_widgets_are_orphaned_if_retained() {
         smlt::ui::Frame* frame = _setup_frame();
         auto& children = frame->packed_children();

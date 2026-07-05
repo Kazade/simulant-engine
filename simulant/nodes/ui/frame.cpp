@@ -46,7 +46,7 @@ void Frame::finalize_build() {
     auto ow = outer_width() - (border_width() * 2);
 
     if(direction_ == LAYOUT_DIRECTION_LEFT_TO_RIGHT) {
-        Px width = -(ow / 2);
+        Px width = -(ow / 2) + padding().left;
         for(auto& child: packed_children()) {
             child->set_anchor_point(0.0f, 0.5f);
             child->transform->set_translation_2d(Vec2(cx + width.value, cy));
@@ -54,11 +54,10 @@ void Frame::finalize_build() {
             width += space_between_;
         }
     } else {
-        Px height = (oh / 2);
+        Px height = (oh / 2) - padding().top;
 
         if(!text().empty()) {
             height -= line_height();
-            height -= padding().top;
         }
 
         for(auto& child: packed_children()) {
@@ -116,7 +115,7 @@ bool Frame::pack_child(Widget* widget) {
     if(it == children_.end()) {
         widget->set_parent(this); // Reparent
         children_.push_back(widget);
-        rebuild();
+        rebuild_and_propagate_resize();
         return true;
     }
 
@@ -133,7 +132,7 @@ bool Frame::unpack_child(Widget* widget, ChildCleanup clean_up) {
         } else {
             widget->set_parent(nullptr);
         }
-        rebuild();
+        rebuild_and_propagate_resize();
         return true;
     }
 
@@ -144,13 +143,18 @@ const std::vector<Widget*>& Frame::packed_children() const {
     return children_;
 }
 
+void Frame::on_child_size_changed(Widget* child) {
+    _S_UNUSED(child);
+    rebuild_and_propagate_resize();
+}
+
 void Frame::set_layout_direction(LayoutDirection dir) {
     if(direction_ == dir) {
         return;
     }
 
     direction_ = dir;
-    rebuild();
+    rebuild_and_propagate_resize();
 }
 
 void Frame::set_space_between(Px spacing) {
@@ -159,7 +163,20 @@ void Frame::set_space_between(Px spacing) {
     }
 
     space_between_ = spacing;
+    rebuild_and_propagate_resize();
+}
+
+void Frame::rebuild_and_propagate_resize() {
+    auto prev_width = outer_width();
+    auto prev_height = outer_height();
+
     rebuild();
+
+    /* If re-laying out our children changed our own size, tell our parent
+     * too, so nested frames re-flow correctly. */
+    if(outer_width() != prev_width || outer_height() != prev_height) {
+        notify_parent_of_size_change();
+    }
 }
 
 Widget::WidgetBounds
@@ -199,10 +216,11 @@ UIDim Frame::calculate_content_dimensions(Px text_width, Px text_height) {
         }
     }
 
+    int gap_count = children_.empty() ? 0 : int(children_.size() - 1);
     if(direction_ == LAYOUT_DIRECTION_TOP_TO_BOTTOM) {
-        content_height += (space_between() * int(children_.size() - 1));
+        content_height += (space_between() * gap_count);
     } else {
-        content_width += (space_between() * int(children_.size() - 1));
+        content_width += (space_between() * gap_count);
     }
 
     /* Titlebar */
