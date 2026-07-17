@@ -848,6 +848,8 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
 
         int joints_id = -1;
         int weights_id = -1;
+
+        int mode = TRIANGLES;
     };
 
     std::vector<MeshPrimitive> primitives;
@@ -892,6 +894,7 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
         mp.indexes_id = primitive["indices"]->to_int().value_or(-1);
         mp.joints_id = primitive["attributes"]["JOINTS_0"]->to_int().value_or(-1);
         mp.weights_id = primitive["attributes"]["WEIGHTS_0"]->to_int().value_or(-1);
+        mp.mode = primitive["mode"]->to_int().value_or(TRIANGLES);
 
         S_DEBUG("Joint on primitive: {0}", mp.joints_id);
 
@@ -928,7 +931,7 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
                     "currently unsupported");
         }
 
-        auto mode = mesh["mode"]->to_int().value_or(TRIANGLES);
+        auto mode = primitive.mode;
         if(mode != TRIANGLES && mode != TRIANGLE_STRIP) {
             S_ERROR("Mesh with unsupported mode: {0}", mode);
             continue;

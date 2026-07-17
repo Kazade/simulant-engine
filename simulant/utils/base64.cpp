@@ -9,35 +9,50 @@ optional<std::string> base64_decode(const std::string& encoded_string) {
                                             "abcdefghijklmnopqrstuvwxyz"
                                             "0123456789+/";
 
-    // Remove any padding characters
-    size_t padding = 0;
     auto in_len = encoded_string.size();
-    size_t out_len = (in_len * 3) / 4 - padding;
-    std::string decoded_string;
-    decoded_string.reserve(out_len);
+    if(in_len == 0) {
+        return std::string();
+    }
+    if(in_len % 4 != 0) {
+        return no_value;
+    }
 
-    if(in_len >= 2 && encoded_string[in_len - 1] == '=') {
+    // '=' padding characters (up to two) may only appear at the very end.
+    size_t padding = 0;
+    if(encoded_string[in_len - 1] == '=') {
         padding++;
         if(encoded_string[in_len - 2] == '=') {
             padding++;
         }
     }
 
-    for(size_t i = 0; i < in_len;) {
-        uint32_t a = base64_chars.find(encoded_string[i++]);
-        uint32_t b = (i < in_len) ? base64_chars.find(encoded_string[i++]) : 0;
-        uint32_t c = (i < in_len) ? base64_chars.find(encoded_string[i++]) : 0;
-        uint32_t d = (i < in_len) ? base64_chars.find(encoded_string[i++]) : 0;
+    std::string decoded_string;
+    decoded_string.reserve((in_len / 4) * 3 - padding);
 
-        if(a == std::string::npos || b == std::string::npos ||
-           c == std::string::npos || d == std::string::npos) {
-            return no_value;
+    for(size_t i = 0; i < in_len;) {
+        uint32_t vals[4];
+        for(int k = 0; k < 4; ++k) {
+            char c = encoded_string[i++];
+            if(c == '=') {
+                vals[k] = 0;
+            } else {
+                auto pos = base64_chars.find(c);
+                if(pos == std::string::npos) {
+                    return no_value;
+                }
+                vals[k] = (uint32_t)pos;
+            }
         }
 
-        uint32_t triple = (a << 3 * 6) + (b << 2 * 6) + (c << 1 * 6) + d;
+        uint32_t triple = (vals[0] << 3 * 6) + (vals[1] << 2 * 6) +
+                          (vals[2] << 1 * 6) + vals[3];
         decoded_string.push_back((triple >> 2 * 8) & 0xFF);
         decoded_string.push_back((triple >> 1 * 8) & 0xFF);
         decoded_string.push_back((triple >> 0 * 8) & 0xFF);
+    }
+
+    if(padding > 0) {
+        decoded_string.resize(decoded_string.size() - padding);
     }
 
     return decoded_string;

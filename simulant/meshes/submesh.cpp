@@ -288,11 +288,19 @@ void SubMesh::_each_triangle_indexed(std::function<void (uint32_t, uint32_t, uin
         assert(index_data_->count() >= 3);
 
         for(uint32_t i = 2; i < index_data_->count(); ++i) {
-            cb(
-                index_data_->at(i - 2),
-                index_data_->at(i - 1),
-                index_data_->at(i)
-            );
+            if(i % 2 == 0) {
+                cb(
+                    index_data_->at(i - 2),
+                    index_data_->at(i - 1),
+                    index_data_->at(i)
+                );
+            } else {
+                cb(
+                    index_data_->at(i - 1),
+                    index_data_->at(i - 2),
+                    index_data_->at(i)
+                );
+            }
         }
     } else if(arrangement_ == MESH_ARRANGEMENT_LINES) {
         for(uint32_t i = 0; i < index_data_->count(); i += 2) {
