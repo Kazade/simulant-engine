@@ -448,7 +448,11 @@ void OPTLoader::read_block(std::istream& file, Offset offset) {
 }
 
 bool OPTLoader::into(Loadable& resource, const LoaderOptions& options) {
-    _S_UNUSED(options);
+    MeshLoadOptions mesh_opts;
+    auto opts_it = options.find(MESH_LOAD_OPTIONS_KEY);
+    if(opts_it != options.end()) {
+        mesh_opts = smlt::any_cast<MeshLoadOptions>(opts_it->second);
+    }
 
     Loadable* res_ptr = &resource;
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
@@ -521,7 +525,8 @@ bool OPTLoader::into(Loadable& resource, const LoaderOptions& options) {
         //Create a submesh for each texture.
         texture_submesh[tex.name] = mesh->create_submesh(
             tex.name,
-            mesh->asset_manager().create_material_from_texture(new_tex),
+            mesh->asset_manager().create_material_from_texture(
+                new_tex, GARBAGE_COLLECT_PERIODIC, mesh_opts.use_asset_cache),
             INDEX_TYPE_16_BIT,
             MESH_ARRANGEMENT_TRIANGLES
         );

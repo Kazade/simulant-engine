@@ -571,10 +571,6 @@ void Texture::flip_vertically() {
     mutate_data(&do_flip_vertically);
 }
 
-void Texture::set_source(const Path& source) {
-    source_ = source;
-}
-
 void Texture::free() {
     /* We don't mark data dirty here, we don't want
      * anything to be updated in GL, we're just freeing
@@ -651,10 +647,6 @@ uint8_t* Texture::_stash_paletted_data() {
 void Texture::save_to_file(const Path& filename) {
     _S_UNUSED(filename);
     assert(0 && "Not Implemented");
-}
-
-Path Texture::source() const {
-    return source_;
 }
 
 TextureFilter Texture::texture_filter() const {

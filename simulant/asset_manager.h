@@ -61,10 +61,20 @@ struct FontFlags {
     /* If non-zero, this will apply a blur to the font texture
      * before upload. Useful for drop shadows */
     std::size_t blur_radius = 0;
+
+    /* If true (the default), loading a font with the same resolved
+     * source path as an already-loaded font in the same AssetManager
+     * will return the existing font instead of loading it again. */
+    bool use_asset_cache = true;
 };
 
 struct SoundFlags {
     bool stream_audio = true;
+
+    /* If true (the default), loading a sound with the same resolved
+     * source path as an already-loaded sound in the same AssetManager
+     * will return the existing sound instead of loading it again. */
+    bool use_asset_cache = true;
 };
 
 /* Majority of the API definitions have been generated using this Python code:
@@ -102,7 +112,8 @@ public:
     /* ParticleScript API */
     ParticleScriptPtr load_particle_script(
         const Path& filename,
-        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC,
+        bool use_asset_cache = true);
     void destroy_particle_script(AssetID id);
     ParticleScriptPtr particle_script(AssetID id);
     const ParticleScriptPtr particle_script(AssetID id) const;
@@ -112,7 +123,8 @@ public:
 
     PrefabPtr load_prefab(
         const Path& filename,
-        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC,
+        bool use_asset_cache = true);
     PrefabPtr prefab(AssetID id);
     const PrefabPtr prefab(AssetID id) const;
     std::size_t prefab_count() const;
@@ -144,9 +156,15 @@ public:
     MeshPtr find_mesh(const std::string& name);
 
     /* Material API */
+    /* Note: unlike other asset types, use_asset_cache defaults to false here.
+     * Loading the same builtin/custom material path twice is a common,
+     * established idiom in this codebase for getting a fresh, independently
+     * mutable Material (see e.g. Debug::on_init) - defaulting to sharing
+     * would silently break that. Pass use_asset_cache=true to opt in. */
     MaterialPtr load_material(
         const Path& filename,
-        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC,
+        bool use_asset_cache = false);
     void destroy_material(const AssetID& id);
     MaterialPtr material(const AssetID& id);
     const MaterialPtr material(const AssetID& id) const;
@@ -168,7 +186,8 @@ public:
     /* Load raw binary data from a file */
     BinaryPtr load_binary(
         const Path& filename,
-        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC,
+        bool use_asset_cache = true);
     BinaryPtr binary(AssetID id) const;
     std::size_t binary_count() const;
     bool has_binary(AssetID id) const;
@@ -255,7 +274,8 @@ public:
         GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
     MaterialPtr create_material_from_texture(
         TexturePtr texture,
-        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC);
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC,
+        bool use_asset_cache = false);
 
     void update(float dt);
 

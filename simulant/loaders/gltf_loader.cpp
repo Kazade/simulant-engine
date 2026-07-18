@@ -585,7 +585,8 @@ public:
 static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
                                      JSONIterator& texture, int texture_id,
                                      std::istream* bin_chunk,
-                                     const std::string& ext = "") {
+                                     const std::string& ext = "",
+                                     bool use_asset_cache = true) {
 
     _S_UNUSED(texture_id);
 
@@ -663,7 +664,9 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
                 }
             } else {
                 S_VERBOSE("Loading dreamcast .dtex texture from uri: ", dtex_uri);
-                auto tex = assets->load_texture(smlt::Path(dtex_uri));
+                TextureFlags tex_flags;
+                tex_flags.use_asset_cache = use_asset_cache;
+                auto tex = assets->load_texture(smlt::Path(dtex_uri), tex_flags);
                 apply_sampler_settings(tex);
                 return tex;
             }
@@ -677,7 +680,9 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
         }
 
         S_VERBOSE("Loading texture from uri: ", uri.str());
-        auto tex = assets->load_texture(uri);
+        TextureFlags tex_flags;
+        tex_flags.use_asset_cache = use_asset_cache;
+        auto tex = assets->load_texture(uri, tex_flags);
         apply_sampler_settings(tex);
         return tex;
     } else {
@@ -1329,6 +1334,11 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         ext = any_cast<std::string>(options.at("override_texture_extension"));
     }
 
+    bool use_asset_cache = true;
+    if(options.count("use_asset_cache")) {
+        use_asset_cache = any_cast<bool>(options.at("use_asset_cache"));
+    }
+
     std::vector<TexturePtr> textures;
     std::vector<MaterialPtr> materials;
     std::vector<MeshPtr> meshes;
@@ -1366,7 +1376,7 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     for(auto& node: textures_it) {
         auto tex_it = node.to_iterator();
         auto tex = load_texture(&prefab->asset_manager(), js, tex_it, j++,
-                                bin_chunk.get(), ext);
+                                bin_chunk.get(), ext, use_asset_cache);
         textures.push_back(tex);
         prefab->push_texture(tex);
     }

@@ -124,7 +124,9 @@ bool DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
 
-            auto tex = mesh->asset_manager().load_texture(final);
+            TextureFlags tex_flags;
+            tex_flags.use_asset_cache = mesh_opts.use_asset_cache;
+            auto tex = mesh->asset_manager().load_texture(final, tex_flags);
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
@@ -141,7 +143,9 @@ bool DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
 
-            auto tex = mesh->asset_manager().load_texture(final);
+            TextureFlags tex_flags;
+            tex_flags.use_asset_cache = mesh_opts.use_asset_cache;
+            auto tex = mesh->asset_manager().load_texture(final, tex_flags);
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
@@ -158,7 +162,9 @@ bool DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
 
-            auto tex = mesh->asset_manager().load_texture(final);
+            TextureFlags tex_flags;
+            tex_flags.use_asset_cache = mesh_opts.use_asset_cache;
+            auto tex = mesh->asset_manager().load_texture(final, tex_flags);
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {
@@ -175,7 +181,9 @@ bool DCMLoader::into(Loadable& resource, const LoaderOptions& options) {
                 final = final.replace_ext(mesh_opts.override_texture_extension);
             }
 
-            auto tex = mesh->asset_manager().load_texture(final);
+            TextureFlags tex_flags;
+            tex_flags.use_asset_cache = mesh_opts.use_asset_cache;
+            auto tex = mesh->asset_manager().load_texture(final, tex_flags);
             if(!tex) {
                 S_WARN("Couldn't locate texture: {0}", final);
             } else {

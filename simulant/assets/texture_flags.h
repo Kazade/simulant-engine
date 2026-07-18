@@ -37,5 +37,10 @@ struct TextureFlags {
     TextureFreeData free_data = TEXTURE_FREE_DATA_AFTER_UPLOAD;
     bool flip_vertically = false;
     bool auto_upload = true; // Should the texture be uploaded automatically?
+
+    /* If true (the default), loading a texture with the same resolved
+     * source path as an already-loaded texture in the same AssetManager
+     * will return the existing texture instead of loading it again. */
+    bool use_asset_cache = true;
 };
 } // namespace smlt

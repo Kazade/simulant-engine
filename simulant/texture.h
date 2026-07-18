@@ -196,8 +196,6 @@ public:
      */
     void flip_vertically();
 
-    void set_source(const smlt::Path& source);
-
     /** Texture filtering and wrapping */
     void set_texture_filter(TextureFilter filter);
 
@@ -293,7 +291,6 @@ public:
      */
     void save_to_file(const Path& filename);
 
-    Path source() const;
     TextureFilter texture_filter() const;
     TextureWrap wrap_u() const;
     TextureWrap wrap_v() const;
@@ -339,8 +336,6 @@ private:
 
     TextureFormat format_ = TEXTURE_FORMAT_INVALID;
     uint8_t format_channels_ = 0;
-
-    Path source_;
 
     bool auto_upload_ =
         true; /* If true, the texture is uploaded by the renderer asap */

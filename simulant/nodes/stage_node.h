@@ -468,6 +468,12 @@ struct TreeLoadOptions {
      * of the one provided by the mesh. Should be the extension excluding the
      * leading dot. (e.g. "dtex") */
     std::string override_texture_extension = "";
+
+    /* If true (the default), textures loaded as a dependency of this tree
+     * will be shared with any other already-loaded asset with the same
+     * source path in the same AssetManager, rather than always being
+     * loaded fresh. */
+    bool use_asset_cache = true;
 };
 
 class alignas(32) StageNode:

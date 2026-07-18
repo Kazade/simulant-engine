@@ -181,6 +181,14 @@ struct MeshLoadOptions {
      * of the one provided by the mesh. Should be the extension excluding the leading
      * dot. (e.g. "dtex") */
     std::string override_texture_extension = "";
+
+    /* If true (the default), loading a mesh with the same resolved source
+     * path as an already-loaded mesh in the same AssetManager will return
+     * the existing mesh instead of loading it again. This same value is
+     * also used for any dependent assets loaded during the mesh load (e.g.
+     * textures referenced by material definitions) - there's no separate
+     * flag for those. */
+    bool use_asset_cache = true;
 };
 
 #define MESH_LOAD_OPTIONS_KEY "mesh_options"
