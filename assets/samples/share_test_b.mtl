@@ -1,0 +1,12 @@
+# Minimal material used by tests/test_asset_sharing.h
+# Deliberately shares a texture with share_test_a.mtl so tests can verify
+# that loading two different meshes referencing the same texture path
+# only loads that texture once.
+
+newmtl SharedMat
+Ka 0.000000 0.000000 0.000000
+Kd 0.8 0.8 0.8
+Ks 0.8 0.8 0.8
+d 1
+illum 2
+map_Kd assets/samples/crate.png
