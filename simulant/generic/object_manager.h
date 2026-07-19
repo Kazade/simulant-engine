@@ -8,6 +8,7 @@
 #include "../core/stage_node_id.h"
 
 #include "../logging.h"
+#include "../path.h"
 #include "../signals/signal.h"
 #include "../macros.h"
 
@@ -235,6 +236,34 @@ public:
         }
     }
 
+    /* Returns an already-registered object with this source path, or nullptr
+     * if there isn't one (or the object it referred to was since destroyed).
+     * An empty source path never matches anything. */
+    ObjectTypePtr get_by_source(const Path& source) const {
+        if(source.str().empty()) {
+            return ObjectTypePtr();
+        }
+
+        auto it = source_index_.find(source);
+        if(it == source_index_.end()) {
+            return ObjectTypePtr();
+        }
+
+        return this->get(it->second);
+    }
+
+    /* Records that the object with the given id was loaded from source,
+     * so future get_by_source() calls can find it. No-op for an empty
+     * source path. */
+    void register_source(IDType id, const Path& source) {
+        if(source.str().empty()) {
+            return;
+        }
+
+        object_metas_.at(id).source = source;
+        source_index_[source] = id;
+    }
+
 private:
     typedef std::chrono::time_point<std::chrono::system_clock> date_time;
 
@@ -244,9 +273,11 @@ private:
 
         GarbageCollectMethod collection_method = GARBAGE_COLLECT_PERIODIC;
         date_time created;
+        Path source;
     };
 
     std::unordered_map<IDType, ObjMeta> object_metas_;
+    std::unordered_map<Path, IDType> source_index_;
 
     void on_make(IDType id) override {
         object_metas_.insert(std::make_pair(id, ObjMeta()));
@@ -255,7 +286,13 @@ private:
     void on_destroy(IDType id) override {
         S_DEBUG("Garbage collecting {0}", id);
 
-        object_metas_.erase(id);
+        auto it = object_metas_.find(id);
+        if(it != object_metas_.end()) {
+            if(!it->second.source.str().empty()) {
+                source_index_.erase(it->second.source);
+            }
+            object_metas_.erase(it);
+        }
     }
 };
 

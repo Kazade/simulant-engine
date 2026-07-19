@@ -128,7 +128,11 @@ MS3DLoader::MS3DLoader(const Path& filename, std::shared_ptr<std::istream> data)
     Loader(filename, data) {}
 
 bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
-    _S_UNUSED(options);
+    MeshLoadOptions mesh_opts;
+    auto opts_it = options.find(MESH_LOAD_OPTIONS_KEY);
+    if(opts_it != options.end()) {
+        mesh_opts = smlt::any_cast<MeshLoadOptions>(opts_it->second);
+    }
 
     S_DEBUG("MS3D: Beginning read..");
 
@@ -351,9 +355,12 @@ bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
         S_DEBUG("MS3D: Loading texture {0}...", texname);
 
+        TextureFlags tex_flags;
+        tex_flags.use_asset_cache = mesh_opts.use_asset_cache;
+
         auto tex = (loaded_textures.count(texname)) ?
             loaded_textures[texname] :
-            assets->load_texture(texname);
+            assets->load_texture(texname, tex_flags);
 
         if(!tex) {
             /* Sometimes MS3D files use absolute paths which is no good
@@ -361,7 +368,7 @@ bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
              * current directory */
             std::replace(texname.begin(), texname.end(), '\\', kfs::SEP[0]);
             Path filename = kfs::path::split(texname).second;
-            tex = assets->load_texture(filename);
+            tex = assets->load_texture(filename, tex_flags);
         }
 
         if(tex) {

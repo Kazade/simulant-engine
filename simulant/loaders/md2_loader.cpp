@@ -216,7 +216,11 @@ typedef std::shared_ptr<MD2MeshFrameData> MD2MeshFrameDataPtr;
 const int32_t MAGIC_NUMBER_ID = 844121161;
 
 bool MD2Loader::into(Loadable& resource, const LoaderOptions& options) {
-    _S_UNUSED(options);
+    MeshLoadOptions mesh_opts;
+    auto opts_it = options.find(MESH_LOAD_OPTIONS_KEY);
+    if(opts_it != options.end()) {
+        mesh_opts = smlt::any_cast<MeshLoadOptions>(opts_it->second);
+    }
 
     Mesh* mesh = loadable_to<Mesh>(resource);
     AssetManager* asset_manager = &mesh->asset_manager();
@@ -292,7 +296,9 @@ bool MD2Loader::into(Loadable& resource, const LoaderOptions& options) {
         for(auto& texture_path: possible_paths) {
             auto p = vfs->locate_file(texture_path);
             if(p.has_value()) {
-                tex = asset_manager->load_texture(p.value());
+                TextureFlags tex_flags;
+                tex_flags.use_asset_cache = mesh_opts.use_asset_cache;
+                tex = asset_manager->load_texture(p.value(), tex_flags);
                 found = true;
                 break;
             } else {

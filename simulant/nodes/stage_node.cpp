@@ -38,6 +38,8 @@ StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
         lopts["override_texture_extension"] = opts.override_texture_extension;
     }
 
+    lopts["use_asset_cache"] = opts.use_asset_cache;
+
     if(opts.replace) {
         loader->into(this, lopts);
         return this;

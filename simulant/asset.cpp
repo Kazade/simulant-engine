@@ -44,7 +44,8 @@ void Asset::set_garbage_collection_method(GarbageCollectMethod method) {
 Asset::Asset(const Asset& rhs):
     manager_(rhs.manager_),
     created_(std::chrono::system_clock::now()),
-    data_(rhs.data_) {
+    data_(rhs.data_),
+    source_(rhs.source_) {
 }
 
 Asset& Asset::operator=(const Asset& rhs) {
@@ -53,6 +54,7 @@ Asset& Asset::operator=(const Asset& rhs) {
     // We intentionally don't copy the created timestamp
     manager_ = rhs.manager_;
     data_ = rhs.data_;
+    source_ = rhs.source_;
 
     return *this;
 }

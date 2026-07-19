@@ -27,6 +27,7 @@
 #include "generic/data_carrier.h"
 #include "generic/object_manager.h"
 #include "interfaces/nameable.h"
+#include "path.h"
 #include "threads/mutex.h"
 
 namespace smlt {
@@ -50,6 +51,12 @@ public:
 
     void set_garbage_collection_method(GarbageCollectMethod method);
 
+    /* If this asset was loaded from a file, this is the resolved path
+     * it was loaded from. Used by AssetManager to share assets loaded
+     * from the same source. Empty if this asset wasn't loaded from a file. */
+    Path source() const { return source_; }
+    void set_source(const Path& source) { source_ = source; }
+
     Property<generic::DataCarrier Asset::*> data = {this, &Asset::data_};
 
 protected:
@@ -61,6 +68,8 @@ private:
     std::chrono::time_point<std::chrono::system_clock> created_;
 
     generic::DataCarrier data_;
+
+    Path source_;
 };
 
 }

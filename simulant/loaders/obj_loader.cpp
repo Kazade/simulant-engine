@@ -105,6 +105,7 @@ struct LoadInfo {
 
     CullMode cull_mode = CULL_MODE_BACK_FACE;
     std::string overridden_tex_format = "";
+    bool use_asset_cache = true;
 
     std::istream* stream;
     Path folder;
@@ -157,7 +158,9 @@ static bool map_Kd(LoadInfo* info, std::string,
         tex_path = kfs::path::split_ext(tex_path).first + ext;
     }
 
-    auto tex = info->assets->load_texture(tex_path);
+    TextureFlags tex_flags;
+    tex_flags.use_asset_cache = info->use_asset_cache;
+    auto tex = info->assets->load_texture(tex_path, tex_flags);
     if(!tex) {
         return false;
     }
@@ -615,6 +618,7 @@ bool OBJLoader::into(Loadable& resource, const LoaderOptions& options) {
     info.overridden_tex_format = mesh_opts.override_texture_extension;
     info.default_material = std::make_shared<ObjMaterial>();
     info.folder = kfs::path::dir_name(filename_.str());
+    info.use_asset_cache = mesh_opts.use_asset_cache;
 
     run_parser(info);
 
@@ -686,15 +690,18 @@ bool OBJLoader::into(Loadable& resource, const LoaderOptions& options) {
             ".tga"
         };
 
+        TextureFlags tex_flags;
+        tex_flags.use_asset_cache = mesh_opts.use_asset_cache;
+
         for(auto& ext: extensions) {
             auto path = this->filename_.replace_ext(ext);
             if(kfs::path::exists(path.str().c_str())) {
-                auto tex = mesh->asset_manager().load_texture(path);
+                auto tex = mesh->asset_manager().load_texture(path, tex_flags);
                 info.default_material->map_Kd = tex;
             } else {
                 path = kfs::path::split_ext(filename_.str()).first + "_color" + ext;
                 if(kfs::path::exists(path.str().c_str())) {
-                    auto tex = mesh->asset_manager().load_texture(path);
+                    auto tex = mesh->asset_manager().load_texture(path, tex_flags);
                     info.default_material->map_Kd = tex;
                 }
             }

@@ -260,7 +260,20 @@ MeshPtr AssetManager::load_mesh(const Path& path,
     const MeshLoadOptions& options,
     GarbageCollectMethod garbage_collect) {
 
-    //Load the material
+    auto resolved = get_app()->vfs->locate_file(path);
+    if(!resolved.has_value()) {
+        S_ERROR("No mesh loader found for path: {0}", path.str());
+        return MeshPtr();
+    }
+
+    if(options.use_asset_cache) {
+        if(auto existing = mesh_manager_.get_by_source(resolved.value())) {
+            mesh_manager_.set_garbage_collection_method(existing->id(), garbage_collect);
+            return existing;
+        }
+    }
+
+    //Load the mesh
     auto mesh = create_mesh(desired_specification, garbage_collect);
     auto loader = get_app()->loader_for(path);
     assert(loader && "Unable to locate a loader for the specified mesh file");
@@ -275,6 +288,11 @@ MeshPtr AssetManager::load_mesh(const Path& path,
 
     if(!loader->into(mesh, loader_options)) {
         return nullptr;
+    }
+
+    mesh->set_source(resolved.value());
+    if(options.use_asset_cache) {
+        mesh_manager_.register_source(mesh->id(), resolved.value());
     }
 
     return mesh;
@@ -347,7 +365,20 @@ void AssetManager::destroy_material(const AssetID& m) {
     material_manager_.set_garbage_collection_method(m, GARBAGE_COLLECT_PERIODIC);
 }
 
-MaterialPtr AssetManager::load_material(const Path& path, GarbageCollectMethod garbage_collect) {
+MaterialPtr AssetManager::load_material(const Path& path, GarbageCollectMethod garbage_collect, bool use_asset_cache) {
+    auto resolved = get_app()->vfs->locate_file(path);
+    if(!resolved.has_value()) {
+        S_ERROR("Unable to locate material file: {0}", path);
+        return MaterialPtr();
+    }
+
+    if(use_asset_cache) {
+        if(auto existing = material_manager_.get_by_source(resolved.value())) {
+            material_manager_.set_garbage_collection_method(existing->id(), garbage_collect);
+            return existing;
+        }
+    }
+
     auto new_mat = create_material();
     auto loader = get_app()->loader_for(path);
     if(!loader) {
@@ -359,16 +390,47 @@ MaterialPtr AssetManager::load_material(const Path& path, GarbageCollectMethod g
         return nullptr;
     }
     material_manager_.set_garbage_collection_method(new_mat->id(), garbage_collect);
+
+    new_mat->set_source(resolved.value());
+    if(use_asset_cache) {
+        material_manager_.register_source(new_mat->id(), resolved.value());
+    }
+
     return new_mat;
 }
 
-MaterialPtr AssetManager::create_material_from_texture(TexturePtr texture, GarbageCollectMethod garbage_collect) {
-    auto m = load_material(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER);
+MaterialPtr AssetManager::create_material_from_texture(TexturePtr texture, GarbageCollectMethod garbage_collect, bool use_asset_cache) {
+    /* If the source texture itself has a known source path, and sharing was
+     * requested, key the resulting material on a synthetic path derived from
+     * that, so repeated calls with the same (file-loaded) texture share the
+     * material. Textures with no source (procedurally created, or embedded
+     * in a container format) can't be shared this way and always get a
+     * fresh material - this mirrors the source-path-only sharing rule used
+     * everywhere else in AssetManager. */
+    Path synthetic_source;
+    if(use_asset_cache && !texture->source().str().empty()) {
+        synthetic_source = Path(Material::BuiltIns::TEXTURE_ONLY + "#" + texture->source().str());
+
+        if(auto existing = material_manager_.get_by_source(synthetic_source)) {
+            material_manager_.set_garbage_collection_method(existing->id(), garbage_collect);
+            return existing;
+        }
+    }
+
+    /* The base material template must never be shared here - it's about to
+     * be mutated with a texture-specific configuration */
+    auto m = load_material(Material::BuiltIns::TEXTURE_ONLY, GARBAGE_COLLECT_NEVER, /*use_asset_cache=*/false);
     assert(m);
 
     m->set_base_color_map(texture);
 
     material_manager_.set_garbage_collection_method(m->id(), garbage_collect);
+
+    if(!synthetic_source.str().empty()) {
+        m->set_source(synthetic_source);
+        material_manager_.register_source(m->id(), synthetic_source);
+    }
+
     return m;
 }
 
@@ -402,6 +464,19 @@ TexturePtr AssetManager::load_texture(const Path& path, GarbageCollectMethod gar
 }
 
 TexturePtr AssetManager::load_texture(const Path& path, TextureFlags flags, GarbageCollectMethod garbage_collect) {
+    auto resolved = get_app()->vfs->locate_file(path);
+    if(!resolved.has_value()) {
+        S_WARN("Couldn't locate texture file: {0}", path);
+        return smlt::TexturePtr();
+    }
+
+    if(flags.use_asset_cache) {
+        if(auto existing = texture_manager_.get_by_source(resolved.value())) {
+            texture_manager_.set_garbage_collection_method(existing->id(), garbage_collect);
+            return existing;
+        }
+    }
+
     //Load the texture
     S_DEBUG("Loading texture from file: {0}", path);
     smlt::TexturePtr tex = create_texture(8, 8, TEXTURE_FORMAT_RGBA_4UB_8888, garbage_collect);
@@ -428,6 +503,11 @@ TexturePtr AssetManager::load_texture(const Path& path, TextureFlags flags, Garb
         tex->set_texture_wrap(flags.wrap, flags.wrap, flags.wrap);
         tex->set_texture_filter(flags.filter);
         tex->set_auto_upload(flags.auto_upload);
+    }
+
+    tex->set_source(resolved.value());
+    if(flags.use_asset_cache) {
+        texture_manager_.register_source(tex->id(), resolved.value());
     }
 
     S_DEBUG("Texture loaded");
@@ -459,6 +539,19 @@ std::size_t AssetManager::texture_count() const {
 }
 
 SoundPtr AssetManager::load_sound(const Path& path, const SoundFlags &flags, GarbageCollectMethod garbage_collect) {
+    auto resolved = get_app()->vfs->locate_file(path);
+    if(!resolved.has_value()) {
+        S_ERROR("Unsupported file type: ", path);
+        return SoundPtr();
+    }
+
+    if(flags.use_asset_cache) {
+        if(auto existing = sound_manager_.get_by_source(resolved.value())) {
+            sound_manager_.set_garbage_collection_method(existing->id(), garbage_collect);
+            return existing;
+        }
+    }
+
     //Load the sound
     auto snd = sound_manager_.make(this, get_app()->sound_driver);
     sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);
@@ -477,6 +570,11 @@ SoundPtr AssetManager::load_sound(const Path& path, const SoundFlags &flags, Gar
     }
 
     sound_manager_.set_garbage_collection_method(snd->id(), garbage_collect);
+
+    snd->set_source(resolved.value());
+    if(flags.use_asset_cache) {
+        sound_manager_.register_source(snd->id(), resolved.value());
+    }
 
     return snd;
 }
@@ -505,9 +603,21 @@ void AssetManager::destroy_sound(AssetID t) {
     sound_manager_.set_garbage_collection_method(t, GARBAGE_COLLECT_PERIODIC);
 }
 
-BinaryPtr AssetManager::load_binary(const Path& filename, GarbageCollectMethod garbage_collect) {
+BinaryPtr AssetManager::load_binary(const Path& filename, GarbageCollectMethod garbage_collect, bool use_asset_cache) {
 
-    auto stream = smlt::get_app()->vfs->read_file(filename);
+    auto resolved = get_app()->vfs->locate_file(filename);
+    if(!resolved.has_value()) {
+        return BinaryPtr();
+    }
+
+    if(use_asset_cache) {
+        if(auto existing = binary_manager_.get_by_source(resolved.value())) {
+            binary_manager_.set_garbage_collection_method(existing->id(), garbage_collect);
+            return existing;
+        }
+    }
+
+    auto stream = smlt::get_app()->vfs->read_file(resolved.value());
     if(!stream) {
         return BinaryPtr();
     }
@@ -520,6 +630,11 @@ BinaryPtr AssetManager::load_binary(const Path& filename, GarbageCollectMethod g
 
     auto bin = binary_manager_.make(this, std::move(data));
     binary_manager_.set_garbage_collection_method(bin->id(), garbage_collect);
+
+    bin->set_source(resolved.value());
+    if(use_asset_cache) {
+        binary_manager_.register_source(bin->id(), resolved.value());
+    }
 
     return bin;
 }
@@ -688,7 +803,21 @@ PrefabPtr AssetManager::create_prefab(const smlt::StageNode* root,
 }
 
 PrefabPtr AssetManager::load_prefab(const Path& filename,
-                                    GarbageCollectMethod garbage_collect) {
+                                    GarbageCollectMethod garbage_collect,
+                                    bool use_asset_cache) {
+
+    auto resolved = get_app()->vfs->locate_file(filename);
+    if(!resolved.has_value()) {
+        S_ERROR("Couldn't locate prefab file: {0}", filename);
+        return PrefabPtr();
+    }
+
+    if(use_asset_cache) {
+        if(auto existing = prefab_manager_.get_by_source(resolved.value())) {
+            prefab_manager_.set_garbage_collection_method(existing->id(), garbage_collect);
+            return existing;
+        }
+    }
 
     auto prefab = prefab_manager_.make(this);
     auto prefab_id = prefab->id();
@@ -697,6 +826,11 @@ PrefabPtr AssetManager::load_prefab(const Path& filename,
     LoaderOptions opts;
     if(!get_app()->loader_for(filename)->into(prefab.get(), opts)) {
         return nullptr;
+    }
+
+    prefab->set_source(resolved.value());
+    if(use_asset_cache) {
+        prefab_manager_.register_source(prefab_id, resolved.value());
     }
 
     return prefab;
@@ -727,11 +861,39 @@ void AssetManager::destroy_prefab(AssetID id) {
 }
 
 FontPtr AssetManager::load_font(const Path& filename, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
+    auto resolved = get_app()->vfs->locate_file(filename);
+    if(!resolved.has_value()) {
+        S_ERROR("Couldn't locate font file: {0}", filename);
+        return FontPtr();
+    }
+
+    uint16_t size = flags.size ? flags.size : get_app()->config->ui.font_size;
+
+    /* A font's identity depends on more than just the file it came from -
+     * the same .ttf loaded at a different size/weight/style/charset produces
+     * a different glyph atlas - so the sharing key folds those in too. */
+    Path source_key;
+    if(flags.use_asset_cache) {
+        source_key = Path(
+            resolved.value().str() + "#" +
+            std::to_string(size) + ":" +
+            std::to_string((int)flags.weight) + ":" +
+            std::to_string((int)flags.style) + ":" +
+            std::to_string((int)flags.charset) + ":" +
+            std::to_string(flags.blur_radius)
+        );
+
+        if(auto existing = font_manager_.get_by_source(source_key)) {
+            font_manager_.set_garbage_collection_method(existing->id(), garbage_collect);
+            return existing;
+        }
+    }
+
     auto font = font_manager_.make(this);
     auto font_id = font->id();
 
     LoaderOptions options;
-    options["size"] = flags.size ? flags.size : get_app()->config->ui.font_size;
+    options["size"] = size;
     options["weight"] = flags.weight;
     options["style"] = flags.style;
     options["charset"] = flags.charset;
@@ -741,6 +903,11 @@ FontPtr AssetManager::load_font(const Path& filename, const FontFlags& flags, Ga
     }
 
     font_manager_.set_garbage_collection_method(font_id, garbage_collect);
+
+    font->set_source(resolved.value());
+    if(flags.use_asset_cache) {
+        font_manager_.register_source(font_id, source_key);
+    }
 
     return font;
 }
@@ -769,7 +936,20 @@ bool AssetManager::has_font(AssetID f) const {
     return font_manager_.contains(f);
 }
 
-ParticleScriptPtr AssetManager::load_particle_script(const Path& filename, GarbageCollectMethod garbage_collect) {
+ParticleScriptPtr AssetManager::load_particle_script(const Path& filename, GarbageCollectMethod garbage_collect, bool use_asset_cache) {
+    auto resolved = get_app()->vfs->locate_file(filename);
+    if(!resolved.has_value()) {
+        S_ERROR("Couldn't locate particle script file: {0}", filename);
+        return ParticleScriptPtr();
+    }
+
+    if(use_asset_cache) {
+        if(auto existing = particle_script_manager_.get_by_source(resolved.value())) {
+            particle_script_manager_.set_garbage_collection_method(existing->id(), garbage_collect);
+            return existing;
+        }
+    }
+
     auto ps = particle_script_manager_.make(this);
 
     LoaderOptions options;
@@ -779,6 +959,12 @@ ParticleScriptPtr AssetManager::load_particle_script(const Path& filename, Garba
 
     particle_script_manager_.set_garbage_collection_method(ps->id(),
                                                            garbage_collect);
+
+    ps->set_source(resolved.value());
+    if(use_asset_cache) {
+        particle_script_manager_.register_source(ps->id(), resolved.value());
+    }
+
     return ps;
 }
 
