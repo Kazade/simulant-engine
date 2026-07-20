@@ -213,7 +213,7 @@ uint64_t generate_frame_id() {
     return ++frame_id;
 }
 
-static bool build_renderables(
+static void build_renderables(
     std::vector<Light*>& lights_visible, batcher::RenderQueue* render_queue_,
     const smlt::CameraPtr& camera, const smlt::LayerPtr& pipeline_stage,
     StageNode* node
@@ -221,7 +221,7 @@ static bool build_renderables(
     assert(node);
 
     if(!node->is_visible()) {
-        return true;
+        return;
     }
 
     /* Compute AABB once — center() and distance_to_camera both need it, and
@@ -262,8 +262,6 @@ static bool build_renderables(
                                lights_visible.data(),
                                std::min((std::size_t)MAX_LIGHTS_PER_RENDERABLE,
                                         lights_visible.size()));
-
-    return !(node->generates_renderables_for_descendents());
 }
 
 void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {
