@@ -4,6 +4,7 @@
 
 #include "simulant/simulant.h"
 #include "simulant/test.h"
+#include "simulant/nodes/frustum_culler.h"
 #include "simulant/nodes/stage_node_visitors.h"
 
 namespace {
@@ -179,6 +180,45 @@ public:
         for (auto* node : expected) {
             assert_true(visited.count(node));
         }
+    }
+
+    void test_does_not_descend_into_renderable_generating_nodes() {
+        /* Regression test: nodes that generate renderables on behalf of their
+         * whole subtree (FrustumCuller and other Partitioner subclasses,
+         * ShadowCaster) signal this via generates_renderables_for_descendents()
+         * returning true. traverse_bfs must stop descending into such a node's
+         * children -- otherwise the compositor would call generate_renderables()
+         * on those same descendants a second time, once via the node's own
+         * generation pass and once via traverse_bfs visiting them directly.
+
+            root
+           /    \
+          culler  a2
+           |
+           b1
+        */
+        auto root = scene->create_child<smlt::Stage>();
+        auto culler = scene->create_child<smlt::FrustumCuller>();
+        auto a2 = scene->create_child<smlt::Stage>();
+        auto b1 = scene->create_child<smlt::Stage>();
+
+        culler->set_parent(root);
+        a2->set_parent(root);
+        b1->set_parent(culler);
+
+        assert_true(culler->generates_renderables_for_descendents());
+
+        std::set<StageNode*> visited;
+        traverse_bfs(root, [&](StageNode* node) {
+            visited.insert(node);
+        });
+
+        /* culler itself must still be visited (so it gets a chance to
+         * generate renderables for its subtree), but b1 -- its descendant --
+         * must not be visited directly. */
+        std::set<StageNode*> expected{root, culler, a2};
+        assert_items_equal(visited, expected);
+        assert_false(visited.count(b1));
     }
 };
 
