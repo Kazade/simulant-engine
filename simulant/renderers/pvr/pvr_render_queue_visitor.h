@@ -36,6 +36,12 @@ public:
 
     static const int MAX_LIGHTS = 2;
 
+    /* Number of distinct lights whose eye-space state we cache per frame.
+     * apply_lights can be called once per renderable (and once per light for
+     * ONCE_PER_LIGHT passes), but a light's eye-space position/direction is
+     * constant for the whole camera pass, so we compute it once and reuse. */
+    static const int LIGHT_CACHE_SIZE = 8;
+
 private:
     PVRRenderer* renderer_;
     CameraPtr camera_;
@@ -58,6 +64,24 @@ private:
 
     VertexLightState lights_[MAX_LIGHTS];
     float ambient_[3] = {0.2f, 0.2f, 0.2f};
+
+    /* Per-frame cache of computed eye-space light state, keyed by Light*.
+     * Reset in start_traversal; populated lazily by apply_lights. */
+    struct LightCacheEntry {
+        const Light* light = nullptr;
+        VertexLightState state;
+    };
+    LightCacheEntry light_cache_[LIGHT_CACHE_SIZE];
+    int light_cache_count_ = 0;
+    VertexLightState light_scratch_; /* used when the cache overflows */
+
+    /* Compute a light's frame-constant eye-space state (position/dir/colour/
+     * intensity/range). Leaves state.enabled untouched. */
+    void compute_light_state(LightPtr light, VertexLightState& out);
+
+    /* Return cached eye-space state for `light`, computing and caching it on
+     * first use this frame. */
+    const VertexLightState& get_cached_light_state(LightPtr light);
 
     /* PBR material properties stored directly (no Phong conversion) */
     float mat_base_color_[4] = {1, 1, 1, 1};

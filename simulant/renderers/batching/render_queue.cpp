@@ -121,19 +121,22 @@ void RenderQueue::insert_renderable(Renderable&& renderable) {
 
 void RenderQueue::clear() {
     render_queue_.clear();
-    sorted_indices_.clear();
+    sort_words_.clear();
 }
 
 void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const {
-    /* Build and sort an index array — sorting uint32_t is 32x cheaper than
-     * sorting Renderable structs directly. Capacity is retained across frames. */
+    /* Pack (sort_key << 32) | index into each word and sort the words directly.
+     * The comparator is then a plain 64-bit integer compare with no indirection
+     * back into the big Renderable array, so the sort stays cache-resident.
+     * The high 32 bits are the key, so the ordering matches a key-only sort.
+     * Capacity is retained across frames. */
     const uint32_t n = (uint32_t) render_queue_.size();
-    sorted_indices_.resize(n);
-    for(uint32_t i = 0; i < n; ++i) sorted_indices_[i] = i;
-    std::sort(sorted_indices_.begin(), sorted_indices_.end(),
-        [this](uint32_t a, uint32_t b) {
-            return render_queue_[a].first.sort_key.i < render_queue_[b].first.sort_key.i;
-        });
+    sort_words_.resize(n);
+    for(uint32_t i = 0; i < n; ++i) {
+        sort_words_[i] =
+            ((uint64_t) render_queue_[i].first.sort_key.i << 32) | i;
+    }
+    std::sort(sort_words_.begin(), sort_words_.end());
 
     visitor->start_traversal(*this, frame_id, stage_node_);
 
@@ -143,7 +146,7 @@ void RenderQueue::traverse(RenderQueueVisitor* visitor, uint64_t frame_id) const
     const RenderGroup* last_group = nullptr;
 
     for(uint32_t si = 0; si < n; ++si) {
-        const auto& p = render_queue_[sorted_indices_[si]];
+        const auto& p = render_queue_[(uint32_t) sort_words_[si]];
         const RenderGroup* current_group = &p.first;
         const Renderable* renderable = &p.second;
 
