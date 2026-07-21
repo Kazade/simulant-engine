@@ -187,10 +187,15 @@ private:
     CameraPtr camera_;
 
     /* Flat storage — pushed in arbitrary order, sorted at traverse time.
-     * Avoids per-frame BST rebuild; sort operates on a compact index array
-     * (uint32_t) so elements swapped are 32x smaller than Renderable. */
+     * Avoids per-frame BST rebuild. */
     std::vector<std::pair<RenderGroup, Renderable>> render_queue_;
-    mutable std::vector<uint32_t> sorted_indices_;
+
+    /* Sort words: each entry packs (sort_key << 32) | index. Sorting these is a
+     * plain integer sort with no indirection back into render_queue_, so the
+     * comparator never gathers through the ~88-byte Renderable structs (which,
+     * in sorted order, would each be a cache miss on the SH4). The index is
+     * recovered as the low 32 bits during traversal. */
+    mutable std::vector<uint64_t> sort_words_;
 };
 
 }

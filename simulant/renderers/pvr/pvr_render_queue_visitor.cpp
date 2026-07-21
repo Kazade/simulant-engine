@@ -156,6 +156,10 @@ void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
     _S_UNUSED(frame_id);
     _S_UNUSED(stage_node);
 
+    /* New camera pass — discard any light state cached against the previous
+     * view matrix. */
+    light_cache_count_ = 0;
+
     /* Get ambient light from the stage if available */
     if(stage_node) {
         auto a = stage_node->scene->lighting->ambient_light();
@@ -329,6 +333,68 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 #endif
 }
 
+void PVRRenderQueueVisitor::compute_light_state(LightPtr light,
+                                                 VertexLightState& state) {
+    const float w = (light->light_type() == smlt::LIGHT_TYPE_DIRECTIONAL) ? 0.0f : 1.0f;
+    auto lp = light->transform->position();
+    /* Use w=1 for point lights so the view translation is included;
+     * w=0 for directional lights treats it as a direction vector. */
+    auto pos4 = camera_->view_matrix() * smlt::Vec4(lp.x, lp.y, lp.z, w);
+    state.position[0] = pos4.x;
+    state.position[1] = pos4.y;
+    state.position[2] = pos4.z;
+    state.position[3] = w;
+
+    state.color[0] = light->color().r;
+    state.color[1] = light->color().g;
+    state.color[2] = light->color().b;
+
+    state.intensity = light->intensity();
+    state.range = light->range();
+
+    /* Pre-normalised toward-light direction for directional lights.
+     * position already stores -pointing_dir (set_direction negates on write),
+     * so pos4.xyz = view_rot * (-pointing_dir) = toward_light in eye space.
+     * No further negation needed. */
+    if(state.position[3] < 0.5f) {
+#ifdef __DREAMCAST__
+        shz_vec3_t d = shz_vec3_normalize_safe(
+            shz_vec3_init(pos4.x, pos4.y, pos4.z));
+        state.dir[0] = d.x; state.dir[1] = d.y; state.dir[2] = d.z;
+#else
+        float len = std::sqrt(pos4.x*pos4.x + pos4.y*pos4.y + pos4.z*pos4.z);
+        if(len > 1e-8f) {
+            state.dir[0] = pos4.x/len;
+            state.dir[1] = pos4.y/len;
+            state.dir[2] = pos4.z/len;
+        }
+#endif
+    }
+}
+
+const VertexLightState& PVRRenderQueueVisitor::get_cached_light_state(LightPtr light) {
+    for(int i = 0; i < light_cache_count_; ++i) {
+        if(light_cache_[i].light == light) {
+            return light_cache_[i].state;
+        }
+    }
+
+    /* Miss: compute once. Cache it if there's room, otherwise fall back to the
+     * scratch slot (the eye-space transform is only skipped for repeats, so an
+     * overflowing light simply doesn't benefit from caching). */
+    VertexLightState* dst;
+    if(light_cache_count_ < LIGHT_CACHE_SIZE) {
+        LightCacheEntry& entry = light_cache_[light_cache_count_++];
+        entry.light = light;
+        dst = &entry.state;
+    } else {
+        dst = &light_scratch_;
+    }
+
+    compute_light_state(light, *dst);
+    return *dst;
+}
+
 void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t count) {
     for(int i = 0; i < MAX_LIGHTS; i++) {
         lights_[i].enabled = false;
@@ -337,45 +403,11 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
     for(uint8_t i = 0; i < count && i < MAX_LIGHTS; i++) {
         if(!lights[i]) continue;
 
-        VertexLightState& state = lights_[i];
-        state.enabled = true;
-
-        auto light = lights[i];
-        const float w = (light->light_type() == smlt::LIGHT_TYPE_DIRECTIONAL) ? 0.0f : 1.0f;
-        auto lp = light->transform->position();
-        /* Use w=1 for point lights so the view translation is included;
-         * w=0 for directional lights treats it as a direction vector. */
-        auto pos4 = camera_->view_matrix() * smlt::Vec4(lp.x, lp.y, lp.z, w);
-        state.position[0] = pos4.x;
-        state.position[1] = pos4.y;
-        state.position[2] = pos4.z;
-        state.position[3] = w;
-
-        state.color[0] = light->color().r;
-        state.color[1] = light->color().g;
-        state.color[2] = light->color().b;
-
-        state.intensity = light->intensity();
-        state.range = light->range();
-
-        /* Pre-normalised toward-light direction for directional lights.
-         * position already stores -pointing_dir (set_direction negates on write),
-         * so pos4.xyz = view_rot * (-pointing_dir) = toward_light in eye space.
-         * No further negation needed. */
-        if(state.position[3] < 0.5f) {
-#ifdef __DREAMCAST__
-            shz_vec3_t d = shz_vec3_normalize_safe(
-                shz_vec3_init(pos4.x, pos4.y, pos4.z));
-            state.dir[0] = d.x; state.dir[1] = d.y; state.dir[2] = d.z;
-#else
-            float len = std::sqrt(pos4.x*pos4.x + pos4.y*pos4.y + pos4.z*pos4.z);
-            if(len > 1e-8f) {
-                state.dir[0] = pos4.x/len;
-                state.dir[1] = pos4.y/len;
-                state.dir[2] = pos4.z/len;
-            }
-#endif
-        }
+        /* The eye-space position/dir/colour are frame-constant per light, so
+         * pull them from the per-frame cache instead of recomputing the
+         * view-matrix product and normalise on every call. */
+        lights_[i] = get_cached_light_state(lights[i]);
+        lights_[i].enabled = true;
     }
 }
 
@@ -794,12 +826,12 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     bool lighting_enabled = material_pass->is_lighting_enabled() && normal_offset;
 
     /* ================================================================
-     * Three-pass vertex transformation
+     * Two-pass vertex transformation
      * Each pass below uses a narrow working set, so the SH4 register file
-     * is largely sufficient.  Pass 1 only needs the loaded MVP in xmtrx
-     * and the FTRV inputs; pass 2 does no floating-point work besides a
-     * handful of multiplies; pass 3 uses xmtrx for modelview transforms
-     * and computes lighting against a fixed-size light table.
+     * is largely sufficient.  Pass 1 needs the loaded MVP in xmtrx for the
+     * FTRV position transform and folds in the UV / colour reads (no matrix);
+     * the optional lighting pass uses xmtrx for modelview transforms and
+     * computes lighting against a fixed-size light table.
      * ================================================================ */
     static aligned_vector<ClipVertex, 32> work_vertices_;
 
@@ -816,30 +848,28 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         work_vertices_.resize(count);
 
         /* ------------------------------------------------------------
-         * Pass 1: position × MVP via FTRV.
-         * ------------------------------------------------------------ */
-        {
-            const uint8_t* row = raw_data + stride * base;
-            for(uint32_t i = 0; i < count; ++i) {
-                const float* p = (const float*)(row + pos_offset);
-                shz_vec4_t clip = shz_xmtrx_transform_vec4(
-                    shz_vec4_init(p[0], p[1], p[2], 1.0f));
-                ClipVertex& cv = work_vertices_[i];
-                cv.x = clip.x; cv.y = clip.y; cv.z = clip.z; cv.w = clip.w;
-                row += stride;
-            }
-        }
-
-        /* ------------------------------------------------------------
-         * Pass 2: UVs and base colour (material × per-vertex colour).
-         * Stores the *base* colour in cv.r/g/b — pass 3 reads it back
-         * out and replaces it with the lit colour if lighting is on.
+         * Pass 1: position × MVP (FTRV), UVs, and base colour (material ×
+         * per-vertex colour) in a single sweep over the vertex rows.
+         *
+         * Position transform uses the MVP already loaded in xmtrx; the UV /
+         * colour work needs no matrix, so both fit in one loop. Merging them
+         * halves the number of passes over the source vertex buffer — on the
+         * SH4 the vertex data is the dominant memory-bandwidth cost, and for
+         * a batch larger than the D-cache the rows would otherwise be re-read
+         * from RAM on the second pass. The *base* colour is stashed in
+         * cv.r/g/b; the lighting pass below reads it back out and replaces it
+         * with the lit colour if lighting is on.
          * ------------------------------------------------------------ */
         {
             const VertexAttribute color_attr = spec.color_attribute;
             const uint8_t* row = raw_data + stride * base;
             for(uint32_t i = 0; i < count; ++i) {
                 ClipVertex& cv = work_vertices_[i];
+
+                const float* p = (const float*)(row + pos_offset);
+                shz_vec4_t clip = shz_xmtrx_transform_vec4(
+                    shz_vec4_init(p[0], p[1], p[2], 1.0f));
+                cv.x = clip.x; cv.y = clip.y; cv.z = clip.z; cv.w = clip.w;
 
                 if(uv_offset) {
                     const float* t = (const float*)(row + uv_offset);
@@ -892,7 +922,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         }
 
         /* ------------------------------------------------------------
-         * Pass 3: per-vertex PBR lighting.
+         * Pass 2: per-vertex PBR lighting.
          * Loads modelview into xmtrx so the normal and eye-space
          * position transforms can also use FTRV.
          * ------------------------------------------------------------ */
@@ -908,7 +938,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             for(uint32_t i = 0; i < count; ++i) {
                 ClipVertex& cv = work_vertices_[i];
 
-                /* Recover base colour stashed by pass 2. */
+                /* Recover base colour stashed by pass 1. */
                 const float br = cv.r;
                 const float bg = cv.g;
                 const float bb = cv.b;
@@ -1275,6 +1305,30 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * that they need, then walk the topology referencing the cached
      * ClipVertex slots in work_vertices_.
      * ================================================================ */
+
+    /* Deferred lists (TR/PT) accumulate vertices in a std::vector that is
+     * appended to one vertex at a time below. Reserve the worst-case size for
+     * this renderable up front so those appends never reallocate mid-way —
+     * a reallocation would memcpy the entire display list built so far, a
+     * large and unpredictable per-frame spike on the SH4. Near-plane clipping
+     * can at most double the primitive count, so 2 output vertices per input
+     * index/vertex is a safe bound; the +8 covers strip-restart degenerates.
+     * reserve() only grows capacity, so over-estimating is harmless. */
+    if(renderer_->current_list_type_ != PVR_LIST_OP_POLY) {
+        std::size_t prim_verts = 0;
+        if(renderable->index_element_count > 0 && renderable->index_data) {
+            prim_verts = renderable->index_element_count;
+        } else {
+            for(std::size_t ri = 0; ri < renderable->vertex_range_count; ++ri) {
+                prim_verts += renderable->vertex_ranges[ri].count;
+            }
+        }
+        auto& buf = renderer_->buffer(renderer_->current_list_type_)
+                        .buffers[renderer_->current_buffer_index_];
+        buf.reserve(buf.size() +
+                    (2 * prim_verts + 8) * sizeof(pvr_vertex_type5_t));
+    }
+
     if(renderable->index_element_count > 0 && renderable->index_data) {
         /* Indexed rendering. */
         const auto* idata = renderable->index_data;
