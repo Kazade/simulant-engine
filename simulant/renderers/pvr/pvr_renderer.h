@@ -8,6 +8,11 @@
 #include <kos.h>
 #endif
 
+/*
+ * When enabled OP polys are sent to the PVR via store queues and all other
+ * lists are sent over DMA. */
+#define HYBRID_RENDERING_ENABLED 0
+
 namespace smlt {
 
 class PVRRenderQueueVisitor;

@@ -6,6 +6,7 @@
 #include <kos.h>
 #include <dc/pvr.h>
 #include <dc/video.h>
+#include "../../deps/sh4zam/shz_sh4zam.h"
 
 extern struct pvr_state_t pvr_state;
 #endif
@@ -181,6 +182,7 @@ void PVRRenderer::on_post_render() {
         pvr_list_finish();
         prev_list_type_ = (pvr_list_type_t) -1;
 
+#if HYBRID_RENDERING_ENABLED
         for(auto list_type: { PVR_LIST_OP_MOD, PVR_LIST_PT_POLY, PVR_LIST_TR_POLY }) {
             auto& buf = buffer(list_type);
             auto& b = buf.buffers[current_buffer_index_];
@@ -203,6 +205,27 @@ void PVRRenderer::on_post_render() {
             pvr_set_vertbuf(buf.list_type, &b[0], b.size() * 2);
             pvr_vertbuf_written(buf.list_type, count);
         }
+#else
+        /* HYBRID_RENDERING_ENABLED is off: OP_MOD/TR_POLY/PT_POLY are still
+         * buffered in RAM during the frame exactly as above (the visitor
+         * doesn't know or care which flush mechanism is in use), but instead
+         * of handing the buffer to KOS's PVR-DMA machinery (pvr_set_vertbuf +
+         * the automatic DMA-out in pvr_scene_finish), we blast each buffer to
+         * the TA input directly via store queues. */
+        for(auto list_type: { PVR_LIST_OP_MOD, PVR_LIST_PT_POLY, PVR_LIST_TR_POLY }) {
+            auto& buf = buffer(list_type);
+            auto& b = buf.buffers[current_buffer_index_];
+
+            pvr_list_begin(list_type);
+            for(size_t offset = 0; offset < b.size(); offset += 32) {
+                void* dest = pvr_dr_target(dr_state_);
+                shz_memcpy32(dest, &b[offset], 32);
+                pvr_dr_commit(dest);
+            }
+            pvr_list_finish();
+        }
+        _S_UNUSED(ram_target);
+#endif
 
         S_VERBOSE("Finishing scene");
 
