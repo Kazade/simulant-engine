@@ -171,7 +171,7 @@ public:
     const Color& fog_color() const;
     float metallic() const;
     float roughness() const;
-    float point_size() const;
+    float line_width() const;
     float alpha_threshold() const;
     float fog_density() const;
     float fog_start() const;
@@ -500,7 +500,7 @@ public:
     const Color& fog_color() const      { return base_props_.fog_color; }
     float metallic() const              { return base_props_.metallic; }
     float roughness() const             { return base_props_.roughness; }
-    float point_size() const            { return base_props_.point_size; }
+    float line_width() const            { return base_props_.line_width; }
     float alpha_threshold() const       { return base_props_.alpha_threshold; }
     float fog_density() const           { return base_props_.fog_density; }
     float fog_start() const             { return base_props_.fog_start; }
@@ -706,8 +706,8 @@ inline float MaterialPass::metallic() const {
 inline float MaterialPass::roughness() const {
     return (override_mask_ & CORE_MASK_ROUGHNESS) ? pass_props_.roughness : material_->base_props_.roughness;
 }
-inline float MaterialPass::point_size() const {
-    return (override_mask_ & CORE_MASK_POINT_SIZE) ? pass_props_.point_size : material_->base_props_.point_size;
+inline float MaterialPass::line_width() const {
+    return (override_mask_ & CORE_MASK_LINE_WIDTH) ? pass_props_.line_width : material_->base_props_.line_width;
 }
 inline float MaterialPass::alpha_threshold() const {
     return (override_mask_ & CORE_MASK_ALPHA_THRESHOLD) ? pass_props_.alpha_threshold : material_->base_props_.alpha_threshold;

@@ -191,8 +191,8 @@ void GL1RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     ENABLE_TEXTURE(3, metallic_roughness);
 
 #if !defined(__DREAMCAST__) && !defined(__PSP__)
-    if(!prev || prev->point_size() != next->point_size()) {
-        glPointSize(next->point_size());
+    if(!prev || prev->line_width() != next->line_width()) {
+        glLineWidth(next->line_width());
     }
 
     switch((PolygonMode)next->polygon_mode()) {

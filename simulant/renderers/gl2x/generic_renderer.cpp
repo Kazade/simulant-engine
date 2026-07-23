@@ -171,11 +171,6 @@ void GenericRenderer::set_material_uniforms(const MaterialPass* pass,
         program->set_uniform_color(diff_loc, pass->base_color());
     }
 
-    auto ps_loc = program->locate_uniform(POINT_SIZE_PROPERTY_NAME, true);
-    if(ps_loc > -1) {
-        program->set_uniform_float(ps_loc, pass->point_size());
-    }
-
     auto le_loc = program->locate_uniform(LIGHTING_ENABLED_PROPERTY_NAME, true);
     if(le_loc > -1) {
         program->set_uniform_int(le_loc, pass->is_lighting_enabled() ? 1 : 0);
@@ -601,8 +596,8 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     }
 
     if(!renderer_->is_gles()) {
-        if(!prev || prev->point_size() != next->point_size()) {
-            glPointSize(next->point_size());
+        if(!prev || prev->line_width() != next->line_width()) {
+            glLineWidth(next->line_width());
         }
 
         if(!prev || prev->polygon_mode() != next->polygon_mode()) {

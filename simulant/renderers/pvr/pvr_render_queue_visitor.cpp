@@ -1058,36 +1058,30 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     /* MVP is loaded once here; transform_batch keeps it loaded across calls. */
     shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp._native());
 
-    /* Lambda to do perspective divide and emit a ClipVertex.
+    /* Emit a single screen-space vertex (viewport transform + perspective
+     * divide already applied) into the active PVR list.
      * For OP: submits directly via store queues (64-byte Type 5 format).
-     * For PT/TR: appends the vertex to the deferred buffer. */
-    auto submit_clip_vertex = [&](const ClipVertex& cv, bool is_last) {
-        /* Apply viewport transform (done before perspective divide for PVR) */
-        float vx = cv.x * hw + hw * cv.w;
-        float vy = -cv.y * hh + hh * cv.w;
-
-        /* Perspective divide */
-        float w = cv.w;
-        if(w == 0.0f) w = FLT_EPSILON;
-        float inv_w = shz_invf(w);
-
-        float sx = vx * inv_w;
-        float sy = vy * inv_w;
-        float sz = inv_w;  /* PVR uses 1/w for depth */
-
+     * For PT/TR: appends the vertex to the deferred buffer.
+     *
+     * Kept separate from the clip-space path so the line expansion below can
+     * build its width in screen space and emit through the same sink. */
+    auto emit_vertex = [&](float sx, float sy, float sz,
+                           float u, float v,
+                           float r, float g, float b, float a,
+                           bool is_last) {
         pvr_vertex_type5_t vert;
         vert.flags = is_last ? PVR_CMD_VERTEX_EOL : PVR_CMD_VERTEX;
         vert.x = sx;
         vert.y = sy;
         vert.z = sz;
-        vert.u = cv.u;
-        vert.v = cv.v;
+        vert.u = u;
+        vert.v = v;
         vert._pad0 = 0;
         vert._pad1 = 0;
-        vert.base_a = cv.a;
-        vert.base_r = cv.r;
-        vert.base_g = cv.g;
-        vert.base_b = cv.b;
+        vert.base_a = a;
+        vert.base_r = r;
+        vert.base_g = g;
+        vert.base_b = b;
         vert.offset_a = 0.0f;
         vert.offset_r = 0.0f;
         vert.offset_g = 0.0f;
@@ -1121,6 +1115,30 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             const uint8_t* vert_bytes = reinterpret_cast<const uint8_t*>(&vert);
             buf.insert(buf.end(), vert_bytes, vert_bytes + sizeof(pvr_vertex_type5_t));
         }
+    };
+
+    /* Viewport transform + perspective divide of a clip-space vertex.
+     * Returns screen-space x/y and the 1/w depth the PVR expects. */
+    auto clip_to_screen = [&](const ClipVertex& cv,
+                              float& sx, float& sy, float& sz) {
+        /* Apply viewport transform (done before perspective divide for PVR) */
+        float vx = cv.x * hw + hw * cv.w;
+        float vy = -cv.y * hh + hh * cv.w;
+
+        float w = cv.w;
+        if(w == 0.0f) w = FLT_EPSILON;
+        float inv_w = shz_invf(w);
+
+        sx = vx * inv_w;
+        sy = vy * inv_w;
+        sz = inv_w;  /* PVR uses 1/w for depth */
+    };
+
+    /* Lambda to do perspective divide and emit a ClipVertex. */
+    auto submit_clip_vertex = [&](const ClipVertex& cv, bool is_last) {
+        float sx, sy, sz;
+        clip_to_screen(cv, sx, sy, sz);
+        emit_vertex(sx, sy, sz, cv.u, cv.v, cv.r, cv.g, cv.b, cv.a, is_last);
     };
 
     /* Lambda to process a triangle with near-plane clipping */
@@ -1225,6 +1243,65 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         }
     };
 
+    /* Lambda to render a quad (4 corners in GL_QUADS perimeter order) as a
+     * single 4-vertex triangle strip.  A strip [v0,v1,v3,v2] draws the two
+     * triangles (v0,v1,v3) and (v1,v2,v3) — a valid triangulation of the quad
+     * across the v1–v3 diagonal, with the PVR flipping the second triangle's
+     * winding automatically so no per-triangle winding fixup is needed.  When
+     * any corner is behind the near plane we fall back to two independently
+     * clipped triangles matching GL_QUADS' (v0,v1,v2)+(v0,v2,v3) split. */
+    auto process_quad = [&](const ClipVertex& v0, const ClipVertex& v1,
+                            const ClipVertex& v2, const ClipVertex& v3) {
+        if(is_vertex_visible(v0) && is_vertex_visible(v1) &&
+           is_vertex_visible(v2) && is_vertex_visible(v3)) {
+            submit_clip_vertex(v0, false);
+            submit_clip_vertex(v1, false);
+            submit_clip_vertex(v3, false);
+            submit_clip_vertex(v2, true);
+        } else {
+            process_triangle(v0, v1, v2, true);
+            process_triangle(v0, v2, v3, true);
+        }
+    };
+
+    /* Lambda to render a line segment as a screen-space-aligned quad (a
+     * 4-vertex triangle strip).  The PVR has no line primitive, so each
+     * segment is expanded to a constant-pixel-width strip: the perpendicular
+     * is computed in screen space after the perspective divide, giving the
+     * same uniform width GL's glLineWidth would.  Segments touching the near
+     * plane are dropped — lines are thin outlines and full near-plane line
+     * clipping isn't worth the hot-path cost. */
+    const float line_half_width = material_pass->line_width() * 0.5f;
+    auto process_line = [&](const ClipVertex& c0, const ClipVertex& c1) {
+        if(!is_vertex_visible(c0) || !is_vertex_visible(c1)) {
+            return;
+        }
+
+        float sx0, sy0, sz0, sx1, sy1, sz1;
+        clip_to_screen(c0, sx0, sy0, sz0);
+        clip_to_screen(c1, sx1, sy1, sz1);
+
+        float dx = sx1 - sx0;
+        float dy = sy1 - sy0;
+        float len_sq = dx * dx + dy * dy;
+        if(len_sq < 1e-8f) {
+            return; /* degenerate zero-length segment */
+        }
+        /* Unit perpendicular in screen space, scaled to the half width. */
+        float inv_len = shz_inv_sqrtf_fsrra(len_sq);
+        float nx = -dy * inv_len * line_half_width;
+        float ny =  dx * inv_len * line_half_width;
+
+        emit_vertex(sx0 + nx, sy0 + ny, sz0, c0.u, c0.v,
+                    c0.r, c0.g, c0.b, c0.a, false);
+        emit_vertex(sx0 - nx, sy0 - ny, sz0, c0.u, c0.v,
+                    c0.r, c0.g, c0.b, c0.a, false);
+        emit_vertex(sx1 + nx, sy1 + ny, sz1, c1.u, c1.v,
+                    c1.r, c1.g, c1.b, c1.a, false);
+        emit_vertex(sx1 - nx, sy1 - ny, sz1, c1.u, c1.v,
+                    c1.r, c1.g, c1.b, c1.a, true);
+    };
+
     /* ================================================================
      * Strip submission state (shared by indexed and non-indexed paths)
      *
@@ -1310,10 +1387,13 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * appended to one vertex at a time below. Reserve the worst-case size for
      * this renderable up front so those appends never reallocate mid-way —
      * a reallocation would memcpy the entire display list built so far, a
-     * large and unpredictable per-frame spike on the SH4. Near-plane clipping
-     * can at most double the primitive count, so 2 output vertices per input
-     * index/vertex is a safe bound; the +8 covers strip-restart degenerates.
-     * reserve() only grows capacity, so over-estimating is harmless. */
+     * large and unpredictable per-frame spike on the SH4. For triangle
+     * topologies near-plane clipping can at most double the primitive count,
+     * so 2 output vertices per input index/vertex is a safe bound. Line
+     * topologies expand each input vertex into a 4-vertex strip quad (a line
+     * strip emits ~4 output verts per input index), so those need a factor of
+     * 4. The +8 covers strip-restart degenerates. reserve() only grows
+     * capacity, so over-estimating is harmless. */
     if(renderer_->current_list_type_ != PVR_LIST_OP_POLY) {
         std::size_t prim_verts = 0;
         if(renderable->index_element_count > 0 && renderable->index_data) {
@@ -1323,10 +1403,14 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 prim_verts += renderable->vertex_ranges[ri].count;
             }
         }
+        const std::size_t vfactor =
+            (renderable->arrangement == MESH_ARRANGEMENT_LINES ||
+             renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP)
+                ? 4 : 2;
         auto& buf = renderer_->buffer(renderer_->current_list_type_)
                         .buffers[renderer_->current_buffer_index_];
         buf.reserve(buf.size() +
-                    (2 * prim_verts + 8) * sizeof(pvr_vertex_type5_t));
+                    (vfactor * prim_verts + 8) * sizeof(pvr_vertex_type5_t));
     }
 
     if(renderable->index_element_count > 0 && renderable->index_data) {
@@ -1387,6 +1471,26 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     process_triangle(v0, v1, v2, is_last);
                 }
             }
+        } else if(renderable->arrangement == MESH_ARRANGEMENT_QUADS) {
+            for(std::size_t i = 0; i + 3 < icount; i += 4) {
+                const ClipVertex& v0 = work_vertices_[get_index(i + 0) - base];
+                const ClipVertex& v1 = work_vertices_[get_index(i + 1) - base];
+                const ClipVertex& v2 = work_vertices_[get_index(i + 2) - base];
+                const ClipVertex& v3 = work_vertices_[get_index(i + 3) - base];
+                process_quad(v0, v1, v2, v3);
+            }
+        } else if(renderable->arrangement == MESH_ARRANGEMENT_LINES) {
+            for(std::size_t i = 0; i + 1 < icount; i += 2) {
+                const ClipVertex& c0 = work_vertices_[get_index(i + 0) - base];
+                const ClipVertex& c1 = work_vertices_[get_index(i + 1) - base];
+                process_line(c0, c1);
+            }
+        } else if(renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP) {
+            for(std::size_t i = 1; i < icount; i++) {
+                const ClipVertex& c0 = work_vertices_[get_index(i - 1) - base];
+                const ClipVertex& c1 = work_vertices_[get_index(i) - base];
+                process_line(c0, c1);
+            }
         }
     } else {
         /* Non-indexed range-based rendering: each range is independent so
@@ -1431,6 +1535,19 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                         bool is_last = (i + 2 >= count) && (ri + 1 >= range_count);
                         process_triangle(v0, v1, v2, is_last);
                     }
+                }
+            } else if(renderable->arrangement == MESH_ARRANGEMENT_QUADS) {
+                for(uint32_t i = 0; i + 3 < count; i += 4) {
+                    process_quad(work_vertices_[i + 0], work_vertices_[i + 1],
+                                 work_vertices_[i + 2], work_vertices_[i + 3]);
+                }
+            } else if(renderable->arrangement == MESH_ARRANGEMENT_LINES) {
+                for(uint32_t i = 0; i + 1 < count; i += 2) {
+                    process_line(work_vertices_[i + 0], work_vertices_[i + 1]);
+                }
+            } else if(renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP) {
+                for(uint32_t i = 1; i < count; i++) {
+                    process_line(work_vertices_[i - 1], work_vertices_[i]);
                 }
             }
         }
