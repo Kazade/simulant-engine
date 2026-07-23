@@ -143,6 +143,14 @@ void PVRRenderer::pre_render() {
     prev_list_type_ = (pvr_list_type_t) -1;
     current_list_type_ = PVR_LIST_OP_POLY;
 
+    /* Force the first poly submitted to each list this frame to send its
+     * header — the TA's per-list poly state doesn't persist across
+     * pvr_scene_begin/finish, so a header that matched what was last sent
+     * *last* frame can't be assumed to still be active. */
+    for(auto& valid: last_header_valid_) {
+        valid = false;
+    }
+
     ensure_list_opened(current_list_type_);
 #endif
 }

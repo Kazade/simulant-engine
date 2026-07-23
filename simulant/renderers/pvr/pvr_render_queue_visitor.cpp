@@ -29,6 +29,7 @@
 
 #include <cmath>
 #include <cfloat>
+#include <cstring>
 
 namespace smlt {
 
@@ -202,6 +203,21 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     mat_metallic_  = next->metallic();
     mat_roughness_ = next->roughness();
 
+    /* Cache the base color map's UV transform as scalar coefficients (see
+     * the field comment in the header for why this avoids xmtrx). Skipping
+     * the multiply entirely in the (common) identity case keeps the no-op
+     * cost at a single bool check per vertex. */
+    const Mat4& uv_mat = next->base_color_map_matrix();
+    uv_matrix_identity_ = (uv_mat == Mat4());
+    if(!uv_matrix_identity_) {
+        uv_matrix_[0] = uv_mat[0];
+        uv_matrix_[1] = uv_mat[4];
+        uv_matrix_[2] = uv_mat[12];
+        uv_matrix_[3] = uv_mat[1];
+        uv_matrix_[4] = uv_mat[5];
+        uv_matrix_[5] = uv_mat[13];
+    }
+
     /* Determine PVR list type based on blend mode, then redirect to the
      * matching modifier-volume list if this pass targets it. Punch-through has
      * no modifier list, so it falls back to the opaque modifier list. */
@@ -285,6 +301,51 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         case FOG_MODE_EXP:
         case FOG_MODE_EXP2: fog_type = PVR_FOG_TABLE;   break;
         default:            fog_type = PVR_FOG_DISABLE;  break;
+    }
+
+    /* Sync the PVR's global fog table/color registers (see the cache fields'
+     * comment in pvr_renderer.h for why this is deduped and lives on the
+     * renderer rather than being rebuilt unconditionally here). GL1x/GL2
+     * reach the equivalent state via glFogf/glFogfv on every pass change;
+     * on the PVR that would mean rebuilding a 129-entry table on every
+     * material switch, so only touch it when the fog params actually
+     * differ from what's already programmed. */
+    if(fog_type == PVR_FOG_TABLE) {
+        const Color& fc = next->fog_color();
+        const float density = next->fog_density();
+        const float start = next->fog_start();
+        const float end = next->fog_end();
+        const int32_t mode = (int32_t)next->fog_mode();
+
+        auto& r = *renderer_;
+        const bool changed =
+            r.fog_mode_cache_ != mode ||
+            r.fog_density_cache_ != density ||
+            r.fog_start_cache_ != start ||
+            r.fog_end_cache_ != end ||
+            r.fog_color_cache_[0] != fc.r ||
+            r.fog_color_cache_[1] != fc.g ||
+            r.fog_color_cache_[2] != fc.b ||
+            r.fog_color_cache_[3] != fc.a;
+
+        if(changed) {
+            switch(next->fog_mode()) {
+                case FOG_MODE_EXP:  pvr_fog_table_exp(density);  break;
+                case FOG_MODE_EXP2: pvr_fog_table_exp2(density); break;
+                case FOG_MODE_LINEAR:
+                default:             pvr_fog_table_linear(start, end); break;
+            }
+            pvr_fog_table_color(fc.a, fc.r, fc.g, fc.b);
+
+            r.fog_mode_cache_ = mode;
+            r.fog_density_cache_ = density;
+            r.fog_start_cache_ = start;
+            r.fog_end_cache_ = end;
+            r.fog_color_cache_[0] = fc.r;
+            r.fog_color_cache_[1] = fc.g;
+            r.fog_color_cache_[2] = fc.b;
+            r.fog_color_cache_[3] = fc.a;
+        }
     }
 
     /* Resolve texture — bind_texture uploads if needed and returns VRAM object */
@@ -795,16 +856,35 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         hdr_src = &hdr_local;
     }
 
-    if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
-        pvr_vertex_t* hdr_dest = static_cast<pvr_vertex_t*>(pvr_dr_target(renderer_->dr_state_));
-        shz_memcpy32(hdr_dest, hdr_src, sizeof(pvr_poly_hdr_t));
-        pvr_dr_commit(hdr_dest);
-    } else {
-        auto& buf = renderer_->buffer(renderer_->current_list_type_).buffers[renderer_->current_buffer_index_];
-        const uint8_t* hdr_bytes = reinterpret_cast<const uint8_t*>(hdr_src);
-        auto size = buf.size();
-        buf.resize(size + sizeof(pvr_poly_hdr_t));
-        shz_memcpy32(&buf[size], hdr_bytes, sizeof(pvr_poly_hdr_t));
+    /* Skip resubmitting a header that's byte-identical to the one already
+     * active for this list — the TA has to redundantly update its internal
+     * poly state on every header it sees even when nothing about it
+     * actually changed, so runs of renderables sharing a material pass (and
+     * shadow-receive flag, which is what `hdr_src` above already folds in)
+     * were paying for a resend on every single one. Cache lives per-list on
+     * the renderer — see its field comment — and is invalidated once per
+     * frame, so the first poly submitted to a list always sends its header
+     * regardless of what was cached from the previous frame. */
+    bool& cache_valid = renderer_->last_header_valid_[renderer_->current_list_type_];
+    pvr_poly_hdr_t& cache_bytes = renderer_->last_header_[renderer_->current_list_type_];
+    const bool header_unchanged =
+        cache_valid && std::memcmp(&cache_bytes, hdr_src, sizeof(pvr_poly_hdr_t)) == 0;
+
+    if(!header_unchanged) {
+        if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
+            pvr_vertex_t* hdr_dest = static_cast<pvr_vertex_t*>(pvr_dr_target(renderer_->dr_state_));
+            shz_memcpy32(hdr_dest, hdr_src, sizeof(pvr_poly_hdr_t));
+            pvr_dr_commit(hdr_dest);
+        } else {
+            auto& buf = renderer_->buffer(renderer_->current_list_type_).buffers[renderer_->current_buffer_index_];
+            const uint8_t* hdr_bytes = reinterpret_cast<const uint8_t*>(hdr_src);
+            auto size = buf.size();
+            buf.resize(size + sizeof(pvr_poly_hdr_t));
+            shz_memcpy32(&buf[size], hdr_bytes, sizeof(pvr_poly_hdr_t));
+        }
+
+        cache_bytes = *hdr_src;
+        cache_valid = true;
     }
 
     /* ================================================================
@@ -873,8 +953,15 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
                 if(uv_offset) {
                     const float* t = (const float*)(row + uv_offset);
-                    cv.u = t[0];
-                    cv.v = t[1];
+                    if(uv_matrix_identity_) {
+                        cv.u = t[0];
+                        cv.v = t[1];
+                    } else {
+                        const float u = t[0];
+                        const float v = t[1];
+                        cv.u = uv_matrix_[0] * u + uv_matrix_[1] * v + uv_matrix_[2];
+                        cv.v = uv_matrix_[3] * u + uv_matrix_[4] * v + uv_matrix_[5];
+                    }
                 } else {
                     cv.u = 0.0f; cv.v = 0.0f;
                 }
