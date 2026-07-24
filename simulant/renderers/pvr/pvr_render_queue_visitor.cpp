@@ -69,7 +69,10 @@ static inline uint32_t pvr_txr_size_idx(int sz) {
  *   uv_flip/clamp = none  (= 0)
  *   mipmap_bias   = PVR_MIPBIAS_NORMAL (= 4)
  *   mipmap        = disabled (= 0)
- *   no modifier volumes, no user-clip, no specular */
+ *   no modifier volumes, no user-clip
+ *   specular (oargb) = enabled only when the pass has lighting on, so the
+ *   TSP's extra per-pixel offset-color add is only paid for where it's
+ *   actually used. */
 static inline void pvr_build_poly_hdr(
     pvr_poly_hdr_t* hdr,
     int list_type,
@@ -80,15 +83,17 @@ static inline void pvr_build_poly_hdr(
     int blend_src,
     int blend_dst,
     int fog_type,
+    int specular,
     const PVRTextureObject* tex_obj)
 {
     const int textured = (tex_obj != nullptr) ? 1 : 0;
     /* alpha enabled for translucent and punch-through lists */
     const int alpha = (list_type != PVR_LIST_OP_POLY) ? 1 : 0;
 
-    /* CMD: base | texture-enable (bit 3) | list type (26:24)
-     *          | color format (6:4) | shade mode (bit 1) */
+    /* CMD: base | specular/oargb-enable (bit 2) | texture-enable (bit 3)
+     *          | list type (26:24) | color format (6:4) | shade mode (bit 1) */
     hdr->cmd = PVR_CMD_POLYHDR
+             | ((uint32_t)specular   << PVR_TA_CMD_SPECULAR_SHIFT)
              | ((uint32_t)textured   << 3)
              | ((uint32_t)list_type  << PVR_TA_CMD_TYPE_SHIFT)
              | (PVR_CLRFMT_4FLOATS   << PVR_TA_CMD_CLRFMT_SHIFT)
@@ -388,6 +393,7 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             blend_src,
             blend_dst,
             fog_type,
+            next->is_lighting_enabled() ? PVR_SPECULAR_ENABLE : PVR_SPECULAR_DISABLE,
             tex_obj
         );
     }
@@ -481,9 +487,13 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
 
 /* A vertex in clip space with all attributes needed for interpolation */
 struct ClipVertex {
-    float x, y, z, w;  /* Clip-space position */
-    float u, v;         /* Texture coordinates */
-    float r, g, b, a;   /* Color */
+    float x, y, z, w;    /* Clip-space position */
+    float u, v;          /* Texture coordinates */
+    float r, g, b, a;    /* Base (diffuse+ambient) color */
+    float sr, sg, sb;    /* Specular color — offloaded to the PVR's oargb
+                           * offset-color unit, added post-texture-modulate
+                           * and clamped by hardware (PVR_CLRCLAMP_ENABLE),
+                           * so it never needs summing or clamping here. */
 };
 
 /* Check if a vertex is in front of the near plane (visible).
@@ -527,6 +537,9 @@ static inline ClipVertex lerp_vertex(const ClipVertex& v1, const ClipVertex& v2,
     out.g = shz_lerpf(v1.g, v2.g, t);
     out.b = shz_lerpf(v1.b, v2.b, t);
     out.a = shz_lerpf(v1.a, v2.a, t);
+    out.sr = shz_lerpf(v1.sr, v2.sr, t);
+    out.sg = shz_lerpf(v1.sg, v2.sg, t);
+    out.sb = shz_lerpf(v1.sb, v2.sb, t);
     return out;
 }
 
@@ -1004,6 +1017,11 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 cv.g = bg;
                 cv.b = bb;
                 cv.a = ba;
+                /* No specular unless the lighting pass below overwrites it —
+                 * covers both the lighting-disabled and no-normals cases. */
+                cv.sr = 0.0f;
+                cv.sg = 0.0f;
+                cv.sb = 0.0f;
                 row += stride;
             }
         }
@@ -1062,9 +1080,21 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 const float F0_g = 0.04f + (bg - 0.04f) * mat_metallic_;
                 const float F0_b = 0.04f + (bb - 0.04f) * mat_metallic_;
 
+                /* Diffuse (+ambient) and specular are accumulated separately
+                 * and submitted through the vertex's base/offset (oargb)
+                 * colors respectively — the PVR's TSP adds them together
+                 * (and clamps the result, via PVR_CLRCLAMP_ENABLE) at raster
+                 * time, so neither sum needs summing or clamping here. This
+                 * also fixes an accuracy issue the old combined-sum had:
+                 * specular no longer gets multiplied by the surface texture
+                 * when the two are later modulated together in hardware —
+                 * oargb is added post-modulate. */
                 float total_r = br * ambient_[0];
                 float total_g = bg * ambient_[1];
                 float total_b = bb * ambient_[2];
+                float total_sr = 0.0f;
+                float total_sg = 0.0f;
+                float total_sb = 0.0f;
 
                 for(int li = 0; li < MAX_LIGHTS; ++li) {
                     if(!lights_[li].enabled) continue;
@@ -1126,14 +1156,25 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     float spec = D * G / denom;
 
                     float scale = NdotL * lights_[li].intensity * att;
-                    total_r += (kD_r * br + spec * Fr) * scale * lights_[li].color[0];
-                    total_g += (kD_g * bg + spec * Fg) * scale * lights_[li].color[1];
-                    total_b += (kD_b * bb + spec * Fb) * scale * lights_[li].color[2];
+                    float light_r = scale * lights_[li].color[0];
+                    float light_g = scale * lights_[li].color[1];
+                    float light_b = scale * lights_[li].color[2];
+
+                    total_r += kD_r * br * light_r;
+                    total_g += kD_g * bg * light_g;
+                    total_b += kD_b * bb * light_b;
+
+                    total_sr += spec * Fr * light_r;
+                    total_sg += spec * Fg * light_g;
+                    total_sb += spec * Fb * light_b;
                 }
 
-                cv.r = total_r > 1.0f ? 1.0f : total_r;
-                cv.g = total_g > 1.0f ? 1.0f : total_g;
-                cv.b = total_b > 1.0f ? 1.0f : total_b;
+                cv.r = total_r;
+                cv.g = total_g;
+                cv.b = total_b;
+                cv.sr = total_sr;
+                cv.sg = total_sg;
+                cv.sb = total_sb;
                 row += stride;
             }
 
@@ -1155,6 +1196,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     auto emit_vertex = [&](float sx, float sy, float sz,
                            float u, float v,
                            float r, float g, float b, float a,
+                           float sr, float sg, float sb,
                            bool is_last) {
         pvr_vertex_type5_t vert;
         vert.flags = is_last ? PVR_CMD_VERTEX_EOL : PVR_CMD_VERTEX;
@@ -1169,10 +1211,12 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         vert.base_r = r;
         vert.base_g = g;
         vert.base_b = b;
+        /* Offset alpha is ignored by the PVR's oargb unit — only rgb is
+         * added to the post-texture-modulate color. */
         vert.offset_a = 0.0f;
-        vert.offset_r = 0.0f;
-        vert.offset_g = 0.0f;
-        vert.offset_b = 0.0f;
+        vert.offset_r = sr;
+        vert.offset_g = sg;
+        vert.offset_b = sb;
 
         if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
             /* Submit 64-byte Type 5 vertex via direct rendering (two 32-byte writes) */
@@ -1225,7 +1269,8 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     auto submit_clip_vertex = [&](const ClipVertex& cv, bool is_last) {
         float sx, sy, sz;
         clip_to_screen(cv, sx, sy, sz);
-        emit_vertex(sx, sy, sz, cv.u, cv.v, cv.r, cv.g, cv.b, cv.a, is_last);
+        emit_vertex(sx, sy, sz, cv.u, cv.v, cv.r, cv.g, cv.b, cv.a,
+                    cv.sr, cv.sg, cv.sb, is_last);
     };
 
     /* Lambda to process a triangle with near-plane clipping */
@@ -1379,14 +1424,15 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         float nx = -dy * inv_len * line_half_width;
         float ny =  dx * inv_len * line_half_width;
 
+        /* Lines never carry specular — flat vertex colour only. */
         emit_vertex(sx0 + nx, sy0 + ny, sz0, c0.u, c0.v,
-                    c0.r, c0.g, c0.b, c0.a, false);
+                    c0.r, c0.g, c0.b, c0.a, 0.0f, 0.0f, 0.0f, false);
         emit_vertex(sx0 - nx, sy0 - ny, sz0, c0.u, c0.v,
-                    c0.r, c0.g, c0.b, c0.a, false);
+                    c0.r, c0.g, c0.b, c0.a, 0.0f, 0.0f, 0.0f, false);
         emit_vertex(sx1 + nx, sy1 + ny, sz1, c1.u, c1.v,
-                    c1.r, c1.g, c1.b, c1.a, false);
+                    c1.r, c1.g, c1.b, c1.a, 0.0f, 0.0f, 0.0f, false);
         emit_vertex(sx1 - nx, sy1 - ny, sz1, c1.u, c1.v,
-                    c1.r, c1.g, c1.b, c1.a, true);
+                    c1.r, c1.g, c1.b, c1.a, 0.0f, 0.0f, 0.0f, true);
     };
 
     /* ================================================================
