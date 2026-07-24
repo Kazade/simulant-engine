@@ -29,6 +29,7 @@
 
 #include <cmath>
 #include <cfloat>
+#include <cstring>
 
 namespace smlt {
 
@@ -68,7 +69,10 @@ static inline uint32_t pvr_txr_size_idx(int sz) {
  *   uv_flip/clamp = none  (= 0)
  *   mipmap_bias   = PVR_MIPBIAS_NORMAL (= 4)
  *   mipmap        = disabled (= 0)
- *   no modifier volumes, no user-clip, no specular */
+ *   no modifier volumes, no user-clip
+ *   specular (oargb) = enabled only when the pass has lighting on, so the
+ *   TSP's extra per-pixel offset-color add is only paid for where it's
+ *   actually used. */
 static inline void pvr_build_poly_hdr(
     pvr_poly_hdr_t* hdr,
     int list_type,
@@ -79,15 +83,17 @@ static inline void pvr_build_poly_hdr(
     int blend_src,
     int blend_dst,
     int fog_type,
+    int specular,
     const PVRTextureObject* tex_obj)
 {
     const int textured = (tex_obj != nullptr) ? 1 : 0;
     /* alpha enabled for translucent and punch-through lists */
     const int alpha = (list_type != PVR_LIST_OP_POLY) ? 1 : 0;
 
-    /* CMD: base | texture-enable (bit 3) | list type (26:24)
-     *          | color format (6:4) | shade mode (bit 1) */
+    /* CMD: base | specular/oargb-enable (bit 2) | texture-enable (bit 3)
+     *          | list type (26:24) | color format (6:4) | shade mode (bit 1) */
     hdr->cmd = PVR_CMD_POLYHDR
+             | ((uint32_t)specular   << PVR_TA_CMD_SPECULAR_SHIFT)
              | ((uint32_t)textured   << 3)
              | ((uint32_t)list_type  << PVR_TA_CMD_TYPE_SHIFT)
              | (PVR_CLRFMT_4FLOATS   << PVR_TA_CMD_CLRFMT_SHIFT)
@@ -202,6 +208,21 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     mat_metallic_  = next->metallic();
     mat_roughness_ = next->roughness();
 
+    /* Cache the base color map's UV transform as scalar coefficients (see
+     * the field comment in the header for why this avoids xmtrx). Skipping
+     * the multiply entirely in the (common) identity case keeps the no-op
+     * cost at a single bool check per vertex. */
+    const Mat4& uv_mat = next->base_color_map_matrix();
+    uv_matrix_identity_ = (uv_mat == Mat4());
+    if(!uv_matrix_identity_) {
+        uv_matrix_[0] = uv_mat[0];
+        uv_matrix_[1] = uv_mat[4];
+        uv_matrix_[2] = uv_mat[12];
+        uv_matrix_[3] = uv_mat[1];
+        uv_matrix_[4] = uv_mat[5];
+        uv_matrix_[5] = uv_mat[13];
+    }
+
     /* Determine PVR list type based on blend mode, then redirect to the
      * matching modifier-volume list if this pass targets it. Punch-through has
      * no modifier list, so it falls back to the opaque modifier list. */
@@ -287,6 +308,51 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         default:            fog_type = PVR_FOG_DISABLE;  break;
     }
 
+    /* Sync the PVR's global fog table/color registers (see the cache fields'
+     * comment in pvr_renderer.h for why this is deduped and lives on the
+     * renderer rather than being rebuilt unconditionally here). GL1x/GL2
+     * reach the equivalent state via glFogf/glFogfv on every pass change;
+     * on the PVR that would mean rebuilding a 129-entry table on every
+     * material switch, so only touch it when the fog params actually
+     * differ from what's already programmed. */
+    if(fog_type == PVR_FOG_TABLE) {
+        const Color& fc = next->fog_color();
+        const float density = next->fog_density();
+        const float start = next->fog_start();
+        const float end = next->fog_end();
+        const int32_t mode = (int32_t)next->fog_mode();
+
+        auto& r = *renderer_;
+        const bool changed =
+            r.fog_mode_cache_ != mode ||
+            r.fog_density_cache_ != density ||
+            r.fog_start_cache_ != start ||
+            r.fog_end_cache_ != end ||
+            r.fog_color_cache_[0] != fc.r ||
+            r.fog_color_cache_[1] != fc.g ||
+            r.fog_color_cache_[2] != fc.b ||
+            r.fog_color_cache_[3] != fc.a;
+
+        if(changed) {
+            switch(next->fog_mode()) {
+                case FOG_MODE_EXP:  pvr_fog_table_exp(density);  break;
+                case FOG_MODE_EXP2: pvr_fog_table_exp2(density); break;
+                case FOG_MODE_LINEAR:
+                default:             pvr_fog_table_linear(start, end); break;
+            }
+            pvr_fog_table_color(fc.a, fc.r, fc.g, fc.b);
+
+            r.fog_mode_cache_ = mode;
+            r.fog_density_cache_ = density;
+            r.fog_start_cache_ = start;
+            r.fog_end_cache_ = end;
+            r.fog_color_cache_[0] = fc.r;
+            r.fog_color_cache_[1] = fc.g;
+            r.fog_color_cache_[2] = fc.b;
+            r.fog_color_cache_[3] = fc.a;
+        }
+    }
+
     /* Resolve texture — bind_texture uploads if needed and returns VRAM object */
     PVRTextureObject* tex_obj = nullptr;
     if((next->textures_enabled() & BASE_COLOR_MAP_ENABLED) != 0) {
@@ -327,6 +393,7 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             blend_src,
             blend_dst,
             fog_type,
+            next->is_lighting_enabled() ? PVR_SPECULAR_ENABLE : PVR_SPECULAR_DISABLE,
             tex_obj
         );
     }
@@ -420,9 +487,13 @@ void PVRRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
 
 /* A vertex in clip space with all attributes needed for interpolation */
 struct ClipVertex {
-    float x, y, z, w;  /* Clip-space position */
-    float u, v;         /* Texture coordinates */
-    float r, g, b, a;   /* Color */
+    float x, y, z, w;    /* Clip-space position */
+    float u, v;          /* Texture coordinates */
+    float r, g, b, a;    /* Base (diffuse+ambient) color */
+    float sr, sg, sb;    /* Specular color — offloaded to the PVR's oargb
+                           * offset-color unit, added post-texture-modulate
+                           * and clamped by hardware (PVR_CLRCLAMP_ENABLE),
+                           * so it never needs summing or clamping here. */
 };
 
 /* Check if a vertex is in front of the near plane (visible).
@@ -466,6 +537,9 @@ static inline ClipVertex lerp_vertex(const ClipVertex& v1, const ClipVertex& v2,
     out.g = shz_lerpf(v1.g, v2.g, t);
     out.b = shz_lerpf(v1.b, v2.b, t);
     out.a = shz_lerpf(v1.a, v2.a, t);
+    out.sr = shz_lerpf(v1.sr, v2.sr, t);
+    out.sg = shz_lerpf(v1.sg, v2.sg, t);
+    out.sb = shz_lerpf(v1.sb, v2.sb, t);
     return out;
 }
 
@@ -795,16 +869,35 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         hdr_src = &hdr_local;
     }
 
-    if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
-        pvr_vertex_t* hdr_dest = static_cast<pvr_vertex_t*>(pvr_dr_target(renderer_->dr_state_));
-        shz_memcpy32(hdr_dest, hdr_src, sizeof(pvr_poly_hdr_t));
-        pvr_dr_commit(hdr_dest);
-    } else {
-        auto& buf = renderer_->buffer(renderer_->current_list_type_).buffers[renderer_->current_buffer_index_];
-        const uint8_t* hdr_bytes = reinterpret_cast<const uint8_t*>(hdr_src);
-        auto size = buf.size();
-        buf.resize(size + sizeof(pvr_poly_hdr_t));
-        shz_memcpy32(&buf[size], hdr_bytes, sizeof(pvr_poly_hdr_t));
+    /* Skip resubmitting a header that's byte-identical to the one already
+     * active for this list — the TA has to redundantly update its internal
+     * poly state on every header it sees even when nothing about it
+     * actually changed, so runs of renderables sharing a material pass (and
+     * shadow-receive flag, which is what `hdr_src` above already folds in)
+     * were paying for a resend on every single one. Cache lives per-list on
+     * the renderer — see its field comment — and is invalidated once per
+     * frame, so the first poly submitted to a list always sends its header
+     * regardless of what was cached from the previous frame. */
+    bool& cache_valid = renderer_->last_header_valid_[renderer_->current_list_type_];
+    pvr_poly_hdr_t& cache_bytes = renderer_->last_header_[renderer_->current_list_type_];
+    const bool header_unchanged =
+        cache_valid && std::memcmp(&cache_bytes, hdr_src, sizeof(pvr_poly_hdr_t)) == 0;
+
+    if(!header_unchanged) {
+        if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
+            pvr_vertex_t* hdr_dest = static_cast<pvr_vertex_t*>(pvr_dr_target(renderer_->dr_state_));
+            shz_memcpy32(hdr_dest, hdr_src, sizeof(pvr_poly_hdr_t));
+            pvr_dr_commit(hdr_dest);
+        } else {
+            auto& buf = renderer_->buffer(renderer_->current_list_type_).buffers[renderer_->current_buffer_index_];
+            const uint8_t* hdr_bytes = reinterpret_cast<const uint8_t*>(hdr_src);
+            auto size = buf.size();
+            buf.resize(size + sizeof(pvr_poly_hdr_t));
+            shz_memcpy32(&buf[size], hdr_bytes, sizeof(pvr_poly_hdr_t));
+        }
+
+        cache_bytes = *hdr_src;
+        cache_valid = true;
     }
 
     /* ================================================================
@@ -873,8 +966,15 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
                 if(uv_offset) {
                     const float* t = (const float*)(row + uv_offset);
-                    cv.u = t[0];
-                    cv.v = t[1];
+                    if(uv_matrix_identity_) {
+                        cv.u = t[0];
+                        cv.v = t[1];
+                    } else {
+                        const float u = t[0];
+                        const float v = t[1];
+                        cv.u = uv_matrix_[0] * u + uv_matrix_[1] * v + uv_matrix_[2];
+                        cv.v = uv_matrix_[3] * u + uv_matrix_[4] * v + uv_matrix_[5];
+                    }
                 } else {
                     cv.u = 0.0f; cv.v = 0.0f;
                 }
@@ -917,6 +1017,11 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 cv.g = bg;
                 cv.b = bb;
                 cv.a = ba;
+                /* No specular unless the lighting pass below overwrites it —
+                 * covers both the lighting-disabled and no-normals cases. */
+                cv.sr = 0.0f;
+                cv.sg = 0.0f;
+                cv.sb = 0.0f;
                 row += stride;
             }
         }
@@ -975,9 +1080,21 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 const float F0_g = 0.04f + (bg - 0.04f) * mat_metallic_;
                 const float F0_b = 0.04f + (bb - 0.04f) * mat_metallic_;
 
+                /* Diffuse (+ambient) and specular are accumulated separately
+                 * and submitted through the vertex's base/offset (oargb)
+                 * colors respectively — the PVR's TSP adds them together
+                 * (and clamps the result, via PVR_CLRCLAMP_ENABLE) at raster
+                 * time, so neither sum needs summing or clamping here. This
+                 * also fixes an accuracy issue the old combined-sum had:
+                 * specular no longer gets multiplied by the surface texture
+                 * when the two are later modulated together in hardware —
+                 * oargb is added post-modulate. */
                 float total_r = br * ambient_[0];
                 float total_g = bg * ambient_[1];
                 float total_b = bb * ambient_[2];
+                float total_sr = 0.0f;
+                float total_sg = 0.0f;
+                float total_sb = 0.0f;
 
                 for(int li = 0; li < MAX_LIGHTS; ++li) {
                     if(!lights_[li].enabled) continue;
@@ -1039,14 +1156,25 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     float spec = D * G / denom;
 
                     float scale = NdotL * lights_[li].intensity * att;
-                    total_r += (kD_r * br + spec * Fr) * scale * lights_[li].color[0];
-                    total_g += (kD_g * bg + spec * Fg) * scale * lights_[li].color[1];
-                    total_b += (kD_b * bb + spec * Fb) * scale * lights_[li].color[2];
+                    float light_r = scale * lights_[li].color[0];
+                    float light_g = scale * lights_[li].color[1];
+                    float light_b = scale * lights_[li].color[2];
+
+                    total_r += kD_r * br * light_r;
+                    total_g += kD_g * bg * light_g;
+                    total_b += kD_b * bb * light_b;
+
+                    total_sr += spec * Fr * light_r;
+                    total_sg += spec * Fg * light_g;
+                    total_sb += spec * Fb * light_b;
                 }
 
-                cv.r = total_r > 1.0f ? 1.0f : total_r;
-                cv.g = total_g > 1.0f ? 1.0f : total_g;
-                cv.b = total_b > 1.0f ? 1.0f : total_b;
+                cv.r = total_r;
+                cv.g = total_g;
+                cv.b = total_b;
+                cv.sr = total_sr;
+                cv.sg = total_sg;
+                cv.sb = total_sb;
                 row += stride;
             }
 
@@ -1058,40 +1186,37 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     /* MVP is loaded once here; transform_batch keeps it loaded across calls. */
     shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp._native());
 
-    /* Lambda to do perspective divide and emit a ClipVertex.
+    /* Emit a single screen-space vertex (viewport transform + perspective
+     * divide already applied) into the active PVR list.
      * For OP: submits directly via store queues (64-byte Type 5 format).
-     * For PT/TR: appends the vertex to the deferred buffer. */
-    auto submit_clip_vertex = [&](const ClipVertex& cv, bool is_last) {
-        /* Apply viewport transform (done before perspective divide for PVR) */
-        float vx = cv.x * hw + hw * cv.w;
-        float vy = -cv.y * hh + hh * cv.w;
-
-        /* Perspective divide */
-        float w = cv.w;
-        if(w == 0.0f) w = FLT_EPSILON;
-        float inv_w = shz_invf(w);
-
-        float sx = vx * inv_w;
-        float sy = vy * inv_w;
-        float sz = inv_w;  /* PVR uses 1/w for depth */
-
+     * For PT/TR: appends the vertex to the deferred buffer.
+     *
+     * Kept separate from the clip-space path so the line expansion below can
+     * build its width in screen space and emit through the same sink. */
+    auto emit_vertex = [&](float sx, float sy, float sz,
+                           float u, float v,
+                           float r, float g, float b, float a,
+                           float sr, float sg, float sb,
+                           bool is_last) {
         pvr_vertex_type5_t vert;
         vert.flags = is_last ? PVR_CMD_VERTEX_EOL : PVR_CMD_VERTEX;
         vert.x = sx;
         vert.y = sy;
         vert.z = sz;
-        vert.u = cv.u;
-        vert.v = cv.v;
+        vert.u = u;
+        vert.v = v;
         vert._pad0 = 0;
         vert._pad1 = 0;
-        vert.base_a = cv.a;
-        vert.base_r = cv.r;
-        vert.base_g = cv.g;
-        vert.base_b = cv.b;
+        vert.base_a = a;
+        vert.base_r = r;
+        vert.base_g = g;
+        vert.base_b = b;
+        /* Offset alpha is ignored by the PVR's oargb unit — only rgb is
+         * added to the post-texture-modulate color. */
         vert.offset_a = 0.0f;
-        vert.offset_r = 0.0f;
-        vert.offset_g = 0.0f;
-        vert.offset_b = 0.0f;
+        vert.offset_r = sr;
+        vert.offset_g = sg;
+        vert.offset_b = sb;
 
         if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
             /* Submit 64-byte Type 5 vertex via direct rendering (two 32-byte writes) */
@@ -1121,6 +1246,31 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             const uint8_t* vert_bytes = reinterpret_cast<const uint8_t*>(&vert);
             buf.insert(buf.end(), vert_bytes, vert_bytes + sizeof(pvr_vertex_type5_t));
         }
+    };
+
+    /* Viewport transform + perspective divide of a clip-space vertex.
+     * Returns screen-space x/y and the 1/w depth the PVR expects. */
+    auto clip_to_screen = [&](const ClipVertex& cv,
+                              float& sx, float& sy, float& sz) {
+        /* Apply viewport transform (done before perspective divide for PVR) */
+        float vx = cv.x * hw + hw * cv.w;
+        float vy = -cv.y * hh + hh * cv.w;
+
+        float w = cv.w;
+        if(w == 0.0f) w = FLT_EPSILON;
+        float inv_w = shz_invf(w);
+
+        sx = vx * inv_w;
+        sy = vy * inv_w;
+        sz = inv_w;  /* PVR uses 1/w for depth */
+    };
+
+    /* Lambda to do perspective divide and emit a ClipVertex. */
+    auto submit_clip_vertex = [&](const ClipVertex& cv, bool is_last) {
+        float sx, sy, sz;
+        clip_to_screen(cv, sx, sy, sz);
+        emit_vertex(sx, sy, sz, cv.u, cv.v, cv.r, cv.g, cv.b, cv.a,
+                    cv.sr, cv.sg, cv.sb, is_last);
     };
 
     /* Lambda to process a triangle with near-plane clipping */
@@ -1225,6 +1375,66 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         }
     };
 
+    /* Lambda to render a quad (4 corners in GL_QUADS perimeter order) as a
+     * single 4-vertex triangle strip.  A strip [v0,v1,v3,v2] draws the two
+     * triangles (v0,v1,v3) and (v1,v2,v3) — a valid triangulation of the quad
+     * across the v1–v3 diagonal, with the PVR flipping the second triangle's
+     * winding automatically so no per-triangle winding fixup is needed.  When
+     * any corner is behind the near plane we fall back to two independently
+     * clipped triangles matching GL_QUADS' (v0,v1,v2)+(v0,v2,v3) split. */
+    auto process_quad = [&](const ClipVertex& v0, const ClipVertex& v1,
+                            const ClipVertex& v2, const ClipVertex& v3) {
+        if(is_vertex_visible(v0) && is_vertex_visible(v1) &&
+           is_vertex_visible(v2) && is_vertex_visible(v3)) {
+            submit_clip_vertex(v0, false);
+            submit_clip_vertex(v1, false);
+            submit_clip_vertex(v3, false);
+            submit_clip_vertex(v2, true);
+        } else {
+            process_triangle(v0, v1, v2, true);
+            process_triangle(v0, v2, v3, true);
+        }
+    };
+
+    /* Lambda to render a line segment as a screen-space-aligned quad (a
+     * 4-vertex triangle strip).  The PVR has no line primitive, so each
+     * segment is expanded to a constant-pixel-width strip: the perpendicular
+     * is computed in screen space after the perspective divide, giving the
+     * same uniform width GL's glLineWidth would.  Segments touching the near
+     * plane are dropped — lines are thin outlines and full near-plane line
+     * clipping isn't worth the hot-path cost. */
+    const float line_half_width = material_pass->line_width() * 0.5f;
+    auto process_line = [&](const ClipVertex& c0, const ClipVertex& c1) {
+        if(!is_vertex_visible(c0) || !is_vertex_visible(c1)) {
+            return;
+        }
+
+        float sx0, sy0, sz0, sx1, sy1, sz1;
+        clip_to_screen(c0, sx0, sy0, sz0);
+        clip_to_screen(c1, sx1, sy1, sz1);
+
+        float dx = sx1 - sx0;
+        float dy = sy1 - sy0;
+        float len_sq = dx * dx + dy * dy;
+        if(len_sq < 1e-8f) {
+            return; /* degenerate zero-length segment */
+        }
+        /* Unit perpendicular in screen space, scaled to the half width. */
+        float inv_len = shz_inv_sqrtf_fsrra(len_sq);
+        float nx = -dy * inv_len * line_half_width;
+        float ny =  dx * inv_len * line_half_width;
+
+        /* Lines never carry specular — flat vertex colour only. */
+        emit_vertex(sx0 + nx, sy0 + ny, sz0, c0.u, c0.v,
+                    c0.r, c0.g, c0.b, c0.a, 0.0f, 0.0f, 0.0f, false);
+        emit_vertex(sx0 - nx, sy0 - ny, sz0, c0.u, c0.v,
+                    c0.r, c0.g, c0.b, c0.a, 0.0f, 0.0f, 0.0f, false);
+        emit_vertex(sx1 + nx, sy1 + ny, sz1, c1.u, c1.v,
+                    c1.r, c1.g, c1.b, c1.a, 0.0f, 0.0f, 0.0f, false);
+        emit_vertex(sx1 - nx, sy1 - ny, sz1, c1.u, c1.v,
+                    c1.r, c1.g, c1.b, c1.a, 0.0f, 0.0f, 0.0f, true);
+    };
+
     /* ================================================================
      * Strip submission state (shared by indexed and non-indexed paths)
      *
@@ -1310,10 +1520,13 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * appended to one vertex at a time below. Reserve the worst-case size for
      * this renderable up front so those appends never reallocate mid-way —
      * a reallocation would memcpy the entire display list built so far, a
-     * large and unpredictable per-frame spike on the SH4. Near-plane clipping
-     * can at most double the primitive count, so 2 output vertices per input
-     * index/vertex is a safe bound; the +8 covers strip-restart degenerates.
-     * reserve() only grows capacity, so over-estimating is harmless. */
+     * large and unpredictable per-frame spike on the SH4. For triangle
+     * topologies near-plane clipping can at most double the primitive count,
+     * so 2 output vertices per input index/vertex is a safe bound. Line
+     * topologies expand each input vertex into a 4-vertex strip quad (a line
+     * strip emits ~4 output verts per input index), so those need a factor of
+     * 4. The +8 covers strip-restart degenerates. reserve() only grows
+     * capacity, so over-estimating is harmless. */
     if(renderer_->current_list_type_ != PVR_LIST_OP_POLY) {
         std::size_t prim_verts = 0;
         if(renderable->index_element_count > 0 && renderable->index_data) {
@@ -1323,10 +1536,14 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 prim_verts += renderable->vertex_ranges[ri].count;
             }
         }
+        const std::size_t vfactor =
+            (renderable->arrangement == MESH_ARRANGEMENT_LINES ||
+             renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP)
+                ? 4 : 2;
         auto& buf = renderer_->buffer(renderer_->current_list_type_)
                         .buffers[renderer_->current_buffer_index_];
         buf.reserve(buf.size() +
-                    (2 * prim_verts + 8) * sizeof(pvr_vertex_type5_t));
+                    (vfactor * prim_verts + 8) * sizeof(pvr_vertex_type5_t));
     }
 
     if(renderable->index_element_count > 0 && renderable->index_data) {
@@ -1387,6 +1604,26 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     process_triangle(v0, v1, v2, is_last);
                 }
             }
+        } else if(renderable->arrangement == MESH_ARRANGEMENT_QUADS) {
+            for(std::size_t i = 0; i + 3 < icount; i += 4) {
+                const ClipVertex& v0 = work_vertices_[get_index(i + 0) - base];
+                const ClipVertex& v1 = work_vertices_[get_index(i + 1) - base];
+                const ClipVertex& v2 = work_vertices_[get_index(i + 2) - base];
+                const ClipVertex& v3 = work_vertices_[get_index(i + 3) - base];
+                process_quad(v0, v1, v2, v3);
+            }
+        } else if(renderable->arrangement == MESH_ARRANGEMENT_LINES) {
+            for(std::size_t i = 0; i + 1 < icount; i += 2) {
+                const ClipVertex& c0 = work_vertices_[get_index(i + 0) - base];
+                const ClipVertex& c1 = work_vertices_[get_index(i + 1) - base];
+                process_line(c0, c1);
+            }
+        } else if(renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP) {
+            for(std::size_t i = 1; i < icount; i++) {
+                const ClipVertex& c0 = work_vertices_[get_index(i - 1) - base];
+                const ClipVertex& c1 = work_vertices_[get_index(i) - base];
+                process_line(c0, c1);
+            }
         }
     } else {
         /* Non-indexed range-based rendering: each range is independent so
@@ -1431,6 +1668,19 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                         bool is_last = (i + 2 >= count) && (ri + 1 >= range_count);
                         process_triangle(v0, v1, v2, is_last);
                     }
+                }
+            } else if(renderable->arrangement == MESH_ARRANGEMENT_QUADS) {
+                for(uint32_t i = 0; i + 3 < count; i += 4) {
+                    process_quad(work_vertices_[i + 0], work_vertices_[i + 1],
+                                 work_vertices_[i + 2], work_vertices_[i + 3]);
+                }
+            } else if(renderable->arrangement == MESH_ARRANGEMENT_LINES) {
+                for(uint32_t i = 0; i + 1 < count; i += 2) {
+                    process_line(work_vertices_[i + 0], work_vertices_[i + 1]);
+                }
+            } else if(renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP) {
+                for(uint32_t i = 1; i < count; i++) {
+                    process_line(work_vertices_[i - 1], work_vertices_[i]);
                 }
             }
         }

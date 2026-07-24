@@ -12,7 +12,7 @@ struct CoreMaterialProps {
     Color   fog_color           = Color::white();
     float   metallic            = 0.0f;
     float   roughness           = 0.4f;
-    float   point_size          = 1.0f;
+    float   line_width          = 1.0f;
     float   alpha_threshold     = 1.0f;
     float   fog_density         = 1.0f;
     float   fog_start           = 100.0f;
@@ -47,7 +47,7 @@ enum CorePropMask : uint32_t {
     CORE_MASK_FOG_COLOR        = 1u << 2,
     CORE_MASK_METALLIC         = 1u << 3,
     CORE_MASK_ROUGHNESS        = 1u << 4,
-    CORE_MASK_POINT_SIZE       = 1u << 6,
+    CORE_MASK_LINE_WIDTH       = 1u << 6,
     CORE_MASK_ALPHA_THRESHOLD  = 1u << 7,
     CORE_MASK_FOG_DENSITY      = 1u << 8,
     CORE_MASK_FOG_START        = 1u << 9,
@@ -71,7 +71,7 @@ inline uint32_t core_mask_for_hash(MaterialPropertyNameHash hsh) {
         case FOG_COLOR_PROPERTY_HASH:           return CORE_MASK_FOG_COLOR;
         case METALLIC_PROPERTY_HASH:            return CORE_MASK_METALLIC;
         case ROUGHNESS_PROPERTY_HASH:           return CORE_MASK_ROUGHNESS;
-        case POINT_SIZE_PROPERTY_HASH:          return CORE_MASK_POINT_SIZE;
+        case LINE_WIDTH_PROPERTY_HASH:          return CORE_MASK_LINE_WIDTH;
         case ALPHA_THRESHOLD_PROPERTY_HASH:     return CORE_MASK_ALPHA_THRESHOLD;
         case FOG_DENSITY_PROPERTY_HASH:         return CORE_MASK_FOG_DENSITY;
         case FOG_START_PROPERTY_HASH:           return CORE_MASK_FOG_START;
@@ -103,7 +103,7 @@ inline const float* core_scalar_ptr<float>(const CoreMaterialProps& p, MaterialP
     switch(hsh) {
         case METALLIC_PROPERTY_HASH:        return &p.metallic;
         case ROUGHNESS_PROPERTY_HASH:       return &p.roughness;
-        case POINT_SIZE_PROPERTY_HASH:      return &p.point_size;
+        case LINE_WIDTH_PROPERTY_HASH:      return &p.line_width;
         case ALPHA_THRESHOLD_PROPERTY_HASH: return &p.alpha_threshold;
         case FOG_DENSITY_PROPERTY_HASH:     return &p.fog_density;
         case FOG_START_PROPERTY_HASH:       return &p.fog_start;

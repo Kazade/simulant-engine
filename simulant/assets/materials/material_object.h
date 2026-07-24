@@ -79,7 +79,7 @@ public:
     bool is_lighting_enabled() const;
     void set_textures_enabled(EnabledTextureMask v);
     int32_t textures_enabled() const;
-    float point_size() const;
+    float line_width() const;
 
     void set_polygon_mode(PolygonMode mode);
     PolygonMode polygon_mode() const;

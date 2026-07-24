@@ -318,9 +318,9 @@ int32_t MaterialObject::textures_enabled() const {
     return *ptr;
 }
 
-float MaterialObject::point_size() const {
+float MaterialObject::line_width() const {
     const float* ptr = nullptr;
-    bool ok = property_value(POINT_SIZE_PROPERTY_NAME, ptr);
+    bool ok = property_value(LINE_WIDTH_PROPERTY_NAME, ptr);
     assert(ok);
     _S_UNUSED(ok);
     return *ptr;

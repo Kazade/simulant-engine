@@ -88,6 +88,15 @@ private:
     float mat_metallic_  = 0.0f;
     float mat_roughness_ = 0.4f;
 
+    /* Cached affine UV transform derived from base_color_map_matrix(),
+     * recomputed only on material-pass change. Mirrors GL1x's texture-matrix
+     * behaviour (glLoadMatrixf on GL_TEXTURE) without touching the SH4's
+     * single xmtrx register in the hot per-vertex loop, which stays loaded
+     * with MVP/modelview for position transforms. Layout: u' = m_[0]*u +
+     * m_[1]*v + m_[2]; v' = m_[3]*u + m_[4]*v + m_[5]. */
+    bool  uv_matrix_identity_ = true;
+    float uv_matrix_[6] = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+
     void do_visit(const Renderable* renderable,
                   const MaterialPass* material_pass,
                   batcher::Iteration iteration);

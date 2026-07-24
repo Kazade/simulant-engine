@@ -66,6 +66,34 @@ friend class PVRRenderQueueVisitor;
 
     #ifdef __DREAMCAST__
         pvr_dr_state_t dr_state_;
+
+        /* Cache of the PVR's global fog registers (table + color), which the
+         * ISP/TSP applies once for the whole scene at render-kick time —
+         * unlike blend/depth/cull which are stored per-polygon, there is only
+         * one hardware fog config in effect, no matter how many materials
+         * with different fog settings are submitted in a frame. Cached here
+         * (on the persistent renderer, not the per-frame visitor) so
+         * change_material_pass only rebuilds the 129-entry fog table when a
+         * material's fog params actually differ from what's already
+         * programmed — building it is a real per-call CPU cost, not a cheap
+         * register poke. -1 forces the first pass with fog enabled to sync. */
+        int32_t fog_mode_cache_ = -1;
+        float fog_density_cache_ = -1.0f;
+        float fog_start_cache_ = -1.0f;
+        float fog_end_cache_ = -1.0f;
+        float fog_color_cache_[4] = {-1.0f, -1.0f, -1.0f, -1.0f};
+
+        /* Last pvr_poly_hdr_t bytes submitted to each of the 5 PVR lists
+         * (indexed by pvr_list_type_t), so do_visit can skip resubmitting a
+         * header that's byte-identical to the one already active for that
+         * list — the TA has to redundantly update its internal poly state
+         * for a header resend even when nothing about it actually changed.
+         * Persists on the renderer (not the per-frame visitor) purely so the
+         * array doesn't need reallocating; the *validity* is strictly
+         * per-frame — pre_render() clears last_header_valid_ so the first
+         * poly submitted to each list this frame always gets its header. */
+        pvr_poly_hdr_t last_header_[5];
+        bool last_header_valid_[5] = {false, false, false, false, false};
     #endif
 
     struct ListDMABuffer {

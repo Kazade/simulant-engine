@@ -21,7 +21,7 @@ bool core_property_type(MaterialPropertyNameHash hsh, MaterialPropertyType* type
         break;
         case material_property_hash(METALLIC_PROPERTY_NAME):
         case material_property_hash(ROUGHNESS_PROPERTY_NAME):
-        case material_property_hash(POINT_SIZE_PROPERTY_NAME):
+        case material_property_hash(LINE_WIDTH_PROPERTY_NAME):
         case ALPHA_THRESHOLD_PROPERTY_HASH:
         case FOG_DENSITY_PROPERTY_HASH:
         case FOG_START_PROPERTY_HASH:
@@ -70,7 +70,7 @@ const PropertyList& core_properties() {
     static const PropertyList core_properties = {
         {BASE_COLOR_PROPERTY_NAME,                    MATERIAL_PROPERTY_TYPE_VEC4   },
 
-        {POINT_SIZE_PROPERTY_NAME,                    MATERIAL_PROPERTY_TYPE_FLOAT  },
+        {LINE_WIDTH_PROPERTY_NAME,                    MATERIAL_PROPERTY_TYPE_FLOAT  },
 
         {METALLIC_PROPERTY_NAME,                      MATERIAL_PROPERTY_TYPE_FLOAT  },
         {ROUGHNESS_PROPERTY_NAME,                     MATERIAL_PROPERTY_TYPE_FLOAT  },

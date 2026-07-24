@@ -125,7 +125,7 @@ DepthFunc depth_func_from_name(const char* name);
 #define SHADE_MODEL_PROPERTY_NAME "s_shade_model"
 #define LIGHTING_ENABLED_PROPERTY_NAME "s_lighting_enabled"
 #define TEXTURES_ENABLED_PROPERTY_NAME "s_textures_enabled"
-#define POINT_SIZE_PROPERTY_NAME "s_point_size"
+#define LINE_WIDTH_PROPERTY_NAME "s_line_width"
 #define POLYGON_MODE_PROPERTY_NAME "s_polygon_mode"
 #define COLOR_MATERIAL_PROPERTY_NAME "s_color_material"
 #define BASE_COLOR_MAP_MATRIX_PROPERTY_NAME "s_base_color_map_matrix"
