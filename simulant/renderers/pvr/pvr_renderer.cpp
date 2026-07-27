@@ -58,11 +58,32 @@ void PVRRenderer::init_context() {
          * OP_MOD is bumped from BINSIZE_0 so cheap-shadow modifier volumes
          * (submitted by ShadowCaster) have somewhere to land. */
         { PVR_BINSIZE_32, PVR_BINSIZE_32, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
-        512 * 1024, /* Vertex buffer size */
-        1,          /* DMA enabled */
+        /* Vertex buffer size. Matched to GLdc's, which is the renderer this
+         * one is compared against for stability. Overrunning it isn't a soft
+         * failure: the TA raises TA_INPUT_OVERFLOW / ISP_OUTOFMEM, stops
+         * draining its input FIFO, and the next store-queue write to the TA
+         * stalls the SH4 on the external bus — a hard lockup on real
+         * hardware that emulators don't reproduce (they don't model the
+         * TA buffer limits). Headroom matters more here than in GLdc
+         * because every vertex we emit is a 64-byte Type 5 float-colour
+         * vertex, twice the size of GLdc's 32-byte packed-colour one. */
+        2560 * 256, /* Vertex buffer size */
+        /* DMA is only meaningful when hybrid rendering hands the deferred
+         * lists to KOS via pvr_set_vertbuf(); with it off we push every list
+         * to the TA through store queues ourselves and never assign a vertex
+         * buffer, so KOS's DMA machinery has nothing to transfer. Claiming
+         * DMA anyway isn't free: pvr_state.dma_mode gates off KOS's own list
+         * protocol checks ("opened an already closed list", "closed an
+         * unopened list"), and pvr_scene_finish() takes the DMA path and
+         * kicks pvr_start_dma() every frame just to walk five lists with
+         * null buffers. */
+        HYBRID_RENDERING_ENABLED, /* DMA enabled */
         0,          /* FSAA */
         0,          /* Autosort (0 = enabled for TR) */
-        8,          /* OPB overflow count */
+        /* OPB overflow count. KOS allocates opb_total * (1 + this), twice
+         * (one set per TA buffer), so each extra bin costs real VRAM that
+         * would otherwise hold textures. Matched to GLdc's. */
+        2,          /* OPB overflow count */
         0           /* VBUF doublebuf disabled */
     };
 
