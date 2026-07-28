@@ -68,6 +68,10 @@ public:
     Prefab(AssetID id, AssetManager* asset_manager) :
         Asset(asset_manager), generic::Identifiable<AssetID>(id) {}
 
+    const char* asset_type_name() const override {
+        return "Prefab";
+    }
+
     void push_node(PrefabNode node, int32_t parent_id = -1);
 
     void push_texture(TexturePtr texture) {

@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <memory>
 
+#include "../core/memory_log.h"
 #include "../core/stage_node_id.h"
 
 #include "../logging.h"
@@ -281,9 +282,28 @@ private:
 
     void on_make(IDType id) override {
         object_metas_.insert(std::make_pair(id, ObjMeta()));
+
+        /* Only ObjectType's deriving from Asset expose asset_type_name(),
+         * so this is skipped entirely (at compile time) for managers of
+         * non-asset objects (e.g. GPUProgram). */
+        if constexpr(requires(const ObjectType& o) { o.asset_type_name(); }) {
+            auto obj = this->get(id);
+            log_memory_event(MEMORY_LOG_EVENT_ALLOC, obj->asset_type_name(),
+                              (uint64_t)obj->id(), obj->source().str(),
+                              obj->name());
+        }
     }
 
     void on_destroy(IDType id) override {
+        if constexpr(requires(const ObjectType& o) { o.asset_type_name(); }) {
+            auto obj = this->get(id);
+            if(obj) {
+                log_memory_event(MEMORY_LOG_EVENT_DEALLOC,
+                                  obj->asset_type_name(), (uint64_t)obj->id(),
+                                  obj->source().str(), obj->name());
+            }
+        }
+
         S_DEBUG("Garbage collecting {0}", id);
 
         auto it = object_metas_.find(id);

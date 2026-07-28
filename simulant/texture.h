@@ -142,6 +142,10 @@ public:
             TextureFormat format = TEXTURE_FORMAT_RGBA_4UB_8888);
     ~Texture();
 
+    const char* asset_type_name() const override {
+        return "Texture";
+    }
+
     TextureFormat format() const;
     void set_format(TextureFormat format);
 

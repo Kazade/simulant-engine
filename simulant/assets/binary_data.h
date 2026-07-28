@@ -18,6 +18,10 @@ public:
         generic::Identifiable<AssetID>(id),
         data_(std::move(data)) {}
 
+    const char* asset_type_name() const override {
+        return "Binary";
+    }
+
     const uint8_t* data() const {
         return &data_[0];
     }

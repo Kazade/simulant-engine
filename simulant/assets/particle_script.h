@@ -80,6 +80,10 @@ public:
 
     ParticleScript(AssetID id, AssetManager* asset_manager);
 
+    const char* asset_type_name() const override {
+        return "ParticleScript";
+    }
+
     std::size_t emitter_count() const;
     const Emitter* emitter(std::size_t i) const;
 

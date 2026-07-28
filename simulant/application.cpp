@@ -22,6 +22,7 @@
 #include <future>
 #include <cstdlib>
 
+#include "core/memory_log.h"
 #include "scripting/lua/interpreter.h"
 
 #define DEFINE_STAGENODEPOOL
@@ -162,6 +163,11 @@ Application::Application(const AppConfig& config, void* platform_state) :
      * someone constructs two, but only calls run on one or something. */
     global_app = this;
 
+    if(!config_.development.memory_log_path.empty()) {
+        memory_logger = std::make_unique<MemoryLogger>(
+            config_.development.memory_log_path);
+    }
+
     /* We're in profiling mode if we've forced it via app config
      * or the environment variable is set. If it's done by compile
      * flag the AppConfig force_profiling variable would default
@@ -243,6 +249,8 @@ Application::~Application() {
     if(global_app == this) {
         global_app = nullptr;
     }
+
+    memory_logger.reset();
 }
 
 void Application::preload_default_font() {

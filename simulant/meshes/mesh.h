@@ -156,6 +156,10 @@ public:
 
     virtual ~Mesh();
 
+    const char* asset_type_name() const override {
+        return "Mesh";
+    }
+
     void reset(VertexDataPtr vertex_data);
     void reset(VertexSpecification vertex_specification);
 

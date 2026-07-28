@@ -137,6 +137,14 @@ struct AppConfig {
         /* Additional memory debug logging. If set to true information
           about scene memory usage will be logged at INFO level */
         bool additional_memory_logging = true;
+
+        /* If set, a CSV log of asset and stage node allocations and
+         * deallocations is written to this path as they happen. Any
+         * existing file at this path is replaced when the app starts.
+         *
+         * Left empty by default, which disables memory logging entirely
+         * with no performance cost. */
+        std::string memory_log_path = "";
     } development;
 };
 

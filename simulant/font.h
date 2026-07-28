@@ -82,6 +82,10 @@ public:
 
     Font(AssetID id, AssetManager* asset_manager);
 
+    const char* asset_type_name() const override {
+        return "Font";
+    }
+
     bool on_init() override;
 
     std::size_t page_count() const {

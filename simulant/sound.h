@@ -52,6 +52,10 @@ class Sound :
 public:
     Sound(AssetID id, AssetManager* asset_manager, SoundDriver* sound_driver);
 
+    const char* asset_type_name() const override {
+        return "Sound";
+    }
+
     uint32_t sample_rate() const { return sample_rate_; }
     void set_sample_rate(uint32_t rate) { sample_rate_ = rate; }
 

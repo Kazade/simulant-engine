@@ -275,6 +275,10 @@ public:
     Material(AssetID id, AssetManager *asset_manager);
     virtual ~Material();
 
+    const char* asset_type_name() const override {
+        return "Material";
+    }
+
 // ---------- Passes ------------------------
     bool set_pass_count(uint8_t pass_count);
 

@@ -47,6 +47,10 @@ public:
     AssetManager& asset_manager() { assert(manager_); return *manager_; }
     const AssetManager& asset_manager() const { assert(manager_); return *manager_; }
 
+    /* Short, human-readable type name (e.g. "Mesh", "Texture") used when
+     * reporting on assets, e.g. in the memory log. */
+    virtual const char* asset_type_name() const = 0;
+
     int age() const;
 
     void set_garbage_collection_method(GarbageCollectMethod method);

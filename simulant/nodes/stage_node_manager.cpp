@@ -1,5 +1,6 @@
 #include "stage_node_manager.h"
 #include "../application.h"
+#include "../core/memory_log.h"
 #include "../scenes/scene.h"
 #include "../scripting/lua/interpreter.h"
 
@@ -32,6 +33,12 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
     }
 
     on_stage_node_erased(node);
+
+    /* Captured before destructor(node) runs, since node_type_name()/name()
+     * can no longer be safely called on the node once its destructor has
+     * started (virtual dispatch is unwinding). */
+    log_memory_event(MEMORY_LOG_EVENT_DEALLOC, node->node_type_name(),
+                      (uint64_t)node->id(), "", node->name());
 
     void* alloc_base = node_data_it->second.alloc_base;
     it->second.destructor(node);
@@ -283,6 +290,9 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
             node);
     all_nodes_.insert(std::make_pair(node->id(), NodeData(mem, node)));
     on_stage_node_inserted(node);
+
+    log_memory_event(MEMORY_LOG_EVENT_ALLOC, node->node_type_name(),
+                      (uint64_t)node->id(), "", node->name());
 
     return node;
 }
