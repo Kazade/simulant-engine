@@ -224,8 +224,8 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     }
 
     /* Determine PVR list type based on blend mode, then redirect to the
-     * matching modifier-volume list if this pass targets it. Punch-through has
-     * no modifier list, so it falls back to the opaque modifier list. */
+     * modifier-volume list if this pass targets it. All modifier passes go to
+     * PVR_LIST_OP_MOD regardless of blend mode. */
     auto blend = next->blend_func();
     const bool to_modifier =
         (next->polygon_list_target() == POLYGON_LIST_TARGET_MODIFIER);
@@ -239,7 +239,7 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             to_modifier ? PVR_LIST_OP_MOD : PVR_LIST_PT_POLY;
     } else {
         renderer_->current_list_type_ =
-            to_modifier ? PVR_LIST_TR_MOD : PVR_LIST_TR_POLY;
+            to_modifier ? PVR_LIST_OP_MOD : PVR_LIST_TR_POLY;
     }
 
 #ifdef __DREAMCAST__
@@ -491,15 +491,31 @@ struct ClipVertex {
     float u, v;          /* Texture coordinates */
     float r, g, b, a;    /* Base (diffuse+ambient) color */
     float sr, sg, sb;    /* Specular color — offloaded to the PVR's oargb
-                           * offset-color unit, added post-texture-modulate
-                           * and clamped by hardware (PVR_CLRCLAMP_ENABLE),
-                           * so it never needs summing or clamping here. */
+                          * offset-color unit, added post-texture-modulate
+                          * and clamped by hardware (PVR_CLRCLAMP_ENABLE),
+                          * so it never needs summing or clamping here. */
+    bool ok;             /* False if the source position transformed to a
+                          * a NaN or similar */
 };
 
 /* Check if a vertex is in front of the near plane (visible).
  * In clip space, the near plane is at z = -w for the standard projection. */
 static inline bool is_vertex_visible(const ClipVertex& v) {
     return v.z >= -v.w;
+}
+
+/* NaN and Inf screen coordinates hard-lock the TA, and near-plane clipping
+ * does *not* filter them out. A single bad source position therefore turns
+ * into a lockup, but only on the frames where it happens to straddle the near plane.
+ *
+ * Written as "inside the bounds" rather than "not outside" so NaN, which
+ * compares false against both, is rejected along with Inf. */
+static inline bool is_clip_position_valid(float x, float y, float z, float w) {
+    const float LIMIT = 1.0e18f;
+    return x > -LIMIT && x < LIMIT &&
+           y > -LIMIT && y < LIMIT &&
+           z > -LIMIT && z < LIMIT &&
+           w > -LIMIT && w < LIMIT;
 }
 
 /* Interpolate between two vertices at the near plane intersection.
@@ -540,6 +556,9 @@ static inline ClipVertex lerp_vertex(const ClipVertex& v1, const ClipVertex& v2,
     out.sr = shz_lerpf(v1.sr, v2.sr, t);
     out.sg = shz_lerpf(v1.sg, v2.sg, t);
     out.sb = shz_lerpf(v1.sb, v2.sb, t);
+    /* Callers only interpolate between two usable vertices — process_triangle
+     * drops any primitive touching a poisoned one first. */
+    out.ok = true;
     return out;
 }
 
@@ -620,23 +639,31 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
         shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp._native());
 
-        /* Position-only clip-space vertex. */
-        struct ModVtx { float x, y, z, w; };
+        /* Position-only clip-space vertex. `ok` mirrors ClipVertex::ok. */
+        struct ModVtx { float x, y, z, w; bool ok; };
 
         auto load_clip = [&](uint32_t vi) -> ModVtx {
             const float* p = (const float*)(raw_data + stride * vi + pos_offset);
             shz_vec4_t c = shz_xmtrx_transform_vec4(
                 shz_vec4_init(p[0], p[1], p[2], 1.0f));
-            return {c.x, c.y, c.z, c.w};
+            if(!is_clip_position_valid(c.x, c.y, c.z, c.w)) {
+                /* Same substitution as the polygon path — see the comment in
+                 * transform_batch. Always tests as behind the near plane, and
+                 * flagged so the switch below drops any triangle touching it. */
+                return {0.0f, 0.0f, 0.0f, -1.0f, false};
+            }
+            return {c.x, c.y, c.z, c.w, true};
         };
 
-        /* Linear interpolation in clip space. */
+        /* Linear interpolation in clip space. Callers only interpolate between
+         * two usable vertices. */
         auto lerp_clip = [](const ModVtx& a, const ModVtx& b, float t) -> ModVtx {
             return {
                 a.x + (b.x - a.x) * t,
                 a.y + (b.y - a.y) * t,
                 a.z + (b.z - a.z) * t,
                 a.w + (b.w - a.w) * t,
+                true,
             };
         };
 
@@ -740,6 +767,13 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             const bool vis1 = (v1.z >= -v1.w);
             const bool vis2 = (v2.z >= -v2.w);
             const int mask = (vis0 ? 1 : 0) | (vis1 ? 2 : 0) | (vis2 ? 4 : 0);
+
+            /* See the matching guard in process_triangle: a poisoned vertex is
+             * always invisible, so only the clipped masks can drag it into the
+             * output via interpolation. */
+            if(mask != 7 && mask != 0 && !(v0.ok && v1.ok && v2.ok)) {
+                continue;
+            }
 
             switch(mask) {
                 case 0: /* All behind the near plane: discard. */
@@ -962,7 +996,18 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 const float* p = (const float*)(row + pos_offset);
                 shz_vec4_t clip = shz_xmtrx_transform_vec4(
                     shz_vec4_init(p[0], p[1], p[2], 1.0f));
-                cv.x = clip.x; cv.y = clip.y; cv.z = clip.z; cv.w = clip.w;
+                cv.ok = is_clip_position_valid(clip.x, clip.y, clip.z, clip.w);
+                if(cv.ok) {
+                    cv.x = clip.x; cv.y = clip.y; cv.z = clip.z; cv.w = clip.w;
+                } else {
+                    /* Bad vertex postion.
+                     * Swap for a point that is guaranteed to test as behind the near
+                     * plane (is_vertex_visible: 0 >= 1 is false), so it can
+                     * never be emitted directly, and flag it so the clip path
+                     * drops primitives that touch it rather than interpolating
+                     * towards it */
+                    cv.x = 0.0f; cv.y = 0.0f; cv.z = 0.0f; cv.w = -1.0f;
+                }
 
                 if(uv_offset) {
                     const float* t = (const float*)(row + uv_offset);
@@ -1256,8 +1301,12 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         float vx = cv.x * hw + hw * cv.w;
         float vy = -cv.y * hh + hh * cv.w;
 
+        /* Clamp rather than only special-casing exactly zero: a substituted or
+         * interpolated vertex can land on a small or negative w, and 1/w for
+         * those produces the huge (or sign-flipped) screen coordinates the TA
+         * chokes on. Matches the modifier path's to_screen(). */
         float w = cv.w;
-        if(w == 0.0f) w = FLT_EPSILON;
+        if(w < FLT_EPSILON) w = FLT_EPSILON;
         float inv_w = shz_invf(w);
 
         sx = vx * inv_w;
@@ -1281,6 +1330,18 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         bool vis1 = is_vertex_visible(v1);
         bool vis2 = is_vertex_visible(v2);
         int visible_mask = (vis0 ? 1 : 0) | (vis1 ? 2 : 0) | (vis2 ? 4 : 0);
+
+        /* A poisoned vertex always tests as invisible, so it can only reach the
+         * TA via a clip interpolation — drop the whole primitive instead. Only
+         * the partially-visible masks need checking: mask 7 can't contain one,
+         * and mask 0 emits nothing, which keeps the fully-visible fast path and
+         * the fully-culled path free of the test. sp_step, process_quad and
+         * process_line all funnel their clipped cases through here, so this is
+         * the only place the check is needed. */
+        if(visible_mask != 7 && visible_mask != 0 &&
+           !(v0.ok && v1.ok && v2.ok)) {
+            return;
+        }
 
         switch(visible_mask) {
             case 0:  /* All behind - skip */
@@ -1508,25 +1569,13 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         }
     };
 
-    /* ================================================================
+    /*
      * Submit geometry with near-plane clipping.
      *
      * Both paths first run transform_batch over the source vertex range
      * that they need, then walk the topology referencing the cached
      * ClipVertex slots in work_vertices_.
-     * ================================================================ */
-
-    /* Deferred lists (TR/PT) accumulate vertices in a std::vector that is
-     * appended to one vertex at a time below. Reserve the worst-case size for
-     * this renderable up front so those appends never reallocate mid-way —
-     * a reallocation would memcpy the entire display list built so far, a
-     * large and unpredictable per-frame spike on the SH4. For triangle
-     * topologies near-plane clipping can at most double the primitive count,
-     * so 2 output vertices per input index/vertex is a safe bound. Line
-     * topologies expand each input vertex into a 4-vertex strip quad (a line
-     * strip emits ~4 output verts per input index), so those need a factor of
-     * 4. The +8 covers strip-restart degenerates. reserve() only grows
-     * capacity, so over-estimating is harmless. */
+     */
     if(renderer_->current_list_type_ != PVR_LIST_OP_POLY) {
         std::size_t prim_verts = 0;
         if(renderable->index_element_count > 0 && renderable->index_data) {
@@ -1536,10 +1585,14 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 prim_verts += renderable->vertex_ranges[ri].count;
             }
         }
-        const std::size_t vfactor =
-            (renderable->arrangement == MESH_ARRANGEMENT_LINES ||
-             renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP)
-                ? 4 : 2;
+        std::size_t vfactor;
+        switch(renderable->arrangement) {
+            case MESH_ARRANGEMENT_LINES:
+            case MESH_ARRANGEMENT_LINE_STRIP:    vfactor = 4; break;
+            case MESH_ARRANGEMENT_TRIANGLE_FAN:  vfactor = 6; break;
+            case MESH_ARRANGEMENT_QUADS:         vfactor = 3; break;
+            default:                             vfactor = 2; break;
+        }
         auto& buf = renderer_->buffer(renderer_->current_list_type_)
                         .buffers[renderer_->current_buffer_index_];
         buf.reserve(buf.size() +

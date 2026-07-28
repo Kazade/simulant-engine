@@ -195,6 +195,8 @@ void PVRRenderer::ensure_list_opened(pvr_list_type_t list_type) {
 
     S_VERBOSE("Beginning list {0}", list_type);
     pvr_list_begin(list_type);
+    pvr_dr_init(&dr_state_);
+
     prev_list_type_ = list_type;
 #else
     _S_UNUSED(list_type);
@@ -246,6 +248,11 @@ void PVRRenderer::on_post_render() {
             auto& b = buf.buffers[current_buffer_index_];
 
             pvr_list_begin(list_type);
+            /* Re-arm the store queues: the pvr_list_finish() that closed the
+             * previous list released them via pvr_dr_finish(). See
+             * ensure_list_opened(). */
+            pvr_dr_init(&dr_state_);
+
             for(size_t offset = 0; offset < b.size(); offset += 32) {
                 void* dest = pvr_dr_target(dr_state_);
                 shz_memcpy32(dest, &b[offset], 32);
