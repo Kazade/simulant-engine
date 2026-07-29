@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
@@ -19,6 +20,18 @@ const bool DONT_REFCOUNT = false;
 const bool DO_REFCOUNT = true;
 
 namespace _object_manager_impl {
+
+/* C++17-compatible detection of whether T exposes asset_type_name() (i.e.
+ * is Asset-derived), used to gate memory-log calls to managers of actual
+ * assets and skip them (at compile time) for other ObjectManager users
+ * such as GPUProgram. */
+template<typename T, typename = void>
+struct HasAssetTypeName: std::false_type {};
+
+template<typename T>
+struct HasAssetTypeName<
+    T, std::void_t<decltype(std::declval<const T&>().asset_type_name())>>:
+    std::true_type {};
 
 /* All managers of the same type should share a counter */
 template<typename T>
@@ -286,7 +299,7 @@ private:
         /* Only ObjectType's deriving from Asset expose asset_type_name(),
          * so this is skipped entirely (at compile time) for managers of
          * non-asset objects (e.g. GPUProgram). */
-        if constexpr(requires(const ObjectType& o) { o.asset_type_name(); }) {
+        if constexpr(_object_manager_impl::HasAssetTypeName<ObjectType>::value) {
             auto obj = this->get(id);
             log_memory_event(MEMORY_LOG_EVENT_ALLOC, obj->asset_type_name(),
                               (uint64_t)obj->id(), obj->source().str(),
@@ -295,7 +308,7 @@ private:
     }
 
     void on_destroy(IDType id) override {
-        if constexpr(requires(const ObjectType& o) { o.asset_type_name(); }) {
+        if constexpr(_object_manager_impl::HasAssetTypeName<ObjectType>::value) {
             auto obj = this->get(id);
             if(obj) {
                 log_memory_event(MEMORY_LOG_EVENT_DEALLOC,
