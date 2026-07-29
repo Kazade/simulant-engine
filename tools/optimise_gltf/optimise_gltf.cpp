@@ -1010,9 +1010,25 @@ static bool same_orientation(uint32_t a, uint32_t b, uint32_t c,
 // runs are stitched together with degenerate triangles so the whole primitive
 // is one strip. Winding is validated on every extension so the result renders
 // identically to the source.
-static std::vector<uint32_t> stripify(const std::vector<uint32_t>& tris) {
+//
+// Adjacency is computed on position-welded (canonical) vertices via `canon`
+// (indexed by raw vertex index; empty => no welding, raw indices used
+// directly), for the same reason simplify() welds: glTF meshes routinely
+// duplicate a vertex at every UV/normal seam, so two triangles that are
+// geometrically adjacent along an edge often reference different raw vertex
+// indices there. Without welding, the strip walk dies at every seam and
+// fragments into many short strips, each needing degenerate triangles to
+// stitch it to the next - overhead that can outgrow the savings of stripping
+// in the first place. Output indices are always the original raw vertices,
+// so attributes are unaffected.
+static std::vector<uint32_t> stripify(const std::vector<uint32_t>& tris,
+                                      const std::vector<uint32_t>& canon) {
     size_t triCount = tris.size() / 3;
     if(triCount == 0) return {};
+
+    auto cid = [&](uint32_t raw) -> uint32_t {
+        return raw < canon.size() ? canon[raw] : raw;
+    };
 
     auto ekey = [](uint32_t a, uint32_t b) -> uint64_t {
         if(a > b) std::swap(a, b);
@@ -1022,7 +1038,7 @@ static std::vector<uint32_t> stripify(const std::vector<uint32_t>& tris) {
     std::unordered_multimap<uint64_t, size_t> edgeToTri;
     edgeToTri.reserve(triCount * 3);
     for(size_t t = 0; t < triCount; ++t) {
-        uint32_t a = tris[t * 3], b = tris[t * 3 + 1], c = tris[t * 3 + 2];
+        uint32_t a = cid(tris[t * 3]), b = cid(tris[t * 3 + 1]), c = cid(tris[t * 3 + 2]);
         edgeToTri.insert({ekey(a, b), t});
         edgeToTri.insert({ekey(b, c), t});
         edgeToTri.insert({ekey(c, a), t});
@@ -1038,7 +1054,7 @@ static std::vector<uint32_t> stripify(const std::vector<uint32_t>& tris) {
                                        tris[start * 3 + 2]};
         while(true) {
             size_t n = strip.size();
-            uint32_t e0 = strip[n - 2], e1 = strip[n - 1];
+            uint32_t e0 = cid(strip[n - 2]), e1 = cid(strip[n - 1]);
             size_t p = n - 2; // index of the triangle we are about to append
             long long chosen = -1;
             uint32_t chosenD = 0;
@@ -1047,11 +1063,13 @@ static std::vector<uint32_t> stripify(const std::vector<uint32_t>& tris) {
             for(auto it = range.first; it != range.second; ++it) {
                 size_t t = it->second;
                 if(used[t]) continue;
-                uint32_t na = tris[t * 3], nb = tris[t * 3 + 1], nc = tris[t * 3 + 2];
-                uint32_t d;
-                if(na != e0 && na != e1) d = na;
-                else if(nb != e0 && nb != e1) d = nb;
-                else d = nc;
+                uint32_t rna = tris[t * 3], rnb = tris[t * 3 + 1], rnc = tris[t * 3 + 2];
+                uint32_t na = cid(rna), nb = cid(rnb), nc = cid(rnc);
+                uint32_t draw, d;
+                if(na != e0 && na != e1) { draw = rna; d = na; }
+                else if(nb != e0 && nb != e1) { draw = rnb; d = nb; }
+                else if(nc != e0 && nc != e1) { draw = rnc; d = nc; }
+                else continue; // degenerate under welding: no usable third corner
 
                 uint32_t o0, o1, o2;
                 if(p % 2 == 0) { o0 = e0; o1 = e1; o2 = d; }
@@ -1059,7 +1077,7 @@ static std::vector<uint32_t> stripify(const std::vector<uint32_t>& tris) {
 
                 if(same_orientation(o0, o1, o2, na, nb, nc)) {
                     chosen = (long long)t;
-                    chosenD = d;
+                    chosenD = draw;
                     break;
                 }
             }
@@ -1387,15 +1405,16 @@ int main(int argc, char** argv) {
                 // them. Gathering all positions first lets each primitive's
                 // LOD pass lock vertices that touch its siblings, and a
                 // shared weld tolerance keeps that comparison consistent.
+                // Positions are gathered unconditionally (not just under
+                // --lod): stripify() also needs them, to weld seam vertices
+                // for adjacency (see stripify()'s comment).
                 std::vector<std::vector<Vec3>> meshPositions(prims->arr.size());
-                if(opt.lod < 1.0f) {
-                    for(size_t pi = 0; pi < prims->arr.size(); ++pi) {
-                        Json& prim = prims->arr[pi];
-                        if(prim.get_int("mode", 4) != 4) continue;
-                        auto* attrs = prim.find("attributes");
-                        long long posAcc = attrs ? attrs->get_int("POSITION", -1) : -1;
-                        if(posAcc >= 0) meshPositions[pi] = read_positions(doc, posAcc);
-                    }
+                for(size_t pi = 0; pi < prims->arr.size(); ++pi) {
+                    Json& prim = prims->arr[pi];
+                    if(prim.get_int("mode", 4) != 4) continue;
+                    auto* attrs = prim.find("attributes");
+                    long long posAcc = attrs ? attrs->get_int("POSITION", -1) : -1;
+                    if(posAcc >= 0) meshPositions[pi] = read_positions(doc, posAcc);
                 }
                 double meshEps = 0.0;
                 {
@@ -1457,7 +1476,11 @@ int main(int argc, char** argv) {
                     }
                     if(tris.size() < 3) continue;
 
-                    std::vector<uint32_t> strip = stripify(tris);
+                    std::vector<uint32_t> canon;
+                    if(!meshPositions[pi].empty()) {
+                        canon = weld_positions(meshPositions[pi], meshEps);
+                    }
+                    std::vector<uint32_t> strip = stripify(tris, canon);
                     if(strip.empty()) continue;
 
                     uint32_t maxIndex = 0;
