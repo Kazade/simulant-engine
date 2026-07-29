@@ -656,6 +656,7 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
                     auto tex = assets->create_texture(8, 8);
                     if(loader.into(*tex)) {
                         apply_sampler_settings(tex);
+                        tex->flush();
                         return tex;
                     }
                     S_ERROR("Failed to load embedded .dtex texture");
