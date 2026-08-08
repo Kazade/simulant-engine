@@ -127,7 +127,7 @@ public:
 
 private:
     template<typename Func>
-    friend Promise<typename std::result_of<Func()>::type> cr_async(Func func);
+    friend Promise<typename std::invoke_result<Func>::type> cr_async(Func func);
 
     Promise(typename promise_impl::PromiseState<T>::ptr state):
         state_(state) {
@@ -141,7 +141,7 @@ template<>
 class Promise<void> {
 private:
     template<typename Func>
-    friend Promise<typename std::result_of<Func()>::type> cr_async(Func func);
+    friend Promise<typename std::invoke_result<Func>::type> cr_async(Func func);
 
     Promise(typename promise_impl::PromiseState<void>::ptr state):
         state_(state) {
@@ -206,8 +206,8 @@ void _trigger_coroutine(std::function<void ()> func);
 void _trigger_idle_updates();
 
 template<typename Func>
-Promise<typename std::result_of<Func()>::type> cr_async(Func func) {
-    typedef typename std::result_of<Func()>::type T;
+Promise<typename std::invoke_result<Func>::type> cr_async(Func func) {
+    typedef typename std::invoke_result<Func>::type T;
 
     auto state = std::make_shared<typename promise_impl::PromiseState<T>>();
     Promise<T> promise(state);

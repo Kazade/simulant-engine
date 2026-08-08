@@ -189,8 +189,19 @@ private:
 template< class T >
 using decay_t = typename std::decay<T>::type;
 
+/* std::result_of was deprecated in C++17 and removed in C++20. libstdc++
+ * still ships it as an extension, but libc++ does not, so referring to it
+ * breaks the build on macOS and any other libc++ target. std::invoke_result
+ * (C++17) is the drop-in replacement; keep the result_of_t<F(Args...)>
+ * spelling so the call sites below are unchanged. */
 template< class T >
-using result_of_t = typename std::result_of<T>::type;
+struct result_of_helper;
+
+template< class F, class... Args >
+struct result_of_helper<F(Args...)> : std::invoke_result<F, Args...> { };
+
+template< class T >
+using result_of_t = typename result_of_helper<T>::type;
 
 template< bool B, class T = void >
 using enable_if_t = typename std::enable_if<B,T>::type;
