@@ -764,6 +764,16 @@ void Texture::_set_has_mipmaps(bool v) {
     has_mipmaps_ = v;
 }
 
+void Texture::_adopt_data(uint8_t* data, uint32_t size) {
+    if(data_) {
+        delete [] data_;
+    }
+
+    data_ = data;
+    data_size_ = size;
+    data_dirty_ = true;
+}
+
 void Texture::resize_data(uint32_t byte_size) {
     if(byte_size == data_size_) {
         return;

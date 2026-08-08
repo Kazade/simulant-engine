@@ -17,6 +17,8 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <memory>
+
 #include "renderer.h"
 #include "../texture.h"
 
@@ -306,45 +308,50 @@ bool Renderer::convert_if_necessary(Texture* tex) {
     bool decompress = format_in_list(fmt, can_decompress);
 
     if(decompress) {
-        std::vector<uint8_t> tmp(tex->width() * tex->height() * 2);
-        decompress_16bpp(&tex->data()[0], &tmp[0], tex->width(), tex->height());
+        uint32_t size = tex->width() * tex->height() * 2;
+        std::unique_ptr<uint8_t[]> tmp(new uint8_t[size]);
+        decompress_16bpp(tex->data(), tmp.get(), tex->width(), tex->height());
 
         fmt = uncompress_format(fmt);
-        tex->set_data(&tmp[0], tmp.size());
+        tex->_adopt_data(tmp.release(), size);
     }
 
     bool untwiddle = format_in_list(fmt, can_untwiddle);
 
     if(untwiddle) {
-        std::vector<uint8_t> tmp(tex->data_size());
+        uint32_t size = tex->data_size();
+        std::unique_ptr<uint8_t[]> tmp(new uint8_t[size]);
 
-        untwiddle_16bpp(&tex->data()[0], &tmp[0], tex->width(), tex->height());
+        untwiddle_16bpp(tex->data(), tmp.get(), tex->width(), tex->height());
         fmt = untwiddle_format(fmt);
-        tex->set_data(&tmp[0], tmp.size());
+        tex->_adopt_data(tmp.release(), size);
     }
 
     /* Handle 32-bit RGBA → 16-bit ARGB4444 conversion */
     if(fmt == TEXTURE_FORMAT_RGBA_4UB_8888) {
-        std::vector<uint8_t> tmp(tex->width() * tex->height() * 2);
-        rgba8888_to_argb4444(&tex->data()[0], &tmp[0], tex->width(), tex->height());
+        uint32_t size = tex->width() * tex->height() * 2;
+        std::unique_ptr<uint8_t[]> tmp(new uint8_t[size]);
+        rgba8888_to_argb4444(tex->data(), tmp.get(), tex->width(), tex->height());
         fmt = rgba8888_format();
-        tex->set_data(&tmp[0], tmp.size());
+        tex->_adopt_data(tmp.release(), size);
     }
 
     /* Handle 24-bit RGB → 16-bit RGB565 conversion */
     if(fmt == TEXTURE_FORMAT_RGB_3UB_888) {
-        std::vector<uint8_t> tmp(tex->width() * tex->height() * 2);
-        rgb888_to_rgb565(&tex->data()[0], &tmp[0], tex->width(), tex->height());
+        uint32_t size = tex->width() * tex->height() * 2;
+        std::unique_ptr<uint8_t[]> tmp(new uint8_t[size]);
+        rgb888_to_rgb565(tex->data(), tmp.get(), tex->width(), tex->height());
         fmt = rgb888_format();
-        tex->set_data(&tmp[0], tmp.size());
+        tex->_adopt_data(tmp.release(), size);
     }
 
     /* Handle 8-bit grayscale → 16-bit RGB565 conversion */
     if(fmt == TEXTURE_FORMAT_R_1UB_8) {
-        std::vector<uint8_t> tmp(tex->width() * tex->height() * 2);
-        r8_to_rgb565(&tex->data()[0], &tmp[0], tex->width(), tex->height());
+        uint32_t size = tex->width() * tex->height() * 2;
+        std::unique_ptr<uint8_t[]> tmp(new uint8_t[size]);
+        r8_to_rgb565(tex->data(), tmp.get(), tex->width(), tex->height());
         fmt = r8_format();
-        tex->set_data(&tmp[0], tmp.size());
+        tex->_adopt_data(tmp.release(), size);
     }
 
     /* Handle paletted formats - expand to actual color data then convert to RGB565 or ARGB4444 */
@@ -360,8 +367,9 @@ bool Renderer::convert_if_necessary(Texture* tex) {
 
         /* Determine output format based on whether the palette has alpha */
         /* For simplicity, we convert everything to ARGB4444 to preserve alpha if present */
-        std::vector<uint8_t> tmp(w * h * 2);
-        uint16_t* out = (uint16_t*)&tmp[0];
+        uint32_t tmp_size = w * h * 2;
+        std::unique_ptr<uint8_t[]> tmp(new uint8_t[tmp_size]);
+        uint16_t* out = (uint16_t*)tmp.get();
 
         /* Get palette data - for paletted formats the data buffer starts with the palette */
         const uint8_t* palette = &tex->data()[0];
@@ -423,7 +431,7 @@ bool Renderer::convert_if_necessary(Texture* tex) {
         }
 
         fmt = TEXTURE_FORMAT_ARGB_1US_4444;
-        tex->set_data(&tmp[0], tmp.size());
+        tex->_adopt_data(tmp.release(), tmp_size);
     }
 
     tex->set_format(fmt);

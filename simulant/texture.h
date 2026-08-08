@@ -332,6 +332,14 @@ public:
     /** INTERNAL: copy the current data to the paletted data array */
     uint8_t* _stash_paletted_data();
 
+    /** INTERNAL: Takes ownership of a buffer previously allocated with
+     *  `new uint8_t[size]`, replacing the current data without copying it.
+     *  Used by the renderer during format conversion so the converted
+     *  buffer doesn't need to be copied into a second freshly-allocated
+     *  one - it just becomes the texture's data. The old buffer (if any)
+     *  is freed. */
+    void _adopt_data(uint8_t* data, uint32_t size);
+
 private:
     Renderer* renderer_ = nullptr;
 
