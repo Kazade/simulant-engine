@@ -218,6 +218,13 @@ void GLRenderer::do_swap_buffers() {
     GLChecker::end_of_frame_check();
 }
 
+bool GLRenderer::read_pixels(uint32_t x, uint32_t y, uint32_t width,
+                             uint32_t height, uint8_t* out_rgba) {
+    GLCheck(glReadPixels, (GLint) x, (GLint) y, (GLsizei) width,
+            (GLsizei) height, GL_RGBA, GL_UNSIGNED_BYTE, out_rgba);
+    return true;
+}
+
 void GLRenderer::on_texture_prepare(Texture *texture) {
     // Do nothing if everything is up to date
     if(!texture->_data_dirty() && !texture->_params_dirty()) {

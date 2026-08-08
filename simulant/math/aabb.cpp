@@ -8,11 +8,13 @@ namespace smlt {
 AABB::AABB(const Vec3 &center, float width) {
     center_ = center;
     extents_ = Vec3(width * 0.5f, width * 0.5f, width * 0.5f);
+    is_empty_ = false;
 }
 
 AABB::AABB(const Vec3 &center, float xsize, float ysize, float zsize) {
     center_ = center;
     extents_ = Vec3(xsize * 0.5f, ysize * 0.5f, zsize * 0.5f);
+    is_empty_ = false;
 }
 
 AABB::AABB(const VertexData& vertex_data) {
@@ -115,11 +117,13 @@ bool AABB::intersects_sphere(const smlt::Vec3& center, float diameter) const {
 }
 
 void AABB::encapsulate(const AABB &bounds) {
-    if(has_zero_area()) {
-        // If an AABB has zero area, we class it as unintialized and set it
-        // it directly
+    if(is_empty_) {
+        // We've never been given real bounds yet, so become the other AABB
+        // outright rather than growing to include it (which would
+        // incorrectly also include our own default zero-at-origin value).
         center_ = bounds.center_;
         extents_ = bounds.extents_;
+        is_empty_ = bounds.is_empty_;
     } else {
         encapsulate(bounds.center_ - bounds.extents_);
         encapsulate(bounds.center_ + bounds.extents_);
@@ -127,9 +131,10 @@ void AABB::encapsulate(const AABB &bounds) {
 }
 
 void AABB::encapsulate(const Vec3& point) {
-    if(has_zero_area()) {
-        // If an AABB has zero area, we class it as unintialized and set it
-        // it directly
+    if(is_empty_) {
+        // First point we've ever seen - become a zero-size box at that
+        // point (set_min_max() also clears is_empty_) rather than growing
+        // to include our own default zero-at-origin value.
         set_min_max(point, point);
     } else {
         set_min_max(Vec3::min(min(), point), Vec3::max(max(), point));

@@ -23,6 +23,15 @@ class AABB {
     Vec3 center_;
     Vec3 extents_;
 
+    /* True only for an AABB that has never been given explicit bounds (i.e.
+     * still holds its default-constructed value). This is distinct from
+     * has_zero_area(): a *legitimate* single-point or line-like AABB (e.g.
+     * one produced by encapsulating a single vertex) also has zero area,
+     * but must not be treated as "empty" - encapsulate() uses this flag
+     * (rather than has_zero_area()) to decide whether it's seeing its first
+     * bit of data or should grow to include new bounds. */
+    bool is_empty_ = true;
+
 public:
     static AABB zero() {
         return AABB();
@@ -31,6 +40,7 @@ public:
     void set_min_max(const Vec3& min, const Vec3& max) {
         extents_ = (max - min) * 0.5f;
         center_ = min + extents_;
+        is_empty_ = false;
     }
 
     Vec3 min() const {
@@ -44,7 +54,7 @@ public:
     AABB() = default;
 
     AABB(const Vec3& center, const Vec3& extents):
-        center_(center), extents_(extents) {}
+        center_(center), extents_(extents), is_empty_(false) {}
 
     AABB(const Vec3& center, float width);
     AABB(const Vec3& center, float xsize, float ysize, float zsize);

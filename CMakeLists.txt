@@ -426,6 +426,7 @@ ENDIF()
 
 IF(SIMULANT_BUILD_TOOLS)
   ADD_SUBDIRECTORY(tools/optimise_gltf)
+  ADD_SUBDIRECTORY(tools/sprite_gen)
 ENDIF()
 
 

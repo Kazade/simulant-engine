@@ -104,6 +104,21 @@ public:
         return 1024;
     }
 
+    /** Reads back a rectangle of the current framebuffer as tightly-packed
+     *  RGBA8 pixels (row 0 = bottom, matching OpenGL's convention) into
+     *  out_rgba, which must be at least width*height*4 bytes. Returns false
+     *  if the renderer doesn't support readback. Must be called after
+     *  rendering but before the buffers are swapped. */
+    virtual bool read_pixels(uint32_t x, uint32_t y, uint32_t width,
+                             uint32_t height, uint8_t* out_rgba) {
+        _S_UNUSED(x);
+        _S_UNUSED(y);
+        _S_UNUSED(width);
+        _S_UNUSED(height);
+        _S_UNUSED(out_rgba);
+        return false;
+    }
+
 public:
     /** To be overridden by subclasses. Default supported textures
      *  are those that are supported by glTexImage2D without any

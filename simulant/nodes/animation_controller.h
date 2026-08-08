@@ -234,6 +234,82 @@ public:
 
         time_ += dt * animation_speed_;
 
+        bool unfinished = apply_current_frame();
+
+        if(!unfinished) {
+            // We've finished! Either loop, or move onto the next
+            // animation.
+
+            if(loop_count_ > 0) {
+                // Restart
+                time_ = 0.0f;
+                loop_count_--;
+            } else if(loop_count_ == 0) {
+                if(!animation_queue_.empty()) {
+                    // Move to the next animation
+                    current_animation_ = animation_queue_.front();
+                    animation_queue_.pop();
+                    time_ = 0.0f;
+                }
+            } else if(loop_count_ == -1) {
+                time_ = 0.0f;
+            }
+        }
+    }
+
+    /** Jumps directly to the given time (in seconds) within the currently
+     *  selected animation (set via play()) and applies it immediately,
+     *  bypassing the normal dt accumulation/looping logic in on_update().
+     *  Intended for tools that need frame-accurate, deterministic capture
+     *  of specific animation poses (e.g. sprite_gen). Does nothing if no
+     *  animation has been selected via play(). */
+    void seek(float time) {
+        if(current_animation_ >= animations_.size()) {
+            return;
+        }
+
+        time_ = time;
+        apply_current_frame();
+    }
+
+    /** Returns the duration (in seconds) of the named animation, or 0.0f
+     *  if it doesn't exist. */
+    float animation_duration(const std::string& animation) const {
+        auto index = find_animation_index(animation);
+        if(!index) {
+            return 0.0f;
+        }
+
+        float max_time = 0.0f;
+        for(auto& channel: animations_[index.value()].channels) {
+            max_time = std::max(max_time, channel.data->max_time());
+        }
+        return max_time;
+    }
+
+    void push_animation(const Animation& a) {
+        animations_.push_back(a);
+    }
+
+    std::vector<std::string> animation_names() const {
+        std::vector<std::string> ret;
+
+        if(animations_.empty()) {
+            return ret;
+        }
+
+        for(auto& anim: animations_) {
+            ret.push_back(anim.name.str());
+        }
+
+        return ret;
+    }
+
+private:
+    /* Applies the current_animation_'s channels at time_ to their target
+     * nodes and updates skinning. Returns true if any channel has not yet
+     * reached the end of its data at time_. */
+    bool apply_current_frame() {
         auto& anim = animations_[current_animation_];
         int unfinished = 0;
         for(auto& channel: anim.channels) {
@@ -260,56 +336,20 @@ public:
             }
 
             unfinished += !channel.data->finished(time_);
-
         }
+
         // If any mesh is skinned, updating the skinning
         if(!target_meshes_.empty()) {
-            for(const auto& target_mesh : target_meshes_) {
-                if(target_mesh->is_skinned && current_animation_ < animations_.size())
+            for(const auto& target_mesh: target_meshes_) {
+                if(target_mesh->is_skinned &&
+                   current_animation_ < animations_.size())
                     target_mesh->update_skinning();
             }
         }
 
-        if(!unfinished) {
-            // We've finished! Either loop, or move onto the next
-            // animation.
-
-            if(loop_count_ > 0) {
-                // Restart
-                time_ = 0.0f;
-                loop_count_--;
-            } else if(loop_count_ == 0) {
-                if(!animation_queue_.empty()) {
-                    // Move to the next animation
-                    current_animation_ = animation_queue_.front();
-                    animation_queue_.pop();
-                    time_ = 0.0f;
-                }
-            } else if(loop_count_ == -1) {
-                time_ = 0.0f;
-            }
-        }
+        return unfinished > 0;
     }
 
-    void push_animation(const Animation& a) {
-        animations_.push_back(a);
-    }
-
-    std::vector<std::string> animation_names() const {
-        std::vector<std::string> ret;
-
-        if(animations_.empty()) {
-            return ret;
-        }
-
-        for(auto& anim: animations_) {
-            ret.push_back(anim.name.str());
-        }
-
-        return ret;
-    }
-
-private:
     optional<std::size_t>
         find_animation_index(const std::string& animation) const {
         auto it = std::find_if(animations_.begin(), animations_.end(),

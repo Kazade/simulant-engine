@@ -603,6 +603,12 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
     }
 
     auto apply_sampler_settings = [&sampler](const smlt::TexturePtr& tex) {
+        if(!tex) {
+            // The texture failed to load (e.g. a missing/unreadable file
+            // referenced by the glTF) - nothing to apply settings to.
+            return;
+        }
+
         auto wrapS = sampler["wrapS"]->to_int().value_or(10497);
         auto wrapT = sampler["wrapT"]->to_int().value_or(10497);
         auto magFilter = sampler["magFilter"]->to_int().value_or(9729);
@@ -766,25 +772,31 @@ smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
     auto occ_texture_id =
         material["occlusionTexture"]["index"]->to_int().value_or(-1);
 
+    /* Textures referenced by index can be null here if they failed to load
+     * (e.g. a missing/unreadable file referenced by the glTF) - treat that
+     * the same as the material simply not referencing a texture, rather
+     * than enabling a map that points at nothing (which would crash later
+     * when the renderer tries to upload/bind it). */
     smlt::EnabledTextureMask enabled = 0;
     smlt::MaterialPtr ret = assets->clone_default_material();
-    if(base_texture_id >= 0) {
+    if(base_texture_id >= 0 && textures[base_texture_id]) {
         ret->set_base_color_map(textures[base_texture_id]);
         enabled |= BASE_COLOR_MAP_ENABLED;
     }
 
-    if(metallic_roughness_texture_id >= 0) {
+    if(metallic_roughness_texture_id >= 0 &&
+       textures[metallic_roughness_texture_id]) {
         ret->set_metallic_roughness_map(
             textures[metallic_roughness_texture_id]);
         enabled |= METALLIC_ROUGHNESS_MAP_ENABLED;
     }
 
-    if(normal_texture_id >= 0) {
+    if(normal_texture_id >= 0 && textures[normal_texture_id]) {
         ret->set_normal_map(textures[normal_texture_id]);
         enabled |= NORMAL_MAP_ENABLED;
     }
 
-    if(occ_texture_id >= 0) {
+    if(occ_texture_id >= 0 && textures[occ_texture_id]) {
         ret->set_light_map(textures[occ_texture_id]);
         enabled |= LIGHT_MAP_ENABLED;
     }
