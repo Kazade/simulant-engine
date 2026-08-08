@@ -21,6 +21,23 @@ bool PrefabInstance::on_create(Params params) {
 
     auto node_map = build_tree(prefab_ptr);
 
+    // Skinned meshes loaded from a Prefab are shared (by pointer) across
+    // every PrefabInstance built from it. Give each skinned Actor here its
+    // own writable skin instance *before* anything below binds skinning
+    // state (skin->bound_actor, skin->node_indices) to this instance -
+    // otherwise instantiating the same animated prefab more than once would
+    // have every instance fight over one shared, mutable vertex buffer.
+    for(auto node: this->find_descendents_by_types({Actor::Meta::node_type})) {
+        auto actor_ptr = static_cast<ActorPtr>(node);
+        auto base = actor_ptr->base_mesh();
+        if(!base || !base->is_skinned || !base->skin) {
+            continue;
+        }
+
+        auto instance_mesh = base->create_skin_instance(scene->assets.get());
+        actor_ptr->set_mesh(instance_mesh);
+    }
+
     if(prefab_ptr->has_animations()) {
         auto anims = create_mixin<AnimationController>();
 

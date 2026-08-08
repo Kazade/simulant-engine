@@ -196,6 +196,34 @@ public:
 
     std::shared_ptr<Skin> skin;
 
+    /* Immutable bind-pose data needed to (re-)compute skinning: rest-pose
+     * positions/normals and the per-vertex joint indices/weights. This is
+     * identical for every instance of the same source mesh, so it's built
+     * once (see ensure_skin_bind_pose()) and shared by pointer rather than
+     * copied into each per-instance mesh. */
+    struct SkinBindPose {
+        std::vector<Vec3> rest_positions;
+        std::vector<Vec3> rest_normals;
+        std::vector<uint16_t> joints; // 4 consecutive entries per vertex
+        std::vector<Vec4> weights;    // 1 entry per vertex
+    };
+
+    /* Creates a lightweight per-instance copy of this (skinned) mesh, for
+     * use by e.g. multiple PrefabInstances of the same animated prefab.
+     *
+     * The instance shares this mesh's bind-pose data (rest_positions,
+     * rest_normals, joints, weights - see SkinBindPose) and each submesh's
+     * index data by pointer, since none of that changes with pose. It gets
+     * its own small vertex buffer (position/normal/uv/color only - joints
+     * and weights are dropped, since nothing but skinning ever reads them)
+     * to receive skinning output independently of every other instance.
+     *
+     * The returned mesh still needs its skin->node_indices (and
+     * skin->bound_actor) resolved against the instance's own StageNode
+     * skeleton before it can be skinned correctly.
+     */
+    MeshPtr create_skin_instance(AssetManager* asset_manager);
+
     /**
      * @brief Create a new ranged submesh with the specified material
      * @param name
@@ -363,8 +391,9 @@ private:
     friend class Actor;
 
     Skeleton* skeleton_ = nullptr;
-    std::vector<Vec3> rest_positions_;
-    std::vector<Vec3> rest_normals_;
+
+    std::shared_ptr<SkinBindPose> skin_bind_pose_;
+    void ensure_skin_bind_pose();
 
     VertexDataPtr vertex_data_;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;
