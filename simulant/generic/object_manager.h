@@ -69,6 +69,13 @@ public:
         auto copy = target_manager->make(&source->asset_manager());
         *copy = *source;
 
+        if constexpr(_object_manager_impl::HasAssetTypeName<ObjectType>::value) {
+            log_memory_event(MEMORY_LOG_EVENT_ALLOC, copy->asset_type_name(),
+                              (uint64_t)copy->id(),
+                              copy->estimated_size_in_bytes(),
+                              copy->source().str(), copy->name());
+        }
+
         return copy;
     }
 
@@ -296,23 +303,23 @@ private:
     void on_make(IDType id) override {
         object_metas_.insert(std::make_pair(id, ObjMeta()));
 
+        /* The ALLOC event for asset types is logged explicitly by
+         * AssetManager once the object is fully populated (source, data)
+         * rather than here - at this point the object has only just been
+         * default-constructed, so its source/size aren't known yet. See
+         * AssetManager::load_*() call sites. */
+    }
+
+    void on_destroy(IDType id) override {
         /* Only ObjectType's deriving from Asset expose asset_type_name(),
          * so this is skipped entirely (at compile time) for managers of
          * non-asset objects (e.g. GPUProgram). */
         if constexpr(_object_manager_impl::HasAssetTypeName<ObjectType>::value) {
             auto obj = this->get(id);
-            log_memory_event(MEMORY_LOG_EVENT_ALLOC, obj->asset_type_name(),
-                              (uint64_t)obj->id(), obj->source().str(),
-                              obj->name());
-        }
-    }
-
-    void on_destroy(IDType id) override {
-        if constexpr(_object_manager_impl::HasAssetTypeName<ObjectType>::value) {
-            auto obj = this->get(id);
             if(obj) {
                 log_memory_event(MEMORY_LOG_EVENT_DEALLOC,
                                   obj->asset_type_name(), (uint64_t)obj->id(),
+                                  obj->estimated_size_in_bytes(),
                                   obj->source().str(), obj->name());
             }
         }

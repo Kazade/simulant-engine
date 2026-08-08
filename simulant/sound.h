@@ -56,6 +56,10 @@ public:
         return "Sound";
     }
 
+    uint64_t estimated_size_in_bytes() const override {
+        return buffer_size();
+    }
+
     uint32_t sample_rate() const { return sample_rate_; }
     void set_sample_rate(uint32_t rate) { sample_rate_ = rate; }
 

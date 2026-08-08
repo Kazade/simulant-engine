@@ -56,6 +56,12 @@ public:
         return dict_.count(name.c_str());
     }
 
+    /* Number of key/value pairs currently stored - each one is a
+     * separately heap-allocated std::map node. */
+    std::size_t size() const {
+        return dict_.size();
+    }
+
     template<typename T>
     optional<T> get(const char* name) const {
         auto it = dict_.find(name);

@@ -160,6 +160,16 @@ public:
         return "Mesh";
     }
 
+    uint64_t estimated_size_in_bytes() const override {
+        uint64_t total = (vertex_data_) ? vertex_data_->data_size() : 0;
+        for(auto& submesh: submeshes_) {
+            if(submesh->index_data) {
+                total += submesh->index_data->data_size();
+            }
+        }
+        return total;
+    }
+
     void reset(VertexDataPtr vertex_data);
     void reset(VertexSpecification vertex_specification);
 

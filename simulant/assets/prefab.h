@@ -72,6 +72,8 @@ public:
         return "Prefab";
     }
 
+    uint64_t estimated_size_in_bytes() const override;
+
     void push_node(PrefabNode node, int32_t parent_id = -1);
 
     void push_texture(TexturePtr texture) {

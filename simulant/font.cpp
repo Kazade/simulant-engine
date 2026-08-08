@@ -25,6 +25,16 @@ bool Font::on_init() {
     return true;
 }
 
+uint64_t Font::estimated_size_in_bytes() const {
+    uint64_t total = 0;
+    for(std::size_t i = 0; i < pages_.size(); ++i) {
+        if(pages_[i].texture) {
+            total += pages_[i].texture->estimated_size_in_bytes();
+        }
+    }
+    return total;
+}
+
 const FontPage* Font::page(std::size_t i) const {
     assert(i < pages_.size());
     return &pages_[i];

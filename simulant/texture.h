@@ -146,6 +146,10 @@ public:
         return "Texture";
     }
 
+    uint64_t estimated_size_in_bytes() const override {
+        return data_size();
+    }
+
     TextureFormat format() const;
     void set_format(TextureFormat format);
 

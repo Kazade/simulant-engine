@@ -84,6 +84,21 @@ public:
         return "ParticleScript";
     }
 
+    uint64_t estimated_size_in_bytes() const override {
+        /* sizeof(*this) covers emitters_, which is sized for
+         * MAX_EMITTER_COUNT regardless of how many are actually used. */
+        uint64_t total = sizeof(*this);
+
+        /* Manipulators are heap-allocated polymorphic objects - this
+         * approximates using the base class size, since actual derived
+         * sizes vary and aren't visible from here. material_ isn't
+         * counted - it references a Material that's already logged (and
+         * sized) independently. */
+        total += manipulators_.size() * sizeof(Manipulator);
+
+        return total;
+    }
+
     std::size_t emitter_count() const;
     const Emitter* emitter(std::size_t i) const;
 

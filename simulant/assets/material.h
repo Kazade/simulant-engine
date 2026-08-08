@@ -279,6 +279,8 @@ public:
         return "Material";
     }
 
+    uint64_t estimated_size_in_bytes() const override;
+
 // ---------- Passes ------------------------
     bool set_pass_count(uint8_t pass_count);
 

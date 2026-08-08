@@ -28,6 +28,7 @@
 #include "../renderers/gl2x/gpu_program.h"
 
 #include "material.h"
+#include "materials/core/material_value_pool.h"
 
 namespace smlt {
 
@@ -126,6 +127,36 @@ void Material::initialize_core_properties() {
 
 MaterialValuePool* Material::_get_pool() const {
     return get_app()->material_value_pool.get();
+}
+
+uint64_t Material::estimated_size_in_bytes() const {
+    /* sizeof(*this) covers the fixed-size stuff that's inline in every
+     * Material: passes_ (each pass' full CoreMaterialProps struct), the
+     * 16-bucket values_ hash table, etc. - this is often the bulk of it,
+     * since those are sized for MAX_MATERIAL_PASSES regardless of how many
+     * passes/properties are actually used. */
+    uint64_t total = sizeof(*this);
+
+    /* Custom/texture property overrides beyond what fits in the 16 fixed
+     * hash buckets chain onto heap-allocated nodes - see
+     * _set_property_value(). */
+    for(auto& entry: values_) {
+        auto* node = entry.next;
+        while(node) {
+            total += sizeof(MaterialPropertyEntry);
+            node = node->next;
+        }
+    }
+
+    /* Property *values* (textures aside, which are counted by the Texture
+     * asset itself) live as flyweights in the shared MaterialValuePool, so
+     * their storage can be deduplicated across materials and can't be
+     * attributed exactly to any one of them. This adds a rough per-value
+     * estimate (one pool block each) rather than ignoring them entirely. */
+    total += (uint64_t)(texture_properties_.size() + custom_properties_.size()) *
+             (sizeof(BlockHeader) + alignment);
+
+    return total;
 }
 
 bool Material::set_pass_count(uint8_t pass_count) {

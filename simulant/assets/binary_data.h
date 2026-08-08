@@ -22,6 +22,10 @@ public:
         return "Binary";
     }
 
+    uint64_t estimated_size_in_bytes() const override {
+        return data_size_in_bytes();
+    }
+
     const uint8_t* data() const {
         return &data_[0];
     }

@@ -86,6 +86,8 @@ public:
         return "Font";
     }
 
+    uint64_t estimated_size_in_bytes() const override;
+
     bool on_init() override;
 
     std::size_t page_count() const {

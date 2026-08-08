@@ -38,7 +38,7 @@ bool StageNodeManager::clean_up_node(StageNode* node) {
      * can no longer be safely called on the node once its destructor has
      * started (virtual dispatch is unwinding). */
     log_memory_event(MEMORY_LOG_EVENT_DEALLOC, node->node_type_name(),
-                      (uint64_t)node->id(), "", node->name());
+                      (uint64_t)node->id(), 0, "", node->name());
 
     void* alloc_base = node_data_it->second.alloc_base;
     it->second.destructor(node);
@@ -292,7 +292,7 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
     on_stage_node_inserted(node);
 
     log_memory_event(MEMORY_LOG_EVENT_ALLOC, node->node_type_name(),
-                      (uint64_t)node->id(), "", node->name());
+                      (uint64_t)node->id(), 0, "", node->name());
 
     return node;
 }

@@ -61,6 +61,15 @@ public:
     Path source() const { return source_; }
     void set_source(const Path& source) { source_ = source; }
 
+    /* Approximate number of bytes of host RAM this asset's data currently
+     * occupies (e.g. texel data, vertex/index buffers, decoded audio).
+     * Used for reporting/memory logging - not exact (e.g. it won't include
+     * per-object overhead), and defaults to 0 for asset types that don't
+     * override it. */
+    virtual uint64_t estimated_size_in_bytes() const {
+        return 0;
+    }
+
     Property<generic::DataCarrier Asset::*> data = {this, &Asset::data_};
 
 protected:

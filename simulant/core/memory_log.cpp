@@ -11,7 +11,7 @@ MemoryLogger::MemoryLogger(const std::string& path):
     /* "w" truncates/replaces any existing file at this path */
     file_ = fopen(path.c_str(), "w");
     if(file_) {
-        fprintf(file_, "time_since_start,total_usage,event,type,id,source,name\n");
+        fprintf(file_, "time_since_start_ms,total_usage,event,type,id,size,source,name\n");
         fflush(file_);
     }
 }
@@ -40,20 +40,23 @@ static void write_csv_field(FILE* file, const std::string& value) {
 }
 
 void MemoryLogger::log(MemoryLogEvent event, const char* type, uint64_t id,
-                        const std::string& source, const std::string& name) {
+                        uint64_t size, const std::string& source,
+                        const std::string& name) {
     if(!file_) {
         return;
     }
 
-    auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(
+    auto elapsed_ms = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(
         std::chrono::steady_clock::now() - start_
     ).count();
 
     auto usage = get_app()->ram_usage_in_bytes();
 
-    fprintf(file_, "%f,%lld,%s,%s,%llu,", elapsed, (long long)usage,
+    /* id is zero-padded to a fixed width so rows line up as plain text
+     * (e.g. when eyeballing the file or diffing two runs) */
+    fprintf(file_, "%.3f,%lld,%s,%s,%08llu,%llu,", elapsed_ms, (long long)usage,
             (event == MEMORY_LOG_EVENT_ALLOC) ? "alloc" : "dealloc", type,
-            (unsigned long long)id);
+            (unsigned long long)id, (unsigned long long)size);
     write_csv_field(file_, source);
     fputc(',', file_);
     write_csv_field(file_, name);

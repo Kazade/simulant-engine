@@ -188,6 +188,19 @@ auto new_x(T self, M& manager, GarbageCollectMethod garbage_collect) -> auto {
     return result;
 }
 
+/* Logs an ALLOC memory-log event for an asset that has just been fully
+ * populated (source set, data loaded) - call this at the point an asset is
+ * handed back to the caller, not at raw construction time, otherwise the
+ * source/size will still reflect an empty placeholder object. */
+template<typename T>
+static void log_asset_alloc(const std::shared_ptr<T>& obj) {
+    if(obj) {
+        log_memory_event(MEMORY_LOG_EVENT_ALLOC, obj->asset_type_name(),
+                          (uint64_t)obj->id(), obj->estimated_size_in_bytes(),
+                          obj->source().str(), obj->name());
+    }
+}
+
 #define GET_X(klass, name, manager_name) \
     if(parent_ && !CONCAT(has_, name)(id)) { \
         return parent_-> name (id); \
@@ -196,11 +209,15 @@ auto new_x(T self, M& manager, GarbageCollectMethod garbage_collect) -> auto {
 
 MeshPtr AssetManager::create_mesh(VertexSpecification vertex_specification,
                                   GarbageCollectMethod garbage_collect) {
-    return new_x(this, mesh_manager_, garbage_collect, vertex_specification);
+    auto mesh = new_x(this, mesh_manager_, garbage_collect, vertex_specification);
+    log_asset_alloc(mesh);
+    return mesh;
 }
 
 MeshPtr AssetManager::create_mesh(VertexDataPtr vertex_data, GarbageCollectMethod garbage_collect) {
-    return new_x(this, mesh_manager_, garbage_collect, vertex_data);
+    auto mesh = new_x(this, mesh_manager_, garbage_collect, vertex_data);
+    log_asset_alloc(mesh);
+    return mesh;
 }
 
 MeshPtr AssetManager::mesh(AssetID id) {
@@ -274,7 +291,11 @@ MeshPtr AssetManager::load_mesh(const Path& path,
     }
 
     //Load the mesh
-    auto mesh = create_mesh(desired_specification, garbage_collect);
+    //
+    // Deliberately bypasses create_mesh() (and its logging) here - this
+    // mesh isn't fully populated yet, so logging now would record an empty
+    // source and zero size. It's logged explicitly below once loaded.
+    auto mesh = new_x(this, mesh_manager_, garbage_collect, desired_specification);
     auto loader = get_app()->loader_for(path);
     assert(loader && "Unable to locate a loader for the specified mesh file");
 
@@ -294,6 +315,8 @@ MeshPtr AssetManager::load_mesh(const Path& path,
     if(options.use_asset_cache) {
         mesh_manager_.register_source(mesh->id(), resolved.value());
     }
+
+    log_asset_alloc(mesh);
 
     return mesh;
 }
@@ -358,7 +381,9 @@ std::size_t AssetManager::mesh_count() const {
 }
 
 MaterialPtr AssetManager::create_material(GarbageCollectMethod garbage_collect) {
-    return new_x(this, material_manager_, garbage_collect);
+    auto mat = new_x(this, material_manager_, garbage_collect);
+    log_asset_alloc(mat);
+    return mat;
 }
 
 void AssetManager::destroy_material(const AssetID& m) {
@@ -379,7 +404,9 @@ MaterialPtr AssetManager::load_material(const Path& path, GarbageCollectMethod g
         }
     }
 
-    auto new_mat = create_material();
+    // Deliberately bypasses create_material() (and its logging) here - see
+    // the equivalent comment in load_mesh().
+    auto new_mat = material_manager_.make(this);
     auto loader = get_app()->loader_for(path);
     if(!loader) {
         S_ERROR("Unable to find loader for {0}", path);
@@ -395,6 +422,8 @@ MaterialPtr AssetManager::load_material(const Path& path, GarbageCollectMethod g
     if(use_asset_cache) {
         material_manager_.register_source(new_mat->id(), resolved.value());
     }
+
+    log_asset_alloc(new_mat);
 
     return new_mat;
 }
@@ -455,8 +484,10 @@ std::size_t AssetManager::material_count() const {
 }
 
 TexturePtr AssetManager::create_texture(uint16_t width, uint16_t height, TextureFormat format, GarbageCollectMethod garbage_collect) {
-    return new_x(this, texture_manager_, garbage_collect, width, height,
-                 format);
+    auto tex = new_x(this, texture_manager_, garbage_collect, width, height,
+                      format);
+    log_asset_alloc(tex);
+    return tex;
 }
 
 TexturePtr AssetManager::load_texture(const Path& path, GarbageCollectMethod garbage_collect) {
@@ -478,8 +509,12 @@ TexturePtr AssetManager::load_texture(const Path& path, TextureFlags flags, Garb
     }
 
     //Load the texture
+    //
+    // Deliberately bypasses create_texture() (and its logging) here - see
+    // the equivalent comment in load_mesh().
     S_DEBUG("Loading texture from file: {0}", path);
-    smlt::TexturePtr tex = create_texture(8, 8, TEXTURE_FORMAT_RGBA_4UB_8888, garbage_collect);
+    smlt::TexturePtr tex = new_x(this, texture_manager_, garbage_collect, (uint16_t)8,
+                                  (uint16_t)8, TEXTURE_FORMAT_RGBA_4UB_8888);
 
     {
         S_DEBUG("Finding loader for: {0}", path);
@@ -509,6 +544,8 @@ TexturePtr AssetManager::load_texture(const Path& path, TextureFlags flags, Garb
     if(flags.use_asset_cache) {
         texture_manager_.register_source(tex->id(), resolved.value());
     }
+
+    log_asset_alloc(tex);
 
     S_DEBUG("Texture loaded");
     return tex;
@@ -576,6 +613,8 @@ SoundPtr AssetManager::load_sound(const Path& path, const SoundFlags &flags, Gar
         sound_manager_.register_source(snd->id(), resolved.value());
     }
 
+    log_asset_alloc(snd);
+
     return snd;
 }
 
@@ -635,6 +674,8 @@ BinaryPtr AssetManager::load_binary(const Path& filename, GarbageCollectMethod g
     if(use_asset_cache) {
         binary_manager_.register_source(bin->id(), resolved.value());
     }
+
+    log_asset_alloc(bin);
 
     return bin;
 }
@@ -723,6 +764,8 @@ FontPtr AssetManager::create_font_from_memory(
     }
     font_manager_.set_garbage_collection_method(font_id, garbage_collect);
 
+    log_asset_alloc(font);
+
     return font;
 }
 
@@ -799,6 +842,8 @@ PrefabPtr AssetManager::create_prefab(const smlt::StageNode* root,
         }
     }
 
+    log_asset_alloc(prefab);
+
     return prefab;
 }
 
@@ -832,6 +877,8 @@ PrefabPtr AssetManager::load_prefab(const Path& filename,
     if(use_asset_cache) {
         prefab_manager_.register_source(prefab_id, resolved.value());
     }
+
+    log_asset_alloc(prefab);
 
     return prefab;
 }
@@ -909,6 +956,8 @@ FontPtr AssetManager::load_font(const Path& filename, const FontFlags& flags, Ga
         font_manager_.register_source(font_id, source_key);
     }
 
+    log_asset_alloc(font);
+
     return font;
 }
 
@@ -964,6 +1013,8 @@ ParticleScriptPtr AssetManager::load_particle_script(const Path& filename, Garba
     if(use_asset_cache) {
         particle_script_manager_.register_source(ps->id(), resolved.value());
     }
+
+    log_asset_alloc(ps);
 
     return ps;
 }
