@@ -41,6 +41,10 @@
 
 namespace smlt {
 
+/* Floor for user-resizable windows, see _init_window. */
+static const int MIN_RESIZABLE_WIDTH = 320;
+static const int MIN_RESIZABLE_HEIGHT = 240;
+
 SDL2Window::SDL2Window() {
     auto default_flags =
         SDL_INIT_EVERYTHING & (~SDL_INIT_HAPTIC) & (~SDL_INIT_SENSOR);
@@ -85,7 +89,22 @@ void SDL2Window::cursor_position(int32_t& mouse_x, int32_t& mouse_y) {
 }
 
 int32_t SDL2Window::default_window_flags() const {
-    return SDL_WINDOW_OPENGL;
+    int32_t flags = SDL_WINDOW_OPENGL;
+
+    if(is_resizable()) {
+        flags |= SDL_WINDOW_RESIZABLE;
+    }
+
+    /* SDL_WINDOW_ALLOW_HIGHDPI is deliberately absent. Without it, SDL gives
+     * us a 1x backing store, so SDL_GetWindowSize == SDL_GL_GetDrawableSize
+     * == the GL framebuffer size, and SDL mouse coordinates are in those same
+     * units. Window::width_/height_ (and therefore glViewport, via Viewport's
+     * ratios) and any picking code that divides mouse coords by width() then
+     * agree by construction. Enabling HiDPI would require width_/height_ to
+     * become drawable pixels *and* every incoming mouse/touch coordinate to be
+     * scaled by drawable/window -- see the SDL_WINDOWEVENT_SIZE_CHANGED
+     * handler in check_events(). */
+    return flags;
 }
 
 int event_filter(void* user_data, SDL_Event* event) {
@@ -701,6 +720,14 @@ void SDL2Window::check_events() {
                 on_finger_up(event.tfinger.fingerId, x, y);
             } break;
             case SDL_WINDOWEVENT: {
+                /* SDL_PollEvent is global, and initialize_screen() may have
+                 * created a second "Virtual Screen" SDL window, so ignore
+                 * anything that isn't the main window. */
+                if(!screen_ ||
+                   event.window.windowID != SDL_GetWindowID(screen_)) {
+                    break;
+                }
+
                 /* Make sure we pause/unpause when the window is minimized and
                  * restored. We also unpause on maximize just in case (although
                  * I imagine that we shouldn't see a maximize without a restore
@@ -713,6 +740,26 @@ void SDL2Window::check_events() {
                     case SDL_WINDOWEVENT_MAXIMIZED:
                         set_has_focus(true);
                         break;
+                    case SDL_WINDOWEVENT_SIZE_CHANGED: {
+                        /* SIZE_CHANGED rather than RESIZED: RESIZED only fires
+                         * for external (user/WM) resizes and is always preceded
+                         * by SIZE_CHANGED, whereas SIZE_CHANGED also covers
+                         * SDL_SetWindowSize and fullscreen toggles. set_size is
+                         * idempotent so the wider coverage costs nothing.
+                         *
+                         * event.window.data1/data2 carry the new size, but we
+                         * re-query to stay consistent with _init_window and to
+                         * pick up any clamping SDL applied (see
+                         * SDL_SetWindowMinimumSize there).
+                         *
+                         * NOTE: SDL_GetWindowSize reports *window* units, which
+                         * equal the GL drawable size only because we don't pass
+                         * SDL_WINDOW_ALLOW_HIGHDPI -- see
+                         * default_window_flags(). */
+                        int w = 0, h = 0;
+                        SDL_GetWindowSize(screen_, &w, &h);
+                        set_size(uint16_t(w), uint16_t(h));
+                    } break;
                     default:
                         break;
                 }
@@ -797,6 +844,15 @@ bool SDL2Window::_init_window() {
     if(!screen_) {
         S_ERROR(std::string(SDL_GetError()));
         throw std::runtime_error("FATAL: Unable to create SDL window");
+    }
+
+    if(is_resizable()) {
+        /* Below this, aspect ratios go degenerate and glViewport ends up with
+         * a zero dimension. Also stops the user dragging the window to
+         * nothing. Only applied to resizable windows so a fixed window that
+         * asked for a smaller size still gets it. */
+        SDL_SetWindowMinimumSize(screen_, MIN_RESIZABLE_WIDTH,
+                                 MIN_RESIZABLE_HEIGHT);
     }
 
     int w, h;

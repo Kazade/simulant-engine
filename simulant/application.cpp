@@ -332,6 +332,10 @@ bool Application::construct_window(const AppConfig& config) {
         config_copy.height = 480;
     }
 
+    /* Must be set before create_window: platform windows bake the resize flag
+     * in at creation time. A fullscreen window is never resizable. */
+    window_->set_resizable(config_copy.resizable && !config_copy.fullscreen);
+
     if(!window_->create_window(
        config_copy.width,
        config_copy.height,

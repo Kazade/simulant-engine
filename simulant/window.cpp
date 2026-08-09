@@ -164,6 +164,29 @@ void Window::set_has_focus(bool v) {
     }
 }
 
+void Window::set_size(uint16_t width, uint16_t height) {
+    /* A zero dimension gets reported by some window managers on minimize.
+     * Ignore it -- aspect_ratio() only asserts (so it's a no-op in release
+     * builds) and glViewport with a zero dimension is degenerate. The real
+     * size arrives again on restore. */
+    if(width == 0 || height == 0) {
+        return;
+    }
+
+    if(width == width_ && height == height_) {
+        return;
+    }
+
+    width_ = width;
+    height_ = height;
+
+    S_DEBUG("Window resized to {0}x{1}", width_, height_);
+
+    each_event_listener([=, this](EventListener* listener) {
+        listener->handle_window_resize(this, width, height);
+    });
+}
+
 void Window::on_application_set(Application* app) {
     _S_UNUSED(app);
 }
