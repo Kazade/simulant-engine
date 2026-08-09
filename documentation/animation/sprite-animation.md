@@ -25,6 +25,7 @@ For 2D animation, Simulant provides the `Sprite` node. It works by updating text
 Headers:
 - `simulant/nodes/sprite.h` -- `Sprite`, `SpritesheetAttrs`
 - `simulant/animation.h` -- `KeyFrameAnimated`, `KeyFrameAnimationState`, `AnimationUpdatedCallback`
+- `simulant/assets/spritesheet.h` -- `Spritesheet`, `SpritesheetFrame`, `SpritesheetAnimation` (see [Spritesheet Asset & Atlas Format](../assets/spritesheets.md))
 
 The `Sprite` class inherits from both `KeyFrameAnimated` and `ContainerNode`:
 
@@ -105,6 +106,24 @@ sprite->set_render_dimensions_from_height(1.0f);
 ```
 
 > **Note:** Render dimensions are in **world units**, not pixels. A value of `1.0f` means the sprite occupies 1 world unit. The pixel size of frames in the sprite sheet only determines UV calculation, not render size.
+
+### Loading a Sheet from a JSON Atlas
+
+For sheets with non-uniform frame sizes or tightly-packed layouts -- such as those produced by the [`sprite_gen`](../guides/sprite-gen.md) tool, TexturePacker, or Aseprite -- load a `Spritesheet` asset instead of configuring `SpritesheetAttrs` by hand:
+
+```cpp
+auto sheet = assets->load_spritesheet("sprites/hero.json");
+sprite->set_spritesheet(sheet);
+sprite->set_render_dimensions(1.0f, 1.0f);
+```
+
+This also works as a creation-time parameter:
+
+```cpp
+auto sprite = create_child<Sprite>(Params().set("spritesheet", sheet));
+```
+
+See [Spritesheet Asset & Atlas Format](../assets/spritesheets.md) for the atlas format and the rest of the `Spritesheet` API. The next section covers `add_animation()`, which still applies regardless of how the sheet was configured -- though loading via `Spritesheet` also auto-registers any animations (`frameTags`) defined in the atlas, using each frame's `duration` to derive the FPS.
 
 ---
 
@@ -453,4 +472,6 @@ private:
 - [Animation Controller](animation-controller.md) -- Playing and blending skeletal animations
 - [Animation System Overview](overview.md) -- High-level overview of all animation systems
 - [Sprites](../rendering/sprites.md) -- 2D sprite rendering details
+- [Spritesheet Asset & Atlas Format](../assets/spritesheets.md) -- JSON atlas format and the `Spritesheet` asset
+- [sprite_gen Tool](../guides/sprite-gen.md) -- Generate sprite sheets from 3D model animations
 - [KeyFrameAnimated](../../api/animation.md) -- API reference for keyframe animation base classes

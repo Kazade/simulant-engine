@@ -24,6 +24,8 @@ This guide covers the complete asset workflow for the Simulant game engine -- fr
 - [Mesh Formats](../assets/mesh-formats.md) -- Supported 3D file formats and loaders
 - [Materials](../rendering/materials.md) -- Material properties and shader assignment
 - [Textures](../rendering/textures.md) -- Texture loading, filtering, and format conversion
+- [Spritesheet Asset & Atlas Format](../assets/spritesheets.md) -- JSON sprite sheet atlases
+- [sprite_gen Tool](sprite-gen.md) -- Generate sprite sheets from 3D model animations
 
 ---
 
@@ -1083,7 +1085,7 @@ Before embedding assets for constrained platforms:
    ```bash
    magick convert photo.png -quality 85 photo.jpg
    ```
-4. **Combine texture sheets** -- use sprite/texture atlases to reduce draw calls
+4. **Combine texture sheets** -- use sprite/texture atlases to reduce draw calls. For pre-rendered 2D sprites from a 3D model, the [`sprite_gen`](sprite-gen.md) tool automates packing an animation into a sheet plus a loadable JSON atlas (see [Spritesheet Asset & Atlas Format](../assets/spritesheets.md))
 5. **Remove unused assets** -- every embedded asset increases binary size
 6. **Use platform-specific variants** -- lower-detail meshes and smaller textures for Dreamcast/PSP
 

@@ -2,7 +2,7 @@
 
 This guide covers 2D game development in Simulant, from rendering a single sprite to building a complete 2D platformer. Sprites are the foundation of 2D rendering in Simulant -- they are lightweight, animated, texture-mapped quads that integrate seamlessly with the engine's scene graph.
 
-**Related documentation:** [Stage Nodes](../core-concepts/stage-nodes.md), [Animation](../animation/overview.md), [Cameras](../core-concepts/cameras.md), [Input](../input/overview.md), [Physics](../physics/overview.md).
+**Related documentation:** [Stage Nodes](../core-concepts/stage-nodes.md), [Animation](../animation/overview.md), [Cameras](../core-concepts/cameras.md), [Input](../input/overview.md), [Physics](../physics/overview.md), [Spritesheet Asset & Atlas Format](../assets/spritesheets.md), [sprite_gen Tool](../guides/sprite-gen.md).
 
 ---
 
@@ -235,6 +235,30 @@ sprite->set_render_dimensions(1.5f, 1.5f);
 ```
 
 > **Note:** When you call `set_spritesheet()`, the material is automatically created with alpha blending (`BLEND_ALPHA`) enabled.
+
+### Loading Sheets from a JSON Atlas (`Spritesheet` Asset)
+
+The grid-based configuration above assumes every frame is the same size and evenly spaced. For sheets that were **tightly packed** by an external tool -- including Simulant's own [`sprite_gen`](../guides/sprite-gen.md) tool, TexturePacker, or Aseprite -- use the `Spritesheet` asset instead. It stores an explicit rectangle per frame (so frames can vary in size) and can carry named animations loaded straight from the atlas file:
+
+```cpp
+// Load the atlas (loads the referenced texture automatically)
+auto sheet = assets->load_spritesheet("sprites/hero.json");
+
+auto sprite = create_child<Sprite>();
+sprite->set_spritesheet(sheet);
+sprite->set_render_dimensions(1.0f, 1.0f);
+
+// Animations defined in the atlas (frameTags) are registered automatically
+sprite->animations->play_animation("walk");
+```
+
+`Sprite` also accepts a `"spritesheet"` parameter at creation time:
+
+```cpp
+auto sprite = create_child<Sprite>(Params().set("spritesheet", sheet));
+```
+
+See [Spritesheet Asset & Atlas Format](../assets/spritesheets.md) for the full JSON format and API, and the [sprite_gen Tool](../guides/sprite-gen.md) guide for generating sheets from a 3D model's animations.
 
 ---
 
@@ -1375,7 +1399,8 @@ On constrained platforms (Dreamcast, PSP):
 
 | Method | Description |
 |--------|-------------|
-| `set_spritesheet(tex, frame_w, frame_h, attrs)` | Configure the sprite sheet texture and frame size |
+| `set_spritesheet(tex, frame_w, frame_h, attrs)` | Configure a uniform grid sprite sheet texture and frame size |
+| `set_spritesheet(sheet)` | Configure from a `Spritesheet` asset loaded from a JSON atlas |
 | `set_render_dimensions(w, h)` | Set world-space render size |
 | `set_render_dimensions_from_width(w)` | Set size from width, height from aspect ratio |
 | `set_render_dimensions_from_height(h)` | Set size from height, width from aspect ratio |
@@ -1415,3 +1440,5 @@ On constrained platforms (Dreamcast, PSP):
 - [Physics](../physics/overview.md) -- Rigid body physics system
 - [Render Pipelines](pipelines.md) -- Compositor and layer management
 - [Textures](../textures.md) -- Texture loading and configuration
+- [Spritesheet Asset & Atlas Format](../assets/spritesheets.md) -- JSON atlas format and the `Spritesheet` asset
+- [sprite_gen Tool](../guides/sprite-gen.md) -- Generate sprite sheets from 3D model animations

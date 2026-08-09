@@ -115,6 +115,7 @@ Simulant is a cross-platform C++ game engine with support for desktop (Linux, Wi
 - **[Mesh Formats](assets/mesh-formats.md)** - Supported 3D file formats
 - **[Material Files](assets/material-files.md)** - .smat material format
 - **[Particle Script Format](assets/particle-script.md)** - Particle system definitions
+- **[Spritesheet Asset & Atlas Format](assets/spritesheets.md)** - JSON sprite sheet atlases for the Sprite node
 
 ---
 
@@ -139,6 +140,7 @@ Simulant is a cross-platform C++ game engine with support for desktop (Linux, Wi
 - **[PSP Development](guides/psp.md)** - PSP specifics
 - **[Performance Optimization](guides/performance.md)** - Making your game run faster
 - **[Asset Pipeline](guides/asset-pipeline.md)** - Importing and preparing assets
+- **[sprite_gen Tool](guides/sprite-gen.md)** - Generate sprite sheets from 3D model animations
 - **[Packaging & Distribution](guides/packaging.md)** - Shipping your game
 
 ---
