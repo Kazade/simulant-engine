@@ -20,6 +20,7 @@
 #include "sprite.h"
 #include "../animation.h"
 #include "../asset_manager.h"
+#include "../assets/spritesheet.h"
 #include "../scenes/scene.h"
 #include "../window.h"
 #include "actor.h"
@@ -35,7 +36,9 @@ Sprite::Sprite(Scene* owner) :
 }
 
 bool Sprite::on_create(Params params) {
-    _S_UNUSED(params);
+    if(!clean_params<Sprite>(params)) {
+        return false;
+    }
 
     mesh_ = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
     mesh_->create_submesh_as_rectangle(
@@ -53,7 +56,15 @@ bool Sprite::on_create(Params params) {
     animation_state_ = std::make_shared<KeyFrameAnimationState>(
         this, std::bind(&Sprite::refresh_animation_state, this, _1, _2, _3));
 
-    return true;
+    if(params.contains("spritesheet")) {
+        auto sheet =
+            params.get<SpritesheetRef>("spritesheet").value_or(SpritesheetRef()).lock();
+        if(sheet) {
+            set_spritesheet(sheet);
+        }
+    }
+
+    return StageNode::on_create(params);
 }
 
 bool Sprite::on_destroy() {
@@ -104,20 +115,39 @@ void Sprite::flip_vertically(bool value) {
 }
 
 void Sprite::update_texture_coordinates() {
-    uint8_t across = image_width_ / frame_width_;
-
     auto current_frame = animation_state_->current_frame();
-    int x = current_frame % across;
-    int y = current_frame / across;
 
-    float x0 = sprite_sheet_margin_ +
-               (x * (sprite_sheet_spacing_ + frame_width_)) +
-               sprite_sheet_padding_.first;
-    float x1 = x0 + (frame_width_ - sprite_sheet_padding_.first);
-    float y0 = sprite_sheet_margin_ +
-               (y * (sprite_sheet_spacing_ + frame_height_)) +
-               sprite_sheet_padding_.second;
-    float y1 = y0 + (frame_height_ - sprite_sheet_padding_.second);
+    float x0, x1, y0, y1;
+
+    if(spritesheet_) {
+        const SpritesheetFrame* frame = spritesheet_->frame(current_frame);
+        if(!frame) {
+            frame = spritesheet_->frame(0);
+        }
+
+        if(!frame) {
+            return;
+        }
+
+        x0 = float(frame->x);
+        x1 = float(frame->x + frame->w);
+        y0 = float(frame->y);
+        y1 = float(frame->y + frame->h);
+    } else {
+        uint8_t across = image_width_ / frame_width_;
+
+        int x = current_frame % across;
+        int y = current_frame / across;
+
+        x0 = sprite_sheet_margin_ +
+             (x * (sprite_sheet_spacing_ + frame_width_)) +
+             sprite_sheet_padding_.first;
+        x1 = x0 + (frame_width_ - sprite_sheet_padding_.first);
+        y0 = sprite_sheet_margin_ +
+             (y * (sprite_sheet_spacing_ + frame_height_)) +
+             sprite_sheet_padding_.second;
+        y1 = y0 + (frame_height_ - sprite_sheet_padding_.second);
+    }
 
     x0 = x0 / float(image_width_);
     x1 = x1 / float(image_width_);
@@ -157,6 +187,8 @@ void Sprite::update_texture_coordinates() {
 
 void Sprite::set_spritesheet(TexturePtr texture, uint32_t frame_width,
                              uint32_t frame_height, SpritesheetAttrs attrs) {
+    spritesheet_.reset();
+
     frame_width_ = frame_width;
     frame_height_ = frame_height;
     sprite_sheet_margin_ = attrs.margin;
@@ -166,6 +198,46 @@ void Sprite::set_spritesheet(TexturePtr texture, uint32_t frame_width,
 
     image_width_ = texture->width();
     image_height_ = texture->height();
+
+    // Hold a reference to the new material
+    auto mat = scene->assets->create_material_from_texture(texture);
+    mat->set_blend_func(smlt::BLEND_ALPHA);
+
+    material_ = mat;
+    mesh_->set_material(mat);
+
+    update_texture_coordinates();
+}
+
+void Sprite::set_spritesheet(SpritesheetPtr spritesheet) {
+    if(!spritesheet || !spritesheet->texture()) {
+        S_WARN("Tried to set an invalid spritesheet on a sprite");
+        return;
+    }
+
+    spritesheet_ = spritesheet;
+
+    auto texture = spritesheet_->texture();
+    image_width_ = texture->width();
+    image_height_ = texture->height();
+
+    frame_width_ = 0;
+    frame_height_ = 0;
+    if(auto* first_frame = spritesheet_->frame(0)) {
+        frame_width_ = first_frame->w;
+        frame_height_ = first_frame->h;
+    }
+
+    for(std::size_t i = 0; i < spritesheet_->animation_count(); ++i) {
+        auto* anim = spritesheet_->animation(i);
+        auto* start_frame = spritesheet_->frame(anim->start_frame);
+        if(start_frame && start_frame->duration_ms > 0) {
+            add_animation(anim->name, anim->start_frame, anim->end_frame,
+                         1000.0f / float(start_frame->duration_ms));
+        } else {
+            add_animation(anim->name, anim->start_frame, anim->end_frame);
+        }
+    }
 
     // Hold a reference to the new material
     auto mat = scene->assets->create_material_from_texture(texture);

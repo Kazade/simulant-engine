@@ -461,6 +461,10 @@ class ParticleScript;
 typedef std::weak_ptr<ParticleScript> ParticleScriptRef;
 typedef std::shared_ptr<ParticleScript> ParticleScriptPtr;
 
+class Spritesheet;
+typedef std::weak_ptr<Spritesheet> SpritesheetRef;
+typedef std::shared_ptr<Spritesheet> SpritesheetPtr;
+
 class Binary;
 typedef std::weak_ptr<Binary> BinaryRef;
 typedef std::shared_ptr<Binary> BinaryPtr;

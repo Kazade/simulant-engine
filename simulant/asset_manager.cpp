@@ -74,6 +74,7 @@ void AssetManager::destroy_all() {
     font_manager_.destroy_all();
     particle_script_manager_.destroy_all();
     binary_manager_.destroy_all();
+    spritesheet_manager_.destroy_all();
     run_garbage_collection();
 }
 
@@ -163,6 +164,7 @@ void AssetManager::run_garbage_collection() {
     font_manager_.update();
     particle_script_manager_.update();
     binary_manager_.update();
+    spritesheet_manager_.update();
 }
 
 bool AssetManager::is_base_manager() const {
@@ -983,6 +985,64 @@ std::size_t AssetManager::font_count() const {
 
 bool AssetManager::has_font(AssetID f) const {
     return font_manager_.contains(f);
+}
+
+SpritesheetPtr AssetManager::load_spritesheet(const Path& filename, GarbageCollectMethod garbage_collect, bool use_asset_cache) {
+    auto resolved = get_app()->vfs->locate_file(filename);
+    if(!resolved.has_value()) {
+        S_ERROR("Couldn't locate spritesheet file: {0}", filename);
+        return SpritesheetPtr();
+    }
+
+    if(use_asset_cache) {
+        if(auto existing = spritesheet_manager_.get_by_source(resolved.value())) {
+            spritesheet_manager_.set_garbage_collection_method(existing->id(), garbage_collect);
+            return existing;
+        }
+    }
+
+    auto sheet = spritesheet_manager_.make(this);
+
+    LoaderOptions options;
+    if(!get_app()->loader_for(filename)->into(sheet.get(), options)) {
+        return nullptr;
+    }
+
+    spritesheet_manager_.set_garbage_collection_method(sheet->id(),
+                                                        garbage_collect);
+
+    sheet->set_source(resolved.value());
+    if(use_asset_cache) {
+        spritesheet_manager_.register_source(sheet->id(), resolved.value());
+    }
+
+    log_asset_alloc(sheet);
+
+    return sheet;
+}
+
+SpritesheetPtr AssetManager::find_spritesheet(const std::string& name) {
+    return spritesheet_manager_.find_object(name);
+}
+
+void AssetManager::destroy_spritesheet(AssetID id) {
+    spritesheet_manager_.set_garbage_collection_method(id, GARBAGE_COLLECT_PERIODIC);
+}
+
+SpritesheetPtr AssetManager::spritesheet(AssetID id) {
+    GET_X(Spritesheet, spritesheet, spritesheet_manager_);
+}
+
+const SpritesheetPtr AssetManager::spritesheet(AssetID id) const {
+    GET_X(Spritesheet, spritesheet, spritesheet_manager_);
+}
+
+std::size_t AssetManager::spritesheet_count() const {
+    return spritesheet_manager_.count();
+}
+
+bool AssetManager::has_spritesheet(AssetID id) const {
+    return spritesheet_manager_.contains(id);
 }
 
 ParticleScriptPtr AssetManager::load_particle_script(const Path& filename, GarbageCollectMethod garbage_collect, bool use_asset_cache) {

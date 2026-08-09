@@ -25,6 +25,7 @@
 #include "assets/material.h"
 #include "assets/particle_script.h"
 #include "assets/prefab.h"
+#include "assets/spritesheet.h"
 #include "assets/texture_flags.h"
 
 #include "font.h"
@@ -51,6 +52,7 @@ typedef ObjectManager<AssetID, ParticleScript, DO_REFCOUNT>
     ParticleScriptManager;
 typedef ObjectManager<AssetID, Binary, DO_REFCOUNT> BinaryManager;
 typedef ObjectManager<AssetID, Prefab, DO_REFCOUNT> PrefabManager;
+typedef ObjectManager<AssetID, Spritesheet, DO_REFCOUNT> SpritesheetManager;
 
 struct FontFlags {
     uint16_t size = 0;
@@ -227,6 +229,18 @@ public:
     bool has_font(AssetID id) const;
     FontPtr find_font(const std::string& alias);
 
+    /* Spritesheet API */
+    SpritesheetPtr load_spritesheet(
+        const Path& filename,
+        GarbageCollectMethod garbage_collect = GARBAGE_COLLECT_PERIODIC,
+        bool use_asset_cache = true);
+    void destroy_spritesheet(AssetID id);
+    SpritesheetPtr spritesheet(AssetID id);
+    const SpritesheetPtr spritesheet(AssetID id) const;
+    std::size_t spritesheet_count() const;
+    bool has_spritesheet(AssetID id) const;
+    SpritesheetPtr find_spritesheet(const std::string& name);
+
     // Customisations
     TexturePtr create_texture(
         uint16_t width, uint16_t height,
@@ -313,6 +327,7 @@ private:
     ParticleScriptManager particle_script_manager_;
     BinaryManager binary_manager_;
     PrefabManager prefab_manager_;
+    SpritesheetManager spritesheet_manager_;
 
     std::vector<AssetManager*> children_;
     void register_child(AssetManager* child) {
@@ -347,6 +362,9 @@ private:
             binary_manager_.set_garbage_collection_method(p->id(), method);
         } else if(auto p = dynamic_cast<const Prefab*>(resource)) {
             prefab_manager_.set_garbage_collection_method(p->id(), method);
+        } else if(auto p = dynamic_cast<const Spritesheet*>(resource)) {
+            spritesheet_manager_.set_garbage_collection_method(p->id(),
+                                                                method);
         } else {
             S_ERROR("Unhandled asset type. GC method not set");
         }

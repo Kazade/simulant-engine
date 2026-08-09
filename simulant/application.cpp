@@ -79,6 +79,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "loaders/particle_script.h"
 #include "loaders/pcx_loader.h"
 #include "loaders/png_loader.h"
+#include "loaders/spritesheet_loader.h"
 #include "loaders/texture_loader.h"
 #include "loaders/ttf_loader.h"
 #include "loaders/wal_loader.h"
@@ -205,6 +206,7 @@ Application::Application(const AppConfig& config, void* platform_state) :
     register_loader(std::make_shared<smlt::loaders::DTEXLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DCMLoaderType>());
     register_loader(std::make_shared<smlt::loaders::GLTFLoaderType>());
+    register_loader(std::make_shared<smlt::loaders::SpritesheetLoaderType>());
 }
 
 Application::~Application() {

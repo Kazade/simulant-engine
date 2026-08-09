@@ -48,6 +48,9 @@ class Sprite:
 
 public:
     S_DEFINE_STAGE_NODE_META("sprite");
+    S_DEFINE_STAGE_NODE_PARAM(
+        Sprite, "spritesheet", SpritesheetPtr, SpritesheetPtr(),
+        "The spritesheet asset providing this sprite's texture and frames");
 
     bool on_create(Params params) override;
     bool on_destroy() override;
@@ -73,6 +76,7 @@ public:
     void set_spritesheet(TexturePtr texture, uint32_t frame_width,
                          uint32_t frame_height,
                          SpritesheetAttrs attrs = SpritesheetAttrs());
+    void set_spritesheet(SpritesheetPtr spritesheet);
 
     void flip_vertically(bool value = true);
     void flip_horizontally(bool value = true);
@@ -91,6 +95,7 @@ private:
     ActorPtr actor_ = nullptr;
     MeshPtr mesh_;
     MaterialPtr material_;
+    SpritesheetPtr spritesheet_;
 
     float image_width_ = 0;
     float image_height_ = 0;
