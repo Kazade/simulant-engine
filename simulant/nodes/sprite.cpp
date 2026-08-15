@@ -131,8 +131,14 @@ void Sprite::update_texture_coordinates() {
 
         x0 = float(frame->x);
         x1 = float(frame->x + frame->w);
-        y0 = float(frame->y);
-        y1 = float(frame->y + frame->h);
+
+        /* Texture data is stored bottom-up (see
+         * Loader::format_stored_upside_down), so V=0 is the bottom edge of
+         * the source image, but atlas frame rects are specified top-down.
+         * Flip the frame's Y extents into texture space here, so y0 stays
+         * the smaller (bottom) V and y1 the larger (top) one. */
+        y0 = float(image_height_) - float(frame->y + frame->h);
+        y1 = float(image_height_) - float(frame->y);
     } else {
         uint8_t across = image_width_ / frame_width_;
 
@@ -143,10 +149,19 @@ void Sprite::update_texture_coordinates() {
              (x * (sprite_sheet_spacing_ + frame_width_)) +
              sprite_sheet_padding_.first;
         x1 = x0 + (frame_width_ - sprite_sheet_padding_.first);
-        y0 = sprite_sheet_margin_ +
-             (y * (sprite_sheet_spacing_ + frame_height_)) +
-             sprite_sheet_padding_.second;
-        y1 = y0 + (frame_height_ - sprite_sheet_padding_.second);
+
+        /* Grid cells are counted top-down, but the texture is stored
+         * bottom-up, so flip the row's Y extents into texture space (same
+         * as the spritesheet branch above). For a single frame covering the
+         * whole texture this is a no-op, but it's what picks the correct
+         * row for a sheet with more than one of them. */
+        float top = sprite_sheet_margin_ +
+                    (y * (sprite_sheet_spacing_ + frame_height_)) +
+                    sprite_sheet_padding_.second;
+        float bottom = top + (frame_height_ - sprite_sheet_padding_.second);
+
+        y0 = float(image_height_) - bottom;
+        y1 = float(image_height_) - top;
     }
 
     x0 = x0 / float(image_width_);
