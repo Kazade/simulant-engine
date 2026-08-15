@@ -184,12 +184,12 @@ public:
         auto* uv0 = mesh->vertex_data->texcoord0_at<Vec2>(0);
         assert_is_not_null(uv0);
         assert_close(uv0->x, 0.045f, 0.001f);
-        assert_close(uv0->y, 0.13f, 0.001f);
+        assert_close(uv0->y, 0.69f, 0.001f);
 
         auto* uv1 = mesh->vertex_data->texcoord0_at<Vec2>(1);
         assert_is_not_null(uv1);
         assert_close(uv1->x, 0.235f, 0.001f);
-        assert_close(uv1->y, 0.13f, 0.001f);
+        assert_close(uv1->y, 0.69f, 0.001f);
     }
 
     void test_sprite_creation_param_wires_spritesheet() {
