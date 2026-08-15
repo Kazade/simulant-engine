@@ -1,5 +1,7 @@
 #include "prefab.h"
 
+#include "../logging.h"
+
 namespace smlt {
 
 void Prefab::push_node(PrefabNode node, int32_t parent_id) {
@@ -15,7 +17,15 @@ void Prefab::push_node(PrefabNode node, int32_t parent_id) {
         }
     }
 
-    parent.path.push_back(node.id);
+    if(!parent.path.push_back(node.id)) {
+        /* The key would be identical to its parent's, so the node would end up
+         * re-parented (or worse) when the prefab is instantiated */
+        S_WARN("Prefab node {0} is deeper than the maximum supported nesting "
+               "level and has been dropped",
+               node.name.str());
+        return;
+    }
+
     nodes_.insert(std::make_pair(parent, node));
 }
 

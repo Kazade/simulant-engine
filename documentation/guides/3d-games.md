@@ -346,13 +346,13 @@ anim_controller->signal_animation_finished().connect(
 
 Simulant does **not support** Inverse Kinematics (IK) at runtime. If your animation uses IK constraints, you must **bake IK into keyframes** before exporting from your DCC tool.
 
-### Configuring Animation Ranges
+### Playing MS3D Animations
 
-For MS3D files, configure keyframe ranges before playing:
+An MS3D file holds a single unnamed timeline, which is exposed as an animation called `default`:
 
 ```cpp
-auto mesh = assets->load_mesh("models/character.ms3d");
-// Set animation keyframe ranges on the skeleton
+auto instance = scene->load_tree("models/character.ms3d");
+instance->find_mixin<AnimationController>()->play("default", ANIMATION_LOOP_FOREVER);
 ```
 
 ---

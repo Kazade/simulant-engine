@@ -1,8 +1,15 @@
 #include "ms3d_loader.h"
+
+#include <cstring>
+#include <map>
+#include <vector>
+
 #include "../application.h"
 #include "../asset_manager.h"
-#include "../assets/meshes/skeleton.h"
+#include "../assets/prefab.h"
+#include "../generic/raii.h"
 #include "../meshes/mesh.h"
+#include "../nodes/animation_controller.h"
 #include "../platform.h"
 #include "../utils/pbr.h"
 #include "../vertex_data.h"
@@ -99,29 +106,22 @@ struct MS3DVertexExtra {
     uint32_t extra; // Only if subversion is 2
 };
 
-/** Given an array of keyframes (rotation or position) this finds the previous and next
- *  keyframes for the given frame time */
-template<typename T>
-static std::pair<T*, T*> find_next_previous(T* array, std::size_t count, float frame_time) {
-    if(!count) {
-        return std::make_pair(nullptr, nullptr);
-    }
+/* An MS3D file holds a single unnamed timeline of keyframes. The generated
+ * Prefab exposes it under this name (e.g. anim_controller->play("default")) */
+const char* MS3D_ANIMATION_NAME = "default";
 
-    T* it = array;
-    for(std::size_t i = 0; i < count; ++i, ++it) {
-        /* If this is true it means we went past the frame time so we need
-         * the previous frame and this frame */
-        if(it->time > frame_time) {
-            if(i > 0) {
-                return std::make_pair(it - 1, it);
-            } else {
-                return std::make_pair(array, array);
-            }
-        }
-    }
+/* The Prefab node id given to the Actor holding the generated mesh. Joints
+ * follow on from it - joint N is node id (N + 1) */
+const uint32_t MS3D_MESH_NODE_ID = 0;
 
-    /* We went past the end, so just return the last frame for both */
-    return std::make_pair(it, it);
+/* MS3D name fields are fixed-size and are only NULL terminated if the name
+ * is shorter than the field */
+static std::string read_name(const char* field, std::size_t size) {
+    return std::string(field, strnlen(field, size));
+}
+
+static Quaternion euler_to_quaternion(const Vec3& angles) {
+    return Quaternion(Radians(angles.x), Radians(angles.y), Radians(angles.z));
 }
 
 MS3DLoader::MS3DLoader(const Path& filename, std::shared_ptr<std::istream> data):
@@ -134,14 +134,20 @@ bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         mesh_opts = smlt::any_cast<MeshLoadOptions>(opts_it->second);
     }
 
+    bool use_asset_cache = mesh_opts.use_asset_cache;
+    if(options.count("use_asset_cache")) {
+        use_asset_cache = any_cast<bool>(options.at("use_asset_cache"));
+    }
+
     S_DEBUG("MS3D: Beginning read..");
 
-    Mesh* mesh = loadable_to<Mesh>(resource);
-    assert(mesh && "Tried to load an MS3D file into a non-mesh");
+    Prefab* prefab = loadable_to<Prefab>(resource);
+    if(!prefab) {
+        S_ERROR("MS3D files must be loaded into a Prefab (see load_prefab)");
+        return false;
+    }
 
-    AssetManager* assets = &mesh->asset_manager();
-
-    mesh->reset(VertexSpecification::DEFAULT);
+    AssetManager* assets = &prefab->asset_manager();
 
     MS3DHeader header;
     data_->read((char*) &header.id, sizeof(char) * 10);
@@ -313,33 +319,130 @@ bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
     }
 
-    /* Add a skeleton with the same number joints as
-     * the MS3D model. Note, the number of vertices in the triangles does
-     * not match as indexes share positions in the MS3D file and we need to
-     * duplicate them in Simulant */
-    mesh->add_skeleton(joints.size());
+    /* Resolve the joint hierarchy. MS3D stores joints parent-first, but rather
+     * than rely on that we order them ourselves so that a joint always follows
+     * its parent - both the bind matrices below and Prefab::push_node need
+     * that ordering */
+    std::vector<int32_t> parent_of(joints.size(), -1);
+    {
+        std::map<std::string, std::size_t> joint_by_name;
+        for(std::size_t i = 0; i < joints.size(); ++i) {
+            joint_by_name[read_name(joints[i].name, 32)] = i;
+        }
 
-    /* Set the default fps to what's in the file */
-    mesh->set_default_fps(anim_data.fps);
+        for(std::size_t i = 0; i < joints.size(); ++i) {
+            auto parent_name = read_name(joints[i].parent_name, 32);
+            if(parent_name.empty()) {
+                continue;
+            }
 
-    auto frame_data = std::make_shared<SkeletalFrameUnpacker>(
-        mesh,
-        anim_data.total_frames,
-        triangles.size() * 3  /* Vertex count */
-    );
+            auto it = joint_by_name.find(parent_name);
+            if(it == joint_by_name.end()) {
+                S_WARN("MS3D: Joint {0} has an unknown parent ({1})",
+                       read_name(joints[i].name, 32), parent_name);
+                continue;
+            }
 
-    auto dir = kfs::path::dir_name(filename_.str());
-    bool remove_path = get_app()->vfs->add_search_path(dir);
+            parent_of[i] = (int32_t) it->second;
+        }
+    }
 
-    auto vdata = mesh->vertex_data.get();
+    std::vector<std::size_t> joint_order;
+    {
+        joint_order.reserve(joints.size());
+
+        std::vector<bool> placed(joints.size(), false);
+        bool progressed = true;
+        while(joint_order.size() < joints.size() && progressed) {
+            progressed = false;
+            for(std::size_t i = 0; i < joints.size(); ++i) {
+                if(placed[i] || (parent_of[i] >= 0 && !placed[parent_of[i]])) {
+                    continue;
+                }
+
+                placed[i] = true;
+                joint_order.push_back(i);
+                progressed = true;
+            }
+        }
+
+        /* Anything left over is part of a cycle - detach it so we still
+         * produce something usable */
+        for(std::size_t i = 0; i < joints.size(); ++i) {
+            if(!placed[i]) {
+                S_WARN("MS3D: Joint {0} is part of a parenting cycle, detaching",
+                       read_name(joints[i].name, 32));
+                parent_of[i] = -1;
+                joint_order.push_back(i);
+            }
+        }
+    }
+
+    /* The bind pose. `abs_rest` transforms a point from the joint's space into
+     * mesh space, so its inverse is the inverse bind matrix used for skinning */
+    std::vector<Mat4> abs_rest(joints.size());
+    for(auto i: joint_order) {
+        auto local = Mat4::as_transform(joints[i].position,
+                                        euler_to_quaternion(joints[i].rotation),
+                                        Vec3(1, 1, 1));
+
+        abs_rest[i] = (parent_of[i] < 0) ? local : abs_rest[parent_of[i]] * local;
+    }
+
+    /* MS3D files reference their textures relative to the model, so make sure
+     * the containing folder is searched while we load */
+    auto folder = filename_.parent();
+    auto added = get_app()->vfs->insert_search_path(0, folder);
+    raii::Finally finally([&]() {
+        if(added) {
+            get_app()->vfs->remove_search_path(folder);
+        }
+    });
 
     S_DEBUG("MS3D: Generating mesh");
 
-    std::map<std::string, TexturePtr> loaded_textures;
+    /* Positions are duplicated per-triangle-corner (MS3D shares vertices
+     * between faces with differing normals/UVs) hence the triangle count
+     * rather than the vertex count here */
+    auto spec = VertexSpecification(
+        VERTEX_ATTRIBUTE_3F,   // Position
+        VERTEX_ATTRIBUTE_3F,   // Normal
+        VERTEX_ATTRIBUTE_2F,   // UV
+        VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
+        VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE, VERTEX_ATTRIBUTE_NONE,
+        VERTEX_ATTRIBUTE_NONE,
+        VERTEX_ATTRIBUTE_4F,   // Color
+        VERTEX_ATTRIBUTE_NONE, // Specular
+        joints.empty() ? VERTEX_ATTRIBUTE_NONE : VERTEX_ATTRIBUTE_4UB, // Joints
+        joints.empty() ? VERTEX_ATTRIBUTE_NONE : VERTEX_ATTRIBUTE_4F   // Weights
+    );
 
-    for(auto& group: groups) {
-        auto& material = materials[group.material_index];
+    auto mesh = assets->create_mesh(spec);
+    mesh->set_name(filename_.name());
+
+    auto vdata = mesh->vertex_data.get();
+
+    std::map<std::string, TexturePtr> loaded_textures;
+    std::map<int, MaterialPtr> loaded_materials;
+    std::map<int, SubMeshPtr> submeshes;
+
+    auto material_for_group = [&](int material_index) -> MaterialPtr {
+        auto existing = loaded_materials.find(material_index);
+        if(existing != loaded_materials.end()) {
+            return existing->second;
+        }
+
         smlt::MaterialPtr mat = assets->create_material();
+        mat->set_lighting_enabled(true);
+
+        /* Groups without a material just get the default one */
+        if(material_index < 0 || material_index >= (int) materials.size()) {
+            mat->set_textures_enabled(0);
+            loaded_materials[material_index] = mat;
+            return mat;
+        }
+
+        auto& material = materials[material_index];
 
         auto s = traditional_to_pbr(material.ambient, material.diffuse,
                                     material.specular, material.shininess);
@@ -347,46 +450,65 @@ bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
         mat->set_metallic(s.metallic);
         mat->set_roughness(s.roughness);
         mat->set_base_color(s.base_color);
+        mat->set_name(read_name(material.name, 32));
 
-        auto texname = kfs::path::norm_path(material.texture);
-        if(texname[0] == '.' && texname[1] == '\\') {
-            texname = texname.substr(2);
+        /* norm_path("") is ".", so only normalise once we know there's
+         * actually a texture to look for */
+        auto texname = read_name(material.texture, 128);
+        if(!texname.empty()) {
+            texname = kfs::path::norm_path(texname);
+            if(texname.size() > 1 && texname[0] == '.' && texname[1] == '\\') {
+                texname = texname.substr(2);
+            }
+
+            S_DEBUG("MS3D: Loading texture {0}...", texname);
+
+            TextureFlags tex_flags;
+            tex_flags.use_asset_cache = use_asset_cache;
+
+            auto tex = (loaded_textures.count(texname))
+                           ? loaded_textures[texname]
+                           : assets->load_texture(texname, tex_flags);
+
+            if(!tex) {
+                /* Sometimes MS3D files use absolute paths which is no good
+                 * so if the texture isn't found, fallback to looking in the
+                 * current directory */
+                std::replace(texname.begin(), texname.end(), '\\', kfs::SEP[0]);
+                Path fallback = kfs::path::split(texname).second;
+                tex = assets->load_texture(fallback, tex_flags);
+            }
+
+            if(tex) {
+                loaded_textures[texname] = tex;
+                mat->set_base_color_map(tex);
+                mat->set_textures_enabled(BASE_COLOR_MAP_ENABLED);
+                prefab->push_texture(tex);
+            }
         }
 
-        S_DEBUG("MS3D: Loading texture {0}...", texname);
+        loaded_materials[material_index] = mat;
+        prefab->push_material(mat);
+        return mat;
+    };
 
-        TextureFlags tex_flags;
-        tex_flags.use_asset_cache = mesh_opts.use_asset_cache;
+    for(auto& group: groups) {
+        int material_index = group.material_index;
+        auto mat = material_for_group(material_index);
 
-        auto tex = (loaded_textures.count(texname)) ?
-            loaded_textures[texname] :
-            assets->load_texture(texname, tex_flags);
-
-        if(!tex) {
-            /* Sometimes MS3D files use absolute paths which is no good
-             * so if the texture isn't found, fallback to looking in the
-             * current directory */
-            std::replace(texname.begin(), texname.end(), '\\', kfs::SEP[0]);
-            Path filename = kfs::path::split(texname).second;
-            tex = assets->load_texture(filename, tex_flags);
-        }
-
-        if(tex) {
-            loaded_textures[texname] = tex;
-            mat->set_base_color_map(tex);
-        }
-
-        mat->set_textures_enabled(BASE_COLOR_MAP_ENABLED);
-        mat->set_lighting_enabled(true);
-
+        /* Groups sharing a material share a submesh */
         SubMeshPtr sm;
-
-        /* If groups have the same material we just reuse the same submesh */
-        if(mesh->has_submesh(material.name)) {
-            sm = mesh->find_submesh(material.name);
+        auto existing = submeshes.find(material_index);
+        if(existing != submeshes.end()) {
+            sm = existing->second;
         } else {
-            /* Otherwise we create a new one for this material */
-            sm = mesh->create_submesh(material.name, mat, INDEX_TYPE_16_BIT);
+            auto sm_name = mat->name();
+            if(sm_name.empty() || mesh->has_submesh(sm_name)) {
+                sm_name = _F("Material {0}").format(material_index);
+            }
+
+            sm = mesh->create_submesh(sm_name, mat, INDEX_TYPE_16_BIT);
+            submeshes[material_index] = sm;
         }
 
         auto idata = sm->index_data.get();
@@ -399,41 +521,51 @@ bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
                 vdata->tex_coord0(triangle.s[i], 1.0f - triangle.t[i]);
                 vdata->normal(triangle.normals[i]);
                 vdata->color(Color::white());
-                vdata->move_next();
 
-                int8_t bones[4] = {
-                    vertices[vert_index].bone,
-                    (vertex_extra_subversion == 0) ? (int8_t) -1 : vertex_extras[vert_index].bone_ids[0],
-                    (vertex_extra_subversion == 0) ? (int8_t) -1 : vertex_extras[vert_index].bone_ids[1],
-                    (vertex_extra_subversion == 0) ? (int8_t) -1 : vertex_extras[vert_index].bone_ids[2],
-                };
+                if(!joints.empty()) {
+                    int8_t bones[4] = {
+                        vertices[vert_index].bone,
+                        (vertex_extra_subversion == 0) ? (int8_t) -1 : vertex_extras[vert_index].bone_ids[0],
+                        (vertex_extra_subversion == 0) ? (int8_t) -1 : vertex_extras[vert_index].bone_ids[1],
+                        (vertex_extra_subversion == 0) ? (int8_t) -1 : vertex_extras[vert_index].bone_ids[2],
+                    };
 
-                uint8_t weights[4] = {
-                    (bones[0] > -1 && vertex_extra_subversion > 0) ? vertex_extras[vert_index].weights[0] : (uint8_t) 0,
-                    (bones[1] > -1 && vertex_extra_subversion > 0) ? vertex_extras[vert_index].weights[1] : (uint8_t) 0,
-                    (bones[2] > -1 && vertex_extra_subversion > 0) ? vertex_extras[vert_index].weights[2] : (uint8_t) 0,
-                    0
-                };
+                    uint8_t weights[4] = {
+                        (bones[0] > -1 && vertex_extra_subversion > 0) ? vertex_extras[vert_index].weights[0] : (uint8_t) 0,
+                        (bones[1] > -1 && vertex_extra_subversion > 0) ? vertex_extras[vert_index].weights[1] : (uint8_t) 0,
+                        (bones[2] > -1 && vertex_extra_subversion > 0) ? vertex_extras[vert_index].weights[2] : (uint8_t) 0,
+                        0
+                    };
 
-                int range = (vertex_extra_subversion <= 1) ? 255 : 100;
+                    int range = (vertex_extra_subversion <= 1) ? 255 : 100;
 
-                weights[3] = (bones[3] > -1) ?
-                    range - weights[2] - weights[1] - weights[0] : 0;
+                    weights[3] = (bones[3] > -1) ?
+                        range - weights[2] - weights[1] - weights[0] : 0;
 
-                if(weights[0] + weights[1] + weights[2] + weights[3] == 0) {
-                    weights[0] = range;
-                }
-
-                float weight_scalar = 1.0f / float(range);
-
-                for(uint8_t k = 0; k < 4; ++k) {
-                    int8_t bone = bones[k];
-                    if(bone > -1) {
-                        frame_data->link_vertex_to_joint(
-                            vdata->count() - 1, bone, float(weights[k]) * weight_scalar
-                        );
+                    if(weights[0] + weights[1] + weights[2] + weights[3] == 0) {
+                        weights[0] = (bones[0] > -1) ? range : 0;
                     }
+
+                    float weight_scalar = 1.0f / float(range);
+
+                    uint8_t out_joints[4] = {0, 0, 0, 0};
+                    float out_weights[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+
+                    for(uint8_t k = 0; k < 4; ++k) {
+                        int8_t bone = bones[k];
+                        if(bone > -1 && (std::size_t) bone < joints.size()) {
+                            out_joints[k] = (uint8_t) bone;
+                            out_weights[k] = float(weights[k]) * weight_scalar;
+                        }
+                    }
+
+                    vdata->joints<uint8_t>(out_joints[0], out_joints[1],
+                                           out_joints[2], out_joints[3]);
+                    vdata->weights<float>(out_weights[0], out_weights[1],
+                                          out_weights[2], out_weights[3]);
                 }
+
+                vdata->move_next();
 
                 idata->index(vdata->count() - 1);
             }
@@ -444,96 +576,126 @@ bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     vdata->done();
 
-    if(remove_path) {
-        get_app()->vfs->remove_search_path(dir);
+    if(!joints.empty()) {
+        auto skin = std::make_shared<Mesh::Skin>();
+        skin->joint_indices.reserve(joints.size());
+        skin->inverse_bind_matrices.reserve(joints.size());
+
+        for(std::size_t i = 0; i < joints.size(); ++i) {
+            skin->joint_indices.push_back((int16_t) (i + 1));
+            skin->inverse_bind_matrices.push_back(abs_rest[i].inversed());
+        }
+
+        /* joint_order is parent-first, so the first entry is always a root */
+        auto root_node_id = joint_order[0] + 1;
+        skin->skeleton_root_node =
+            (root_node_id <= 127) ? (int8_t) root_node_id : (int8_t) -1;
+
+        mesh->skin = skin;
+        mesh->is_skinned = true;
+        mesh->skin_index = 0;
     }
 
-    auto to_quaternion = [](const Vec3& angles) -> Quaternion {
-        return Quaternion(Radians(angles.x), Radians(angles.y),
-                          Radians(angles.z));
+    prefab->push_mesh(mesh);
+
+    /* Now build the node hierarchy: an Actor holding the mesh, and a node
+     * per joint that the animation channels below drive */
+
+    PrefabNode mesh_node;
+    mesh_node.id = MS3D_MESH_NODE_ID;
+    mesh_node.node_type_name = "actor";
+    mesh_node.name = mesh->name();
+    mesh_node.params.set("mesh", mesh);
+    mesh_node.params.set("translation", Vec3());
+    mesh_node.params.set("rotation", Quaternion());
+    mesh_node.params.set("scale_factor", Vec3(1, 1, 1));
+    prefab->push_node(mesh_node, -1);
+
+    std::vector<PrefabNode> joint_nodes(joints.size());
+    for(auto i: joint_order) {
+        PrefabNode& node = joint_nodes[i];
+        node.id = (uint32_t) (i + 1);
+        node.node_type_name = "stage";
+        node.name = read_name(joints[i].name, 32);
+        node.params.set("translation", joints[i].position);
+        node.params.set("rotation", euler_to_quaternion(joints[i].rotation));
+        node.params.set("scale_factor", Vec3(1, 1, 1));
+
+        int32_t parent_node_id =
+            (parent_of[i] < 0) ? -1 : (int32_t) (parent_of[i] + 1);
+
+        prefab->push_node(node, parent_node_id);
+
+        S_DEBUG("Loaded joint {0}", node.name.str());
+    }
+
+    /* Finally the animation. MS3D keyframes are stored per-joint, sparsely,
+     * and relative to the joint's rest pose - which maps directly onto the
+     * translation/rotation channels of a Prefab animation */
+
+    float duration = 0.0f;
+    if(anim_data.fps > 0.0f) {
+        duration = float(anim_data.total_frames) / anim_data.fps;
+    }
+
+    for(auto& joint: joints) {
+        for(auto& key: joint.rotation_key_frames) {
+            duration = std::max(duration, key.time);
+        }
+        for(auto& key: joint.position_key_frames) {
+            duration = std::max(duration, key.time);
+        }
+    }
+
+    /* AnimationData interpolates between a pair of keys, so a channel with a
+     * single key needs a second (identical) one to hold its value */
+    auto pad_times = [&](std::vector<float>& times) {
+        times.push_back((duration > times[0]) ? duration : times[0] + 1.0f);
     };
 
-    Skeleton* skeleton = mesh->skeleton;
-
     for(std::size_t i = 0; i < joints.size(); ++i) {
-        auto joint_out = skeleton->joint(i);
-        auto joint_in = &joints[i];
+        auto& joint = joints[i];
 
-        joint_out->set_id(i);
-        joint_out->set_name(std::string(joint_in->name));
-        joint_out->move_to(joint_in->position);
-        joint_out->rotate_to(to_quaternion(joint_in->rotation));
-
-        S_DEBUG("Loaded joint {0}", joint_in->name);
-
-        /* If we have a parent */
-        if(joint_in->parent_name[0] != '\0') {
-            /* Find the parent joint, and link it to this joint */
-            auto parent_joint = skeleton->find_joint(joint_in->parent_name);
-            assert(parent_joint);
-
-            parent_joint->link_to(joint_out);
-        }
-    }
-
-    /* MS3D files don't store entire joint keyframes of animation, they only
-     * store the rotations or translations that changed. What we do here is
-     * unpack them into our structure where we duplicate some state for better
-     * performance during animation at the cost of a bit of memory */
-
-    for(std::size_t i = 0; i < (std::size_t) anim_data.total_frames; ++i) {
-        float frame_time = i / anim_data.fps;
-
-        for(std::size_t j = 0; j < joints.size(); ++j) {
-            JointState state;
-
-            /* MS3D joints store key frames at the time in seconds
-             * what we want to do is work out which keyframe is active
-             * at the time of this frame and interpolate to our frame time*/
-
-            auto& source_joint = joints[j];
-
-            auto rot_frames = find_next_previous(
-                &source_joint.rotation_key_frames[0],
-                source_joint.rotation_key_frames.size(),
-                frame_time
-            );
-
-            auto pos_frames = find_next_previous(
-                &source_joint.position_key_frames[0],
-                source_joint.position_key_frames.size(),
-                frame_time
-            );
-
-            if(rot_frames.first && pos_frames.first) {
-                float divider = (rot_frames.first->time == rot_frames.second->time) ? 1.0f : (rot_frames.second->time - rot_frames.first->time);
-                float t = (frame_time - rot_frames.first->time) / divider;
-                float t2 = t * t;
-                float t3 = t2 * t;
-
-                auto& r0 = rot_frames.first->rotation;
-                auto& r1 = rot_frames.second->rotation;
-                auto& p0 = pos_frames.first->position;
-                auto& p1 = pos_frames.second->position;
-
-                // Ease-in-out interpolation: 2 * powf(s, 3.0f) * (v1 - v2) + 3 * powf(s, 2.0f) * (v2 - v1) + v1;
-                state.translation = 2.0f * t3 * (p0 - p1) + 3.0f * t2 * (p1 - p0) + p0;
-                state.rotation = to_quaternion(r0).slerp(to_quaternion(r1), t);
+        if(!joint.position_key_frames.empty()) {
+            std::vector<float> times;
+            std::vector<Vec3> values;
+            for(auto& key: joint.position_key_frames) {
+                times.push_back(key.time);
+                values.push_back(joint.position + key.position);
             }
 
-            frame_data->set_joint_state_at_frame(i, j, state);
+            if(times.size() == 1) {
+                pad_times(times);
+                values.push_back(values[0]);
+            }
+
+            prefab->push_animation_channel(
+                MS3D_ANIMATION_NAME, joint_nodes[i],
+                ANIMATION_PATH_TRANSLATION, ANIMATION_INTERPOLATION_LINEAR,
+                std::make_shared<AnimationData>(times, std::move(values)));
+        }
+
+        if(!joint.rotation_key_frames.empty()) {
+            auto rest = euler_to_quaternion(joint.rotation);
+
+            std::vector<float> times;
+            std::vector<Quaternion> values;
+            for(auto& key: joint.rotation_key_frames) {
+                times.push_back(key.time);
+                values.push_back(rest * euler_to_quaternion(key.rotation));
+            }
+
+            if(times.size() == 1) {
+                pad_times(times);
+                values.push_back(values[0]);
+            }
+
+            prefab->push_animation_channel(
+                MS3D_ANIMATION_NAME, joint_nodes[i], ANIMATION_PATH_ROTATION,
+                ANIMATION_INTERPOLATION_LINEAR,
+                std::make_shared<AnimationData>(times, std::move(values)));
         }
     }
-
-    /* Calculate the absolute transformations of all joints in
-     * all keyframes */
-    frame_data->rebuild_key_frame_absolute_transforms();
-
-    mesh->enable_animation(
-        MESH_ANIMATION_TYPE_SKELETAL,
-        anim_data.total_frames,
-        frame_data
-    );
 
     return true;
 }

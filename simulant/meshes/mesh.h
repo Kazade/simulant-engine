@@ -47,14 +47,11 @@ namespace smlt {
 class AssetManager;
 class AdjacencyInfo;
 class Renderer;
-class Rig;
-class Skeleton;
 class Debug;
 
 enum MeshAnimationType {
     MESH_ANIMATION_TYPE_NONE,
-    MESH_ANIMATION_TYPE_VERTEX_MORPH,
-    MESH_ANIMATION_TYPE_SKELETAL
+    MESH_ANIMATION_TYPE_VERTEX_MORPH
 };
 
 
@@ -69,24 +66,21 @@ public:
     virtual ~FrameUnpacker() {}
 
     /*
-     * Used to interpolate the rig (if any) or do
-     * any other kind of preparation during update()
+     * Used to do any kind of preparation during update()
      */
     virtual void prepare_unpack(
         uint32_t current_frame,
         uint32_t next_frame,
-        float t, Rig* const rig,
+        float t,
         Debug* const debug=nullptr
     ) = 0;
 
     /* Used before rendering to generate the output
-     * vertices with the given Rig (if any) and interpolated
-     * value */
+     * vertices for the interpolated value */
     virtual void unpack_frame(
         const uint32_t current_frame,
         const uint32_t next_frame,
         const float t,
-        Rig* const rig,
         VertexData* const out,
         Debug* const debug=nullptr
     ) = 0;
@@ -172,13 +166,6 @@ public:
 
     void reset(VertexDataPtr vertex_data);
     void reset(VertexSpecification vertex_specification);
-
-    /* Add a skeleton to this mesh, returns False if
-     * the mesh already had a skeleton, otherwise returns true */
-    bool add_skeleton(uint32_t num_joints);
-
-    /* Returns true if the Mesh has had a skeleton added */
-    bool has_skeleton() const;
 
     int skin_index = -1;
     bool is_skinned = false;
@@ -375,12 +362,9 @@ public:
 public:
     // Signals
 
-    typedef sig::signal<void (Skeleton*)> SkeletonAddedSignal;
     typedef sig::signal<void (AssetID, SubMeshPtr)> SubMeshCreatedCallback;
     typedef sig::signal<void (AssetID, SubMeshPtr)> SubMeshDestroyedCallback;
     typedef sig::signal<void (AssetID, SubMeshPtr, MaterialSlot, AssetID, AssetID)> SubMeshMaterialChangedCallback;
-
-    DEFINE_SIGNAL(SkeletonAddedSignal, signal_skeleton_added);
 
     SubMeshCreatedCallback& signal_submesh_created() { return signal_submesh_created_; }
     SubMeshDestroyedCallback& signal_submesh_destroyed() { return signal_submesh_destroyed_; }
@@ -389,8 +373,6 @@ public:
 private:
     friend class SubMesh;
     friend class Actor;
-
-    Skeleton* skeleton_ = nullptr;
 
     std::shared_ptr<SkinBindPose> skin_bind_pose_;
     void ensure_skin_bind_pose();
@@ -422,9 +404,6 @@ public:
     S_DEFINE_PROPERTY(adjacency_info, &Mesh::adjacency_);
 
     S_DEFINE_PROPERTY(vertex_data, &Mesh::vertex_data_);
-
-    /* Returns a nullptr if there is no skeleton */
-    S_DEFINE_PROPERTY(skeleton, &Mesh::skeleton_);
 };
 
 }

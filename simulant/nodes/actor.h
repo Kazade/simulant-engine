@@ -37,7 +37,6 @@
 namespace smlt {
 
 class KeyFrameAnimationState;
-class Rig;
 
 struct ActorParams {
     ActorParams(MeshPtr mesh) :
@@ -98,14 +97,6 @@ public:
         return material_slot_;
     }
 
-    /*
-     * Returns true if the attached base mesh has a skeleton
-     * and so can be overridden by the rig
-     */
-    bool is_rigged() const {
-        return bool(rig_);
-    }
-
 private:
     bool on_create(Params params) override;
 
@@ -143,14 +134,8 @@ private:
     void refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
                                  float interp);
 
-    /* Only available if the base mesh has a skeleton */
-    std::unique_ptr<Rig> rig_;
-    void add_rig(const Skeleton* skeleton);
-    sig::connection mesh_skeleton_added_;
-
 public:
     S_DEFINE_PROPERTY(animation_state, &Actor::animation_state_);
-    S_DEFINE_PROPERTY(rig, &Actor::rig_);
 };
 
 } // namespace smlt

@@ -23,7 +23,6 @@
 
 #include "mesh.h"
 #include "adjacency_info.h"
-#include "../assets/meshes/skeleton.h"
 
 #include "../window.h"
 #include "../asset_manager.h"
@@ -73,8 +72,6 @@ void Mesh::reset(VertexDataPtr vertex_data) {
         std::bind(&Mesh::vertex_data_updated, this)
     );
 
-    delete skeleton_;
-    skeleton_ = nullptr;
     skin_bind_pose_.reset();
 
     rebuild_aabb();
@@ -94,32 +91,14 @@ void Mesh::reset(VertexSpecification vertex_specification) {
         std::bind(&Mesh::vertex_data_updated, this)
     );
 
-    delete skeleton_;
-    skeleton_ = nullptr;
     skin_bind_pose_.reset();
 
     rebuild_aabb();
 }
 
-bool Mesh::add_skeleton(uint32_t num_joints) {
-    if(!skeleton_) {
-        skeleton_ = new Skeleton(this, num_joints);
-        signal_skeleton_added_(skeleton_);
-        return true;
-    } else {
-        return false;
-    }
-}
-
-bool Mesh::has_skeleton() const {
-    return skeleton_ != nullptr;
-}
-
 Mesh::~Mesh() {
     submeshes_.clear();
     vertex_data_.reset();
-
-    delete skeleton_;
 }
 
 bool Mesh::reinsert_submesh(const SubMeshPtr& submesh, std::size_t new_idx) {
@@ -183,10 +162,6 @@ void Mesh::enable_animation(MeshAnimationType animation_type, uint32_t animation
 
     if(!animation_frames) {
         throw std::logic_error("You must specify the number of frames when enabling mesh animations");
-    }
-
-    if(animation_type == MESH_ANIMATION_TYPE_SKELETAL && !skeleton.get()) {
-        throw std::logic_error("enable_animation called without skeleton");
     }
 
     animation_type_ = animation_type;
@@ -917,6 +892,24 @@ void Mesh::update_skinning() {
         const uint16_t* joints = &pose.joints[(std::size_t)i * 4];
 
         float sum = weights[0] + weights[1] + weights[2] + weights[3];
+
+        // Not every format weights every vertex (MS3D in particular allows
+        // vertices with no bone at all). Blending zero joint matrices would
+        // collapse those vertices onto the origin, so leave them at their
+        // bind-pose position/normal instead.
+        if (sum == 0.0f) {
+            if (has_positions) {
+                vertex_data_->position(pose.rest_positions[i]);
+            }
+
+            if (has_normals) {
+                vertex_data_->normal(pose.rest_normals[i]);
+            }
+
+            vertex_data_->move_next();
+            continue;
+        }
+
         if (sum > 1.01f) {
             for (float& weight : weights) weight /= sum;
         }

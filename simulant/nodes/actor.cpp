@@ -20,7 +20,6 @@
 #include "actor.h"
 
 #include "../animation.h"
-#include "../assets/meshes/rig.h"
 #include "../nodes/debug.h"
 #include "../renderers/renderer.h"
 #include "../scenes/scene.h"
@@ -34,7 +33,6 @@ Actor::Actor(Scene* owner) :
     StageNode(owner, Meta::node_type) {}
 
 Actor::~Actor() {
-    mesh_skeleton_added_.disconnect();
     submesh_created_connection_.disconnect();
     submesh_destroyed_connection_.disconnect();
 }
@@ -119,23 +117,6 @@ void Actor::set_mesh(const MeshPtr& mesh, DetailLevel detail_level) {
                                 animation_state_->next_frame(), 0);
     }
 
-    /* Update the rig if a skeleton is added to the mesh, or, if it
-     * has one at the time of setting */
-    if(detail_level == DETAIL_LEVEL_NEAREST) {
-        mesh_skeleton_added_.disconnect();
-
-        mesh_skeleton_added_ =
-            meshes_[DETAIL_LEVEL_NEAREST]->signal_skeleton_added().connect(
-                std::bind(&Actor::add_rig, this, std::placeholders::_1));
-
-        if(meshes_[DETAIL_LEVEL_NEAREST]->has_skeleton()) {
-            add_rig(meshes_[DETAIL_LEVEL_NEAREST]->skeleton);
-        } else {
-            /* No skeleton on the mesh we just set, so delete the rig */
-            rig_.reset();
-        }
-    }
-
     recalc_effective_meshes();
 
     /* Recalculate the AABB if necessary */
@@ -168,9 +149,9 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
 #endif
 
     base_mesh->animated_frame_data_->prepare_unpack(current_frame, next_frame,
-                                                    interp, rig_.get()
+                                                    interp
 #if DEBUG_ANIMATION
-                                                                ,
+                                                    ,
                                                     debug
 #endif
     );
@@ -180,12 +161,6 @@ void Actor::refresh_animation_state(uint32_t current_frame, uint32_t next_frame,
     debug->transform->set_rotation(Quaternion());
     debug->transform->set_scale_factor(Vec3(1, 1, 1));
 #endif
-}
-
-void Actor::add_rig(const Skeleton* skeleton) {
-    assert(!rig_);
-
-    rig_.reset(new Rig(skeleton));
 }
 
 const AABB& Actor::aabb() const {
@@ -262,12 +237,11 @@ void Actor::do_generate_renderables(batcher::RenderQueue* render_queue,
 
         /*
          * Update the vertices for the animated base mesh if that's the
-         * detail level we're using - if this is a skeletal animation then
-         * the current rig will be used
+         * detail level we're using
          */
         mesh->animated_frame_data_->unpack_frame(
             animation_state->current_frame(), animation_state->next_frame(),
-            animation_state->interp(), rig_.get(),
+            animation_state->interp(),
             interpolated_vertex_data_.get()
 #if DEBUG_ANIMATION
                 ,

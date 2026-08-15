@@ -546,7 +546,6 @@ body->signal_collision_exit().connect([&](const Collision& c) {
 | `DestroyableObject` | `signal_destroyed()` | `void()` | When `destroy()` is called. |
 | `Compositor` | `signal_layer_render_started(Layer&)` | `void(Layer&)` | Before a compositor layer renders. |
 | `Compositor` | `signal_layer_render_finished(Layer&)` | `void(Layer&)` | After a compositor layer renders. |
-| `Mesh` | `signal_skeleton_added(Skeleton*)` | `void(Skeleton*)` | When a skeleton is attached to a mesh. |
 | `Mesh` | `signal_submesh_created(AssetID, SubMeshPtr)` | `void(AssetID, SubMeshPtr)` | When a submesh is created. |
 | `Mesh` | `signal_submesh_destroyed(AssetID, SubMeshPtr)` | `void(AssetID, SubMeshPtr)` | When a submesh is destroyed. |
 | `Mesh` | `signal_submesh_material_changed(...)` | `void(AssetID, SubMeshPtr, MaterialSlot, AssetID, AssetID)` | When a submesh material changes. |

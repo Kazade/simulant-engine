@@ -41,33 +41,34 @@ auto actor2 = stage->new_actor_with_mesh(mesh);
 actor2->use_material_slot(MATERIAL_SLOT1);  // actor2 now uses the other material
 ```
 
-## Skeletons
+## Skinned meshes
 
-A mesh may optional have a skeleton assigned to it - this is normally created implicitly
-by loading a mesh file from a format that supports skeletal animation (e.g. .ms3d).
+A mesh loaded from a format that supports skeletal animation (e.g. `.gltf`, `.ms3d`) is
+*skinned*: `Mesh::is_skinned` is true and `Mesh::skin` holds the data needed to deform it.
 
-A skeleton contains a number of joints, and these joints are linked together to form
-bones. A joint has both a relative rotation + translation (to the parent) and an absolute
-rotation + translation. 
+There is no separate skeleton type on the mesh. The joints are ordinary `StageNode`s in
+the scene tree, created when the prefab the mesh came from is instantiated, and the skin
+simply refers to them:
 
-You can find and manipulate a joint by it's name:
+ - `skin->node_indices` - the joint node for each joint index, in the order the mesh's
+   vertex joint attribute refers to them
+ - `skin->inverse_bind_matrices` - the inverse of each joint's bind-pose transform
+ - `skin->bound_actor` - the `Actor` the skinned mesh is attached to
+
+Each vertex carries up to four joint indices and weights (the `joint` and `weight` vertex
+attributes). `Mesh::update_skinning()` blends the joint transforms per-vertex and writes
+the result back into the mesh's vertex data - the `AnimationController` calls it for you
+each time it applies a frame.
+
+Because the joints are just scene nodes, posing a character is done through the normal
+transform API:
 
 ```
-Joint* joint = mesh->skeleton->find_joint("neck");
-neck->rotate_to(my_rotation);
-neck->move_to(my_translation);
+auto neck = actor->find_descendent_with_name("neck");
+neck->transform->set_rotation(my_rotation);
 ```
 
-Finally, skeletons maintain a relationship from vertices to joints. You can link
-a vertex index to a joint by calling:
-
-```
-mesh->skeleton->attach_vertex_to_joint(joint, vertex_index, weight);
-```
-
-The `vertex_index` should be an index into the mesh's `vertex_data` array. `weight`
-should be a value between 0.0 and 1.0. The total weights for a vertex should add up
-to 1.0.
+See [Skeleton Animation](../animation/skeleton-animation.md) for the full picture.
 
 # Heightmaps
 

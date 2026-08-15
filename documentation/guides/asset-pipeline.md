@@ -76,7 +76,7 @@ Simulant supports the following mesh file formats out of the box:
 |--------|-----------|-------------------|-------|
 | **glTF 2.0** | `.glb`, `.gltf` | Yes (skinned + joint-based) | **Recommended format**. ASCII and binary supported. Creates prefabs automatically. |
 | **Wavefront OBJ** | `.obj` | No | Simple static meshes. Widely supported by all DCC tools. |
-| **Milkshape3D** | `.ms3d` | Yes | All versions supported. Generates skeleton automatically. |
+| **Milkshape3D** | `.ms3d` | Yes | All versions supported. Loaded as a prefab, with a node per joint. |
 | **Quake 2 MD2** | `.md2` | Yes (vertex animation) | Frame-based animation only. |
 | **Quake 2 BSP** | `.bsp` (v38) | No | Level format. Processes mesh data, textures/materials (limited), and entities. |
 | **X-Wing OPT** | `.opt` | No | Legacy format support. |
@@ -187,22 +187,19 @@ MD2 uses vertex-level animation (morphing between frames). Each frame is a compl
 
 #### Animation Controller
 
-When a glTF with animations is loaded, Simulant automatically creates an `AnimationController` on the prefab. You can play animations by name:
+When a glTF or MS3D file with animations is loaded, Simulant automatically creates an `AnimationController` on the prefab instance. You can play animations by name:
 
 ```cpp
-auto prefab = assets->load_prefab("models/character.glb");
-auto instance = prefab->instantiate(stage);
-
-// The AnimationController is spawned automatically
-// Play animations by name
-// (access through the AnimationController component)
+auto instance = scene->load_tree("models/character.glb");
+auto anims = instance->find_mixin<AnimationController>();
+anims->play("walk", ANIMATION_LOOP_FOREVER);
 ```
 
-For MS3D files, you need to specify keyframe ranges before playing:
+An MS3D file holds a single unnamed timeline, which is exposed as an animation called `default`:
 
 ```cpp
-auto mesh = assets->load_mesh("models/character.ms3d");
-// Configure animation keyframes on the skeleton
+auto instance = scene->load_tree("models/character.ms3d");
+instance->find_mixin<AnimationController>()->play("default", ANIMATION_LOOP_FOREVER);
 ```
 
 > **Important:** IK (Inverse Kinematics) constraints are **not supported** in Simulant. If your animation uses IK, you must **bake IK into keyframes** before exporting.

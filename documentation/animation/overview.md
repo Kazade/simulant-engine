@@ -1,17 +1,17 @@
 # Animation System Overview
 
-This document covers animation in Simulant, including skeleton animation, the AnimationController, sprite animation, loading animations from GLTF/GLB files, and manual rig manipulation.
+This document covers animation in Simulant, including skeleton animation, the AnimationController, sprite animation, loading animations from GLTF/GLB files, and manual joint manipulation.
 
 ---
 
 ## Table of Contents
 
 1. [Overview of Animation in Simulant](#1-overview-of-animation-in-simulant)
-2. [Skeleton Animation](#2-skeleton-animation-rigs-skeletons-joints)
+2. [Skeleton Animation](#2-skeleton-animation-joints-skinning)
 3. [AnimationController](#3-animationcontroller---playing-and-blending-animations)
 4. [Loading Animations from GLTF/GLB Files](#4-loading-animations-from-gltfglb-files)
 5. [Animation States and Transitions](#5-animation-states-and-transitions)
-6. [Manipulating Rigs Manually](#6-manipulating-rigs-manually-look-at-ik-like-behaviors)
+6. [Manipulating Joints Manually](#6-manipulating-joints-manually-look-at-ik-like-behaviors)
 7. [Sprite Animation](#7-sprite-animation-2d-sprite-sheets)
 8. [Animation Events and Callbacks](#8-animation-events-and-callbacks)
 9. [Performance Considerations](#9-performance-considerations)
@@ -34,8 +34,8 @@ The core animation classes live in the `smlt` namespace:
 
 - **`AnimationController`** -- A `StageNode` that plays and blends skeletal animations loaded from GLTF files. Found in `simulant/nodes/animation_controller.h`.
 - **`KeyFrameAnimated`** / **`KeyFrameAnimationState`** -- Base classes for keyframe-based animation. Found in `simulant/animation.h`.
-- **`Rig`** / **`RigJoint`** -- Runtime instances of a skeleton that can be manipulated per-frame. Found in `simulant/assets/meshes/rig.h`.
-- **`Skeleton`** / **`Joint`** -- The definition of a skeleton (bone structure and vertex weights). Found in `simulant/assets/meshes/skeleton.h`.
+- **`Prefab`** / **`PrefabInstance`** -- The template a skinned model is loaded into, and the scene nodes created from it (including one node per joint). Found in `simulant/assets/prefab.h` and `simulant/nodes/prefab_instance.h`.
+- **`Mesh::Skin`** -- The per-mesh skinning data: joint nodes, inverse bind matrices and the bound `Actor`. Found in `simulant/meshes/mesh.h`.
 - **`Sprite`** -- A `StageNode` for 2D sprite sheet animation. Found in `simulant/nodes/sprite.h`.
 
 ### How Animation Fits into the Engine
@@ -46,85 +46,37 @@ See also: [Actors](../core-concepts/actors.md), [Meshes](../rendering/meshes.md)
 
 ---
 
-## 2. Skeleton Animation (Rigs, Skeletons, Joints)
+## 2. Skeleton Animation (Joints, Skinning)
 
-Skeleton animation in Simulant works by deforming a mesh based on the positions of joints (bones). A **Skeleton** defines the bone structure, and a **Rig** is a runtime instance of that skeleton whose joints can be rotated and translated each frame.
+Skeleton animation in Simulant works by deforming a mesh based on the positions of joints (bones). There is no separate skeleton or rig object: **a joint is an ordinary `StageNode`**, and the joint hierarchy is simply part of the scene tree created when a prefab is instantiated.
 
 ### Key Concepts
 
-- **Skeleton** -- Stores the rest-pose bone structure and vertex-to-bone weight data. It is loaded from a mesh file and is shared among all instances.
-- **Rig** -- A per-instance copy of the skeleton's joint hierarchy. You manipulate the Rig to pose the character.
-- **Joint** -- A single bone in the hierarchy. Each joint has a rotation and translation relative to its parent.
-- **Bone** -- A link between two joints. Created via `Joint::link_to()`.
-- **SkeletalFrameUnpacker** -- Interpolates between keyframes and updates vertex positions on the mesh.
+- **Joint** -- A `StageNode` in the prefab's tree. Its local transform is the joint's rotation/translation relative to its parent joint.
+- **Skinned mesh** -- A `Mesh` with `is_skinned` set, whose vertices carry up to 4 joint indices and weights.
+- **`Mesh::Skin`** -- Links the mesh to its joint nodes (`node_indices`) and stores the inverse bind matrices.
+- **`Mesh::update_skinning()`** -- Blends the joint transforms per-vertex and writes the deformed positions/normals back into the mesh's vertex data.
+- **`AnimationController`** -- Drives the joint nodes' transforms from keyframe channels, then triggers skinning.
 
-### Skeleton Structure
-
-A skeleton consists of joints arranged in a hierarchy. Each joint has:
+### Structure
 
 ```
-Joint
-  - name           // Human-readable name (e.g., "LeftArm")
-  - id             // Numeric index (0 = root)
-  - parent         // Pointer to parent joint
-  - rotation       // Relative rotation (Quaternion)
-  - translation    // Relative translation (Vec3)
-  - absolute_rotation    // World-space rotation
-  - absolute_translation // World-space position
+PrefabInstance
+  |-- AnimationController (mixin)
+  |-- Actor           (holds the skinned mesh)
+  |-- Stage "Root"    (joint 0)
+        |-- Stage "Spine"   (joint 1)
+              |-- Stage "Head"    (joint 2)
 ```
 
 ### Vertex Skinning
 
-Each vertex in a skinned mesh stores up to 4 joint indices and weights:
+A skinned mesh's vertex specification carries two extra attributes -- `joint_attribute`
+(`VERTEX_ATTRIBUTE_4UB` or `VERTEX_ATTRIBUTE_4US`) and `weight_attribute`
+(`VERTEX_ATTRIBUTE_4F` or `VERTEX_ATTRIBUTE_4UB`) -- giving up to 4 joint influences per
+vertex. The joint values index into `skin->node_indices`.
 
-```cpp
-struct SkeletonVertex {
-    int32_t joints[MAX_JOINTS_PER_VERTEX] = {-1, -1, -1, -1};
-    float weights[MAX_JOINTS_PER_VERTEX] = {0, 0, 0, 0};
-};
-```
-
-Constants:
-- `MAX_JOINTS_PER_VERTEX` = 4
-- `MAX_JOINTS_PER_MESH` = 64
-
-### Creating a Skeleton and Rig Programmatically
-
-```cpp
-// Create a mesh with skeletal animation support
-auto mesh = assets->create_mesh(smlt::VertexSpecification::DEFAULT_SKINNED);
-
-// The mesh has a Skeleton attached
-Skeleton* skeleton = mesh->skeleton.get();
-
-// Joints are pre-allocated. Access them by index:
-Joint* root = skeleton->joint(0);
-root->set_name("Root");
-
-Joint* spine = skeleton->joint(1);
-spine->set_name("Spine");
-
-// Link joints to form a bone hierarchy
-root->link_to(spine);
-
-// Attach vertices to joints with weights
-skeleton->attach_vertex_to_joint(0, vertex_index, 0.8f);
-skeleton->attach_vertex_to_joint(1, vertex_index, 0.2f);
-
-// Create a Rig (runtime instance) for this skeleton
-auto rig = std::make_unique<Rig>(skeleton);
-
-// Manipulate the rig
-RigJoint* spineJoint = rig->find_joint("Spine");
-if (spineJoint) {
-    spineJoint->rotate_to(Quaternion::angle_axis(Degrees(30), Vec3::up()));
-}
-
-// Recalculate world-space transforms
-rig->recalc_absolute_transformations();
-```
-
-> **Note:** In practice, you will rarely create skeletons manually. They are loaded automatically from GLTF/GLB files. See [Loading Animations from GLTF/GLB Files](#4-loading-animations-from-gltfglb-files) below.
+> **Note:** In practice you will rarely build any of this by hand. It is loaded automatically from GLTF/GLB and MS3D files. See [Loading Animations from GLTF/GLB Files](#4-loading-animations-from-gltfglb-files) below, and [Skeleton Animation](skeleton-animation.md) for the full detail.
 
 ---
 
@@ -367,23 +319,23 @@ private:
 
 ### Crossfading Between Animations
 
-The current `AnimationController` does not support automatic crossfading (blending between two animations). To implement smooth transitions, you would need to interpolate joint rotations in the Rig manually during the transition period:
+The current `AnimationController` does not support automatic crossfading (blending between two animations). To implement smooth transitions, you would need to interpolate the joint nodes' transforms manually during the transition period:
 
 ```cpp
 // Manual crossfade approach (advanced)
-// Store the previous rig pose, blend with new pose over N frames
-// This requires direct access to Rig joints and is beyond the built-in API
+// Store the previous pose of each joint node, then blend towards the
+// new pose over N frames in on_late_update(). This is beyond the built-in API
 ```
 
 ---
 
-## 6. Manipulating Rigs Manually (Look-At, IK-like Behaviors)
+## 6. Manipulating Joints Manually (Look-At, IK-like Behaviors)
 
-You can manipulate joints in a Rig directly to create effects like look-at behavior or simple inverse kinematics.
+You can manipulate joints directly to create effects like look-at behavior or simple inverse kinematics.
 
 ### Accessing Joints on a Running Character
 
-When a prefab is loaded, the Rig is not directly exposed. However, you can manipulate joint transforms through the scene node hierarchy. Each joint in the skeleton corresponds to a node in the prefab hierarchy, and the AnimationController animates those nodes' transforms.
+Each joint is a node in the prefab hierarchy, and the AnimationController animates those nodes' transforms. So manipulating a joint means finding the node and writing to its transform - do it in `on_late_update()` so it runs after the controller has applied the current frame.
 
 ### Look-At for a Joint
 
@@ -469,11 +421,17 @@ void solve_two_bone_ik(
 
 ### Debugging Joint Positions
 
-Enable debug drawing to visualize the skeleton:
+Because joints are ordinary nodes, you can draw them with the `Debug` node by walking the
+hierarchy:
 
 ```cpp
-// The SkeletalFrameUnpacker draws joint lines in debug mode
-// Pass a Debug node to unpack_frame to see joint positions
+for(auto& node: character_->each_descendent()) {
+    if(node.parent()) {
+        debug_->draw_line(node.parent()->transform->position(),
+                          node.transform->position(),
+                          smlt::Color::yellow(), smlt::Seconds(0.1f), false);
+    }
+}
 ```
 
 ---
@@ -647,10 +605,10 @@ void update(float dt) {
 
 ### CPU Skinning Cost
 
-Skeletal animation in Simulant is done on the CPU. The `SkeletalFrameUnpacker::unpack_frame()` method iterates over every vertex and applies joint transformations. This means:
+Skeletal animation in Simulant is done on the CPU. `Mesh::update_skinning()` iterates over every vertex and applies the blended joint transformations. This means:
 
 - **Vertex count matters**: More vertices = more CPU work per frame
-- **Joint count is bounded**: Maximum 64 joints per mesh, 4 joints per vertex
+- **Joint count is bounded**: 4 joints per vertex; the joint vertex attribute type caps the joints per mesh (255 for `4UB`, 65535 for `4US`)
 - **Skinned meshes cost more**: Non-skinned meshes skip the skinning update entirely
 
 The engine checks `mesh->is_skinned` before updating skinning, so non-animated meshes are not penalized.
@@ -673,8 +631,8 @@ This means keyframe animations will not exceed 60 updates per second regardless 
 
 ### Memory Considerations
 
-- **Skeleton data is shared**: The `Skeleton` is stored on the `Mesh` and shared across instances
-- **Rig is per-instance**: Each animated character needs its own `Rig`
+- **Bind-pose data is shared**: `Mesh::SkinBindPose` (rest positions/normals, joints and weights) is built once per source mesh and shared by pointer across instances
+- **Vertex data is per-instance**: Each animated character gets its own vertex buffer via `Mesh::create_skin_instance()`, since skinning writes into it
 - **AnimationData stores times and values**: Both are kept in memory for the lifetime of the prefab
 
 ### Best Practices
@@ -795,8 +753,14 @@ public:
 
         // Debug: draw skeleton joints
         if (debug_) {
-            // Joint visualization is handled by the SkeletalFrameUnpacker
-            // in debug mode when a Debug pointer is passed
+            for(auto& node: character_->each_descendent()) {
+                if(node.parent()) {
+                    debug_->draw_line(node.parent()->transform->position(),
+                                      node.transform->position(),
+                                      smlt::Color::yellow(),
+                                      smlt::Seconds(0.1f), false);
+                }
+            }
         }
     }
 
@@ -860,7 +824,7 @@ int main(int argc, char* argv[]) {
 
 ### Key Takeaways from the Example
 
-1. **Load prefabs with `assets->load_prefab()`** -- this parses GLTF and extracts meshes, skeletons, and animations.
+1. **Load prefabs with `assets->load_prefab()`** -- this parses GLTF/MS3D and extracts meshes, joint hierarchies, and animations.
 2. **Get the `AnimationController` via `find_mixin<>()`** -- this is how you access animation playback controls.
 3. **List animations with `animation_names()`** -- useful for debugging and dynamic state machines.
 4. **Play animations with `play(name, loop_count)`** -- use `ANIMATION_LOOP_FOREVER` for looping animations.

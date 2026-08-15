@@ -19,16 +19,23 @@ class GLTFLoader;
 struct PrefabKey {
     LimitedVector<uint32_t, 16> path;
 
+    /* Straight lexicographic ordering. As well as being a valid strict weak
+     * ordering (comparing only the first element that differs) this sorts a
+     * node's path directly before the paths of its descendents, which is what
+     * PrefabInstance::build_tree relies on to always have a parent available
+     * by the time it reaches a child. */
     bool operator<(const PrefabKey& rhs) const {
         auto min =
             (path.size() < rhs.path.size()) ? path.size() : rhs.path.size();
         for(std::size_t i = 0; i < min; ++i) {
             if(path[i] < rhs.path[i]) {
                 return true;
+            } else if(rhs.path[i] < path[i]) {
+                return false;
             }
         }
 
-        return false;
+        return path.size() < rhs.path.size();
     }
 };
 

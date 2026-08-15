@@ -163,7 +163,7 @@ public:
         }
     }
 
-    void prepare_unpack(uint32_t, uint32_t, float, Rig* const, Debug* const = nullptr) override {
+    void prepare_unpack(uint32_t, uint32_t, float, Debug* const = nullptr) override {
         // INTENTIONALLY BLANK
     }
 
@@ -171,11 +171,9 @@ public:
       const uint32_t current_frame,
       const uint32_t next_frame,
       const float t,
-      Rig* const rig,
       VertexData* const out,
       Debug* const debug=nullptr
     ) override {
-        _S_UNUSED(rig);
         _S_UNUSED(debug);  // We don't have any debugging for MD2 models. Maybe normals?
 
         _expand_verts(current_frame);

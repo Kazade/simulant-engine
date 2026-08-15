@@ -23,7 +23,9 @@ StageNode* StageNode::load_tree(const Path& path, const TreeLoadOptions& opts) {
         return nullptr;
     }
 
-    auto loader = app->loader_for("gltf", path);
+    /* Pick the loader by extension - any format that loads into a Prefab
+     * (.gltf/.glb, .ms3d) can be loaded as a tree */
+    auto loader = app->loader_for(path);
     if(!loader) {
         return nullptr;
     }

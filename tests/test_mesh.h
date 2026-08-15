@@ -107,21 +107,6 @@ public:
         assert_equal(second_mesh->first_submesh()->arrangement(), submesh->arrangement());
     }
 
-    void test_skeleton() {
-        auto mesh1 = generate_test_mesh(stage_);
-
-        bool added = mesh1->add_skeleton(3);
-
-        assert_true(added);
-
-        Skeleton* s = mesh1->skeleton;
-
-        assert_equal(s->joint_count(), 3u);
-
-        assert_false(mesh1->add_skeleton(2));
-        assert_equal(s->joint_count(), 3u); // Didn't change
-    }
-
     void test_mesh_garbage_collection() {
         assert_false(stage_->is_destroyed());
 

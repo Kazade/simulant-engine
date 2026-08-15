@@ -21,10 +21,19 @@ The Quake 2 BSP file format is supported for mesh loading in Simulant. Much of t
   
 # MS3D
 
-.ms3d mesh files are fully supported. All versions of the format should be supported
-and loading an MS3D file should generate a mesh skeleton, and set the correct frame rate.
+.ms3d mesh files are fully supported. All versions of the format should be supported.
 
-Animations need to be specified by keyframe before they can be played.
+Like glTF, MS3D files are loaded as prefabs. The prefab contains an `Actor` holding the
+mesh, plus a `Stage` node per MS3D joint, arranged in the same hierarchy as the file's
+skeleton. The mesh itself is skinned against those joint nodes.
+
+An MS3D file holds a single, unnamed timeline of keyframes. If the file contains any, the
+prefab exposes it as an animation called `default`:
+
+```
+auto tree = scene->load_tree("models/character.ms3d");
+tree->find_mixin<AnimationController>()->play("default", ANIMATION_LOOP_FOREVER);
+```
 
 # glTF
 

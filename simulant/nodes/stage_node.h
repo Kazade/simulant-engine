@@ -825,9 +825,9 @@ public:
         return active_pipeline_count_ > 0;
     }
 
-    /** Loads a subtree from a .gltf file. The resulting child
-     *  will be a Stage*. The result will be nullptr if there is a
-     *  problem loading the tree */
+    /** Loads a subtree from any file format that loads into a Prefab
+     *  (.gltf/.glb, .ms3d). The resulting child will be a PrefabInstance.
+     *  The result will be nullptr if there is a problem loading the tree */
     StageNode* load_tree(const Path& path,
                          const TreeLoadOptions& opts = TreeLoadOptions());
 

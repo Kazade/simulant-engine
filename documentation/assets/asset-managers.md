@@ -77,7 +77,7 @@ Each asset type has a consistent API pattern: `load_<type>()` for file-based loa
 
 ### Meshes
 
-Meshes are loaded from model files or created programmatically. Supported formats include OBJ, glTF 2.0, MS3D, MD2, BSP, OPT, and TMX. See [Mesh Formats](mesh-formats.md) for details.
+Meshes are loaded from model files or created programmatically. Supported formats include OBJ, MD2, BSP, OPT, and TMX. glTF 2.0 and MS3D files describe a node hierarchy rather than a single mesh, so they are loaded as prefabs via `load_prefab()`. See [Mesh Formats](mesh-formats.md) for details.
 
 ```cpp
 // Load from file
@@ -676,13 +676,13 @@ Available loaders include:
 
 | Asset Type | Supported Formats | Loader Class |
 |------------|-------------------|--------------|
-| Meshes | OBJ, glTF, MS3D, MD2, BSP, OPT, TMX | `OBJLoader`, `GLTFLoader`, `MS3DLoader`, `MD2Loader`, etc. |
+| Meshes | OBJ, MD2, BSP, OPT, TMX | `OBJLoader`, `MD2Loader`, etc. |
 | Textures | PNG, DTEX, DDS, KMG, WAL, PCX | `PNGLoader`, `DTEXLoader`, `DDSTextureLoader`, etc. |
 | Sounds | OGG, WAV | `OGGLoader`, `WAVLoader` |
 | Fonts | TTF, FNT | `TTFLoader`, `FNTLoader` |
 | Materials | `.material` scripts | `MaterialScriptLoader` |
 | Particle Scripts | `.script` files | `ParticleScriptLoader` |
-| Prefabs | glTF | `GLTFLoader` |
+| Prefabs | glTF, MS3D | `GLTFLoader`, `MS3DLoader` |
 
 The engine selects the appropriate loader based on the file extension. If a file extension is ambiguous (e.g., a TGA file could be a texture or a heightmap), you can use **loader hints**:
 
