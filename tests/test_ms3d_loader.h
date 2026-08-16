@@ -169,7 +169,7 @@ public:
 
         assert_is_not_null(prefab.get());
 
-        /* One Actor for the mesh, plus a node per joint */
+        /* One Armature for the mesh, plus a node per joint */
         assert_equal(prefab->node_count(), 3u);
         assert_true(prefab->has_animations());
         assert_equal(prefab->animation_count(), 1u);
@@ -182,7 +182,7 @@ public:
         auto mesh_node = prefab->node(0);
         assert_true(bool(mesh_node));
         assert_equal(mesh_node.value().node_type_name.str(),
-                     std::string("actor"));
+                     std::string("armature"));
 
         auto mesh = mesh_node.value()
                         .params.get<MeshRef>("mesh")
@@ -195,14 +195,22 @@ public:
         assert_equal(mesh->vertex_data->count(), 3u);
         assert_equal(mesh->first_submesh()->index_data->count(), 3u);
 
-        assert_true(mesh->is_skinned);
+        assert_true(mesh->is_skinned());
         assert_is_not_null(mesh->skin.get());
 
-        /* Joint N in the file maps to prefab node (N + 1) */
-        assert_equal(mesh->skin->joint_indices.size(), 2u);
-        assert_equal(mesh->skin->joint_indices[0], (int16_t)1);
-        assert_equal(mesh->skin->joint_indices[1], (int16_t)2);
         assert_equal(mesh->skin->inverse_bind_matrices.size(), 2u);
+
+        /* Joint N in the file maps to prefab node (N + 1), and carries N as
+         * its index into the inverse bind matrices */
+        for(uint32_t i = 0; i < 2; ++i) {
+            auto joint_node = prefab->node(i + 1);
+            assert_true(bool(joint_node));
+            assert_equal(joint_node.value().node_type_name.str(),
+                         std::string("joint"));
+            assert_equal(
+                joint_node.value().params.get<int>("joint_index").value_or(-1),
+                (int)i);
+        }
     }
 
     void test_joint_hierarchy_and_animation() {

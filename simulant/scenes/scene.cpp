@@ -24,6 +24,7 @@
 #include "../layer.h"
 #include "../nodes/actor.h"
 #include "../nodes/animation_controller.h"
+#include "../nodes/armature.h"
 #include "../nodes/audio_source.h"
 #include "../nodes/camera.h"
 #include "../nodes/cylindrical_billboard.h"
@@ -31,6 +32,7 @@
 #include "../nodes/fly_controller.h"
 #include "../nodes/frustum_culler.h"
 #include "../nodes/geom.h"
+#include "../nodes/joint.h"
 #include "../nodes/light.h"
 #include "../nodes/mesh_instancer.h"
 #include "../nodes/particle_system.h"
@@ -105,6 +107,8 @@ void Scene::register_builtin_nodes() {
     register_stage_node<PrefabInstance>();
     register_stage_node<ShadowCaster>();
     register_stage_node<AnimationController>();
+    register_stage_node<Armature>();
+    register_stage_node<Joint>();
 
     register_stage_node<StaticBody>();
     register_stage_node<DynamicBody>();

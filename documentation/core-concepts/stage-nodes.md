@@ -84,6 +84,8 @@ Simulant ships with many StageNode subclasses. Here is a summary of the most com
 | `ParticleSystem` | Renders a particle effect defined by a particle script. |
 | `Skybox` | Renders a skybox around the scene. |
 | `MeshInstancer` | Efficiently renders many instances of the same mesh. |
+| `Armature` | The root of a skeleton. Poses the skinned meshes bound to it and renders the result. See [Skeleton Animation](../animation/skeleton-animation.md). |
+| `Joint` | A single bone below an `Armature`. An ordinary node that carries an index into the skeleton. |
 
 ### UI Widgets
 

@@ -45,20 +45,20 @@ Any distance above `far_cutoff` will use the `DETAIL_LEVEL_FARTHEST` level. Any 
 
 # Skinned actors
 
-When an `Actor`'s base mesh is skinned (`mesh->is_skinned`), the joints that deform it are
-ordinary `StageNode`s alongside the `Actor` in the prefab it was instantiated from, rather
-than a separate rig object owned by the `Actor`.
+`Actor` renders a mesh as-is, so it is *not* what renders a skinned character. Meshes hold
+source vertex data only and are shared between every node that uses them, which means
+posing one in place would corrupt every other user of it.
 
-That means posing a character is just moving scene nodes. For example, to make an animated
-character's head look in a particular direction, create a mixin with a `late_update()`
-method - which runs after the `AnimationController` has applied the current frame - and do
-something similar to the following:
+Skinned meshes are rendered by an `Armature` instead. An `Armature` is the root of a
+skeleton of `Joint` nodes, owns a private posed copy of each skinned mesh bound to it, and
+submits that copy to the render queue. See
+[Skeleton Animation](../animation/skeleton-animation.md).
+
+An `Actor` is still the right thing for anything *attached* to a skeleton but not deformed
+by it - a sword, a hat, a backpack. Because joints are ordinary scene nodes, that's just
+parenting:
 
 ```
-Quaternion rotation = calculate_rotation_to_look();
-find_descendent_with_name("Neck")->transform->set_rotation(rotation);
+auto sword = create_child<Actor>(assets->load_mesh("models/sword.obj"));
+sword->set_parent(armature->find_joint("hand.r"));
 ```
-
-This allows you to take manual control of joints, even if the rest of the mesh is animated.
-The skinning itself is recalculated by `Mesh::update_skinning()`.
-

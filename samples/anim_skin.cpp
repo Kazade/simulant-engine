@@ -14,8 +14,9 @@ public:
         auto prefab = assets->load_prefab("assets/samples/khronos/RiggedSimple.glb");
         prefab_ = create_child<smlt::PrefabInstance>(prefab);
 
-        auto sample_actor = dynamic_cast<ActorPtr>(prefab_->find_descendents_by_types({Actor::Meta::node_type})[0]);
-        sample_actor->base_mesh()->first_submesh()->material()->set_lighting_enabled(false);
+        auto armature = static_cast<ArmaturePtr>(
+            prefab_->find_descendents_by_types({Armature::Meta::node_type})[0]);
+        armature->skinned_mesh()->first_submesh()->material()->set_lighting_enabled(false);
 
         auto anim_controller = prefab_->find_mixin<AnimationController>();
         auto animations = anim_controller->animation_names();

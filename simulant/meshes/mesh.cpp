@@ -33,8 +33,6 @@
 
 #include "../procedural/mesh.h"
 
-#include "../deps/sh4zam/shz_matrix.h"
-#include "../nodes/actor.h"
 
 namespace smlt {
 
@@ -72,8 +70,6 @@ void Mesh::reset(VertexDataPtr vertex_data) {
         std::bind(&Mesh::vertex_data_updated, this)
     );
 
-    skin_bind_pose_.reset();
-
     rebuild_aabb();
 }
 
@@ -90,8 +86,6 @@ void Mesh::reset(VertexSpecification vertex_specification) {
     done_connection_ = vertex_data_->signal_update_complete().connect(
         std::bind(&Mesh::vertex_data_updated, this)
     );
-
-    skin_bind_pose_.reset();
 
     rebuild_aabb();
 }
@@ -734,224 +728,6 @@ void Mesh::normalize() {
     smlt::Mat4 scale_matrix = Mat4::as_scale(smlt::Vec3(scaling));
 
     transform_vertices(scale_matrix);
-}
-
-void Mesh::ensure_skin_bind_pose() {
-    if(skin_bind_pose_) return;
-
-    auto pose = std::make_shared<SkinBindPose>();
-
-    const uint32_t count = vertex_data_->count();
-    const auto& spec = vertex_data_->vertex_specification();
-
-    pose->rest_positions.reserve(spec.has_positions() ? count : 0);
-    pose->rest_normals.reserve(spec.has_normals() ? count : 0);
-    pose->joints.reserve((std::size_t)count * 4);
-    pose->weights.reserve(count);
-
-    const bool use_byte_joints = spec.joint_attribute == VERTEX_ATTRIBUTE_4UB;
-
-    for(uint32_t i = 0; i < count; ++i) {
-        if(spec.has_positions()) {
-            pose->rest_positions.push_back(*vertex_data_->position_at<Vec3>(i));
-        }
-        if(spec.has_normals()) {
-            pose->rest_normals.push_back(*vertex_data_->normal_at<Vec3>(i));
-        }
-
-        if(use_byte_joints) {
-            const auto* joints_acc = vertex_data_->joints_at<uint8_t>(i);
-            for(int j = 0; j < 4; ++j) pose->joints.push_back(joints_acc[j]);
-        } else {
-            const auto* joints_acc = vertex_data_->joints_at<uint16_t>(i);
-            for(int j = 0; j < 4; ++j) pose->joints.push_back(joints_acc[j]);
-        }
-
-        pose->weights.push_back(*vertex_data_->weights_at<Vec4>(i));
-    }
-
-    skin_bind_pose_ = pose;
-}
-
-MeshPtr Mesh::create_skin_instance(AssetManager* asset_manager) {
-    assert(is_skinned && skin);
-
-    // Make sure there's a bind pose to share before we hand a copy of the
-    // shared_ptr off to the instance below.
-    ensure_skin_bind_pose();
-
-    VertexSpecification render_spec = vertex_data_->vertex_specification();
-    render_spec.joint_attribute = VERTEX_ATTRIBUTE_NONE;
-    render_spec.weight_attribute = VERTEX_ATTRIBUTE_NONE;
-
-    auto instance = asset_manager->create_mesh(render_spec);
-
-    const uint32_t count = vertex_data_->count();
-    instance->vertex_data->resize(count);
-
-    // Position/normal/uv/color/specular all come before joints/weights in
-    // the layout (see VertexSpecification::recalc_stride_and_offsets), so
-    // their offsets are identical between the two specs and we can copy
-    // each vertex's shared prefix directly rather than walking it
-    // attribute-by-attribute.
-    const uint32_t copy_bytes =
-        std::min(vertex_data_->stride(), instance->vertex_data->stride());
-    for(uint32_t i = 0; i < count; ++i) {
-        std::memcpy(
-            instance->vertex_data->data() + (std::size_t)i * instance->vertex_data->stride(),
-            vertex_data_->data() + (std::size_t)i * vertex_data_->stride(),
-            copy_bytes
-        );
-    }
-    instance->vertex_data->done();
-
-    for(auto& sm: submeshes_) {
-        SubMesh* new_sm = nullptr;
-        if(sm->type() == SUBMESH_TYPE_INDEXED) {
-            // index_data_ is private, but Mesh is a friend of SubMesh - grab
-            // the shared_ptr directly rather than via the ::index_data
-            // property, which unwraps to the pointee type rather than the
-            // shared_ptr itself.
-            new_sm = instance->create_submesh(
-                sm->name(), sm->material(), sm->index_data_, sm->arrangement()
-            );
-        } else {
-            new_sm = instance->create_submesh(sm->name(), sm->material(), sm->arrangement());
-            for(std::size_t r = 0; r < sm->vertex_range_count(); ++r) {
-                new_sm->add_vertex_range(sm->vertex_ranges()[r].start, sm->vertex_ranges()[r].count);
-            }
-        }
-
-        for(uint8_t slot = MATERIAL_SLOT1; slot < MATERIAL_SLOT_MAX; ++slot) {
-            auto mat = sm->material_at_slot((MaterialSlot) slot, false);
-            if(mat) {
-                new_sm->set_material_at_slot((MaterialSlot) slot, mat);
-            }
-        }
-    }
-
-    instance->is_skinned = true;
-    instance->skin_index = skin_index;
-    instance->skin = std::make_shared<Skin>(*skin);
-    instance->skin_bind_pose_ = skin_bind_pose_;
-
-    return instance;
-}
-
-void Mesh::update_skinning() {
-    if(!skin) return;
-
-    ensure_skin_bind_pose();
-    const SkinBindPose& pose = *skin_bind_pose_;
-
-    // Use the block-triangular inverse — it's faster than the general inverse
-    // and is always correct for TRS world matrices.
-    Mat4 mesh_world_inverse;
-    if (skin->bound_actor) {
-        mesh_world_inverse = skin->bound_actor->transform->world_space_matrix().inversed_transform();
-    } else {
-        mesh_world_inverse = Mat4();
-    }
-
-    vertex_data_->move_to_start();
-
-    static std::vector<Mat4, aligned_allocator<Mat4, 32>> pre_joint_matrices;
-    pre_joint_matrices.clear();
-    pre_joint_matrices.resize(skin->node_indices.size(), Mat4());
-
-    // Pre-compute joint matrices: pre[h] = mesh_world_inverse * joint_world * inverse_bind[h]
-    //
-    // Chain the three matrix multiplies through XMTRX directly, saving one full
-    // XMTRX load+store round-trip per joint compared to calling shz_mat4x4_mult twice.
-    for(size_t h = 0; h < skin->node_indices.size(); ++h) {
-        StageNodePtr joint_node = skin->node_indices[h];
-        if (!joint_node) continue;
-
-        const Mat4& joint_matrix = joint_node->transform->world_space_matrix();
-
-        // XMTRX = mesh_world_inverse * joint_matrix
-        shz_xmtrx_load_apply_4x4((shz_mat4x4_t*) mesh_world_inverse._native(), (shz_mat4x4_t*) joint_matrix._native());
-        // XMTRX = (mesh_world_inverse * joint_matrix) * inverse_bind_matrices[h]
-        shz_xmtrx_apply_4x4((shz_mat4x4_t*) skin->inverse_bind_matrices[h]._native());
-        // Store result
-        shz_xmtrx_store_4x4((shz_mat4x4_t*) pre_joint_matrices[h]._native());
-    }
-
-    const bool has_positions = vertex_data_->vertex_specification().has_positions();
-    const bool has_normals   = vertex_data_->vertex_specification().has_normals();
-
-    for (uint32_t i = 0; i < vertex_data_->count(); ++i) {
-        // Zero-init the skin matrix directly — avoids an unnecessary XMTRX
-        // clobber from Mat4::zero() before we're ready to use XMTRX ourselves.
-        Mat4 skin_matrix;
-        memset(skin_matrix.data(), 0, sizeof(float) * 16);
-
-        const Vec4& weights_acc = pose.weights[i];
-        float weights[4] = { weights_acc.x, weights_acc.y, weights_acc.z, weights_acc.w };
-
-        const uint16_t* joints = &pose.joints[(std::size_t)i * 4];
-
-        float sum = weights[0] + weights[1] + weights[2] + weights[3];
-
-        // Not every format weights every vertex (MS3D in particular allows
-        // vertices with no bone at all). Blending zero joint matrices would
-        // collapse those vertices onto the origin, so leave them at their
-        // bind-pose position/normal instead.
-        if (sum == 0.0f) {
-            if (has_positions) {
-                vertex_data_->position(pose.rest_positions[i]);
-            }
-
-            if (has_normals) {
-                vertex_data_->normal(pose.rest_normals[i]);
-            }
-
-            vertex_data_->move_next();
-            continue;
-        }
-
-        if (sum > 1.01f) {
-            for (float& weight : weights) weight /= sum;
-        }
-
-        for (int j = 0; j < 4; ++j) {
-            float weight = weights[j];
-            if (weight == 0.0f) continue;
-
-            auto joint_index = joints[j];
-            if(joint_index >= skin->node_indices.size()) continue;
-
-            StageNodePtr joint_node = skin->node_indices[joint_index];
-            if (!joint_node) continue;
-
-            // Weighted blend of pre-computed joint matrices.
-            // Treating the matrix as 4 consecutive Vec4 columns keeps the
-            // hot path to 4 SIMD-friendly fmadd operations.
-            const Mat4& joint_matrix = pre_joint_matrices[joint_index];
-            Vec4* skin_cols        = reinterpret_cast<Vec4*>(skin_matrix.data());
-            const Vec4* joint_cols = reinterpret_cast<const Vec4*>(joint_matrix.data());
-
-            skin_cols[0] = skin_cols[0] + joint_cols[0] * weight;
-            skin_cols[1] = skin_cols[1] + joint_cols[1] * weight;
-            skin_cols[2] = skin_cols[2] + joint_cols[2] * weight;
-            skin_cols[3] = skin_cols[3] + joint_cols[3] * weight;
-        }
-
-        Mat4Scratch scratch(skin_matrix);
-
-        if (has_positions) {
-            const Vec3& v = pose.rest_positions[i];
-            vertex_data_->position(scratch.transform_point(v));
-        }
-
-        if (has_normals) {
-            const Vec3& n = pose.rest_normals[i];
-            vertex_data_->normal(scratch.transform_vector(n).normalized());
-        }
-
-        vertex_data_->move_next();
-    }
-    vertex_data_->done();
 }
 
 void Mesh::reverse_winding() {

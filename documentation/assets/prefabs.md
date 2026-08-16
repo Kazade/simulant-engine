@@ -140,6 +140,9 @@ When a glTF file is loaded as a prefab, the following data is processed:
 The GLTF loader maps glTF nodes to Simulant stage node types:
 
 - Nodes with a mesh become **Actor** nodes.
+- Nodes used as a joint by a skin become **Joint** nodes, and an **Armature** is inserted
+  above the skeleton to hold and render the meshes bound to it. Nodes with a *skinned*
+  mesh become plain **Stage** nodes, since their mesh belongs to the armature.
 - Nodes with a camera definition become **Camera** nodes.
 - Nodes with a light definition become **Light** nodes.
 - All other nodes become **Stage** (grouping) nodes.
@@ -195,7 +198,9 @@ That is all it takes. The `PrefabInstance`:
 2. Creates the corresponding `StageNode` objects (Actors, Cameras, Lights, Stages, etc.).
 3. Sets up the parent-child relationships to match the original hierarchy.
 4. If the prefab has animations, attaches an `AnimationController` mixin.
-5. If the prefab has skinned meshes, binds the skeleton to the joint nodes.
+
+Skinning needs no fixup step: each `Armature` resolves its own `Joint` nodes and builds
+its own posed mesh, so instances never share deformable state.
 
 ### The PrefabInstance as a container
 
