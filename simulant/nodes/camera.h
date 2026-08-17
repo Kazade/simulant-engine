@@ -126,8 +126,7 @@ public:
                               "The camera near distance");
     S_DEFINE_STAGE_NODE_PARAM(Camera3D, "zfar", float, 100.0f,
                               "The camera far distance");
-    S_DEFINE_STAGE_NODE_PARAM(Camera3D, "aspect_ratio", float, 1.0f,
-                              "Aspect ratio");
+    S_DEFINE_STAGE_NODE_PARAM(Camera3D, "aspect", float, 1.0f, "Aspect ratio");
     S_DEFINE_STAGE_NODE_PARAM(Camera3D, "yfov", float, 60.0f,
                               "The camera field of view (in degrees)");
 

@@ -34,9 +34,6 @@ public:
             {"yfov",   45.0f                 }
         });
 
-        camera->set_perspective_projection(Degrees(45.0),
-                                           window->aspect_ratio(), 1.0, 1000.0);
-
         auto layer = compositor->create_layer(prefab_, camera);
         layer->set_clear_flags(smlt::BUFFER_CLEAR_ALL);
         layer->viewport->set_color(smlt::Color::gray());

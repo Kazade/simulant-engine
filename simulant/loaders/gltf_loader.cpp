@@ -5,6 +5,8 @@
 #include "../asset_manager.h"
 #include "../assets/prefab.h"
 #include "../generic/raii.h"
+#include "../math/degrees.h"
+#include "../math/radians.h"
 #include "../nodes/armature.h"
 #include "../platform.h"
 #include "../time_keeper.h"
@@ -1369,7 +1371,7 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
     } else if(node->has_key("camera")) {
         auto camera_id = node["camera"]->to_int().value_or(-1);
         if(camera_id >= 0) {
-            prefab_node.node_type_name = "camera";
+            prefab_node.node_type_name = "camera3d";
 
             auto cam_node = js["cameras"][camera_id];
             auto persp_node = cam_node["perspective"];
@@ -1378,8 +1380,13 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
                 prefab_node.params.set(
                     "aspect",
                     persp_node["aspectRatio"]->to_float().value_or(1.777f));
+
+                /* glTF stores yfov in radians, but the camera takes degrees */
                 prefab_node.params.set(
-                    "yfov", persp_node["yfov"]->to_float().value_or(60.0f));
+                    "yfov", Degrees(Radians(persp_node["yfov"]
+                                                ->to_float()
+                                                .value_or(1.047f)))
+                                .to_float());
                 prefab_node.params.set(
                     "znear", persp_node["znear"]->to_float().value_or(1.0f));
 

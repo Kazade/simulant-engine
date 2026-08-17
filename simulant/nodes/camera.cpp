@@ -6,6 +6,7 @@
 #include "../viewport.h"
 #include "../window.h"
 #include "simulant/math/mat4.h"
+#include "simulant/math/radians.h"
 
 #if defined(_MSC_VER)
 #undef near
@@ -157,7 +158,7 @@ bool Camera2D::on_create(Params params) {
     proj[0] = 2.0f / xmag;
     proj[5] = 2.0f / ymag;
     proj[10] = -2.0f / (f - n);
-    proj[12] = -(f + n) / (f - n);
+    proj[14] = -(f + n) / (f - n);
     proj[15] = 1.0f;
 
     Params new_params;
@@ -167,7 +168,7 @@ bool Camera2D::on_create(Params params) {
 }
 
 bool Camera3D::on_create(Params params) {
-    if(!clean_params<Camera2D>(params)) {
+    if(!clean_params<Camera3D>(params)) {
         return false;
     }
 
@@ -175,7 +176,10 @@ bool Camera3D::on_create(Params params) {
     auto zfar_maybe = params.get<float>("zfar");
 
     float a = params.get<float>("aspect").value_or(1.0f);
-    float y = params.get<float>("yfov").value_or(60.0f);
+
+    /* yfov is specified in degrees, but the trig below needs radians */
+    float y = Radians(Degrees(params.get<float>("yfov").value_or(60.0f)))
+                  .to_float();
     float n = params.get<float>("znear").value_or(1.0f);
 
     if(zfar_maybe) {
