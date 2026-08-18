@@ -34,8 +34,9 @@ The core animation classes live in the `smlt` namespace:
 
 - **`AnimationController`** -- A `StageNode` that plays and blends skeletal animations loaded from GLTF files. Found in `simulant/nodes/animation_controller.h`.
 - **`KeyFrameAnimated`** / **`KeyFrameAnimationState`** -- Base classes for keyframe-based animation. Found in `simulant/animation.h`.
-- **`Prefab`** / **`PrefabInstance`** -- The template a skinned model is loaded into, and the scene nodes created from it (including one node per joint). Found in `simulant/assets/prefab.h` and `simulant/nodes/prefab_instance.h`.
-- **`Mesh::Skin`** -- The per-mesh skinning data: joint nodes, inverse bind matrices and the bound `Actor`. Found in `simulant/meshes/mesh.h`.
+- **`Prefab`** / **`PrefabInstance`** -- The template a skinned model is loaded into, and the scene nodes created from it (including an `Armature` and one `Joint` per bone). Found in `simulant/assets/prefab.h` and `simulant/nodes/prefab_instance.h`.
+- **`Armature`** / **`Joint`** -- The root of a skeleton (which also owns and renders the posed mesh) and the bones below it. Found in `simulant/nodes/armature.h` and `simulant/nodes/joint.h`.
+- **`Mesh::Skin`** -- How a mesh binds to a skeleton: its inverse bind matrices. Found in `simulant/meshes/mesh.h`.
 - **`Sprite`** -- A `StageNode` for 2D sprite sheet animation. Found in `simulant/nodes/sprite.h`.
 
 ### How Animation Fits into the Engine
@@ -48,25 +49,25 @@ See also: [Actors](../core-concepts/actors.md), [Meshes](../rendering/meshes.md)
 
 ## 2. Skeleton Animation (Joints, Skinning)
 
-Skeleton animation in Simulant works by deforming a mesh based on the positions of joints (bones). There is no separate skeleton or rig object: **a joint is an ordinary `StageNode`**, and the joint hierarchy is simply part of the scene tree created when a prefab is instantiated.
+Skeleton animation in Simulant works by deforming a mesh based on the positions of joints (bones). The skeleton is part of the scene tree created when a prefab is instantiated: **a joint is an ordinary `StageNode`**, rooted at an `Armature`.
 
 ### Key Concepts
 
-- **Joint** -- A `StageNode` in the prefab's tree. Its local transform is the joint's rotation/translation relative to its parent joint.
-- **Skinned mesh** -- A `Mesh` with `is_skinned` set, whose vertices carry up to 4 joint indices and weights.
-- **`Mesh::Skin`** -- Links the mesh to its joint nodes (`node_indices`) and stores the inverse bind matrices.
-- **`Mesh::update_skinning()`** -- Blends the joint transforms per-vertex and writes the deformed positions/normals back into the mesh's vertex data.
-- **`AnimationController`** -- Drives the joint nodes' transforms from keyframe channels, then triggers skinning.
+- **`Armature`** -- The root of a skeleton. It holds the skinned source mesh, owns the posed mesh deformed from it, and renders that posed mesh. There is no `Actor` involved.
+- **`Joint`** -- A `StageNode` below the armature. Its local transform is the joint's rotation/translation relative to its parent joint, and its `joint_index` says which bone it is.
+- **Skinned mesh** -- A `Mesh` with `is_skinned()` true, whose vertices carry up to 4 joint indices and weights. It only ever holds the bind pose, and is shared between instances.
+- **`Armature::update_skinning()`** -- Blends the joint transforms per-vertex and writes the deformed positions/normals into the armature's own output mesh.
+- **`AnimationController`** -- Drives the joint nodes' transforms from keyframe channels, then re-poses the armatures below it.
 
 ### Structure
 
 ```
 PrefabInstance
   |-- AnimationController (mixin)
-  |-- Actor           (holds the skinned mesh)
-  |-- Stage "Root"    (joint 0)
-        |-- Stage "Spine"   (joint 1)
-              |-- Stage "Head"    (joint 2)
+  |-- Armature "Rig"      (holds and renders the skinned mesh)
+        |-- Joint "Root"    (joint 0)
+              |-- Joint "Spine"   (joint 1)
+                    |-- Joint "Head"    (joint 2)
 ```
 
 ### Vertex Skinning
@@ -74,7 +75,7 @@ PrefabInstance
 A skinned mesh's vertex specification carries two extra attributes -- `joint_attribute`
 (`VERTEX_ATTRIBUTE_4UB` or `VERTEX_ATTRIBUTE_4US`) and `weight_attribute`
 (`VERTEX_ATTRIBUTE_4F` or `VERTEX_ATTRIBUTE_4UB`) -- giving up to 4 joint influences per
-vertex. The joint values index into `skin->node_indices`.
+vertex. The joint values index into the armature's joints (`Armature::joint(i)`).
 
 > **Note:** In practice you will rarely build any of this by hand. It is loaded automatically from GLTF/GLB and MS3D files. See [Loading Animations from GLTF/GLB Files](#4-loading-animations-from-gltfglb-files) below, and [Skeleton Animation](skeleton-animation.md) for the full detail.
 
@@ -163,17 +164,13 @@ The controller stores animations as collections of **Channels**. Each channel ta
 
 Each channel uses **keyframe data** with timestamps and values. Interpolation between keyframes is linear by default, with support for STEP and CUBIC_SPLINE interpolation loaded from GLTF files.
 
-When the mesh is skinned (`mesh->is_skinned` is true), the controller calls `mesh->update_skinning()` each frame to update vertex positions based on the current rig pose.
+Once the channels have moved the joints, the controller calls `update_skinning()` on every `Armature` below it, refreshing the posed vertex positions from the current pose.
 
-### Target Meshes
+### Armatures
 
-You can associate additional meshes with the controller:
-
-```cpp
-anim_controller->add_target_mesh(mesh);
-```
-
-These meshes will have their skinning updated when the animation plays.
+The controller drives whatever armatures are in its subtree - there is no registration
+step. Parenting another skinned character's `Armature` under it is enough for that
+character to be animated too.
 
 ---
 
@@ -229,9 +226,15 @@ Animation "Walk"
   ...
 ```
 
-### Skeleton Root Node
+### Where the Armature Goes
 
-The GLTF loader identifies the skeleton root node from the `skin.skeleton` property. This determines the root of the joint hierarchy and is used for centering the model.
+For each skin in the file, the loader works out the common ancestor of all of that skin's
+joints and inserts an `Armature` directly above it. That keeps every joint's world
+transform exactly as the file describes it, while guaranteeing the joints are all
+descendents of the armature. The skinned mesh nodes themselves become plain nodes - per
+the glTF spec their own transform is ignored, and their meshes are handed to the armature
+to pose and render. A skin shared by several mesh nodes produces a single `Armature`
+holding all of them.
 
 ### Sample GLTF Files
 
@@ -605,13 +608,14 @@ void update(float dt) {
 
 ### CPU Skinning Cost
 
-Skeletal animation in Simulant is done on the CPU. `Mesh::update_skinning()` iterates over every vertex and applies the blended joint transformations. This means:
+Skeletal animation in Simulant is done on the CPU. `Armature::update_skinning()` iterates over every vertex and applies the blended joint transformations. This means:
 
 - **Vertex count matters**: More vertices = more CPU work per frame
 - **Joint count is bounded**: 4 joints per vertex; the joint vertex attribute type caps the joints per mesh (255 for `4UB`, 65535 for `4US`)
-- **Skinned meshes cost more**: Non-skinned meshes skip the skinning update entirely
+- **Skinned meshes cost more**: Nothing but an `Armature` ever pays for skinning, so ordinary `Actor`s are unaffected.
 
-The engine checks `mesh->is_skinned` before updating skinning, so non-animated meshes are not penalized.
+An armature only re-poses when something has actually moved its joints, so a skeleton that
+is sitting still costs nothing per frame.
 
 ### Frame Rate Throttling
 
@@ -626,20 +630,20 @@ This means keyframe animations will not exceed 60 updates per second regardless 
 ### AnimationController Optimization
 
 - Channels with null targets are skipped (`if(!channel.target) continue;`)
-- Skinning update only runs for skinned meshes
+- Re-posing bails out early for an armature with no joints or no meshes
 - The controller stops processing when the current animation index is out of range
 
 ### Memory Considerations
 
-- **Bind-pose data is shared**: `Mesh::SkinBindPose` (rest positions/normals, joints and weights) is built once per source mesh and shared by pointer across instances
-- **Vertex data is per-instance**: Each animated character gets its own vertex buffer via `Mesh::create_skin_instance()`, since skinning writes into it
+- **Bind-pose data is shared**: the source `Mesh` is never written to, so its vertex data (rest positions/normals, joints and weights), index data and materials are shared by every armature posing it
+- **Posed vertex data is per-armature**: each armature builds its own output mesh, which carries only what's needed to render (position, normal, uv, color) - the joints and weights attributes are dropped
 - **AnimationData stores times and values**: Both are kept in memory for the lifetime of the prefab
 
 ### Best Practices
 
 1. **Keep joint counts low**: Stay well under the 64-joint maximum
 2. **Use LOD for distant characters**: Switch to simpler meshes or disable animation
-3. **Batch static characters**: If a character doesn't animate, avoid unnecessary skinning updates
+3. **Leave static characters alone**: an armature whose joints aren't moving isn't re-posed
 4. **Use sprite sheets efficiently**: Pack multiple animations into one sheet to reduce texture swaps
 5. **Preload animations**: Load GLTF files during loading screens, not during gameplay
 

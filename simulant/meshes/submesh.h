@@ -122,6 +122,9 @@ public:
 
 private:
     friend class Mesh;
+    /* Needs the index data by shared_ptr so a posed output mesh can share
+     * the source mesh's topology */
+    friend class Armature;
 
     sig::connection material_change_connection_;
 

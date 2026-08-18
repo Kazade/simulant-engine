@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstddef>
+#include <memory>
+#include <new>
+
 #include "memory.h"
 #include "../macros.h"
 

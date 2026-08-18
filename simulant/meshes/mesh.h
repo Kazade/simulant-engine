@@ -36,11 +36,11 @@
 
 #include "../animation.h"
 #include "../asset.h"
+#include "../core/aligned_allocator.h"
 #include "../interfaces.h"
 #include "../loadable.h"
 #include "../types.h"
 #include "../vertex_data.h"
-#include "simulant/nodes/stage_node.h"
 
 namespace smlt {
 
@@ -167,49 +167,27 @@ public:
     void reset(VertexDataPtr vertex_data);
     void reset(VertexSpecification vertex_specification);
 
-    int skin_index = -1;
-    bool is_skinned = false;
-
-    /* For skinned animations, holds the necessary data to cross-reference
-     * with the stage nodes used as joints. */
+    /* Describes how this mesh binds to a skeleton. This is immutable source
+     * data - the mesh itself is never posed. Posing is the job of an
+     * `Armature` stage node, which drives a skeleton of `Joint` nodes and
+     * writes the result into its own output mesh.
+     *
+     * The bind pose itself is simply this mesh's vertex data, which carries
+     * the per-vertex joint indices and weights alongside the rest-pose
+     * positions and normals. */
     struct Skin {
-        std::vector<int16_t> joint_indices;
-        std::vector<StageNodePtr> node_indices; // Keep a vector of pointers to the smlt StageNodes used as joints
-        std::vector<Mat4, aligned_allocator<Mat4, 32>> inverse_bind_matrices; // Allocated on 32B for DC performance
-        int8_t skeleton_root_node; // In case the root isn't at origin, use this to translate from it
-        StageNodePtr skeleton_root_stage_node;
-        ActorPtr bound_actor;
+        /* One matrix per joint, transforming from mesh space into the
+         * joint's space at the bind pose. Allocated on 32B for DC
+         * performance */
+        std::vector<Mat4, aligned_allocator<Mat4, 32>> inverse_bind_matrices;
     };
 
+    /* Shared between every mesh bound to the same skeleton */
     std::shared_ptr<Skin> skin;
 
-    /* Immutable bind-pose data needed to (re-)compute skinning: rest-pose
-     * positions/normals and the per-vertex joint indices/weights. This is
-     * identical for every instance of the same source mesh, so it's built
-     * once (see ensure_skin_bind_pose()) and shared by pointer rather than
-     * copied into each per-instance mesh. */
-    struct SkinBindPose {
-        std::vector<Vec3> rest_positions;
-        std::vector<Vec3> rest_normals;
-        std::vector<uint16_t> joints; // 4 consecutive entries per vertex
-        std::vector<Vec4> weights;    // 1 entry per vertex
-    };
-
-    /* Creates a lightweight per-instance copy of this (skinned) mesh, for
-     * use by e.g. multiple PrefabInstances of the same animated prefab.
-     *
-     * The instance shares this mesh's bind-pose data (rest_positions,
-     * rest_normals, joints, weights - see SkinBindPose) and each submesh's
-     * index data by pointer, since none of that changes with pose. It gets
-     * its own small vertex buffer (position/normal/uv/color only - joints
-     * and weights are dropped, since nothing but skinning ever reads them)
-     * to receive skinning output independently of every other instance.
-     *
-     * The returned mesh still needs its skin->node_indices (and
-     * skin->bound_actor) resolved against the instance's own StageNode
-     * skeleton before it can be skinned correctly.
-     */
-    MeshPtr create_skin_instance(AssetManager* asset_manager);
+    bool is_skinned() const {
+        return bool(skin);
+    }
 
     /**
      * @brief Create a new ranged submesh with the specified material
@@ -341,8 +319,6 @@ public:
 
     void reverse_winding(); ///< Reverse the winding of all submeshes
 
-    void update_skinning(); ///< Run the animation skinning logic on the mesh
-
     const AABB& aabb() const;
     void normalize(); //Scales the mesh so it has a radius of 1.0
     void transform_vertices(const smlt::Mat4& transform);
@@ -373,9 +349,6 @@ public:
 private:
     friend class SubMesh;
     friend class Actor;
-
-    std::shared_ptr<SkinBindPose> skin_bind_pose_;
-    void ensure_skin_bind_pose();
 
     VertexDataPtr vertex_data_;
     MeshAnimationType animation_type_ = MESH_ANIMATION_TYPE_NONE;

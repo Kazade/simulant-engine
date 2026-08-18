@@ -110,8 +110,9 @@ struct MS3DVertexExtra {
  * Prefab exposes it under this name (e.g. anim_controller->play("default")) */
 const char* MS3D_ANIMATION_NAME = "default";
 
-/* The Prefab node id given to the Actor holding the generated mesh. Joints
- * follow on from it - joint N is node id (N + 1) */
+/* The Prefab node id given to the Armature holding the generated mesh (or a
+ * plain Actor, if the file has no skeleton). Joints follow on from it -
+ * joint N is node id (N + 1) */
 const uint32_t MS3D_MESH_NODE_ID = 0;
 
 /* MS3D name fields are fixed-size and are only NULL terminated if the name
@@ -578,32 +579,24 @@ bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     if(!joints.empty()) {
         auto skin = std::make_shared<Mesh::Skin>();
-        skin->joint_indices.reserve(joints.size());
         skin->inverse_bind_matrices.reserve(joints.size());
 
         for(std::size_t i = 0; i < joints.size(); ++i) {
-            skin->joint_indices.push_back((int16_t) (i + 1));
             skin->inverse_bind_matrices.push_back(abs_rest[i].inversed());
         }
 
-        /* joint_order is parent-first, so the first entry is always a root */
-        auto root_node_id = joint_order[0] + 1;
-        skin->skeleton_root_node =
-            (root_node_id <= 127) ? (int8_t) root_node_id : (int8_t) -1;
-
         mesh->skin = skin;
-        mesh->is_skinned = true;
-        mesh->skin_index = 0;
     }
 
     prefab->push_mesh(mesh);
 
-    /* Now build the node hierarchy: an Actor holding the mesh, and a node
-     * per joint that the animation channels below drive */
+    /* Now build the node hierarchy. MS3D joint transforms are relative to
+     * the model origin, so the Armature holding the mesh sits there and the
+     * root joints hang directly off it. */
 
     PrefabNode mesh_node;
     mesh_node.id = MS3D_MESH_NODE_ID;
-    mesh_node.node_type_name = "actor";
+    mesh_node.node_type_name = joints.empty() ? "actor" : "armature";
     mesh_node.name = mesh->name();
     mesh_node.params.set("mesh", mesh);
     mesh_node.params.set("translation", Vec3());
@@ -615,14 +608,16 @@ bool MS3DLoader::into(Loadable& resource, const LoaderOptions& options) {
     for(auto i: joint_order) {
         PrefabNode& node = joint_nodes[i];
         node.id = (uint32_t) (i + 1);
-        node.node_type_name = "stage";
+        node.node_type_name = "joint";
         node.name = read_name(joints[i].name, 32);
+        node.params.set("joint_index", (int) i);
         node.params.set("translation", joints[i].position);
         node.params.set("rotation", euler_to_quaternion(joints[i].rotation));
         node.params.set("scale_factor", Vec3(1, 1, 1));
 
-        int32_t parent_node_id =
-            (parent_of[i] < 0) ? -1 : (int32_t) (parent_of[i] + 1);
+        int32_t parent_node_id = (parent_of[i] < 0)
+                                     ? (int32_t)MS3D_MESH_NODE_ID
+                                     : (int32_t)(parent_of[i] + 1);
 
         prefab->push_node(node, parent_node_id);
 

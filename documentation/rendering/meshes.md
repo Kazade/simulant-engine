@@ -44,28 +44,31 @@ actor2->use_material_slot(MATERIAL_SLOT1);  // actor2 now uses the other materia
 ## Skinned meshes
 
 A mesh loaded from a format that supports skeletal animation (e.g. `.gltf`, `.ms3d`) is
-*skinned*: `Mesh::is_skinned` is true and `Mesh::skin` holds the data needed to deform it.
+*skinned*: `Mesh::is_skinned()` is true and `Mesh::skin` holds the inverse bind matrices
+the skeleton was bound with.
 
-There is no separate skeleton type on the mesh. The joints are ordinary `StageNode`s in
-the scene tree, created when the prefab the mesh came from is instantiated, and the skin
-simply refers to them:
+A skinned mesh is still only ever *source* data. It holds the bind pose, and each of its
+vertices carries up to four joint indices and weights (the `joint` and `weight` vertex
+attributes). It is never posed in place - meshes are shared assets, so deforming one would
+deform it for everything else using it.
 
- - `skin->node_indices` - the joint node for each joint index, in the order the mesh's
-   vertex joint attribute refers to them
- - `skin->inverse_bind_matrices` - the inverse of each joint's bind-pose transform
- - `skin->bound_actor` - the `Actor` the skinned mesh is attached to
+Posing is the job of an `Armature` stage node, which owns the skeleton (a tree of `Joint`
+nodes), keeps a private posed copy of each skinned mesh bound to it, and renders that copy.
+Instantiating the same animated prefab any number of times is therefore safe: they share
+the bind pose, and each gets its own posed output.
 
-Each vertex carries up to four joint indices and weights (the `joint` and `weight` vertex
-attributes). `Mesh::update_skinning()` blends the joint transforms per-vertex and writes
-the result back into the mesh's vertex data - the `AnimationController` calls it for you
-each time it applies a frame.
+```
+auto armature = instance->find_descendents_by_types({Armature::Meta::node_type})[0];
+
+armature->source_mesh();   // shared bind pose - never modified
+armature->skinned_mesh();  // this armature's posed output - what gets rendered
+```
 
 Because the joints are just scene nodes, posing a character is done through the normal
 transform API:
 
 ```
-auto neck = actor->find_descendent_with_name("neck");
-neck->transform->set_rotation(my_rotation);
+armature->find_joint("neck")->transform->set_rotation(my_rotation);
 ```
 
 See [Skeleton Animation](../animation/skeleton-animation.md) for the full picture.

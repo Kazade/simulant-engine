@@ -12,7 +12,7 @@ This document covers the `AnimationController` class in Simulant, including play
 4. [Queueing Animations](#4-queueing-animations)
 5. [Playback Control](#5-playback-control)
 6. [Animation Data and Channels](#6-animation-data-and-channels)
-7. [Target Meshes](#7-target-meshes)
+7. [Driving Armatures](#7-driving-armatures)
 8. [Implementing State Machines](#8-implementing-state-machines)
 9. [How the Update Loop Works](#9-how-the-update-loop-works)
 10. [Complete Example](#10-complete-example)
@@ -29,7 +29,7 @@ Header: `simulant/nodes/animation_controller.h`
 
 - **Stores animations** as collections of channels, each targeting a node in the scene hierarchy
 - **Interpolates keyframe data** (translation, rotation, scale) over time
-- **Updates mesh skinning** each frame for skinned meshes
+- **Re-poses armatures** each frame, once the joints have been moved
 - **Manages playback state** (playing, paused, loop count, speed)
 - **Supports animation queuing** for sequencing animations
 
@@ -237,27 +237,29 @@ The `interpolated_value<T>()` method performs linear interpolation between keyfr
 
 ---
 
-## 7. Target Meshes
+## 7. Driving Armatures
 
-You can associate additional meshes with the controller so their skinning is updated during animation:
-
-```cpp
-bool add_target_mesh(const MeshPtr& target_mesh);
-```
-
-This is useful when a character has multiple mesh parts (e.g., a separate weapon mesh) that need to be skinned by the same animation:
+The controller doesn't know anything about meshes. Its channels move joints, and once
+they've been moved it re-poses every `Armature` below the node it's attached to:
 
 ```cpp
-auto body_mesh = assets->load_mesh("models/character_body.glb");
-auto weapon_mesh = assets->load_mesh("models/sword.glb");
-
-controller->add_target_mesh(body_mesh);
-controller->add_target_mesh(weapon_mesh);
+for(auto& node: base()->each_descendent()) {
+    if(node.node_type() == Armature::Meta::node_type) {
+        static_cast<Armature*>(&node)->update_skinning();
+    }
+}
 ```
 
-When an animation plays, the controller calls `update_skinning()` on each target mesh that has `is_skinned` set to `true`. Non-skinned meshes are skipped automatically.
+That means a controller drives whatever skeletons happen to be in its subtree, however
+many there are, with no registration step. Adding a skinned character under an existing
+controller is just a matter of parenting its `Armature` into the tree.
 
-> **Note:** Meshes from the original prefab are automatically registered with the controller. `add_target_mesh()` is for adding meshes that were not part of the original GLTF import.
+Nothing else needs doing for a character split across several meshes either. A glTF skin
+referenced by several mesh nodes produces one `Armature` holding all of them, and posing
+it poses all of them together.
+
+> **Note:** Armatures also re-pose themselves in `late_update()` whenever their joints
+> have moved, so a hand-posed skeleton with no animation playing still renders correctly.
 
 ---
 
@@ -372,8 +374,8 @@ The `AnimationController::on_update(float dt)` method is called every frame by t
       - TRANSLATION -> set_translation()
       - ROTATION -> set_rotation()
       - SCALE -> set_scale_factor()
-4. For each target mesh that is skinned:
-   - Call mesh->update_skinning()
+4. Re-pose every Armature below the controller:
+   - Call armature->update_skinning()
 5. Check if animation is finished:
    a. If loop_count_ > 0: restart (time_ = 0, decrement loop_count_)
    b. If loop_count_ == 0 and queue is not empty: advance to next animation
@@ -383,7 +385,8 @@ The `AnimationController::on_update(float dt)` method is called every frame by t
 ### Important Details
 
 - **Null channels are skipped**: `if(!channel.target) continue;`
-- **Skinning only runs for skinned meshes**: `if(target_mesh->is_skinned && ...)`
+- **Armatures with no joints are cheap to skip**: posing bails out early if the skeleton
+  or the mesh list is empty
 - **Time advances even after the animation ends**: The `finished()` check happens after interpolation, so the last frame of the animation is always rendered.
 - **Queue processing resets time**: When advancing to a queued animation, `time_` is reset to `0.0f`.
 
@@ -530,7 +533,7 @@ private:
 
 ## Related Documentation
 
-- [Skeleton Animation](skeleton-animation.md) -- Skeletons, joints, rigs, and vertex skinning
+- [Skeleton Animation](skeleton-animation.md) -- Armatures, joints, and vertex skinning
 - [Sprite Animation](sprite-animation.md) -- 2D sprite sheet animation
 - [Animation System Overview](overview.md) -- High-level overview of all animation systems
 - [Prefabs](../assets/prefabs.md) -- Loading animated models from GLTF files

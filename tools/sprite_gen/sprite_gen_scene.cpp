@@ -14,6 +14,7 @@
 #include <simulant/math/euler.h>
 #include <simulant/math/quaternion.h>
 #include <simulant/nodes/actor.h>
+#include <simulant/nodes/armature.h>
 #include <simulant/nodes/camera.h>
 #include <simulant/nodes/light.h>
 #include <simulant/nodes/prefab_instance.h>
@@ -128,36 +129,14 @@ smlt::AABB SpriteGenScene::compute_animated_bounds() {
     bool found_any = false;
 
     auto accumulate_current_pose = [&]() {
-        auto actors = prefab_instance_->find_descendents_by_types(
-            {smlt::Actor::Meta::node_type});
-        for(auto* node: actors) {
-            auto* actor = static_cast<smlt::ActorPtr>(node);
-            auto mesh = actor->base_mesh();
-            if(!mesh) {
-                continue;
-            }
-
-            if(mesh->is_skinned && mesh->vertex_data &&
-               mesh->vertex_data->vertex_specification().has_positions()) {
-                // Skinning deforms vertex_data in place (see
-                // Mesh::update_skinning()) but never touches the mesh's
-                // cached aabb(), so transformed_aabb() would report the
-                // static bind pose here regardless of the current
-                // animation frame - read the live (post-skin) vertex
-                // positions directly instead.
-                auto world = actor->transform->world_space_matrix();
-                smlt::VertexData* vdata = mesh->vertex_data;
-                for(uint32_t i = 0; i < vdata->count(); ++i) {
-                    auto* pos = vdata->position_at<smlt::Vec3>(i);
-                    if(pos) {
-                        bounds.encapsulate(pos->transformed_by(world));
-                        found_any = true;
-                    }
-                }
-            } else {
-                bounds.encapsulate(node->transformed_aabb());
-                found_any = true;
-            }
+        // Armatures re-pose into their own output mesh (and refresh its
+        // AABB) every time the animation is seeked, so transformed_aabb()
+        // tracks the current frame for both skinned and static geometry.
+        auto renderers = prefab_instance_->find_descendents_by_types(
+            {smlt::Actor::Meta::node_type, smlt::Armature::Meta::node_type});
+        for(auto* node: renderers) {
+            bounds.encapsulate(node->transformed_aabb());
+            found_any = true;
         }
     };
 
@@ -172,10 +151,10 @@ smlt::AABB SpriteGenScene::compute_animated_bounds() {
     }
 
     if(!found_any) {
-        // No Actor descendants were found at all - fall back to a small
-        // default box so the framing/layout math below doesn't divide by
-        // zero.
-        S_WARN("Model contains no visible mesh actors; framing with a "
+        // No mesh-bearing descendants were found at all - fall back to a
+        // small default box so the framing/layout math below doesn't
+        // divide by zero.
+        S_WARN("Model contains no visible meshes; framing with a "
                "default bounding box");
         return smlt::AABB(smlt::Vec3(), 1.0f);
     }

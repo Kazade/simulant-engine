@@ -5,6 +5,9 @@
 #include "../asset_manager.h"
 #include "../assets/prefab.h"
 #include "../generic/raii.h"
+#include "../math/degrees.h"
+#include "../math/radians.h"
+#include "../nodes/armature.h"
 #include "../platform.h"
 #include "../time_keeper.h"
 #include "../utils/base64.h"
@@ -849,7 +852,7 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
                                const std::vector<Accessor>& accessors,
                                const std::vector<smlt::MaterialPtr>& materials,
                                std::istream* bin_chunk,
-                               int8_t node_skin_index) {
+                               std::shared_ptr<Mesh::Skin> skin) {
     _S_UNUSED(mesh_id);
 
     struct MeshPrimitive {
@@ -1034,69 +1037,12 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
 
             sm->index_data->done();
         }
-        // Getting the inverse bind matrices
-        if (node_skin_index >= 0 && !final_mesh->skin) {
-            auto skin = std::make_shared<Mesh::Skin>();
-            final_mesh->skin_index = node_skin_index;
-            final_mesh->is_skinned = true;
-
-            auto skin_node = js["skins"][node_skin_index];
-
-            // Storing the joint references in the skin to update skinning from later
-            auto joints_json = skin_node["joints"];
-            skin->joint_indices.clear();
-
-            for (auto& j : joints_json) {
-                // Not making this an int8_t for the rare event the nmb. of joints go > 127
-                int16_t node_index = j.to_int().value_or(-1);
-                if (node_index < 0) {
-                    S_ERROR("Invalid joint index in skin");
-                    continue;
-                }
-                skin->joint_indices.push_back(node_index);
-            }
-            S_DEBUG("Loaded {0} joint indices", skin->joint_indices.size());
-
-            // Setting the skeleton root node, to be able to offset from center
-            skin->skeleton_root_node = skin_node["skeleton"]->to_int().value_or(-1);
-            S_DEBUG("Skeleton root node: {0}", skin->skeleton_root_node);
-
-            int ibm_accessor_idx = skin_node["inverseBindMatrices"]->to_int().value_or(-1);
-            if(ibm_accessor_idx < 0) {
-                S_WARN("Skin has no inverse bind matrices.");
-                continue;
-            }
-            auto ibm = accessors[ibm_accessor_idx];
-            auto buffer_info = process_buffer(js, ibm, bin_chunk);
-
-            size_t ibm_count = js["accessors"][ibm_accessor_idx]["count"]->to_int().value_or(0);
-            skin->inverse_bind_matrices.reserve(ibm_count);
-
-            const float* data = reinterpret_cast<const float*>(buffer_info.data.data());
-
-            if (buffer_info.data.size() < ibm_count * 16 * sizeof(float)) {
-                S_ERROR("IBM buffer too small: expected {} floats, got {}", ibm_count * 16, buffer_info.data.size() / sizeof(float));
-                continue;
-            }
-            for (size_t i = 0; i < ibm_count; ++i) {
-                FloatArray arr(data + i * 16, data + (i + 1) * 16); // 16 floats per Mat4 as usual
-                skin->inverse_bind_matrices.push_back(Mat4(arr));
-            }
-            S_DEBUG("Successfully loaded {0} inverse bind matrices", skin->inverse_bind_matrices.size());
-
-            if (node_skin_index >= 0 && !skin->inverse_bind_matrices.empty()) {
-                final_mesh->skin = skin;
-                final_mesh->is_skinned = true;
-                final_mesh->skin_index = node_skin_index;
-                S_DEBUG("Applied skin {0} to mesh.", node_skin_index);
-                S_DEBUG("Joint nodes: {0}", skin->joint_indices.size());
-
-            } else {
-                final_mesh->is_skinned = false;
-                final_mesh->skin.reset();
-
-            }
+        if(skin && !final_mesh->skin) {
+            /* Shared with every other mesh bound to the same skeleton -
+             * an Armature node is what actually poses it */
+            final_mesh->skin = skin;
         }
+
         if (primitive.joints_id >= 0) {
             auto joints = accessors[primitive.joints_id];
             auto buffer_info = process_buffer(js, joints, bin_chunk);
@@ -1114,11 +1060,285 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
     return final_mesh;
 }
 
+/* Everything we need to know about the file's skins to turn them into
+ * Armature -> Joint hierarchies */
+/* One generated Armature. A glTF skin maps to one of these, except that
+ * skins driving the same joints in the same order are merged - exporters
+ * routinely emit one skin per mesh part over a single shared skeleton, and
+ * the only thing that differs between them (the inverse bind matrices) lives
+ * on the mesh, not the armature. */
+struct ArmatureInfo {
+    std::string name;
+
+    /* glTF node index of each joint, in the order the inverse bind matrices
+     * expect them */
+    std::vector<int> joint_nodes;
+
+    /* The node the Armature is inserted above. This is the common ancestor
+     * of every joint, so all of them end up below the armature without any
+     * of them having their world transform changed. */
+    int anchor_node = -1;
+
+    /* Prefab node id given to the generated Armature. glTF node ids are
+     * used as prefab node ids directly, so these continue on from the end
+     * of the file's node list. */
+    uint32_t armature_node_id = 0;
+
+    /* The meshes this armature poses, in glTF mesh order */
+    std::vector<smlt::MeshPtr> meshes;
+};
+
+struct SkeletonInfo {
+    std::vector<ArmatureInfo> armatures;
+
+    /* glTF skin index -> the armature driving it (-1 if unusable) */
+    std::vector<int> skin_to_armature;
+
+    /* glTF skin index -> the inverse bind matrices to attach to its meshes */
+    std::vector<std::shared_ptr<Mesh::Skin>> skin_data;
+
+    /* glTF node index -> parent node index (-1 for roots) */
+    std::vector<int> parents;
+
+    /* glTF node index -> (armature index, joint index within it) */
+    std::map<int, std::pair<int, int>> joints;
+
+    /* glTF node index -> indices of the armatures anchored above it */
+    std::map<int, std::vector<int>> anchors;
+};
+
+/* Builds the node -> parent map. glTF only stores the relationship in the
+ * other direction */
+static void build_parent_map(JSONIterator& js, std::vector<int>& parents) {
+    auto nodes = js["nodes"];
+    const std::size_t count = nodes->size();
+
+    parents.assign(count, -1);
+
+    for(std::size_t i = 0; i < count; ++i) {
+        auto node = nodes[i];
+        if(!node->has_key("children")) {
+            continue;
+        }
+
+        for(auto& child: node["children"]) {
+            int child_id = child.to_int().value_or(-1);
+            if(child_id >= 0 && (std::size_t)child_id < count) {
+                parents[child_id] = (int)i;
+            }
+        }
+    }
+}
+
+static int lowest_common_ancestor(const std::vector<int>& parents,
+                                  const std::vector<int>& depths, int a,
+                                  int b) {
+    if(a < 0 || b < 0) {
+        return -1;
+    }
+
+    while(depths[a] > depths[b]) {
+        a = parents[a];
+    }
+
+    while(depths[b] > depths[a]) {
+        b = parents[b];
+    }
+
+    while(a != b) {
+        if(a < 0 || b < 0) {
+            return -1;
+        }
+
+        a = parents[a];
+        b = parents[b];
+    }
+
+    return a;
+}
+
+static void load_skeletons(JSONIterator& js,
+                           const std::vector<Accessor>& accessors,
+                           std::istream* bin_chunk, SkeletonInfo& info) {
+    auto skins_it = js["skins"];
+    if(!skins_it.is_valid() || skins_it->size() == 0) {
+        return;
+    }
+
+    build_parent_map(js, info.parents);
+
+    std::vector<int> depths(info.parents.size(), 0);
+    for(std::size_t i = 0; i < info.parents.size(); ++i) {
+        int depth = 0;
+        for(int p = info.parents[i]; p >= 0; p = info.parents[p]) {
+            ++depth;
+        }
+        depths[i] = depth;
+    }
+
+    int skin_index = 0;
+    for(auto& skin_node_it: skins_it) {
+        auto skin_node = skin_node_it.to_iterator();
+
+        auto name = skin_node["name"]->to_str().value_or(
+            _F("Armature {0}").format(skin_index));
+
+        std::vector<int> joint_nodes;
+        for(auto& j: skin_node["joints"]) {
+            int node_index = j.to_int().value_or(-1);
+            if(node_index < 0 || (std::size_t)node_index >= info.parents.size()) {
+                S_ERROR("Invalid joint index in skin");
+                node_index = -1;
+            }
+
+            joint_nodes.push_back(node_index);
+        }
+
+        auto skin = std::make_shared<Mesh::Skin>();
+        info.skin_data.push_back(skin);
+
+        int ibm_accessor_idx =
+            skin_node["inverseBindMatrices"]->to_int().value_or(-1);
+        if(ibm_accessor_idx < 0) {
+            S_WARN("Skin has no inverse bind matrices.");
+        } else {
+            auto buffer_info =
+                process_buffer(js, accessors[ibm_accessor_idx], bin_chunk);
+
+            std::size_t ibm_count =
+                js["accessors"][ibm_accessor_idx]["count"]->to_int().value_or(0);
+
+            if(buffer_info.data.size() < ibm_count * 16 * sizeof(float)) {
+                S_ERROR("IBM buffer too small: expected {0} floats, got {1}",
+                        ibm_count * 16, buffer_info.data.size() / sizeof(float));
+                ibm_count = 0;
+            }
+
+            const float* data =
+                reinterpret_cast<const float*>(buffer_info.data.data());
+
+            skin->inverse_bind_matrices.reserve(ibm_count);
+            for(std::size_t i = 0; i < ibm_count; ++i) {
+                // 16 floats per Mat4 as usual
+                FloatArray arr(data + i * 16, data + (i + 1) * 16);
+                skin->inverse_bind_matrices.push_back(Mat4(arr));
+            }
+
+            S_DEBUG("Loaded {0} joints and {1} inverse bind matrices",
+                    joint_nodes.size(), skin->inverse_bind_matrices.size());
+        }
+
+        ++skin_index;
+
+        /* Anything driving the same joints in the same order is the same
+         * skeleton as far as we're concerned, so reuse its armature rather
+         * than nesting a second one that would fight it for the joints. */
+        int existing = -1;
+        for(std::size_t a = 0; a < info.armatures.size(); ++a) {
+            if(info.armatures[a].joint_nodes == joint_nodes) {
+                existing = (int)a;
+                break;
+            }
+        }
+
+        if(existing >= 0) {
+            info.skin_to_armature.push_back(existing);
+            continue;
+        }
+
+        /* Where to hang the armature. The file's own "skeleton" entry is
+         * optional (and not always the common root it claims to be), so
+         * derive it from the joints themselves. */
+        int anchor = -1;
+        bool have_anchor = false;
+        for(auto joint_node: joint_nodes) {
+            if(joint_node < 0) {
+                continue;
+            }
+
+            anchor = (have_anchor) ? lowest_common_ancestor(
+                                         info.parents, depths, anchor, joint_node)
+                                   : joint_node;
+            have_anchor = true;
+
+            if(anchor < 0) {
+                /* The joints aren't all in one tree, so there's nowhere to
+                 * put an armature that would own all of them */
+                break;
+            }
+        }
+
+        if(anchor < 0) {
+            S_WARN("Skin '{0}' has no usable joints and will be ignored", name);
+            info.skin_to_armature.push_back(-1);
+            continue;
+        }
+
+        ArmatureInfo out;
+        out.name = name;
+        out.joint_nodes = joint_nodes;
+        out.anchor_node = anchor;
+        out.armature_node_id =
+            (uint32_t)(info.parents.size() + info.armatures.size());
+
+        const int armature_index = (int)info.armatures.size();
+
+        for(std::size_t i = 0; i < out.joint_nodes.size(); ++i) {
+            if(out.joint_nodes[i] < 0) {
+                continue;
+            }
+
+            if(info.joints.count(out.joint_nodes[i])) {
+                S_WARN("Node {0} is a joint of more than one skeleton - only "
+                       "the first will pose it",
+                       out.joint_nodes[i]);
+                continue;
+            }
+
+            info.joints[out.joint_nodes[i]] =
+                std::make_pair(armature_index, (int)i);
+        }
+
+        info.anchors[anchor].push_back(armature_index);
+        info.armatures.push_back(out);
+        info.skin_to_armature.push_back(armature_index);
+    }
+}
+
 static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
                                    JSONIterator& js,
-                                   const std::vector<smlt::MeshPtr>& meshes) {
+                                   const std::vector<smlt::MeshPtr>& meshes,
+                                   const SkeletonInfo& skeletons) {
     auto nodes = js["nodes"];
     auto node = nodes[node_id];
+
+    /* If any skeleton is anchored here, the Armature goes in above this
+     * node. Chaining them keeps things sane in the (unusual) case of
+     * several skins sharing a common root. */
+    auto anchored = skeletons.anchors.find(node_id);
+    if(anchored != skeletons.anchors.end()) {
+        for(auto armature_index: anchored->second) {
+            auto& armature = skeletons.armatures[armature_index];
+
+            PrefabNode armature_node;
+            armature_node.id = armature.armature_node_id;
+            armature_node.node_type_name = "armature";
+            armature_node.name = armature.name;
+            armature_node.params.set("translation", Vec3());
+            armature_node.params.set("rotation", Quaternion());
+            armature_node.params.set("scale_factor", Vec3(1, 1, 1));
+
+            for(std::size_t i = 0; i < armature.meshes.size(); ++i) {
+                auto key = (i == 0) ? std::string("mesh")
+                                    : Armature::extra_mesh_param_prefix() +
+                                          std::to_string(i);
+                armature_node.params.set(key, armature.meshes[i]);
+            }
+
+            prefab.push_node(armature_node, parent);
+            parent = (int32_t)armature_node.id;
+        }
+    }
 
     PrefabNode prefab_node;
     prefab_node.id = node_id;
@@ -1127,14 +1347,31 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
         node["extensions"]["KHR_lights_punctual"]["light"]->to_int().value_or(
             -1);
 
-    if(node->has_key("mesh") && !meshes.empty()) {
+    auto joint = skeletons.joints.find(node_id);
+
+    if(joint != skeletons.joints.end()) {
+        prefab_node.node_type_name = "joint";
+        prefab_node.params.set("joint_index", joint->second.second);
+
+        if(node->has_key("mesh")) {
+            S_WARN("Node {0} is both a joint and a mesh - the mesh will be "
+                   "ignored",
+                   node_id);
+        }
+    } else if(node->has_key("mesh") && node->has_key("skin")) {
+        /* The mesh is posed by (and rendered from) the armature, not from
+         * here. Per the glTF spec a skinned mesh node's own transform is
+         * ignored anyway, so all this node does now is hold its place in
+         * the hierarchy for anything parented to it. */
+        prefab_node.node_type_name = "stage";
+    } else if(node->has_key("mesh") && !meshes.empty()) {
         prefab_node.node_type_name = "actor";
         prefab_node.params.set("mesh",
                                meshes[node["mesh"]->to_int().value_or(0)]);
     } else if(node->has_key("camera")) {
         auto camera_id = node["camera"]->to_int().value_or(-1);
         if(camera_id >= 0) {
-            prefab_node.node_type_name = "camera";
+            prefab_node.node_type_name = "camera3d";
 
             auto cam_node = js["cameras"][camera_id];
             auto persp_node = cam_node["perspective"];
@@ -1143,8 +1380,13 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
                 prefab_node.params.set(
                     "aspect",
                     persp_node["aspectRatio"]->to_float().value_or(1.777f));
+
+                /* glTF stores yfov in radians, but the camera takes degrees */
                 prefab_node.params.set(
-                    "yfov", persp_node["yfov"]->to_float().value_or(60.0f));
+                    "yfov", Degrees(Radians(persp_node["yfov"]
+                                                ->to_float()
+                                                .value_or(1.047f)))
+                                .to_float());
                 prefab_node.params.set(
                     "znear", persp_node["znear"]->to_float().value_or(1.0f));
 
@@ -1257,7 +1499,8 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
     if(node->has_key("children")) {
         for(auto& child: node["children"]) {
             spawn_node_recursively(prefab, prefab_node.id,
-                                   child.to_int().value_or(0), js, meshes);
+                                   child.to_int().value_or(0), js, meshes,
+                                   skeletons);
         }
     }
 
@@ -1357,6 +1600,8 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     std::vector<MeshPtr> meshes;
     std::vector<Accessor> accessors;
 
+    SkeletonInfo skeletons;
+
     std::unordered_map<int, int> mesh_to_skin;
 
     // Looping through all the nodes for skin association
@@ -1409,6 +1654,11 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     prefab->push_material(default_material);
     materials.push_back(default_material);
 
+    /* Skins are parsed up-front: several meshes can share one, and the
+     * Armature that poses them has to be woven into the node hierarchy as
+     * it's spawned below. */
+    load_skeletons(js, accessors, bin_chunk.get(), skeletons);
+
     auto meshes_it = js["meshes"];
     j = 0;
     for(auto& node: meshes_it) {
@@ -1422,10 +1672,21 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
             S_DEBUG("Associating skin {} to mesh {}", skin_id, mesh_id);
         }
 
+        std::shared_ptr<Mesh::Skin> skin;
+        int armature_index = -1;
+        if(skin_id >= 0 && (std::size_t)skin_id < skeletons.skin_data.size()) {
+            skin = skeletons.skin_data[skin_id];
+            armature_index = skeletons.skin_to_armature[skin_id];
+        }
+
         auto mesh = load_mesh(&prefab->asset_manager(), js, mesh_it, mesh_id,
-                              accessors, materials, bin_chunk.get(), skin_id);
+                              accessors, materials, bin_chunk.get(), skin);
         prefab->push_mesh(mesh);
         meshes.push_back(mesh);
+
+        if(armature_index >= 0) {
+            skeletons.armatures[armature_index].meshes.push_back(mesh);
+        }
 
         j++;
     }
@@ -1440,7 +1701,8 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
             if(it->has_key("name")) {
                 auto name_maybe = it["name"]->to_str();
                 if(name_maybe && name_maybe.value() == root_name) {
-                    spawn_node_recursively(*prefab, -1, i, js, meshes);
+                    spawn_node_recursively(*prefab, -1, i, js, meshes,
+                                           skeletons);
                     return true;
                 }
             }
@@ -1461,7 +1723,7 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         auto node_id = maybe_id.value();
-        spawn_node_recursively(*prefab, -1, node_id, js, meshes);
+        spawn_node_recursively(*prefab, -1, node_id, js, meshes, skeletons);
     }
 
     auto animations_it = js["animations"];

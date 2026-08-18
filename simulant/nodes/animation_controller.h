@@ -4,7 +4,6 @@
 #include "builtins.h"
 #include "locators/node_locator.h"
 #include "simulant/application.h"
-#include "simulant/meshes/mesh.h"
 #include "simulant/time_keeper.h"
 #include "stage_node.h"
 
@@ -173,16 +172,6 @@ public:
         return true;
     }
 
-    bool add_target_mesh(const MeshPtr& target_mesh) {
-        if(!target_mesh) {
-            S_ERROR("Could not associate target mesh with anim controller: " + target_mesh->name());
-            return false;
-        }
-        target_meshes_.emplace_back(target_mesh);
-        return true;
-
-    }
-
     bool play(const std::string& animation, const int32_t loop_count = 1) {
         if(auto index = find_animation_index(animation)) {
             current_animation_ = index.value();
@@ -307,8 +296,8 @@ public:
 
 private:
     /* Applies the current_animation_'s channels at time_ to their target
-     * nodes and updates skinning. Returns true if any channel has not yet
-     * reached the end of its data at time_. */
+     * nodes and re-poses any armature being driven. Returns true if any
+     * channel has not yet reached the end of its data at time_. */
     bool apply_current_frame() {
         auto& anim = animations_[current_animation_];
         int unfinished = 0;
@@ -338,17 +327,16 @@ private:
             unfinished += !channel.data->finished(time_);
         }
 
-        // If any mesh is skinned, updating the skinning
-        if(!target_meshes_.empty()) {
-            for(const auto& target_mesh: target_meshes_) {
-                if(target_mesh->is_skinned &&
-                   current_animation_ < animations_.size())
-                    target_mesh->update_skinning();
-            }
-        }
+        /* The channels above have just moved the joints, so anything
+         * skinned to them needs re-posing. */
+        update_armatures();
 
         return unfinished > 0;
     }
+
+    /* Re-poses every armature below the node this controller is attached
+     * to. Mixins live outside the tree, so the search starts at base(). */
+    void update_armatures();
 
     optional<std::size_t>
         find_animation_index(const std::string& animation) const {
@@ -369,7 +357,6 @@ private:
     AnimationState state_ = ANIMATION_STATE_PLAYING;
     float time_ = 0.0f;
     int32_t loop_count_ = 1;
-    std::vector<MeshPtr> target_meshes_;
 
     // By default, at 1.0f, but to be able to override animation speed at runtime
     float animation_speed_ = 1.0f;
