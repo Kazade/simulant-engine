@@ -59,18 +59,24 @@ public:
         assert_equal(armature->joint(0)->armature(), armature);
         assert_equal(armature->joint(1)->parent(), (StageNode*)armature->joint(0));
 
-        /* Meshes only ever hold the bind pose - posing happens into the
-         * armature's own output mesh */
-        assert_not_equal(armature->skinned_mesh(), armature->source_mesh());
-        assert_equal(armature->skinned_mesh()->submesh_count(),
-                     armature->source_mesh()->submesh_count());
+        /* Meshes only ever hold the bind pose. Posing no longer produces a
+         * persistent output mesh - it's deferred to the renderer - but a
+         * synchronous CPU readback of the current pose is still available
+         * for tools/tests/gameplay code that need it (e.g. picking). */
+        armature->update_skinning();
+
+        VertexData posed(
+            armature->source_mesh()->vertex_data->vertex_specification());
+        assert_true(armature->read_back_pose(0, posed));
+        assert_equal(posed.count(), armature->source_mesh()->vertex_data->count());
     }
 
     /* Instantiating the same skinned prefab more than once used to corrupt
      * every earlier instance: Mesh objects loaded from a glTF are shared by
      * pointer, and skinning wrote straight back into that shared Mesh, so
      * every instance fought over one mutable vertex buffer. Each Armature
-     * should now own the mesh it poses. */
+     * now keeps its own joint matrices and never writes to the (shared,
+     * immutable) source mesh at all. */
     void test_multiple_instances_of_skinned_prefab_dont_share_mesh_state() {
         auto prefab = scene->assets->load_prefab(
             "assets/samples/khronos/RiggedSimple.glb");
@@ -91,16 +97,31 @@ public:
         assert_equal(armature0->source_mesh()->skin,
                      armature1->source_mesh()->skin);
 
-        // The posed output must not be, or the two instances would
-        // overwrite each other every frame.
-        assert_not_equal(armature0->skinned_mesh(), armature1->skinned_mesh());
-        assert_not_equal(armature0->skinned_mesh()->vertex_data.get(),
-                         armature1->skinned_mesh()->vertex_data.get());
-
         // Each armature drives its own skeleton
         assert_not_equal(armature0->joint(0), armature1->joint(0));
         assert_equal(armature0->joint(0)->armature(), armature0);
         assert_equal(armature1->joint(0)->armature(), armature1);
+
+        auto bind_pose_vertex =
+            *armature0->source_mesh()->vertex_data->position_at<Vec3>(0);
+
+        armature0->joint(0)->transform->set_translation(Vec3(0, 50, 0));
+        armature0->update_skinning();
+        armature1->update_skinning();
+
+        // Posing must never write back into the shared source mesh.
+        assert_equal(*armature0->source_mesh()->vertex_data->position_at<Vec3>(0),
+                     bind_pose_vertex);
+
+        VertexData pose0(
+            armature0->source_mesh()->vertex_data->vertex_specification());
+        VertexData pose1(
+            armature1->source_mesh()->vertex_data->vertex_specification());
+        assert_true(armature0->read_back_pose(0, pose0));
+        assert_true(armature1->read_back_pose(0, pose1));
+
+        // The two instances must have posed independently.
+        assert_not_equal(*pose0.position_at<Vec3>(0), *pose1.position_at<Vec3>(0));
     }
 
     /* Posing is done in armature space, so two instances at different
@@ -121,7 +142,10 @@ public:
         armature1->update_skinning();
 
         auto vertex_of = [](ArmaturePtr a) {
-            return *a->skinned_mesh()->vertex_data->position_at<Vec3>(0);
+            VertexData posed(
+                a->source_mesh()->vertex_data->vertex_specification());
+            a->read_back_pose(0, posed);
+            return *posed.position_at<Vec3>(0);
         };
 
         auto before = vertex_of(armature1);

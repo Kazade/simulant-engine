@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include <cstring>
+#include <unordered_set>
 
 #include "armature.h"
 #include "joint.h"
@@ -27,6 +27,7 @@
 #include "../deps/sh4zam/shz_matrix.h"
 #include "../renderers/batching/render_queue.h"
 #include "../scenes/scene.h"
+#include "../utils/skinning.h"
 
 namespace smlt {
 
@@ -61,36 +62,53 @@ bool Armature::on_create(Params params) {
     return StageNode::on_create(params);
 }
 
-MeshPtr Armature::add_mesh(const MeshPtr& source) {
+bool Armature::add_mesh(const MeshPtr& source) {
     if(!source) {
-        return MeshPtr();
+        return false;
     }
 
     if(!source->is_skinned()) {
         S_WARN("Mesh '{0}' has no skin, so can't be posed by an armature",
                source->name());
-        return MeshPtr();
+        return false;
     }
 
-    auto output = build_output_mesh(source);
-    if(!output) {
-        return MeshPtr();
-    }
-
-    meshes_.push_back(SkinnedMesh{source, output});
+    meshes_.push_back(SkinnedMesh{source});
 
     mark_skinning_dirty();
     rebuild_aabb();
 
-    return output;
+    return true;
 }
 
 MeshPtr Armature::source_mesh(std::size_t i) const {
     return (i < meshes_.size()) ? meshes_[i].source : MeshPtr();
 }
 
-MeshPtr Armature::skinned_mesh(std::size_t i) const {
-    return (i < meshes_.size()) ? meshes_[i].output : MeshPtr();
+bool Armature::read_back_pose(std::size_t i, VertexData& out) const {
+    if(i >= meshes_.size()) {
+        return false;
+    }
+
+    auto& entry = meshes_[i];
+    auto& skin = entry.source->skin;
+    if(!skin) {
+        return false;
+    }
+
+    auto it = skin_poses_.find(skin.get());
+    if(it == skin_poses_.end()) {
+        return false;
+    }
+
+    auto source_data = entry.source->vertex_data.get();
+    out.reset(source_data->vertex_specification());
+    out.resize(source_data->count());
+
+    skin_vertices(source_data, it->second.info.joint_matrices,
+                 it->second.info.joint_count, &out);
+
+    return true;
 }
 
 Joint* Armature::joint(std::size_t index) const {
@@ -108,69 +126,6 @@ Joint* Armature::find_joint(const std::string& name) const {
     }
 
     return nullptr;
-}
-
-MeshPtr Armature::build_output_mesh(const MeshPtr& source) {
-    auto source_data = source->vertex_data.get();
-
-    VertexSpecification render_spec = source_data->vertex_specification();
-    render_spec.joint_attribute = VERTEX_ATTRIBUTE_NONE;
-    render_spec.weight_attribute = VERTEX_ATTRIBUTE_NONE;
-
-    auto output = scene->assets->create_mesh(render_spec);
-    if(!output) {
-        return MeshPtr();
-    }
-
-    output->set_name(source->name());
-
-    const uint32_t count = source_data->count();
-    output->vertex_data->resize(count);
-
-    /* Position/normal/uv/color/specular all come before joints/weights in
-     * the layout (see VertexSpecification::recalc_stride_and_offsets), so
-     * their offsets are identical between the two specs and we can copy
-     * each vertex's shared prefix directly rather than walking it
-     * attribute-by-attribute. Everything except position and normal is then
-     * left untouched by posing. */
-    const uint32_t copy_bytes =
-        std::min(source_data->stride(), output->vertex_data->stride());
-    for(uint32_t i = 0; i < count; ++i) {
-        shz_memcpy(output->vertex_data->data() +
-                        (std::size_t)i * output->vertex_data->stride(),
-                   source_data->data() + (std::size_t)i * source_data->stride(),
-                   copy_bytes);
-    }
-    output->vertex_data->done();
-
-    for(auto& sm: source->each_submesh()) {
-        SubMesh* new_sm = nullptr;
-        if(sm->type() == SUBMESH_TYPE_INDEXED) {
-            /* index_data_ is private, but Armature is a friend of Mesh (and
-             * Mesh a friend of SubMesh) - grab the shared_ptr directly
-             * rather than via the ::index_data property, which unwraps to
-             * the pointee type rather than the shared_ptr itself. Topology
-             * is invariant under deformation, so it can be shared. */
-            new_sm = output->create_submesh(sm->name(), sm->material(),
-                                            sm->index_data_, sm->arrangement());
-        } else {
-            new_sm = output->create_submesh(sm->name(), sm->material(),
-                                            sm->arrangement());
-            for(std::size_t r = 0; r < sm->vertex_range_count(); ++r) {
-                new_sm->add_vertex_range(sm->vertex_ranges()[r].start,
-                                         sm->vertex_ranges()[r].count);
-            }
-        }
-
-        for(uint8_t slot = MATERIAL_SLOT1; slot < MATERIAL_SLOT_MAX; ++slot) {
-            auto mat = sm->material_at_slot((MaterialSlot)slot, false);
-            if(mat) {
-                new_sm->set_material_at_slot((MaterialSlot)slot, mat);
-            }
-        }
-    }
-
-    return output;
 }
 
 void Armature::ensure_joints() const {
@@ -212,11 +167,15 @@ void Armature::ensure_joints() const {
 
 void Armature::update_joint_matrices(const Mat4& armature_world_inverse,
                                      const Mesh::Skin& skin) {
+    auto& pose = skin_poses_[&skin];
+
     const std::size_t count =
         std::min(joints_.size(), skin.inverse_bind_matrices.size());
 
-    joint_matrices_.clear();
-    joint_matrices_.resize(count, Mat4());
+    /* Missing joints (a declared index with no matching Joint node) are left
+     * as the zero matrix, so skin_vertices() can blend them in
+     * unconditionally without needing to know which joints exist. */
+    pose.joint_matrices.assign(count, Mat4::zero());
 
     /* Chain the three matrix multiplies through XMTRX directly, saving one
      * full XMTRX load+store round-trip per joint compared to calling
@@ -235,109 +194,13 @@ void Armature::update_joint_matrices(const Mat4& armature_world_inverse,
             (shz_mat4x4_t*)joint_matrix._native());
         // XMTRX = (armature_world_inverse * joint_matrix) * inverse_bind[h]
         shz_xmtrx_apply_store_4x4(
-            (shz_mat4x4_t*)joint_matrices_[h]._native(),
+            (shz_mat4x4_t*)pose.joint_matrices[h]._native(),
             (shz_mat4x4_t*)skin.inverse_bind_matrices[h]._native());
     }
-}
 
-void Armature::pose_mesh(const SkinnedMesh& entry) {
-    auto source_data = entry.source->vertex_data.get();
-    auto output_data = entry.output->vertex_data.get();
-
-    const auto& source_spec = source_data->vertex_specification();
-
-    if(!source_spec.has_joints() || !source_spec.has_weights()) {
-        /* Bound to a skeleton, but with nothing saying how. The output mesh
-         * already holds a copy of the bind pose, so leave it at that. */
-        S_WARN_ONCE("Skinned mesh '{0}' has no joint/weight vertex "
-                    "attributes and can't be posed",
-                    entry.source->name());
-        return;
-    }
-
-    const bool has_positions = source_spec.has_positions();
-    const bool has_normals = source_spec.has_normals();
-    const bool use_byte_joints = source_spec.joint_attribute == VERTEX_ATTRIBUTE_4UB;
-
-    output_data->move_to_start();
-
-    for(uint32_t i = 0; i < source_data->count(); ++i) {
-        const Vec4& weights_acc = *source_data->weights_at<Vec4>(i);
-        float weights[4] = {weights_acc.x, weights_acc.y, weights_acc.z,
-                            weights_acc.w};
-
-        uint16_t joints[4] = {0, 0, 0, 0};
-        if(use_byte_joints) {
-            const auto* acc = source_data->joints_at<uint8_t>(i);
-            for(int j = 0; j < 4; ++j) {
-                joints[j] = acc[j];
-            }
-        } else {
-            const auto* acc = source_data->joints_at<uint16_t>(i);
-            for(int j = 0; j < 4; ++j) {
-                joints[j] = acc[j];
-            }
-        }
-
-        float sum = weights[0] + weights[1] + weights[2] + weights[3];
-
-        /* Not every format weights every vertex (MS3D in particular allows
-         * vertices with no bone at all). Blending zero joint matrices would
-         * collapse those vertices onto the origin, so leave them at their
-         * bind-pose position/normal instead. */
-        if(sum == 0.0f) {
-            if(has_positions) {
-                output_data->position(*source_data->position_at<Vec3>(i));
-            }
-
-            if(has_normals) {
-                output_data->normal(*source_data->normal_at<Vec3>(i));
-            }
-
-            output_data->move_next();
-            continue;
-        }
-
-        if(sum > 1.01f) {
-            float inv_sum = shz_invf_fsrra(sum);
-            for(float& weight: weights) {
-                weight *= inv_sum;
-            }
-        }
-
-        shz_xmtrx_init_zero();
-        for(int j = 0; j < 4; ++j) {
-            float weight = weights[j];
-            if(weight == 0.0f) {
-                continue;
-            }
-
-            auto joint_index = joints[j];
-            if(joint_index >= joint_matrices_.size() || !joints_[joint_index]) {
-                continue;
-            }
-
-            const Mat4& joint_matrix = joint_matrices_[joint_index];
-            shz_xmtrx_blend((const shz_mat4x4_t*)joint_matrix._native(), weight);
-        }
-
-        if(has_positions) {
-            const Vec3& v = *source_data->position_at<Vec3>(i);
-            shz_vec3_t out = shz_xmtrx_transform_point3(shz_vec3_init(v.x, v.y, v.z));
-            output_data->position({out.x, out.y, out.z});
-        }
-
-        if(has_normals) {
-            const Vec3& n = *source_data->normal_at<Vec3>(i);
-            shz_vec3_t out = shz_xmtrx_transform_vec3(shz_vec3_init(n.x, n.y, n.z));
-            output_data->normal(Vec3(out.x, out.y, out.z).normalized());
-        }
-
-        output_data->move_next();
-    }
-
-    /* This also refreshes the output mesh's AABB */
-    output_data->done();
+    pose.info.joint_matrices = pose.joint_matrices.data();
+    pose.info.joint_count = (uint16_t)count;
+    ++pose.info.generation;
 }
 
 void Armature::update_skinning() {
@@ -354,9 +217,10 @@ void Armature::update_skinning() {
     const Mat4 armature_world_inverse =
         transform->world_space_matrix().inversed_transform();
 
-    /* Meshes bound to the same skeleton share a Skin (and therefore a set
-     * of joint matrices), so only recompute when it actually changes */
-    const Mesh::Skin* current_skin = nullptr;
+    /* Meshes bound to the same skeleton share a Skin (and therefore a set of
+     * joint matrices) - glTF exporters commonly emit one skin per mesh part
+     * over a shared skeleton - so only recompute each distinct skin once. */
+    std::unordered_set<const Mesh::Skin*> processed;
 
     for(auto& entry: meshes_) {
         auto& skin = entry.source->skin;
@@ -364,29 +228,44 @@ void Armature::update_skinning() {
             continue;
         }
 
-        if(skin.get() != current_skin) {
-            current_skin = skin.get();
+        if(processed.insert(skin.get()).second) {
             update_joint_matrices(armature_world_inverse, *skin);
         }
-
-        pose_mesh(entry);
     }
 
     rebuild_aabb();
 }
 
 void Armature::rebuild_aabb() {
-    if(meshes_.empty()) {
-        aabb_ = AABB();
-        mark_transformed_aabb_dirty();
-        return;
+    bool first = true;
+
+    for(auto& entry: meshes_) {
+        auto& skin = entry.source->skin;
+        if(!skin) {
+            continue;
+        }
+
+        auto it = skin_poses_.find(skin.get());
+        if(it == skin_poses_.end()) {
+            continue;
+        }
+
+        AABB mesh_aabb =
+            skinned_aabb(entry.source->vertex_data.get(),
+                        it->second.info.joint_matrices,
+                        it->second.info.joint_count);
+
+        if(first) {
+            aabb_ = mesh_aabb;
+            first = false;
+        } else {
+            aabb_.encapsulate(mesh_aabb.min());
+            aabb_.encapsulate(mesh_aabb.max());
+        }
     }
 
-    aabb_ = meshes_[0].output->aabb();
-    for(std::size_t i = 1; i < meshes_.size(); ++i) {
-        auto& other = meshes_[i].output->aabb();
-        aabb_.encapsulate(other.min());
-        aabb_.encapsulate(other.max());
+    if(first) {
+        aabb_ = AABB();
     }
 
     mark_transformed_aabb_dirty();
@@ -434,15 +313,32 @@ void Armature::do_generate_renderables(batcher::RenderQueue* render_queue,
     const bool visible = is_visible();
 
     for(auto& entry: meshes_) {
-        int i = entry.output->submesh_count();
+        auto& skin = entry.source->skin;
 
-        for(auto& submesh: entry.output->each_submesh()) {
+        const SkinningInfo* skinning_info = nullptr;
+        if(skin) {
+            auto it = skin_poses_.find(skin.get());
+            if(it != skin_poses_.end()) {
+                skinning_info = &it->second.info;
+            }
+        }
+
+        int i = entry.source->submesh_count();
+
+        for(auto& submesh: entry.source->each_submesh()) {
             Renderable new_renderable;
             new_renderable.final_transformation = mat;
             new_renderable.render_priority = rp;
             new_renderable.is_visible = visible;
             new_renderable.arrangement = submesh->arrangement();
-            new_renderable.vertex_data = entry.output->vertex_data.get();
+
+            /* The unposed, shared bind-pose vertex data (with joint/weight
+             * attributes) plus the current joint matrices - actually
+             * skinning this into something renderable is deferred to the
+             * renderer, immediately before submission. */
+            new_renderable.vertex_data = entry.source->vertex_data.get();
+            new_renderable.skinning = skinning_info;
+
             new_renderable.index_data = submesh->index_data.get();
             new_renderable.index_element_count =
                 (new_renderable.index_data)
@@ -457,8 +353,8 @@ void Armature::do_generate_renderables(batcher::RenderQueue* render_queue,
             /* Indexed submeshes have fixed connectivity, so expose a stable
              * key (the index data's uuid) to allow derived data to be
              * cached. This holds even while posing: the topology is
-             * invariant under deformation, and only the per-frame normals
-             * need refreshing. */
+             * invariant under deformation, and skinning only changes
+             * position/normal. */
             new_renderable.key = (new_renderable.index_data)
                                      ? (int64_t)new_renderable.index_data->uuid()
                                      : -1;

@@ -629,7 +629,7 @@ uint64_t VertexData::last_updated() const {
     return last_updated_;
 }
 
-bool VertexData::clone_into(VertexData& other) {
+bool VertexData::clone_into(VertexData& other) const {
     if(vertex_specification_ != other.vertex_specification_) {
         return false;
     }

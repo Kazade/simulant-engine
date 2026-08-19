@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <cstdint>
+#include "../../vertex_data.h"
 #include "../batching/render_queue.h"
 #include "../../utils/vertex_lighting.h"
 
@@ -96,6 +97,14 @@ private:
      * m_[1]*v + m_[2]; v' = m_[3]*u + m_[4]*v + m_[5]. */
     bool  uv_matrix_identity_ = true;
     float uv_matrix_[6] = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f};
+
+    /* Reused scratch buffer that skinned renderables are posed into
+     * immediately before submission - see skin_resolve.h. There's no
+     * persistent GPU-side buffer on this backend (vertex data is streamed
+     * straight to the Tile Accelerator every draw), so a single reused
+     * buffer is all that's needed regardless of how many Armature instances
+     * share a source mesh. */
+    VertexData skin_scratch_{VertexSpecification()};
 
     void do_visit(const Renderable* renderable,
                   const MaterialPass* material_pass,

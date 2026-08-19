@@ -73,6 +73,29 @@ enum RenderableFlags : uint32_t {
     RENDERABLE_FLAG_RECEIVES_SHADOWS = 1u << 0,
 };
 
+/* Attached to a Renderable when its vertex_data holds an unposed, bind-pose
+ * skinned mesh (i.e. it has joint/weight vertex attributes) that must be
+ * skinned before use. Owned by the producing node (e.g. Armature) and only
+ * required to stay valid for the frame in which the Renderable was
+ * generated.
+ *
+ * Renderers are expected to skin vertex_data into a small, reused scratch
+ * buffer immediately before consuming it (e.g. in prepare_to_render), rather
+ * than the producing node keeping a posed copy alive for every instance. */
+struct SkinningInfo {
+    /* armature_world_inverse * joint_world * inverse_bind, one per joint.
+     * Unused/missing joints are the zero matrix so they can be blended in
+     * unconditionally without contributing anything. */
+    const Mat4* joint_matrices = nullptr;
+    uint16_t joint_count = 0;
+
+    /* Bumped by the producing node whenever joint_matrices changes. Lets a
+     * renderer with a persistent GPU-side buffer (e.g. GL2's VBOManager)
+     * detect that a re-skin/re-upload is needed even though vertex_data
+     * itself (the immutable bind pose) never changes. */
+    uint64_t generation = 0;
+};
+
 struct alignas(8) Renderable final {
     /* A stable identifier for persistent renderables. If != -1, this renderable
      * is expected to be returned again on subsequent frames with the same
@@ -106,6 +129,10 @@ struct alignas(8) Renderable final {
     const Mat4* final_transformation = nullptr;
     Material* material = nullptr;
     bool is_visible = true;
+
+    /* Non-null if vertex_data is an unposed skinned bind pose that needs
+     * skinning before use. See SkinningInfo. */
+    const SkinningInfo* skinning = nullptr;
 
     LightPtr lights_affecting_this_frame[MAX_LIGHTS_PER_RENDERABLE];
     uint8_t light_count = 0;

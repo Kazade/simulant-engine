@@ -16,7 +16,7 @@ public:
 
         auto armature = static_cast<ArmaturePtr>(
             prefab_->find_descendents_by_types({Armature::Meta::node_type})[0]);
-        armature->skinned_mesh()->first_submesh()->material()->set_lighting_enabled(false);
+        armature->source_mesh()->first_submesh()->material()->set_lighting_enabled(false);
 
         auto anim_controller = prefab_->find_mixin<AnimationController>();
         auto animations = anim_controller->animation_names();

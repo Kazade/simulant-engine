@@ -1,6 +1,17 @@
 #include "vbo_manager.h"
 
+#include "../../utils/skinning.h"
+
 namespace smlt {
+
+namespace {
+/* Drop a skinned slot's cache entry if it hasn't been asked for in this
+ * long - handles an Armature (or its bound mesh) going away or simply no
+ * longer being drawn, without needing a destruction signal from something
+ * as short-lived as a SkinningInfo. */
+const uint64_t SKINNED_SLOT_IDLE_TIMEOUT_US = 2 * 1000 * 1000;
+const uint32_t SKINNED_SLOT_SWEEP_INTERVAL = 256;
+} // namespace
 
 void GPUBuffer::bind_vbos() {
     vertex_vbo->bind(vertex_vbo_slot);
@@ -65,9 +76,65 @@ std::pair<VBO*, VBOSlot> VBOManager::perform_fetch_or_upload(const Data* vdata, 
     return std::make_pair(vvbo, vslot);
 }
 
+std::pair<VBO*, VBOSlot>
+VBOManager::fetch_skinned_vertex_slot(const Renderable* renderable) {
+    auto& entry = skinned_slots_[renderable->skinning];
+
+    entry.last_seen_us = TimeKeeper::now_in_us();
+
+    const VertexData* source = renderable->vertex_data;
+
+    if(!entry.persistent_output) {
+        entry.persistent_output =
+            std::make_shared<VertexData>(source->vertex_specification());
+    }
+
+    /* Only actually re-skin (and, via VertexData::done(), trigger a
+     * re-upload below) when the pose has genuinely changed since we last
+     * saw it - mirrors the dirty-check perform_fetch_or_upload already does
+     * for ordinary vertex data. */
+    if(entry.last_generation_skinned != renderable->skinning->generation) {
+        if(entry.persistent_output->vertex_specification() !=
+           source->vertex_specification()) {
+            entry.persistent_output->reset(source->vertex_specification());
+        }
+
+        source->clone_into(*entry.persistent_output);
+        skin_vertices(source, renderable->skinning->joint_matrices,
+                      renderable->skinning->joint_count,
+                      entry.persistent_output.get());
+
+        entry.last_generation_skinned = renderable->skinning->generation;
+    }
+
+    if(++skinned_slot_fetch_count_ % SKINNED_SLOT_SWEEP_INTERVAL == 0) {
+        evict_stale_skinned_slots();
+    }
+
+    return perform_fetch_or_upload(entry.persistent_output.get(),
+                                   dedicated_vertex_vbos_, vertex_data_slots_);
+}
+
+void VBOManager::evict_stale_skinned_slots() {
+    const uint64_t now = TimeKeeper::now_in_us();
+
+    for(auto it = skinned_slots_.begin(); it != skinned_slots_.end();) {
+        if(now - it->second.last_seen_us > SKINNED_SLOT_IDLE_TIMEOUT_US) {
+            /* Dropping persistent_output fires its destruction signal,
+             * which release_slot() is already connected to. */
+            it = skinned_slots_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 GPUBuffer VBOManager::update_and_fetch_buffers(const Renderable *renderable) {
-    const auto& vdata = renderable->vertex_data;
-    auto vpair = perform_fetch_or_upload(vdata, dedicated_vertex_vbos_, vertex_data_slots_);
+    auto vpair = (renderable->skinning)
+                     ? fetch_skinned_vertex_slot(renderable)
+                     : perform_fetch_or_upload(renderable->vertex_data,
+                                               dedicated_vertex_vbos_,
+                                               vertex_data_slots_);
 
     assert(vpair.first->target() == GL_ARRAY_BUFFER);
 

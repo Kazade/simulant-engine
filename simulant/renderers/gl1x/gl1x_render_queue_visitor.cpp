@@ -27,6 +27,7 @@
 #include "../../utils/vertex_lighting.h"
 #include "../../vertex_data.h"
 #include "../../window.h"
+#include "../batching/skin_resolve.h"
 
 namespace smlt {
 
@@ -521,12 +522,19 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     GLCheck(glMatrixMode, GL_MODELVIEW);
     GLCheck(glLoadMatrixf, modelview.data());
 
-    const auto& spec = renderable->vertex_data->vertex_specification();
+    /* Skinned renderables carry an unposed bind pose plus the joint matrices
+     * needed to pose it (see SkinningInfo) - pose it into skin_scratch_ now,
+     * immediately before submission, rather than every Armature instance
+     * keeping its own permanent posed copy. */
+    const VertexData* resolved_vertex_data =
+        resolve_vertex_data(renderable, skin_scratch_);
+
+    const auto& spec = resolved_vertex_data->vertex_specification();
     const auto stride = spec.stride();
 
     renderer_->prepare_to_render(renderable);
 
-    const auto vertex_data = renderable->vertex_data->data();
+    const auto vertex_data = resolved_vertex_data->data();
     assert(vertex_data);
 
     const auto has_positions = spec.has_positions();
@@ -577,7 +585,7 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
     const float global_amb[3] = {global_ambient_.r, global_ambient_.g, global_ambient_.b};
 
     if(do_soft_lighting) {
-        uint32_t vcount = renderable->vertex_data->count();
+        uint32_t vcount = resolved_vertex_data->count();
         soft_color_buf_.resize(vcount * 4);
 
         auto pos_off    = spec.has_positions() ? spec.position_offset(false) : 0;

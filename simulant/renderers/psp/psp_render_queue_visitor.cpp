@@ -11,6 +11,7 @@
 #include "../../vertex_data.h"
 #include "../../math/mat4.h"
 #include "../../window.h"
+#include "../batching/skin_resolve.h"
 #include "psp_render_group_impl.h"
 #include "psp_render_queue_visitor.h"
 #include "psp_renderer.h"
@@ -515,6 +516,13 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     renderer_->prepare_to_render(renderable);
 
+    /* Skinned renderables carry an unposed bind pose plus the joint matrices
+     * needed to pose it (see SkinningInfo) - pose it into skin_scratch_ now,
+     * immediately before submission, rather than every Armature instance
+     * keeping its own permanent posed copy. */
+    const VertexData* resolved_vertex_data =
+        resolve_vertex_data(renderable, skin_scratch_);
+
     const auto& model = *renderable->final_transformation;
     const auto& view = camera_->view_matrix();
     const auto& projection = camera_->projection_matrix();
@@ -560,7 +568,7 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
     if(element_count) {
         std::vector<uint8_t> buffer;
-        auto stride = renderable->vertex_data->stride();
+        auto stride = resolved_vertex_data->stride();
         buffer.resize(renderable->index_element_count * stride);
 
         uint8_t* dst = &buffer[0];
@@ -568,7 +576,7 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         for(std::size_t i = 0; i < renderable->index_element_count; ++i) {
             auto idx = renderable->index_data->at(i);
             auto offset = idx * stride;
-            std::memcpy(dst, renderable->vertex_data->data() + offset, stride);
+            std::memcpy(dst, resolved_vertex_data->data() + offset, stride);
             dst += stride;
         }
 
@@ -579,12 +587,12 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         switch(renderable->arrangement) {
             case MESH_ARRANGEMENT_TRIANGLE_STRIP:
                 zclip_tristrips_and_submit_range(
-                    &range, renderable->vertex_data->vertex_specification(),
+                    &range, resolved_vertex_data->vertex_specification(),
                     &buffer[0], stride, lctx);
                 break;
             case MESH_ARRANGEMENT_TRIANGLES:
                 zclip_triangles_and_submit_range(
-                    &range, renderable->vertex_data->vertex_specification(),
+                    &range, resolved_vertex_data->vertex_specification(),
                     &buffer[0], stride, lctx);
                 break;
             default:
@@ -594,19 +602,19 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         total += range.count;
     } else {
         auto range = renderable->vertex_ranges;
-        auto spec_stride = renderable->vertex_data->vertex_specification().stride();
+        auto spec_stride = resolved_vertex_data->vertex_specification().stride();
 
         for(std::size_t i = 0; i < renderable->vertex_range_count; ++i, ++range) {
             switch(renderable->arrangement) {
                 case MESH_ARRANGEMENT_TRIANGLE_STRIP:
                     zclip_tristrips_and_submit_range(
-                        range, renderable->vertex_data->vertex_specification(),
-                        renderable->vertex_data->data(), spec_stride, lctx);
+                        range, resolved_vertex_data->vertex_specification(),
+                        resolved_vertex_data->data(), spec_stride, lctx);
                     break;
                 case MESH_ARRANGEMENT_TRIANGLES:
                     zclip_triangles_and_submit_range(
-                        range, renderable->vertex_data->vertex_specification(),
-                        renderable->vertex_data->data(), spec_stride, lctx);
+                        range, resolved_vertex_data->vertex_specification(),
+                        resolved_vertex_data->data(), spec_stride, lctx);
                     break;
                 default:
                     break;

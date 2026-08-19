@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "../../assets/material.h"
+#include "../../vertex_data.h"
 #include "../batching/renderable.h"
 #include "../gl_renderer.h"
 #include "../../utils/vertex_lighting.h"
@@ -75,6 +76,14 @@ private:
 
     /* Temporary buffer for computed per-vertex colours (RGBA floats) */
     std::vector<float> soft_color_buf_;
+
+    /* Reused scratch buffer that skinned renderables are posed into
+     * immediately before submission - see skin_resolve.h. There's no
+     * persistent GPU-side buffer on this backend (vertex arrays are read
+     * straight from client memory every draw), so a single reused buffer is
+     * all that's needed regardless of how many Armature instances share a
+     * source mesh. */
+    VertexData skin_scratch_{VertexSpecification()};
 };
 
 

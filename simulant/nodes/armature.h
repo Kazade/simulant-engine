@@ -18,8 +18,11 @@
 
 #pragma once
 
+#include <unordered_map>
+
 #include "../core/aligned_allocator.h"
 #include "../meshes/mesh.h"
+#include "../renderers/batching/renderable.h"
 #include "stage_node.h"
 
 namespace smlt {
@@ -28,19 +31,21 @@ class Joint;
 
 /** The root of a skeleton, and the thing that renders what's attached to it.
  *
- *  An Armature owns three things:
+ *  An Armature owns two things:
  *
  *   - the skeleton, which is the tree of `Joint` nodes below it,
  *   - one or more skinned *source* meshes, which are shared, immutable
  *     assets holding the bind pose along with per-vertex joint indices and
- *     weights,
- *   - a posed *output* mesh per source mesh, which is private to this
- *     armature and is what actually gets submitted to the render queue.
+ *     weights.
  *
- *  Because the output meshes are per-armature, any number of armatures can
- *  pose the same source mesh at the same time without treading on each
- *  other - which is what makes it safe to instantiate the same animated
- *  prefab more than once.
+ *  Unlike earlier versions of this class, posing does *not* produce a
+ *  private copy of the mesh. Instead, each frame this armature computes the
+ *  joint matrices for its pose and hands them to the render queue alongside
+ *  the shared, unposed source mesh (see SkinningInfo in renderable.h) -
+ *  actually skinning the vertices is deferred to the renderer, immediately
+ *  before the geometry is submitted. This means any number of armatures can
+ *  pose the same source mesh at once without each needing its own copy of
+ *  the (potentially large) posed vertex buffer.
  *
  *  Skinning happens in armature space, so the pose doesn't depend on where
  *  the armature sits in the scene; moving the Armature moves the posed mesh
@@ -67,10 +72,9 @@ public:
     Armature(Scene* owner) :
         StageNode(owner, Meta::node_type) {}
 
-    /** Binds a skinned mesh to this armature, and creates the output mesh
-     *  that its posed vertices will be written into. Returns the output
-     *  mesh, or nullptr if `source` couldn't be used. */
-    MeshPtr add_mesh(const MeshPtr& source);
+    /** Binds a skinned mesh to this armature. Returns false if `source`
+     *  couldn't be used (e.g. it has no skin). */
+    bool add_mesh(const MeshPtr& source);
 
     std::size_t mesh_count() const {
         return meshes_.size();
@@ -79,15 +83,21 @@ public:
     /** The shared, immutable bind-pose mesh at `i` */
     MeshPtr source_mesh(std::size_t i = 0) const;
 
-    /** The posed mesh at `i`, private to this armature. This is what ends
-     *  up in the render queue. */
-    MeshPtr skinned_mesh(std::size_t i = 0) const;
+    /** Computes the posed vertices of the mesh at `i` into `out`, using the
+     *  current pose. This is a synchronous CPU readback intended for tools,
+     *  tests, and gameplay code that needs to inspect posed geometry (e.g.
+     *  picking); the render queue does not use this and instead skins
+     *  directly into a transient renderer-owned buffer. `out` is resized and
+     *  its position/normal attributes overwritten; everything else is left
+     *  untouched. Returns false if there's no mesh at `i` or the pose isn't
+     *  up to date and couldn't be resolved. */
+    bool read_back_pose(std::size_t i, VertexData& out) const;
 
-    /** Recalculates the posed vertices of every bound mesh from the current
+    /** Recalculates the joint matrices of every bound mesh from the current
      *  transforms of this armature's joints. */
     void update_skinning();
 
-    /** Flags that the pose has changed and the skinned meshes need
+    /** Flags that the pose has changed and the joint matrices need
      *  rebuilding before they're next rendered. */
     void mark_skinning_dirty() {
         skinning_dirty_ = true;
@@ -130,7 +140,17 @@ public:
 private:
     struct SkinnedMesh {
         MeshPtr source; ///< Shared bind-pose mesh
-        MeshPtr output; ///< Posed mesh owned by this armature
+    };
+
+    /* Per-Skin joint matrices, kept across frames so meshes with distinct
+     * skins bound to the same armature don't clobber each other's matrices
+     * (several meshes can share a Skin, in which case they share an entry
+     * here too). Renderable::skinning points at `info` directly, so it must
+     * stay at a stable address for as long as this armature (and the map
+     * entry) lives - std::unordered_map guarantees that across insertions. */
+    struct SkinPose {
+        std::vector<Mat4, aligned_allocator<Mat4, 32>> joint_matrices;
+        SkinningInfo info;
     };
 
     bool on_create(Params params) override;
@@ -141,17 +161,11 @@ private:
      * this is resolved lazily rather than up-front. */
     void ensure_joints() const;
 
-    /* Creates the output mesh matching a source mesh. The output shares the
-     * source's index data (topology doesn't change with pose) but gets its
-     * own vertex buffer, minus the joints/weights attributes which nothing
-     * downstream of skinning reads. */
-    MeshPtr build_output_mesh(const MeshPtr& source);
-
-    /* joint_matrices_[h] = armature_world_inverse * joint_world * ibm[h] */
+    /* pose.joint_matrices[h] = armature_world_inverse * joint_world * ibm[h],
+     * with entries for missing joints left as Mat4::zero() so they can be
+     * blended in unconditionally. Bumps pose.info.generation. */
     void update_joint_matrices(const Mat4& armature_world_inverse,
                                const Mesh::Skin& skin);
-
-    void pose_mesh(const SkinnedMesh& entry);
 
     void rebuild_aabb();
 
@@ -162,8 +176,7 @@ private:
     mutable std::vector<Joint*> joints_;
     mutable bool joints_dirty_ = true;
 
-    /* Allocated on 32B for DC performance */
-    std::vector<Mat4, aligned_allocator<Mat4, 32>> joint_matrices_;
+    std::unordered_map<const Mesh::Skin*, SkinPose> skin_poses_;
 
     bool skinning_dirty_ = true;
 

@@ -267,7 +267,7 @@ public:
      *
      * Returns true on success, false otherwise.
     */
-    bool clone_into(VertexData& other);
+    bool clone_into(VertexData& other) const;
 
 private:
     VertexSpecification vertex_specification_;

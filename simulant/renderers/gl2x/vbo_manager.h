@@ -8,6 +8,7 @@
 #include "../../meshes/mesh.h"
 #include "../../generic/managed.h"
 #include "../../time_keeper.h"
+#include "../../vertex_data.h"
 #include "../glad/glad/glad.h"
 #include "../../utils/gl_error.h"
 #include "../batching/renderable.h"
@@ -220,6 +221,29 @@ private:
 
     std::pair<VBO*, VBOSlot> allocate_slot(const VertexData* vertex_data);
     std::pair<VBO*, VBOSlot> allocate_slot(const IndexData* index_data);
+
+    /* Skinned renderables (see SkinningInfo in renderable.h) carry an
+     * unposed bind pose that must be skinned before upload. Rather than the
+     * producing Armature keeping a permanent posed copy alive for every
+     * instance, we keep a small per-instance VertexData here instead - one
+     * per distinct SkinningInfo we've seen render, lazily created and
+     * re-skinned only when its generation counter advances (i.e. the pose
+     * actually changed), and dropped again if it goes unseen for a while.
+     * This is the "as a first step, transfer while iterating the render
+     * queue" interim design; real GPU (vertex shader) skinning would let the
+     * source's vertex buffer be shared across instances like IndexData
+     * already is, but that's a bigger follow-up. */
+    struct SkinnedSlot {
+        VertexDataPtr persistent_output;
+        uint64_t last_generation_skinned = 0;
+        uint64_t last_seen_us = 0;
+    };
+
+    std::pair<VBO*, VBOSlot> fetch_skinned_vertex_slot(const Renderable* renderable);
+    void evict_stale_skinned_slots();
+
+    std::unordered_map<const SkinningInfo*, SkinnedSlot> skinned_slots_;
+    uint32_t skinned_slot_fetch_count_ = 0;
 
     void release_slot(const VertexData* vertex_data);
     void release_slot(const IndexData* index_data);

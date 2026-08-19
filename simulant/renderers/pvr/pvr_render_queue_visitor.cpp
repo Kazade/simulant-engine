@@ -3,6 +3,7 @@
 #include "pvr_texture_manager.h"
 
 #include "../../meshes/submesh.h"
+#include "../batching/skin_resolve.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../scenes/scene.h"
@@ -594,6 +595,15 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
     renderer_->prepare_to_render(renderable);
 
+    /* Skinned renderables carry an unposed bind pose plus the joint matrices
+     * needed to pose it (see SkinningInfo) - pose it into skin_scratch_ now,
+     * immediately before submission, rather than every Armature instance
+     * keeping its own permanent posed copy. Used below in place of
+     * renderable->vertex_data by both the modifier-volume and normal
+     * polygon submission paths. */
+    const VertexData* resolved_vertex_data =
+        resolve_vertex_data(renderable, skin_scratch_);
+
 #ifdef __DREAMCAST__
     /* ================================================================
      * Modifier-volume submission path
@@ -606,7 +616,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * affected — what cheap-shadow uses to darken receivers).
      * ================================================================ */
     if(emitting_modifier_volume_) {
-        const auto* vdata = renderable->vertex_data;
+        const auto* vdata = resolved_vertex_data;
         const auto* idata = renderable->index_data;
         if(!vdata || !idata) return;
         if(renderable->arrangement != MESH_ARRANGEMENT_TRIANGLES) {
@@ -937,7 +947,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     /* ================================================================
      * Read vertex data and transform
      * ================================================================ */
-    const auto* vdata = renderable->vertex_data;
+    const auto* vdata = resolved_vertex_data;
     if(!vdata) return;
 
     const auto& spec = vdata->vertex_specification();
