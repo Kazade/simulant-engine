@@ -136,10 +136,10 @@ MeshPtr Armature::build_output_mesh(const MeshPtr& source) {
     const uint32_t copy_bytes =
         std::min(source_data->stride(), output->vertex_data->stride());
     for(uint32_t i = 0; i < count; ++i) {
-        std::memcpy(output->vertex_data->data() +
+        shz_memcpy(output->vertex_data->data() +
                         (std::size_t)i * output->vertex_data->stride(),
-                    source_data->data() + (std::size_t)i * source_data->stride(),
-                    copy_bytes);
+                   source_data->data() + (std::size_t)i * source_data->stride(),
+                   copy_bytes);
     }
     output->vertex_data->done();
 
@@ -234,10 +234,9 @@ void Armature::update_joint_matrices(const Mat4& armature_world_inverse,
             (shz_mat4x4_t*)armature_world_inverse._native(),
             (shz_mat4x4_t*)joint_matrix._native());
         // XMTRX = (armature_world_inverse * joint_matrix) * inverse_bind[h]
-        shz_xmtrx_apply_4x4(
+        shz_xmtrx_apply_store_4x4(
+            (shz_mat4x4_t*)joint_matrices_[h]._native(),
             (shz_mat4x4_t*)skin.inverse_bind_matrices[h]._native());
-        // Store result
-        shz_xmtrx_store_4x4((shz_mat4x4_t*)joint_matrices_[h]._native());
     }
 }
 
@@ -263,12 +262,6 @@ void Armature::pose_mesh(const SkinnedMesh& entry) {
     output_data->move_to_start();
 
     for(uint32_t i = 0; i < source_data->count(); ++i) {
-        /* Zero-init the skin matrix directly - avoids an unnecessary XMTRX
-         * clobber from Mat4::zero() before we're ready to use XMTRX
-         * ourselves. */
-        Mat4 skin_matrix;
-        memset(skin_matrix.data(), 0, sizeof(float) * 16);
-
         const Vec4& weights_acc = *source_data->weights_at<Vec4>(i);
         float weights[4] = {weights_acc.x, weights_acc.y, weights_acc.z,
                             weights_acc.w};
@@ -306,11 +299,13 @@ void Armature::pose_mesh(const SkinnedMesh& entry) {
         }
 
         if(sum > 1.01f) {
+            float inv_sum = shz_invf_fsrra(sum);
             for(float& weight: weights) {
-                weight /= sum;
+                weight *= inv_sum;
             }
         }
 
+        shz_xmtrx_init_zero();
         for(int j = 0; j < 4; ++j) {
             float weight = weights[j];
             if(weight == 0.0f) {
@@ -322,30 +317,20 @@ void Armature::pose_mesh(const SkinnedMesh& entry) {
                 continue;
             }
 
-            /* Weighted blend of pre-computed joint matrices. Treating the
-             * matrix as 4 consecutive Vec4 columns keeps the hot path to 4
-             * SIMD-friendly fmadd operations. */
             const Mat4& joint_matrix = joint_matrices_[joint_index];
-            Vec4* skin_cols = reinterpret_cast<Vec4*>(skin_matrix.data());
-            const Vec4* joint_cols =
-                reinterpret_cast<const Vec4*>(joint_matrix.data());
-
-            skin_cols[0] = skin_cols[0] + joint_cols[0] * weight;
-            skin_cols[1] = skin_cols[1] + joint_cols[1] * weight;
-            skin_cols[2] = skin_cols[2] + joint_cols[2] * weight;
-            skin_cols[3] = skin_cols[3] + joint_cols[3] * weight;
+            shz_xmtrx_blend((const shz_mat4x4_t*)joint_matrix._native(), weight);
         }
-
-        Mat4Scratch scratch(skin_matrix);
 
         if(has_positions) {
             const Vec3& v = *source_data->position_at<Vec3>(i);
-            output_data->position(scratch.transform_point(v));
+            shz_vec3_t out = shz_xmtrx_transform_point3(shz_vec3_init(v.x, v.y, v.z));
+            output_data->position({out.x, out.y, out.z});
         }
 
         if(has_normals) {
             const Vec3& n = *source_data->normal_at<Vec3>(i);
-            output_data->normal(scratch.transform_vector(n).normalized());
+            shz_vec3_t out = shz_xmtrx_transform_vec3(shz_vec3_init(n.x, n.y, n.z));
+            output_data->normal(Vec3(out.x, out.y, out.z).normalized());
         }
 
         output_data->move_next();
