@@ -1739,6 +1739,29 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         }
     }
 
+    /* OP is submitted straight to the TA via store queues rather than
+     * buffered in RAM like the other lists (fastest option: OP is always
+     * the first list, so there's no "reopen a closed list" hazard, and it
+     * skips a RAM round-trip for what's usually the biggest list in the
+     * frame). The cost is that pvr_dr_init() (see ensure_list_opened) holds
+     * KOS's store-queue lock — a real cross-thread mutex shared with every
+     * other sq_lock() user in the OS, e.g. sound streaming — open for as
+     * long as we keep writing through it.
+     *
+     * Release and immediately re-acquire it here, between draw calls, so
+     * any other thread waiting on the SQ lock gets a chance to run instead
+     * of being starved for the whole traversal. This only touches
+     * dr_used/the SQ lock, not pvr_state.list_reg_open, so it's safe to do
+     * mid-list — unlike pvr_list_begin/finish, a list can't be reopened
+     * once closed, but the SQ lock can be cycled freely as long as we're
+     * between complete primitives (which we are: every triangle/strip/vertex
+     * write above ends with a committed pvr_dr_commit, so nothing is left
+     * half-written here). */
+    if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
+        pvr_dr_finish();
+        pvr_dr_init(&renderer_->dr_state_);
+    }
+
 #else
     _S_UNUSED(material_pass);
 #endif
