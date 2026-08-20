@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../assets/material.h"
-#include "../../vertex_data.h"
 #include "../batching/renderable.h"
 #include "../../utils/vertex_lighting.h"
 
@@ -53,13 +52,6 @@ private:
     float mat_metallic_  = 0.0f;
     float mat_roughness_ = 0.4f;
     bool  mat_lighting_enabled_ = false;
-
-    /* Reused scratch buffer that skinned renderables are posed into
-     * immediately before submission - see skin_resolve.h. There's no
-     * persistent GPU-side buffer on this backend, so a single reused buffer
-     * is all that's needed regardless of how many Armature instances share
-     * a source mesh. */
-    VertexData skin_scratch_{VertexSpecification()};
 
     void do_visit(const Renderable* renderable,
                   const MaterialPass* material_pass,

@@ -78,12 +78,27 @@ private:
     std::vector<float> soft_color_buf_;
 
     /* Reused scratch buffer that skinned renderables are posed into
-     * immediately before submission - see skin_resolve.h. There's no
-     * persistent GPU-side buffer on this backend (vertex arrays are read
+     * immediately before submission, bounded to the active submesh's index
+     * range rather than the whole mesh (see resolve_vertex_data()). There's
+     * no persistent GPU-side buffer on this backend (vertex arrays are read
      * straight from client memory every draw), so a single reused buffer is
      * all that's needed regardless of how many Armature instances share a
-     * source mesh. */
+     * source mesh. Grown as needed, never shrunk. */
     VertexData skin_scratch_{VertexSpecification()};
+
+    /* Lets consecutive calls for the *same* renderable (e.g. one draw per
+     * affecting light) reuse skin_scratch_ as-is instead of redoing the
+     * blend - cheap to check, and the render queue frequently visits one
+     * renderable several times in a row. Does NOT help across renderables
+     * with a different index range even if they share a SkinningInfo (e.g.
+     * two submeshes of the same skinned mesh), which is why the range is
+     * part of the comparison. */
+    const SkinningInfo* last_skinned_info_ = nullptr;
+    uint64_t last_skinned_generation_ = 0;
+    uint32_t last_skinned_range_start_ = 0;
+    uint32_t last_skinned_range_end_ = 0;
+
+    const VertexData* resolve_vertex_data(const Renderable* renderable);
 };
 
 

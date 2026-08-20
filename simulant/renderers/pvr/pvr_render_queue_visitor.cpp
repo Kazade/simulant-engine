@@ -3,7 +3,7 @@
 #include "pvr_texture_manager.h"
 
 #include "../../meshes/submesh.h"
-#include "../batching/skin_resolve.h"
+#include "../../utils/skinning.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/light.h"
 #include "../../scenes/scene.h"
@@ -596,13 +596,18 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     renderer_->prepare_to_render(renderable);
 
     /* Skinned renderables carry an unposed bind pose plus the joint matrices
-     * needed to pose it (see SkinningInfo) - pose it into skin_scratch_ now,
-     * immediately before submission, rather than every Armature instance
-     * keeping its own permanent posed copy. Used below in place of
-     * renderable->vertex_data by both the modifier-volume and normal
-     * polygon submission paths. */
-    const VertexData* resolved_vertex_data =
-        resolve_vertex_data(renderable, skin_scratch_);
+     * needed to pose it (see SkinningInfo). Rather than pre-skinning a whole
+     * posed copy of the mesh, both submission paths below blend each vertex
+     * in place, right where they already read position/normal off the row
+     * they're walking - so the only "buffer" this ever needs is the same
+     * per-triangle/per-batch working set they already use for non-skinned
+     * geometry. */
+    const bool is_skinned = renderable->skinning != nullptr;
+    const Mat4* joint_matrices = is_skinned ? renderable->skinning->joint_matrices : nullptr;
+    const uint16_t joint_count = is_skinned ? renderable->skinning->joint_count : 0;
+    const bool use_byte_joints =
+        is_skinned && renderable->vertex_data->vertex_specification().joint_attribute ==
+                          VERTEX_ATTRIBUTE_4UB;
 
 #ifdef __DREAMCAST__
     /* ================================================================
@@ -616,7 +621,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * affected — what cheap-shadow uses to darken receivers).
      * ================================================================ */
     if(emitting_modifier_volume_) {
-        const auto* vdata = resolved_vertex_data;
+        const auto* vdata = renderable->vertex_data;
         const auto* idata = renderable->index_data;
         if(!vdata || !idata) return;
         if(renderable->arrangement != MESH_ARRANGEMENT_TRIANGLES) {
@@ -654,8 +659,19 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
         auto load_clip = [&](uint32_t vi) -> ModVtx {
             const float* p = (const float*)(raw_data + stride * vi + pos_offset);
-            shz_vec4_t c = shz_xmtrx_transform_vec4(
-                shz_vec4_init(p[0], p[1], p[2], 1.0f));
+            float px = p[0], py = p[1], pz = p[2];
+
+            if(is_skinned &&
+               skin_blend_matrix(vdata, vi, joint_matrices, joint_count,
+                                 use_byte_joints)) {
+                shz_vec3_t sp =
+                    shz_xmtrx_transform_point3(shz_vec3_init(px, py, pz));
+                px = sp.x; py = sp.y; pz = sp.z;
+                shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp._native());
+            }
+
+            shz_vec4_t c =
+                shz_xmtrx_transform_vec4(shz_vec4_init(px, py, pz, 1.0f));
             if(!is_clip_position_valid(c.x, c.y, c.z, c.w)) {
                 /* Same substitution as the polygon path — see the comment in
                  * transform_batch. Always tests as behind the near plane, and
@@ -947,7 +963,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     /* ================================================================
      * Read vertex data and transform
      * ================================================================ */
-    const auto* vdata = resolved_vertex_data;
+    const auto* vdata = renderable->vertex_data;
     if(!vdata) return;
 
     const auto& spec = vdata->vertex_specification();
@@ -1004,8 +1020,27 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 ClipVertex& cv = work_vertices_[i];
 
                 const float* p = (const float*)(row + pos_offset);
-                shz_vec4_t clip = shz_xmtrx_transform_vec4(
-                    shz_vec4_init(p[0], p[1], p[2], 1.0f));
+                float px = p[0], py = p[1], pz = p[2];
+
+                /* Skinned renderables carry the unposed bind pose; blend
+                 * this vertex's joint matrix and transform through it
+                 * before the usual MVP transform below, right here in the
+                 * same sweep that's already reading this row - no separate
+                 * pre-pass or scratch buffer needed. Unweighted vertices
+                 * (skin_blend_matrix returns false) fall straight through
+                 * with the bind-pose position, and xmtrx is left holding
+                 * MVP since the blend never touched it. */
+                if(is_skinned &&
+                   skin_blend_matrix(vdata, base + i, joint_matrices,
+                                     joint_count, use_byte_joints)) {
+                    shz_vec3_t sp =
+                        shz_xmtrx_transform_point3(shz_vec3_init(px, py, pz));
+                    px = sp.x; py = sp.y; pz = sp.z;
+                    shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp._native());
+                }
+
+                shz_vec4_t clip =
+                    shz_xmtrx_transform_vec4(shz_vec4_init(px, py, pz, 1.0f));
                 cv.ok = is_clip_position_valid(clip.x, clip.y, clip.z, clip.w);
                 if(cv.ok) {
                     cv.x = clip.x; cv.y = clip.y; cv.z = clip.z; cv.w = clip.w;
@@ -1105,10 +1140,29 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
                 const float* p     = (const float*)(row + pos_offset);
                 const float* n_ptr = (const float*)(row + normal_offset);
+                float px = p[0], py = p[1], pz = p[2];
+                float nx = n_ptr[0], ny = n_ptr[1], nz = n_ptr[2];
+
+                /* Same in-place blend as pass 1, redone here for the
+                 * normal - xmtrx holds modelview (not MVP) in this pass, so
+                 * pass 1's already-skinned clip-space position can't be
+                 * reused; recomputing is one more (cheap) blend, still far
+                 * short of a whole extra buffer pass. */
+                if(is_skinned &&
+                   skin_blend_matrix(vdata, base + i, joint_matrices,
+                                     joint_count, use_byte_joints)) {
+                    shz_vec3_t sp =
+                        shz_xmtrx_transform_point3(shz_vec3_init(px, py, pz));
+                    shz_vec3_t sn =
+                        shz_xmtrx_transform_vec3(shz_vec3_init(nx, ny, nz));
+                    px = sp.x; py = sp.y; pz = sp.z;
+                    nx = sn.x; ny = sn.y; nz = sn.z;
+                    shz_xmtrx_load_4x4((shz_mat4x4_t*) modelview._native());
+                }
 
                 /* Normal × modelview (w=0 drops translation). */
                 shz_vec4_t nv = shz_xmtrx_transform_vec4(
-                    shz_vec4_init(n_ptr[0], n_ptr[1], n_ptr[2], 0.0f));
+                    shz_vec4_init(nx, ny, nz, 0.0f));
                 float Nx = nv.x, Ny = nv.y, Nz = nv.z;
                 float n_sq = shz_mag_sqr3f(Nx, Ny, Nz);
                 if(n_sq > 1e-8f) {
@@ -1118,7 +1172,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
                 /* Position × modelview → eye-space. */
                 shz_vec4_t ev = shz_xmtrx_transform_vec4(
-                    shz_vec4_init(p[0], p[1], p[2], 1.0f));
+                    shz_vec4_init(px, py, pz, 1.0f));
                 float pos_ex = ev.x, pos_ey = ev.y, pos_ez = ev.z;
 
                 /* View direction (eye at origin in view space). */

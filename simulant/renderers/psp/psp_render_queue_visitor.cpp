@@ -11,7 +11,7 @@
 #include "../../vertex_data.h"
 #include "../../math/mat4.h"
 #include "../../window.h"
-#include "../batching/skin_resolve.h"
+#include "../../utils/skinning.h"
 #include "psp_render_group_impl.h"
 #include "psp_render_queue_visitor.h"
 #include "psp_renderer.h"
@@ -366,9 +366,23 @@ struct PSPLightingContext {
     bool  lighting_enabled;
 };
 
+/* Non-null (with joint_count > 0) when the renderable is a skinned bind pose
+ * that must be posed before use - see SkinningInfo. convert_and_push() blends
+ * each vertex right where it already reads position/normal, rather than
+ * pre-posing the whole mesh (or even just this range) into a separate
+ * buffer first. */
+struct PSPSkinningContext {
+    const Mat4* joint_matrices = nullptr;
+    uint16_t joint_count = 0;
+    bool use_byte_joints = false;
+    int16_t joint_offset = 0;
+    int16_t weight_offset = 0;
+};
+
 static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
                              const VertexSpecification& spec,
-                             const PSPLightingContext& lctx) {
+                             const PSPLightingContext& lctx,
+                             const PSPSkinningContext& skctx) {
     auto pos_off    = spec.position_offset(false);
     auto uv_off     = spec.has_texcoord0() ? spec.texcoord0_offset(false) : 0;
     auto color_off  = spec.has_color()     ? spec.color_offset(false)     : 0;
@@ -411,8 +425,31 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
         base_r *= vc_r; base_g *= vc_g; base_b *= vc_b; base_a *= vc_a;
     }
 
+    /* If skinned, blend this vertex's joint matrix once and use it to pose
+     * both position and normal below - falls through to the raw bind-pose
+     * bytes for unweighted vertices or non-skinned renderables. */
+    const uint8_t* pos_src = it + pos_off;
+    const uint8_t* normal_src = normal_off ? it + normal_off : nullptr;
+    float skinned_pos[3];
+    float skinned_normal[3];
+
+    if(skctx.joint_count > 0) {
+        const float* raw_pos = (const float*)(it + pos_off);
+        const float* raw_normal = normal_off ? (const float*)(it + normal_off) : nullptr;
+
+        if(skin_vertex_row(it, skctx.joint_offset, skctx.weight_offset,
+                           skctx.joint_matrices, skctx.joint_count,
+                           skctx.use_byte_joints, raw_pos, skinned_pos,
+                           raw_normal, raw_normal ? skinned_normal : nullptr)) {
+            pos_src = (const uint8_t*)skinned_pos;
+            if(raw_normal) {
+                normal_src = (const uint8_t*)skinned_normal;
+            }
+        }
+    }
+
     float pos[3] = {0, 0, 0};
-    convert_position(pos, it + pos_off, spec.position_attribute);
+    convert_position(pos, pos_src, spec.position_attribute);
     v->x = pos[0]; v->y = pos[1]; v->z = pos[2];
 
     if(lctx.lighting_enabled && normal_off && lctx.light_count > 0) {
@@ -421,10 +458,10 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
         float eye_pos[3] = {ep.x, ep.y, ep.z};
 
         /* Transform normal to eye space (direction — Mat4*Vec3 uses upper-3x3) */
-        const uint8_t* n_raw = it + normal_off;
-        float nx_model = ((float*)n_raw)[0];
-        float ny_model = ((float*)n_raw)[1];
-        float nz_model = ((float*)n_raw)[2];
+        const float* n_raw = (const float*)normal_src;
+        float nx_model = n_raw[0];
+        float ny_model = n_raw[1];
+        float nz_model = n_raw[2];
         Vec3 nv = (*lctx.modelview * Vec3(nx_model, ny_model, nz_model)).normalized();
         float N[3] = {nv.x, nv.y, nv.z};
 
@@ -448,7 +485,7 @@ static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
         v->color = smlt::Color(base_r, base_g, base_b, base_a).to_abgr_4444();
 
         if(normal_off) {
-            convert_normal(&v->nx, it + normal_off, spec.normal_attribute);
+            convert_normal(&v->nx, normal_src, spec.normal_attribute);
         }
     }
 }
@@ -459,13 +496,14 @@ static void zclip_tristrips_and_submit_range(const VertexRange* range,
                                              const VertexSpecification& spec,
                                              const uint8_t* data,
                                              std::size_t stride,
-                                             const PSPLightingContext& lctx) {
+                                             const PSPLightingContext& lctx,
+                                             const PSPSkinningContext& skctx) {
     buffer.clear();
 
     const uint8_t* it = data + (stride * range->start);
 
     for(std::size_t i = 0; i < range->count; ++i) {
-        convert_and_push(buffer, it, spec, lctx);
+        convert_and_push(buffer, it, spec, lctx, skctx);
         it += stride;
     }
 
@@ -483,13 +521,14 @@ static void zclip_triangles_and_submit_range(const VertexRange* range,
                                              const VertexSpecification& spec,
                                              const uint8_t* data,
                                              std::size_t stride,
-                                             const PSPLightingContext& lctx) {
+                                             const PSPLightingContext& lctx,
+                                             const PSPSkinningContext& skctx) {
     buffer.clear();
 
     const uint8_t* it = data + (stride * range->start);
 
     for(std::size_t i = 0; i < range->count; ++i) {
-        convert_and_push(buffer, it, spec, lctx);
+        convert_and_push(buffer, it, spec, lctx, skctx);
         it += stride;
     }
 
@@ -517,11 +556,21 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     renderer_->prepare_to_render(renderable);
 
     /* Skinned renderables carry an unposed bind pose plus the joint matrices
-     * needed to pose it (see SkinningInfo) - pose it into skin_scratch_ now,
-     * immediately before submission, rather than every Armature instance
-     * keeping its own permanent posed copy. */
-    const VertexData* resolved_vertex_data =
-        resolve_vertex_data(renderable, skin_scratch_);
+     * needed to pose it (see SkinningInfo). convert_and_push() blends each
+     * vertex right where it already reads position/normal, so no separate
+     * pre-pass or scratch buffer is needed here - just the skinning context
+     * to pass through to it. */
+    const VertexData* vdata = renderable->vertex_data;
+    const auto& vdata_spec = vdata->vertex_specification();
+
+    PSPSkinningContext skctx;
+    if(renderable->skinning) {
+        skctx.joint_matrices = renderable->skinning->joint_matrices;
+        skctx.joint_count = renderable->skinning->joint_count;
+        skctx.use_byte_joints = vdata_spec.joint_attribute == VERTEX_ATTRIBUTE_4UB;
+        skctx.joint_offset = vdata_spec.joint_offset(false);
+        skctx.weight_offset = vdata_spec.weight_offset(false);
+    }
 
     const auto& model = *renderable->final_transformation;
     const auto& view = camera_->view_matrix();
@@ -567,8 +616,13 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     auto total = 0;
 
     if(element_count) {
+        /* Indices aren't contiguous in the source vertex buffer, so gather
+         * each referenced row (raw, unskinned bytes - joint/weight
+         * attributes included) into a dense buffer first; the clip/submit
+         * functions below then walk it by stride like any other range, and
+         * do the actual skinning as they do, one row at a time. */
         std::vector<uint8_t> buffer;
-        auto stride = resolved_vertex_data->stride();
+        auto stride = vdata->stride();
         buffer.resize(renderable->index_element_count * stride);
 
         uint8_t* dst = &buffer[0];
@@ -576,7 +630,7 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         for(std::size_t i = 0; i < renderable->index_element_count; ++i) {
             auto idx = renderable->index_data->at(i);
             auto offset = idx * stride;
-            std::memcpy(dst, resolved_vertex_data->data() + offset, stride);
+            std::memcpy(dst, vdata->data() + offset, stride);
             dst += stride;
         }
 
@@ -586,14 +640,14 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
 
         switch(renderable->arrangement) {
             case MESH_ARRANGEMENT_TRIANGLE_STRIP:
-                zclip_tristrips_and_submit_range(
-                    &range, resolved_vertex_data->vertex_specification(),
-                    &buffer[0], stride, lctx);
+                zclip_tristrips_and_submit_range(&range, vdata_spec,
+                                                 &buffer[0], stride, lctx,
+                                                 skctx);
                 break;
             case MESH_ARRANGEMENT_TRIANGLES:
-                zclip_triangles_and_submit_range(
-                    &range, resolved_vertex_data->vertex_specification(),
-                    &buffer[0], stride, lctx);
+                zclip_triangles_and_submit_range(&range, vdata_spec,
+                                                 &buffer[0], stride, lctx,
+                                                 skctx);
                 break;
             default:
                 break;
@@ -602,19 +656,19 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
         total += range.count;
     } else {
         auto range = renderable->vertex_ranges;
-        auto spec_stride = resolved_vertex_data->vertex_specification().stride();
+        auto spec_stride = vdata_spec.stride();
 
         for(std::size_t i = 0; i < renderable->vertex_range_count; ++i, ++range) {
             switch(renderable->arrangement) {
                 case MESH_ARRANGEMENT_TRIANGLE_STRIP:
                     zclip_tristrips_and_submit_range(
-                        range, resolved_vertex_data->vertex_specification(),
-                        resolved_vertex_data->data(), spec_stride, lctx);
+                        range, vdata_spec, vdata->data(), spec_stride, lctx,
+                        skctx);
                     break;
                 case MESH_ARRANGEMENT_TRIANGLES:
                     zclip_triangles_and_submit_range(
-                        range, resolved_vertex_data->vertex_specification(),
-                        resolved_vertex_data->data(), spec_stride, lctx);
+                        range, vdata_spec, vdata->data(), spec_stride, lctx,
+                        skctx);
                     break;
                 default:
                     break;

@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cstring>
 
 #include "simulant/types.h"
 #ifdef __DREAMCAST__
@@ -24,12 +26,78 @@
 #include "../../nodes/light.h"
 #include "../../stage.h"
 #include "../../utils/gl_error.h"
+#include "../../utils/skinning.h"
 #include "../../utils/vertex_lighting.h"
 #include "../../vertex_data.h"
 #include "../../window.h"
-#include "../batching/skin_resolve.h"
 
 namespace smlt {
+
+const VertexData* GL1RenderQueueVisitor::resolve_vertex_data(
+    const Renderable* renderable) {
+    if(!renderable->skinning) {
+        return renderable->vertex_data;
+    }
+
+    const VertexData* source = renderable->vertex_data;
+
+    /* Bound skin_scratch_ to the index range this submesh actually draws
+     * from, rather than the whole (possibly much larger) mesh - the index
+     * buffer references absolute vertex numbers, so the scratch buffer
+     * keeps that numbering too (padding out [0, range_start) rather than
+     * remapping indices) and only [range_start, range_end) is ever
+     * written or read. */
+    uint32_t range_start = 0;
+    uint32_t range_end = source->count();
+
+    if(renderable->index_element_count > 0 && renderable->index_data) {
+        range_start = renderable->index_data->min_index();
+        range_end = renderable->index_data->max_index() + 1;
+    } else if(renderable->vertex_range_count > 0) {
+        const VertexRange* ranges = renderable->vertex_ranges;
+        range_start = ranges[0].start;
+        range_end = ranges[0].start + ranges[0].count;
+        for(std::size_t i = 1; i < renderable->vertex_range_count; ++i) {
+            range_start = std::min(range_start, ranges[i].start);
+            range_end =
+                std::max(range_end, ranges[i].start + ranges[i].count);
+        }
+    }
+
+    const bool already_current =
+        last_skinned_info_ == renderable->skinning &&
+        last_skinned_generation_ == renderable->skinning->generation &&
+        last_skinned_range_start_ == range_start &&
+        last_skinned_range_end_ == range_end;
+
+    if(already_current) {
+        return &skin_scratch_;
+    }
+
+    if(skin_scratch_.vertex_specification() != source->vertex_specification()) {
+        skin_scratch_.reset(source->vertex_specification());
+    }
+
+    if(skin_scratch_.count() < range_end) {
+        skin_scratch_.resize(range_end);
+    }
+
+    const auto stride = source->stride();
+    std::memcpy(skin_scratch_.data() + (std::size_t)range_start * stride,
+               source->data() + (std::size_t)range_start * stride,
+               (std::size_t)(range_end - range_start) * stride);
+
+    skin_vertices(source, renderable->skinning->joint_matrices,
+                 renderable->skinning->joint_count, &skin_scratch_,
+                 range_start, range_end);
+
+    last_skinned_info_ = renderable->skinning;
+    last_skinned_generation_ = renderable->skinning->generation;
+    last_skinned_range_start_ = range_start;
+    last_skinned_range_end_ = range_end;
+
+    return &skin_scratch_;
+}
 
 GL1RenderQueueVisitor::GL1RenderQueueVisitor(GL1XRenderer* renderer,
                                              CameraPtr camera) :
@@ -524,10 +592,10 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
 
     /* Skinned renderables carry an unposed bind pose plus the joint matrices
      * needed to pose it (see SkinningInfo) - pose it into skin_scratch_ now,
-     * immediately before submission, rather than every Armature instance
-     * keeping its own permanent posed copy. */
-    const VertexData* resolved_vertex_data =
-        resolve_vertex_data(renderable, skin_scratch_);
+     * immediately before submission, bounded to this submesh's active index
+     * range, rather than every Armature instance keeping its own permanent
+     * posed copy of the whole mesh. */
+    const VertexData* resolved_vertex_data = resolve_vertex_data(renderable);
 
     const auto& spec = resolved_vertex_data->vertex_specification();
     const auto stride = spec.stride();

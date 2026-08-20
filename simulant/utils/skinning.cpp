@@ -10,27 +10,20 @@
 
 namespace smlt {
 
-namespace {
-
-/* Reads vertex `i`'s joint indices/weights from `source` and leaves XMTRX
- * holding the blended skinning matrix. Returns false (XMTRX untouched) if
- * the vertex has no weight at all, in which case callers should fall back to
- * the bind pose. */
-bool load_blended_matrix(const VertexData* source, uint32_t i,
-                         const Mat4* joint_matrices, uint16_t joint_count,
-                         bool use_byte_joints) {
-    const Vec4& weights_acc = *source->weights_at<Vec4>(i);
-    float weights[4] = {weights_acc.x, weights_acc.y, weights_acc.z,
-                        weights_acc.w};
+bool skin_blend_matrix_row(const uint8_t* row, int16_t joint_offset,
+                           int16_t weight_offset, const Mat4* joint_matrices,
+                           uint16_t joint_count, bool use_byte_joints) {
+    const float* w = (const float*)(row + weight_offset);
+    float weights[4] = {w[0], w[1], w[2], w[3]};
 
     uint16_t joints[4] = {0, 0, 0, 0};
     if(use_byte_joints) {
-        const auto* acc = source->joints_at<uint8_t>(i);
+        const uint8_t* acc = row + joint_offset;
         for(int j = 0; j < 4; ++j) {
             joints[j] = acc[j];
         }
     } else {
-        const auto* acc = source->joints_at<uint16_t>(i);
+        const uint16_t* acc = (const uint16_t*)(row + joint_offset);
         for(int j = 0; j < 4; ++j) {
             joints[j] = acc[j];
         }
@@ -72,10 +65,45 @@ bool load_blended_matrix(const VertexData* source, uint32_t i,
     return true;
 }
 
-} // namespace
+bool skin_vertex_row(const uint8_t* row, int16_t joint_offset,
+                     int16_t weight_offset, const Mat4* joint_matrices,
+                     uint16_t joint_count, bool use_byte_joints,
+                     const float* pos_in, float* pos_out,
+                     const float* normal_in, float* normal_out) {
+    if(!skin_blend_matrix_row(row, joint_offset, weight_offset,
+                              joint_matrices, joint_count, use_byte_joints)) {
+        return false;
+    }
+
+    if(pos_in && pos_out) {
+        shz_vec3_t out = shz_xmtrx_transform_point3(
+            shz_vec3_init(pos_in[0], pos_in[1], pos_in[2]));
+        pos_out[0] = out.x; pos_out[1] = out.y; pos_out[2] = out.z;
+    }
+
+    if(normal_in && normal_out) {
+        shz_vec3_t out = shz_xmtrx_transform_vec3(
+            shz_vec3_init(normal_in[0], normal_in[1], normal_in[2]));
+        Vec3 n = Vec3(out.x, out.y, out.z).normalized();
+        normal_out[0] = n.x; normal_out[1] = n.y; normal_out[2] = n.z;
+    }
+
+    return true;
+}
+
+bool skin_blend_matrix(const VertexData* source, uint32_t i,
+                       const Mat4* joint_matrices, uint16_t joint_count,
+                       bool use_byte_joints) {
+    const auto& spec = source->vertex_specification();
+    const uint8_t* row = source->data() + (std::size_t)i * source->stride();
+    return skin_blend_matrix_row(row, spec.joint_offset(false),
+                                 spec.weight_offset(false), joint_matrices,
+                                 joint_count, use_byte_joints);
+}
 
 void skin_vertices(const VertexData* source, const Mat4* joint_matrices,
-                   uint16_t joint_count, VertexData* dest) {
+                   uint16_t joint_count, VertexData* dest,
+                   uint32_t range_start, uint32_t range_end) {
     const auto& source_spec = source->vertex_specification();
 
     if(!source_spec.has_joints() || !source_spec.has_weights()) {
@@ -84,16 +112,20 @@ void skin_vertices(const VertexData* source, const Mat4* joint_matrices,
         return;
     }
 
+    if(range_end > source->count()) {
+        range_end = source->count();
+    }
+
     const bool has_positions = source_spec.has_positions();
     const bool has_normals = source_spec.has_normals();
     const bool use_byte_joints =
         source_spec.joint_attribute == VERTEX_ATTRIBUTE_4UB;
 
-    dest->move_to_start();
+    dest->move_to(range_start);
 
-    for(uint32_t i = 0; i < source->count(); ++i) {
-        bool blended = load_blended_matrix(source, i, joint_matrices,
-                                           joint_count, use_byte_joints);
+    for(uint32_t i = range_start; i < range_end; ++i) {
+        bool blended = skin_blend_matrix(source, i, joint_matrices,
+                                         joint_count, use_byte_joints);
 
         if(!blended) {
             /* Leave unweighted vertices at their bind-pose position/normal */
@@ -145,8 +177,8 @@ AABB skinned_aabb(const VertexData* source, const Mat4* joint_matrices,
     bool first = true;
 
     for(uint32_t i = 0; i < source->count(); ++i) {
-        bool blended = load_blended_matrix(source, i, joint_matrices,
-                                           joint_count, use_byte_joints);
+        bool blended = skin_blend_matrix(source, i, joint_matrices,
+                                         joint_count, use_byte_joints);
 
         Vec3 pos;
         if(!blended) {
