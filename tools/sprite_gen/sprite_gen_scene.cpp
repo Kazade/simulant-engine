@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
+#include <filesystem>
 
 #include <simulant/application.h>
 #include <simulant/asset_manager.h>
@@ -18,11 +20,14 @@
 #include <simulant/nodes/camera.h>
 #include <simulant/nodes/light.h>
 #include <simulant/nodes/prefab_instance.h>
+#include <simulant/path.h>
 #include <simulant/stage.h>
 #include <simulant/renderers/renderer.h>
 #include <simulant/viewport.h>
 #include <simulant/window.h>
 
+#include "dtex_writer.h"
+#include "png_writer.h"
 #include "tga_writer.h"
 
 namespace sprite_gen {
@@ -35,6 +40,43 @@ uint16_t next_pow2(uint32_t v) {
         p <<= 1;
     }
     return uint16_t(std::min(p, uint32_t(MAX_SHEET_DIM)));
+}
+
+/* Runs texconv to write a compressed .dtex to `output_path`, feeding it a
+ * temporary PNG of the sheet as input (texconv can't read pixels directly).
+ * Requires `texconv_bin` (a name or full path) to be runnable via PATH. */
+bool write_compressed_dtex(const std::string& texconv_bin,
+                           const std::string& output_path, uint16_t width,
+                           uint16_t height, const uint8_t* rgba) {
+    namespace fs = std::filesystem;
+
+    auto tmp_png =
+        fs::temp_directory_path() /
+        ("sprite_gen_" + std::to_string(std::rand()) + ".png");
+
+    if(!write_png(tmp_png.string(), width, height, rgba)) {
+        return false;
+    }
+
+    std::string cmd = "\"" + texconv_bin + "\"";
+    cmd += " -i \"" + tmp_png.string() + "\"";
+    cmd += " -o \"" + output_path + "\"";
+    cmd += " -f ARGB4444";
+    cmd += " -c";
+
+    int rc = std::system(cmd.c_str());
+
+    std::error_code ec;
+    fs::remove(tmp_png, ec);
+
+    if(rc != 0) {
+        S_ERROR("texconv failed (exit {0}) - is it installed and on the "
+                "PATH?",
+                rc);
+        return false;
+    }
+
+    return true;
 }
 
 } // namespace
@@ -341,8 +383,39 @@ void SpriteGenScene::capture_frame() {
 void SpriteGenScene::finalize() {
     pre_swap_connection_.disconnect();
 
-    if(!write_tga(opts_.output_path, sheet_w_, sheet_h_,
-                  sheet_pixels_.data())) {
+    std::string ext = smlt::Path(opts_.output_path).ext();
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    bool ok;
+    if(ext == ".tga") {
+        ok = write_tga(opts_.output_path, sheet_w_, sheet_h_,
+                       sheet_pixels_.data());
+    } else {
+        // .dtex is loaded with format_stored_upside_down() == false (see
+        // dtex_loader.cpp), i.e. no flip happens on load, so row 0 in the
+        // file must already be the bottom of the image. sheet_pixels_ is
+        // composed top-to-bottom, and texconv doesn't flip its input either,
+        // so flip here for both the direct writer and the PNG fed to
+        // texconv under -C.
+        std::vector<uint8_t> flipped(sheet_pixels_.size());
+        const std::size_t row_bytes = std::size_t(sheet_w_) * 4;
+        for(uint16_t y = 0; y < sheet_h_; ++y) {
+            std::memcpy(flipped.data() + std::size_t(y) * row_bytes,
+                       sheet_pixels_.data() +
+                           std::size_t(sheet_h_ - 1 - y) * row_bytes,
+                       row_bytes);
+        }
+
+        if(opts_.compress) {
+            ok = write_compressed_dtex(opts_.texconv, opts_.output_path,
+                                       sheet_w_, sheet_h_, flipped.data());
+        } else {
+            ok = write_dtex(opts_.output_path, sheet_w_, sheet_h_,
+                            flipped.data());
+        }
+    }
+
+    if(!ok) {
         fail();
         return;
     }

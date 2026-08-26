@@ -25,6 +25,14 @@ struct SpriteGenOptions {
 
     float fps = 15.0f;
 
+    /* Output format is inferred from output_path's extension (.dtex or
+     * .tga). -C/--compress only applies to .dtex output and requires the
+     * texconv tool (https://github.com/tvspelsfreak/texconv/) to be on the
+     * PATH - texconv is used to write the compressed data, otherwise
+     * sprite_gen writes an uncompressed .dtex itself. */
+    bool compress = false;
+    std::string texconv = "texconv";
+
     /* Shared with the SpriteGenApp instance that owns the AppConfig this
      * struct was built from, so main() can report a non-zero exit code
      * for failures discovered only once the Scene starts loading (e.g. an

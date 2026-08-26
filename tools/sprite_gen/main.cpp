@@ -1,5 +1,6 @@
 #include <simulant/simulant.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -19,8 +20,10 @@ void usage() {
            "\n"
            "Options:\n"
            "  -i, --input <path>             Input .glb/.gltf file (required)\n"
-           "  -o, --output <path>            Output .tga file (default: "
-           "<input>.tga)\n"
+           "  -o, --output <path>            Output .dtex or .tga file "
+           "(default: <input>.dtex)\n"
+           "  -C, --compress                 Write a compressed .dtex "
+           "(requires texconv on the PATH). Only valid for .dtex output\n"
            "  -a, --animation <name>         Animation to render (default: "
            "first found)\n"
            "  -r, --rotation <x,y,z>         Euler rotation in degrees "
@@ -101,6 +104,9 @@ private:
 
 int main(int argc, char* argv[]) {
     sprite_gen::SpriteGenOptions opts;
+#ifdef DEFAULT_TEXCONV
+    opts.texconv = DEFAULT_TEXCONV;
+#endif
 
     for(int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -119,6 +125,8 @@ int main(int argc, char* argv[]) {
             opts.input_path = next();
         } else if(a == "-o" || a == "--output") {
             opts.output_path = next();
+        } else if(a == "-C" || a == "--compress") {
+            opts.compress = true;
         } else if(a == "-a" || a == "--animation") {
             opts.animation_name = next();
         } else if(a == "-r" || a == "--rotation") {
@@ -187,7 +195,21 @@ int main(int argc, char* argv[]) {
     }
 
     if(opts.output_path.empty()) {
-        opts.output_path = in_path.replace_ext("tga").str();
+        opts.output_path = in_path.replace_ext("dtex").str();
+    }
+
+    std::string out_ext = smlt::Path(opts.output_path).ext();
+    std::transform(out_ext.begin(), out_ext.end(), out_ext.begin(), ::tolower);
+
+    if(out_ext != ".dtex" && out_ext != ".tga") {
+        std::cerr << "Error: output path must end in .dtex or .tga (got '"
+                  << opts.output_path << "')\n";
+        return 1;
+    }
+
+    if(opts.compress && out_ext != ".dtex") {
+        std::cerr << "Error: -C/--compress only applies to .dtex output\n";
+        return 1;
     }
 
     smlt::AppConfig config;
