@@ -64,6 +64,11 @@ struct AppConfig {
     uint32_t bpp = 0;
     bool fullscreen = true;
 
+    /* Whether the user can resize the window by dragging its edges. Ignored
+     * on platforms with a fixed framebuffer (Dreamcast, PSP), and ignored
+     * when fullscreen is set. */
+    bool resizable = false;
+
     /* This is the frame limit; set to 0 to disable */
     uint16_t target_frame_rate = 60;
 

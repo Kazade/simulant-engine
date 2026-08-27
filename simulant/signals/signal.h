@@ -321,7 +321,6 @@ private:
     ProtoSignal<Signature>* pimpl_ = nullptr;
 
 public:
-    typedef std::result_of<Signature> result;
     typedef std::function<Signature> callback;
 
     signal() {

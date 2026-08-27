@@ -77,6 +77,11 @@ struct MouseEvent {
     bool is_touch_device;
 };
 
+struct WindowResizeEvent {
+    uint16_t width;
+    uint16_t height;
+};
+
 enum GameControllerEventType {
     GAME_CONTROLLER_EVENT_TYPE_BUTTON_DOWN,
     GAME_CONTROLLER_EVENT_TYPE_BUTTON_UP
@@ -103,6 +108,8 @@ public:
     void handle_mouse_down(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device);
     void handle_mouse_up(Window* window, MouseID id, uint8_t mouse_button, int32_t x, int32_t y, bool touch_device);
     void handle_mouse_move(Window* window, MouseID id, int32_t x, int32_t y, bool touch_device);
+
+    void handle_window_resize(Window* window, uint16_t width, uint16_t height);
 
     void handle_controller_button_down(GameControllerIndex controller, JoystickButton button);
     void handle_controller_button_up(GameControllerIndex controller, JoystickButton button);
@@ -145,6 +152,13 @@ private:
     }
 
     virtual void on_game_controller_button_up(const GameControllerEvent& evt) {
+        _S_UNUSED(evt);
+    }
+
+    /** Called after the window's size has changed. Camera aspect ratios must
+     *  be recomputed here; GL viewports do not need touching because Viewport
+     *  stores ratios of the render target, not pixels. */
+    virtual void on_window_resize(const WindowResizeEvent& evt) {
         _S_UNUSED(evt);
     }
 

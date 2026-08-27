@@ -107,6 +107,7 @@ public:
     uint16_t width() const override { return width_; }
     uint16_t height() const override { return height_; }
     bool is_fullscreen() const { return fullscreen_; }
+    bool is_resizable() const { return resizable_; }
     bool vsync_enabled() const { return vsync_enabled_; }
 
     float aspect_ratio() const;
@@ -234,12 +235,26 @@ protected:
         height_ = height;
     }
 
+    /** Records a new window size and notifies event listeners so they can
+     *  recompute anything that depends on it (camera aspect ratios, mainly --
+     *  Viewport stores ratios of the render target, so GL viewports follow
+     *  along on their own). Called by platform Window subclasses in response
+     *  to OS resize events; not intended for user code. No-ops if the size is
+     *  unchanged or degenerate. */
+    void set_size(uint16_t width, uint16_t height);
+
     void set_bpp(uint16_t bpp) {
         bpp_ = bpp;
     }
 
     void set_fullscreen(bool val) {
         fullscreen_ = val;
+    }
+
+    /** Must be called before create_window() -- platform windows bake the
+     *  resize flag in at creation time. */
+    void set_resizable(bool val) {
+        resizable_ = val;
     }
 
     virtual void destroy_window() = 0;
@@ -281,6 +296,7 @@ private:
     uint16_t height_ = 0;
     uint16_t bpp_ = 0;
     bool fullscreen_ = false;
+    bool resizable_ = false;
     bool vsync_enabled_ = false;
 
     bool escape_to_quit_ = true;

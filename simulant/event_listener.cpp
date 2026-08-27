@@ -118,6 +118,16 @@ void EventListener::handle_mouse_move(Window* window, MouseID id, int32_t x, int
     on_mouse_move(evt);
 }
 
+void EventListener::handle_window_resize(Window* window, uint16_t width, uint16_t height) {
+    _S_UNUSED(window);
+
+    WindowResizeEvent evt;
+    evt.width = width;
+    evt.height = height;
+
+    on_window_resize(evt);
+}
+
 void EventListenerManager::register_event_listener(EventListener* listener) {
     listeners_.push_back(listener);
 }
