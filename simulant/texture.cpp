@@ -427,6 +427,17 @@ static void compress_rgba4444(uint8_t* dest, float r, float g, float b, float a)
     *out = (rr << 12) | (rg << 8) | (rb << 4) | ra;
 }
 
+static void compress_argb4444(uint8_t* dest, float r, float g, float b, float a) {
+    uint16_t* out = (uint16_t*) dest;
+
+    uint8_t rr = (uint8_t) (15.0f * r);
+    uint8_t rg = (uint8_t) (15.0f * g);
+    uint8_t rb = (uint8_t) (15.0f * b);
+    uint8_t ra = (uint8_t) (15.0f * a);
+
+    *out = (ra << 12) | (rr << 8) | (rg << 4) | rb;
+}
+
 static void compress_rgba8888(uint8_t* dest, float r, float g, float b, float a) {
     uint32_t* out = (uint32_t*) dest;
 
@@ -493,6 +504,7 @@ static const std::map<TextureFormat, ExplodeFunc> EXPLODERS = {
 static const std::map<TextureFormat, CompressFunc> COMPRESSORS = {
     {TEXTURE_FORMAT_RGB_1US_565, compress_rgb565},
     {TEXTURE_FORMAT_RGBA_1US_4444, compress_rgba4444},
+    {TEXTURE_FORMAT_ARGB_1US_4444, compress_argb4444},
     {TEXTURE_FORMAT_RGBA_4UB_8888, compress_rgba8888}
 };
 

@@ -392,6 +392,25 @@ void PVRRenderer::on_texture_prepare(Texture* texture) {
             /* Need to swizzle RGBA4444 to ARGB4444 */
             pvr_format = PVR_TXRFMT_ARGB4444 | PVR_TXRFMT_NONTWIDDLED;
             break;
+        case TEXTURE_FORMAT_RGBA_4UB_8888:
+        case TEXTURE_FORMAT_RGB_3UB_888:
+            /* PVR has no native 32-bit (or 24-bit) texture format. These
+             * show up for runtime-generated textures (e.g. Texture::create
+             * defaults to RGBA_4UB_8888) and for PNGs loaded directly
+             * instead of through the .dtex pipeline. Downconvert to the
+             * closest supported 16-bit format rather than silently
+             * dropping the upload. */
+            if(!texture->convert(TEXTURE_FORMAT_ARGB_1US_4444)) {
+                S_WARN("Failed to downconvert texture format {0} for PVR",
+                       (int)texture->format());
+                return;
+            }
+            w = texture->width();
+            h = texture->height();
+            data = texture->data();
+            data_size = texture->data_size();
+            pvr_format = PVR_TXRFMT_ARGB4444 | PVR_TXRFMT_NONTWIDDLED;
+            break;
         default:
             S_WARN("Unsupported texture format for PVR: {0}", (int)texture->format());
             return;
