@@ -660,11 +660,22 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
                 auto decoded =
                     smlt::base64_decode(dtex_uri.substr(marker_pos + strlen(b64_marker)));
                 if(decoded) {
+                    S_DEBUG("Decoded embedded dtex, {0} bytes", decoded->size());
                     auto is = std::make_shared<std::istringstream>(*decoded, std::ios::binary);
                     auto loader = DTEXLoader("embedded.dtex", is);
                     auto tex = assets->create_texture(8, 8);
                     if(loader.into(*tex)) {
+                        S_DEBUG(
+                            "Embedded dtex loaded: {0}x{1} format={2} "
+                            "data_size={3} renderer_id={4}",
+                            tex->width(), tex->height(), (int)tex->format(),
+                            tex->data_size(), tex->_renderer_specific_id());
                         apply_sampler_settings(tex);
+                        S_DEBUG(
+                            "After apply_sampler_settings: {0}x{1} "
+                            "format={2} data_size={3}",
+                            tex->width(), tex->height(), (int)tex->format(),
+                            tex->data_size());
                         tex->flush();
                         return tex;
                     }
@@ -673,7 +684,7 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
                     S_ERROR("Failed to base64 decode embedded .dtex texture");
                 }
             } else {
-                S_VERBOSE("Loading dreamcast .dtex texture from uri: ", dtex_uri);
+                S_VERBOSE("Loading .dtex texture from uri: ", dtex_uri);
                 TextureFlags tex_flags;
                 tex_flags.use_asset_cache = use_asset_cache;
                 auto tex = assets->load_texture(smlt::Path(dtex_uri), tex_flags);
