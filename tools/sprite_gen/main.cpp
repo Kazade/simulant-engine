@@ -14,12 +14,14 @@ namespace {
 
 void usage() {
     std::cout
-        << "Usage: sprite_gen -i <input.glb|.gltf> [options]\n"
+        << "Usage: sprite_gen -i <input.glb|.gltf|.obj> [options]\n"
            "\n"
            "Renders an animation from a 3D model to a sprite sheet.\n"
            "\n"
            "Options:\n"
-           "  -i, --input <path>             Input .glb/.gltf file (required)\n"
+           "  -i, --input <path>             Input .glb/.gltf/.obj file "
+           "(required; .obj has no animation data, so only a single static "
+           "frame is generated)\n"
            "  -o, --output <path>            Output .dtex or .tga file "
            "(default: <input>.dtex)\n"
            "  -C, --compress                 Write a compressed .dtex "

@@ -15,6 +15,7 @@ class PrefabInstance;
 class AnimationController;
 class Camera3D;
 class Light;
+class Actor;
 } // namespace smlt
 
 namespace sprite_gen {
@@ -50,7 +51,11 @@ private:
     SpriteGenOptions opts_;
 
     smlt::Stage* stage_ = nullptr;
+    // Set for .glb/.gltf input; null for .obj input (see static_actor_).
     smlt::PrefabInstance* prefab_instance_ = nullptr;
+    // Set for .obj input, which is a single static mesh with no animation
+    // data - null for .glb/.gltf input (see prefab_instance_).
+    smlt::Actor* static_actor_ = nullptr;
     smlt::AnimationController* anim_controller_ = nullptr;
     smlt::Camera3D* camera_ = nullptr;
 

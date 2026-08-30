@@ -90,63 +90,96 @@ void SpriteGenScene::fail() {
 }
 
 void SpriteGenScene::on_load() {
-    auto prefab = assets->load_prefab(opts_.input_path);
-    if(!prefab) {
-        S_ERROR("Failed to load model '{0}' - check it's a valid .glb/.gltf "
-                "file",
-                opts_.input_path);
-        fail();
-        return;
-    }
-
     stage_ = create_child<smlt::Stage>();
 
-    prefab_instance_ = stage_->create_child<smlt::PrefabInstance>(prefab);
-    prefab_instance_->transform->set_rotation(smlt::Quaternion(smlt::Euler(
-        opts_.rotation.x, opts_.rotation.y, opts_.rotation.z)));
-    prefab_instance_->transform->set_scale_factor(
-        smlt::Vec3(opts_.scale, opts_.scale, opts_.scale));
+    std::string ext = smlt::Path(opts_.input_path).ext();
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
-    anim_controller_ =
-        prefab_instance_->find_mixin<smlt::AnimationController>();
-    auto names = anim_controller_ ? anim_controller_->animation_names()
-                                  : std::vector<std::string>();
-
-    if(anim_controller_ && !names.empty()) {
-        std::string anim_name =
-            opts_.animation_name.empty() ? names.front() : opts_.animation_name;
-
-        if(std::find(names.begin(), names.end(), anim_name) == names.end()) {
-            std::string available;
-            for(std::size_t i = 0; i < names.size(); ++i) {
-                available += names[i];
-                if(i + 1 < names.size()) {
-                    available += ", ";
-                }
-            }
-            S_ERROR("Animation '{0}' not found in '{1}'. Available: {2}",
-                    anim_name, opts_.input_path, available);
+    if(ext == ".obj") {
+        // .obj has no animation data, so this is always a single static
+        // frame - load it as a plain mesh + Actor rather than a Prefab.
+        auto mesh = assets->load_mesh(opts_.input_path);
+        if(!mesh) {
+            S_ERROR("Failed to load model '{0}' - check it's a valid .obj "
+                    "file",
+                    opts_.input_path);
             fail();
             return;
         }
 
-        frame_base_name_ = anim_name;
-        has_animation_ = true;
+        static_actor_ = stage_->create_child<smlt::Actor>(mesh);
+        static_actor_->transform->set_rotation(smlt::Quaternion(smlt::Euler(
+            opts_.rotation.x, opts_.rotation.y, opts_.rotation.z)));
+        static_actor_->transform->set_scale_factor(
+            smlt::Vec3(opts_.scale, opts_.scale, opts_.scale));
 
-        float duration = anim_controller_->animation_duration(anim_name);
-        frame_count_ = std::max(1, int(std::round(duration * opts_.fps)));
-
-        anim_controller_->play(anim_name);
-        anim_controller_->pause();
-    } else {
         if(!opts_.animation_name.empty()) {
-            S_WARN("Model has no animations; --animation '{0}' will be "
-                   "ignored, generating a single static frame",
+            S_WARN("'.obj' models have no animations; --animation '{0}' "
+                   "will be ignored, generating a single static frame",
                    opts_.animation_name);
         }
         frame_base_name_ = "frame";
         has_animation_ = false;
         frame_count_ = 1;
+    } else {
+        auto prefab = assets->load_prefab(opts_.input_path);
+        if(!prefab) {
+            S_ERROR("Failed to load model '{0}' - check it's a valid "
+                    ".glb/.gltf/.obj file",
+                    opts_.input_path);
+            fail();
+            return;
+        }
+
+        prefab_instance_ = stage_->create_child<smlt::PrefabInstance>(prefab);
+        prefab_instance_->transform->set_rotation(smlt::Quaternion(smlt::Euler(
+            opts_.rotation.x, opts_.rotation.y, opts_.rotation.z)));
+        prefab_instance_->transform->set_scale_factor(
+            smlt::Vec3(opts_.scale, opts_.scale, opts_.scale));
+
+        anim_controller_ =
+            prefab_instance_->find_mixin<smlt::AnimationController>();
+        auto names = anim_controller_ ? anim_controller_->animation_names()
+                                      : std::vector<std::string>();
+
+        if(anim_controller_ && !names.empty()) {
+            std::string anim_name = opts_.animation_name.empty()
+                                        ? names.front()
+                                        : opts_.animation_name;
+
+            if(std::find(names.begin(), names.end(), anim_name) ==
+               names.end()) {
+                std::string available;
+                for(std::size_t i = 0; i < names.size(); ++i) {
+                    available += names[i];
+                    if(i + 1 < names.size()) {
+                        available += ", ";
+                    }
+                }
+                S_ERROR("Animation '{0}' not found in '{1}'. Available: {2}",
+                        anim_name, opts_.input_path, available);
+                fail();
+                return;
+            }
+
+            frame_base_name_ = anim_name;
+            has_animation_ = true;
+
+            float duration = anim_controller_->animation_duration(anim_name);
+            frame_count_ = std::max(1, int(std::round(duration * opts_.fps)));
+
+            anim_controller_->play(anim_name);
+            anim_controller_->pause();
+        } else {
+            if(!opts_.animation_name.empty()) {
+                S_WARN("Model has no animations; --animation '{0}' will be "
+                       "ignored, generating a single static frame",
+                       opts_.animation_name);
+            }
+            frame_base_name_ = "frame";
+            has_animation_ = false;
+            frame_count_ = 1;
+        }
     }
 
     smlt::AABB bounds = compute_animated_bounds();
@@ -174,7 +207,9 @@ smlt::AABB SpriteGenScene::compute_animated_bounds() {
         // Armatures re-pose into their own output mesh (and refresh its
         // AABB) every time the animation is seeked, so transformed_aabb()
         // tracks the current frame for both skinned and static geometry.
-        auto renderers = prefab_instance_->find_descendents_by_types(
+        // Search from stage_ rather than prefab_instance_ so this works
+        // whether the model is a glb/gltf Prefab or a plain .obj Actor.
+        auto renderers = stage_->find_descendents_by_types(
             {smlt::Actor::Meta::node_type, smlt::Armature::Meta::node_type});
         for(auto* node: renderers) {
             bounds.encapsulate(node->transformed_aabb());
