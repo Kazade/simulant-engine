@@ -448,6 +448,10 @@ static void vram_alloc_release_blocks(struct VRAMAllocEntry* it) {
 void vram_alloc_free(void* pool, void* p) {
     (void)pool;
 
+    if(!p) {
+        return;
+    }
+
     struct VRAMAllocEntry* it = pool_header.vram_allocations;
     struct VRAMAllocEntry* last = NULL;
     while(it) {

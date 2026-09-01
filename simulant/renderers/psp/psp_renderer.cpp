@@ -104,7 +104,10 @@ void PSPRenderer::init_context() {
 
 void PSPRenderer::on_texture_unregister(AssetID tex_id, Texture *texture)
 {
-    texture_manager_.release_texture(texture->_renderer_specific_id());
+    auto id = texture->_renderer_specific_id();
+    if(id) {
+        texture_manager_.release_texture(id);
+    }
 }
 
 void PSPRenderer::clear(const RenderTarget &target, const Color &color, uint32_t clear_flags)

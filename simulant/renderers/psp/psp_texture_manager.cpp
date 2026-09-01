@@ -271,8 +271,10 @@ int PSPTextureManager::upload_texture(int id, int format, int width, int height,
         obj->id = ++id_counter;
     }
 
-    vram_alloc_free(nullptr, obj->texture_vram);
-    obj->texture_vram = 0;
+    if(obj->texture_vram) {
+        vram_alloc_free(nullptr, obj->texture_vram);
+        obj->texture_vram = nullptr;
+    }
 
     // Free the data that's there
     free(obj->texture_ram);
@@ -362,76 +364,82 @@ void PSPTextureManager::bind_texture(int id) {
     }
 
     auto tex = find_texture(id);
-    if(tex) {
-        currently_bound_texture_ = tex->id;
+    if(!tex) {
+        // The texture never uploaded successfully (e.g. rejected for
+        // exceeding the max texture size) - disable texturing rather than
+        // leaving whatever the previous draw call bound still active, which
+        // would otherwise "leak" that texture onto this polygon.
+        sceGuDisable(GU_TEXTURE_2D);
+        currently_bound_texture_ = 0;
+        return;
+    }
 
-        if(!tex->texture_ram && !tex->texture_vram) {
-            // Can't do anything with a texture that has no data
-            S_ERROR("Texture ({0}) had no data and couldn't be bound", id);
-            return;
-        }
+    currently_bound_texture_ = tex->id;
 
-        textures_this_frame_.insert(tex.get());
-        texture_priority_.erase(std::find(texture_priority_.begin(),
-                                          texture_priority_.end(), tex.get()));
-        texture_priority_.push_front(tex.get());
+    if(!tex->texture_ram && !tex->texture_vram) {
+        // Can't do anything with a texture that has no data
+        S_ERROR("Texture ({0}) had no data and couldn't be bound", id);
+        return;
+    }
 
-        auto available = vram_alloc_count_continuous((void*)0);
+    textures_this_frame_.insert(tex.get());
+    texture_priority_.erase(std::find(texture_priority_.begin(),
+                                      texture_priority_.end(), tex.get()));
+    texture_priority_.push_front(tex.get());
 
-        if(tex->palette) {            
-            auto entries = tex->palette_size /
-                           ((tex->palette_format == GU_PSM_8888) ? 4 : 2);
+    auto available = vram_alloc_count_continuous((void*)0);
 
-            sceGuClutMode(tex->palette_format, 0, entries - 1, 0);
-            sceGuClutLoad(entries / 8, tex->palette);
-        }
+    if(tex->palette) {
+        auto entries = tex->palette_size /
+                       ((tex->palette_format == GU_PSM_8888) ? 4 : 2);
 
-        assert(tex->mipmaps.size() > 0);
+        sceGuClutMode(tex->palette_format, 0, entries - 1, 0);
+        sceGuClutLoad(entries / 8, tex->palette);
+    }
 
-        auto levels = std::max(std::min(tex->mipmaps.size(), 8u), 1u);
+    assert(tex->mipmaps.size() > 0);
 
-        sceGuTexMode(tex->format, levels - 1, 0,
-                     (tex->is_swizzled) ? GU_TRUE : GU_FALSE);
+    auto levels = std::max(std::min(tex->mipmaps.size(), 8u), 1u);
 
-        auto data = tex->texture_vram ? tex->texture_vram : tex->texture_ram;
-        if(!data) {
-            S_ERROR("Texture ({0}) had no data after promotion and couldn't be "
-                    "bound",
-                    id);
-            return;
-        }
+    sceGuTexMode(tex->format, levels - 1, 0,
+                 (tex->is_swizzled) ? GU_TRUE : GU_FALSE);
 
-        for(std::size_t i = 0; i < levels; ++i) {
-            auto& level = tex->mipmaps[i];
-            auto dest = data + level.offset;
-            sceGuTexImage(i, level.w, level.h, level.w, dest);
-        }
+    auto data = tex->texture_vram ? tex->texture_vram : tex->texture_ram;
+    if(!data) {
+        S_ERROR("Texture ({0}) had no data after promotion and couldn't be "
+                "bound",
+                id);
+        return;
+    }
 
-        if(levels > 1) {
-            switch(tex->filter) {
-                case TEXTURE_FILTER_BILINEAR:
-                    sceGuTexFilter(GU_LINEAR, GU_LINEAR_MIPMAP_NEAREST);
-                    break;
-                case TEXTURE_FILTER_TRILINEAR:
-                    sceGuTexFilter(GU_LINEAR, GU_LINEAR_MIPMAP_LINEAR);
-                    break;
-                default:
-                    sceGuTexFilter(GU_NEAREST, GU_NEAREST);
-                    break;
-            }
-        } else {
-            switch(tex->filter) {
-                case TEXTURE_FILTER_BILINEAR:
-                case TEXTURE_FILTER_TRILINEAR:
-                    sceGuTexFilter(GU_LINEAR, GU_LINEAR);
-                    break;
-                default:
-                    sceGuTexFilter(GU_NEAREST, GU_NEAREST);
-                    break;
-            }
+    for(std::size_t i = 0; i < levels; ++i) {
+        auto& level = tex->mipmaps[i];
+        auto dest = data + level.offset;
+        sceGuTexImage(i, level.w, level.h, level.w, dest);
+    }
+
+    if(levels > 1) {
+        switch(tex->filter) {
+            case TEXTURE_FILTER_BILINEAR:
+                sceGuTexFilter(GU_LINEAR, GU_LINEAR_MIPMAP_NEAREST);
+                break;
+            case TEXTURE_FILTER_TRILINEAR:
+                sceGuTexFilter(GU_LINEAR, GU_LINEAR_MIPMAP_LINEAR);
+                break;
+            default:
+                sceGuTexFilter(GU_NEAREST, GU_NEAREST);
+                break;
         }
     } else {
-        currently_bound_texture_ = 0;
+        switch(tex->filter) {
+            case TEXTURE_FILTER_BILINEAR:
+            case TEXTURE_FILTER_TRILINEAR:
+                sceGuTexFilter(GU_LINEAR, GU_LINEAR);
+                break;
+            default:
+                sceGuTexFilter(GU_NEAREST, GU_NEAREST);
+                break;
+        }
     }
 }
 

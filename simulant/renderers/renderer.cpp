@@ -225,6 +225,22 @@ static void r8_to_rgb565(const uint8_t* src, uint8_t* dst, uint32_t w, uint32_t 
     }
 }
 
+/* Convert ARGB 1555 (2 bytes per pixel) to ARGB 4444 (2 bytes per pixel) */
+static void argb1555_to_argb4444(const uint8_t* src, uint8_t* dst, uint32_t w, uint32_t h) {
+    uint32_t count = w * h;
+    const uint16_t* s = (const uint16_t*) src;
+    uint16_t* d = (uint16_t*) dst;
+
+    for(uint32_t i = 0; i < count; ++i) {
+        uint16_t v = s[i];
+        uint16_t a = (v >> 15) & 0x1;
+        uint16_t r = (v >> 10) & 0x1F;
+        uint16_t g = (v >> 5) & 0x1F;
+        uint16_t b = v & 0x1F;
+        d[i] = ((a ? 0xF : 0x0) << 12) | ((r >> 1) << 8) | ((g >> 1) << 4) | (b >> 1);
+    }
+}
+
 static void untwiddle_16bpp(const uint8_t* src, uint8_t* dst, uint32_t w, uint32_t h) {
     uint32_t x, y, yout, min, mask;
 
@@ -263,6 +279,7 @@ static TextureFormat uncompress_format(TextureFormat fmt) {
 static TextureFormat rgba8888_format() { return TEXTURE_FORMAT_ARGB_1US_4444; }
 static TextureFormat rgb888_format() { return TEXTURE_FORMAT_RGB_1US_565; }
 static TextureFormat r8_format() { return TEXTURE_FORMAT_RGB_1US_565; }
+static TextureFormat argb1555_format() { return TEXTURE_FORMAT_ARGB_1US_4444; }
 
 static TextureFormat untwiddle_format(TextureFormat fmt) {
     switch(fmt) {
@@ -351,6 +368,16 @@ bool Renderer::convert_if_necessary(Texture* tex) {
         std::unique_ptr<uint8_t[]> tmp(new uint8_t[size]);
         r8_to_rgb565(tex->data(), tmp.get(), tex->width(), tex->height());
         fmt = r8_format();
+        tex->_adopt_data(tmp.release(), size);
+    }
+
+    /* Handle 16-bit ARGB1555 → ARGB4444 conversion (e.g. decompressed/untwiddled
+     * Dreamcast .dtex data on platforms that don't natively support ARGB1555) */
+    if(fmt == TEXTURE_FORMAT_ARGB_1US_1555) {
+        uint32_t size = tex->width() * tex->height() * 2;
+        std::unique_ptr<uint8_t[]> tmp(new uint8_t[size]);
+        argb1555_to_argb4444(tex->data(), tmp.get(), tex->width(), tex->height());
+        fmt = argb1555_format();
         tex->_adopt_data(tmp.release(), size);
     }
 
