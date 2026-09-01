@@ -10,6 +10,7 @@
 #include "../../sound/drivers/null_sound_driver.h"
 
 #include "../../renderers/renderer_config.h"
+#include "../../math/utils.h"
 
 namespace smlt {
 
@@ -40,6 +41,8 @@ void PSPWindow::destroy_window() {
 
 void PSPWindow::check_events() {
     static bool button_states[JOYSTICK_BUTTON_MAX];
+    static uint8_t previous_lx = 128;
+    static uint8_t previous_ly = 128;
 
     SceCtrlData pad;
     if(sceCtrlPeekBufferPositive(&pad, 1)) {
@@ -80,6 +83,24 @@ void PSPWindow::check_events() {
         check_button(PSP_CTRL_CROSS, JOYSTICK_BUTTON_A);
 
         // FIXME: Other buttons
+
+        auto handle_axis = [this](uint8_t& previous, uint8_t current, JoystickAxis axis, bool invert) {
+            if(previous == current) {
+                return;
+            }
+
+            previous = current;
+
+            float v = clamp((float(current) - 128.0f) / 128.0f, -1.0f, 1.0f);
+            if(invert) {
+                v = -v;
+            }
+
+            input_state->_handle_joystick_axis_motion(GameControllerID(0), axis, v);
+        };
+
+        handle_axis(previous_lx, pad.Lx, JOYSTICK_AXIS_X, false);
+        handle_axis(previous_ly, pad.Ly, JOYSTICK_AXIS_Y, true);
     }
 }
 
