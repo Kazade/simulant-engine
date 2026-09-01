@@ -373,7 +373,7 @@ bool Renderer::convert_if_necessary(Texture* tex) {
 
     /* Handle 16-bit ARGB1555 → ARGB4444 conversion (e.g. decompressed/untwiddled
      * Dreamcast .dtex data on platforms that don't natively support ARGB1555) */
-    if(fmt == TEXTURE_FORMAT_ARGB_1US_1555) {
+    if(fmt == TEXTURE_FORMAT_ARGB_1US_1555 && !natively_supports_texture_format(fmt)) {
         uint32_t size = tex->width() * tex->height() * 2;
         std::unique_ptr<uint8_t[]> tmp(new uint8_t[size]);
         argb1555_to_argb4444(tex->data(), tmp.get(), tex->width(), tex->height());
