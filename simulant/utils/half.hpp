@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 #include <cstring>
 
@@ -70,6 +72,15 @@ public:
 
     const uint16_t* data() const {
         return &data_;
+    }
+
+    /* Constructs a half directly from its raw IEEE-754 binary16 bit
+     * pattern, e.g. when decoding one straight out of a file/buffer rather
+     * than converting down from an existing float. */
+    static half from_bits(uint16_t bits) {
+        half h;
+        h.data_ = bits;
+        return h;
     }
 
 private:

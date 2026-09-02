@@ -46,8 +46,8 @@ public:
 
     void clear() {
         while(size_ > 0) {
-            data_[size_] = {};
             --size_;
+            data_[size_] = {};
         }
     }
 
@@ -74,8 +74,8 @@ public:
     }
 
     void pop_back() {
-        data_[size_] = T();
         --size_;
+        data_[size_] = T();
     }
 
     struct iterator {

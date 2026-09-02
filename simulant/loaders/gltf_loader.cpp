@@ -1,5 +1,9 @@
 #include "gltf_loader.h"
 
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
+#include <set>
 #include <sstream>
 
 #include "../asset_manager.h"
@@ -11,6 +15,7 @@
 #include "../platform.h"
 #include "../time_keeper.h"
 #include "../utils/base64.h"
+#include "../utils/half.hpp"
 #include "../utils/random.h"
 #include "../vfs.h"
 #include "dtex_loader.h"
@@ -62,8 +67,18 @@ bool check_gltf_version(JSONIterator& js) {
         return false;
     }
 
-    return js["asset"]["version"]->to_str().value_or("0.0") == "2.0";
+    /* glTF 2.1 is a backwards-compatible revision of 2.0 (adding, amongst
+     * other things, the "shapes" and external-asset/"files" features
+     * handled below) so files declaring either version are accepted. */
+    auto version = js["asset"]["version"]->to_str().value_or("0.0");
+    return version == "2.0" || version == "2.1";
 }
+
+/* Tracks the chain of glTF files currently being loaded (by the path they
+ * were requested with) so that external-asset references which form a
+ * cycle (A -> B -> A) are refused rather than recursing forever. Keyed by
+ * thread since loading can happen on worker threads. */
+static thread_local std::set<std::string> gltf_loading_stack;
 
 optional<JSONIterator> find_scene(JSONIterator& js) {
     auto id = js["scene"]->to_int().value_or(0);
@@ -79,8 +94,25 @@ enum ComponentType {
     UNSIGNED_BYTE = 5121,
     SHORT = 5122,
     UNSIGNED_SHORT = 5123,
+    /* glTF 2.1 "Accessor Component Type Definitions": these five are new -
+     * they give extensions (and, per the spec, potentially future core
+     * features) a shared set of componentType values to build on instead
+     * of each having to define their own. glTF 2.1 explicitly does not
+     * require them to be usable everywhere an accessor is (e.g. mesh
+     * attributes still go through Simulant's existing GPU vertex formats,
+     * which have no half/double/int64 equivalent), so below we: always
+     * report the correct byte size for them (so stride/size math for any
+     * accessor using one is correct rather than silently wrong), and
+     * additionally decode SIGNED_INT/HALF_FLOAT/DOUBLE where a plain
+     * CPU-side float/vec3/quaternion is being extracted (animation sampler
+     * data - see BufferInfo::to_typed_array below). */
+    SIGNED_INT = 5124,
     UNSIGNED_INT = 5125,
-    FLOAT = 5126
+    FLOAT = 5126,
+    DOUBLE = 5130,
+    HALF_FLOAT = 5131,
+    SIGNED_INT64 = 5134,
+    UNSIGNED_INT64 = 5135
 };
 
 std::size_t component_size(ComponentType type) {
@@ -90,13 +122,53 @@ std::size_t component_size(ComponentType type) {
             return 1;
         case SHORT:
         case UNSIGNED_SHORT:
+        case HALF_FLOAT:
             return 2;
+        case SIGNED_INT:
         case UNSIGNED_INT:
         case FLOAT:
             return 4;
+        case DOUBLE:
+        case SIGNED_INT64:
+        case UNSIGNED_INT64:
+            return 8;
         default:
             return 0;
     }
+}
+
+/* Reads a single component as a float regardless of its underlying glTF
+ * storage type, for the (CPU-side only, no GPU vertex format involved)
+ * conversions in BufferInfo::to_typed_array below. */
+static float read_component_as_float(const uint8_t* ptr, ComponentType type) {
+    switch(type) {
+        case HALF_FLOAT: {
+            uint16_t bits;
+            std::memcpy(&bits, ptr, sizeof(bits));
+            return float(smlt::half::from_bits(bits));
+        }
+        case DOUBLE: {
+            double d;
+            std::memcpy(&d, ptr, sizeof(d));
+            return float(d);
+        }
+        case SIGNED_INT: {
+            int32_t v;
+            std::memcpy(&v, ptr, sizeof(v));
+            return float(v);
+        }
+        case FLOAT:
+        default: {
+            float f;
+            std::memcpy(&f, ptr, sizeof(f));
+            return f;
+        }
+    }
+}
+
+static bool is_float_convertible(ComponentType type) {
+    return type == FLOAT || type == HALF_FLOAT || type == DOUBLE ||
+           type == SIGNED_INT;
 }
 
 std::size_t component_count(const std::string& type) {
@@ -121,8 +193,8 @@ struct BufferInfo {
     std::size_t c_count = 0;
 
     bool to_typed_array(std::vector<Vec3>& vecs_out) {
-        if(c_type != FLOAT || c_count != 3) {
-            S_ERROR("Only float conversion implemented");
+        if(!is_float_convertible(c_type) || c_count != 3) {
+            S_ERROR("Unsupported component type for float conversion");
             return false;
         }
 
@@ -131,11 +203,11 @@ struct BufferInfo {
         uint8_t* it = &data[0];
         auto count = data.size() / stride;
         for(std::size_t i = 0; i < count; ++i) {
-            float x = *reinterpret_cast<float*>(it);
+            float x = read_component_as_float(it, c_type);
             it += c_stride;
-            float y = *reinterpret_cast<float*>(it);
+            float y = read_component_as_float(it, c_type);
             it += c_stride;
-            float z = *reinterpret_cast<float*>(it);
+            float z = read_component_as_float(it, c_type);
             it += c_stride;
 
             vecs_out.push_back(Vec3(x, y, z));
@@ -145,8 +217,8 @@ struct BufferInfo {
     }
 
     bool to_typed_array(std::vector<Quaternion>& quats_out) {
-        if(c_type != FLOAT || c_count != 4) {
-            S_ERROR("Only float conversion implemented");
+        if(!is_float_convertible(c_type) || c_count != 4) {
+            S_ERROR("Unsupported component type for float conversion");
             return false;
         }
 
@@ -155,13 +227,13 @@ struct BufferInfo {
         uint8_t* it = &data[0];
         auto count = data.size() / stride;
         for(std::size_t i = 0; i < count; ++i) {
-            float x = *reinterpret_cast<float*>(it);
+            float x = read_component_as_float(it, c_type);
             it += c_stride;
-            float y = *reinterpret_cast<float*>(it);
+            float y = read_component_as_float(it, c_type);
             it += c_stride;
-            float z = *reinterpret_cast<float*>(it);
+            float z = read_component_as_float(it, c_type);
             it += c_stride;
-            float w = *reinterpret_cast<float*>(it);
+            float w = read_component_as_float(it, c_type);
             it += c_stride;
 
             quats_out.push_back(Quaternion(x, y, z, w));
@@ -171,8 +243,8 @@ struct BufferInfo {
     }
 
     bool to_typed_array(std::vector<float>& scalars_out) {
-        if(c_type != FLOAT || c_count != 1) {
-            S_ERROR("Only float conversion implemented");
+        if(!is_float_convertible(c_type) || c_count != 1) {
+            S_ERROR("Unsupported component type for float conversion");
             return false;
         }
 
@@ -182,8 +254,7 @@ struct BufferInfo {
         auto count = data.size() / stride;
         for(std::size_t i = 0; i < count; ++i) {
             for(std::size_t j = 0; j < c_count; ++j) {
-                float* thing = reinterpret_cast<float*>(it);
-                scalars_out.push_back(*thing);
+                scalars_out.push_back(read_component_as_float(it, c_type));
                 it += c_stride;
             }
         }
@@ -741,6 +812,116 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
     return smlt::TexturePtr();
 }
 
+/* glTF 2.1 "shapes": implicit geometric primitives (box/sphere/capsule/
+ * cylinder/plane), stored in a top-level "shapes" array and attached to
+ * nodes via a "boundingVolume" property. These are turned into ordinary
+ * Actor nodes wrapping a procedurally generated mesh, rather than a new
+ * stage node type, so they render/cull/transform like anything else. */
+struct ShapeInfo {
+    std::string type;
+    smlt::Vec3 box_size = smlt::Vec3(1.0f, 1.0f, 1.0f);
+    float sphere_radius = 0.5f;
+    float capsule_height = 0.5f;
+    float capsule_radius_top = 0.25f;
+    float capsule_radius_bottom = 0.25f;
+    float cylinder_height = 0.5f;
+    float cylinder_radius_top = 0.25f;
+    float cylinder_radius_bottom = 0.25f;
+
+    /* The glTF 2.1 announcement doesn't publish a normative schema for the
+     * plane shape's parameters (unlike box/sphere/capsule/cylinder, which
+     * carry over from the pre-existing KHR_implicit_shapes draft), so we
+     * treat it as a finite quad of this size for visualisation purposes. */
+    float plane_width = 1.0f;
+    float plane_height = 1.0f;
+};
+
+static ShapeInfo parse_shape(JSONIterator shape_it) {
+    ShapeInfo info;
+    info.type = shape_it["type"]->to_str().value_or("");
+
+    if(info.type == "box") {
+        auto box = shape_it["box"];
+        if(box.is_valid() && box->has_key("size")) {
+            info.box_size = parse_scale(box["size"]);
+        }
+    } else if(info.type == "sphere") {
+        auto sphere = shape_it["sphere"];
+        info.sphere_radius = sphere["radius"]->to_float().value_or(0.5f);
+    } else if(info.type == "capsule") {
+        auto capsule = shape_it["capsule"];
+        info.capsule_height = capsule["height"]->to_float().value_or(0.5f);
+        info.capsule_radius_bottom =
+            capsule["radiusBottom"]->to_float().value_or(0.25f);
+        info.capsule_radius_top =
+            capsule["radiusTop"]->to_float().value_or(0.25f);
+    } else if(info.type == "cylinder") {
+        auto cylinder = shape_it["cylinder"];
+        info.cylinder_height = cylinder["height"]->to_float().value_or(0.5f);
+        info.cylinder_radius_bottom =
+            cylinder["radiusBottom"]->to_float().value_or(0.25f);
+        info.cylinder_radius_top =
+            cylinder["radiusTop"]->to_float().value_or(0.25f);
+    } else if(info.type == "plane") {
+        auto plane = shape_it["plane"];
+        if(plane.is_valid() && plane->has_key("size")) {
+            auto size = plane["size"];
+            info.plane_width = size[0]->to_float().value_or(1.0f);
+            info.plane_height = size[1]->to_float().value_or(1.0f);
+        }
+    } else {
+        S_WARN("Unsupported glTF shape type: {0}", info.type);
+    }
+
+    return info;
+}
+
+static smlt::MaterialPtr create_shape_material(AssetManager* assets) {
+    auto mat = assets->clone_default_material();
+    mat->set_name("GLTFShape");
+    mat->set_lighting_enabled(false);
+    mat->set_textures_enabled(0);
+    mat->set_cull_mode(smlt::CULL_MODE_NONE);
+    mat->set_blend_func(smlt::BLEND_ALPHA);
+    mat->set_base_color(smlt::Color(0.2f, 0.9f, 0.3f, 0.35f));
+    return mat;
+}
+
+static smlt::MeshPtr build_shape_mesh(AssetManager* assets,
+                                      const ShapeInfo& shape,
+                                      const smlt::MaterialPtr& material) {
+    auto mesh = assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+
+    if(shape.type == "box") {
+        mesh->create_submesh_as_box("shape", material, shape.box_size.x,
+                                    shape.box_size.y, shape.box_size.z);
+    } else if(shape.type == "sphere") {
+        mesh->create_submesh_as_sphere("shape", material,
+                                       shape.sphere_radius * 2.0f, 12, 12);
+    } else if(shape.type == "capsule") {
+        auto diameter = std::max(shape.capsule_radius_top,
+                                 shape.capsule_radius_bottom) *
+                        2.0f;
+        auto length = shape.capsule_height + diameter;
+        mesh->create_submesh_as_capsule("shape", material, diameter, length,
+                                        12, 1, 4);
+    } else if(shape.type == "cylinder") {
+        auto diameter = std::max(shape.cylinder_radius_top,
+                                 shape.cylinder_radius_bottom) *
+                        2.0f;
+        mesh->create_submesh_as_cylinder("shape", material, diameter,
+                                         shape.cylinder_height, 16, 1);
+    } else if(shape.type == "plane") {
+        mesh->create_submesh_as_rectangle("shape", material,
+                                          shape.plane_width,
+                                          shape.plane_height);
+    } else {
+        return smlt::MeshPtr();
+    }
+
+    return mesh;
+}
+
 static smlt::MaterialPtr create_default_material(AssetManager* assets) {
     auto mat = assets->clone_default_material();
     mat->set_name("Default");
@@ -858,6 +1039,47 @@ smlt::MaterialPtr load_material(AssetManager* assets, JSONIterator& js,
     return ret;
 }
 
+/* glTF 2.1 "Non-Sequential Attributes": TEXCOORD_n/COLOR_n accessors are no
+ * longer required to start at 0 or be contiguous (so e.g. a primitive may
+ * declare only "TEXCOORD_2" with no "TEXCOORD_0"/"TEXCOORD_1" at all).
+ * Simulant only wires up a single texcoord and a single color channel per
+ * primitive, so rather than only ever looking at "<prefix>0" (and silently
+ * dropping the attribute if that particular set is missing) we fall back
+ * to whichever numbered set has the lowest index. */
+static int find_attribute_id(JSONIterator attributes, const std::string& prefix) {
+    auto zero_id = attributes[prefix + "0"]->to_int();
+    if(zero_id) {
+        return zero_id.value();
+    }
+
+    if(!attributes.is_valid()) {
+        return -1;
+    }
+
+    int best_id = -1;
+    long best_set = -1;
+    for(auto& key: attributes->keys()) {
+        if(key.size() <= prefix.size() ||
+           key.compare(0, prefix.size(), prefix) != 0) {
+            continue;
+        }
+
+        auto suffix = key.substr(prefix.size());
+        char* end = nullptr;
+        long set = std::strtol(suffix.c_str(), &end, 10);
+        if(suffix.empty() || *end != '\0') {
+            continue; // Not a plain integer suffix
+        }
+
+        if(best_set == -1 || set < best_set) {
+            best_set = set;
+            best_id = attributes[key]->to_int().value_or(-1);
+        }
+    }
+
+    return best_id;
+}
+
 static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
                                JSONIterator& mesh, int mesh_id,
                                const std::vector<Accessor>& accessors,
@@ -920,9 +1142,8 @@ static smlt::MeshPtr load_mesh(AssetManager* assets, JSONIterator& js,
         mp.position_id =
             primitive["attributes"]["POSITION"]->to_int().value_or(-1);
         mp.normal_id = primitive["attributes"]["NORMAL"]->to_int().value_or(-1);
-        mp.color_id = primitive["attributes"]["COLOR_0"]->to_int().value_or(-1);
-        mp.texcoord_id =
-            primitive["attributes"]["TEXCOORD_0"]->to_int().value_or(-1);
+        mp.color_id = find_attribute_id(primitive["attributes"], "COLOR_");
+        mp.texcoord_id = find_attribute_id(primitive["attributes"], "TEXCOORD_");
         mp.indexes_id = primitive["indices"]->to_int().value_or(-1);
         mp.joints_id = primitive["attributes"]["JOINTS_0"]->to_int().value_or(-1);
         mp.weights_id = primitive["attributes"]["WEIGHTS_0"]->to_int().value_or(-1);
@@ -1316,10 +1537,31 @@ static void load_skeletons(JSONIterator& js,
     }
 }
 
+/* Bundles the state needed for glTF 2.1's "Shapes" and "External Assets"
+ * features through the recursive node walk, so as not to keep growing
+ * spawn_node_recursively's parameter list. */
+struct ComplexSceneContext {
+    /* shapes[i] -> the procedurally generated mesh for shapes[i], indexed
+     * exactly as the file's top-level "shapes" array. */
+    const std::vector<smlt::MeshPtr>& shape_meshes;
+
+    /* files[i] -> the uri of the top-level "files" array entry, used to
+     * resolve node "asset" (external glTF) references. */
+    const std::vector<std::string>& external_files;
+
+    /* Ids for nodes synthesized by this loader (bounding volume actors,
+     * armatures) must not collide with real glTF node ids or each other.
+     * Armature ids are pre-allocated starting here (see
+     * ArmatureInfo::armature_node_id), so anything else we invent grabs the
+     * next free id from this shared counter. */
+    uint32_t& next_extra_id;
+};
+
 static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
                                    JSONIterator& js,
                                    const std::vector<smlt::MeshPtr>& meshes,
-                                   const SkeletonInfo& skeletons) {
+                                   const SkeletonInfo& skeletons,
+                                   ComplexSceneContext& complex) {
     auto nodes = js["nodes"];
     auto node = nodes[node_id];
 
@@ -1360,7 +1602,35 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
 
     auto joint = skeletons.joints.find(node_id);
 
-    if(joint != skeletons.joints.end()) {
+    /* glTF 2.1 "External Assets": this node instantiates a whole other
+     * glTF file as a sub-tree, rather than holding a mesh/camera/light of
+     * its own. */
+    auto asset_index = node["asset"]->to_int().value_or(-1);
+
+    if(asset_index >= 0) {
+        smlt::PrefabPtr nested_prefab;
+
+        if((std::size_t)asset_index < complex.external_files.size()) {
+            auto uri = complex.external_files[(std::size_t)asset_index];
+            nested_prefab =
+                prefab.asset_manager().load_prefab(smlt::Path(uri));
+            if(!nested_prefab) {
+                S_ERROR("Failed to load external asset '{0}' referenced by "
+                        "node {1} (missing file or cyclical reference)",
+                        uri, node_id);
+            }
+        } else {
+            S_ERROR("Node {0} references out-of-range external asset {1}",
+                    node_id, asset_index);
+        }
+
+        if(nested_prefab) {
+            prefab_node.node_type_name = "prefab_instance";
+            prefab_node.params.set("prefab", nested_prefab);
+        } else {
+            prefab_node.node_type_name = "stage";
+        }
+    } else if(joint != skeletons.joints.end()) {
         prefab_node.node_type_name = "joint";
         prefab_node.params.set("joint_index", joint->second.second);
 
@@ -1507,11 +1777,51 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
 
     prefab.push_node(prefab_node, parent);
 
+    /* glTF 2.1 "Shapes": if this node carries a boundingVolume, spawn the
+     * referenced shape as a child Actor wrapping a procedurally generated
+     * mesh (see build_shape_mesh). */
+    auto bounding_volume = node["boundingVolume"];
+    if(bounding_volume.is_valid()) {
+        auto shape_index = bounding_volume["shape"]->to_int().value_or(-1);
+        if(shape_index >= 0 &&
+           (std::size_t)shape_index < complex.shape_meshes.size() &&
+           complex.shape_meshes[(std::size_t)shape_index]) {
+
+            PrefabNode shape_node;
+            shape_node.id = complex.next_extra_id++;
+            shape_node.node_type_name = "actor";
+            shape_node.name = "BoundingVolume";
+            shape_node.params.set(
+                "mesh", complex.shape_meshes[(std::size_t)shape_index]);
+
+            auto bv_translation =
+                bounding_volume->has_key("translation")
+                    ? parse_pos(bounding_volume["translation"])
+                    : Vec3();
+            auto bv_rotation =
+                bounding_volume->has_key("rotation")
+                    ? parse_quaternion(bounding_volume["rotation"])
+                    : Quaternion();
+            auto bv_scale = bounding_volume->has_key("scale")
+                                ? parse_scale(bounding_volume["scale"])
+                                : Vec3(1, 1, 1);
+
+            shape_node.params.set("translation", bv_translation);
+            shape_node.params.set("rotation", bv_rotation);
+            shape_node.params.set("scale_factor", bv_scale);
+
+            prefab.push_node(shape_node, prefab_node.id);
+        } else {
+            S_WARN("Node {0} has an invalid boundingVolume shape index",
+                   node_id);
+        }
+    }
+
     if(node->has_key("children")) {
         for(auto& child: node["children"]) {
             spawn_node_recursively(prefab, prefab_node.id,
                                    child.to_int().value_or(0), js, meshes,
-                                   skeletons);
+                                   skeletons, complex);
         }
     }
 
@@ -1521,6 +1831,25 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
 bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     auto prefab = loadable_to<Prefab>(resource);
     std::shared_ptr<std::istream> bin_chunk;
+
+    /* Refuse to load a glTF file that's already an ancestor of this load,
+     * i.e. an "External Assets" reference cycle (A -> B -> A). Everything
+     * further down loads through this same GLTFLoader::into, so a single
+     * per-thread stack of in-flight paths catches cycles at any depth.
+     * The path is resolved through the VFS (the same way AssetManager
+     * resolves "asset"/"files" references) so that a nested reference
+     * written as a bare relative uri still matches the absolute path the
+     * root file was opened with. */
+    auto resolved = smlt::get_app()->vfs->locate_file(filename_);
+    auto loading_key = resolved ? resolved.value().str() : filename_.str();
+    if(gltf_loading_stack.count(loading_key)) {
+        S_ERROR("Cyclical glTF external asset reference detected for '{0}'",
+                loading_key);
+        return false;
+    }
+    gltf_loading_stack.insert(loading_key);
+    raii::Finally pop_loading_stack(
+        [&]() { gltf_loading_stack.erase(loading_key); });
 
     uint32_t magic;
     data_->read((char*)&magic, sizeof(magic));
@@ -1613,6 +1942,39 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
 
     SkeletonInfo skeletons;
 
+    /* glTF 2.1 "Shapes": build every declared shape's mesh up-front (nodes
+     * reference them by index via "boundingVolume"), sharing one material
+     * across all of them. */
+    std::vector<MeshPtr> shape_meshes;
+    auto shapes_it = js["shapes"];
+    if(shapes_it.is_valid()) {
+        auto shape_material = create_shape_material(&prefab->asset_manager());
+        prefab->push_material(shape_material);
+
+        for(auto& shape_node: shapes_it) {
+            auto shape_it = shape_node.to_iterator();
+            auto info = parse_shape(shape_it);
+            auto mesh =
+                build_shape_mesh(&prefab->asset_manager(), info, shape_material);
+            if(mesh) {
+                prefab->push_mesh(mesh);
+            }
+            shape_meshes.push_back(mesh);
+        }
+    }
+
+    /* glTF 2.1 "External Assets": the top-level "files" array is the
+     * virtual file system that node "asset" references index into. We only
+     * need the uri of each entry to resolve+load the referenced glTF. */
+    std::vector<std::string> external_files;
+    auto files_it = js["files"];
+    if(files_it.is_valid()) {
+        for(auto& file_node: files_it) {
+            auto file_it = file_node.to_iterator();
+            external_files.push_back(file_it["uri"]->to_str().value_or(""));
+        }
+    }
+
     std::unordered_map<int, int> mesh_to_skin;
 
     // Looping through all the nodes for skin association
@@ -1670,6 +2032,14 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
      * it's spawned below. */
     load_skeletons(js, accessors, bin_chunk.get(), skeletons);
 
+    /* Ids for nodes this loader invents itself (bounding volume actors)
+     * must not collide with real glTF node ids or the armature ids just
+     * allocated above (which start at nodes.size() and run on from there,
+     * one per armature). */
+    uint32_t next_extra_id =
+        (uint32_t)js["nodes"]->size() + (uint32_t)skeletons.armatures.size();
+    ComplexSceneContext complex{shape_meshes, external_files, next_extra_id};
+
     auto meshes_it = js["meshes"];
     j = 0;
     for(auto& node: meshes_it) {
@@ -1713,7 +2083,7 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
                 auto name_maybe = it["name"]->to_str();
                 if(name_maybe && name_maybe.value() == root_name) {
                     spawn_node_recursively(*prefab, -1, i, js, meshes,
-                                           skeletons);
+                                           skeletons, complex);
                     return true;
                 }
             }
@@ -1734,7 +2104,8 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         }
 
         auto node_id = maybe_id.value();
-        spawn_node_recursively(*prefab, -1, node_id, js, meshes, skeletons);
+        spawn_node_recursively(*prefab, -1, node_id, js, meshes, skeletons,
+                               complex);
     }
 
     auto animations_it = js["animations"];
