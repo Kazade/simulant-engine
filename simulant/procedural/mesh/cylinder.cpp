@@ -21,13 +21,13 @@
 #include "cylinder.h"
 #include "../../types.h"
 #include "../../meshes/mesh.h"
-#include "../../asset_manager.h"
+#include "../../meshes/submesh.h"
 
 namespace smlt {
 namespace procedural {
 namespace mesh {
 
-void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int32_t stacks) {
+void cylinder(SubMeshPtr submesh, float diameter, float length, int32_t segments, int32_t stacks) {
     float radius = diameter * 0.5f;
     float half_length = length * 0.5f;
     float delta_angle = (PI * 2.0f) / (float) segments;
@@ -37,7 +37,8 @@ void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments, int3
     // 5 6 7 8 9
     // 0 1 2 3 4
 
-    auto buffer = mesh->create_submesh("cylinder", mesh->asset_manager().clone_default_material(), INDEX_TYPE_16_BIT);
+    auto mesh = submesh->mesh.get();
+    auto& buffer = submesh;
     for(auto i = 0; i <= stacks; ++i) {
         auto segment_offset = offset;
         for(auto j = 0; j < segments; ++j) {

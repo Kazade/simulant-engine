@@ -249,6 +249,14 @@ public:
         std::size_t stacks
     );
 
+    SubMeshPtr create_submesh_as_cylinder(const std::string& name,
+        MaterialPtr material,
+        float diameter,
+        float length,
+        std::size_t segments,
+        std::size_t stacks
+    );
+
     SubMeshPtr create_submesh_as_icosphere(const std::string& name,
         MaterialPtr material,
         float diameter,

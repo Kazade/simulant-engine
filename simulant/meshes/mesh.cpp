@@ -263,6 +263,16 @@ SubMeshPtr Mesh::create_submesh_as_sphere(const std::string& name,
     return sm;
 }
 
+SubMeshPtr Mesh::create_submesh_as_cylinder(const std::string& name,
+    MaterialPtr material, float diameter, float length, std::size_t segments, std::size_t stacks) {
+
+    SubMesh* sm = create_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+
+    procedural::mesh::cylinder(sm, diameter, length, (int32_t) segments, (int32_t) stacks);
+
+    return sm;
+}
+
 SubMeshPtr Mesh::create_submesh_as_capsule(
     const std::string& name,
     MaterialPtr material, float diameter, float length,

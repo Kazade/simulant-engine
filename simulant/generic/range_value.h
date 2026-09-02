@@ -58,7 +58,7 @@ public:
     }
 
 private:
-    T clamp(T x) const {
+    static T clamp(T x) {
         // Debug assertions
         assert(x >= (T) min);
         assert(x <= (T) max);

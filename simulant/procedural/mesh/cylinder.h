@@ -29,7 +29,7 @@ class Mesh;
 namespace procedural {
 namespace mesh {
 
-void cylinder(MeshPtr mesh, float diameter, float length, int32_t segments=20, int32_t stacks=20);
+void cylinder(SubMeshPtr submesh, float diameter, float length, int32_t segments=20, int32_t stacks=20);
 
 
 }

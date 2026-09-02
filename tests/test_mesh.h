@@ -414,6 +414,19 @@ public:
         //assert_close(mesh->aabb().depth(), 2.0f, EPSILON);
     }
 
+    void test_create_submesh_as_cylinder() {
+        auto mesh = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        mesh->create_submesh_as_cylinder(
+            "cylinder",
+            scene->assets->create_material(),
+            2.0f, 5.0f, 16, 1
+        );
+
+        assert_close(mesh->aabb().height(), 5.0f, EPSILON);
+        assert_close(mesh->aabb().width(), 2.0f, EPSILON);
+        assert_close(mesh->aabb().depth(), 2.0f, EPSILON);
+    }
+
     void test_find_mesh() {
         auto mesh = scene->assets->create_mesh(VertexSpecification::DEFAULT)->set_name_and_get("Mesh 1");
         scene->assets->create_mesh(VertexSpecification::DEFAULT)->set_name("Mesh 2");
