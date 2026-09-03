@@ -155,7 +155,8 @@ void yield() {
     sleep(0);
 #elif defined(__PSP__)
     /* FIXME: For some reason the CMake check thinks pthread_yield exists? */
-    sleep(0);
+    // sleep(0) isn't guaranteed to reschedule.
+    sleep(5);
 #else
     pthread_yield();
 #endif

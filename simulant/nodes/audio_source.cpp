@@ -75,7 +75,7 @@ void AudioSource::source_update_thread() {
         auto dt = float(diff) * 0.000001f;
 
         if(dt < update_rate) {
-            thread::yield();
+            thread::sleep(5);
             continue;
         }
 

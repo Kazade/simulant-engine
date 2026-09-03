@@ -103,6 +103,17 @@ IF(MINGW)
   SET(FLTO_SUPPORTED False)
 ENDIF()
 
+# libsimulant built with LTO (as fat, IR-only objects) breaks the PRX link
+# path (-Wl,-q -T linkfile.prx in CreatePBP.cmake, used when packaging for
+# PSP): the final link fails with "ld: final link failed: invalid
+# operation" regardless of whether the downstream project itself uses LTO,
+# since GCC's LTO plugin activates automatically for any link against an
+# LTO-only static library. Confirmed by rebuilding libsimulant.a without
+# LTO and observing the exact same PRX link succeed.
+IF(PLATFORM_PSP)
+  SET(FLTO_SUPPORTED False)
+ENDIF()
+
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
 # Fast-math is important on DC!

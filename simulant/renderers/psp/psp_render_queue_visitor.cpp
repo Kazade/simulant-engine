@@ -177,13 +177,16 @@ void PSPRenderQueueVisitor::change_material_pass(const MaterialPass* prev, const
     // FIXME: Multitexture?
     // FIXME: texture matrix
     auto enabled = next->textures_enabled();
-    if((enabled & (1 << 0))) {
+    auto base_color_map = enabled & (1 << 0) ? next->base_color_map() : nullptr;
+    if(base_color_map) {
         sceGuEnable(GU_TEXTURE_2D);
 
         // We have to keep the filter in sync
-        auto id = next->base_color_map()->_renderer_specific_id();
+        auto id = base_color_map->_renderer_specific_id();
         auto tex = renderer_->texture_manager_.find_texture(id);
-        tex->filter = next->base_color_map()->texture_filter();
+        if(tex) {
+            tex->filter = base_color_map->texture_filter();
+        }
 
         renderer_->texture_manager_.bind_texture(id);
     } else {

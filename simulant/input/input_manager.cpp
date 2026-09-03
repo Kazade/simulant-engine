@@ -15,7 +15,14 @@
 
 namespace smlt {
 
+#ifdef __PSP__
+/* The PSP-1000's analog nub is notoriously imprecise and often doesn't
+ * spring back all the way to center, so it needs a larger deadzone than
+ * other controllers to avoid drifting in the last-pressed direction. */
+const static float DEADZONE = 0.4f;
+#else
 const static float DEADZONE = 0.2f;
+#endif
 
 InputManager::InputManager(InputState *controller):
     controller_(controller) {
