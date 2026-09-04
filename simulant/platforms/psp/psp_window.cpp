@@ -41,11 +41,28 @@ void PSPWindow::destroy_window() {
 
 void PSPWindow::check_events() {
     static bool button_states[JOYSTICK_BUTTON_MAX];
+    static bool stick_calibrated = false;
+    static uint8_t center_lx = 128;
+    static uint8_t center_ly = 128;
     static uint8_t previous_lx = 128;
     static uint8_t previous_ly = 128;
 
     SceCtrlData pad;
     if(sceCtrlPeekBufferPositive(&pad, 1)) {
+        /* The PSP-1000's analog nub frequently rests somewhere other than
+         * the nominal (128, 128) centre - sometimes far enough off that it
+         * still reads as "pushed" once normalized, even at rest. Rather
+         * than assume perfect centring, calibrate against whatever the
+         * stick reports on the very first poll (the stick is assumed to
+         * be untouched at startup) and treat that as the zero point. */
+        if(!stick_calibrated) {
+            center_lx = pad.Lx;
+            center_ly = pad.Ly;
+            previous_lx = pad.Lx;
+            previous_ly = pad.Ly;
+            stick_calibrated = true;
+        }
+
         auto check_button = [&](PspCtrlButtons psp_button, JoystickButton button) {
             bool pressed = (pad.Buttons & psp_button) == psp_button;
             if(pressed && !button_states[button]) {
@@ -84,14 +101,20 @@ void PSPWindow::check_events() {
 
         // FIXME: Other buttons
 
-        auto handle_axis = [this](uint8_t& previous, uint8_t current, JoystickAxis axis, bool invert) {
+        auto handle_axis = [this](uint8_t& previous, uint8_t current, uint8_t center, JoystickAxis axis, bool invert) {
             if(previous == current) {
                 return;
             }
 
             previous = current;
 
-            float v = clamp((float(current) - 128.0f) / 128.0f, -1.0f, 1.0f);
+            /* Scale relative to whichever side of centre we're on, so a
+             * miscalibrated centre doesn't clip travel in one direction
+             * while leaving the other unable to reach -1/+1. */
+            float delta = float(current) - float(center);
+            float range = (delta >= 0.0f) ? (255.0f - float(center)) : float(center);
+            float v = (range > 0.0f) ? clamp(delta / range, -1.0f, 1.0f) : 0.0f;
+
             if(invert) {
                 v = -v;
             }
@@ -99,8 +122,8 @@ void PSPWindow::check_events() {
             input_state->_handle_joystick_axis_motion(GameControllerID(0), axis, v);
         };
 
-        handle_axis(previous_lx, pad.Lx, JOYSTICK_AXIS_X, false);
-        handle_axis(previous_ly, pad.Ly, JOYSTICK_AXIS_Y, true);
+        handle_axis(previous_lx, pad.Lx, center_lx, JOYSTICK_AXIS_X, false);
+        handle_axis(previous_ly, pad.Ly, center_ly, JOYSTICK_AXIS_Y, true);
     }
 }
 
