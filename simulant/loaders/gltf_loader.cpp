@@ -1682,14 +1682,18 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
         auto light =
             js["extensions"]["KHR_lights_punctual"]["lights"][light_id];
         if(light.is_valid()) {
-            prefab_node.node_type_name = "light";
+            /* Only "point_light" and "directional_light" are registered
+             * node type names (see Scene::register_default_stage_node_types);
+             * there is no generic "light" factory, so resolve the concrete
+             * type here rather than leaving it for create_node to fail on. */
+            auto light_type = light["type"]->to_str().value_or("directional");
+            prefab_node.node_type_name =
+                (light_type == "point") ? "point_light" : "directional_light";
             prefab_node.params.set("color", parse_color3(light["color"]));
             prefab_node.params.set(
                 "intensity", light["intensity"]->to_float().value_or(1.0f));
             prefab_node.params.set("range",
                                    light["range"]->to_float().value_or(100.0f));
-            prefab_node.params.set(
-                "type", light["type"]->to_str().value_or("directional"));
         }
     } else {
         prefab_node.node_type_name = "stage";
