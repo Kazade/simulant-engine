@@ -30,10 +30,15 @@
 
 #include "scene.h"
 #include "../generic/managed.h"
+#include "../path.h"
 #include "../signals/signal.h"
 
 #include "../generic/static_if.h"
 #include "../coroutines/helpers.h"
+
+extern "C" {
+    struct lua_State;
+}
 
 namespace smlt {
 
@@ -328,7 +333,19 @@ public:
     std::shared_ptr<T> resolve_scene_as(const std::string& route) {
         return std::dynamic_pointer_cast<T>(resolve_scene(route));
     }
+
+    /* Registers a scene defined in a Lua script. The route name used to
+     * activate the scene comes from the Meta table set up by
+     * smlt.define_scene() in the script, not from an argument here — this
+     * mirrors StageNodeManager::register_stage_node(). */
+    bool register_scene(const Path& script, const char* class_name);
+    bool register_scene(const char* script_data, const char* class_name);
+
 private:
+    /* Shared implementation used by both register_scene overloads above
+       after the Lua state has been loaded. */
+    bool register_scene_from_lua_state(lua_State* L, const char* class_name);
+
     void _store_scene_factory(const std::string& name, SceneFactory func) {
         scene_factories_[name] = func;
     }

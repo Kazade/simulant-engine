@@ -141,6 +141,66 @@ rawset(smlt, "create_mixin", function(host_node, type_name, params)
 end)
 )lua";
 
+// ---------------------------------------------------------------------------
+// smlt.define_scene(name) — Lua helper that creates a Scene subclass.
+//
+// Usage in a Lua script:
+//
+//   MyScene = smlt.define_scene("my_scene")
+//
+//   function MyScene:on_load()
+//       -- Properties forward transparently through the wrapper's __index:
+//       local assets = self.assets
+//       -- But methods that live on the real C++ object (not on the Lua
+//       -- class table) must be called on _cpp_node directly, or via a
+//       -- smlt.* helper (e.g. smlt.create_child_node), so that `self`
+//       -- inside the C++ binding resolves to the userdata rather than
+//       -- this Lua wrapper table:
+//       self._cpp_node:create_child("camera")
+//   end
+//
+// The helper sets up:
+//   - the class table with __index pointing to itself
+//   - the Meta table (just the route name) used to register the scene
+//   - a default :new(window) constructor that returns a plain Lua wrapper
+//     table; the C++ factory fills in a _cpp_node field (via rawset, so
+//     metamethods are bypassed) pointing to the real LuaScene once it has
+//     been constructed.
+//   - an __index metamethod on each instance that checks for Lua-defined
+//     methods first, then forwards unknown keys to _cpp_node so that C++
+//     properties like assets, window, and input are transparently
+//     accessible as self.assets etc.
+// ---------------------------------------------------------------------------
+static const char* k_define_scene_helper = R"lua(
+rawset(smlt, "define_scene", function(name)
+    local cls = {}
+    cls.__index = cls
+    cls.Meta = {name = name}
+
+    -- Default constructor.  Called by the C++ registration machinery as
+    -- cls:new(window), i.e. constructor(cls, window).
+    -- Returns a plain Lua wrapper table.  C++ will rawset _cpp_node on it
+    -- (bypassing __newindex) once the real LuaScene has been created.
+    function cls:new(window)
+        local wrapper = {}
+        setmetatable(wrapper, {
+            __index = function(t, k)
+                -- Lua-defined methods (e.g. on_load) take priority.
+                local v = cls[k]
+                if v ~= nil then return v end
+                -- Forward to the real C++ scene stored by the factory.
+                local cpp = rawget(t, "_cpp_node")
+                if cpp ~= nil then return cpp[k] end
+                return nil
+            end
+        })
+        return wrapper
+    end
+
+    return cls
+end)
+)lua";
+
 bool smlt::LuaInterpreter::on_init() {
     state_ = lua_newstate(LuaInterpreter::l_alloc, NULL, 47);
     luaL_openlibs(state_);
@@ -151,6 +211,13 @@ bool smlt::LuaInterpreter::on_init() {
     // (it depends on smlt.StageNode and smlt.stage_node_meta being available).
     if(!load_string(k_define_node_helper)) {
         S_ERROR("Failed to load smlt.define_node Lua helper");
+        return false;
+    }
+
+    // Inject the smlt.define_scene() helper (depends on smlt.Scene being
+    // available, which is bound above via lua_bind()).
+    if(!load_string(k_define_scene_helper)) {
+        S_ERROR("Failed to load smlt.define_scene Lua helper");
         return false;
     }
 

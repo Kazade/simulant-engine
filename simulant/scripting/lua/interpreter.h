@@ -35,6 +35,7 @@
 #include "../../generic/optional.h"
 #include "../../nodes/stage_node.h"
 #include "../../path.h"
+#include "../../scenes/scene.h"
 #include "bindings.h"
 
 namespace smlt {
@@ -250,6 +251,80 @@ public:
 private:
     std::string node_type_name_;
     std::set<NodeParam> params_;
+};
+
+class LuaScene: public Scene {
+private:
+    struct Pimpl {
+        Pimpl(const luabridge::LuaRef& instance) :
+            instance(instance) {}
+
+        luabridge::LuaRef instance;
+    };
+
+    Pimpl* ref_ = nullptr;
+
+    friend class SceneManager;
+
+public:
+    LuaScene(Window* window, luabridge::LuaRef instance) :
+        Scene(window),
+        ref_(new Pimpl(instance)) {}
+
+    ~LuaScene() override {
+        delete ref_;
+    }
+
+    void on_load() override {
+        call_lua_method("on_load");
+    }
+
+    void on_unload() override {
+        if(!call_lua_method("on_unload")) {
+            Scene::on_unload();
+        }
+    }
+
+    void on_activate() override {
+        if(!call_lua_method("on_activate")) {
+            Scene::on_activate();
+        }
+    }
+
+    void on_deactivate() override {
+        if(!call_lua_method("on_deactivate")) {
+            Scene::on_deactivate();
+        }
+    }
+
+private:
+    // Returns true if a Lua method of this name was found and invoked
+    // (regardless of whether the call itself raised a Lua error, which is
+    // logged rather than silently discarded).
+    bool call_lua_method(const char* name) {
+        if(!ref_ || !ref_->instance) {
+            return false;
+        }
+
+        luabridge::LuaRef method = ref_->instance[name];
+        if(method.isNil() || !method.isFunction()) {
+            return false;
+        }
+
+        std::string err;
+        auto handler = [&err](lua_State* L) -> int {
+            if(lua_gettop(L) > 0 && lua_isstring(L, -1)) {
+                err = lua_tostring(L, -1);
+            }
+            return 1;
+        };
+
+        if(!method.callWithHandler(handler, ref_->instance)) {
+            S_ERROR("Lua error in {0}: {1}", name, err);
+        }
+
+        return true;
+    }
 };
 
 class LuaInterpreter: public RefCounted<LuaInterpreter>, public Interpreter {

@@ -21,6 +21,7 @@
 #include "scene.h"
 #include "../window.h"
 #include "../application.h"
+#include "../scripting/lua/interpreter.h"
 
 namespace smlt {
 
@@ -163,6 +164,100 @@ void SceneManager::reset() {
     }
     routes_.clear();
     scene_factories_.clear();
+}
+
+bool SceneManager::register_scene(const Path& script, const char* class_name) {
+    auto lua = smlt::get_app()->ensure_lua_ready();
+
+    if(!lua->load_file(script)) {
+        return false;
+    }
+
+    return register_scene_from_lua_state(lua->lua_state(), class_name);
+}
+
+bool SceneManager::register_scene(const char* script_data,
+                                  const char* class_name) {
+    auto lua = smlt::get_app()->ensure_lua_ready();
+
+    if(!lua->load_string(script_data)) {
+        return false;
+    }
+
+    return register_scene_from_lua_state(lua->lua_state(), class_name);
+}
+
+bool SceneManager::register_scene_from_lua_state(lua_State* L,
+                                                 const char* class_name) {
+    luabridge::LuaRef klass = luabridge::getGlobal(L, class_name);
+    if(klass.isNil()) {
+        S_ERROR("Unable to find specified class in Lua file: {0}", class_name);
+        return false;
+    }
+
+    luabridge::LuaRef meta = klass["Meta"];
+    if(meta.isNil()) {
+        S_ERROR("Lua class '{0}' is missing Meta table", class_name);
+        return false;
+    }
+
+    std::string name = meta["name"].cast<std::string>().valueOr("");
+    if(name.empty()) {
+        S_ERROR("Lua class '{0}' Meta table is missing name", class_name);
+        return false;
+    }
+
+    // Capture the raw lua_State* and the class name string rather than a
+    // luabridge::LuaRef, for the same reason as
+    // StageNodeManager::register_stage_node_from_lua_state: a LuaRef
+    // destroyed after lua_close() (which happens when the interpreter is
+    // torn down) would call luaL_unref on already-freed Lua memory.
+    std::string klass_name(class_name);
+
+    _store_scene_factory(
+        name, [L, klass_name, name, this](Window* window) -> ScenePtr {
+        lua_getglobal(L, klass_name.c_str());
+        if(lua_isnil(L, -1)) {
+            lua_pop(L, 1);
+            S_ERROR("Lua class not found: {0}", klass_name);
+            return ScenePtr();
+        }
+        luabridge::LuaRef klass = luabridge::LuaRef::fromStack(L, -1);
+        lua_pop(L, 1);
+
+        auto constructor = klass["new"];
+        try {
+            // cls:new(window) returns a plain Lua wrapper table; _cpp_node
+            // is not set yet — that happens below once the real LuaScene
+            // has been constructed.
+            luabridge::LuaRef instance =
+                *constructor.call<luabridge::LuaRef>(klass, window);
+
+            std::shared_ptr<LuaScene> ret(new LuaScene(window, instance),
+                                          &SceneManager::deleter<LuaScene>);
+
+            // Wire the wrapper table to the real C++ scene using a raw
+            // table set so that __newindex metamethods (if any) are
+            // bypassed. Pushed as a plain Scene* so it uses the smlt.Scene
+            // binding (create_child, assets, window, etc).
+            instance.rawsetField("_cpp_node",
+                                 static_cast<Scene*>(ret.get()));
+
+            if(!ret->init()) {
+                S_ERROR("Failed to initialize the Scene");
+                return ScenePtr();
+            }
+
+            ret->set_name(name);
+            ret->scene_manager_ = this;
+            return ret;
+        } catch(const std::exception& e) {
+            S_ERROR("Lua error: {0}", e.what());
+            return ScenePtr();
+        }
+    });
+
+    return true;
 }
 
 }

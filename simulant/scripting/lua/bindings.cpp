@@ -3,6 +3,7 @@
 #include "../../asset_manager.h"
 #include "../../compositor.h"
 #include "../../input/input_manager.h"
+#include "../../nodes/camera.h"
 #include "../../nodes/stage_node.h"
 #include "../../utils/hash/fnv1.h"
 #include "../../window.h"
@@ -78,22 +79,86 @@ void lua_bind(lua_State* state) {
         .addVariable("TextureFlags",     NODE_PARAM_TYPE_TEXTURE_FLAGS)
         .endNamespace()
         // ----------------------------------------------------------------
-        // Scene (opaque handle, passed as a constructor argument)
+        // StageNode — generic non-owning handle for a node in the scene
+        // tree. This is what create_child()/create_mixin() (below, on both
+        // Scene and LuaStageNode) return: it exists so LuaBridge has a
+        // registered class to marshal StageNode* values through, whether
+        // the concrete node is a built-in C++ type (Stage, Camera3D, ...)
+        // or a Lua-authored node created via smlt.define_node() (see
+        // LuaStageNode, which derives from this class below so Lua nodes
+        // get destroy()/is_destroyed() for free too).
+        //
+        //   node.transform
+        //   node:destroy()
+        //   node:is_destroyed()
+        // ----------------------------------------------------------------
+        .beginClass<StageNode>("StageNode")
+        .addProperty("transform", &StageNode::get_transform)
+        .addFunction("destroy", [](StageNode* n) { return n->destroy(); })
+        .addFunction("is_destroyed", [](StageNode* n) { return n->is_destroyed(); })
+        .endClass()
+        // ----------------------------------------------------------------
+        // Scene — passed as a constructor argument to stage node scripts,
+        // and also the base for scenes defined in Lua via smlt.define_scene()
+        // (see LuaScene, which forwards on_load/on_unload/on_activate/
+        // on_deactivate to same-named Lua methods on its instance table).
         //
         //   scene.assets   -> AssetManager
         //   scene.input    -> InputManager
+        //   scene:create_child(type_name, params)
+        //   scene:create_mixin(type_name, params)
         // ----------------------------------------------------------------
         .beginClass<Scene>("Scene")
-        .addProperty("assets", &Scene::assets)
-        .addProperty("input", &Scene::input)
-        .addProperty("compositor", &Scene::compositor)
-        .addProperty("app", &Scene::app)
-        .addProperty("window", &Scene::window)
+        .addProperty("transform", [](Scene* s) -> Transform* { return s->get_transform(); })
+        .addProperty("assets", [](Scene* s) -> AssetManager* { return s->assets.get(); })
+        .addProperty("input", [](Scene* s) -> InputManager* { return s->input.get(); })
+        .addProperty("compositor", [](Scene* s) -> SceneCompositor* { return s->compositor.get(); })
+        .addProperty("app", [](Scene* s) -> Application* { return s->app.get(); })
+        .addProperty("window", [](Scene* s) -> Window* { return s->window.get(); })
+        .addFunction("create_child", [](Scene* scene, const char* name, luabridge::LuaRef params_table) -> StageNode* {
+            return scene->create_child(name, lua_table_to_params(params_table));
+        })
+        .addFunction("create_mixin", [](Scene* scene, const std::string& name, luabridge::LuaRef params_table) -> StageNode* {
+            return scene->create_mixin(name, lua_table_to_params(params_table));
+        })
         .endClass()
         // ----------------------------------------------------------------
-        // SceneCompositor — manages scene layers and rendering.
+        // Layer — a single render pass created via
+        // SceneCompositor:create_layer().
+        // ----------------------------------------------------------------
+        .beginClass<Layer>("Layer")
+        .addFunction("name",       [](Layer* l) { return l->name(); })
+        .addFunction("set_name",   [](Layer* l, const std::string& n) { l->set_name(n); })
+        .addFunction("is_active",  [](Layer* l) { return l->is_active(); })
+        .addFunction("activate",   [](Layer* l) { l->activate(); })
+        .addFunction("deactivate", [](Layer* l) { l->deactivate(); })
+        .addFunction("priority",   [](Layer* l) { return l->priority(); })
+        .addFunction("destroy",    [](Layer* l) { return l->destroy(); })
+        .endClass()
+        // ----------------------------------------------------------------
+        // SceneCompositor — manages the scene's render layers. A layer
+        // renders a stage-node subtree through a camera.
+        //
+        //   local layer = scene.compositor:create_layer(stage_node, camera_node, 0)
+        //   local layer = scene.compositor:find_layer(name)
+        //   scene.compositor:destroy_all_layers()
         // ----------------------------------------------------------------
         .beginClass<SceneCompositor>("SceneCompositor")
+        .addFunction("create_layer",
+            [](SceneCompositor* c, StageNode* subtree, StageNode* camera_node,
+               int32_t priority) -> LayerPtr {
+            auto camera = dynamic_cast<Camera*>(camera_node);
+            if(!camera) {
+                S_ERROR("SceneCompositor.create_layer: second argument must "
+                        "be a Camera node");
+                return LayerPtr();
+            }
+            return c->create_layer(subtree, camera, priority);
+        })
+        .addFunction("find_layer", [](SceneCompositor* c, const std::string& name) -> LayerPtr {
+            return c->find_layer(name);
+        })
+        .addFunction("destroy_all_layers", [](SceneCompositor* c) { c->destroy_all_layers(); })
         .endClass()
         // ----------------------------------------------------------------
         // Application — the running application instance.
@@ -406,7 +471,10 @@ void lua_bind(lua_State* state) {
         // ----------------------------------------------------------------
         .addFunction("stage_node_meta", &stage_node_meta)
         // ----------------------------------------------------------------
-        // LuaStageNode — exposed to Lua as smlt.StageNode.
+        // LuaStageNode — exposed to Lua as smlt.LuaNode, derived from the
+        // generic smlt.StageNode registered above (so Lua-authored nodes
+        // also get destroy()/is_destroyed()/transform for free). Nothing
+        // constructs this from Lua directly by name — see below.
         //
         // Each Lua node class created with smlt.define_node() gets a plain
         // Lua wrapper table whose __index metamethod delegates unknown key
@@ -424,7 +492,7 @@ void lua_bind(lua_State* state) {
         // _cpp_node pointer during lua_close GC, calling clean_up() on a node
         // that is mid-teardown and may be re-entered or already invalid.
         // ----------------------------------------------------------------
-        .beginClass<LuaStageNode>("StageNode")
+        .deriveClass<LuaStageNode, StageNode>("LuaNode")
         .addConstructor<void (*)(Scene*, StageNodeType, std::string,
                                  std::set<NodeParam>)>()
         .addProperty("scene",     &LuaStageNode::lua_get_scene)

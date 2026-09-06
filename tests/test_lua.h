@@ -254,6 +254,100 @@ function ParamMixinRole:on_create(params)
 end
 )";
 
+// Used by: test_registering_and_loading_lua_scene
+// on_load creates a "stage" child so the C++ test can verify the scene's
+// StageNodeManager (inherited via Scene) is reachable and functional from a
+// Lua-defined on_load, and that self._cpp_node:create_child(...) works on a
+// scene the same way it does on a plain Lua stage node.
+const char* test_scene_script = R"(
+LuaTestScene = smlt.define_scene("lua_test_scene")
+
+function LuaTestScene:on_load()
+    -- As with Lua stage nodes, methods that live on the real C++ object
+    -- (rather than on the Lua class table) must be called on _cpp_node
+    -- directly, or via a smlt.* helper, so that `self` inside the C++
+    -- binding resolves to the userdata rather than the Lua wrapper table.
+    self._cpp_node:create_child("stage", {})
+end
+)";
+
+// Used by: test_lua_scene_can_load_assets
+// Loads a real mesh and texture via self.assets (an AssetManager, bound
+// directly as a property so no _cpp_node indirection is needed) and encodes
+// success/failure into the scene's own transform, since Scene is itself a
+// StageNode with a transform the C++ test can read back.
+const char* asset_load_scene_script = R"(
+AssetLoadScene = smlt.define_scene("asset_load_scene")
+
+function AssetLoadScene:on_load()
+    local mesh = self.assets:load_mesh("assets/samples/cube.obj")
+    local texture = self.assets:load_texture("assets/textures/checkerboard.png")
+
+    local mesh_ok = (mesh ~= nil) and 1 or 0
+    local texture_ok = (texture ~= nil) and 1 or 0
+    self.transform.translation = smlt.Vec3(mesh_ok, texture_ok, 0)
+end
+)";
+
+// Used by: test_lua_scene_can_manipulate_compositor
+// Creates a stage + camera, wires them into a compositor layer, exercises
+// activate/deactivate and find_layer, and encodes each check into the
+// scene's transform for the C++ test to verify.
+const char* compositor_scene_script = R"(
+CompositorScene = smlt.define_scene("compositor_scene")
+
+function CompositorScene:on_load()
+    local stage = self._cpp_node:create_child("stage", {})
+    local camera = self._cpp_node:create_child("camera3d", {})
+
+    local layer = self.compositor:create_layer(stage, camera, 0)
+    layer:set_name("main_layer")
+
+    -- Newly created layers start deactivated.
+    local was_inactive = not layer:is_active()
+
+    layer:activate()
+    local is_active_now = layer:is_active()
+
+    layer:deactivate()
+    local is_inactive_again = not layer:is_active()
+
+    local found = self.compositor:find_layer("main_layer")
+    local found_ok = (found ~= nil)
+
+    local x = was_inactive and 1 or 0
+    local y = is_active_now and 1 or 0
+    local z = (is_inactive_again and found_ok) and 1 or 0
+    self.transform.translation = smlt.Vec3(x, y, z)
+end
+)";
+
+// Used by: test_lua_scene_can_create_and_destroy_stage_nodes
+// Creates a stage node, confirms it starts alive, destroys it from Lua, and
+// confirms is_destroyed() flips immediately. Actual removal from the scene's
+// StageNodeManager bookkeeping is deferred until clean_up runs (mirrored by
+// activating the scene and running a frame in the C++ test, exactly like the
+// existing on_destroy/on_clean_up forwarding tests above).
+const char* lifecycle_scene_script = R"(
+LifecycleScene = smlt.define_scene("lifecycle_scene")
+
+function LifecycleScene:on_load()
+    local node = self._cpp_node:create_child("stage", {})
+
+    local created_ok = (node ~= nil) and 1 or 0
+    local alive_ok = 0
+    local destroyed_ok = 0
+
+    if node then
+        alive_ok = (not node:is_destroyed()) and 1 or 0
+        node:destroy()
+        destroyed_ok = node:is_destroyed() and 1 or 0
+    end
+
+    self.transform.translation = smlt.Vec3(created_ok, alive_ok, destroyed_ok)
+end
+)";
+
 // ---------------------------------------------------------------------------
 
 class LuaTests: public test::SimulantTestCase {
@@ -844,6 +938,115 @@ ReportParamNode.params = {
         auto node = scene->create_child("find_node");
         assert_is_not_null(node);
         assert_close(42.0f, node->transform->translation().x, 0.01f);
+    }
+
+    // -----------------------------------------------------------------------
+    // Lua scenes
+    // -----------------------------------------------------------------------
+
+    // Registers a scene defined with smlt.define_scene(), resolves it (without
+    // activating it, so the shared "main" test scene fixture is left alone),
+    // then loads it directly and verifies on_load ran by checking that the
+    // "stage" child it creates shows up in the scene's own StageNodeManager.
+    void test_registering_and_loading_lua_scene() {
+        assert_true(
+            application->scenes->register_scene(test_scene_script, "LuaTestScene"));
+        assert_true(application->scenes->has_scene("lua_test_scene"));
+
+        auto lua_scene = application->scenes->resolve_scene("lua_test_scene");
+        assert_is_not_null(lua_scene.get());
+
+        lua_scene->load();
+        assert_true(lua_scene->is_loaded());
+
+        auto maybe_info = lua_scene->registered_stage_node_info("stage");
+        assert_true(maybe_info);
+        assert_equal(1, (int)lua_scene->nodes_by_type(maybe_info.value().type).size());
+    }
+
+    // A script containing syntax errors must fail gracefully during scene
+    // registration without crashing.
+    void test_invalid_lua_scene_script_fails_to_register() {
+        const char* garbage = "this is @@ not valid lua !!!";
+        assert_false(application->scenes->register_scene(garbage, "Anything"));
+    }
+
+    // Supplying a class name that does not exist inside an otherwise valid
+    // script must fail registration.
+    void test_unknown_lua_scene_class_fails_to_register() {
+        const char* script = R"(
+LuaRealSceneClass = smlt.define_scene("lua_real_scene_class")
+)";
+        assert_false(
+            application->scenes->register_scene(script, "NonExistentClass"));
+    }
+
+    // Verifies that a Lua scene can load real assets (mesh + texture) via
+    // the self.assets property, which returns the real AssetManager
+    // userdata directly (no _cpp_node indirection needed for properties).
+    void test_lua_scene_can_load_assets() {
+        assert_true(application->scenes->register_scene(asset_load_scene_script,
+                                                         "AssetLoadScene"));
+
+        auto lua_scene = application->scenes->resolve_scene("asset_load_scene");
+        assert_is_not_null(lua_scene.get());
+
+        lua_scene->load();
+
+        auto t = lua_scene->transform->translation();
+        assert_close(1.0f, t.x, 0.01f); // mesh loaded
+        assert_close(1.0f, t.y, 0.01f); // texture loaded
+    }
+
+    // Verifies that a Lua scene can manipulate its SceneCompositor: create a
+    // layer from a stage + camera pair, toggle its activation state, and
+    // find it again by name.
+    void test_lua_scene_can_manipulate_compositor() {
+        assert_true(application->scenes->register_scene(compositor_scene_script,
+                                                         "CompositorScene"));
+
+        auto lua_scene = application->scenes->resolve_scene("compositor_scene");
+        assert_is_not_null(lua_scene.get());
+
+        lua_scene->load();
+
+        auto t = lua_scene->transform->translation();
+        assert_close(1.0f, t.x, 0.01f); // layer started deactivated
+        assert_close(1.0f, t.y, 0.01f); // activate() worked
+        assert_close(1.0f, t.z, 0.01f); // deactivate() + find_layer() worked
+    }
+
+    // Verifies that a Lua scene can create a stage node and then destroy it.
+    // destroy() flips is_destroyed() immediately, but actual removal from
+    // the scene's StageNodeManager bookkeeping is deferred until clean_up
+    // runs, so we activate the scene and run a frame to observe that too.
+    void test_lua_scene_can_create_and_destroy_stage_nodes() {
+        assert_true(application->scenes->register_scene(lifecycle_scene_script,
+                                                         "LifecycleScene"));
+
+        auto lua_scene = application->scenes->resolve_scene("lifecycle_scene");
+        assert_is_not_null(lua_scene.get());
+
+        auto maybe_info = lua_scene->registered_stage_node_info("stage");
+        assert_true(maybe_info);
+
+        lua_scene->load();
+
+        auto t = lua_scene->transform->translation();
+        assert_close(1.0f, t.x, 0.01f); // node was created
+        assert_close(1.0f, t.y, 0.01f); // ...and was alive right after creation
+        assert_close(1.0f, t.z, 0.01f); // ...and is_destroyed() flipped after destroy()
+
+        // Activate the scene for real so the normal update loop processes
+        // its queued clean-up, then confirm the node is actually gone from
+        // the scene's bookkeeping. Activation only takes effect at the end
+        // of the frame's late_update, so the *following* frame is the first
+        // one where clean_up_destroyed_objects() runs against this scene.
+        application->scenes->activate("lifecycle_scene");
+        application->run_frame();
+        application->run_frame();
+
+        assert_equal(0, (int)lua_scene->nodes_by_type(maybe_info.value().type).size());
     }
 };
 
