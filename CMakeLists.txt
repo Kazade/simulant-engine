@@ -26,8 +26,10 @@ ENDIF()
 
 IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR PLATFORM_XBOX OR ANDROID)
   OPTION(SIMULANT_BUILD_TOOLS "Build Simulant host tools (e.g. optimise_gltf)" OFF)
+  OPTION(SIMULANT_BUILD_C_BINDINGS "Build the C-linkage bindings (libsimulant-c)" OFF)
 ELSE()
   OPTION(SIMULANT_BUILD_TOOLS "Build Simulant host tools (e.g. optimise_gltf)" ON)
+  OPTION(SIMULANT_BUILD_C_BINDINGS "Build the C-linkage bindings (libsimulant-c)" ON)
 ENDIF()
 
 OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
@@ -438,6 +440,10 @@ ENDIF()
 IF(SIMULANT_BUILD_TOOLS)
   ADD_SUBDIRECTORY(tools/optimise_gltf)
   ADD_SUBDIRECTORY(tools/sprite_gen)
+ENDIF()
+
+IF(SIMULANT_BUILD_C_BINDINGS)
+  ADD_SUBDIRECTORY(ports/c)
 ENDIF()
 
 

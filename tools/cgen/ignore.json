@@ -1,0 +1,12 @@
+{
+    "//": "Fully-qualified C++ names (classes, methods, ctors, functions) to always skip, for cases the scanner can't detect heuristically (e.g. a method that's technically bindable but semantically unsafe to expose as-is). Extend as needed.",
+
+    "//_broken_headers": "These are all structurally wrappable, but their declaring header (or one it drags in, e.g. generic/allocators/dynamic_aligned_allocator.h) fails to compile under GCC's -Wtemplate-body (missing #include <vector>/<cassert>, undeclared aligned_free/S_ERROR in template bodies) -- a pre-existing bug in Simulant itself, unrelated to the generated bindings. Remove these once that's fixed upstream.",
+    "ignore": [
+        "smlt::Block",
+        "smlt::BlockHeader",
+        "smlt::MaterialValuePool",
+        "smlt::MaterialPropertyValuePointer",
+        "smlt::StageNodeStorage"
+    ]
+}
