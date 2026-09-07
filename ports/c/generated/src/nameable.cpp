@@ -19,7 +19,7 @@ void smlt_nameable_set_name(smlt_nameable_t* self, const char* name) {
     reinterpret_cast<smlt::Nameable*>(self)->set_name(name);
 }
 
-void smlt_nameable_set_name2(smlt_nameable_t* self, const char* name) {
+void smlt_nameable_set_name_string(smlt_nameable_t* self, const char* name) {
     reinterpret_cast<smlt::Nameable*>(self)->set_name(std::string(name ? name : ""));
 }
 

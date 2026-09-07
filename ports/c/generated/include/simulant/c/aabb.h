@@ -13,11 +13,11 @@ extern "C" {
 
 void smlt_aabb_destroy(smlt_aabb_t* self);
 smlt_aabb_t* smlt_aabb_create(void);
-smlt_aabb_t* smlt_aabb_create2(const smlt_vertex_data_t* vertex_data);
-smlt_aabb_t* smlt_aabb_create3(const smlt_vec3_t* center, const smlt_vec3_t* extents);
-smlt_aabb_t* smlt_aabb_create4(const smlt_vec3_t* center, float width);
-smlt_aabb_t* smlt_aabb_create5(const smlt_vec3_t* vertices, unsigned long count);
-smlt_aabb_t* smlt_aabb_create6(const smlt_vec3_t* center, float xsize, float ysize, float zsize);
+smlt_aabb_t* smlt_aabb_create_from_vertex_data(const smlt_vertex_data_t* vertex_data);
+smlt_aabb_t* smlt_aabb_create_from_center_extents(const smlt_vec3_t* center, const smlt_vec3_t* extents);
+smlt_aabb_t* smlt_aabb_create_cube(const smlt_vec3_t* center, float width);
+smlt_aabb_t* smlt_aabb_create_from_vertices(const smlt_vec3_t* vertices, unsigned long count);
+smlt_aabb_t* smlt_aabb_create_from_center_size(const smlt_vec3_t* center, float xsize, float ysize, float zsize);
 smlt_aabb_t* smlt_aabb_zero(void);
 void smlt_aabb_set_min_max(smlt_aabb_t* self, const smlt_vec3_t* min, const smlt_vec3_t* max);
 smlt_vec3_t* smlt_aabb_min(const smlt_aabb_t* self);
@@ -37,7 +37,7 @@ bool smlt_aabb_contains_point(const smlt_aabb_t* self, const smlt_vec3_t* p);
 bool smlt_aabb_contains_points(const smlt_aabb_t* self, const smlt_vec3_t* vertices, unsigned long count);
 smlt_vec3_t* smlt_aabb_closest_point(const smlt_aabb_t* self, const smlt_vec3_t* p);
 void smlt_aabb_encapsulate(smlt_aabb_t* self, const smlt_aabb_t* other);
-void smlt_aabb_encapsulate2(smlt_aabb_t* self, const smlt_vec3_t* point);
+void smlt_aabb_encapsulate_point(smlt_aabb_t* self, const smlt_vec3_t* point);
 bool smlt_aabb_equals(const smlt_aabb_t* self, const smlt_aabb_t* rhs);
 bool smlt_aabb_not_equals(const smlt_aabb_t* self, const smlt_aabb_t* rhs);
 

@@ -17,7 +17,7 @@ void smlt_ui_ui_coord_set_x(smlt_ui_ui_coord_t* self, const smlt_ui_px_t* value)
 smlt_ui_px_t* smlt_ui_ui_coord_get_y(const smlt_ui_ui_coord_t* self);
 void smlt_ui_ui_coord_set_y(smlt_ui_ui_coord_t* self, const smlt_ui_px_t* value);
 smlt_ui_ui_coord_t* smlt_ui_ui_coord_create(void);
-smlt_ui_ui_coord_t* smlt_ui_ui_coord_create2(const smlt_ui_px_t* x, const smlt_ui_px_t* y);
+smlt_ui_ui_coord_t* smlt_ui_ui_coord_create_from_px(const smlt_ui_px_t* x, const smlt_ui_px_t* y);
 bool smlt_ui_ui_coord_equals(const smlt_ui_ui_coord_t* self, const smlt_ui_ui_coord_t* rhs);
 
 #ifdef __cplusplus

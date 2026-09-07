@@ -44,11 +44,12 @@ set_target_properties(simulant-c PROPERTIES
 )
 
 # Optional developer target: re-scans the Simulant C++ headers with
-# tools/cgen/cgen.py and refreshes ports/c/generated/. Requires Python 3
-# with the `libclang` package installed (pip install libclang). This is
-# never required for the default build -- only run it after changing the
-# public API and re-run CMake afterwards so any new/removed generated
-# files are picked up.
+# tools/cgen/cgen.py and refreshes ports/c/generated/ *and*
+# ports/vala/simulant-c.vapi (cgen.py writes both by default -- see
+# ports/vala/README.md). Requires Python 3 with the `libclang` package
+# installed (pip install libclang). This is never required for the
+# default build -- only run it after changing the public API and re-run
+# CMake afterwards so any new/removed generated files are picked up.
 find_package(Python3 COMPONENTS Interpreter QUIET)
 if(Python3_Interpreter_FOUND)
   add_custom_target(simulant-c-regenerate

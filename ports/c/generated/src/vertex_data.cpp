@@ -61,27 +61,27 @@ uint64_t smlt_vertex_data_last_updated(const smlt_vertex_data_t* self) {
     return reinterpret_cast<const smlt::VertexData*>(self)->last_updated();
 }
 
-void smlt_vertex_data_position(smlt_vertex_data_t* self, const smlt_vec2_t* pos) {
+void smlt_vertex_data_position_vec2(smlt_vertex_data_t* self, const smlt_vec2_t* pos) {
     reinterpret_cast<smlt::VertexData*>(self)->position((*reinterpret_cast<const smlt::Vec2*>(pos)));
 }
 
-void smlt_vertex_data_position2(smlt_vertex_data_t* self, const smlt_vec3_t* pos) {
+void smlt_vertex_data_position_vec3(smlt_vertex_data_t* self, const smlt_vec3_t* pos) {
     reinterpret_cast<smlt::VertexData*>(self)->position((*reinterpret_cast<const smlt::Vec3*>(pos)));
 }
 
-void smlt_vertex_data_position3(smlt_vertex_data_t* self, const smlt_vec4_t* pos) {
+void smlt_vertex_data_position_vec4(smlt_vertex_data_t* self, const smlt_vec4_t* pos) {
     reinterpret_cast<smlt::VertexData*>(self)->position((*reinterpret_cast<const smlt::Vec4*>(pos)));
 }
 
-void smlt_vertex_data_position4(smlt_vertex_data_t* self, float x, float y) {
+void smlt_vertex_data_position_xy(smlt_vertex_data_t* self, float x, float y) {
     reinterpret_cast<smlt::VertexData*>(self)->position(x, y);
 }
 
-void smlt_vertex_data_position5(smlt_vertex_data_t* self, float x, float y, float z) {
+void smlt_vertex_data_position_xyz(smlt_vertex_data_t* self, float x, float y, float z) {
     reinterpret_cast<smlt::VertexData*>(self)->position(x, y, z);
 }
 
-void smlt_vertex_data_position6(smlt_vertex_data_t* self, float x, float y, float z, float w) {
+void smlt_vertex_data_position_xyzw(smlt_vertex_data_t* self, float x, float y, float z, float w) {
     reinterpret_cast<smlt::VertexData*>(self)->position(x, y, z, w);
 }
 
@@ -93,7 +93,7 @@ void smlt_vertex_data_normal(smlt_vertex_data_t* self, const smlt_vec3_t* n) {
     reinterpret_cast<smlt::VertexData*>(self)->normal((*reinterpret_cast<const smlt::Vec3*>(n)));
 }
 
-void smlt_vertex_data_normal2(smlt_vertex_data_t* self, float x, float y, float z) {
+void smlt_vertex_data_normal_xyz(smlt_vertex_data_t* self, float x, float y, float z) {
     reinterpret_cast<smlt::VertexData*>(self)->normal(x, y, z);
 }
 
@@ -101,15 +101,15 @@ void smlt_vertex_data_tex_coord0(smlt_vertex_data_t* self, const smlt_vec2_t* ve
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord0((*reinterpret_cast<const smlt::Vec2*>(vec)));
 }
 
-void smlt_vertex_data_tex_coord02(smlt_vertex_data_t* self, float u, float v) {
+void smlt_vertex_data_tex_coord0_uv(smlt_vertex_data_t* self, float u, float v) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord0(u, v);
 }
 
-void smlt_vertex_data_tex_coord03(smlt_vertex_data_t* self, float u, float v, float w) {
+void smlt_vertex_data_tex_coord0_uvw(smlt_vertex_data_t* self, float u, float v, float w) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord0(u, v, w);
 }
 
-void smlt_vertex_data_tex_coord04(smlt_vertex_data_t* self, float x, float y, float z, float w) {
+void smlt_vertex_data_tex_coord0_xyzw(smlt_vertex_data_t* self, float x, float y, float z, float w) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord0(x, y, z, w);
 }
 
@@ -117,15 +117,15 @@ void smlt_vertex_data_tex_coord1(smlt_vertex_data_t* self, const smlt_vec2_t* ve
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord1((*reinterpret_cast<const smlt::Vec2*>(vec)));
 }
 
-void smlt_vertex_data_tex_coord12(smlt_vertex_data_t* self, float u, float v) {
+void smlt_vertex_data_tex_coord1_uv(smlt_vertex_data_t* self, float u, float v) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord1(u, v);
 }
 
-void smlt_vertex_data_tex_coord13(smlt_vertex_data_t* self, float u, float v, float w) {
+void smlt_vertex_data_tex_coord1_uvw(smlt_vertex_data_t* self, float u, float v, float w) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord1(u, v, w);
 }
 
-void smlt_vertex_data_tex_coord14(smlt_vertex_data_t* self, float x, float y, float z, float w) {
+void smlt_vertex_data_tex_coord1_xyzw(smlt_vertex_data_t* self, float x, float y, float z, float w) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord1(x, y, z, w);
 }
 
@@ -133,15 +133,15 @@ void smlt_vertex_data_tex_coord2(smlt_vertex_data_t* self, const smlt_vec2_t* ve
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord2((*reinterpret_cast<const smlt::Vec2*>(vec)));
 }
 
-void smlt_vertex_data_tex_coord22(smlt_vertex_data_t* self, float u, float v) {
+void smlt_vertex_data_tex_coord2_uv(smlt_vertex_data_t* self, float u, float v) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord2(u, v);
 }
 
-void smlt_vertex_data_tex_coord23(smlt_vertex_data_t* self, float u, float v, float w) {
+void smlt_vertex_data_tex_coord2_uvw(smlt_vertex_data_t* self, float u, float v, float w) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord2(u, v, w);
 }
 
-void smlt_vertex_data_tex_coord24(smlt_vertex_data_t* self, float x, float y, float z, float w) {
+void smlt_vertex_data_tex_coord2_xyzw(smlt_vertex_data_t* self, float x, float y, float z, float w) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord2(x, y, z, w);
 }
 
@@ -149,15 +149,15 @@ void smlt_vertex_data_tex_coord3(smlt_vertex_data_t* self, const smlt_vec2_t* ve
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord3((*reinterpret_cast<const smlt::Vec2*>(vec)));
 }
 
-void smlt_vertex_data_tex_coord32(smlt_vertex_data_t* self, float u, float v) {
+void smlt_vertex_data_tex_coord3_uv(smlt_vertex_data_t* self, float u, float v) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord3(u, v);
 }
 
-void smlt_vertex_data_tex_coord33(smlt_vertex_data_t* self, float u, float v, float w) {
+void smlt_vertex_data_tex_coord3_uvw(smlt_vertex_data_t* self, float u, float v, float w) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord3(u, v, w);
 }
 
-void smlt_vertex_data_tex_coord34(smlt_vertex_data_t* self, float x, float y, float z, float w) {
+void smlt_vertex_data_tex_coord3_xyzw(smlt_vertex_data_t* self, float x, float y, float z, float w) {
     reinterpret_cast<smlt::VertexData*>(self)->tex_coord3(x, y, z, w);
 }
 
@@ -165,15 +165,15 @@ void smlt_vertex_data_color(smlt_vertex_data_t* self, const smlt_color_t* color)
     reinterpret_cast<smlt::VertexData*>(self)->color((*reinterpret_cast<const smlt::Color*>(color)));
 }
 
-void smlt_vertex_data_color2(smlt_vertex_data_t* self, float r, float g, float b) {
+void smlt_vertex_data_color_rgb(smlt_vertex_data_t* self, float r, float g, float b) {
     reinterpret_cast<smlt::VertexData*>(self)->color(r, g, b);
 }
 
-void smlt_vertex_data_color3(smlt_vertex_data_t* self, float r, float g, float b, float a) {
+void smlt_vertex_data_color_rgba(smlt_vertex_data_t* self, float r, float g, float b, float a) {
     reinterpret_cast<smlt::VertexData*>(self)->color(r, g, b, a);
 }
 
-void smlt_vertex_data_color4(smlt_vertex_data_t* self, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+void smlt_vertex_data_color_rgba_bytes(smlt_vertex_data_t* self, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     reinterpret_cast<smlt::VertexData*>(self)->color(r, g, b, a);
 }
 
@@ -181,7 +181,7 @@ void smlt_vertex_data_specular(smlt_vertex_data_t* self, const smlt_color_t* col
     reinterpret_cast<smlt::VertexData*>(self)->specular((*reinterpret_cast<const smlt::Color*>(color)));
 }
 
-void smlt_vertex_data_specular2(smlt_vertex_data_t* self, float r, float g, float b, float a) {
+void smlt_vertex_data_specular_rgba(smlt_vertex_data_t* self, float r, float g, float b, float a) {
     reinterpret_cast<smlt::VertexData*>(self)->specular(r, g, b, a);
 }
 
@@ -225,7 +225,7 @@ const uint8_t* smlt_vertex_data_data(const smlt_vertex_data_t* self) {
     return reinterpret_cast<const smlt::VertexData*>(self)->data();
 }
 
-uint8_t* smlt_vertex_data_data2(smlt_vertex_data_t* self) {
+uint8_t* smlt_vertex_data_data_mut(smlt_vertex_data_t* self) {
     return reinterpret_cast<smlt::VertexData*>(self)->data();
 }
 

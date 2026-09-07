@@ -19,7 +19,7 @@ smlt_tag_game_controller_index_t* smlt_tag_game_controller_index_create(void) {
     return reinterpret_cast<smlt_tag_game_controller_index_t*>(new smlt::tag_GameControllerIndex());
 }
 
-smlt_tag_game_controller_index_t* smlt_tag_game_controller_index_create2(int8_t i) {
+smlt_tag_game_controller_index_t* smlt_tag_game_controller_index_create_from_value(int8_t i) {
     return reinterpret_cast<smlt_tag_game_controller_index_t*>(new smlt::tag_GameControllerIndex(i));
 }
 

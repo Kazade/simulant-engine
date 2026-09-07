@@ -21,7 +21,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from cgen_lib import clangutil, config, log
 from cgen_lib.emitter import Emitter
+from cgen_lib.renames import apply_renames
 from cgen_lib.scanner import Scanner
+from cgen_lib.vapi_emitter import VapiEmitter
 
 
 def _import_clang():
@@ -52,12 +54,20 @@ def parse_args(argv):
                    help="Simulant repo root (default: auto-detected)")
     p.add_argument("--ignore-file", default=config.DEFAULT_IGNORE_FILE,
                    help="JSON file listing fully-qualified C++ names to always skip")
+    p.add_argument("--rename-file", default=config.DEFAULT_RENAME_FILE,
+                   help="JSON file mapping default generated C names to hand-chosen ones")
     p.add_argument("--libclang", default=None, help="Explicit path to libclang.so, if needed")
     p.add_argument("-v", "--verbose", action="count", default=0,
                    help="Increase verbosity (-v info, -vv debug)")
     p.add_argument("-q", "--quiet", action="store_true", help="Only print errors")
     p.add_argument("--strict", action="store_true",
                    help="Exit non-zero if any class/method/function had to be skipped")
+    p.add_argument("--vapi", default=config.DEFAULT_VAPI_PATH,
+                   help="Also write a Vala .vapi binding for the generated C API to this path "
+                        f"(default: {config.DEFAULT_VAPI_PATH})")
+    p.add_argument("--no-vapi", action="store_true", help="Skip generating the .vapi")
+    p.add_argument("--vapi-namespace", default="Smlt",
+                   help="Vala namespace for --vapi output (default: Smlt)")
     return p.parse_args(argv)
 
 
@@ -87,6 +97,14 @@ def load_ignore_set(path):
     with open(path) as f:
         data = json.load(f)
     return set(data.get("ignore", []))
+
+
+def load_rename_map(path):
+    if not path or not os.path.exists(path):
+        return {}
+    with open(path) as f:
+        data = json.load(f)
+    return dict(data.get("renames", {}))
 
 
 def resolve_inputs(args):
@@ -159,8 +177,15 @@ def main(argv=None):
     scanner.collect(tu.cursor)
     ir = scanner.extract(tu.cursor)
 
+    rename_map = load_rename_map(args.rename_file)
+    apply_renames(ir, rename_map)
+
     emitter = Emitter(args.out_dir, args.repo_root)
     emitter.write_all(ir)
+
+    if args.vapi and not args.no_vapi:
+        os.makedirs(os.path.dirname(os.path.abspath(args.vapi)), exist_ok=True)
+        VapiEmitter(namespace=args.vapi_namespace).write(ir, args.vapi)
 
     log.status(f"done: {log.warning_count()} warning(s), {log.error_count()} error(s)")
 

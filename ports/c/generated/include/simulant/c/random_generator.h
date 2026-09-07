@@ -13,7 +13,7 @@ extern "C" {
 
 void smlt_random_generator_destroy(smlt_random_generator_t* self);
 smlt_random_generator_t* smlt_random_generator_create(void);
-smlt_random_generator_t* smlt_random_generator_create2(uint32_t seed);
+smlt_random_generator_t* smlt_random_generator_create_seeded(uint32_t seed);
 smlt_random_generator_t* smlt_random_generator_instance(void);
 float smlt_random_generator_float_in_range(smlt_random_generator_t* self, float lower, float upper);
 int32_t smlt_random_generator_int_in_range(smlt_random_generator_t* self, int32_t lower, int32_t upper);

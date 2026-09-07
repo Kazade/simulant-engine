@@ -13,7 +13,7 @@ extern "C" {
 
 void smlt_pixel_destroy(smlt_pixel_t* self);
 smlt_pixel_t* smlt_pixel_create(void);
-smlt_pixel_t* smlt_pixel_create2(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+smlt_pixel_t* smlt_pixel_create_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 #ifdef __cplusplus
 }

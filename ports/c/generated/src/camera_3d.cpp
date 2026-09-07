@@ -12,11 +12,11 @@
 
 extern "C" {
 
-const char* smlt_camera3_d_node_type_name(const smlt_camera3_d_t* self) {
+const char* smlt_camera_3d_node_type_name(const smlt_camera_3d_t* self) {
     return reinterpret_cast<const smlt::Camera3D*>(self)->node_type_name();
 }
 
-bool smlt_camera3_d_on_create(smlt_camera3_d_t* self, const smlt_params_t* params) {
+bool smlt_camera_3d_on_create(smlt_camera_3d_t* self, const smlt_params_t* params) {
     return reinterpret_cast<smlt::Camera3D*>(self)->on_create((*reinterpret_cast<const smlt::Params*>(params)));
 }
 

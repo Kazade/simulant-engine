@@ -19,7 +19,7 @@ smlt_tag_game_controller_id_t* smlt_tag_game_controller_id_create(void) {
     return reinterpret_cast<smlt_tag_game_controller_id_t*>(new smlt::tag_GameControllerID());
 }
 
-smlt_tag_game_controller_id_t* smlt_tag_game_controller_id_create2(int8_t i) {
+smlt_tag_game_controller_id_t* smlt_tag_game_controller_id_create_from_value(int8_t i) {
     return reinterpret_cast<smlt_tag_game_controller_id_t*>(new smlt::tag_GameControllerID(i));
 }
 

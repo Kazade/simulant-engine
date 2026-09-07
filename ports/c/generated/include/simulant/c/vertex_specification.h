@@ -13,7 +13,7 @@ extern "C" {
 
 void smlt_vertex_specification_destroy(smlt_vertex_specification_t* self);
 smlt_vertex_specification_t* smlt_vertex_specification_create(void);
-smlt_vertex_specification_t* smlt_vertex_specification_create2(smlt_vertex_attribute_t position, smlt_vertex_attribute_t normal, smlt_vertex_attribute_t texcoord0, smlt_vertex_attribute_t texcoord1, smlt_vertex_attribute_t texcoord2, smlt_vertex_attribute_t texcoord3, smlt_vertex_attribute_t texcoord4, smlt_vertex_attribute_t texcoord5, smlt_vertex_attribute_t texcoord6, smlt_vertex_attribute_t texcoord7, smlt_vertex_attribute_t diffuse, smlt_vertex_attribute_t specular, smlt_vertex_attribute_t joint, smlt_vertex_attribute_t weight);
+smlt_vertex_specification_t* smlt_vertex_specification_create_with_attributes(smlt_vertex_attribute_t position, smlt_vertex_attribute_t normal, smlt_vertex_attribute_t texcoord0, smlt_vertex_attribute_t texcoord1, smlt_vertex_attribute_t texcoord2, smlt_vertex_attribute_t texcoord3, smlt_vertex_attribute_t texcoord4, smlt_vertex_attribute_t texcoord5, smlt_vertex_attribute_t texcoord6, smlt_vertex_attribute_t texcoord7, smlt_vertex_attribute_t diffuse, smlt_vertex_attribute_t specular, smlt_vertex_attribute_t joint, smlt_vertex_attribute_t weight);
 bool smlt_vertex_specification_equals(const smlt_vertex_specification_t* self, const smlt_vertex_specification_t* rhs);
 bool smlt_vertex_specification_not_equals(const smlt_vertex_specification_t* self, const smlt_vertex_specification_t* rhs);
 uint32_t smlt_vertex_specification_stride(const smlt_vertex_specification_t* self);

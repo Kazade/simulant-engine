@@ -13,12 +13,40 @@ _CAMEL_RE1 = re.compile(r"(.)([A-Z][a-z]+)")
 _CAMEL_RE2 = re.compile(r"([a-z0-9])([A-Z])")
 _NON_ALNUM_RE = re.compile(r"[^0-9a-zA-Z]+")
 
+# A digit run immediately followed by a single trailing uppercase letter
+# that *isn't* the start of a new word (e.g. "2D"/"3D" in Camera3D,
+# Horde3D) reads as one unit ("2d"/"3d"), not two. Left to _CAMEL_RE2
+# alone, "Camera3D" would split as "camera3_d" (between the digit and the
+# letter) instead of "camera_3d" (before the digit) -- this runs first and
+# lowercases the trailing letter so _CAMEL_RE2 has nothing left to match
+# there. Doesn't fire for a trailing digit with no letter after it (Vec3
+# stays "vec3") or for a digit preceded by an uppercase letter, i.e. an
+# all-caps acronym rather than a real word (MD2Loader, MS3D -- handled
+# separately below).
+_DIMENSION_SUFFIX_RE = re.compile(r"([a-z])(\d+)([A-Z])(?![a-z])")
+
+# The all-caps-acronym counterpart of the rule above: an uppercase run,
+# then digits, then another uppercase run, with the whole thing *not*
+# leading into a new Titlecase word (MS3D, GL2X, S3TC read as one token
+# each: "ms3d", "gl2x", "s3tc"). The trailing `[A-Z]+` is written greedy
+# on purpose: for "MS3DLoader" it first grabs "DL", the lookahead then
+# rejects that (a real word, "Loader", follows), so the engine backs off
+# to just "D" -- leaving "Loader" for _CAMEL_RE1 to split off normally,
+# giving "ms3d_loader". For "MD2Loader" this never matches at all (the
+# only possible trailing-run candidate is "L", which is followed by
+# lowercase "oader" and fails the same lookahead with no shorter
+# alternative to back off to), so it's untouched and still splits via
+# _CAMEL_RE1 as before.
+_ACRONYM_DIGIT_RE = re.compile(r"([A-Z]+)(\d+)([A-Z]+)(?![a-z])")
+
 
 def snake_case(identifier: str) -> str:
     """Convert CamelCase, PascalCase or already-snake_case identifiers to
     snake_case. Idempotent: snake_case(snake_case(x)) == snake_case(x).
     """
     s = _NON_ALNUM_RE.sub("_", identifier)
+    s = _ACRONYM_DIGIT_RE.sub(lambda m: (m.group(1) + m.group(2) + m.group(3)).lower(), s)
+    s = _DIMENSION_SUFFIX_RE.sub(lambda m: f"{m.group(1)}_{m.group(2)}{m.group(3).lower()}", s)
     s = _CAMEL_RE1.sub(r"\1_\2", s)
     s = _CAMEL_RE2.sub(r"\1_\2", s)
     s = re.sub(r"_+", "_", s)

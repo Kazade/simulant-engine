@@ -23,7 +23,7 @@ void smlt_sprite_set_alpha(smlt_sprite_t* self, float alpha);
 float smlt_sprite_alpha(const smlt_sprite_t* self);
 smlt_material_t* smlt_sprite_material(const smlt_sprite_t* self);
 void smlt_sprite_set_spritesheet(smlt_sprite_t* self, smlt_spritesheet_t* spritesheet);
-void smlt_sprite_set_spritesheet2(smlt_sprite_t* self, smlt_texture_t* texture, uint32_t frame_width, uint32_t frame_height, const smlt_spritesheet_attrs_t* attrs);
+void smlt_sprite_set_spritesheet_from_texture(smlt_sprite_t* self, smlt_texture_t* texture, uint32_t frame_width, uint32_t frame_height, const smlt_spritesheet_attrs_t* attrs);
 void smlt_sprite_flip_vertically(smlt_sprite_t* self, bool value);
 void smlt_sprite_flip_horizontally(smlt_sprite_t* self, bool value);
 const smlt_aabb_t* smlt_sprite_aabb(const smlt_sprite_t* self);

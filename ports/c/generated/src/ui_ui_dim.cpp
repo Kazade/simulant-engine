@@ -35,7 +35,7 @@ smlt_ui_ui_dim_t* smlt_ui_ui_dim_create(void) {
     return reinterpret_cast<smlt_ui_ui_dim_t*>(new smlt::ui::UIDim());
 }
 
-smlt_ui_ui_dim_t* smlt_ui_ui_dim_create2(const smlt_ui_px_t* width, const smlt_ui_px_t* height) {
+smlt_ui_ui_dim_t* smlt_ui_ui_dim_create_from_px(const smlt_ui_px_t* width, const smlt_ui_px_t* height) {
     return reinterpret_cast<smlt_ui_ui_dim_t*>(new smlt::ui::UIDim((*reinterpret_cast<const smlt::ui::Px*>(width)), (*reinterpret_cast<const smlt::ui::Px*>(height))));
 }
 

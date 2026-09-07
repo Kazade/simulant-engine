@@ -19,7 +19,7 @@ void smlt_key_frame_animated_add_animation(smlt_key_frame_animated_t* self, cons
     reinterpret_cast<smlt::KeyFrameAnimated*>(self)->add_animation(std::string(name ? name : ""), start_frame, end_frame);
 }
 
-void smlt_key_frame_animated_add_animation2(smlt_key_frame_animated_t* self, const char* name, uint32_t start_frame, uint32_t end_frame, float fps) {
+void smlt_key_frame_animated_add_animation_with_fps(smlt_key_frame_animated_t* self, const char* name, uint32_t start_frame, uint32_t end_frame, float fps) {
     reinterpret_cast<smlt::KeyFrameAnimated*>(self)->add_animation(std::string(name ? name : ""), start_frame, end_frame, fps);
 }
 

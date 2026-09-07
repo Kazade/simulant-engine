@@ -13,8 +13,8 @@ extern "C" {
 
 void smlt_path_destroy(smlt_path_t* self);
 smlt_path_t* smlt_path_create(void);
-smlt_path_t* smlt_path_create2(const char* path);
-smlt_path_t* smlt_path_create3(const char* path);
+smlt_path_t* smlt_path_create_from_cstr(const char* path);
+smlt_path_t* smlt_path_create_from_string(const char* path);
 smlt_path_t* smlt_path_system_temp_dir(void);
 smlt_path_t* smlt_path_parent(const smlt_path_t* self);
 smlt_path_t* smlt_path_normalize(const smlt_path_t* self);

@@ -29,7 +29,7 @@ void smlt_reactive_body_add_acceleration_force(smlt_reactive_body_t* self, const
 void smlt_reactive_body_add_acceleration_force_at_position(smlt_reactive_body_t* self, const smlt_vec3_t* force, const smlt_vec3_t* position);
 void smlt_reactive_body_set_linear_damping(smlt_reactive_body_t* self, float d);
 void smlt_reactive_body_set_angular_damping(smlt_reactive_body_t* self, const smlt_vec3_t* d);
-void smlt_reactive_body_set_angular_damping2(smlt_reactive_body_t* self, float d);
+void smlt_reactive_body_set_angular_damping_uniform(smlt_reactive_body_t* self, float d);
 void smlt_reactive_body_set_angular_sleep_tolerance(smlt_reactive_body_t* self, float x);
 smlt_vec3_t* smlt_reactive_body_linear_velocity(const smlt_reactive_body_t* self);
 smlt_vec3_t* smlt_reactive_body_linear_velocity_at(const smlt_reactive_body_t* self, const smlt_vec3_t* position);

@@ -13,8 +13,8 @@ extern "C" {
 
 void smlt_viewport_destroy(smlt_viewport_t* self);
 smlt_viewport_t* smlt_viewport_create(void);
-smlt_viewport_t* smlt_viewport_create2(smlt_viewport_type_t type, const smlt_color_t* color);
-smlt_viewport_t* smlt_viewport_create3(float x, float y, float width, float height, const smlt_color_t* color);
+smlt_viewport_t* smlt_viewport_create_from_type(smlt_viewport_type_t type, const smlt_color_t* color);
+smlt_viewport_t* smlt_viewport_create_from_rect(float x, float y, float width, float height, const smlt_color_t* color);
 float smlt_viewport_x(const smlt_viewport_t* self);
 float smlt_viewport_y(const smlt_viewport_t* self);
 float smlt_viewport_width(const smlt_viewport_t* self);

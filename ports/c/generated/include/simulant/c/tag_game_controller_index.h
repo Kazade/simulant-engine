@@ -13,7 +13,7 @@ extern "C" {
 
 void smlt_tag_game_controller_index_destroy(smlt_tag_game_controller_index_t* self);
 smlt_tag_game_controller_index_t* smlt_tag_game_controller_index_create(void);
-smlt_tag_game_controller_index_t* smlt_tag_game_controller_index_create2(int8_t i);
+smlt_tag_game_controller_index_t* smlt_tag_game_controller_index_create_from_value(int8_t i);
 int8_t smlt_tag_game_controller_index_to_int8_t(const smlt_tag_game_controller_index_t* self);
 bool smlt_tag_game_controller_index_equals(const smlt_tag_game_controller_index_t* self, const smlt_tag_game_controller_index_t* rhs);
 bool smlt_tag_game_controller_index_less_than(const smlt_tag_game_controller_index_t* self, const smlt_tag_game_controller_index_t* rhs);

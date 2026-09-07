@@ -19,7 +19,7 @@ void smlt_physics_material_set_friction(smlt_physics_material_t* self, float val
 float smlt_physics_material_get_bounciness(const smlt_physics_material_t* self);
 void smlt_physics_material_set_bounciness(smlt_physics_material_t* self, float value);
 smlt_physics_material_t* smlt_physics_material_create(void);
-smlt_physics_material_t* smlt_physics_material_create2(float density, float friction, float bounciness);
+smlt_physics_material_t* smlt_physics_material_create_with_properties(float density, float friction, float bounciness);
 smlt_physics_material_t* smlt_physics_material_wood(float density_multiplier);
 smlt_physics_material_t* smlt_physics_material_rubber(float density_multiplier);
 smlt_physics_material_t* smlt_physics_material_iron(float density_multiplier);

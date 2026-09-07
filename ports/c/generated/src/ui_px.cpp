@@ -27,27 +27,27 @@ smlt_ui_px_t* smlt_ui_px_create(void) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px());
 }
 
-smlt_ui_px_t* smlt_ui_px_create2(const double* rhs) {
+smlt_ui_px_t* smlt_ui_px_create_from_double(const double* rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px((*rhs)));
 }
 
-smlt_ui_px_t* smlt_ui_px_create3(const float* rhs) {
+smlt_ui_px_t* smlt_ui_px_create_from_float(const float* rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px((*rhs)));
 }
 
-smlt_ui_px_t* smlt_ui_px_create4(const int* rhs) {
+smlt_ui_px_t* smlt_ui_px_create_from_int(const int* rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px((*rhs)));
 }
 
-smlt_ui_px_t* smlt_ui_px_create5(const uint16_t* rhs) {
+smlt_ui_px_t* smlt_ui_px_create_from_uint16(const uint16_t* rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px((*rhs)));
 }
 
-smlt_ui_px_t* smlt_ui_px_create6(const unsigned int* rhs) {
+smlt_ui_px_t* smlt_ui_px_create_from_uint(const unsigned int* rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px((*rhs)));
 }
 
-smlt_ui_px_t* smlt_ui_px_create7(const unsigned long* rhs) {
+smlt_ui_px_t* smlt_ui_px_create_from_ulong(const unsigned long* rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px((*rhs)));
 }
 
@@ -63,7 +63,7 @@ bool smlt_ui_px_greater_than(const smlt_ui_px_t* self, const smlt_ui_px_t* rhs) 
     return reinterpret_cast<const smlt::ui::Px*>(self)->operator>((*reinterpret_cast<const smlt::ui::Px*>(rhs)));
 }
 
-bool smlt_ui_px_greater_than2(const smlt_ui_px_t* self, int rhs) {
+bool smlt_ui_px_greater_than_int(const smlt_ui_px_t* self, int rhs) {
     return reinterpret_cast<const smlt::ui::Px*>(self)->operator>(rhs);
 }
 
@@ -71,7 +71,7 @@ bool smlt_ui_px_less_than(const smlt_ui_px_t* self, const smlt_ui_px_t* rhs) {
     return reinterpret_cast<const smlt::ui::Px*>(self)->operator<((*reinterpret_cast<const smlt::ui::Px*>(rhs)));
 }
 
-bool smlt_ui_px_less_than2(const smlt_ui_px_t* self, int rhs) {
+bool smlt_ui_px_less_than_int(const smlt_ui_px_t* self, int rhs) {
     return reinterpret_cast<const smlt::ui::Px*>(self)->operator<(rhs);
 }
 
@@ -79,7 +79,7 @@ bool smlt_ui_px_equals(const smlt_ui_px_t* self, const smlt_ui_px_t* rhs) {
     return reinterpret_cast<const smlt::ui::Px*>(self)->operator==((*reinterpret_cast<const smlt::ui::Px*>(rhs)));
 }
 
-bool smlt_ui_px_equals2(const smlt_ui_px_t* self, int16_t rhs) {
+bool smlt_ui_px_equals_int16(const smlt_ui_px_t* self, int16_t rhs) {
     return reinterpret_cast<const smlt::ui::Px*>(self)->operator==(rhs);
 }
 
@@ -91,11 +91,11 @@ smlt_ui_px_t* smlt_ui_px_multiply(const smlt_ui_px_t* self, const smlt_ui_rem_t*
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px(reinterpret_cast<const smlt::ui::Px*>(self)->operator*((*reinterpret_cast<const smlt::ui::Rem*>(rhs)))));
 }
 
-smlt_ui_px_t* smlt_ui_px_multiply2(const smlt_ui_px_t* self, int rhs) {
+smlt_ui_px_t* smlt_ui_px_multiply_int(const smlt_ui_px_t* self, int rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px(reinterpret_cast<const smlt::ui::Px*>(self)->operator*(rhs)));
 }
 
-smlt_ui_px_t* smlt_ui_px_multiply3(const smlt_ui_px_t* self, uint32_t x) {
+smlt_ui_px_t* smlt_ui_px_multiply_uint32(const smlt_ui_px_t* self, uint32_t x) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px(reinterpret_cast<const smlt::ui::Px*>(self)->operator*(x)));
 }
 
@@ -103,7 +103,7 @@ smlt_ui_px_t* smlt_ui_px_divide(const smlt_ui_px_t* self, int rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px(reinterpret_cast<const smlt::ui::Px*>(self)->operator/(rhs)));
 }
 
-smlt_ui_px_t* smlt_ui_px_divide2(const smlt_ui_px_t* self, uint32_t x) {
+smlt_ui_px_t* smlt_ui_px_divide_uint32(const smlt_ui_px_t* self, uint32_t x) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px(reinterpret_cast<const smlt::ui::Px*>(self)->operator/(x)));
 }
 
@@ -111,11 +111,11 @@ smlt_ui_px_t* smlt_ui_px_add(const smlt_ui_px_t* self, const smlt_ui_px_t* rhs) 
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px(reinterpret_cast<const smlt::ui::Px*>(self)->operator+((*reinterpret_cast<const smlt::ui::Px*>(rhs)))));
 }
 
-smlt_ui_px_t* smlt_ui_px_add2(const smlt_ui_px_t* self, int rhs) {
+smlt_ui_px_t* smlt_ui_px_add_int(const smlt_ui_px_t* self, int rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px(reinterpret_cast<const smlt::ui::Px*>(self)->operator+(rhs)));
 }
 
-smlt_ui_px_t* smlt_ui_px_add3(const smlt_ui_px_t* self, uint16_t rhs) {
+smlt_ui_px_t* smlt_ui_px_add_uint16(const smlt_ui_px_t* self, uint16_t rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px(reinterpret_cast<const smlt::ui::Px*>(self)->operator+(rhs)));
 }
 
@@ -123,7 +123,7 @@ smlt_ui_px_t* smlt_ui_px_subtract(const smlt_ui_px_t* self, const smlt_ui_px_t* 
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px(reinterpret_cast<const smlt::ui::Px*>(self)->operator-((*reinterpret_cast<const smlt::ui::Px*>(rhs)))));
 }
 
-smlt_ui_px_t* smlt_ui_px_subtract2(const smlt_ui_px_t* self, uint16_t rhs) {
+smlt_ui_px_t* smlt_ui_px_subtract_uint16(const smlt_ui_px_t* self, uint16_t rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px(reinterpret_cast<const smlt::ui::Px*>(self)->operator-(rhs)));
 }
 

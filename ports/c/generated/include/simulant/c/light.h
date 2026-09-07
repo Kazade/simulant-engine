@@ -14,7 +14,7 @@ extern "C" {
 void smlt_light_set_type(smlt_light_t* self, smlt_light_type_t type);
 smlt_vec3_t* smlt_light_direction(const smlt_light_t* self);
 void smlt_light_set_direction(smlt_light_t* self, const smlt_vec3_t* dir);
-void smlt_light_set_direction2(smlt_light_t* self, float x, float y, float z);
+void smlt_light_set_direction_xyz(smlt_light_t* self, float x, float y, float z);
 void smlt_light_set_range(smlt_light_t* self, float range);
 void smlt_light_set_intensity(smlt_light_t* self, float intensity);
 void smlt_light_set_color(smlt_light_t* self, const smlt_color_t* color);

@@ -13,7 +13,7 @@ extern "C" {
 
 void smlt_key_frame_animated_destroy(smlt_key_frame_animated_t* self);
 void smlt_key_frame_animated_add_animation(smlt_key_frame_animated_t* self, const char* name, uint32_t start_frame, uint32_t end_frame);
-void smlt_key_frame_animated_add_animation2(smlt_key_frame_animated_t* self, const char* name, uint32_t start_frame, uint32_t end_frame, float fps);
+void smlt_key_frame_animated_add_animation_with_fps(smlt_key_frame_animated_t* self, const char* name, uint32_t start_frame, uint32_t end_frame, float fps);
 bool smlt_key_frame_animated_has_animations(const smlt_key_frame_animated_t* self);
 unsigned long smlt_key_frame_animated_animation_count(const smlt_key_frame_animated_t* self);
 void smlt_key_frame_animated_set_default_fps(smlt_key_frame_animated_t* self, float fps);

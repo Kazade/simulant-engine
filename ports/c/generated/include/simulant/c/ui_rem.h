@@ -15,7 +15,7 @@ void smlt_ui_rem_destroy(smlt_ui_rem_t* self);
 float smlt_ui_rem_get_value(const smlt_ui_rem_t* self);
 void smlt_ui_rem_set_value(smlt_ui_rem_t* self, float value);
 smlt_ui_rem_t* smlt_ui_rem_create(void);
-smlt_ui_rem_t* smlt_ui_rem_create2(float r);
+smlt_ui_rem_t* smlt_ui_rem_create_from_float(float r);
 
 #ifdef __cplusplus
 }

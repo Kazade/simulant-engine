@@ -106,39 +106,39 @@ float smlt_fast_inverse_sqrt(float n) {
     return smlt::fast_inverse_sqrt(n);
 }
 
-char* smlt_to_string(const smlt_vec2_t* v) {
+char* smlt_to_string_vec2(const smlt_vec2_t* v) {
     return smlt_c_strdup((smlt::to_string((*reinterpret_cast<const smlt::Vec2*>(v)))).c_str());
 }
 
-char* smlt_to_string2(const smlt_vec3_t* v) {
+char* smlt_to_string_vec3(const smlt_vec3_t* v) {
     return smlt_c_strdup((smlt::to_string((*reinterpret_cast<const smlt::Vec3*>(v)))).c_str());
 }
 
-char* smlt_to_string3(const smlt_vec4_t* v) {
+char* smlt_to_string_vec4(const smlt_vec4_t* v) {
     return smlt_c_strdup((smlt::to_string((*reinterpret_cast<const smlt::Vec4*>(v)))).c_str());
 }
 
-char* smlt_to_string4(double value) {
+char* smlt_to_string_double(double value) {
     return smlt_c_strdup((smlt::to_string(value)).c_str());
 }
 
-char* smlt_to_string5(float value) {
+char* smlt_to_string_float(float value) {
     return smlt_c_strdup((smlt::to_string(value)).c_str());
 }
 
-char* smlt_to_string6(int value) {
+char* smlt_to_string_int(int value) {
     return smlt_c_strdup((smlt::to_string(value)).c_str());
 }
 
-char* smlt_to_string7(long value) {
+char* smlt_to_string_long(long value) {
     return smlt_c_strdup((smlt::to_string(value)).c_str());
 }
 
-char* smlt_to_string8(unsigned int value) {
+char* smlt_to_string_uint(unsigned int value) {
     return smlt_c_strdup((smlt::to_string(value)).c_str());
 }
 
-char* smlt_to_string9(unsigned long value) {
+char* smlt_to_string_ulong(unsigned long value) {
     return smlt_c_strdup((smlt::to_string(value)).c_str());
 }
 
@@ -154,27 +154,27 @@ long smlt_stol(const char* str) {
     return smlt::stol(std::string(str ? str : ""));
 }
 
-smlt_degrees_t* smlt_lerp(const smlt_degrees_t* a, const smlt_degrees_t* b, float t) {
+smlt_degrees_t* smlt_lerp_degrees(const smlt_degrees_t* a, const smlt_degrees_t* b, float t) {
     return reinterpret_cast<smlt_degrees_t*>(new smlt::Degrees(smlt::lerp((*reinterpret_cast<const smlt::Degrees*>(a)), (*reinterpret_cast<const smlt::Degrees*>(b)), t)));
 }
 
-smlt_quaternion_t* smlt_lerp2(const smlt_quaternion_t* x, const smlt_quaternion_t* y, float t) {
+smlt_quaternion_t* smlt_lerp_quaternion(const smlt_quaternion_t* x, const smlt_quaternion_t* y, float t) {
     return reinterpret_cast<smlt_quaternion_t*>(new smlt::Quaternion(smlt::lerp((*reinterpret_cast<const smlt::Quaternion*>(x)), (*reinterpret_cast<const smlt::Quaternion*>(y)), t)));
 }
 
-smlt_radians_t* smlt_lerp3(const smlt_radians_t* a, const smlt_radians_t* b, float t) {
+smlt_radians_t* smlt_lerp_radians(const smlt_radians_t* a, const smlt_radians_t* b, float t) {
     return reinterpret_cast<smlt_radians_t*>(new smlt::Radians(smlt::lerp((*reinterpret_cast<const smlt::Radians*>(a)), (*reinterpret_cast<const smlt::Radians*>(b)), t)));
 }
 
-smlt_vec2_t* smlt_lerp4(const smlt_vec2_t* x, const smlt_vec2_t* y, float t) {
+smlt_vec2_t* smlt_lerp_vec2(const smlt_vec2_t* x, const smlt_vec2_t* y, float t) {
     return reinterpret_cast<smlt_vec2_t*>(new smlt::Vec2(smlt::lerp((*reinterpret_cast<const smlt::Vec2*>(x)), (*reinterpret_cast<const smlt::Vec2*>(y)), t)));
 }
 
-smlt_vec3_t* smlt_lerp5(const smlt_vec3_t* x, const smlt_vec3_t* y, float t) {
+smlt_vec3_t* smlt_lerp_vec3(const smlt_vec3_t* x, const smlt_vec3_t* y, float t) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(smlt::lerp((*reinterpret_cast<const smlt::Vec3*>(x)), (*reinterpret_cast<const smlt::Vec3*>(y)), t)));
 }
 
-float smlt_lerp6(float x, float y, float t) {
+float smlt_lerp_float(float x, float y, float t) {
     return smlt::lerp(x, y, t);
 }
 
@@ -314,19 +314,19 @@ void smlt_aligned_free(void* ptr) {
     smlt::aligned_free(ptr);
 }
 
-bool smlt_is_core_property(const char* name) {
+bool smlt_is_core_property_by_name(const char* name) {
     return smlt::is_core_property(name);
 }
 
-bool smlt_is_core_property2(unsigned int hsh) {
+bool smlt_is_core_property_by_hash(unsigned int hsh) {
     return smlt::is_core_property(hsh);
 }
 
-bool smlt_core_property_type(const char* name, smlt_material_property_type_t* type) {
+bool smlt_core_property_type_by_name(const char* name, smlt_material_property_type_t* type) {
     return smlt::core_property_type(name, reinterpret_cast<smlt::MaterialPropertyType*>(type));
 }
 
-bool smlt_core_property_type2(unsigned int hsh, smlt_material_property_type_t* type) {
+bool smlt_core_property_type_by_hash(unsigned int hsh, smlt_material_property_type_t* type) {
     return smlt::core_property_type(hsh, reinterpret_cast<smlt::MaterialPropertyType*>(type));
 }
 

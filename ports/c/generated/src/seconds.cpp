@@ -19,7 +19,7 @@ smlt_seconds_t* smlt_seconds_create(void) {
     return reinterpret_cast<smlt_seconds_t*>(new smlt::Seconds());
 }
 
-smlt_seconds_t* smlt_seconds_create2(float t) {
+smlt_seconds_t* smlt_seconds_create_from_float(float t) {
     return reinterpret_cast<smlt_seconds_t*>(new smlt::Seconds(t));
 }
 

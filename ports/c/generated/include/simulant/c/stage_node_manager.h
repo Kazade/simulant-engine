@@ -15,10 +15,10 @@ void smlt_stage_node_manager_destroy(smlt_stage_node_manager_t* self);
 smlt_stage_node_manager_t* smlt_stage_node_manager_create(smlt_scene_t* scene);
 smlt_stage_node_t* smlt_stage_node_manager_get_node(const smlt_stage_node_manager_t* self, unsigned int id);
 bool smlt_stage_node_manager_has_node(const smlt_stage_node_manager_t* self, unsigned int id);
-smlt_stage_node_t* smlt_stage_node_manager_create_node(smlt_stage_node_manager_t* self, const char* name, const smlt_params_t* params, smlt_stage_node_t* base);
-smlt_stage_node_t* smlt_stage_node_manager_create_node2(smlt_stage_node_manager_t* self, unsigned int type, const smlt_params_t* params, smlt_stage_node_t* base);
-bool smlt_stage_node_manager_register_stage_node(smlt_stage_node_manager_t* self, const char* script_data, const char* class_name);
-bool smlt_stage_node_manager_register_stage_node2(smlt_stage_node_manager_t* self, const smlt_path_t* script_file, const char* class_name);
+smlt_stage_node_t* smlt_stage_node_manager_create_node_by_name(smlt_stage_node_manager_t* self, const char* name, const smlt_params_t* params, smlt_stage_node_t* base);
+smlt_stage_node_t* smlt_stage_node_manager_create_node_by_type(smlt_stage_node_manager_t* self, unsigned int type, const smlt_params_t* params, smlt_stage_node_t* base);
+bool smlt_stage_node_manager_register_stage_node_from_source(smlt_stage_node_manager_t* self, const char* script_data, const char* class_name);
+bool smlt_stage_node_manager_register_stage_node_from_file(smlt_stage_node_manager_t* self, const smlt_path_t* script_file, const char* class_name);
 
 #ifdef __cplusplus
 }

@@ -43,7 +43,7 @@ smlt_physics_material_t* smlt_physics_material_create(void) {
     return reinterpret_cast<smlt_physics_material_t*>(new smlt::PhysicsMaterial());
 }
 
-smlt_physics_material_t* smlt_physics_material_create2(float density, float friction, float bounciness) {
+smlt_physics_material_t* smlt_physics_material_create_with_properties(float density, float friction, float bounciness) {
     return reinterpret_cast<smlt_physics_material_t*>(new smlt::PhysicsMaterial(density, friction, bounciness));
 }
 

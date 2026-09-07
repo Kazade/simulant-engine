@@ -13,7 +13,7 @@ extern "C" {
 
 void smlt_nameable_destroy(smlt_nameable_t* self);
 void smlt_nameable_set_name(smlt_nameable_t* self, const char* name);
-void smlt_nameable_set_name2(smlt_nameable_t* self, const char* name);
+void smlt_nameable_set_name_string(smlt_nameable_t* self, const char* name);
 char* smlt_nameable_name(const smlt_nameable_t* self);
 bool smlt_nameable_has_name(const smlt_nameable_t* self);
 

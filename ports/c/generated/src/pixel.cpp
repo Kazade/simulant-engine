@@ -19,7 +19,7 @@ smlt_pixel_t* smlt_pixel_create(void) {
     return reinterpret_cast<smlt_pixel_t*>(new smlt::Pixel());
 }
 
-smlt_pixel_t* smlt_pixel_create2(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+smlt_pixel_t* smlt_pixel_create_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     return reinterpret_cast<smlt_pixel_t*>(new smlt::Pixel(r, g, b, a));
 }
 

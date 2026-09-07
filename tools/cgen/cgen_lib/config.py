@@ -11,8 +11,10 @@ CGEN_DIR = os.path.dirname(THIS_DIR)
 REPO_ROOT = os.path.dirname(os.path.dirname(CGEN_DIR))
 
 DEFAULT_OUT_DIR = os.path.join(REPO_ROOT, "ports", "c", "generated")
+DEFAULT_VAPI_PATH = os.path.join(REPO_ROOT, "ports", "vala", "simulant-c.vapi")
 
 DEFAULT_IGNORE_FILE = os.path.join(CGEN_DIR, "ignore.json")
+DEFAULT_RENAME_FILE = os.path.join(CGEN_DIR, "renames.json")
 
 # The umbrella header pulls in essentially the whole public API (nodes,
 # application, scenes, ...). Narrow this with --input if you only care

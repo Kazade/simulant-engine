@@ -13,9 +13,9 @@ extern "C" {
 
 void smlt_packed_color4444_destroy(smlt_packed_color4444_t* self);
 smlt_packed_color4444_t* smlt_packed_color4444_create(void);
-smlt_packed_color4444_t* smlt_packed_color4444_create2(const smlt_color_t* c);
-bool smlt_packed_color4444_equals(const smlt_packed_color4444_t* self, const smlt_color_t* rhs);
-bool smlt_packed_color4444_equals2(const smlt_packed_color4444_t* self, const smlt_packed_color4444_t* rhs);
+smlt_packed_color4444_t* smlt_packed_color4444_create_from_color(const smlt_color_t* c);
+bool smlt_packed_color4444_equals_color(const smlt_packed_color4444_t* self, const smlt_color_t* rhs);
+bool smlt_packed_color4444_equals_packed(const smlt_packed_color4444_t* self, const smlt_packed_color4444_t* rhs);
 bool smlt_packed_color4444_not_equals(const smlt_packed_color4444_t* self, const smlt_color_t* rhs);
 uint8_t smlt_packed_color4444_r8(const smlt_packed_color4444_t* self);
 uint8_t smlt_packed_color4444_g8(const smlt_packed_color4444_t* self);

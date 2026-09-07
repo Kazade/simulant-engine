@@ -21,7 +21,7 @@ const smlt_asset_manager_t* smlt_asset_asset_manager(const smlt_asset_t* self) {
     return reinterpret_cast<const smlt_asset_manager_t*>(&((*reinterpret_cast<const std::shared_ptr<smlt::Asset>*>(self))->asset_manager()));
 }
 
-smlt_asset_manager_t* smlt_asset_asset_manager2(smlt_asset_t* self) {
+smlt_asset_manager_t* smlt_asset_asset_manager_mut(smlt_asset_t* self) {
     return reinterpret_cast<smlt_asset_manager_t*>(&((*reinterpret_cast<std::shared_ptr<smlt::Asset>*>(self))->asset_manager()));
 }
 

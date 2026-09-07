@@ -23,15 +23,15 @@ smlt_mat3_t* smlt_mat3_create(void) {
     return reinterpret_cast<smlt_mat3_t*>(new smlt::Mat3());
 }
 
-smlt_mat3_t* smlt_mat3_create2(const float* data) {
+smlt_mat3_t* smlt_mat3_create_from_array(const float* data) {
     return reinterpret_cast<smlt_mat3_t*>(new smlt::Mat3(data));
 }
 
-smlt_mat3_t* smlt_mat3_create3(const smlt_mat4_t* rhs) {
+smlt_mat3_t* smlt_mat3_create_from_mat4(const smlt_mat4_t* rhs) {
     return reinterpret_cast<smlt_mat3_t*>(new smlt::Mat3((*reinterpret_cast<const smlt::Mat4*>(rhs))));
 }
 
-smlt_mat3_t* smlt_mat3_create4(const smlt_vec3_t* c0, const smlt_vec3_t* c1, const smlt_vec3_t* c2) {
+smlt_mat3_t* smlt_mat3_create_from_columns(const smlt_vec3_t* c0, const smlt_vec3_t* c1, const smlt_vec3_t* c2) {
     return reinterpret_cast<smlt_mat3_t*>(new smlt::Mat3((*reinterpret_cast<const smlt::Vec3*>(c0)), (*reinterpret_cast<const smlt::Vec3*>(c1)), (*reinterpret_cast<const smlt::Vec3*>(c2))));
 }
 

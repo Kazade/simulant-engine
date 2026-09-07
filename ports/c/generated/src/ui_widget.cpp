@@ -35,15 +35,15 @@ void smlt_ui_widget_resize(smlt_ui_widget_t* self, const smlt_ui_px_t* width, co
     reinterpret_cast<smlt::ui::Widget*>(self)->resize((*reinterpret_cast<const smlt::ui::Px*>(width)), (*reinterpret_cast<const smlt::ui::Px*>(height)));
 }
 
-void smlt_ui_widget_resize2(smlt_ui_widget_t* self, const smlt_ui_px_t* width, const smlt_ui_rem_t* height) {
+void smlt_ui_widget_resize_px_rem(smlt_ui_widget_t* self, const smlt_ui_px_t* width, const smlt_ui_rem_t* height) {
     reinterpret_cast<smlt::ui::Widget*>(self)->resize((*reinterpret_cast<const smlt::ui::Px*>(width)), (*reinterpret_cast<const smlt::ui::Rem*>(height)));
 }
 
-void smlt_ui_widget_resize3(smlt_ui_widget_t* self, const smlt_ui_rem_t* width, const smlt_ui_px_t* height) {
+void smlt_ui_widget_resize_rem_px(smlt_ui_widget_t* self, const smlt_ui_rem_t* width, const smlt_ui_px_t* height) {
     reinterpret_cast<smlt::ui::Widget*>(self)->resize((*reinterpret_cast<const smlt::ui::Rem*>(width)), (*reinterpret_cast<const smlt::ui::Px*>(height)));
 }
 
-void smlt_ui_widget_resize4(smlt_ui_widget_t* self, const smlt_ui_rem_t* width, const smlt_ui_rem_t* height) {
+void smlt_ui_widget_resize_rem_rem(smlt_ui_widget_t* self, const smlt_ui_rem_t* width, const smlt_ui_rem_t* height) {
     reinterpret_cast<smlt::ui::Widget*>(self)->resize((*reinterpret_cast<const smlt::ui::Rem*>(width)), (*reinterpret_cast<const smlt::ui::Rem*>(height)));
 }
 
@@ -51,11 +51,11 @@ void smlt_ui_widget_set_font(smlt_ui_widget_t* self, smlt_font_t* font) {
     reinterpret_cast<smlt::ui::Widget*>(self)->set_font((*reinterpret_cast<std::shared_ptr<smlt::Font>*>(font)));
 }
 
-void smlt_ui_widget_set_font2(smlt_ui_widget_t* self, const char* family, const smlt_ui_px_t* size, smlt_font_weight_t weight, smlt_font_style_t style) {
+void smlt_ui_widget_set_font_family_px(smlt_ui_widget_t* self, const char* family, const smlt_ui_px_t* size, smlt_font_weight_t weight, smlt_font_style_t style) {
     reinterpret_cast<smlt::ui::Widget*>(self)->set_font(std::string(family ? family : ""), (*reinterpret_cast<const smlt::ui::Px*>(size)), static_cast<smlt::FontWeight>(weight), static_cast<smlt::FontStyle>(style));
 }
 
-void smlt_ui_widget_set_font3(smlt_ui_widget_t* self, const char* family, const smlt_ui_rem_t* size, smlt_font_weight_t weight, smlt_font_style_t style) {
+void smlt_ui_widget_set_font_family_rem(smlt_ui_widget_t* self, const char* family, const smlt_ui_rem_t* size, smlt_font_weight_t weight, smlt_font_style_t style) {
     reinterpret_cast<smlt::ui::Widget*>(self)->set_font(std::string(family ? family : ""), (*reinterpret_cast<const smlt::ui::Rem*>(size)), static_cast<smlt::FontWeight>(weight), static_cast<smlt::FontStyle>(style));
 }
 
@@ -119,7 +119,7 @@ void smlt_ui_widget_set_padding(smlt_ui_widget_t* self, const smlt_ui_px_t* x) {
     reinterpret_cast<smlt::ui::Widget*>(self)->set_padding((*reinterpret_cast<const smlt::ui::Px*>(x)));
 }
 
-void smlt_ui_widget_set_padding2(smlt_ui_widget_t* self, const smlt_ui_px_t* left, const smlt_ui_px_t* right, const smlt_ui_px_t* bottom, const smlt_ui_px_t* top) {
+void smlt_ui_widget_set_padding_per_side(smlt_ui_widget_t* self, const smlt_ui_px_t* left, const smlt_ui_px_t* right, const smlt_ui_px_t* bottom, const smlt_ui_px_t* top) {
     reinterpret_cast<smlt::ui::Widget*>(self)->set_padding((*reinterpret_cast<const smlt::ui::Px*>(left)), (*reinterpret_cast<const smlt::ui::Px*>(right)), (*reinterpret_cast<const smlt::ui::Px*>(bottom)), (*reinterpret_cast<const smlt::ui::Px*>(top)));
 }
 

@@ -43,7 +43,7 @@ const smlt_frustum_t* smlt_camera_frustum(const smlt_camera_t* self) {
     return reinterpret_cast<const smlt_frustum_t*>(&(reinterpret_cast<const smlt::Camera*>(self)->frustum()));
 }
 
-smlt_frustum_t* smlt_camera_frustum2(smlt_camera_t* self) {
+smlt_frustum_t* smlt_camera_frustum_mut(smlt_camera_t* self) {
     return reinterpret_cast<smlt_frustum_t*>(&(reinterpret_cast<smlt::Camera*>(self)->frustum()));
 }
 

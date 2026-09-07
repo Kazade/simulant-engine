@@ -64,7 +64,7 @@ void smlt_sprite_set_spritesheet(smlt_sprite_t* self, smlt_spritesheet_t* sprite
     reinterpret_cast<smlt::Sprite*>(self)->set_spritesheet((*reinterpret_cast<std::shared_ptr<smlt::Spritesheet>*>(spritesheet)));
 }
 
-void smlt_sprite_set_spritesheet2(smlt_sprite_t* self, smlt_texture_t* texture, uint32_t frame_width, uint32_t frame_height, const smlt_spritesheet_attrs_t* attrs) {
+void smlt_sprite_set_spritesheet_from_texture(smlt_sprite_t* self, smlt_texture_t* texture, uint32_t frame_width, uint32_t frame_height, const smlt_spritesheet_attrs_t* attrs) {
     reinterpret_cast<smlt::Sprite*>(self)->set_spritesheet((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(texture)), frame_width, frame_height, (*reinterpret_cast<const smlt::SpritesheetAttrs*>(attrs)));
 }
 

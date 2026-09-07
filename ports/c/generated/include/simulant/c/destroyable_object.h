@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 void smlt_destroyable_object_destroy(smlt_destroyable_object_t* self);
-bool smlt_destroyable_object_destroy_2(smlt_destroyable_object_t* self);
+bool smlt_destroyable_object_trigger_destroy(smlt_destroyable_object_t* self);
 bool smlt_destroyable_object_destroy_immediately(smlt_destroyable_object_t* self);
 bool smlt_destroyable_object_is_destroyed(const smlt_destroyable_object_t* self);
 

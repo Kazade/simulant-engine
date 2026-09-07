@@ -22,7 +22,7 @@ void smlt_index_data_reserve(smlt_index_data_t* self, uint32_t size);
 uint32_t smlt_index_data_min_index(const smlt_index_data_t* self);
 uint32_t smlt_index_data_max_index(const smlt_index_data_t* self);
 void smlt_index_data_index(smlt_index_data_t* self, uint32_t idx);
-void smlt_index_data_index2(smlt_index_data_t* self, uint32_t* indexes, unsigned long count);
+void smlt_index_data_index_array(smlt_index_data_t* self, uint32_t* indexes, unsigned long count);
 void smlt_index_data_done(smlt_index_data_t* self);
 uint64_t smlt_index_data_last_updated(const smlt_index_data_t* self);
 uint32_t smlt_index_data_at(const smlt_index_data_t* self, uint32_t i);

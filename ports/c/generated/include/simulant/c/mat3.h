@@ -13,9 +13,9 @@ extern "C" {
 
 void smlt_mat3_destroy(smlt_mat3_t* self);
 smlt_mat3_t* smlt_mat3_create(void);
-smlt_mat3_t* smlt_mat3_create2(const float* data);
-smlt_mat3_t* smlt_mat3_create3(const smlt_mat4_t* rhs);
-smlt_mat3_t* smlt_mat3_create4(const smlt_vec3_t* c0, const smlt_vec3_t* c1, const smlt_vec3_t* c2);
+smlt_mat3_t* smlt_mat3_create_from_array(const float* data);
+smlt_mat3_t* smlt_mat3_create_from_mat4(const smlt_mat4_t* rhs);
+smlt_mat3_t* smlt_mat3_create_from_columns(const smlt_vec3_t* c0, const smlt_vec3_t* c1, const smlt_vec3_t* c2);
 smlt_mat3_t* smlt_mat3_as_rotation_x(const smlt_degrees_t* angle);
 smlt_mat3_t* smlt_mat3_as_rotation_y(const smlt_degrees_t* angle);
 smlt_mat3_t* smlt_mat3_as_rotation_z(const smlt_degrees_t* angle);

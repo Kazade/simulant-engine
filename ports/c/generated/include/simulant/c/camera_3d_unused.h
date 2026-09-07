@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-void smlt_camera3_d_unused_destroy(smlt_camera3_d_unused_t* self);
+void smlt_camera_3d_unused_destroy(smlt_camera_3d_unused_t* self);
 
 #ifdef __cplusplus
 }

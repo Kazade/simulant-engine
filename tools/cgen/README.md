@@ -13,6 +13,10 @@ default on desktop platforms; off for Dreamcast/PSP/Xbox/Android, same as
 Regenerating is a manual, opt-in developer step -- ordinary builds never
 need Python or libclang, only the checked-in generated sources.
 
+By default `cgen.py` *also* writes a Vala `.vapi` binding for the
+generated C API straight from the same IR (`--vapi`, on unless
+`--no-vapi` is passed) -- see `ports/vala/README.md`.
+
 ## Naming convention
 
 - types: `smlt_<name>_t` (`smlt_stage_t`, `smlt_ui_widget_t` for
@@ -50,6 +54,8 @@ python3 tools/cgen/cgen.py -v         # verbose (info-level logging)
 python3 tools/cgen/cgen.py -vv        # debug (also dumps clang args, unchanged-file skips)
 python3 tools/cgen/cgen.py -q         # quiet (errors only)
 python3 tools/cgen/cgen.py --strict   # exit non-zero if anything had to be skipped
+python3 tools/cgen/cgen.py --no-vapi  # skip writing ports/vala/simulant-c.vapi
+python3 tools/cgen/cgen.py --vapi /tmp/out.vapi --vapi-namespace Foo  # write it elsewhere / under a different namespace
 ```
 
 Or via CMake, after configuring with `-DSIMULANT_BUILD_C_BINDINGS=ON`:
@@ -123,6 +129,44 @@ method bindings.
 Use `tools/cgen/ignore.json` to force-skip specific fully-qualified names
 (classes, methods, constructors, free functions) that the heuristics above
 don't catch on their own.
+
+## Renaming generated names
+
+Overloads beyond the first get a numeric suffix (`smlt_color_create2`,
+`smlt_color_create3`, ...) since that's all cgen.py can derive mechanically
+-- there's no reliable way to turn "takes a `const float*` and a count"
+into a good name without knowing what the array actually represents.
+`tools/cgen/renames.json` maps a *default* generated name to a
+hand-chosen one:
+
+```json
+{
+    "renames": {
+        "smlt_color_create2": "smlt_color_create_from_array"
+    }
+}
+```
+
+This is applied as a post-processing pass after scanning, so it affects
+both the C output and `--vapi` (a renamed overload becomes a nicer named
+Vala constructor too -- see `ports/vala/README.md`). cgen.py validates the
+file on every run: a key that doesn't match any generated name is a
+stale entry (logged as a warning, generation continues), and a rename
+that would collide with another symbol's name is skipped (also warned,
+both symbols keep their original names). Keep the same `smlt_<base>_`
+prefix as the original when choosing a replacement -- only the suffix is
+meant to change; the prefix is what both the C output and (for
+constructors specifically) the Vala emitter's named-constructor-suffix
+derivation key off of.
+
+**Caveat**: keys are the literal default name, which encodes cgen.py's
+overload *ordering* (by parameter count, then parameter types -- see
+above), not the overload's identity. If the underlying C++ overload set
+changes, the numeric suffix a given overload gets can shift; the stale-key
+warning catches a rename that now matches *nothing*, but can't catch one
+that now silently matches a *different* overload than the one it was
+written for. Re-check entries here after changing a constructor/method's
+overload set.
 
 ## Known limitations
 

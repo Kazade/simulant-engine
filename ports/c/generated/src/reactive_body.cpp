@@ -85,7 +85,7 @@ void smlt_reactive_body_set_angular_damping(smlt_reactive_body_t* self, const sm
     reinterpret_cast<smlt::ReactiveBody*>(self)->set_angular_damping((*reinterpret_cast<const smlt::Vec3*>(d)));
 }
 
-void smlt_reactive_body_set_angular_damping2(smlt_reactive_body_t* self, float d) {
+void smlt_reactive_body_set_angular_damping_uniform(smlt_reactive_body_t* self, float d) {
     reinterpret_cast<smlt::ReactiveBody*>(self)->set_angular_damping(d);
 }
 

@@ -24,11 +24,11 @@ void smlt_ui_ui_event_set_type(smlt_ui_ui_event_t* self, smlt_ui_ui_event_type_t
     reinterpret_cast<smlt::ui::UIEvent*>(self)->type = static_cast<smlt::ui::UIEventType>(value);
 }
 
-smlt_ui_ui_event_t* smlt_ui_ui_event_create(const smlt_mouse_event_t* evt) {
+smlt_ui_ui_event_t* smlt_ui_ui_event_create_from_mouse_event(const smlt_mouse_event_t* evt) {
     return reinterpret_cast<smlt_ui_ui_event_t*>(new smlt::ui::UIEvent((*reinterpret_cast<const smlt::MouseEvent*>(evt))));
 }
 
-smlt_ui_ui_event_t* smlt_ui_ui_event_create2(const smlt_touch_event_t* evt) {
+smlt_ui_ui_event_t* smlt_ui_ui_event_create_from_touch_event(const smlt_touch_event_t* evt) {
     return reinterpret_cast<smlt_ui_ui_event_t*>(new smlt::ui::UIEvent((*reinterpret_cast<const smlt::TouchEvent*>(evt))));
 }
 

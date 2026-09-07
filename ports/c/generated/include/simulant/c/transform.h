@@ -26,10 +26,10 @@ void smlt_transform_set_rotation(smlt_transform_t* self, const smlt_quaternion_t
 void smlt_transform_set_scale_factor(smlt_transform_t* self, const smlt_vec3_t* scale);
 void smlt_transform_translate(smlt_transform_t* self, const smlt_vec3_t* v);
 void smlt_transform_rotate(smlt_transform_t* self, const smlt_quaternion_t* q);
-void smlt_transform_rotate2(smlt_transform_t* self, const smlt_vec3_t* axis, const smlt_degrees_t* amount);
-void smlt_transform_rotate3(smlt_transform_t* self, const smlt_degrees_t* x, const smlt_degrees_t* y, const smlt_degrees_t* z);
+void smlt_transform_rotate_axis_angle(smlt_transform_t* self, const smlt_vec3_t* axis, const smlt_degrees_t* amount);
+void smlt_transform_rotate_euler(smlt_transform_t* self, const smlt_degrees_t* x, const smlt_degrees_t* y, const smlt_degrees_t* z);
 void smlt_transform_scale_by(smlt_transform_t* self, const smlt_vec3_t* v);
-void smlt_transform_scale_by2(smlt_transform_t* self, float xyz);
+void smlt_transform_scale_by_uniform(smlt_transform_t* self, float xyz);
 const smlt_mat4_t* smlt_transform_world_space_matrix(const smlt_transform_t* self);
 smlt_vec2_t* smlt_transform_position_2d(const smlt_transform_t* self);
 smlt_vec2_t* smlt_transform_translation_2d(const smlt_transform_t* self);

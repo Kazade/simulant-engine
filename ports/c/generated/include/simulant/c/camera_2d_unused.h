@@ -6,12 +6,12 @@
 
 #include "simulant/c/types.h"
 
-/* smlt::Camera2D::Meta */
+/* smlt::Camera2D::_unused_ */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void smlt_camera2_d_meta_destroy(smlt_camera2_d_meta_t* self);
+void smlt_camera_2d_unused_destroy(smlt_camera_2d_unused_t* self);
 
 #ifdef __cplusplus
 }

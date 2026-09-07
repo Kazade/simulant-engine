@@ -19,7 +19,7 @@ void smlt_ray_set_dir(smlt_ray_t* self, const smlt_vec3_t* value);
 smlt_vec3_t* smlt_ray_get_dir_inv(const smlt_ray_t* self);
 void smlt_ray_set_dir_inv(smlt_ray_t* self, const smlt_vec3_t* value);
 smlt_ray_t* smlt_ray_create(void);
-smlt_ray_t* smlt_ray_create2(const smlt_vec3_t* start, const smlt_vec3_t* dir);
+smlt_ray_t* smlt_ray_create_from_start_and_direction(const smlt_vec3_t* start, const smlt_vec3_t* dir);
 bool smlt_ray_intersects_aabb(const smlt_ray_t* self, const smlt_aabb_t* aabb);
 bool smlt_ray_intersects_triangle(const smlt_ray_t* self, const smlt_vec3_t* v1, const smlt_vec3_t* v2, const smlt_vec3_t* v3, smlt_vec3_t* intersection, smlt_vec3_t* normal, float* distance);
 bool smlt_ray_intersects_sphere(const smlt_ray_t* self, const smlt_vec3_t* center, float radius, smlt_vec3_t* intersection, smlt_vec3_t* normal, float* distance);

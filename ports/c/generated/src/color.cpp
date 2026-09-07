@@ -51,11 +51,11 @@ smlt_color_t* smlt_color_create(void) {
     return reinterpret_cast<smlt_color_t*>(new smlt::Color());
 }
 
-smlt_color_t* smlt_color_create2(const float* buf, unsigned long count) {
+smlt_color_t* smlt_color_create_from_array(const float* buf, unsigned long count) {
     return reinterpret_cast<smlt_color_t*>(new smlt::Color(buf, count));
 }
 
-smlt_color_t* smlt_color_create3(float r, float g, float b, float a) {
+smlt_color_t* smlt_color_create_from_rgba(float r, float g, float b, float a) {
     return reinterpret_cast<smlt_color_t*>(new smlt::Color(r, g, b, a));
 }
 

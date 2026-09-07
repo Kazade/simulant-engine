@@ -27,7 +27,7 @@ smlt_ui_rem_t* smlt_ui_rem_create(void) {
     return reinterpret_cast<smlt_ui_rem_t*>(new smlt::ui::Rem());
 }
 
-smlt_ui_rem_t* smlt_ui_rem_create2(float r) {
+smlt_ui_rem_t* smlt_ui_rem_create_from_float(float r) {
     return reinterpret_cast<smlt_ui_rem_t*>(new smlt::ui::Rem(r));
 }
 

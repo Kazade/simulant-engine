@@ -17,7 +17,7 @@ smlt_aabb_t* smlt_camera_transformed_aabb(const smlt_camera_t* self);
 const smlt_mat4_t* smlt_camera_view_matrix(const smlt_camera_t* self);
 const smlt_mat4_t* smlt_camera_projection_matrix(const smlt_camera_t* self);
 const smlt_frustum_t* smlt_camera_frustum(const smlt_camera_t* self);
-smlt_frustum_t* smlt_camera_frustum2(smlt_camera_t* self);
+smlt_frustum_t* smlt_camera_frustum_mut(smlt_camera_t* self);
 void smlt_camera_set_projection_matrix(smlt_camera_t* self, const smlt_mat4_t* matrix);
 void smlt_camera_set_perspective_projection(smlt_camera_t* self, const smlt_degrees_t* fov, float aspect, float near, float far);
 void smlt_camera_set_orthographic_projection(smlt_camera_t* self, float left, float right, float bottom, float top, float near, float far);

@@ -35,7 +35,7 @@ smlt_ui_ui_coord_t* smlt_ui_ui_coord_create(void) {
     return reinterpret_cast<smlt_ui_ui_coord_t*>(new smlt::ui::UICoord());
 }
 
-smlt_ui_ui_coord_t* smlt_ui_ui_coord_create2(const smlt_ui_px_t* x, const smlt_ui_px_t* y) {
+smlt_ui_ui_coord_t* smlt_ui_ui_coord_create_from_px(const smlt_ui_px_t* x, const smlt_ui_px_t* y) {
     return reinterpret_cast<smlt_ui_ui_coord_t*>(new smlt::ui::UICoord((*reinterpret_cast<const smlt::ui::Px*>(x)), (*reinterpret_cast<const smlt::ui::Px*>(y))));
 }
 

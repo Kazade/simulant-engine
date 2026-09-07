@@ -19,7 +19,7 @@ smlt_formatter_t* smlt_formatter_create(const char* fmt) {
     return reinterpret_cast<smlt_formatter_t*>(new smlt::Formatter(fmt));
 }
 
-smlt_formatter_t* smlt_formatter_create2(const char* fmt) {
+smlt_formatter_t* smlt_formatter_create_from_string(const char* fmt) {
     return reinterpret_cast<smlt_formatter_t*>(new smlt::Formatter(std::string(fmt ? fmt : "")));
 }
 

@@ -31,19 +31,19 @@ bool smlt_stage_node_manager_has_node(const smlt_stage_node_manager_t* self, uns
     return reinterpret_cast<const smlt::StageNodeManager*>(self)->has_node(id);
 }
 
-smlt_stage_node_t* smlt_stage_node_manager_create_node(smlt_stage_node_manager_t* self, const char* name, const smlt_params_t* params, smlt_stage_node_t* base) {
+smlt_stage_node_t* smlt_stage_node_manager_create_node_by_name(smlt_stage_node_manager_t* self, const char* name, const smlt_params_t* params, smlt_stage_node_t* base) {
     return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<smlt::StageNodeManager*>(self)->create_node(std::string(name ? name : ""), (*reinterpret_cast<const smlt::Params*>(params)), reinterpret_cast<smlt::StageNode*>(base))));
 }
 
-smlt_stage_node_t* smlt_stage_node_manager_create_node2(smlt_stage_node_manager_t* self, unsigned int type, const smlt_params_t* params, smlt_stage_node_t* base) {
+smlt_stage_node_t* smlt_stage_node_manager_create_node_by_type(smlt_stage_node_manager_t* self, unsigned int type, const smlt_params_t* params, smlt_stage_node_t* base) {
     return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<smlt::StageNodeManager*>(self)->create_node(type, (*reinterpret_cast<const smlt::Params*>(params)), reinterpret_cast<smlt::StageNode*>(base))));
 }
 
-bool smlt_stage_node_manager_register_stage_node(smlt_stage_node_manager_t* self, const char* script_data, const char* class_name) {
+bool smlt_stage_node_manager_register_stage_node_from_source(smlt_stage_node_manager_t* self, const char* script_data, const char* class_name) {
     return reinterpret_cast<smlt::StageNodeManager*>(self)->register_stage_node(script_data, class_name);
 }
 
-bool smlt_stage_node_manager_register_stage_node2(smlt_stage_node_manager_t* self, const smlt_path_t* script_file, const char* class_name) {
+bool smlt_stage_node_manager_register_stage_node_from_file(smlt_stage_node_manager_t* self, const smlt_path_t* script_file, const char* class_name) {
     return reinterpret_cast<smlt::StageNodeManager*>(self)->register_stage_node((*reinterpret_cast<const smlt::Path*>(script_file)), class_name);
 }
 

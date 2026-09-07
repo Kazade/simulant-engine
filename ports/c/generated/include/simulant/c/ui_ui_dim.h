@@ -17,7 +17,7 @@ void smlt_ui_ui_dim_set_width(smlt_ui_ui_dim_t* self, const smlt_ui_px_t* value)
 smlt_ui_px_t* smlt_ui_ui_dim_get_height(const smlt_ui_ui_dim_t* self);
 void smlt_ui_ui_dim_set_height(smlt_ui_ui_dim_t* self, const smlt_ui_px_t* value);
 smlt_ui_ui_dim_t* smlt_ui_ui_dim_create(void);
-smlt_ui_ui_dim_t* smlt_ui_ui_dim_create2(const smlt_ui_px_t* width, const smlt_ui_px_t* height);
+smlt_ui_ui_dim_t* smlt_ui_ui_dim_create_from_px(const smlt_ui_px_t* width, const smlt_ui_px_t* height);
 
 #ifdef __cplusplus
 }

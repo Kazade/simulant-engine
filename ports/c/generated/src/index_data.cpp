@@ -55,7 +55,7 @@ void smlt_index_data_index(smlt_index_data_t* self, uint32_t idx) {
     reinterpret_cast<smlt::IndexData*>(self)->index(idx);
 }
 
-void smlt_index_data_index2(smlt_index_data_t* self, uint32_t* indexes, unsigned long count) {
+void smlt_index_data_index_array(smlt_index_data_t* self, uint32_t* indexes, unsigned long count) {
     reinterpret_cast<smlt::IndexData*>(self)->index(indexes, count);
 }
 

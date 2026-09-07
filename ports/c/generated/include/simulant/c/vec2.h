@@ -17,7 +17,7 @@ void smlt_vec2_set_x(smlt_vec2_t* self, float value);
 float smlt_vec2_get_y(const smlt_vec2_t* self);
 void smlt_vec2_set_y(smlt_vec2_t* self, float value);
 smlt_vec2_t* smlt_vec2_create(void);
-smlt_vec2_t* smlt_vec2_create2(float x, float y);
+smlt_vec2_t* smlt_vec2_create_xy(float x, float y);
 smlt_vec2_t* smlt_vec2_left(void);
 smlt_vec2_t* smlt_vec2_right(void);
 smlt_vec2_t* smlt_vec2_up(void);

@@ -32,11 +32,11 @@ smlt_mat4_t* smlt_mat4_multiply(const smlt_mat4_t* self, const smlt_mat4_t* rhs)
     return reinterpret_cast<smlt_mat4_t*>(new smlt::Mat4(reinterpret_cast<const smlt::Mat4*>(self)->operator*((*reinterpret_cast<const smlt::Mat4*>(rhs)))));
 }
 
-smlt_vec3_t* smlt_mat4_multiply2(const smlt_mat4_t* self, const smlt_vec3_t* rhs) {
+smlt_vec3_t* smlt_mat4_multiply_vec3(const smlt_mat4_t* self, const smlt_vec3_t* rhs) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(reinterpret_cast<const smlt::Mat4*>(self)->operator*((*reinterpret_cast<const smlt::Vec3*>(rhs)))));
 }
 
-smlt_vec4_t* smlt_mat4_multiply3(const smlt_mat4_t* self, const smlt_vec4_t* rhs) {
+smlt_vec4_t* smlt_mat4_multiply_vec4(const smlt_mat4_t* self, const smlt_vec4_t* rhs) {
     return reinterpret_cast<smlt_vec4_t*>(new smlt::Vec4(reinterpret_cast<const smlt::Mat4*>(self)->operator*((*reinterpret_cast<const smlt::Vec4*>(rhs)))));
 }
 
@@ -108,7 +108,7 @@ const float* smlt_mat4_data(const smlt_mat4_t* self) {
     return reinterpret_cast<const smlt::Mat4*>(self)->data();
 }
 
-float* smlt_mat4_data2(smlt_mat4_t* self) {
+float* smlt_mat4_data_mut(smlt_mat4_t* self) {
     return reinterpret_cast<smlt::Mat4*>(self)->data();
 }
 
@@ -116,7 +116,7 @@ const void* smlt_mat4_native(const smlt_mat4_t* self) {
     return reinterpret_cast<const smlt::Mat4*>(self)->_native();
 }
 
-void* smlt_mat4_native2(smlt_mat4_t* self) {
+void* smlt_mat4_native_mut(smlt_mat4_t* self) {
     return reinterpret_cast<smlt::Mat4*>(self)->_native();
 }
 

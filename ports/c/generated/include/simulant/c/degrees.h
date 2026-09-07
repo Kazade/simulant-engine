@@ -13,8 +13,8 @@ extern "C" {
 
 void smlt_degrees_destroy(smlt_degrees_t* self);
 smlt_degrees_t* smlt_degrees_create(void);
-smlt_degrees_t* smlt_degrees_create2(const smlt_radians_t* rhs);
-smlt_degrees_t* smlt_degrees_create3(float value);
+smlt_degrees_t* smlt_degrees_create_from_radians(const smlt_radians_t* rhs);
+smlt_degrees_t* smlt_degrees_create_from_float(float value);
 float smlt_degrees_to_float(const smlt_degrees_t* self);
 smlt_radians_t* smlt_degrees_to_radians(const smlt_degrees_t* self);
 smlt_degrees_t* smlt_degrees_multiply(smlt_degrees_t* self, float scalar);

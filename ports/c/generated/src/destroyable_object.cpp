@@ -15,7 +15,7 @@ void smlt_destroyable_object_destroy(smlt_destroyable_object_t* self) {
     delete reinterpret_cast<smlt::DestroyableObject*>(self);
 }
 
-bool smlt_destroyable_object_destroy_2(smlt_destroyable_object_t* self) {
+bool smlt_destroyable_object_trigger_destroy(smlt_destroyable_object_t* self) {
     return reinterpret_cast<smlt::DestroyableObject*>(self)->destroy();
 }
 

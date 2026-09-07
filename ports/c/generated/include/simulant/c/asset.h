@@ -13,7 +13,7 @@ extern "C" {
 
 void smlt_asset_release(smlt_asset_t* self);
 const smlt_asset_manager_t* smlt_asset_asset_manager(const smlt_asset_t* self);
-smlt_asset_manager_t* smlt_asset_asset_manager2(smlt_asset_t* self);
+smlt_asset_manager_t* smlt_asset_asset_manager_mut(smlt_asset_t* self);
 const char* smlt_asset_asset_type_name(const smlt_asset_t* self);
 int smlt_asset_age(const smlt_asset_t* self);
 void smlt_asset_set_garbage_collection_method(smlt_asset_t* self, smlt_garbage_collect_method_t method);

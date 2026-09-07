@@ -53,11 +53,11 @@ smlt_vec4_t* smlt_vec4_create(void) {
     return reinterpret_cast<smlt_vec4_t*>(new smlt::Vec4());
 }
 
-smlt_vec4_t* smlt_vec4_create2(const smlt_vec3_t* v, float w) {
+smlt_vec4_t* smlt_vec4_create_from_vec3(const smlt_vec3_t* v, float w) {
     return reinterpret_cast<smlt_vec4_t*>(new smlt::Vec4((*reinterpret_cast<const smlt::Vec3*>(v)), w));
 }
 
-smlt_vec4_t* smlt_vec4_create3(float x, float y, float z, float w) {
+smlt_vec4_t* smlt_vec4_create_xyzw(float x, float y, float z, float w) {
     return reinterpret_cast<smlt_vec4_t*>(new smlt::Vec4(x, y, z, w));
 }
 
@@ -73,7 +73,7 @@ bool smlt_vec4_equals(const smlt_vec4_t* self, const smlt_vec4_t* rhs) {
     return reinterpret_cast<const smlt::Vec4*>(self)->equals((*reinterpret_cast<const smlt::Vec4*>(rhs)));
 }
 
-bool smlt_vec4_equals2(const smlt_vec4_t* self, const smlt_vec4_t* rhs) {
+bool smlt_vec4_eq(const smlt_vec4_t* self, const smlt_vec4_t* rhs) {
     return reinterpret_cast<const smlt::Vec4*>(self)->operator==((*reinterpret_cast<const smlt::Vec4*>(rhs)));
 }
 

@@ -26,7 +26,7 @@ void smlt_light_set_direction(smlt_light_t* self, const smlt_vec3_t* dir) {
     reinterpret_cast<smlt::Light*>(self)->set_direction((*reinterpret_cast<const smlt::Vec3*>(dir)));
 }
 
-void smlt_light_set_direction2(smlt_light_t* self, float x, float y, float z) {
+void smlt_light_set_direction_xyz(smlt_light_t* self, float x, float y, float z) {
     reinterpret_cast<smlt::Light*>(self)->set_direction(x, y, z);
 }
 

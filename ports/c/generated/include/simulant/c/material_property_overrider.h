@@ -12,18 +12,18 @@ extern "C" {
 #endif
 
 void smlt_material_property_overrider_destroy(smlt_material_property_overrider_t* self);
-bool smlt_material_property_overrider_set_property_value(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const bool* value);
-bool smlt_material_property_overrider_set_property_value2(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const float* value);
-bool smlt_material_property_overrider_set_property_value3(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const int32_t* value);
-bool smlt_material_property_overrider_set_property_value4(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_color_t* value);
-bool smlt_material_property_overrider_set_property_value5(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_mat3_t* value);
-bool smlt_material_property_overrider_set_property_value6(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_mat4_t* value);
-bool smlt_material_property_overrider_set_property_value7(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_vec2_t* value);
-bool smlt_material_property_overrider_set_property_value8(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_vec3_t* value);
-bool smlt_material_property_overrider_set_property_value9(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_vec4_t* value);
-bool smlt_material_property_overrider_set_property_value10(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, smlt_texture_t* value);
-bool smlt_material_property_overrider_clear_override(smlt_material_property_overrider_t* self, const char* name);
-bool smlt_material_property_overrider_clear_override2(smlt_material_property_overrider_t* self, unsigned int hsh);
+bool smlt_material_property_overrider_set_property_value_bool(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const bool* value);
+bool smlt_material_property_overrider_set_property_value_float(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const float* value);
+bool smlt_material_property_overrider_set_property_value_int32(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const int32_t* value);
+bool smlt_material_property_overrider_set_property_value_color(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_color_t* value);
+bool smlt_material_property_overrider_set_property_value_mat3(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_mat3_t* value);
+bool smlt_material_property_overrider_set_property_value_mat4(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_mat4_t* value);
+bool smlt_material_property_overrider_set_property_value_vec2(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_vec2_t* value);
+bool smlt_material_property_overrider_set_property_value_vec3(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_vec3_t* value);
+bool smlt_material_property_overrider_set_property_value_vec4(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_vec4_t* value);
+bool smlt_material_property_overrider_set_property_value_texture(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, smlt_texture_t* value);
+bool smlt_material_property_overrider_clear_override_by_name(smlt_material_property_overrider_t* self, const char* name);
+bool smlt_material_property_overrider_clear_override_by_hash(smlt_material_property_overrider_t* self, unsigned int hsh);
 bool smlt_material_property_overrider_check_existance(const smlt_material_property_overrider_t* self, const char* property_name);
 bool smlt_material_property_overrider_property_type(const smlt_material_property_overrider_t* self, const char* property_name, smlt_material_property_type_t* type);
 bool smlt_material_property_overrider_on_check_existence(const smlt_material_property_overrider_t* self, unsigned int hsh);

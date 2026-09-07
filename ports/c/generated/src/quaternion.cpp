@@ -24,23 +24,23 @@ smlt_quaternion_t* smlt_quaternion_create(void) {
     return reinterpret_cast<smlt_quaternion_t*>(new smlt::Quaternion());
 }
 
-smlt_quaternion_t* smlt_quaternion_create2(const smlt_euler_t* angles) {
+smlt_quaternion_t* smlt_quaternion_create_from_euler(const smlt_euler_t* angles) {
     return reinterpret_cast<smlt_quaternion_t*>(new smlt::Quaternion((*reinterpret_cast<const smlt::Euler*>(angles))));
 }
 
-smlt_quaternion_t* smlt_quaternion_create3(const smlt_mat3_t* rot_matrix) {
+smlt_quaternion_t* smlt_quaternion_create_from_mat3(const smlt_mat3_t* rot_matrix) {
     return reinterpret_cast<smlt_quaternion_t*>(new smlt::Quaternion((*reinterpret_cast<const smlt::Mat3*>(rot_matrix))));
 }
 
-smlt_quaternion_t* smlt_quaternion_create4(const smlt_vec3_t* axis, const smlt_degrees_t* degrees) {
+smlt_quaternion_t* smlt_quaternion_create_from_axis_angle(const smlt_vec3_t* axis, const smlt_degrees_t* degrees) {
     return reinterpret_cast<smlt_quaternion_t*>(new smlt::Quaternion((*reinterpret_cast<const smlt::Vec3*>(axis)), (*reinterpret_cast<const smlt::Degrees*>(degrees))));
 }
 
-smlt_quaternion_t* smlt_quaternion_create5(const smlt_degrees_t* pitch, const smlt_degrees_t* yaw, const smlt_degrees_t* roll) {
+smlt_quaternion_t* smlt_quaternion_create_from_pitch_yaw_roll(const smlt_degrees_t* pitch, const smlt_degrees_t* yaw, const smlt_degrees_t* roll) {
     return reinterpret_cast<smlt_quaternion_t*>(new smlt::Quaternion((*reinterpret_cast<const smlt::Degrees*>(pitch)), (*reinterpret_cast<const smlt::Degrees*>(yaw)), (*reinterpret_cast<const smlt::Degrees*>(roll))));
 }
 
-smlt_quaternion_t* smlt_quaternion_create6(float x, float y, float z, float w) {
+smlt_quaternion_t* smlt_quaternion_create_xyzw(float x, float y, float z, float w) {
     return reinterpret_cast<smlt_quaternion_t*>(new smlt::Quaternion(x, y, z, w));
 }
 
@@ -88,7 +88,7 @@ bool smlt_quaternion_equals(const smlt_quaternion_t* self, const smlt_quaternion
     return reinterpret_cast<const smlt::Quaternion*>(self)->equals((*reinterpret_cast<const smlt::Quaternion*>(rhs)));
 }
 
-bool smlt_quaternion_equals2(const smlt_quaternion_t* self, const smlt_quaternion_t* rhs) {
+bool smlt_quaternion_eq(const smlt_quaternion_t* self, const smlt_quaternion_t* rhs) {
     return reinterpret_cast<const smlt::Quaternion*>(self)->operator==((*reinterpret_cast<const smlt::Quaternion*>(rhs)));
 }
 
@@ -100,7 +100,7 @@ smlt_quaternion_t* smlt_quaternion_multiply(const smlt_quaternion_t* self, const
     return reinterpret_cast<smlt_quaternion_t*>(new smlt::Quaternion(reinterpret_cast<const smlt::Quaternion*>(self)->operator*((*reinterpret_cast<const smlt::Quaternion*>(rhs)))));
 }
 
-smlt_quaternion_t* smlt_quaternion_multiply2(const smlt_quaternion_t* self, float rhs) {
+smlt_quaternion_t* smlt_quaternion_multiply_scalar(const smlt_quaternion_t* self, float rhs) {
     return reinterpret_cast<smlt_quaternion_t*>(new smlt::Quaternion(reinterpret_cast<const smlt::Quaternion*>(self)->operator*(rhs)));
 }
 

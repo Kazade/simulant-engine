@@ -11,8 +11,8 @@
 extern "C" {
 #endif
 
-const char* smlt_camera2_d_node_type_name(const smlt_camera2_d_t* self);
-bool smlt_camera2_d_on_create(smlt_camera2_d_t* self, const smlt_params_t* params);
+const char* smlt_camera_2d_node_type_name(const smlt_camera_2d_t* self);
+bool smlt_camera_2d_on_create(smlt_camera_2d_t* self, const smlt_params_t* params);
 
 #ifdef __cplusplus
 }

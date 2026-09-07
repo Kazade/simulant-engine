@@ -21,23 +21,23 @@ smlt_aabb_t* smlt_aabb_create(void) {
     return reinterpret_cast<smlt_aabb_t*>(new smlt::AABB());
 }
 
-smlt_aabb_t* smlt_aabb_create2(const smlt_vertex_data_t* vertex_data) {
+smlt_aabb_t* smlt_aabb_create_from_vertex_data(const smlt_vertex_data_t* vertex_data) {
     return reinterpret_cast<smlt_aabb_t*>(new smlt::AABB((*reinterpret_cast<const smlt::VertexData*>(vertex_data))));
 }
 
-smlt_aabb_t* smlt_aabb_create3(const smlt_vec3_t* center, const smlt_vec3_t* extents) {
+smlt_aabb_t* smlt_aabb_create_from_center_extents(const smlt_vec3_t* center, const smlt_vec3_t* extents) {
     return reinterpret_cast<smlt_aabb_t*>(new smlt::AABB((*reinterpret_cast<const smlt::Vec3*>(center)), (*reinterpret_cast<const smlt::Vec3*>(extents))));
 }
 
-smlt_aabb_t* smlt_aabb_create4(const smlt_vec3_t* center, float width) {
+smlt_aabb_t* smlt_aabb_create_cube(const smlt_vec3_t* center, float width) {
     return reinterpret_cast<smlt_aabb_t*>(new smlt::AABB((*reinterpret_cast<const smlt::Vec3*>(center)), width));
 }
 
-smlt_aabb_t* smlt_aabb_create5(const smlt_vec3_t* vertices, unsigned long count) {
+smlt_aabb_t* smlt_aabb_create_from_vertices(const smlt_vec3_t* vertices, unsigned long count) {
     return reinterpret_cast<smlt_aabb_t*>(new smlt::AABB(reinterpret_cast<const smlt::Vec3*>(vertices), count));
 }
 
-smlt_aabb_t* smlt_aabb_create6(const smlt_vec3_t* center, float xsize, float ysize, float zsize) {
+smlt_aabb_t* smlt_aabb_create_from_center_size(const smlt_vec3_t* center, float xsize, float ysize, float zsize) {
     return reinterpret_cast<smlt_aabb_t*>(new smlt::AABB((*reinterpret_cast<const smlt::Vec3*>(center)), xsize, ysize, zsize));
 }
 
@@ -117,7 +117,7 @@ void smlt_aabb_encapsulate(smlt_aabb_t* self, const smlt_aabb_t* other) {
     reinterpret_cast<smlt::AABB*>(self)->encapsulate((*reinterpret_cast<const smlt::AABB*>(other)));
 }
 
-void smlt_aabb_encapsulate2(smlt_aabb_t* self, const smlt_vec3_t* point) {
+void smlt_aabb_encapsulate_point(smlt_aabb_t* self, const smlt_vec3_t* point) {
     reinterpret_cast<smlt::AABB*>(self)->encapsulate((*reinterpret_cast<const smlt::Vec3*>(point)));
 }
 

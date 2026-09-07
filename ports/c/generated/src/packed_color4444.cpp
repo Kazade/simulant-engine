@@ -19,15 +19,15 @@ smlt_packed_color4444_t* smlt_packed_color4444_create(void) {
     return reinterpret_cast<smlt_packed_color4444_t*>(new smlt::PackedColor4444());
 }
 
-smlt_packed_color4444_t* smlt_packed_color4444_create2(const smlt_color_t* c) {
+smlt_packed_color4444_t* smlt_packed_color4444_create_from_color(const smlt_color_t* c) {
     return reinterpret_cast<smlt_packed_color4444_t*>(new smlt::PackedColor4444((*reinterpret_cast<const smlt::Color*>(c))));
 }
 
-bool smlt_packed_color4444_equals(const smlt_packed_color4444_t* self, const smlt_color_t* rhs) {
+bool smlt_packed_color4444_equals_color(const smlt_packed_color4444_t* self, const smlt_color_t* rhs) {
     return reinterpret_cast<const smlt::PackedColor4444*>(self)->operator==((*reinterpret_cast<const smlt::Color*>(rhs)));
 }
 
-bool smlt_packed_color4444_equals2(const smlt_packed_color4444_t* self, const smlt_packed_color4444_t* rhs) {
+bool smlt_packed_color4444_equals_packed(const smlt_packed_color4444_t* self, const smlt_packed_color4444_t* rhs) {
     return reinterpret_cast<const smlt::PackedColor4444*>(self)->operator==((*reinterpret_cast<const smlt::PackedColor4444*>(rhs)));
 }
 

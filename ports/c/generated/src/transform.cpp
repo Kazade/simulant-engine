@@ -76,11 +76,11 @@ void smlt_transform_rotate(smlt_transform_t* self, const smlt_quaternion_t* q) {
     reinterpret_cast<smlt::Transform*>(self)->rotate((*reinterpret_cast<const smlt::Quaternion*>(q)));
 }
 
-void smlt_transform_rotate2(smlt_transform_t* self, const smlt_vec3_t* axis, const smlt_degrees_t* amount) {
+void smlt_transform_rotate_axis_angle(smlt_transform_t* self, const smlt_vec3_t* axis, const smlt_degrees_t* amount) {
     reinterpret_cast<smlt::Transform*>(self)->rotate((*reinterpret_cast<const smlt::Vec3*>(axis)), (*reinterpret_cast<const smlt::Degrees*>(amount)));
 }
 
-void smlt_transform_rotate3(smlt_transform_t* self, const smlt_degrees_t* x, const smlt_degrees_t* y, const smlt_degrees_t* z) {
+void smlt_transform_rotate_euler(smlt_transform_t* self, const smlt_degrees_t* x, const smlt_degrees_t* y, const smlt_degrees_t* z) {
     reinterpret_cast<smlt::Transform*>(self)->rotate((*reinterpret_cast<const smlt::Degrees*>(x)), (*reinterpret_cast<const smlt::Degrees*>(y)), (*reinterpret_cast<const smlt::Degrees*>(z)));
 }
 
@@ -88,7 +88,7 @@ void smlt_transform_scale_by(smlt_transform_t* self, const smlt_vec3_t* v) {
     reinterpret_cast<smlt::Transform*>(self)->scale_by((*reinterpret_cast<const smlt::Vec3*>(v)));
 }
 
-void smlt_transform_scale_by2(smlt_transform_t* self, float xyz) {
+void smlt_transform_scale_by_uniform(smlt_transform_t* self, float xyz) {
     reinterpret_cast<smlt::Transform*>(self)->scale_by(xyz);
 }
 

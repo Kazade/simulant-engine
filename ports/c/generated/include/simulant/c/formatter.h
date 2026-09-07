@@ -13,7 +13,7 @@ extern "C" {
 
 void smlt_formatter_destroy(smlt_formatter_t* self);
 smlt_formatter_t* smlt_formatter_create(const char* fmt);
-smlt_formatter_t* smlt_formatter_create2(const char* fmt);
+smlt_formatter_t* smlt_formatter_create_from_string(const char* fmt);
 
 #ifdef __cplusplus
 }

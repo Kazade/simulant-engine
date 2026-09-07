@@ -11,7 +11,7 @@
 
 extern "C" {
 
-void smlt_camera3_d_unused_destroy(smlt_camera3_d_unused_t* self) {
+void smlt_camera_3d_unused_destroy(smlt_camera_3d_unused_t* self) {
     delete reinterpret_cast<smlt::Camera3D::_unused_*>(self);
 }
 

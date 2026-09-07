@@ -21,11 +21,11 @@ smlt_viewport_t* smlt_viewport_create(void) {
     return reinterpret_cast<smlt_viewport_t*>(new smlt::Viewport());
 }
 
-smlt_viewport_t* smlt_viewport_create2(smlt_viewport_type_t type, const smlt_color_t* color) {
+smlt_viewport_t* smlt_viewport_create_from_type(smlt_viewport_type_t type, const smlt_color_t* color) {
     return reinterpret_cast<smlt_viewport_t*>(new smlt::Viewport(static_cast<smlt::ViewportType>(type), (*reinterpret_cast<const smlt::Color*>(color))));
 }
 
-smlt_viewport_t* smlt_viewport_create3(float x, float y, float width, float height, const smlt_color_t* color) {
+smlt_viewport_t* smlt_viewport_create_from_rect(float x, float y, float width, float height, const smlt_color_t* color) {
     return reinterpret_cast<smlt_viewport_t*>(new smlt::Viewport(x, y, width, height, (*reinterpret_cast<const smlt::Color*>(color))));
 }
 

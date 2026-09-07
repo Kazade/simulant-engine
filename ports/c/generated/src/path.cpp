@@ -19,11 +19,11 @@ smlt_path_t* smlt_path_create(void) {
     return reinterpret_cast<smlt_path_t*>(new smlt::Path());
 }
 
-smlt_path_t* smlt_path_create2(const char* path) {
+smlt_path_t* smlt_path_create_from_cstr(const char* path) {
     return reinterpret_cast<smlt_path_t*>(new smlt::Path(path));
 }
 
-smlt_path_t* smlt_path_create3(const char* path) {
+smlt_path_t* smlt_path_create_from_string(const char* path) {
     return reinterpret_cast<smlt_path_t*>(new smlt::Path(std::string(path ? path : "")));
 }
 

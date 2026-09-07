@@ -45,7 +45,7 @@ smlt_ray_t* smlt_ray_create(void) {
     return reinterpret_cast<smlt_ray_t*>(new smlt::Ray());
 }
 
-smlt_ray_t* smlt_ray_create2(const smlt_vec3_t* start, const smlt_vec3_t* dir) {
+smlt_ray_t* smlt_ray_create_from_start_and_direction(const smlt_vec3_t* start, const smlt_vec3_t* dir) {
     return reinterpret_cast<smlt_ray_t*>(new smlt::Ray((*reinterpret_cast<const smlt::Vec3*>(start)), (*reinterpret_cast<const smlt::Vec3*>(dir))));
 }
 

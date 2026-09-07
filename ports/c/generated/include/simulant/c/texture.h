@@ -21,7 +21,7 @@ uint32_t smlt_texture_palette_size(const smlt_texture_t* self);
 bool smlt_texture_update_palette(smlt_texture_t* self, const uint8_t* palette);
 bool smlt_texture_blur(smlt_texture_t* self, smlt_blur_type_t blur_type, unsigned long radius);
 void smlt_texture_resize(smlt_texture_t* self, uint16_t width, uint16_t height);
-void smlt_texture_resize2(smlt_texture_t* self, uint16_t width, uint16_t height, uint32_t data_size);
+void smlt_texture_resize_with_data_size(smlt_texture_t* self, uint16_t width, uint16_t height, uint32_t data_size);
 void smlt_texture_flip_vertically(smlt_texture_t* self);
 void smlt_texture_set_texture_filter(smlt_texture_t* self, smlt_texture_filter_t filter);
 void smlt_texture_set_free_data_mode(smlt_texture_t* self, smlt_texture_free_data_t mode);

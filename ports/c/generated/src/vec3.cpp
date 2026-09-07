@@ -50,19 +50,19 @@ smlt_vec3_t* smlt_vec3_create(void) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3());
 }
 
-smlt_vec3_t* smlt_vec3_create2(float xyz) {
+smlt_vec3_t* smlt_vec3_create_uniform(float xyz) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(xyz));
 }
 
-smlt_vec3_t* smlt_vec3_create3(const smlt_vec2_t* v2, float z) {
+smlt_vec3_t* smlt_vec3_create_from_vec2(const smlt_vec2_t* v2, float z) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3((*reinterpret_cast<const smlt::Vec2*>(v2)), z));
 }
 
-smlt_vec3_t* smlt_vec3_create4(float x, float y) {
+smlt_vec3_t* smlt_vec3_create_from_xy(float x, float y) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(x, y));
 }
 
-smlt_vec3_t* smlt_vec3_create5(float x, float y, float z) {
+smlt_vec3_t* smlt_vec3_create_xyz(float x, float y, float z) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(x, y, z));
 }
 
@@ -110,7 +110,7 @@ smlt_vec3_t* smlt_vec3_multiply(const smlt_vec3_t* self, const smlt_vec3_t* rhs)
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(reinterpret_cast<const smlt::Vec3*>(self)->operator*((*reinterpret_cast<const smlt::Vec3*>(rhs)))));
 }
 
-smlt_vec3_t* smlt_vec3_multiply2(const smlt_vec3_t* self, float rhs) {
+smlt_vec3_t* smlt_vec3_multiply_scalar(const smlt_vec3_t* self, float rhs) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(reinterpret_cast<const smlt::Vec3*>(self)->operator*(rhs)));
 }
 
@@ -118,7 +118,7 @@ smlt_vec3_t* smlt_vec3_divide(const smlt_vec3_t* self, const smlt_vec3_t* rhs) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(reinterpret_cast<const smlt::Vec3*>(self)->operator/((*reinterpret_cast<const smlt::Vec3*>(rhs)))));
 }
 
-smlt_vec3_t* smlt_vec3_divide2(const smlt_vec3_t* self, float rhs) {
+smlt_vec3_t* smlt_vec3_divide_scalar(const smlt_vec3_t* self, float rhs) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(reinterpret_cast<const smlt::Vec3*>(self)->operator/(rhs)));
 }
 
@@ -126,7 +126,7 @@ bool smlt_vec3_equals(const smlt_vec3_t* self, const smlt_vec3_t* rhs) {
     return reinterpret_cast<const smlt::Vec3*>(self)->equals((*reinterpret_cast<const smlt::Vec3*>(rhs)));
 }
 
-bool smlt_vec3_equals2(const smlt_vec3_t* self, const smlt_vec3_t* rhs) {
+bool smlt_vec3_eq(const smlt_vec3_t* self, const smlt_vec3_t* rhs) {
     return reinterpret_cast<const smlt::Vec3*>(self)->operator==((*reinterpret_cast<const smlt::Vec3*>(rhs)));
 }
 
@@ -170,11 +170,11 @@ smlt_vec3_t* smlt_vec3_rotated_by(const smlt_vec3_t* self, const smlt_mat3_t* ro
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(reinterpret_cast<const smlt::Vec3*>(self)->rotated_by((*reinterpret_cast<const smlt::Mat3*>(rot)))));
 }
 
-smlt_vec3_t* smlt_vec3_rotated_by2(const smlt_vec3_t* self, const smlt_mat4_t* rot) {
+smlt_vec3_t* smlt_vec3_rotated_by_mat4(const smlt_vec3_t* self, const smlt_mat4_t* rot) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(reinterpret_cast<const smlt::Vec3*>(self)->rotated_by((*reinterpret_cast<const smlt::Mat4*>(rot)))));
 }
 
-smlt_vec3_t* smlt_vec3_rotated_by3(const smlt_vec3_t* self, const smlt_quaternion_t* q) {
+smlt_vec3_t* smlt_vec3_rotated_by_quaternion(const smlt_vec3_t* self, const smlt_quaternion_t* q) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(reinterpret_cast<const smlt::Vec3*>(self)->rotated_by((*reinterpret_cast<const smlt::Quaternion*>(q)))));
 }
 
@@ -198,11 +198,11 @@ smlt_vec3_t* smlt_vec3_limit(smlt_vec3_t* self, float l) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(reinterpret_cast<smlt::Vec3*>(self)->limit(l)));
 }
 
-float smlt_vec3_distance_to(const smlt_vec3_t* self, const smlt_aabb_t* aabb) {
+float smlt_vec3_distance_to_aabb(const smlt_vec3_t* self, const smlt_aabb_t* aabb) {
     return reinterpret_cast<const smlt::Vec3*>(self)->distance_to((*reinterpret_cast<const smlt::AABB*>(aabb)));
 }
 
-float smlt_vec3_distance_to2(const smlt_vec3_t* self, const smlt_vec3_t* other) {
+float smlt_vec3_distance_to_point(const smlt_vec3_t* self, const smlt_vec3_t* other) {
     return reinterpret_cast<const smlt::Vec3*>(self)->distance_to((*reinterpret_cast<const smlt::Vec3*>(other)));
 }
 

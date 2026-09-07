@@ -36,15 +36,15 @@ smlt_plane_t* smlt_plane_create(void) {
     return reinterpret_cast<smlt_plane_t*>(new smlt::Plane());
 }
 
-smlt_plane_t* smlt_plane_create2(const smlt_vec3_t* N, const smlt_vec3_t* P) {
+smlt_plane_t* smlt_plane_create_from_normal_and_point(const smlt_vec3_t* N, const smlt_vec3_t* P) {
     return reinterpret_cast<smlt_plane_t*>(new smlt::Plane((*reinterpret_cast<const smlt::Vec3*>(N)), (*reinterpret_cast<const smlt::Vec3*>(P))));
 }
 
-smlt_plane_t* smlt_plane_create3(const smlt_vec3_t* N, float D) {
+smlt_plane_t* smlt_plane_create_from_normal_and_distance(const smlt_vec3_t* N, float D) {
     return reinterpret_cast<smlt_plane_t*>(new smlt::Plane((*reinterpret_cast<const smlt::Vec3*>(N)), D));
 }
 
-smlt_plane_t* smlt_plane_create4(float A, float B, float C, float D) {
+smlt_plane_t* smlt_plane_create_from_coefficients(float A, float B, float C, float D) {
     return reinterpret_cast<smlt_plane_t*>(new smlt::Plane(A, B, C, D));
 }
 

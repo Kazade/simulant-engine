@@ -38,7 +38,7 @@ smlt_vec2_t* smlt_vec2_create(void) {
     return reinterpret_cast<smlt_vec2_t*>(new smlt::Vec2());
 }
 
-smlt_vec2_t* smlt_vec2_create2(float x, float y) {
+smlt_vec2_t* smlt_vec2_create_xy(float x, float y) {
     return reinterpret_cast<smlt_vec2_t*>(new smlt::Vec2(x, y));
 }
 

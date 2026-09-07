@@ -53,7 +53,7 @@ void smlt_texture_resize(smlt_texture_t* self, uint16_t width, uint16_t height) 
     (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->resize(width, height);
 }
 
-void smlt_texture_resize2(smlt_texture_t* self, uint16_t width, uint16_t height, uint32_t data_size) {
+void smlt_texture_resize_with_data_size(smlt_texture_t* self, uint16_t width, uint16_t height, uint32_t data_size) {
     (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->resize(width, height, data_size);
 }
 

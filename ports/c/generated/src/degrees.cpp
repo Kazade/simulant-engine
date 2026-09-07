@@ -20,11 +20,11 @@ smlt_degrees_t* smlt_degrees_create(void) {
     return reinterpret_cast<smlt_degrees_t*>(new smlt::Degrees());
 }
 
-smlt_degrees_t* smlt_degrees_create2(const smlt_radians_t* rhs) {
+smlt_degrees_t* smlt_degrees_create_from_radians(const smlt_radians_t* rhs) {
     return reinterpret_cast<smlt_degrees_t*>(new smlt::Degrees((*reinterpret_cast<const smlt::Radians*>(rhs))));
 }
 
-smlt_degrees_t* smlt_degrees_create3(float value) {
+smlt_degrees_t* smlt_degrees_create_from_float(float value) {
     return reinterpret_cast<smlt_degrees_t*>(new smlt::Degrees(value));
 }
 

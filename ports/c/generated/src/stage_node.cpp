@@ -25,7 +25,7 @@ const smlt_stage_node_t* smlt_stage_node_find_descendent_with_id(const smlt_stag
     return reinterpret_cast<const smlt_stage_node_t*>((reinterpret_cast<const smlt::StageNode*>(self)->find_descendent_with_id(id)));
 }
 
-smlt_stage_node_t* smlt_stage_node_find_descendent_with_id2(smlt_stage_node_t* self, unsigned int id) {
+smlt_stage_node_t* smlt_stage_node_find_descendent_with_id_mut(smlt_stage_node_t* self, unsigned int id) {
     return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<smlt::StageNode*>(self)->find_descendent_with_id(id)));
 }
 
@@ -41,7 +41,7 @@ const smlt_stage_node_t* smlt_stage_node_first_sibling(const smlt_stage_node_t* 
     return reinterpret_cast<const smlt_stage_node_t*>((reinterpret_cast<const smlt::StageNode*>(self)->first_sibling()));
 }
 
-smlt_stage_node_t* smlt_stage_node_first_sibling2(smlt_stage_node_t* self) {
+smlt_stage_node_t* smlt_stage_node_first_sibling_mut(smlt_stage_node_t* self) {
     return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<smlt::StageNode*>(self)->first_sibling()));
 }
 
@@ -49,7 +49,7 @@ const smlt_stage_node_t* smlt_stage_node_next_sibling(const smlt_stage_node_t* s
     return reinterpret_cast<const smlt_stage_node_t*>((reinterpret_cast<const smlt::StageNode*>(self)->next_sibling()));
 }
 
-smlt_stage_node_t* smlt_stage_node_next_sibling2(smlt_stage_node_t* self) {
+smlt_stage_node_t* smlt_stage_node_next_sibling_mut(smlt_stage_node_t* self) {
     return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<smlt::StageNode*>(self)->next_sibling()));
 }
 
@@ -57,7 +57,7 @@ const smlt_stage_node_t* smlt_stage_node_parent(const smlt_stage_node_t* self) {
     return reinterpret_cast<const smlt_stage_node_t*>((reinterpret_cast<const smlt::StageNode*>(self)->parent()));
 }
 
-smlt_stage_node_t* smlt_stage_node_parent2(smlt_stage_node_t* self) {
+smlt_stage_node_t* smlt_stage_node_parent_mut(smlt_stage_node_t* self) {
     return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<smlt::StageNode*>(self)->parent()));
 }
 
@@ -65,7 +65,7 @@ const smlt_stage_node_t* smlt_stage_node_first_child(const smlt_stage_node_t* se
     return reinterpret_cast<const smlt_stage_node_t*>((reinterpret_cast<const smlt::StageNode*>(self)->first_child()));
 }
 
-smlt_stage_node_t* smlt_stage_node_first_child2(smlt_stage_node_t* self) {
+smlt_stage_node_t* smlt_stage_node_first_child_mut(smlt_stage_node_t* self) {
     return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<smlt::StageNode*>(self)->first_child()));
 }
 
@@ -73,7 +73,7 @@ const smlt_stage_node_t* smlt_stage_node_last_child(const smlt_stage_node_t* sel
     return reinterpret_cast<const smlt_stage_node_t*>((reinterpret_cast<const smlt::StageNode*>(self)->last_child()));
 }
 
-smlt_stage_node_t* smlt_stage_node_last_child2(smlt_stage_node_t* self) {
+smlt_stage_node_t* smlt_stage_node_last_child_mut(smlt_stage_node_t* self) {
     return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<smlt::StageNode*>(self)->last_child()));
 }
 
@@ -121,7 +121,7 @@ const smlt_stage_node_t* smlt_stage_node_base(const smlt_stage_node_t* self) {
     return reinterpret_cast<const smlt_stage_node_t*>((reinterpret_cast<const smlt::StageNode*>(self)->base()));
 }
 
-smlt_stage_node_t* smlt_stage_node_base2(smlt_stage_node_t* self) {
+smlt_stage_node_t* smlt_stage_node_base_mut(smlt_stage_node_t* self) {
     return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<smlt::StageNode*>(self)->base()));
 }
 
@@ -165,7 +165,7 @@ smlt_ancestor_iterator_pair_t* smlt_stage_node_each_ancestor(const smlt_stage_no
     return reinterpret_cast<smlt_ancestor_iterator_pair_t*>(new smlt::AncestorIteratorPair(reinterpret_cast<const smlt::StageNode*>(self)->each_ancestor()));
 }
 
-smlt_ancestor_iterator_pair_t* smlt_stage_node_each_ancestor2(smlt_stage_node_t* self) {
+smlt_ancestor_iterator_pair_t* smlt_stage_node_each_ancestor_mut(smlt_stage_node_t* self) {
     return reinterpret_cast<smlt_ancestor_iterator_pair_t*>(new smlt::AncestorIteratorPair(reinterpret_cast<smlt::StageNode*>(self)->each_ancestor()));
 }
 
@@ -173,7 +173,7 @@ smlt_descendent_iterator_pair_t* smlt_stage_node_each_descendent(const smlt_stag
     return reinterpret_cast<smlt_descendent_iterator_pair_t*>(new smlt::DescendentIteratorPair(reinterpret_cast<const smlt::StageNode*>(self)->each_descendent()));
 }
 
-smlt_descendent_iterator_pair_t* smlt_stage_node_each_descendent2(smlt_stage_node_t* self) {
+smlt_descendent_iterator_pair_t* smlt_stage_node_each_descendent_mut(smlt_stage_node_t* self) {
     return reinterpret_cast<smlt_descendent_iterator_pair_t*>(new smlt::DescendentIteratorPair(reinterpret_cast<smlt::StageNode*>(self)->each_descendent()));
 }
 
@@ -181,7 +181,7 @@ smlt_sibling_iterator_pair_t* smlt_stage_node_each_sibling(const smlt_stage_node
     return reinterpret_cast<smlt_sibling_iterator_pair_t*>(new smlt::SiblingIteratorPair(reinterpret_cast<const smlt::StageNode*>(self)->each_sibling()));
 }
 
-smlt_sibling_iterator_pair_t* smlt_stage_node_each_sibling2(smlt_stage_node_t* self) {
+smlt_sibling_iterator_pair_t* smlt_stage_node_each_sibling_mut(smlt_stage_node_t* self) {
     return reinterpret_cast<smlt_sibling_iterator_pair_t*>(new smlt::SiblingIteratorPair(reinterpret_cast<smlt::StageNode*>(self)->each_sibling()));
 }
 
@@ -189,7 +189,7 @@ smlt_child_iterator_pair_t* smlt_stage_node_each_child(const smlt_stage_node_t* 
     return reinterpret_cast<smlt_child_iterator_pair_t*>(new smlt::ChildIteratorPair(reinterpret_cast<const smlt::StageNode*>(self)->each_child()));
 }
 
-smlt_child_iterator_pair_t* smlt_stage_node_each_child2(smlt_stage_node_t* self) {
+smlt_child_iterator_pair_t* smlt_stage_node_each_child_mut(smlt_stage_node_t* self) {
     return reinterpret_cast<smlt_child_iterator_pair_t*>(new smlt::ChildIteratorPair(reinterpret_cast<smlt::StageNode*>(self)->each_child()));
 }
 

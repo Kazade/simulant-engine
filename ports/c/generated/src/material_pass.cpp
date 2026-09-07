@@ -47,39 +47,39 @@ const smlt_material_t* smlt_material_pass_material(const smlt_material_pass_t* s
     return reinterpret_cast<const smlt_material_t*>((reinterpret_cast<const smlt::MaterialPass*>(self)->material()));
 }
 
-bool smlt_material_pass_set_property_value(smlt_material_pass_t* self, unsigned int hsh, const char* name, const bool* value) {
+bool smlt_material_pass_set_property_value_bool(smlt_material_pass_t* self, unsigned int hsh, const char* name, const bool* value) {
     return reinterpret_cast<smlt::MaterialPass*>(self)->set_property_value(hsh, name, (*value));
 }
 
-bool smlt_material_pass_set_property_value2(smlt_material_pass_t* self, unsigned int hsh, const char* name, const float* value) {
+bool smlt_material_pass_set_property_value_float(smlt_material_pass_t* self, unsigned int hsh, const char* name, const float* value) {
     return reinterpret_cast<smlt::MaterialPass*>(self)->set_property_value(hsh, name, (*value));
 }
 
-bool smlt_material_pass_set_property_value3(smlt_material_pass_t* self, unsigned int hsh, const char* name, const int32_t* value) {
+bool smlt_material_pass_set_property_value_int32(smlt_material_pass_t* self, unsigned int hsh, const char* name, const int32_t* value) {
     return reinterpret_cast<smlt::MaterialPass*>(self)->set_property_value(hsh, name, (*value));
 }
 
-bool smlt_material_pass_set_property_value4(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_mat3_t* value) {
+bool smlt_material_pass_set_property_value_mat3(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_mat3_t* value) {
     return reinterpret_cast<smlt::MaterialPass*>(self)->set_property_value(hsh, name, (*reinterpret_cast<const smlt::Mat3*>(value)));
 }
 
-bool smlt_material_pass_set_property_value5(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_mat4_t* value) {
+bool smlt_material_pass_set_property_value_mat4(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_mat4_t* value) {
     return reinterpret_cast<smlt::MaterialPass*>(self)->set_property_value(hsh, name, (*reinterpret_cast<const smlt::Mat4*>(value)));
 }
 
-bool smlt_material_pass_set_property_value6(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_vec2_t* value) {
+bool smlt_material_pass_set_property_value_vec2(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_vec2_t* value) {
     return reinterpret_cast<smlt::MaterialPass*>(self)->set_property_value(hsh, name, (*reinterpret_cast<const smlt::Vec2*>(value)));
 }
 
-bool smlt_material_pass_set_property_value7(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_vec3_t* value) {
+bool smlt_material_pass_set_property_value_vec3(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_vec3_t* value) {
     return reinterpret_cast<smlt::MaterialPass*>(self)->set_property_value(hsh, name, (*reinterpret_cast<const smlt::Vec3*>(value)));
 }
 
-bool smlt_material_pass_set_property_value8(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_vec4_t* value) {
+bool smlt_material_pass_set_property_value_vec4(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_vec4_t* value) {
     return reinterpret_cast<smlt::MaterialPass*>(self)->set_property_value(hsh, name, (*reinterpret_cast<const smlt::Vec4*>(value)));
 }
 
-bool smlt_material_pass_set_property_value9(smlt_material_pass_t* self, unsigned int hsh, const char* name, smlt_texture_t* value) {
+bool smlt_material_pass_set_property_value_texture(smlt_material_pass_t* self, unsigned int hsh, const char* name, smlt_texture_t* value) {
     return reinterpret_cast<smlt::MaterialPass*>(self)->set_property_value(hsh, name, (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(value)));
 }
 

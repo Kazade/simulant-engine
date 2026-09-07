@@ -21,7 +21,7 @@ smlt_random_generator_t* smlt_random_generator_create(void) {
     return reinterpret_cast<smlt_random_generator_t*>(new smlt::RandomGenerator());
 }
 
-smlt_random_generator_t* smlt_random_generator_create2(uint32_t seed) {
+smlt_random_generator_t* smlt_random_generator_create_seeded(uint32_t seed) {
     return reinterpret_cast<smlt_random_generator_t*>(new smlt::RandomGenerator(seed));
 }
 

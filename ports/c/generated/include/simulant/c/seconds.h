@@ -13,7 +13,7 @@ extern "C" {
 
 void smlt_seconds_destroy(smlt_seconds_t* self);
 smlt_seconds_t* smlt_seconds_create(void);
-smlt_seconds_t* smlt_seconds_create2(float t);
+smlt_seconds_t* smlt_seconds_create_from_float(float t);
 smlt_seconds_t* smlt_seconds_add(const smlt_seconds_t* self, const smlt_seconds_t* rhs);
 bool smlt_seconds_greater_than(const smlt_seconds_t* self, float rhs);
 float smlt_seconds_to_float(const smlt_seconds_t* self);
