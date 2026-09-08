@@ -354,13 +354,12 @@ public:
 
 private:
     /* Shared implementation used by all three register_scene overloads
-       above once the Lua state has been loaded (with prefab/
-       stage_node_scripts only ever non-empty for the gltf overload). Uses
-       (source, class_name) pairs rather than the LuaStageNodeScriptDef
-       type it's ultimately converted to, so this header doesn't need to
-       pull in the Lua scripting headers. */
+       above once the Lua state has been loaded. When gltf_path is set
+       (non-empty, only for the gltf overload) the prefab is loaded lazily
+       inside the factory — at scene instantiation, not registration — so
+       that unused routes don't hold heavyweight asset data in memory. */
     bool register_scene_from_lua_state(
-        lua_State* L, const char* class_name, PrefabPtr prefab = PrefabPtr(),
+        lua_State* L, const char* class_name, Path gltf_path = Path(),
         const std::vector<std::pair<std::string, std::string>>&
             stage_node_scripts = {});
 

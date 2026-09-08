@@ -190,7 +190,7 @@ bool SceneManager::register_scene(const char* script_data,
 }
 
 bool SceneManager::register_scene_from_lua_state(
-    lua_State* L, const char* class_name, PrefabPtr prefab,
+    lua_State* L, const char* class_name, Path gltf_path,
     const std::vector<std::pair<std::string, std::string>>&
         stage_node_scripts) {
     luabridge::LuaRef klass = luabridge::getGlobal(L, class_name);
@@ -227,8 +227,21 @@ bool SceneManager::register_scene_from_lua_state(
     }
 
     _store_scene_factory(
-        name, [L, klass_name, name, prefab, node_script_defs,
+        name, [L, klass_name, name, gltf_path, node_script_defs,
                this](Window* window) -> ScenePtr {
+        // Load the gltf prefab lazily — at scene instantiation, not at
+        // registration. This keeps unused routes from holding heavyweight
+        // asset data in memory.
+        PrefabPtr prefab;
+        if(!gltf_path.str().empty()) {
+            prefab = smlt::get_app()->shared_assets->load_prefab(gltf_path);
+            if(!prefab) {
+                S_ERROR("Unable to load gltf scene graph: {0}",
+                        gltf_path.str());
+                return ScenePtr();
+            }
+        }
+
         lua_getglobal(L, klass_name.c_str());
         if(lua_isnil(L, -1)) {
             lua_pop(L, 1);
@@ -314,14 +327,9 @@ bool SceneManager::register_scene(const Path& gltf_path) {
         return false;
     }
 
-    // Loaded once here; every future instantiation of this route reuses the
-    // same Prefab template, exactly like any other Prefab asset shared
-    // across multiple PrefabInstance nodes.
-    auto prefab = smlt::get_app()->shared_assets->load_prefab(gltf_path);
-    if(!prefab) {
-        S_ERROR("Unable to load gltf scene graph: {0}", gltf_path.str());
-        return false;
-    }
+    // The prefab is loaded lazily inside register_scene_from_lua_state
+    // (at scene instantiation, not registration) so unused routes don't
+    // hold heavyweight asset data in memory.
 
     auto lua = smlt::get_app()->ensure_lua_ready();
     if(!lua->load_string(scene_script->source.c_str())) {
@@ -330,7 +338,7 @@ bool SceneManager::register_scene(const Path& gltf_path) {
 
     return register_scene_from_lua_state(lua->lua_state(),
                                          scene_script->class_name.c_str(),
-                                         prefab, stage_node_scripts);
+                                         gltf_path, stage_node_scripts);
 }
 
 }
