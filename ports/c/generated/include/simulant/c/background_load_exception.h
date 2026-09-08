@@ -13,6 +13,7 @@ extern "C" {
 
 void smlt_background_load_exception_destroy(smlt_background_load_exception_t* self);
 smlt_background_load_exception_t* smlt_background_load_exception_create(void);
+const char* smlt_background_load_exception_what(const smlt_background_load_exception_t* self);
 
 #ifdef __cplusplus
 }

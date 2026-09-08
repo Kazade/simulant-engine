@@ -14,6 +14,12 @@ extern "C" {
 const char* smlt_ui_label_node_type_name(const smlt_ui_label_t* self);
 bool smlt_ui_label_on_create(smlt_ui_label_t* self, const smlt_params_t* params);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::ui::Label as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_ui_label_t* smlt_stage_node_create_child_ui_label(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

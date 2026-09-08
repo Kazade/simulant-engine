@@ -8,6 +8,8 @@
 #include "simulant/nodes/spherical_billboard.h"
 #include "simulant/math/aabb.h"
 #include "simulant/nodes/stage_node.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -23,6 +25,11 @@ void smlt_spherical_billboard_set_target(smlt_spherical_billboard_t* self, smlt_
 
 const smlt_aabb_t* smlt_spherical_billboard_aabb(const smlt_spherical_billboard_t* self) {
     return reinterpret_cast<const smlt_aabb_t*>(&(reinterpret_cast<const smlt::SphericalBillboard*>(self)->aabb()));
+}
+
+smlt_spherical_billboard_t* smlt_stage_node_create_child_spherical_billboard(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::SphericalBillboard>();
+    return reinterpret_cast<smlt_spherical_billboard_t*>(node);
 }
 
 } /* extern "C" */

@@ -14,6 +14,8 @@
 #include "simulant/viewport.h"
 #include "simulant/interfaces.h"
 #include "simulant/utils/params.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -65,6 +67,11 @@ float smlt_camera_set_orthographic_projection_from_height(smlt_camera_t* self, f
 
 bool smlt_camera_on_create(smlt_camera_t* self, const smlt_params_t* params) {
     return reinterpret_cast<smlt::Camera*>(self)->on_create((*reinterpret_cast<const smlt::Params*>(params)));
+}
+
+smlt_camera_t* smlt_stage_node_create_child_camera(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::Camera>();
+    return reinterpret_cast<smlt_camera_t*>(node);
 }
 
 } /* extern "C" */

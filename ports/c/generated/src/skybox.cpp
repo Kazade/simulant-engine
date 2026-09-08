@@ -9,6 +9,8 @@
 #include "simulant/path.h"
 #include "simulant/math/aabb.h"
 #include "simulant/assets/texture_flags.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -32,6 +34,11 @@ void smlt_skybox_generate(smlt_skybox_t* self, const smlt_path_t* up, const smlt
 
 const smlt_aabb_t* smlt_skybox_aabb(const smlt_skybox_t* self) {
     return reinterpret_cast<const smlt_aabb_t*>(&(reinterpret_cast<const smlt::Skybox*>(self)->aabb()));
+}
+
+smlt_skybox_t* smlt_stage_node_create_child_skybox(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::Skybox>();
+    return reinterpret_cast<smlt_skybox_t*>(node);
 }
 
 } /* extern "C" */

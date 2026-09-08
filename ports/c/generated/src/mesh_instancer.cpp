@@ -13,6 +13,8 @@
 #include "simulant/renderers/batching/render_queue.h"
 #include "simulant/nodes/camera.h"
 #include "simulant/viewport.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -48,6 +50,43 @@ bool smlt_mesh_instancer_show_mesh_instance(smlt_mesh_instancer_t* self, unsigne
 
 bool smlt_mesh_instancer_hide_mesh_instance(smlt_mesh_instancer_t* self, unsigned long mid) {
     return reinterpret_cast<smlt::MeshInstancer*>(self)->hide_mesh_instance(mid);
+}
+
+float smlt_mesh_instancer_width(const smlt_mesh_instancer_t* self) {
+    return reinterpret_cast<const smlt::MeshInstancer*>(self)->width();
+}
+
+float smlt_mesh_instancer_height(const smlt_mesh_instancer_t* self) {
+    return reinterpret_cast<const smlt::MeshInstancer*>(self)->height();
+}
+
+float smlt_mesh_instancer_depth(const smlt_mesh_instancer_t* self) {
+    return reinterpret_cast<const smlt::MeshInstancer*>(self)->depth();
+}
+
+float smlt_mesh_instancer_half_width(const smlt_mesh_instancer_t* self) {
+    return reinterpret_cast<const smlt::MeshInstancer*>(self)->half_width();
+}
+
+float smlt_mesh_instancer_half_height(const smlt_mesh_instancer_t* self) {
+    return reinterpret_cast<const smlt::MeshInstancer*>(self)->half_height();
+}
+
+float smlt_mesh_instancer_half_depth(const smlt_mesh_instancer_t* self) {
+    return reinterpret_cast<const smlt::MeshInstancer*>(self)->half_depth();
+}
+
+float smlt_mesh_instancer_diameter(const smlt_mesh_instancer_t* self) {
+    return reinterpret_cast<const smlt::MeshInstancer*>(self)->diameter();
+}
+
+float smlt_mesh_instancer_radius(const smlt_mesh_instancer_t* self) {
+    return reinterpret_cast<const smlt::MeshInstancer*>(self)->radius();
+}
+
+smlt_mesh_instancer_t* smlt_stage_node_create_child_mesh_instancer(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::MeshInstancer>();
+    return reinterpret_cast<smlt_mesh_instancer_t*>(node);
 }
 
 } /* extern "C" */

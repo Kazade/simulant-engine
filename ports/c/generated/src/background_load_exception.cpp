@@ -19,4 +19,8 @@ smlt_background_load_exception_t* smlt_background_load_exception_create(void) {
     return reinterpret_cast<smlt_background_load_exception_t*>(new smlt::BackgroundLoadException());
 }
 
+const char* smlt_background_load_exception_what(const smlt_background_load_exception_t* self) {
+    return reinterpret_cast<const smlt::BackgroundLoadException*>(self)->what();
+}
+
 } /* extern "C" */

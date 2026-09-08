@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 void smlt_renderer_destroy(smlt_renderer_t* self);
+smlt_window_t* smlt_renderer_window(smlt_renderer_t* self);
 void smlt_renderer_init_context(smlt_renderer_t* self);
 char* smlt_renderer_name(const smlt_renderer_t* self);
 void smlt_renderer_prepare_to_render(smlt_renderer_t* self, const smlt_renderable_t* renderable);
@@ -21,7 +22,7 @@ void smlt_renderer_apply_viewport(smlt_renderer_t* self, const smlt_render_targe
 void smlt_renderer_clear(smlt_renderer_t* self, const smlt_render_target_t* target, const smlt_color_t* color, uint32_t clear_flags);
 void smlt_renderer_do_swap_buffers(smlt_renderer_t* self);
 unsigned long smlt_renderer_max_texture_size(const smlt_renderer_t* self);
-bool smlt_renderer_read_pixels(smlt_renderer_t* self, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint8_t* out_rgba);
+bool smlt_renderer_read_pixels(smlt_renderer_t* self, uint32_t x, uint32_t y, uint32_t width, uint32_t height, unsigned char* out_rgba);
 bool smlt_renderer_texture_format_is_native(smlt_renderer_t* self, smlt_texture_format_t fmt);
 bool smlt_renderer_texture_format_is_usable(smlt_renderer_t* self, smlt_texture_format_t fmt);
 bool smlt_renderer_supports_gpu_programs(const smlt_renderer_t* self);
@@ -30,6 +31,7 @@ void smlt_renderer_pre_render(smlt_renderer_t* self);
 void smlt_renderer_post_render(smlt_renderer_t* self);
 void smlt_renderer_prepare_texture(smlt_renderer_t* self, smlt_texture_t* texture);
 void smlt_renderer_prepare_material(smlt_renderer_t* self, smlt_material_t* material);
+smlt_batcher_render_group_key_t* smlt_renderer_prepare_render_group(smlt_renderer_t* self, smlt_batcher_render_group_t* group, const smlt_renderable_t* renderable, const smlt_material_pass_t* material_pass, signed char priority, uint8_t pass_number, bool is_blended, float distance_to_camera, uint16_t texture_id);
 
 /* This class is abstract in C++ (has pure virtual methods): no
  * smlt_..._create() is generated for it. Instances reached via

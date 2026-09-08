@@ -8,6 +8,7 @@
 #include "simulant/asset.h"
 #include "simulant/path.h"
 #include "simulant/asset_manager.h"
+#include "simulant/generic/data_carrier.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -15,6 +16,10 @@ extern "C" {
 
 void smlt_asset_release(smlt_asset_t* self) {
     delete reinterpret_cast<std::shared_ptr<smlt::Asset>*>(self);
+}
+
+smlt_generic_data_carrier_t* smlt_asset_data(smlt_asset_t* self) {
+    return reinterpret_cast<smlt_generic_data_carrier_t*>((*reinterpret_cast<std::shared_ptr<smlt::Asset>*>(self))->data.get());
 }
 
 const smlt_asset_manager_t* smlt_asset_asset_manager(const smlt_asset_t* self) {
@@ -47,6 +52,18 @@ void smlt_asset_set_source(smlt_asset_t* self, const smlt_path_t* source) {
 
 uint64_t smlt_asset_estimated_size_in_bytes(const smlt_asset_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Asset>*>(self))->estimated_size_in_bytes();
+}
+
+void smlt_asset_set_name(smlt_asset_t* self, const char* name) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Asset>*>(self))->set_name(name);
+}
+
+char* smlt_asset_name(const smlt_asset_t* self) {
+    return smlt_c_strdup(((*reinterpret_cast<const std::shared_ptr<smlt::Asset>*>(self))->name()).c_str());
+}
+
+bool smlt_asset_has_name(const smlt_asset_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Asset>*>(self))->has_name();
 }
 
 } /* extern "C" */

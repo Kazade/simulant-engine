@@ -15,6 +15,12 @@ const char* smlt_stats_panel_node_type_name(const smlt_stats_panel_t* self);
 bool smlt_stats_panel_on_init(smlt_stats_panel_t* self);
 void smlt_stats_panel_on_clean_up(smlt_stats_panel_t* self);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::StatsPanel as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_stats_panel_t* smlt_stage_node_create_child_stats_panel(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

@@ -12,11 +12,54 @@ extern "C" {
 #endif
 
 void smlt_sdl2_window_destroy(smlt_sdl2_window_t* self);
+smlt_application_t* smlt_sdl2_window_app(smlt_sdl2_window_t* self);
+smlt_renderer_t* smlt_sdl2_window_renderer(smlt_sdl2_window_t* self);
+smlt_generic_data_carrier_t* smlt_sdl2_window_data(smlt_sdl2_window_t* self);
+smlt_input_manager_t* smlt_sdl2_window_input(smlt_sdl2_window_t* self);
+smlt_input_state_t* smlt_sdl2_window_input_state(smlt_sdl2_window_t* self);
+smlt_compositor_t* smlt_sdl2_window_compositor(smlt_sdl2_window_t* self);
 smlt_sdl2_window_t* smlt_sdl2_window_create(void);
 void smlt_sdl2_window_set_title(smlt_sdl2_window_t* self, const char* title);
 void smlt_sdl2_window_show_cursor(smlt_sdl2_window_t* self, bool value);
 void smlt_sdl2_window_lock_cursor(smlt_sdl2_window_t* self, bool cursor_locked);
-void smlt_sdl2_window_cursor_position(smlt_sdl2_window_t* self, int32_t* mouse_x, int32_t* mouse_y);
+void smlt_sdl2_window_cursor_position(smlt_sdl2_window_t* self, int* mouse_x, int* mouse_y);
+bool smlt_sdl2_window_create_window(smlt_sdl2_window_t* self, uint16_t width, uint16_t height, uint8_t bpp, bool fullscreen, bool enable_vsync);
+void smlt_sdl2_window_swap_buffers(smlt_sdl2_window_t* self);
+uint16_t smlt_sdl2_window_width(const smlt_sdl2_window_t* self);
+uint16_t smlt_sdl2_window_height(const smlt_sdl2_window_t* self);
+bool smlt_sdl2_window_is_fullscreen(const smlt_sdl2_window_t* self);
+bool smlt_sdl2_window_vsync_enabled(const smlt_sdl2_window_t* self);
+float smlt_sdl2_window_aspect_ratio(const smlt_sdl2_window_t* self);
+void smlt_sdl2_window_set_logging_level(smlt_sdl2_window_t* self, smlt_log_level_t level);
+smlt_log_level_t smlt_sdl2_window_logging_level(const smlt_sdl2_window_t* self);
+void smlt_sdl2_window_reset(smlt_sdl2_window_t* self);
+smlt_vec2_t* smlt_sdl2_window_coordinate_from_normalized(smlt_sdl2_window_t* self, float rx, float ry);
+void smlt_sdl2_window_on_finger_down(smlt_sdl2_window_t* self, unsigned int touch_id, float normalized_x, float normalized_y, float pressure);
+void smlt_sdl2_window_on_finger_up(smlt_sdl2_window_t* self, unsigned int touch_id, float normalized_x, float normalized_y);
+void smlt_sdl2_window_on_finger_motion(smlt_sdl2_window_t* self, unsigned int touch_id, float normalized_x, float normalized_y, float dx, float dy);
+void smlt_sdl2_window_on_key_down(smlt_sdl2_window_t* self, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers);
+void smlt_sdl2_window_on_key_up(smlt_sdl2_window_t* self, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers);
+unsigned long smlt_sdl2_window_screen_count(const smlt_sdl2_window_t* self);
+smlt_screen_t* smlt_sdl2_window_screen(const smlt_sdl2_window_t* self, const char* name);
+smlt_screen_t* smlt_sdl2_window_create_screen(smlt_sdl2_window_t* self, const char* name, uint16_t width, uint16_t height, smlt_screen_format_t format, uint16_t refresh_rate);
+void smlt_sdl2_window_destroy_screen(smlt_sdl2_window_t* self, const char* name);
+bool smlt_sdl2_window_initialize_assets_and_devices(smlt_sdl2_window_t* self);
+void smlt_sdl2_window_clean_up(smlt_sdl2_window_t* self);
+smlt_stage_node_t* smlt_sdl2_window_audio_listener(smlt_sdl2_window_t* self);
+void smlt_sdl2_window_set_audio_listener(smlt_sdl2_window_t* self, smlt_stage_node_t* node);
+bool smlt_sdl2_window_has_explicit_audio_listener(const smlt_sdl2_window_t* self);
+bool smlt_sdl2_window_has_context(const smlt_sdl2_window_t* self);
+bool smlt_sdl2_window_has_focus(const smlt_sdl2_window_t* self);
+void smlt_sdl2_window_set_has_focus(smlt_sdl2_window_t* self, bool v);
+void smlt_sdl2_window_set_escape_to_quit(smlt_sdl2_window_t* self, bool value);
+bool smlt_sdl2_window_escape_to_quit_enabled(const smlt_sdl2_window_t* self);
+void smlt_sdl2_window_set_clear_every_frame(smlt_sdl2_window_t* self, uint32_t clear_flags, const smlt_color_t* color);
+uint32_t smlt_sdl2_window_clear_every_frame_flags(const smlt_sdl2_window_t* self);
+smlt_color_t* smlt_sdl2_window_clear_every_frame_color(const smlt_sdl2_window_t* self);
+void smlt_sdl2_window_set_last_frame_rendered_id(smlt_sdl2_window_t* self, uint32_t id);
+const unsigned int* smlt_sdl2_window_last_frame_rendered_id(const smlt_sdl2_window_t* self);
+void smlt_sdl2_window_register_event_listener(smlt_sdl2_window_t* self, smlt_event_listener_t* listener);
+void smlt_sdl2_window_unregister_event_listener(smlt_sdl2_window_t* self, smlt_event_listener_t* listener);
 
 #ifdef __cplusplus
 }

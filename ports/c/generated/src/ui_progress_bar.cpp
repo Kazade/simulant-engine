@@ -7,6 +7,8 @@
 #include <memory>
 #include "simulant/nodes/ui/progress_bar.h"
 #include "simulant/nodes/ui/ui_config.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -54,6 +56,11 @@ smlt_ui_progress_bar_mode_t smlt_ui_progress_bar_current_mode(const smlt_ui_prog
 
 void smlt_ui_progress_bar_on_update(smlt_ui_progress_bar_t* self, float dt) {
     reinterpret_cast<smlt::ui::ProgressBar*>(self)->on_update(dt);
+}
+
+smlt_ui_progress_bar_t* smlt_stage_node_create_child_ui_progress_bar(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::ui::ProgressBar>();
+    return reinterpret_cast<smlt_ui_progress_bar_t*>(node);
 }
 
 } /* extern "C" */

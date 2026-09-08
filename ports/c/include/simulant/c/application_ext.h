@@ -67,11 +67,10 @@ smlt_application_t* smlt_application_create_custom(const smlt_app_config_t* conf
 void smlt_application_set_user_data(smlt_application_t* self, void* user_data);
 void* smlt_application_get_user_data(const smlt_application_t* self);
 
-/* Application::scenes/window are C++ Property<> smart members, a wrapper
- * the generator doesn't understand (see ports/c/README.md); these are the
- * hand-written equivalent. Both are borrowed -- do not destroy. */
-smlt_scene_manager_t* smlt_application_scenes(smlt_application_t* self);
-smlt_window_t* smlt_application_window(smlt_application_t* self);
+/* Application::scenes/window are C++ Property<> smart members; the
+ * generator's scanner recognizes Property<> fields directly and
+ * mechanically wraps them (see smlt_application_scenes()/_window() in the
+ * generated application.h), so no hand-written equivalent lives here. */
 
 #ifdef __cplusplus
 }

@@ -6,9 +6,12 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/assets/prefab.h"
+#include "simulant/path.h"
 #include "simulant/meshes/mesh.h"
+#include "simulant/asset_manager.h"
 #include "simulant/nodes/animation_controller.h"
 #include "simulant/assets/material.h"
+#include "simulant/generic/data_carrier.h"
 #include "simulant/texture.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
@@ -17,6 +20,10 @@ extern "C" {
 
 void smlt_prefab_release(smlt_prefab_t* self) {
     delete reinterpret_cast<std::shared_ptr<smlt::Prefab>*>(self);
+}
+
+smlt_generic_data_carrier_t* smlt_prefab_data(smlt_prefab_t* self) {
+    return reinterpret_cast<smlt_generic_data_carrier_t*>((*reinterpret_cast<std::shared_ptr<smlt::Prefab>*>(self))->data.get());
 }
 
 const char* smlt_prefab_asset_type_name(const smlt_prefab_t* self) {
@@ -53,6 +60,38 @@ bool smlt_prefab_has_animations(const smlt_prefab_t* self) {
 
 unsigned long smlt_prefab_animation_count(const smlt_prefab_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Prefab>*>(self))->animation_count();
+}
+
+smlt_asset_manager_t* smlt_prefab_asset_manager(smlt_prefab_t* self) {
+    return reinterpret_cast<smlt_asset_manager_t*>(&((*reinterpret_cast<std::shared_ptr<smlt::Prefab>*>(self))->asset_manager()));
+}
+
+int smlt_prefab_age(const smlt_prefab_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Prefab>*>(self))->age();
+}
+
+void smlt_prefab_set_garbage_collection_method(smlt_prefab_t* self, smlt_garbage_collect_method_t method) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Prefab>*>(self))->set_garbage_collection_method(static_cast<smlt::GarbageCollectMethod>(method));
+}
+
+smlt_path_t* smlt_prefab_source(const smlt_prefab_t* self) {
+    return reinterpret_cast<smlt_path_t*>(new smlt::Path((*reinterpret_cast<const std::shared_ptr<smlt::Prefab>*>(self))->source()));
+}
+
+void smlt_prefab_set_source(smlt_prefab_t* self, const smlt_path_t* source) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Prefab>*>(self))->set_source((*reinterpret_cast<const smlt::Path*>(source)));
+}
+
+void smlt_prefab_set_name(smlt_prefab_t* self, const char* name) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Prefab>*>(self))->set_name(name);
+}
+
+char* smlt_prefab_name(const smlt_prefab_t* self) {
+    return smlt_c_strdup(((*reinterpret_cast<const std::shared_ptr<smlt::Prefab>*>(self))->name()).c_str());
+}
+
+bool smlt_prefab_has_name(const smlt_prefab_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Prefab>*>(self))->has_name();
 }
 
 } /* extern "C" */

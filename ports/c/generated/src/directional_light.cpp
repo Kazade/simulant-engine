@@ -7,6 +7,8 @@
 #include <memory>
 #include "simulant/nodes/light.h"
 #include "simulant/utils/params.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -18,6 +20,11 @@ const char* smlt_directional_light_node_type_name(const smlt_directional_light_t
 
 bool smlt_directional_light_on_create(smlt_directional_light_t* self, const smlt_params_t* params) {
     return reinterpret_cast<smlt::DirectionalLight*>(self)->on_create((*reinterpret_cast<const smlt::Params*>(params)));
+}
+
+smlt_directional_light_t* smlt_stage_node_create_child_directional_light(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::DirectionalLight>();
+    return reinterpret_cast<smlt_directional_light_t*>(node);
 }
 
 } /* extern "C" */

@@ -13,6 +13,17 @@ extern "C" {
 
 const char* smlt_ui_ui_manager_node_type_name(const smlt_ui_ui_manager_t* self);
 const smlt_ui_ui_config_t* smlt_ui_ui_manager_config(const smlt_ui_ui_manager_t* self);
+void smlt_ui_ui_manager_handle_touch_begin(smlt_ui_ui_manager_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y, float pressure);
+void smlt_ui_ui_manager_handle_touch_end(smlt_ui_ui_manager_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y);
+void smlt_ui_ui_manager_handle_touch_move(smlt_ui_ui_manager_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y, float dx, float dy);
+void smlt_ui_ui_manager_handle_key_down(smlt_ui_ui_manager_t* self, smlt_window_t* window, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers);
+void smlt_ui_ui_manager_handle_key_up(smlt_ui_ui_manager_t* self, smlt_window_t* window, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers);
+
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::ui::UIManager as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_ui_ui_manager_t* smlt_stage_node_create_child_ui_ui_manager(smlt_stage_node_t* parent);
 
 #ifdef __cplusplus
 }

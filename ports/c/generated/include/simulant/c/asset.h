@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 void smlt_asset_release(smlt_asset_t* self);
+smlt_generic_data_carrier_t* smlt_asset_data(smlt_asset_t* self);
 const smlt_asset_manager_t* smlt_asset_asset_manager(const smlt_asset_t* self);
 smlt_asset_manager_t* smlt_asset_asset_manager_mut(smlt_asset_t* self);
 const char* smlt_asset_asset_type_name(const smlt_asset_t* self);
@@ -20,6 +21,9 @@ void smlt_asset_set_garbage_collection_method(smlt_asset_t* self, smlt_garbage_c
 smlt_path_t* smlt_asset_source(const smlt_asset_t* self);
 void smlt_asset_set_source(smlt_asset_t* self, const smlt_path_t* source);
 uint64_t smlt_asset_estimated_size_in_bytes(const smlt_asset_t* self);
+void smlt_asset_set_name(smlt_asset_t* self, const char* name);
+char* smlt_asset_name(const smlt_asset_t* self);
+bool smlt_asset_has_name(const smlt_asset_t* self);
 
 /* This class is abstract in C++ (has pure virtual methods): no
  * smlt_..._create() is generated for it. Instances reached via

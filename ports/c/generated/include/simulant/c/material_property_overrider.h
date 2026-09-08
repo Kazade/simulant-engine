@@ -14,7 +14,7 @@ extern "C" {
 void smlt_material_property_overrider_destroy(smlt_material_property_overrider_t* self);
 bool smlt_material_property_overrider_set_property_value_bool(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const bool* value);
 bool smlt_material_property_overrider_set_property_value_float(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const float* value);
-bool smlt_material_property_overrider_set_property_value_int32(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const int32_t* value);
+bool smlt_material_property_overrider_set_property_value_int32(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const int* value);
 bool smlt_material_property_overrider_set_property_value_color(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_color_t* value);
 bool smlt_material_property_overrider_set_property_value_mat3(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_mat3_t* value);
 bool smlt_material_property_overrider_set_property_value_mat4(smlt_material_property_overrider_t* self, unsigned int hsh, const char* name, const smlt_mat4_t* value);

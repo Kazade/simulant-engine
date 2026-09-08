@@ -9,6 +9,8 @@
 #include "simulant/color.h"
 #include "simulant/math/vec3.h"
 #include "simulant/types.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -48,6 +50,11 @@ void smlt_debug_set_line_width(smlt_debug_t* self, float size) {
 
 float smlt_debug_line_width(const smlt_debug_t* self) {
     return reinterpret_cast<const smlt::Debug*>(self)->line_width();
+}
+
+smlt_debug_t* smlt_stage_node_create_child_debug(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::Debug>();
+    return reinterpret_cast<smlt_debug_t*>(node);
 }
 
 } /* extern "C" */

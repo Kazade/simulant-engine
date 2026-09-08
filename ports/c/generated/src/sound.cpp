@@ -6,7 +6,10 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/sound.h"
+#include "simulant/path.h"
 #include "simulant/sound_driver.h"
+#include "simulant/asset_manager.h"
+#include "simulant/generic/data_carrier.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -14,6 +17,10 @@ extern "C" {
 
 void smlt_sound_release(smlt_sound_t* self) {
     delete reinterpret_cast<std::shared_ptr<smlt::Sound>*>(self);
+}
+
+smlt_generic_data_carrier_t* smlt_sound_data(smlt_sound_t* self) {
+    return reinterpret_cast<smlt_generic_data_carrier_t*>((*reinterpret_cast<std::shared_ptr<smlt::Sound>*>(self))->data.get());
 }
 
 const char* smlt_sound_asset_type_name(const smlt_sound_t* self) {
@@ -58,6 +65,38 @@ unsigned long smlt_sound_stream_length(const smlt_sound_t* self) {
 
 smlt_sound_driver_t* smlt_sound_driver(const smlt_sound_t* self) {
     return reinterpret_cast<smlt_sound_driver_t*>(((*reinterpret_cast<const std::shared_ptr<smlt::Sound>*>(self))->_driver()));
+}
+
+smlt_asset_manager_t* smlt_sound_asset_manager(smlt_sound_t* self) {
+    return reinterpret_cast<smlt_asset_manager_t*>(&((*reinterpret_cast<std::shared_ptr<smlt::Sound>*>(self))->asset_manager()));
+}
+
+int smlt_sound_age(const smlt_sound_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Sound>*>(self))->age();
+}
+
+void smlt_sound_set_garbage_collection_method(smlt_sound_t* self, smlt_garbage_collect_method_t method) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Sound>*>(self))->set_garbage_collection_method(static_cast<smlt::GarbageCollectMethod>(method));
+}
+
+smlt_path_t* smlt_sound_source(const smlt_sound_t* self) {
+    return reinterpret_cast<smlt_path_t*>(new smlt::Path((*reinterpret_cast<const std::shared_ptr<smlt::Sound>*>(self))->source()));
+}
+
+void smlt_sound_set_source(smlt_sound_t* self, const smlt_path_t* source) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Sound>*>(self))->set_source((*reinterpret_cast<const smlt::Path*>(source)));
+}
+
+void smlt_sound_set_name(smlt_sound_t* self, const char* name) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Sound>*>(self))->set_name(name);
+}
+
+char* smlt_sound_name(const smlt_sound_t* self) {
+    return smlt_c_strdup(((*reinterpret_cast<const std::shared_ptr<smlt::Sound>*>(self))->name()).c_str());
+}
+
+bool smlt_sound_has_name(const smlt_sound_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Sound>*>(self))->has_name();
 }
 
 } /* extern "C" */

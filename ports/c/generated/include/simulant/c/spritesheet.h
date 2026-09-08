@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 void smlt_spritesheet_release(smlt_spritesheet_t* self);
+smlt_generic_data_carrier_t* smlt_spritesheet_data(smlt_spritesheet_t* self);
 const char* smlt_spritesheet_asset_type_name(const smlt_spritesheet_t* self);
 uint64_t smlt_spritesheet_estimated_size_in_bytes(const smlt_spritesheet_t* self);
 void smlt_spritesheet_set_texture(smlt_spritesheet_t* self, smlt_texture_t* texture);
@@ -22,6 +23,14 @@ const smlt_spritesheet_frame_t* smlt_spritesheet_frame(const smlt_spritesheet_t*
 void smlt_spritesheet_push_animation(smlt_spritesheet_t* self, const smlt_spritesheet_animation_t* animation);
 unsigned long smlt_spritesheet_animation_count(const smlt_spritesheet_t* self);
 const smlt_spritesheet_animation_t* smlt_spritesheet_animation(const smlt_spritesheet_t* self, unsigned long i);
+smlt_asset_manager_t* smlt_spritesheet_asset_manager(smlt_spritesheet_t* self);
+int smlt_spritesheet_age(const smlt_spritesheet_t* self);
+void smlt_spritesheet_set_garbage_collection_method(smlt_spritesheet_t* self, smlt_garbage_collect_method_t method);
+smlt_path_t* smlt_spritesheet_source(const smlt_spritesheet_t* self);
+void smlt_spritesheet_set_source(smlt_spritesheet_t* self, const smlt_path_t* source);
+void smlt_spritesheet_set_name(smlt_spritesheet_t* self, const char* name);
+char* smlt_spritesheet_name(const smlt_spritesheet_t* self);
+bool smlt_spritesheet_has_name(const smlt_spritesheet_t* self);
 
 #ifdef __cplusplus
 }

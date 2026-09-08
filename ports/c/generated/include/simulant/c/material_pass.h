@@ -20,7 +20,7 @@ uint8_t smlt_material_pass_max_iterations(const smlt_material_pass_t* self);
 const smlt_material_t* smlt_material_pass_material(const smlt_material_pass_t* self);
 bool smlt_material_pass_set_property_value_bool(smlt_material_pass_t* self, unsigned int hsh, const char* name, const bool* value);
 bool smlt_material_pass_set_property_value_float(smlt_material_pass_t* self, unsigned int hsh, const char* name, const float* value);
-bool smlt_material_pass_set_property_value_int32(smlt_material_pass_t* self, unsigned int hsh, const char* name, const int32_t* value);
+bool smlt_material_pass_set_property_value_int32(smlt_material_pass_t* self, unsigned int hsh, const char* name, const int* value);
 bool smlt_material_pass_set_property_value_mat3(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_mat3_t* value);
 bool smlt_material_pass_set_property_value_mat4(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_mat4_t* value);
 bool smlt_material_pass_set_property_value_vec2(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_vec2_t* value);
@@ -84,6 +84,25 @@ void smlt_material_pass_set_color_write_enabled(smlt_material_pass_t* self, bool
 void smlt_material_pass_set_stencil_func(smlt_material_pass_t* self, smlt_stencil_func_t func, int32_t ref, int32_t mask);
 void smlt_material_pass_set_stencil_ops(smlt_material_pass_t* self, smlt_stencil_op_t fail, smlt_stencil_op_t depth_fail, smlt_stencil_op_t pass);
 void smlt_material_pass_set_polygon_list_target(smlt_material_pass_t* self, smlt_polygon_list_target_t v);
+void smlt_material_pass_set_metallic_roughness_map(smlt_material_pass_t* self, smlt_texture_t* texture);
+void smlt_material_pass_set_base_color_map(smlt_material_pass_t* self, smlt_texture_t* texture);
+void smlt_material_pass_set_light_map(smlt_material_pass_t* self, smlt_texture_t* texture);
+void smlt_material_pass_set_normal_map(smlt_material_pass_t* self, smlt_texture_t* texture);
+const smlt_mat4_t* smlt_material_pass_base_color_map_matrix(const smlt_material_pass_t* self);
+const smlt_mat4_t* smlt_material_pass_light_map_matrix(const smlt_material_pass_t* self);
+const smlt_mat4_t* smlt_material_pass_normal_map_matrix(const smlt_material_pass_t* self);
+const smlt_mat4_t* smlt_material_pass_metallic_roughness_map_matrix(const smlt_material_pass_t* self);
+void smlt_material_pass_set_base_color_map_matrix(smlt_material_pass_t* self, const smlt_mat4_t* mat);
+void smlt_material_pass_set_light_map_matrix(smlt_material_pass_t* self, const smlt_mat4_t* mat);
+void smlt_material_pass_set_normal_map_matrix(smlt_material_pass_t* self, const smlt_mat4_t* mat);
+void smlt_material_pass_set_metallic_roughness_map_matrix(smlt_material_pass_t* self, const smlt_mat4_t* mat);
+smlt_texture_t* smlt_material_pass_base_color_map(const smlt_material_pass_t* self);
+smlt_texture_t* smlt_material_pass_light_map(const smlt_material_pass_t* self);
+smlt_texture_t* smlt_material_pass_normal_map(const smlt_material_pass_t* self);
+smlt_texture_t* smlt_material_pass_metallic_roughness_map(const smlt_material_pass_t* self);
+const smlt_material_object_t* smlt_material_pass_parent_material_object(const smlt_material_pass_t* self);
+bool smlt_material_pass_clear_override(smlt_material_pass_t* self, const char* name);
+bool smlt_material_pass_check_existance(const smlt_material_pass_t* self, const char* property_name);
 
 #ifdef __cplusplus
 }

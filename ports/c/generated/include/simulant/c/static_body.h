@@ -15,6 +15,12 @@ const char* smlt_static_body_node_type_name(const smlt_static_body_t* self);
 void smlt_static_body_add_mesh_collider(smlt_static_body_t* self, smlt_mesh_t* mesh, const smlt_physics_material_t* properties, uint16_t kind, const smlt_vec3_t* position, const smlt_quaternion_t* orientation, const smlt_vec3_t* scale);
 const smlt_aabb_t* smlt_static_body_aabb(const smlt_static_body_t* self);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::StaticBody as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_static_body_t* smlt_stage_node_create_child_static_body(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

@@ -13,6 +13,7 @@ extern "C" {
 
 void smlt_generic_no_such_data_destroy(smlt_generic_no_such_data_t* self);
 smlt_generic_no_such_data_t* smlt_generic_no_such_data_create(const char* what);
+const char* smlt_generic_no_such_data_what(const smlt_generic_no_such_data_t* self);
 
 #ifdef __cplusplus
 }

@@ -11,6 +11,8 @@
 #include "simulant/sound/playing_sound.h"
 #include "simulant/scenes/scene.h"
 #include "simulant/utils/params.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -62,6 +64,11 @@ bool smlt_audio_source_on_destroy(smlt_audio_source_t* self) {
 
 void smlt_audio_source_source_update_thread(void) {
     smlt::AudioSource::source_update_thread();
+}
+
+smlt_audio_source_t* smlt_stage_node_create_child_audio_source(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::AudioSource>();
+    return reinterpret_cast<smlt_audio_source_t*>(node);
 }
 
 } /* extern "C" */

@@ -19,4 +19,8 @@ smlt_generic_no_such_data_t* smlt_generic_no_such_data_create(const char* what) 
     return reinterpret_cast<smlt_generic_no_such_data_t*>(new smlt::generic::NoSuchData(std::string(what ? what : "")));
 }
 
+const char* smlt_generic_no_such_data_what(const smlt_generic_no_such_data_t* self) {
+    return reinterpret_cast<const smlt::generic::NoSuchData*>(self)->what();
+}
+
 } /* extern "C" */

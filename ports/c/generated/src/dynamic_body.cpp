@@ -7,6 +7,8 @@
 #include <memory>
 #include "simulant/nodes/physics/dynamic_body.h"
 #include "simulant/math/aabb.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -18,6 +20,11 @@ const char* smlt_dynamic_body_node_type_name(const smlt_dynamic_body_t* self) {
 
 const smlt_aabb_t* smlt_dynamic_body_aabb(const smlt_dynamic_body_t* self) {
     return reinterpret_cast<const smlt_aabb_t*>(&(reinterpret_cast<const smlt::DynamicBody*>(self)->aabb()));
+}
+
+smlt_dynamic_body_t* smlt_stage_node_create_child_dynamic_body(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::DynamicBody>();
+    return reinterpret_cast<smlt_dynamic_body_t*>(node);
 }
 
 } /* extern "C" */

@@ -7,12 +7,16 @@
 #include <memory>
 #include "simulant/assets/material.h"
 #include "simulant/color.h"
+#include "simulant/path.h"
 #include "simulant/math/mat3.h"
 #include "simulant/math/mat4.h"
 #include "simulant/math/vec2.h"
 #include "simulant/math/vec3.h"
 #include "simulant/math/vec4.h"
+#include "simulant/asset_manager.h"
 #include "simulant/assets/materials/core/material_value_pool.h"
+#include "simulant/assets/materials/material_object.h"
+#include "simulant/generic/data_carrier.h"
 #include "simulant/texture.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
@@ -21,6 +25,10 @@ extern "C" {
 
 void smlt_material_release(smlt_material_t* self) {
     delete reinterpret_cast<std::shared_ptr<smlt::Material>*>(self);
+}
+
+smlt_generic_data_carrier_t* smlt_material_data(smlt_material_t* self) {
+    return reinterpret_cast<smlt_generic_data_carrier_t*>((*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->data.get());
 }
 
 const char* smlt_material_asset_type_name(const smlt_material_t* self) {
@@ -51,7 +59,7 @@ bool smlt_material_set_property_value_float(smlt_material_t* self, unsigned int 
     return (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_property_value(hsh, name, (*value));
 }
 
-bool smlt_material_set_property_value_int32(smlt_material_t* self, unsigned int hsh, const char* name, const int32_t* value) {
+bool smlt_material_set_property_value_int32(smlt_material_t* self, unsigned int hsh, const char* name, const int* value) {
     return (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_property_value(hsh, name, (*value));
 }
 
@@ -249,6 +257,114 @@ bool smlt_material_property_type(const smlt_material_t* self, const char* name, 
 
 bool smlt_material_on_check_existence(const smlt_material_t* self, unsigned int hsh) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->on_check_existence(hsh);
+}
+
+smlt_asset_manager_t* smlt_material_asset_manager(smlt_material_t* self) {
+    return reinterpret_cast<smlt_asset_manager_t*>(&((*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->asset_manager()));
+}
+
+int smlt_material_age(const smlt_material_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->age();
+}
+
+void smlt_material_set_garbage_collection_method(smlt_material_t* self, smlt_garbage_collect_method_t method) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_garbage_collection_method(static_cast<smlt::GarbageCollectMethod>(method));
+}
+
+smlt_path_t* smlt_material_source(const smlt_material_t* self) {
+    return reinterpret_cast<smlt_path_t*>(new smlt::Path((*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->source()));
+}
+
+void smlt_material_set_source(smlt_material_t* self, const smlt_path_t* source) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_source((*reinterpret_cast<const smlt::Path*>(source)));
+}
+
+void smlt_material_set_name(smlt_material_t* self, const char* name) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_name(name);
+}
+
+char* smlt_material_name(const smlt_material_t* self) {
+    return smlt_c_strdup(((*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->name()).c_str());
+}
+
+bool smlt_material_has_name(const smlt_material_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->has_name();
+}
+
+void smlt_material_set_metallic_roughness_map(smlt_material_t* self, smlt_texture_t* texture) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_metallic_roughness_map((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(texture)));
+}
+
+void smlt_material_set_base_color_map(smlt_material_t* self, smlt_texture_t* texture) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_base_color_map((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(texture)));
+}
+
+void smlt_material_set_light_map(smlt_material_t* self, smlt_texture_t* texture) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_light_map((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(texture)));
+}
+
+void smlt_material_set_normal_map(smlt_material_t* self, smlt_texture_t* texture) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_normal_map((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(texture)));
+}
+
+const smlt_mat4_t* smlt_material_base_color_map_matrix(const smlt_material_t* self) {
+    return reinterpret_cast<const smlt_mat4_t*>(&((*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->base_color_map_matrix()));
+}
+
+const smlt_mat4_t* smlt_material_light_map_matrix(const smlt_material_t* self) {
+    return reinterpret_cast<const smlt_mat4_t*>(&((*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->light_map_matrix()));
+}
+
+const smlt_mat4_t* smlt_material_normal_map_matrix(const smlt_material_t* self) {
+    return reinterpret_cast<const smlt_mat4_t*>(&((*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->normal_map_matrix()));
+}
+
+const smlt_mat4_t* smlt_material_metallic_roughness_map_matrix(const smlt_material_t* self) {
+    return reinterpret_cast<const smlt_mat4_t*>(&((*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->metallic_roughness_map_matrix()));
+}
+
+void smlt_material_set_base_color_map_matrix(smlt_material_t* self, const smlt_mat4_t* mat) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_base_color_map_matrix((*reinterpret_cast<const smlt::Mat4*>(mat)));
+}
+
+void smlt_material_set_light_map_matrix(smlt_material_t* self, const smlt_mat4_t* mat) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_light_map_matrix((*reinterpret_cast<const smlt::Mat4*>(mat)));
+}
+
+void smlt_material_set_normal_map_matrix(smlt_material_t* self, const smlt_mat4_t* mat) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_normal_map_matrix((*reinterpret_cast<const smlt::Mat4*>(mat)));
+}
+
+void smlt_material_set_metallic_roughness_map_matrix(smlt_material_t* self, const smlt_mat4_t* mat) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_metallic_roughness_map_matrix((*reinterpret_cast<const smlt::Mat4*>(mat)));
+}
+
+smlt_texture_t* smlt_material_base_color_map(const smlt_material_t* self) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>((*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->base_color_map()));
+}
+
+smlt_texture_t* smlt_material_light_map(const smlt_material_t* self) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>((*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->light_map()));
+}
+
+smlt_texture_t* smlt_material_normal_map(const smlt_material_t* self) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>((*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->normal_map()));
+}
+
+smlt_texture_t* smlt_material_metallic_roughness_map(const smlt_material_t* self) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>((*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->metallic_roughness_map()));
+}
+
+const smlt_material_object_t* smlt_material_parent_material_object(const smlt_material_t* self) {
+    return reinterpret_cast<const smlt_material_object_t*>(((*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->parent_material_object()));
+}
+
+bool smlt_material_clear_override(smlt_material_t* self, const char* name) {
+    return (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->clear_override(name);
+}
+
+bool smlt_material_check_existance(const smlt_material_t* self, const char* property_name) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Material>*>(self))->check_existance(property_name);
 }
 
 } /* extern "C" */

@@ -7,6 +7,8 @@
 #include <memory>
 #include "simulant/nodes/joint.h"
 #include "simulant/nodes/armature.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -22,6 +24,11 @@ int smlt_joint_joint_index(const smlt_joint_t* self) {
 
 smlt_armature_t* smlt_joint_armature(const smlt_joint_t* self) {
     return reinterpret_cast<smlt_armature_t*>((reinterpret_cast<const smlt::Joint*>(self)->armature()));
+}
+
+smlt_joint_t* smlt_stage_node_create_child_joint(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::Joint>();
+    return reinterpret_cast<smlt_joint_t*>(node);
 }
 
 } /* extern "C" */

@@ -27,4 +27,28 @@ void smlt_service_fixed_update(smlt_service_t* self, float step) {
     reinterpret_cast<smlt::Service*>(self)->fixed_update(step);
 }
 
+void smlt_service_set_name(smlt_service_t* self, const char* name) {
+    reinterpret_cast<smlt::Service*>(self)->set_name(name);
+}
+
+char* smlt_service_name(const smlt_service_t* self) {
+    return smlt_c_strdup((reinterpret_cast<const smlt::Service*>(self)->name()).c_str());
+}
+
+bool smlt_service_has_name(const smlt_service_t* self) {
+    return reinterpret_cast<const smlt::Service*>(self)->has_name();
+}
+
+bool smlt_service_destroy_2(smlt_service_t* self) {
+    return reinterpret_cast<smlt::Service*>(self)->destroy();
+}
+
+bool smlt_service_destroy_immediately(smlt_service_t* self) {
+    return reinterpret_cast<smlt::Service*>(self)->destroy_immediately();
+}
+
+bool smlt_service_is_destroyed(const smlt_service_t* self) {
+    return reinterpret_cast<const smlt::Service*>(self)->is_destroyed();
+}
+
 } /* extern "C" */

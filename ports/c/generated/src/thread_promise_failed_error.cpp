@@ -19,4 +19,8 @@ smlt_thread_promise_failed_error_t* smlt_thread_promise_failed_error_create(void
     return reinterpret_cast<smlt_thread_promise_failed_error_t*>(new smlt::thread::PromiseFailedError());
 }
 
+const char* smlt_thread_promise_failed_error_what(const smlt_thread_promise_failed_error_t* self) {
+    return reinterpret_cast<const smlt::thread::PromiseFailedError*>(self)->what();
+}
+
 } /* extern "C" */

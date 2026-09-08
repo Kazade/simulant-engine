@@ -9,6 +9,8 @@
 #include "simulant/nodes/ui/widget.h"
 #include "simulant/nodes/ui/ui_config.h"
 #include "simulant/utils/params.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -40,6 +42,11 @@ void smlt_ui_frame_set_space_between(smlt_ui_frame_t* self, const smlt_ui_px_t* 
 
 smlt_ui_px_t* smlt_ui_frame_space_between(const smlt_ui_frame_t* self) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px(reinterpret_cast<const smlt::ui::Frame*>(self)->space_between()));
+}
+
+smlt_ui_frame_t* smlt_stage_node_create_child_ui_frame(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::ui::Frame>();
+    return reinterpret_cast<smlt_ui_frame_t*>(node);
 }
 
 } /* extern "C" */

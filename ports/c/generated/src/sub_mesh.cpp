@@ -20,6 +20,14 @@ void smlt_sub_mesh_destroy(smlt_sub_mesh_t* self) {
     delete reinterpret_cast<smlt::SubMesh*>(self);
 }
 
+smlt_mesh_t* smlt_sub_mesh_mesh(smlt_sub_mesh_t* self) {
+    return reinterpret_cast<smlt_mesh_t*>(reinterpret_cast<smlt::SubMesh*>(self)->mesh.get());
+}
+
+smlt_index_data_t* smlt_sub_mesh_index_data(smlt_sub_mesh_t* self) {
+    return reinterpret_cast<smlt_index_data_t*>(reinterpret_cast<smlt::SubMesh*>(self)->index_data.get());
+}
+
 smlt_sub_mesh_t* smlt_sub_mesh_create(smlt_mesh_t* parent, const char* name, smlt_material_t* material, smlt_mesh_arrangement_t arrangement) {
     return reinterpret_cast<smlt_sub_mesh_t*>(new smlt::SubMesh(reinterpret_cast<smlt::Mesh*>(parent), std::string(name ? name : ""), (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(material)), static_cast<smlt::MeshArrangement>(arrangement)));
 }
@@ -90,6 +98,18 @@ bool smlt_sub_mesh_contributes_to_edge_list(const smlt_sub_mesh_t* self) {
 
 const smlt_aabb_t* smlt_sub_mesh_aabb(const smlt_sub_mesh_t* self) {
     return reinterpret_cast<const smlt_aabb_t*>(&(reinterpret_cast<const smlt::SubMesh*>(self)->aabb()));
+}
+
+void smlt_sub_mesh_set_name(smlt_sub_mesh_t* self, const char* name) {
+    reinterpret_cast<smlt::SubMesh*>(self)->set_name(name);
+}
+
+char* smlt_sub_mesh_name(const smlt_sub_mesh_t* self) {
+    return smlt_c_strdup((reinterpret_cast<const smlt::SubMesh*>(self)->name()).c_str());
+}
+
+bool smlt_sub_mesh_has_name(const smlt_sub_mesh_t* self) {
+    return reinterpret_cast<const smlt::SubMesh*>(self)->has_name();
 }
 
 } /* extern "C" */

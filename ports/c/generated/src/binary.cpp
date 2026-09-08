@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/assets/binary_data.h"
+#include "simulant/path.h"
+#include "simulant/asset_manager.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -23,12 +25,44 @@ uint64_t smlt_binary_estimated_size_in_bytes(const smlt_binary_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Binary>*>(self))->estimated_size_in_bytes();
 }
 
-const uint8_t* smlt_binary_data(const smlt_binary_t* self) {
+const unsigned char* smlt_binary_data(const smlt_binary_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Binary>*>(self))->data();
 }
 
 unsigned long smlt_binary_data_size_in_bytes(const smlt_binary_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Binary>*>(self))->data_size_in_bytes();
+}
+
+smlt_asset_manager_t* smlt_binary_asset_manager(smlt_binary_t* self) {
+    return reinterpret_cast<smlt_asset_manager_t*>(&((*reinterpret_cast<std::shared_ptr<smlt::Binary>*>(self))->asset_manager()));
+}
+
+int smlt_binary_age(const smlt_binary_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Binary>*>(self))->age();
+}
+
+void smlt_binary_set_garbage_collection_method(smlt_binary_t* self, smlt_garbage_collect_method_t method) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Binary>*>(self))->set_garbage_collection_method(static_cast<smlt::GarbageCollectMethod>(method));
+}
+
+smlt_path_t* smlt_binary_source(const smlt_binary_t* self) {
+    return reinterpret_cast<smlt_path_t*>(new smlt::Path((*reinterpret_cast<const std::shared_ptr<smlt::Binary>*>(self))->source()));
+}
+
+void smlt_binary_set_source(smlt_binary_t* self, const smlt_path_t* source) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Binary>*>(self))->set_source((*reinterpret_cast<const smlt::Path*>(source)));
+}
+
+void smlt_binary_set_name(smlt_binary_t* self, const char* name) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Binary>*>(self))->set_name(name);
+}
+
+char* smlt_binary_name(const smlt_binary_t* self) {
+    return smlt_c_strdup(((*reinterpret_cast<const std::shared_ptr<smlt::Binary>*>(self))->name()).c_str());
+}
+
+bool smlt_binary_has_name(const smlt_binary_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Binary>*>(self))->has_name();
 }
 
 } /* extern "C" */

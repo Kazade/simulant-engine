@@ -7,6 +7,7 @@
 #include <memory>
 #include "simulant/compositor.h"
 #include "simulant/nodes/camera.h"
+#include "simulant/layer.h"
 #include "simulant/scenes/scene.h"
 #include "simulant/nodes/stage_node.h"
 #include "simulant/c/simulant_c.h"
@@ -18,8 +19,20 @@ void smlt_scene_compositor_destroy(smlt_scene_compositor_t* self) {
     delete reinterpret_cast<smlt::SceneCompositor*>(self);
 }
 
+smlt_compositor_t* smlt_scene_compositor_global_compositor(smlt_scene_compositor_t* self) {
+    return reinterpret_cast<smlt_compositor_t*>(reinterpret_cast<smlt::SceneCompositor*>(self)->global_compositor.get());
+}
+
 smlt_scene_compositor_t* smlt_scene_compositor_create(smlt_scene_t* scene, smlt_compositor_t* global_compositor) {
     return reinterpret_cast<smlt_scene_compositor_t*>(new smlt::SceneCompositor(reinterpret_cast<smlt::Scene*>(scene), reinterpret_cast<smlt::Compositor*>(global_compositor)));
+}
+
+smlt_layer_t* smlt_scene_compositor_create_layer(smlt_scene_compositor_t* self, smlt_stage_node_t* subtree, smlt_camera_t* camera, int32_t priority) {
+    return reinterpret_cast<smlt_layer_t*>((reinterpret_cast<smlt::SceneCompositor*>(self)->create_layer(reinterpret_cast<smlt::StageNode*>(subtree), reinterpret_cast<smlt::Camera*>(camera), priority)));
+}
+
+smlt_layer_t* smlt_scene_compositor_find_layer(smlt_scene_compositor_t* self, const char* name) {
+    return reinterpret_cast<smlt_layer_t*>((reinterpret_cast<smlt::SceneCompositor*>(self)->find_layer(std::string(name ? name : ""))));
 }
 
 void smlt_scene_compositor_destroy_all_layers(smlt_scene_compositor_t* self) {

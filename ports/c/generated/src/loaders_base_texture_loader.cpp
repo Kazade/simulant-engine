@@ -7,6 +7,7 @@
 #include <memory>
 #include "simulant/loader.h"
 #include "simulant/loadable.h"
+#include "simulant/vfs.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -14,6 +15,14 @@ extern "C" {
 
 void smlt_loaders_base_texture_loader_destroy(smlt_loaders_base_texture_loader_t* self) {
     delete reinterpret_cast<smlt::loaders::BaseTextureLoader*>(self);
+}
+
+smlt_virtual_file_system_t* smlt_loaders_base_texture_loader_vfs(smlt_loaders_base_texture_loader_t* self) {
+    return reinterpret_cast<smlt_virtual_file_system_t*>(reinterpret_cast<smlt::loaders::BaseTextureLoader*>(self)->vfs.get());
+}
+
+void smlt_loaders_base_texture_loader_set_vfs(smlt_loaders_base_texture_loader_t* self, smlt_virtual_file_system_t* locator) {
+    reinterpret_cast<smlt::loaders::BaseTextureLoader*>(self)->set_vfs(reinterpret_cast<smlt::VirtualFileSystem*>(locator));
 }
 
 } /* extern "C" */

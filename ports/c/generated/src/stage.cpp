@@ -7,6 +7,8 @@
 #include <memory>
 #include "simulant/stage.h"
 #include "simulant/math/aabb.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -18,6 +20,11 @@ const char* smlt_stage_node_type_name(const smlt_stage_t* self) {
 
 const smlt_aabb_t* smlt_stage_aabb(const smlt_stage_t* self) {
     return reinterpret_cast<const smlt_aabb_t*>(&(reinterpret_cast<const smlt::Stage*>(self)->aabb()));
+}
+
+smlt_stage_t* smlt_stage_node_create_child_stage(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::Stage>();
+    return reinterpret_cast<smlt_stage_t*>(node);
 }
 
 } /* extern "C" */

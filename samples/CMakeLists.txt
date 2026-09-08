@@ -91,3 +91,10 @@ foreach(sample ${SAMPLES})
     endif()
   endif()
 endforeach()
+
+# A Vala sample against ports/c/ports/vala -- see flappy/CMakeLists.txt.
+# Only meaningful once those exist, and only if valac happens to be
+# installed (checked inside that subdirectory).
+IF(SIMULANT_BUILD_C_BINDINGS)
+  ADD_SUBDIRECTORY(flappy)
+ENDIF()

@@ -15,6 +15,12 @@ void smlt_service_destroy(smlt_service_t* self);
 void smlt_service_update(smlt_service_t* self, float dt);
 void smlt_service_late_update(smlt_service_t* self, float dt);
 void smlt_service_fixed_update(smlt_service_t* self, float step);
+void smlt_service_set_name(smlt_service_t* self, const char* name);
+char* smlt_service_name(const smlt_service_t* self);
+bool smlt_service_has_name(const smlt_service_t* self);
+bool smlt_service_destroy_2(smlt_service_t* self);
+bool smlt_service_destroy_immediately(smlt_service_t* self);
+bool smlt_service_is_destroyed(const smlt_service_t* self);
 
 #ifdef __cplusplus
 }

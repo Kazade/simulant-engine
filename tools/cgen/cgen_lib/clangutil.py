@@ -6,7 +6,7 @@ import os
 import shutil
 import subprocess
 
-from clang.cindex import CursorKind
+from clang.cindex import AccessSpecifier, CursorKind
 
 
 def qualified_name(cursor) -> str:
@@ -71,6 +71,76 @@ def is_derived_from(cursor, target_qualified_name: str, _cache=None) -> bool:
             _cache[key] = True
             return True
     return False
+
+
+def direct_base_in_chain(cursor, target_qualified_name: str, _cache=None) -> str:
+    """For a class known to derive (directly or transitively) from
+    `target_qualified_name`, returns the qualified name of whichever
+    direct base is itself part of that chain (i.e. either *is*
+    target_qualified_name, or derives from it) -- the base cgen.py should
+    use for real Vala inheritance. Falls back to target_qualified_name
+    itself if no direct base qualifies (shouldn't normally happen for a
+    class this was already confirmed to apply to, but multiple/virtual
+    inheritance edge cases could in principle produce one).
+    """
+    for child in cursor.get_children():
+        if child.kind != CursorKind.CXX_BASE_SPECIFIER:
+            continue
+        base_decl = child.type.get_declaration()
+        if base_decl is None:
+            continue
+        base_qn = qualified_name(base_decl)
+        if base_qn == target_qualified_name:
+            return base_qn
+        base_def = base_decl.get_definition()
+        if base_def is not None and is_derived_from(base_def, target_qualified_name, _cache):
+            return base_qn
+    return target_qualified_name
+
+
+def iter_inherited_public_members(cursor, skip_qualified_name=None, _visited=None):
+    """Yields every public CXX_METHOD/FIELD_DECL cursor declared directly on
+    some base class reachable from `cursor` (recursively, across the whole
+    inheritance graph) -- never anything declared on `cursor` itself, and
+    never a constructor/destructor (a derived class's own are what matter,
+    not a base's).
+
+    A naive same-class-only member scan (like the main scanner loop) misses
+    these entirely -- clang only lists members declared textually inside a
+    class body, not ones it inherits. That's invisible for a base already
+    reachable through *real* single-inheritance Vala classes (e.g. Sprite
+    extends ContainerNode in Vala, so ContainerNode's own wrapped methods
+    already work on a Sprite for free) but not for any *other* base, since
+    Vala/GObject only support single inheritance: e.g. Sprite's second
+    base KeyFrameAnimated (add_animation() etc.) has no other way to reach
+    Vala at all. `skip_qualified_name`, if given, names one specific direct
+    base to skip entirely (together with everything reachable only through
+    it) -- the caller's job to identify as whichever base *is* reachable
+    some other way already.
+    """
+    if _visited is None:
+        _visited = set()
+    for child in cursor.get_children():
+        if child.kind != CursorKind.CXX_BASE_SPECIFIER:
+            continue
+        if child.access_specifier != AccessSpecifier.PUBLIC:
+            continue  # privately/protectedly inherited: not reachable via a derived pointer at all
+        base_decl = child.type.get_declaration()
+        if base_decl is None or base_decl.kind not in (CursorKind.CLASS_DECL, CursorKind.STRUCT_DECL):
+            continue  # e.g. a template mixin like ChainNameable<Sprite> -- not resolvable here
+        base_qn = qualified_name(base_decl)
+        if base_qn == skip_qualified_name or base_qn in _visited:
+            continue
+        _visited.add(base_qn)
+        base_def = base_decl.get_definition()
+        if base_def is None:
+            continue
+        for member in base_def.get_children():
+            if member.access_specifier != AccessSpecifier.PUBLIC:
+                continue
+            if member.kind in (CursorKind.CXX_METHOD, CursorKind.FIELD_DECL):
+                yield member
+        yield from iter_inherited_public_members(base_def, None, _visited)
 
 
 def is_inside_namespace(cursor, name: str) -> bool:

@@ -15,6 +15,12 @@ const char* smlt_cylindrical_billboard_node_type_name(const smlt_cylindrical_bil
 void smlt_cylindrical_billboard_set_target(smlt_cylindrical_billboard_t* self, smlt_stage_node_t* target);
 const smlt_aabb_t* smlt_cylindrical_billboard_aabb(const smlt_cylindrical_billboard_t* self);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::CylindricalBillboard as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_cylindrical_billboard_t* smlt_stage_node_create_child_cylindrical_billboard(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

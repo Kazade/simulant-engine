@@ -20,6 +20,12 @@ public:
         type_name_(std::move(type_name)),
         vtable_(vtable) {}
 
+    ~CStageNode() override {
+        if(vtable_.on_deleted) {
+            vtable_.on_deleted(user_data_);
+        }
+    }
+
     const char* node_type_name() const override {
         return type_name_.c_str();
     }

@@ -7,6 +7,8 @@
 #include <memory>
 #include "simulant/nodes/animation_controller.h"
 #include "simulant/utils/params.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -58,6 +60,11 @@ float smlt_animation_controller_animation_duration(const smlt_animation_controll
 
 void smlt_animation_controller_push_animation(smlt_animation_controller_t* self, const smlt_animation_t* a) {
     reinterpret_cast<smlt::AnimationController*>(self)->push_animation((*reinterpret_cast<const smlt::Animation*>(a)));
+}
+
+smlt_animation_controller_t* smlt_stage_node_create_child_animation_controller(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::AnimationController>();
+    return reinterpret_cast<smlt_animation_controller_t*>(node);
 }
 
 } /* extern "C" */

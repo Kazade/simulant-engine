@@ -11,10 +11,16 @@
 #include "simulant/nodes/camera.h"
 #include "simulant/viewport.h"
 #include "simulant/utils/params.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
 extern "C" {
+
+smlt_geom_culler_t* smlt_geom_culler(smlt_geom_t* self) {
+    return reinterpret_cast<smlt_geom_culler_t*>(reinterpret_cast<smlt::Geom*>(self)->culler.get());
+}
 
 const char* smlt_geom_node_type_name(const smlt_geom_t* self) {
     return reinterpret_cast<const smlt::Geom*>(self)->node_type_name();
@@ -26,6 +32,43 @@ const smlt_aabb_t* smlt_geom_aabb(const smlt_geom_t* self) {
 
 bool smlt_geom_on_create(smlt_geom_t* self, const smlt_params_t* params) {
     return reinterpret_cast<smlt::Geom*>(self)->on_create((*reinterpret_cast<const smlt::Params*>(params)));
+}
+
+float smlt_geom_width(const smlt_geom_t* self) {
+    return reinterpret_cast<const smlt::Geom*>(self)->width();
+}
+
+float smlt_geom_height(const smlt_geom_t* self) {
+    return reinterpret_cast<const smlt::Geom*>(self)->height();
+}
+
+float smlt_geom_depth(const smlt_geom_t* self) {
+    return reinterpret_cast<const smlt::Geom*>(self)->depth();
+}
+
+float smlt_geom_half_width(const smlt_geom_t* self) {
+    return reinterpret_cast<const smlt::Geom*>(self)->half_width();
+}
+
+float smlt_geom_half_height(const smlt_geom_t* self) {
+    return reinterpret_cast<const smlt::Geom*>(self)->half_height();
+}
+
+float smlt_geom_half_depth(const smlt_geom_t* self) {
+    return reinterpret_cast<const smlt::Geom*>(self)->half_depth();
+}
+
+float smlt_geom_diameter(const smlt_geom_t* self) {
+    return reinterpret_cast<const smlt::Geom*>(self)->diameter();
+}
+
+float smlt_geom_radius(const smlt_geom_t* self) {
+    return reinterpret_cast<const smlt::Geom*>(self)->radius();
+}
+
+smlt_geom_t* smlt_stage_node_create_child_geom(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::Geom>();
+    return reinterpret_cast<smlt_geom_t*>(node);
 }
 
 } /* extern "C" */

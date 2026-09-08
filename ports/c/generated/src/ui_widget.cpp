@@ -63,6 +63,14 @@ bool smlt_ui_widget_is_focused(const smlt_ui_widget_t* self) {
     return reinterpret_cast<const smlt::ui::Widget*>(self)->is_focused();
 }
 
+void smlt_ui_widget_set_focus_previous(smlt_ui_widget_t* self, smlt_ui_widget_t* previous_widget) {
+    reinterpret_cast<smlt::ui::Widget*>(self)->set_focus_previous(reinterpret_cast<smlt::ui::Widget*>(previous_widget));
+}
+
+void smlt_ui_widget_set_focus_next(smlt_ui_widget_t* self, smlt_ui_widget_t* next_widget) {
+    reinterpret_cast<smlt::ui::Widget*>(self)->set_focus_next(reinterpret_cast<smlt::ui::Widget*>(next_widget));
+}
+
 void smlt_ui_widget_focus(smlt_ui_widget_t* self) {
     reinterpret_cast<smlt::ui::Widget*>(self)->focus();
 }
@@ -71,12 +79,32 @@ void smlt_ui_widget_blur(smlt_ui_widget_t* self) {
     reinterpret_cast<smlt::ui::Widget*>(self)->blur();
 }
 
+smlt_ui_widget_t* smlt_ui_widget_next_in_focus_chain(const smlt_ui_widget_t* self) {
+    return reinterpret_cast<smlt_ui_widget_t*>((reinterpret_cast<const smlt::ui::Widget*>(self)->next_in_focus_chain()));
+}
+
+smlt_ui_widget_t* smlt_ui_widget_previous_in_focus_chain(const smlt_ui_widget_t* self) {
+    return reinterpret_cast<smlt_ui_widget_t*>((reinterpret_cast<const smlt::ui::Widget*>(self)->previous_in_focus_chain()));
+}
+
 void smlt_ui_widget_focus_next_in_chain(smlt_ui_widget_t* self, smlt_ui_change_focus_behaviour_t behaviour) {
     reinterpret_cast<smlt::ui::Widget*>(self)->focus_next_in_chain(static_cast<smlt::ui::ChangeFocusBehaviour>(behaviour));
 }
 
 void smlt_ui_widget_focus_previous_in_chain(smlt_ui_widget_t* self, smlt_ui_change_focus_behaviour_t behaviour) {
     reinterpret_cast<smlt::ui::Widget*>(self)->focus_previous_in_chain(static_cast<smlt::ui::ChangeFocusBehaviour>(behaviour));
+}
+
+smlt_ui_widget_t* smlt_ui_widget_first_in_focus_chain(smlt_ui_widget_t* self) {
+    return reinterpret_cast<smlt_ui_widget_t*>((reinterpret_cast<smlt::ui::Widget*>(self)->first_in_focus_chain()));
+}
+
+smlt_ui_widget_t* smlt_ui_widget_last_in_focus_chain(smlt_ui_widget_t* self) {
+    return reinterpret_cast<smlt_ui_widget_t*>((reinterpret_cast<smlt::ui::Widget*>(self)->last_in_focus_chain()));
+}
+
+smlt_ui_widget_t* smlt_ui_widget_focused_in_chain(smlt_ui_widget_t* self) {
+    return reinterpret_cast<smlt_ui_widget_t*>((reinterpret_cast<smlt::ui::Widget*>(self)->focused_in_chain()));
 }
 
 void smlt_ui_widget_click(smlt_ui_widget_t* self) {
@@ -109,10 +137,6 @@ smlt_ui_px_t* smlt_ui_widget_border_radius(const smlt_ui_widget_t* self) {
 
 void smlt_ui_widget_set_border_color(smlt_ui_widget_t* self, const smlt_color_t* color) {
     reinterpret_cast<smlt::ui::Widget*>(self)->set_border_color((*reinterpret_cast<const smlt::Color*>(color)));
-}
-
-void smlt_ui_widget_set_overflow(smlt_ui_widget_t* self, smlt_ui_overflow_type_t type) {
-    reinterpret_cast<smlt::ui::Widget*>(self)->set_overflow(static_cast<smlt::ui::OverflowType>(type));
 }
 
 void smlt_ui_widget_set_padding(smlt_ui_widget_t* self, const smlt_ui_px_t* x) {

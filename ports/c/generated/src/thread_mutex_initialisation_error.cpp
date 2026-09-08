@@ -19,4 +19,8 @@ smlt_thread_mutex_initialisation_error_t* smlt_thread_mutex_initialisation_error
     return reinterpret_cast<smlt_thread_mutex_initialisation_error_t*>(new smlt::thread::MutexInitialisationError());
 }
 
+const char* smlt_thread_mutex_initialisation_error_what(const smlt_thread_mutex_initialisation_error_t* self) {
+    return reinterpret_cast<const smlt::thread::MutexInitialisationError*>(self)->what();
+}
+
 } /* extern "C" */

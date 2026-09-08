@@ -14,6 +14,15 @@ extern "C" {
 void smlt_boundable_entity_destroy(smlt_boundable_entity_t* self);
 smlt_aabb_t* smlt_boundable_entity_transformed_aabb(const smlt_boundable_entity_t* self);
 smlt_vec3_t* smlt_boundable_entity_center(const smlt_boundable_entity_t* self);
+const smlt_aabb_t* smlt_boundable_entity_aabb(const smlt_boundable_entity_t* self);
+float smlt_boundable_entity_width(const smlt_boundable_entity_t* self);
+float smlt_boundable_entity_height(const smlt_boundable_entity_t* self);
+float smlt_boundable_entity_depth(const smlt_boundable_entity_t* self);
+float smlt_boundable_entity_half_width(const smlt_boundable_entity_t* self);
+float smlt_boundable_entity_half_height(const smlt_boundable_entity_t* self);
+float smlt_boundable_entity_half_depth(const smlt_boundable_entity_t* self);
+float smlt_boundable_entity_diameter(const smlt_boundable_entity_t* self);
+float smlt_boundable_entity_radius(const smlt_boundable_entity_t* self);
 
 /* This class is abstract in C++ (has pure virtual methods): no
  * smlt_..._create() is generated for it. Instances reached via

@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 void smlt_window_holder_destroy(smlt_window_holder_t* self);
+smlt_window_t* smlt_window_holder_window(smlt_window_holder_t* self);
 smlt_window_holder_t* smlt_window_holder_create(smlt_window_t* window);
 
 #ifdef __cplusplus

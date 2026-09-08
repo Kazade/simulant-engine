@@ -7,6 +7,16 @@
 #include <memory>
 #include "simulant/platforms/sdl/sdl2_window.h"
 #include "simulant/application.h"
+#include "simulant/color.h"
+#include "simulant/input/input_manager.h"
+#include "simulant/math/vec2.h"
+#include "simulant/compositor.h"
+#include "simulant/renderers/renderer.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/event_listener.h"
+#include "simulant/generic/data_carrier.h"
+#include "simulant/input/input_state.h"
+#include "simulant/screen.h"
 #include "simulant/window.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
@@ -15,6 +25,30 @@ extern "C" {
 
 void smlt_sdl2_window_destroy(smlt_sdl2_window_t* self) {
     delete reinterpret_cast<smlt::SDL2Window*>(self);
+}
+
+smlt_application_t* smlt_sdl2_window_app(smlt_sdl2_window_t* self) {
+    return reinterpret_cast<smlt_application_t*>(reinterpret_cast<smlt::SDL2Window*>(self)->app.get());
+}
+
+smlt_renderer_t* smlt_sdl2_window_renderer(smlt_sdl2_window_t* self) {
+    return reinterpret_cast<smlt_renderer_t*>(reinterpret_cast<smlt::SDL2Window*>(self)->renderer.get());
+}
+
+smlt_generic_data_carrier_t* smlt_sdl2_window_data(smlt_sdl2_window_t* self) {
+    return reinterpret_cast<smlt_generic_data_carrier_t*>(reinterpret_cast<smlt::SDL2Window*>(self)->data.get());
+}
+
+smlt_input_manager_t* smlt_sdl2_window_input(smlt_sdl2_window_t* self) {
+    return reinterpret_cast<smlt_input_manager_t*>(reinterpret_cast<smlt::SDL2Window*>(self)->input.get());
+}
+
+smlt_input_state_t* smlt_sdl2_window_input_state(smlt_sdl2_window_t* self) {
+    return reinterpret_cast<smlt_input_state_t*>(reinterpret_cast<smlt::SDL2Window*>(self)->input_state.get());
+}
+
+smlt_compositor_t* smlt_sdl2_window_compositor(smlt_sdl2_window_t* self) {
+    return reinterpret_cast<smlt_compositor_t*>(reinterpret_cast<smlt::SDL2Window*>(self)->compositor.get());
 }
 
 smlt_sdl2_window_t* smlt_sdl2_window_create(void) {
@@ -33,8 +67,156 @@ void smlt_sdl2_window_lock_cursor(smlt_sdl2_window_t* self, bool cursor_locked) 
     reinterpret_cast<smlt::SDL2Window*>(self)->lock_cursor(cursor_locked);
 }
 
-void smlt_sdl2_window_cursor_position(smlt_sdl2_window_t* self, int32_t* mouse_x, int32_t* mouse_y) {
+void smlt_sdl2_window_cursor_position(smlt_sdl2_window_t* self, int* mouse_x, int* mouse_y) {
     reinterpret_cast<smlt::SDL2Window*>(self)->cursor_position((*mouse_x), (*mouse_y));
+}
+
+bool smlt_sdl2_window_create_window(smlt_sdl2_window_t* self, uint16_t width, uint16_t height, uint8_t bpp, bool fullscreen, bool enable_vsync) {
+    return reinterpret_cast<smlt::SDL2Window*>(self)->create_window(width, height, bpp, fullscreen, enable_vsync);
+}
+
+void smlt_sdl2_window_swap_buffers(smlt_sdl2_window_t* self) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->swap_buffers();
+}
+
+uint16_t smlt_sdl2_window_width(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<const smlt::SDL2Window*>(self)->width();
+}
+
+uint16_t smlt_sdl2_window_height(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<const smlt::SDL2Window*>(self)->height();
+}
+
+bool smlt_sdl2_window_is_fullscreen(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<const smlt::SDL2Window*>(self)->is_fullscreen();
+}
+
+bool smlt_sdl2_window_vsync_enabled(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<const smlt::SDL2Window*>(self)->vsync_enabled();
+}
+
+float smlt_sdl2_window_aspect_ratio(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<const smlt::SDL2Window*>(self)->aspect_ratio();
+}
+
+void smlt_sdl2_window_set_logging_level(smlt_sdl2_window_t* self, smlt_log_level_t level) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->set_logging_level(static_cast<smlt::LogLevel>(level));
+}
+
+smlt_log_level_t smlt_sdl2_window_logging_level(const smlt_sdl2_window_t* self) {
+    return static_cast<smlt_log_level_t>(reinterpret_cast<const smlt::SDL2Window*>(self)->logging_level());
+}
+
+void smlt_sdl2_window_reset(smlt_sdl2_window_t* self) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->reset();
+}
+
+smlt_vec2_t* smlt_sdl2_window_coordinate_from_normalized(smlt_sdl2_window_t* self, float rx, float ry) {
+    return reinterpret_cast<smlt_vec2_t*>(new smlt::Vec2(reinterpret_cast<smlt::SDL2Window*>(self)->coordinate_from_normalized(rx, ry)));
+}
+
+void smlt_sdl2_window_on_finger_down(smlt_sdl2_window_t* self, unsigned int touch_id, float normalized_x, float normalized_y, float pressure) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->on_finger_down(touch_id, normalized_x, normalized_y, pressure);
+}
+
+void smlt_sdl2_window_on_finger_up(smlt_sdl2_window_t* self, unsigned int touch_id, float normalized_x, float normalized_y) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->on_finger_up(touch_id, normalized_x, normalized_y);
+}
+
+void smlt_sdl2_window_on_finger_motion(smlt_sdl2_window_t* self, unsigned int touch_id, float normalized_x, float normalized_y, float dx, float dy) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->on_finger_motion(touch_id, normalized_x, normalized_y, dx, dy);
+}
+
+void smlt_sdl2_window_on_key_down(smlt_sdl2_window_t* self, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->on_key_down(static_cast<smlt::KeyboardCode>(code), (*reinterpret_cast<const smlt::ModifierKeyState*>(modifiers)));
+}
+
+void smlt_sdl2_window_on_key_up(smlt_sdl2_window_t* self, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->on_key_up(static_cast<smlt::KeyboardCode>(code), (*reinterpret_cast<const smlt::ModifierKeyState*>(modifiers)));
+}
+
+unsigned long smlt_sdl2_window_screen_count(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<const smlt::SDL2Window*>(self)->screen_count();
+}
+
+smlt_screen_t* smlt_sdl2_window_screen(const smlt_sdl2_window_t* self, const char* name) {
+    return reinterpret_cast<smlt_screen_t*>((reinterpret_cast<const smlt::SDL2Window*>(self)->screen(std::string(name ? name : ""))));
+}
+
+smlt_screen_t* smlt_sdl2_window_create_screen(smlt_sdl2_window_t* self, const char* name, uint16_t width, uint16_t height, smlt_screen_format_t format, uint16_t refresh_rate) {
+    return reinterpret_cast<smlt_screen_t*>((reinterpret_cast<smlt::SDL2Window*>(self)->_create_screen(std::string(name ? name : ""), width, height, static_cast<smlt::ScreenFormat>(format), refresh_rate)));
+}
+
+void smlt_sdl2_window_destroy_screen(smlt_sdl2_window_t* self, const char* name) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->_destroy_screen(std::string(name ? name : ""));
+}
+
+bool smlt_sdl2_window_initialize_assets_and_devices(smlt_sdl2_window_t* self) {
+    return reinterpret_cast<smlt::SDL2Window*>(self)->initialize_assets_and_devices();
+}
+
+void smlt_sdl2_window_clean_up(smlt_sdl2_window_t* self) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->_clean_up();
+}
+
+smlt_stage_node_t* smlt_sdl2_window_audio_listener(smlt_sdl2_window_t* self) {
+    return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<smlt::SDL2Window*>(self)->audio_listener()));
+}
+
+void smlt_sdl2_window_set_audio_listener(smlt_sdl2_window_t* self, smlt_stage_node_t* node) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->set_audio_listener(reinterpret_cast<smlt::StageNode*>(node));
+}
+
+bool smlt_sdl2_window_has_explicit_audio_listener(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<const smlt::SDL2Window*>(self)->has_explicit_audio_listener();
+}
+
+bool smlt_sdl2_window_has_context(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<const smlt::SDL2Window*>(self)->has_context();
+}
+
+bool smlt_sdl2_window_has_focus(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<const smlt::SDL2Window*>(self)->has_focus();
+}
+
+void smlt_sdl2_window_set_has_focus(smlt_sdl2_window_t* self, bool v) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->set_has_focus(v);
+}
+
+void smlt_sdl2_window_set_escape_to_quit(smlt_sdl2_window_t* self, bool value) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->set_escape_to_quit(value);
+}
+
+bool smlt_sdl2_window_escape_to_quit_enabled(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<const smlt::SDL2Window*>(self)->escape_to_quit_enabled();
+}
+
+void smlt_sdl2_window_set_clear_every_frame(smlt_sdl2_window_t* self, uint32_t clear_flags, const smlt_color_t* color) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->set_clear_every_frame(clear_flags, (*reinterpret_cast<const smlt::Color*>(color)));
+}
+
+uint32_t smlt_sdl2_window_clear_every_frame_flags(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<const smlt::SDL2Window*>(self)->clear_every_frame_flags();
+}
+
+smlt_color_t* smlt_sdl2_window_clear_every_frame_color(const smlt_sdl2_window_t* self) {
+    return reinterpret_cast<smlt_color_t*>(new smlt::Color(reinterpret_cast<const smlt::SDL2Window*>(self)->clear_every_frame_color()));
+}
+
+void smlt_sdl2_window_set_last_frame_rendered_id(smlt_sdl2_window_t* self, uint32_t id) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->set_last_frame_rendered_id(id);
+}
+
+const unsigned int* smlt_sdl2_window_last_frame_rendered_id(const smlt_sdl2_window_t* self) {
+    return &(reinterpret_cast<const smlt::SDL2Window*>(self)->last_frame_rendered_id());
+}
+
+void smlt_sdl2_window_register_event_listener(smlt_sdl2_window_t* self, smlt_event_listener_t* listener) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->register_event_listener(reinterpret_cast<smlt::EventListener*>(listener));
+}
+
+void smlt_sdl2_window_unregister_event_listener(smlt_sdl2_window_t* self, smlt_event_listener_t* listener) {
+    reinterpret_cast<smlt::SDL2Window*>(self)->unregister_event_listener(reinterpret_cast<smlt::EventListener*>(listener));
 }
 
 } /* extern "C" */

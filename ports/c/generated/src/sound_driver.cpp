@@ -8,6 +8,7 @@
 #include "simulant/sound_driver.h"
 #include "simulant/math/quaternion.h"
 #include "simulant/math/vec3.h"
+#include "simulant/window.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -15,6 +16,10 @@ extern "C" {
 
 void smlt_sound_driver_destroy(smlt_sound_driver_t* self) {
     delete reinterpret_cast<smlt::SoundDriver*>(self);
+}
+
+smlt_window_t* smlt_sound_driver_window(smlt_sound_driver_t* self) {
+    return reinterpret_cast<smlt_window_t*>(reinterpret_cast<smlt::SoundDriver*>(self)->window.get());
 }
 
 bool smlt_sound_driver_startup(smlt_sound_driver_t* self) {
@@ -33,7 +38,7 @@ void smlt_sound_driver_stop_source(smlt_sound_driver_t* self, unsigned int sourc
     reinterpret_cast<smlt::SoundDriver*>(self)->stop_source(source_id);
 }
 
-void smlt_sound_driver_upload_buffer_data(smlt_sound_driver_t* self, unsigned int buffer, smlt_audio_data_format_t format, const uint8_t* data, unsigned long bytes, uint32_t frequency) {
+void smlt_sound_driver_upload_buffer_data(smlt_sound_driver_t* self, unsigned int buffer, smlt_audio_data_format_t format, const unsigned char* data, unsigned long bytes, uint32_t frequency) {
     reinterpret_cast<smlt::SoundDriver*>(self)->upload_buffer_data(buffer, static_cast<smlt::AudioDataFormat>(format), data, bytes, frequency);
 }
 

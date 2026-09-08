@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 
+smlt_key_frame_animation_state_t* smlt_actor_animation_state(smlt_actor_t* self);
 const char* smlt_actor_node_type_name(const smlt_actor_t* self);
 const smlt_aabb_t* smlt_actor_aabb(const smlt_actor_t* self);
 unsigned long smlt_actor_mesh_id(const smlt_actor_t* self, smlt_detail_level_t detail_level);
@@ -24,6 +25,20 @@ void smlt_actor_set_mesh(smlt_actor_t* self, smlt_mesh_t* mesh, smlt_detail_leve
 bool smlt_actor_has_animated_mesh(const smlt_actor_t* self);
 void smlt_actor_use_material_slot(smlt_actor_t* self, smlt_material_slot_t var);
 smlt_material_slot_t smlt_actor_active_material_slot(const smlt_actor_t* self);
+float smlt_actor_width(const smlt_actor_t* self);
+float smlt_actor_height(const smlt_actor_t* self);
+float smlt_actor_depth(const smlt_actor_t* self);
+float smlt_actor_half_width(const smlt_actor_t* self);
+float smlt_actor_half_height(const smlt_actor_t* self);
+float smlt_actor_half_depth(const smlt_actor_t* self);
+float smlt_actor_diameter(const smlt_actor_t* self);
+float smlt_actor_radius(const smlt_actor_t* self);
+
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::Actor as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_actor_t* smlt_stage_node_create_child_actor(smlt_stage_node_t* parent);
 
 #ifdef __cplusplus
 }

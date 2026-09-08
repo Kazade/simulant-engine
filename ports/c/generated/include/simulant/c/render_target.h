@@ -18,7 +18,7 @@ void smlt_render_target_set_clear_every_frame(smlt_render_target_t* self, uint32
 uint32_t smlt_render_target_clear_every_frame_flags(const smlt_render_target_t* self);
 smlt_color_t* smlt_render_target_clear_every_frame_color(const smlt_render_target_t* self);
 void smlt_render_target_set_last_frame_rendered_id(smlt_render_target_t* self, uint32_t id);
-const uint32_t* smlt_render_target_last_frame_rendered_id(const smlt_render_target_t* self);
+const unsigned int* smlt_render_target_last_frame_rendered_id(const smlt_render_target_t* self);
 
 /* This class is abstract in C++ (has pure virtual methods): no
  * smlt_..._create() is generated for it. Instances reached via

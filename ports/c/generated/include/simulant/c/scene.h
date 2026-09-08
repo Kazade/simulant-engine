@@ -11,6 +11,13 @@
 extern "C" {
 #endif
 
+smlt_window_t* smlt_scene_window(smlt_scene_t* self);
+smlt_application_t* smlt_scene_app(smlt_scene_t* self);
+smlt_input_manager_t* smlt_scene_input(smlt_scene_t* self);
+smlt_scene_manager_t* smlt_scene_scenes(smlt_scene_t* self);
+smlt_scene_compositor_t* smlt_scene_compositor(smlt_scene_t* self);
+smlt_lighting_settings_t* smlt_scene_lighting(smlt_scene_t* self);
+smlt_asset_manager_t* smlt_scene_assets(smlt_scene_t* self);
 void smlt_scene_load(smlt_scene_t* self);
 void smlt_scene_unload(smlt_scene_t* self);
 void smlt_scene_activate(smlt_scene_t* self);
@@ -22,6 +29,10 @@ void smlt_scene_set_name(smlt_scene_t* self, const char* name);
 bool smlt_scene_unload_on_deactivate(const smlt_scene_t* self);
 void smlt_scene_set_unload_on_deactivate(smlt_scene_t* self, bool v);
 const char* smlt_scene_node_type_name(const smlt_scene_t* self);
+smlt_stage_node_t* smlt_scene_get_node(const smlt_scene_t* self, unsigned int id);
+bool smlt_scene_has_node(const smlt_scene_t* self, unsigned int id);
+smlt_stage_node_t* smlt_scene_create_node(smlt_scene_t* self, unsigned int type, const smlt_params_t* params, smlt_stage_node_t* base);
+bool smlt_scene_register_stage_node(smlt_scene_t* self, const smlt_path_t* script_file, const char* class_name);
 
 /* This class is abstract in C++ (has pure virtual methods): no
  * smlt_..._create() is generated for it. Instances reached via

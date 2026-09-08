@@ -13,6 +13,7 @@ extern "C" {
 
 void smlt_skybox_image_not_found_error_destroy(smlt_skybox_image_not_found_error_t* self);
 smlt_skybox_image_not_found_error_t* smlt_skybox_image_not_found_error_create(const char* what);
+const char* smlt_skybox_image_not_found_error_what(const smlt_skybox_image_not_found_error_t* self);
 
 #ifdef __cplusplus
 }

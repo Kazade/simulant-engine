@@ -19,4 +19,8 @@ smlt_skybox_image_duplicate_error_t* smlt_skybox_image_duplicate_error_create(co
     return reinterpret_cast<smlt_skybox_image_duplicate_error_t*>(new smlt::SkyboxImageDuplicateError(std::string(what ? what : "")));
 }
 
+const char* smlt_skybox_image_duplicate_error_what(const smlt_skybox_image_duplicate_error_t* self) {
+    return reinterpret_cast<const smlt::SkyboxImageDuplicateError*>(self)->what();
+}
+
 } /* extern "C" */

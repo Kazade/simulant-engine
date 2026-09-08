@@ -19,6 +19,12 @@ void smlt_ui_frame_set_layout_direction(smlt_ui_frame_t* self, smlt_ui_layout_di
 void smlt_ui_frame_set_space_between(smlt_ui_frame_t* self, const smlt_ui_px_t* spacing);
 smlt_ui_px_t* smlt_ui_frame_space_between(const smlt_ui_frame_t* self);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::ui::Frame as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_ui_frame_t* smlt_stage_node_create_child_ui_frame(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

@@ -19,4 +19,8 @@ smlt_asset_missing_error_t* smlt_asset_missing_error_create(const char* what) {
     return reinterpret_cast<smlt_asset_missing_error_t*>(new smlt::AssetMissingError(std::string(what ? what : "")));
 }
 
+const char* smlt_asset_missing_error_what(const smlt_asset_missing_error_t* self) {
+    return reinterpret_cast<const smlt::AssetMissingError*>(self)->what();
+}
+
 } /* extern "C" */

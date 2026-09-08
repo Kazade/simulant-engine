@@ -7,14 +7,26 @@
 #include <memory>
 #include "simulant/nodes/sprite.h"
 #include "simulant/math/aabb.h"
+#include "simulant/animation.h"
+#include "simulant/nodes/actor.h"
 #include "simulant/assets/spritesheet.h"
 #include "simulant/assets/material.h"
 #include "simulant/texture.h"
 #include "simulant/utils/params.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
 extern "C" {
+
+smlt_actor_t* smlt_sprite_actor(smlt_sprite_t* self) {
+    return reinterpret_cast<smlt_actor_t*>(reinterpret_cast<smlt::Sprite*>(self)->actor.get());
+}
+
+smlt_key_frame_animation_state_t* smlt_sprite_animations(smlt_sprite_t* self) {
+    return reinterpret_cast<smlt_key_frame_animation_state_t*>(reinterpret_cast<smlt::Sprite*>(self)->animations.get());
+}
 
 const char* smlt_sprite_node_type_name(const smlt_sprite_t* self) {
     return reinterpret_cast<const smlt::Sprite*>(self)->node_type_name();
@@ -78,6 +90,31 @@ void smlt_sprite_flip_horizontally(smlt_sprite_t* self, bool value) {
 
 const smlt_aabb_t* smlt_sprite_aabb(const smlt_sprite_t* self) {
     return reinterpret_cast<const smlt_aabb_t*>(&(reinterpret_cast<const smlt::Sprite*>(self)->aabb()));
+}
+
+void smlt_sprite_add_animation(smlt_sprite_t* self, const char* name, uint32_t start_frame, uint32_t end_frame, float fps) {
+    reinterpret_cast<smlt::Sprite*>(self)->add_animation(std::string(name ? name : ""), start_frame, end_frame, fps);
+}
+
+bool smlt_sprite_has_animations(const smlt_sprite_t* self) {
+    return reinterpret_cast<const smlt::Sprite*>(self)->has_animations();
+}
+
+unsigned long smlt_sprite_animation_count(const smlt_sprite_t* self) {
+    return reinterpret_cast<const smlt::Sprite*>(self)->animation_count();
+}
+
+void smlt_sprite_set_default_fps(smlt_sprite_t* self, float fps) {
+    reinterpret_cast<smlt::Sprite*>(self)->set_default_fps(fps);
+}
+
+float smlt_sprite_default_fps(const smlt_sprite_t* self) {
+    return reinterpret_cast<const smlt::Sprite*>(self)->default_fps();
+}
+
+smlt_sprite_t* smlt_stage_node_create_child_sprite(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::Sprite>();
+    return reinterpret_cast<smlt_sprite_t*>(node);
 }
 
 } /* extern "C" */

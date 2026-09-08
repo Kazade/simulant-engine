@@ -15,4 +15,16 @@ void smlt_interpreter_destroy(smlt_interpreter_t* self) {
     delete reinterpret_cast<smlt::Interpreter*>(self);
 }
 
+void smlt_interpreter_update(smlt_interpreter_t* self, float dt) {
+    reinterpret_cast<smlt::Interpreter*>(self)->update(dt);
+}
+
+void smlt_interpreter_late_update(smlt_interpreter_t* self, float dt) {
+    reinterpret_cast<smlt::Interpreter*>(self)->late_update(dt);
+}
+
+void smlt_interpreter_fixed_update(smlt_interpreter_t* self, float step) {
+    reinterpret_cast<smlt::Interpreter*>(self)->fixed_update(step);
+}
+
 } /* extern "C" */

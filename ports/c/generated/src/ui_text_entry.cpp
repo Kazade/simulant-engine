@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/nodes/ui/text_entry.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -29,6 +31,11 @@ bool smlt_ui_text_entry_caret_left(smlt_ui_text_entry_t* self) {
 
 bool smlt_ui_text_entry_caret_right(smlt_ui_text_entry_t* self) {
     return reinterpret_cast<smlt::ui::TextEntry*>(self)->caret_right();
+}
+
+smlt_ui_text_entry_t* smlt_stage_node_create_child_ui_text_entry(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::ui::TextEntry>();
+    return reinterpret_cast<smlt_ui_text_entry_t*>(node);
 }
 
 } /* extern "C" */

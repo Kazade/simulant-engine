@@ -12,11 +12,12 @@ extern "C" {
 #endif
 
 void smlt_sound_driver_destroy(smlt_sound_driver_t* self);
+smlt_window_t* smlt_sound_driver_window(smlt_sound_driver_t* self);
 bool smlt_sound_driver_startup(smlt_sound_driver_t* self);
 void smlt_sound_driver_shutdown(smlt_sound_driver_t* self);
 void smlt_sound_driver_play_source(smlt_sound_driver_t* self, unsigned int source_id);
 void smlt_sound_driver_stop_source(smlt_sound_driver_t* self, unsigned int source_id);
-void smlt_sound_driver_upload_buffer_data(smlt_sound_driver_t* self, unsigned int buffer, smlt_audio_data_format_t format, const uint8_t* data, unsigned long bytes, uint32_t frequency);
+void smlt_sound_driver_upload_buffer_data(smlt_sound_driver_t* self, unsigned int buffer, smlt_audio_data_format_t format, const unsigned char* data, unsigned long bytes, uint32_t frequency);
 smlt_audio_source_state_t smlt_sound_driver_source_state(smlt_sound_driver_t* self, unsigned int source);
 int32_t smlt_sound_driver_source_buffers_processed_count(const smlt_sound_driver_t* self, unsigned int source);
 void smlt_sound_driver_set_source_as_ambient(smlt_sound_driver_t* self, unsigned int id);

@@ -17,6 +17,15 @@ void smlt_physics_service_set_gravity(smlt_physics_service_t* self, const smlt_v
 const smlt_contact_filter_t* smlt_physics_service_contact_filter(const smlt_physics_service_t* self);
 void smlt_physics_service_set_contact_filter(smlt_physics_service_t* self, smlt_contact_filter_t* filter);
 void smlt_physics_service_set_debug(smlt_physics_service_t* self, smlt_debug_t* debug);
+void smlt_physics_service_update(smlt_physics_service_t* self, float dt);
+void smlt_physics_service_late_update(smlt_physics_service_t* self, float dt);
+void smlt_physics_service_fixed_update(smlt_physics_service_t* self, float step);
+void smlt_physics_service_set_name(smlt_physics_service_t* self, const char* name);
+char* smlt_physics_service_name(const smlt_physics_service_t* self);
+bool smlt_physics_service_has_name(const smlt_physics_service_t* self);
+bool smlt_physics_service_destroy_2(smlt_physics_service_t* self);
+bool smlt_physics_service_destroy_immediately(smlt_physics_service_t* self);
+bool smlt_physics_service_is_destroyed(const smlt_physics_service_t* self);
 
 #ifdef __cplusplus
 }

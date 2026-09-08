@@ -37,3 +37,4 @@ evbuild
 gradle
 tools/**/build
 **/PLAN.md
+__pycache__

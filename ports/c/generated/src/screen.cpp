@@ -20,7 +20,7 @@ smlt_screen_t* smlt_screen_create(smlt_window_t* window, const char* name, uint1
     return reinterpret_cast<smlt_screen_t*>(new smlt::Screen(reinterpret_cast<smlt::Window*>(window), std::string(name ? name : ""), w, h, static_cast<smlt::ScreenFormat>(format), refresh));
 }
 
-void smlt_screen_render(smlt_screen_t* self, const uint8_t* data) {
+void smlt_screen_render(smlt_screen_t* self, const unsigned char* data) {
     reinterpret_cast<smlt::Screen*>(self)->render(data);
 }
 
@@ -54,6 +54,14 @@ char* smlt_screen_name(const smlt_screen_t* self) {
 
 void smlt_screen_update(smlt_screen_t* self, float dt) {
     reinterpret_cast<smlt::Screen*>(self)->update(dt);
+}
+
+bool smlt_screen_exists(const smlt_screen_t* self, const char* identifier) {
+    return reinterpret_cast<const smlt::Screen*>(self)->exists(std::string(identifier ? identifier : ""));
+}
+
+void smlt_screen_unstash(smlt_screen_t* self, const char* identifier) {
+    reinterpret_cast<smlt::Screen*>(self)->unstash(std::string(identifier ? identifier : ""));
 }
 
 } /* extern "C" */

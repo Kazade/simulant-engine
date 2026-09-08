@@ -6,7 +6,11 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/nodes/ui/ui_manager.h"
+#include "simulant/event_listener.h"
+#include "simulant/window.h"
 #include "simulant/nodes/ui/ui_config.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -18,6 +22,31 @@ const char* smlt_ui_ui_manager_node_type_name(const smlt_ui_ui_manager_t* self) 
 
 const smlt_ui_ui_config_t* smlt_ui_ui_manager_config(const smlt_ui_ui_manager_t* self) {
     return reinterpret_cast<const smlt_ui_ui_config_t*>((reinterpret_cast<const smlt::ui::UIManager*>(self)->config()));
+}
+
+void smlt_ui_ui_manager_handle_touch_begin(smlt_ui_ui_manager_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y, float pressure) {
+    reinterpret_cast<smlt::ui::UIManager*>(self)->handle_touch_begin(reinterpret_cast<smlt::Window*>(window), touch_id, normalized_x, normalized_y, pressure);
+}
+
+void smlt_ui_ui_manager_handle_touch_end(smlt_ui_ui_manager_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y) {
+    reinterpret_cast<smlt::ui::UIManager*>(self)->handle_touch_end(reinterpret_cast<smlt::Window*>(window), touch_id, normalized_x, normalized_y);
+}
+
+void smlt_ui_ui_manager_handle_touch_move(smlt_ui_ui_manager_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y, float dx, float dy) {
+    reinterpret_cast<smlt::ui::UIManager*>(self)->handle_touch_move(reinterpret_cast<smlt::Window*>(window), touch_id, normalized_x, normalized_y, dx, dy);
+}
+
+void smlt_ui_ui_manager_handle_key_down(smlt_ui_ui_manager_t* self, smlt_window_t* window, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers) {
+    reinterpret_cast<smlt::ui::UIManager*>(self)->handle_key_down(reinterpret_cast<smlt::Window*>(window), static_cast<smlt::KeyboardCode>(code), (*reinterpret_cast<const smlt::ModifierKeyState*>(modifiers)));
+}
+
+void smlt_ui_ui_manager_handle_key_up(smlt_ui_ui_manager_t* self, smlt_window_t* window, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers) {
+    reinterpret_cast<smlt::ui::UIManager*>(self)->handle_key_up(reinterpret_cast<smlt::Window*>(window), static_cast<smlt::KeyboardCode>(code), (*reinterpret_cast<const smlt::ModifierKeyState*>(modifiers)));
+}
+
+smlt_ui_ui_manager_t* smlt_stage_node_create_child_ui_ui_manager(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::ui::UIManager>();
+    return reinterpret_cast<smlt_ui_ui_manager_t*>(node);
 }
 
 } /* extern "C" */

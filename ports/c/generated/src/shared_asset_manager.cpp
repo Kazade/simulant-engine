@@ -7,7 +7,20 @@
 #include <memory>
 #include "simulant/asset_manager.h"
 #include "simulant/path.h"
+#include "simulant/meshes/mesh.h"
+#include "simulant/meshes/submesh.h"
+#include "simulant/sound.h"
+#include "simulant/assets/binary_data.h"
+#include "simulant/assets/particle_script.h"
+#include "simulant/assets/prefab.h"
+#include "simulant/assets/spritesheet.h"
+#include "simulant/loaders/heightmap_loader.h"
+#include "simulant/nodes/stage_node.h"
 #include "simulant/assets/material.h"
+#include "simulant/loader.h"
+#include "simulant/texture.h"
+#include "simulant/types.h"
+#include "simulant/font.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -31,6 +44,298 @@ void smlt_shared_asset_manager_set_default_material_filename(smlt_shared_asset_m
 
 smlt_path_t* smlt_shared_asset_manager_default_material_filename(const smlt_shared_asset_manager_t* self) {
     return reinterpret_cast<smlt_path_t*>(new smlt::Path(reinterpret_cast<const smlt::SharedAssetManager*>(self)->default_material_filename()));
+}
+
+smlt_particle_script_t* smlt_shared_asset_manager_load_particle_script(smlt_shared_asset_manager_t* self, const smlt_path_t* filename, smlt_garbage_collect_method_t garbage_collect, bool use_asset_cache) {
+    return reinterpret_cast<smlt_particle_script_t*>(new std::shared_ptr<smlt::ParticleScript>(reinterpret_cast<smlt::SharedAssetManager*>(self)->load_particle_script((*reinterpret_cast<const smlt::Path*>(filename)), static_cast<smlt::GarbageCollectMethod>(garbage_collect), use_asset_cache)));
+}
+
+void smlt_shared_asset_manager_destroy_particle_script(smlt_shared_asset_manager_t* self, unsigned long id) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->destroy_particle_script(id);
+}
+
+smlt_particle_script_t* smlt_shared_asset_manager_particle_script(smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<smlt_particle_script_t*>(new std::shared_ptr<smlt::ParticleScript>(reinterpret_cast<smlt::SharedAssetManager*>(self)->particle_script(id)));
+}
+
+unsigned long smlt_shared_asset_manager_particle_script_count(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->particle_script_count();
+}
+
+bool smlt_shared_asset_manager_has_particle_script(const smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->has_particle_script(id);
+}
+
+smlt_particle_script_t* smlt_shared_asset_manager_find_particle_script(smlt_shared_asset_manager_t* self, const char* name) {
+    return reinterpret_cast<smlt_particle_script_t*>(new std::shared_ptr<smlt::ParticleScript>(reinterpret_cast<smlt::SharedAssetManager*>(self)->find_particle_script(std::string(name ? name : ""))));
+}
+
+smlt_prefab_t* smlt_shared_asset_manager_load_prefab(smlt_shared_asset_manager_t* self, const smlt_path_t* filename, smlt_garbage_collect_method_t garbage_collect, bool use_asset_cache) {
+    return reinterpret_cast<smlt_prefab_t*>(new std::shared_ptr<smlt::Prefab>(reinterpret_cast<smlt::SharedAssetManager*>(self)->load_prefab((*reinterpret_cast<const smlt::Path*>(filename)), static_cast<smlt::GarbageCollectMethod>(garbage_collect), use_asset_cache)));
+}
+
+smlt_prefab_t* smlt_shared_asset_manager_prefab(smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<smlt_prefab_t*>(new std::shared_ptr<smlt::Prefab>(reinterpret_cast<smlt::SharedAssetManager*>(self)->prefab(id)));
+}
+
+unsigned long smlt_shared_asset_manager_prefab_count(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->prefab_count();
+}
+
+bool smlt_shared_asset_manager_has_prefab(const smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->has_prefab(id);
+}
+
+smlt_prefab_t* smlt_shared_asset_manager_find_prefab(smlt_shared_asset_manager_t* self, const char* name) {
+    return reinterpret_cast<smlt_prefab_t*>(new std::shared_ptr<smlt::Prefab>(reinterpret_cast<smlt::SharedAssetManager*>(self)->find_prefab(std::string(name ? name : ""))));
+}
+
+void smlt_shared_asset_manager_destroy_prefab(smlt_shared_asset_manager_t* self, unsigned long id) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->destroy_prefab(id);
+}
+
+smlt_prefab_t* smlt_shared_asset_manager_create_prefab(smlt_shared_asset_manager_t* self, const smlt_stage_node_t* root, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_prefab_t*>(new std::shared_ptr<smlt::Prefab>(reinterpret_cast<smlt::SharedAssetManager*>(self)->create_prefab(reinterpret_cast<const smlt::StageNode*>(root), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_texture_t* smlt_shared_asset_manager_load_texture(smlt_shared_asset_manager_t* self, const smlt_path_t* filename, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>(reinterpret_cast<smlt::SharedAssetManager*>(self)->load_texture((*reinterpret_cast<const smlt::Path*>(filename)), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+void smlt_shared_asset_manager_destroy_texture(smlt_shared_asset_manager_t* self, unsigned long id) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->destroy_texture(id);
+}
+
+smlt_texture_t* smlt_shared_asset_manager_texture(smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>(reinterpret_cast<smlt::SharedAssetManager*>(self)->texture(id)));
+}
+
+unsigned long smlt_shared_asset_manager_texture_count(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->texture_count();
+}
+
+bool smlt_shared_asset_manager_has_texture(const smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->has_texture(id);
+}
+
+smlt_texture_t* smlt_shared_asset_manager_find_texture(smlt_shared_asset_manager_t* self, const char* alias) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>(reinterpret_cast<smlt::SharedAssetManager*>(self)->find_texture(std::string(alias ? alias : ""))));
+}
+
+void smlt_shared_asset_manager_destroy_mesh(smlt_shared_asset_manager_t* self, unsigned long id) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->destroy_mesh(id);
+}
+
+smlt_mesh_t* smlt_shared_asset_manager_mesh(smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<smlt_mesh_t*>(new std::shared_ptr<smlt::Mesh>(reinterpret_cast<smlt::SharedAssetManager*>(self)->mesh(id)));
+}
+
+unsigned long smlt_shared_asset_manager_mesh_count(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->mesh_count();
+}
+
+bool smlt_shared_asset_manager_has_mesh(const smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->has_mesh(id);
+}
+
+smlt_mesh_t* smlt_shared_asset_manager_find_mesh(smlt_shared_asset_manager_t* self, const char* name) {
+    return reinterpret_cast<smlt_mesh_t*>(new std::shared_ptr<smlt::Mesh>(reinterpret_cast<smlt::SharedAssetManager*>(self)->find_mesh(std::string(name ? name : ""))));
+}
+
+smlt_material_t* smlt_shared_asset_manager_load_material(smlt_shared_asset_manager_t* self, const smlt_path_t* filename, smlt_garbage_collect_method_t garbage_collect, bool use_asset_cache) {
+    return reinterpret_cast<smlt_material_t*>(new std::shared_ptr<smlt::Material>(reinterpret_cast<smlt::SharedAssetManager*>(self)->load_material((*reinterpret_cast<const smlt::Path*>(filename)), static_cast<smlt::GarbageCollectMethod>(garbage_collect), use_asset_cache)));
+}
+
+void smlt_shared_asset_manager_destroy_material(smlt_shared_asset_manager_t* self, const unsigned long* id) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->destroy_material((*id));
+}
+
+smlt_material_t* smlt_shared_asset_manager_material(smlt_shared_asset_manager_t* self, const unsigned long* id) {
+    return reinterpret_cast<smlt_material_t*>(new std::shared_ptr<smlt::Material>(reinterpret_cast<smlt::SharedAssetManager*>(self)->material((*id))));
+}
+
+unsigned long smlt_shared_asset_manager_material_count(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->material_count();
+}
+
+bool smlt_shared_asset_manager_has_material(const smlt_shared_asset_manager_t* self, const unsigned long* id) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->has_material((*id));
+}
+
+smlt_material_t* smlt_shared_asset_manager_find_material(smlt_shared_asset_manager_t* self, const char* name) {
+    return reinterpret_cast<smlt_material_t*>(new std::shared_ptr<smlt::Material>(reinterpret_cast<smlt::SharedAssetManager*>(self)->find_material(std::string(name ? name : ""))));
+}
+
+smlt_sound_t* smlt_shared_asset_manager_load_sound(smlt_shared_asset_manager_t* self, const smlt_path_t* filename, const smlt_sound_flags_t* flags, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_sound_t*>(new std::shared_ptr<smlt::Sound>(reinterpret_cast<smlt::SharedAssetManager*>(self)->load_sound((*reinterpret_cast<const smlt::Path*>(filename)), (*reinterpret_cast<const smlt::SoundFlags*>(flags)), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+void smlt_shared_asset_manager_destroy_sound(smlt_shared_asset_manager_t* self, unsigned long id) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->destroy_sound(id);
+}
+
+smlt_sound_t* smlt_shared_asset_manager_sound(smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<smlt_sound_t*>(new std::shared_ptr<smlt::Sound>(reinterpret_cast<smlt::SharedAssetManager*>(self)->sound(id)));
+}
+
+unsigned long smlt_shared_asset_manager_sound_count(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->sound_count();
+}
+
+bool smlt_shared_asset_manager_has_sound(const smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->has_sound(id);
+}
+
+smlt_sound_t* smlt_shared_asset_manager_find_sound(smlt_shared_asset_manager_t* self, const char* name) {
+    return reinterpret_cast<smlt_sound_t*>(new std::shared_ptr<smlt::Sound>(reinterpret_cast<smlt::SharedAssetManager*>(self)->find_sound(std::string(name ? name : ""))));
+}
+
+smlt_binary_t* smlt_shared_asset_manager_load_binary(smlt_shared_asset_manager_t* self, const smlt_path_t* filename, smlt_garbage_collect_method_t garbage_collect, bool use_asset_cache) {
+    return reinterpret_cast<smlt_binary_t*>(new std::shared_ptr<smlt::Binary>(reinterpret_cast<smlt::SharedAssetManager*>(self)->load_binary((*reinterpret_cast<const smlt::Path*>(filename)), static_cast<smlt::GarbageCollectMethod>(garbage_collect), use_asset_cache)));
+}
+
+smlt_binary_t* smlt_shared_asset_manager_binary(const smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<smlt_binary_t*>(new std::shared_ptr<smlt::Binary>(reinterpret_cast<const smlt::SharedAssetManager*>(self)->binary(id)));
+}
+
+unsigned long smlt_shared_asset_manager_binary_count(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->binary_count();
+}
+
+bool smlt_shared_asset_manager_has_binary(const smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->has_binary(id);
+}
+
+smlt_binary_t* smlt_shared_asset_manager_find_binary(smlt_shared_asset_manager_t* self, const char* name) {
+    return reinterpret_cast<smlt_binary_t*>(new std::shared_ptr<smlt::Binary>(reinterpret_cast<smlt::SharedAssetManager*>(self)->find_binary(std::string(name ? name : ""))));
+}
+
+void smlt_shared_asset_manager_destroy_binary(smlt_shared_asset_manager_t* self, unsigned long id) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->destroy_binary(id);
+}
+
+smlt_font_t* smlt_shared_asset_manager_create_font_from_memory(smlt_shared_asset_manager_t* self, const unsigned char* data, unsigned long size, const smlt_font_flags_t* flags, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_font_t*>(new std::shared_ptr<smlt::Font>(reinterpret_cast<smlt::SharedAssetManager*>(self)->create_font_from_memory(data, size, (*reinterpret_cast<const smlt::FontFlags*>(flags)), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_font_t* smlt_shared_asset_manager_create_font_from_family(smlt_shared_asset_manager_t* self, const char* family, const smlt_font_flags_t* flags, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_font_t*>(new std::shared_ptr<smlt::Font>(reinterpret_cast<smlt::SharedAssetManager*>(self)->create_font_from_family(std::string(family ? family : ""), (*reinterpret_cast<const smlt::FontFlags*>(flags)), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_font_t* smlt_shared_asset_manager_load_font(smlt_shared_asset_manager_t* self, const smlt_path_t* filename, const smlt_font_flags_t* flags, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_font_t*>(new std::shared_ptr<smlt::Font>(reinterpret_cast<smlt::SharedAssetManager*>(self)->load_font((*reinterpret_cast<const smlt::Path*>(filename)), (*reinterpret_cast<const smlt::FontFlags*>(flags)), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+void smlt_shared_asset_manager_destroy_font(smlt_shared_asset_manager_t* self, unsigned long id) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->destroy_font(id);
+}
+
+smlt_font_t* smlt_shared_asset_manager_font(smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<smlt_font_t*>(new std::shared_ptr<smlt::Font>(reinterpret_cast<smlt::SharedAssetManager*>(self)->font(id)));
+}
+
+unsigned long smlt_shared_asset_manager_font_count(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->font_count();
+}
+
+bool smlt_shared_asset_manager_has_font(const smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->has_font(id);
+}
+
+smlt_font_t* smlt_shared_asset_manager_find_font(smlt_shared_asset_manager_t* self, const char* alias) {
+    return reinterpret_cast<smlt_font_t*>(new std::shared_ptr<smlt::Font>(reinterpret_cast<smlt::SharedAssetManager*>(self)->find_font(std::string(alias ? alias : ""))));
+}
+
+smlt_spritesheet_t* smlt_shared_asset_manager_load_spritesheet(smlt_shared_asset_manager_t* self, const smlt_path_t* filename, smlt_garbage_collect_method_t garbage_collect, bool use_asset_cache) {
+    return reinterpret_cast<smlt_spritesheet_t*>(new std::shared_ptr<smlt::Spritesheet>(reinterpret_cast<smlt::SharedAssetManager*>(self)->load_spritesheet((*reinterpret_cast<const smlt::Path*>(filename)), static_cast<smlt::GarbageCollectMethod>(garbage_collect), use_asset_cache)));
+}
+
+void smlt_shared_asset_manager_destroy_spritesheet(smlt_shared_asset_manager_t* self, unsigned long id) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->destroy_spritesheet(id);
+}
+
+smlt_spritesheet_t* smlt_shared_asset_manager_spritesheet(smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<smlt_spritesheet_t*>(new std::shared_ptr<smlt::Spritesheet>(reinterpret_cast<smlt::SharedAssetManager*>(self)->spritesheet(id)));
+}
+
+unsigned long smlt_shared_asset_manager_spritesheet_count(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->spritesheet_count();
+}
+
+bool smlt_shared_asset_manager_has_spritesheet(const smlt_shared_asset_manager_t* self, unsigned long id) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->has_spritesheet(id);
+}
+
+smlt_spritesheet_t* smlt_shared_asset_manager_find_spritesheet(smlt_shared_asset_manager_t* self, const char* name) {
+    return reinterpret_cast<smlt_spritesheet_t*>(new std::shared_ptr<smlt::Spritesheet>(reinterpret_cast<smlt::SharedAssetManager*>(self)->find_spritesheet(std::string(name ? name : ""))));
+}
+
+smlt_texture_t* smlt_shared_asset_manager_create_texture(smlt_shared_asset_manager_t* self, uint16_t width, uint16_t height, smlt_texture_format_t format, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>(reinterpret_cast<smlt::SharedAssetManager*>(self)->create_texture(width, height, static_cast<smlt::TextureFormat>(format), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_material_t* smlt_shared_asset_manager_create_material(smlt_shared_asset_manager_t* self, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_material_t*>(new std::shared_ptr<smlt::Material>(reinterpret_cast<smlt::SharedAssetManager*>(self)->create_material(static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_mesh_t* smlt_shared_asset_manager_create_mesh(smlt_shared_asset_manager_t* self, const smlt_vertex_specification_t* vertex_specification, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_mesh_t*>(new std::shared_ptr<smlt::Mesh>(reinterpret_cast<smlt::SharedAssetManager*>(self)->create_mesh((*reinterpret_cast<const smlt::VertexSpecification*>(vertex_specification)), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_mesh_t* smlt_shared_asset_manager_load_mesh(smlt_shared_asset_manager_t* self, const smlt_path_t* path, const smlt_vertex_specification_t* desired_specification, const smlt_mesh_load_options_t* options, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_mesh_t*>(new std::shared_ptr<smlt::Mesh>(reinterpret_cast<smlt::SharedAssetManager*>(self)->load_mesh((*reinterpret_cast<const smlt::Path*>(path)), (*reinterpret_cast<const smlt::VertexSpecification*>(desired_specification)), (*reinterpret_cast<const smlt::MeshLoadOptions*>(options)), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_mesh_t* smlt_shared_asset_manager_create_mesh_from_submesh(smlt_shared_asset_manager_t* self, smlt_sub_mesh_t* submesh, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_mesh_t*>(new std::shared_ptr<smlt::Mesh>(reinterpret_cast<smlt::SharedAssetManager*>(self)->create_mesh_from_submesh(reinterpret_cast<smlt::SubMesh*>(submesh), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_mesh_t* smlt_shared_asset_manager_create_mesh_from_heightmap(smlt_shared_asset_manager_t* self, const smlt_path_t* image_file, const smlt_heightmap_specification_t* spec, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_mesh_t*>(new std::shared_ptr<smlt::Mesh>(reinterpret_cast<smlt::SharedAssetManager*>(self)->create_mesh_from_heightmap((*reinterpret_cast<const smlt::Path*>(image_file)), (*reinterpret_cast<const smlt::HeightmapSpecification*>(spec)), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_mesh_t* smlt_shared_asset_manager_create_mesh_as_cube_with_submesh_per_face(smlt_shared_asset_manager_t* self, float width, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_mesh_t*>(new std::shared_ptr<smlt::Mesh>(reinterpret_cast<smlt::SharedAssetManager*>(self)->create_mesh_as_cube_with_submesh_per_face(width, static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_material_t* smlt_shared_asset_manager_create_material_from_texture(smlt_shared_asset_manager_t* self, smlt_texture_t* texture, smlt_garbage_collect_method_t garbage_collect, bool use_asset_cache) {
+    return reinterpret_cast<smlt_material_t*>(new std::shared_ptr<smlt::Material>(reinterpret_cast<smlt::SharedAssetManager*>(self)->create_material_from_texture((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(texture)), static_cast<smlt::GarbageCollectMethod>(garbage_collect), use_asset_cache)));
+}
+
+void smlt_shared_asset_manager_update(smlt_shared_asset_manager_t* self, float dt) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->update(dt);
+}
+
+smlt_material_t* smlt_shared_asset_manager_clone_material(smlt_shared_asset_manager_t* self, const unsigned long* mat_id, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_material_t*>(new std::shared_ptr<smlt::Material>(reinterpret_cast<smlt::SharedAssetManager*>(self)->clone_material((*mat_id), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_material_t* smlt_shared_asset_manager_clone_default_material(smlt_shared_asset_manager_t* self, smlt_garbage_collect_method_t garbage_collect) {
+    return reinterpret_cast<smlt_material_t*>(new std::shared_ptr<smlt::Material>(reinterpret_cast<smlt::SharedAssetManager*>(self)->clone_default_material(static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
+}
+
+smlt_asset_manager_t* smlt_shared_asset_manager_base_manager(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<smlt_asset_manager_t*>((reinterpret_cast<const smlt::SharedAssetManager*>(self)->base_manager()));
+}
+
+void smlt_shared_asset_manager_destroy_all(smlt_shared_asset_manager_t* self) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->destroy_all();
+}
+
+void smlt_shared_asset_manager_run_garbage_collection(smlt_shared_asset_manager_t* self) {
+    reinterpret_cast<smlt::SharedAssetManager*>(self)->run_garbage_collection();
+}
+
+bool smlt_shared_asset_manager_is_base_manager(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->is_base_manager();
+}
+
+unsigned long smlt_shared_asset_manager_child_manager_count(const smlt_shared_asset_manager_t* self) {
+    return reinterpret_cast<const smlt::SharedAssetManager*>(self)->child_manager_count();
+}
+
+const smlt_asset_manager_t* smlt_shared_asset_manager_child_manager(const smlt_shared_asset_manager_t* self, unsigned long i) {
+    return reinterpret_cast<const smlt_asset_manager_t*>((reinterpret_cast<const smlt::SharedAssetManager*>(self)->child_manager(i)));
 }
 
 } /* extern "C" */

@@ -23,6 +23,12 @@ float smlt_ui_progress_bar_max(const smlt_ui_progress_bar_t* self);
 smlt_ui_progress_bar_mode_t smlt_ui_progress_bar_current_mode(const smlt_ui_progress_bar_t* self);
 void smlt_ui_progress_bar_on_update(smlt_ui_progress_bar_t* self, float dt);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::ui::ProgressBar as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_ui_progress_bar_t* smlt_stage_node_create_child_ui_progress_bar(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

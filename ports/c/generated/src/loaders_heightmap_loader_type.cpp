@@ -28,4 +28,8 @@ bool smlt_loaders_heightmap_loader_type_supports(const smlt_loaders_heightmap_lo
     return reinterpret_cast<const smlt::loaders::HeightmapLoaderType*>(self)->supports((*reinterpret_cast<const smlt::Path*>(filename)));
 }
 
+bool smlt_loaders_heightmap_loader_type_has_hint(smlt_loaders_heightmap_loader_type_t* self, smlt_loader_hint_t hint) {
+    return reinterpret_cast<smlt::loaders::HeightmapLoaderType*>(self)->has_hint(static_cast<smlt::LoaderHint>(hint));
+}
+
 } /* extern "C" */

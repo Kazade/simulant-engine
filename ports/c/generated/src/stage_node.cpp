@@ -8,18 +8,29 @@
 #include "simulant/nodes/stage_node.h"
 #include "simulant/path.h"
 #include "simulant/math/aabb.h"
+#include "simulant/math/vec3.h"
 #include "simulant/interfaces/transform.h"
 #include "simulant/renderers/batching/render_queue.h"
 #include "simulant/nodes/camera.h"
 #include "simulant/viewport.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/nodes/stage_node_iterators.h"
 #include "simulant/nodes/stage_node_path.h"
+#include "simulant/generic/data_carrier.h"
 #include "simulant/types.h"
 #include "simulant/utils/params.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
 extern "C" {
+
+smlt_generic_data_carrier_t* smlt_stage_node_data(smlt_stage_node_t* self) {
+    return reinterpret_cast<smlt_generic_data_carrier_t*>(reinterpret_cast<smlt::StageNode*>(self)->data.get());
+}
+
+smlt_scene_t* smlt_stage_node_scene(smlt_stage_node_t* self) {
+    return reinterpret_cast<smlt_scene_t*>(reinterpret_cast<smlt::StageNode*>(self)->scene.get());
+}
 
 const smlt_stage_node_t* smlt_stage_node_find_descendent_with_id(const smlt_stage_node_t* self, unsigned int id) {
     return reinterpret_cast<const smlt_stage_node_t*>((reinterpret_cast<const smlt::StageNode*>(self)->find_descendent_with_id(id)));
@@ -271,6 +282,82 @@ const char* smlt_stage_node_node_type_name(const smlt_stage_node_t* self) {
 
 smlt_transform_t* smlt_stage_node_get_transform(const smlt_stage_node_t* self) {
     return reinterpret_cast<smlt_transform_t*>((reinterpret_cast<const smlt::StageNode*>(self)->get_transform()));
+}
+
+bool smlt_stage_node_destroy(smlt_stage_node_t* self) {
+    return reinterpret_cast<smlt::StageNode*>(self)->destroy();
+}
+
+bool smlt_stage_node_destroy_immediately(smlt_stage_node_t* self) {
+    return reinterpret_cast<smlt::StageNode*>(self)->destroy_immediately();
+}
+
+bool smlt_stage_node_is_destroyed(const smlt_stage_node_t* self) {
+    return reinterpret_cast<const smlt::StageNode*>(self)->is_destroyed();
+}
+
+void smlt_stage_node_set_render_priority(smlt_stage_node_t* self, signed char priority) {
+    reinterpret_cast<smlt::StageNode*>(self)->set_render_priority(priority);
+}
+
+signed char smlt_stage_node_render_priority(const smlt_stage_node_t* self) {
+    return reinterpret_cast<const smlt::StageNode*>(self)->render_priority();
+}
+
+void smlt_stage_node_set_name(smlt_stage_node_t* self, const char* name) {
+    reinterpret_cast<smlt::StageNode*>(self)->set_name(name);
+}
+
+char* smlt_stage_node_name(const smlt_stage_node_t* self) {
+    return smlt_c_strdup((reinterpret_cast<const smlt::StageNode*>(self)->name()).c_str());
+}
+
+bool smlt_stage_node_has_name(const smlt_stage_node_t* self) {
+    return reinterpret_cast<const smlt::StageNode*>(self)->has_name();
+}
+
+smlt_vec3_t* smlt_stage_node_center(const smlt_stage_node_t* self) {
+    return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(reinterpret_cast<const smlt::StageNode*>(self)->center()));
+}
+
+float smlt_stage_node_width(const smlt_stage_node_t* self) {
+    return reinterpret_cast<const smlt::StageNode*>(self)->width();
+}
+
+float smlt_stage_node_height(const smlt_stage_node_t* self) {
+    return reinterpret_cast<const smlt::StageNode*>(self)->height();
+}
+
+float smlt_stage_node_depth(const smlt_stage_node_t* self) {
+    return reinterpret_cast<const smlt::StageNode*>(self)->depth();
+}
+
+float smlt_stage_node_half_width(const smlt_stage_node_t* self) {
+    return reinterpret_cast<const smlt::StageNode*>(self)->half_width();
+}
+
+float smlt_stage_node_half_height(const smlt_stage_node_t* self) {
+    return reinterpret_cast<const smlt::StageNode*>(self)->half_height();
+}
+
+float smlt_stage_node_half_depth(const smlt_stage_node_t* self) {
+    return reinterpret_cast<const smlt::StageNode*>(self)->half_depth();
+}
+
+float smlt_stage_node_diameter(const smlt_stage_node_t* self) {
+    return reinterpret_cast<const smlt::StageNode*>(self)->diameter();
+}
+
+float smlt_stage_node_radius(const smlt_stage_node_t* self) {
+    return reinterpret_cast<const smlt::StageNode*>(self)->radius();
+}
+
+bool smlt_stage_node_init(smlt_stage_node_t* self) {
+    return reinterpret_cast<smlt::StageNode*>(self)->init();
+}
+
+void smlt_stage_node_clean_up(smlt_stage_node_t* self) {
+    reinterpret_cast<smlt::StageNode*>(self)->clean_up();
 }
 
 } /* extern "C" */

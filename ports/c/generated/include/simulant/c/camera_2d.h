@@ -14,6 +14,12 @@ extern "C" {
 const char* smlt_camera_2d_node_type_name(const smlt_camera_2d_t* self);
 bool smlt_camera_2d_on_create(smlt_camera_2d_t* self, const smlt_params_t* params);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::Camera2D as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_camera_2d_t* smlt_stage_node_create_child_camera_2d(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

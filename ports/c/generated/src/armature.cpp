@@ -12,6 +12,8 @@
 #include "simulant/nodes/camera.h"
 #include "simulant/nodes/joint.h"
 #include "simulant/viewport.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -75,6 +77,11 @@ void smlt_armature_use_material_slot(smlt_armature_t* self, smlt_material_slot_t
 
 smlt_material_slot_t smlt_armature_active_material_slot(const smlt_armature_t* self) {
     return static_cast<smlt_material_slot_t>(reinterpret_cast<const smlt::Armature*>(self)->active_material_slot());
+}
+
+smlt_armature_t* smlt_stage_node_create_child_armature(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::Armature>();
+    return reinterpret_cast<smlt_armature_t*>(node);
 }
 
 } /* extern "C" */

@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 void smlt_prefab_release(smlt_prefab_t* self);
+smlt_generic_data_carrier_t* smlt_prefab_data(smlt_prefab_t* self);
 const char* smlt_prefab_asset_type_name(const smlt_prefab_t* self);
 uint64_t smlt_prefab_estimated_size_in_bytes(const smlt_prefab_t* self);
 void smlt_prefab_push_node(smlt_prefab_t* self, const smlt_prefab_node_t* node, int32_t parent_id);
@@ -21,6 +22,14 @@ void smlt_prefab_push_mesh(smlt_prefab_t* self, smlt_mesh_t* mesh);
 unsigned long smlt_prefab_node_count(const smlt_prefab_t* self);
 bool smlt_prefab_has_animations(const smlt_prefab_t* self);
 unsigned long smlt_prefab_animation_count(const smlt_prefab_t* self);
+smlt_asset_manager_t* smlt_prefab_asset_manager(smlt_prefab_t* self);
+int smlt_prefab_age(const smlt_prefab_t* self);
+void smlt_prefab_set_garbage_collection_method(smlt_prefab_t* self, smlt_garbage_collect_method_t method);
+smlt_path_t* smlt_prefab_source(const smlt_prefab_t* self);
+void smlt_prefab_set_source(smlt_prefab_t* self, const smlt_path_t* source);
+void smlt_prefab_set_name(smlt_prefab_t* self, const char* name);
+char* smlt_prefab_name(const smlt_prefab_t* self);
+bool smlt_prefab_has_name(const smlt_prefab_t* self);
 
 #ifdef __cplusplus
 }

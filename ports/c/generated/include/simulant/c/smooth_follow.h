@@ -13,6 +13,7 @@ extern "C" {
 
 const char* smlt_smooth_follow_node_type_name(const smlt_smooth_follow_t* self);
 void smlt_smooth_follow_on_late_update(smlt_smooth_follow_t* self, float dt);
+void smlt_smooth_follow_set_target(smlt_smooth_follow_t* self, smlt_stage_node_t* node);
 bool smlt_smooth_follow_has_target(const smlt_smooth_follow_t* self);
 smlt_stage_node_t* smlt_smooth_follow_target(const smlt_smooth_follow_t* self);
 void smlt_smooth_follow_set_follow_distance(smlt_smooth_follow_t* self, float dist);
@@ -20,6 +21,12 @@ void smlt_smooth_follow_set_follow_height(smlt_smooth_follow_t* self, float heig
 void smlt_smooth_follow_set_damping(smlt_smooth_follow_t* self, float damping);
 void smlt_smooth_follow_set_rotation_damping(smlt_smooth_follow_t* self, float damping);
 void smlt_smooth_follow_set_following_enabled(smlt_smooth_follow_t* self, bool v);
+
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::SmoothFollow as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_smooth_follow_t* smlt_stage_node_create_child_smooth_follow(smlt_stage_node_t* parent);
 
 #ifdef __cplusplus
 }

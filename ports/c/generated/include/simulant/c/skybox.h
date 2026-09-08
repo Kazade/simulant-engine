@@ -17,6 +17,12 @@ float smlt_skybox_size(const smlt_skybox_t* self);
 void smlt_skybox_generate(smlt_skybox_t* self, const smlt_path_t* up, const smlt_path_t* down, const smlt_path_t* left, const smlt_path_t* right, const smlt_path_t* front, const smlt_path_t* back, const smlt_texture_flags_t* flags);
 const smlt_aabb_t* smlt_skybox_aabb(const smlt_skybox_t* self);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::Skybox as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_skybox_t* smlt_stage_node_create_child_skybox(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

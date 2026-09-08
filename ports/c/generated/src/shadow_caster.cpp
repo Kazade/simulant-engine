@@ -8,6 +8,8 @@
 #include "simulant/nodes/shadow_caster.h"
 #include "simulant/vertex_data.h"
 #include "simulant/renderers/batching/renderable.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -23,6 +25,11 @@ const smlt_vertex_data_t* smlt_shadow_caster_shadow_volume_vertex_data(const sml
 
 const smlt_index_data_t* smlt_shadow_caster_shadow_volume_index_data(const smlt_shadow_caster_t* self) {
     return reinterpret_cast<const smlt_index_data_t*>((reinterpret_cast<const smlt::ShadowCaster*>(self)->_shadow_volume_index_data()));
+}
+
+smlt_shadow_caster_t* smlt_stage_node_create_child_shadow_caster(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::ShadowCaster>();
+    return reinterpret_cast<smlt_shadow_caster_t*>(node);
 }
 
 } /* extern "C" */

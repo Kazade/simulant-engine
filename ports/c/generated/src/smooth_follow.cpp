@@ -7,6 +7,8 @@
 #include <memory>
 #include "simulant/nodes/smooth_follow.h"
 #include "simulant/nodes/stage_node.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -18,6 +20,10 @@ const char* smlt_smooth_follow_node_type_name(const smlt_smooth_follow_t* self) 
 
 void smlt_smooth_follow_on_late_update(smlt_smooth_follow_t* self, float dt) {
     reinterpret_cast<smlt::SmoothFollow*>(self)->on_late_update(dt);
+}
+
+void smlt_smooth_follow_set_target(smlt_smooth_follow_t* self, smlt_stage_node_t* node) {
+    reinterpret_cast<smlt::SmoothFollow*>(self)->set_target(reinterpret_cast<smlt::StageNode*>(node));
 }
 
 bool smlt_smooth_follow_has_target(const smlt_smooth_follow_t* self) {
@@ -46,6 +52,11 @@ void smlt_smooth_follow_set_rotation_damping(smlt_smooth_follow_t* self, float d
 
 void smlt_smooth_follow_set_following_enabled(smlt_smooth_follow_t* self, bool v) {
     reinterpret_cast<smlt::SmoothFollow*>(self)->set_following_enabled(v);
+}
+
+smlt_smooth_follow_t* smlt_stage_node_create_child_smooth_follow(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::SmoothFollow>();
+    return reinterpret_cast<smlt_smooth_follow_t*>(node);
 }
 
 } /* extern "C" */

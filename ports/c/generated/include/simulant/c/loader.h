@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 void smlt_loader_destroy(smlt_loader_t* self);
+smlt_virtual_file_system_t* smlt_loader_vfs(smlt_loader_t* self);
 void smlt_loader_set_vfs(smlt_loader_t* self, smlt_virtual_file_system_t* locator);
 
 /* This class is abstract in C++ (has pure virtual methods): no

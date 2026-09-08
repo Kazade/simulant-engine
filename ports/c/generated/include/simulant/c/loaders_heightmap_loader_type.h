@@ -15,6 +15,7 @@ void smlt_loaders_heightmap_loader_type_destroy(smlt_loaders_heightmap_loader_ty
 smlt_loaders_heightmap_loader_type_t* smlt_loaders_heightmap_loader_type_create(void);
 const char* smlt_loaders_heightmap_loader_type_name(smlt_loaders_heightmap_loader_type_t* self);
 bool smlt_loaders_heightmap_loader_type_supports(const smlt_loaders_heightmap_loader_type_t* self, const smlt_path_t* filename);
+bool smlt_loaders_heightmap_loader_type_has_hint(smlt_loaders_heightmap_loader_type_t* self, smlt_loader_hint_t hint);
 
 #ifdef __cplusplus
 }

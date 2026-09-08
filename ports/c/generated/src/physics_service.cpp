@@ -37,4 +37,40 @@ void smlt_physics_service_set_debug(smlt_physics_service_t* self, smlt_debug_t* 
     reinterpret_cast<smlt::PhysicsService*>(self)->set_debug(reinterpret_cast<smlt::Debug*>(debug));
 }
 
+void smlt_physics_service_update(smlt_physics_service_t* self, float dt) {
+    reinterpret_cast<smlt::PhysicsService*>(self)->update(dt);
+}
+
+void smlt_physics_service_late_update(smlt_physics_service_t* self, float dt) {
+    reinterpret_cast<smlt::PhysicsService*>(self)->late_update(dt);
+}
+
+void smlt_physics_service_fixed_update(smlt_physics_service_t* self, float step) {
+    reinterpret_cast<smlt::PhysicsService*>(self)->fixed_update(step);
+}
+
+void smlt_physics_service_set_name(smlt_physics_service_t* self, const char* name) {
+    reinterpret_cast<smlt::PhysicsService*>(self)->set_name(name);
+}
+
+char* smlt_physics_service_name(const smlt_physics_service_t* self) {
+    return smlt_c_strdup((reinterpret_cast<const smlt::PhysicsService*>(self)->name()).c_str());
+}
+
+bool smlt_physics_service_has_name(const smlt_physics_service_t* self) {
+    return reinterpret_cast<const smlt::PhysicsService*>(self)->has_name();
+}
+
+bool smlt_physics_service_destroy_2(smlt_physics_service_t* self) {
+    return reinterpret_cast<smlt::PhysicsService*>(self)->destroy();
+}
+
+bool smlt_physics_service_destroy_immediately(smlt_physics_service_t* self) {
+    return reinterpret_cast<smlt::PhysicsService*>(self)->destroy_immediately();
+}
+
+bool smlt_physics_service_is_destroyed(const smlt_physics_service_t* self) {
+    return reinterpret_cast<const smlt::PhysicsService*>(self)->is_destroyed();
+}
+
 } /* extern "C" */

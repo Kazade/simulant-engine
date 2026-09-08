@@ -52,6 +52,10 @@ bool Path::is_absolute() const {
     return kfs::path::is_absolute(path_);
 }
 
+bool Path::exists() const {
+    return kfs::path::exists(path_);
+}
+
 Path Path::replace_ext(const std::string &new_ext) const {
     std::string prefix = path_.substr(0, path_.find_last_of("."));
 

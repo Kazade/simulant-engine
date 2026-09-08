@@ -6,6 +6,9 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/assets/spritesheet.h"
+#include "simulant/path.h"
+#include "simulant/asset_manager.h"
+#include "simulant/generic/data_carrier.h"
 #include "simulant/texture.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
@@ -14,6 +17,10 @@ extern "C" {
 
 void smlt_spritesheet_release(smlt_spritesheet_t* self) {
     delete reinterpret_cast<std::shared_ptr<smlt::Spritesheet>*>(self);
+}
+
+smlt_generic_data_carrier_t* smlt_spritesheet_data(smlt_spritesheet_t* self) {
+    return reinterpret_cast<smlt_generic_data_carrier_t*>((*reinterpret_cast<std::shared_ptr<smlt::Spritesheet>*>(self))->data.get());
 }
 
 const char* smlt_spritesheet_asset_type_name(const smlt_spritesheet_t* self) {
@@ -54,6 +61,38 @@ unsigned long smlt_spritesheet_animation_count(const smlt_spritesheet_t* self) {
 
 const smlt_spritesheet_animation_t* smlt_spritesheet_animation(const smlt_spritesheet_t* self, unsigned long i) {
     return reinterpret_cast<const smlt_spritesheet_animation_t*>(((*reinterpret_cast<const std::shared_ptr<smlt::Spritesheet>*>(self))->animation(i)));
+}
+
+smlt_asset_manager_t* smlt_spritesheet_asset_manager(smlt_spritesheet_t* self) {
+    return reinterpret_cast<smlt_asset_manager_t*>(&((*reinterpret_cast<std::shared_ptr<smlt::Spritesheet>*>(self))->asset_manager()));
+}
+
+int smlt_spritesheet_age(const smlt_spritesheet_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Spritesheet>*>(self))->age();
+}
+
+void smlt_spritesheet_set_garbage_collection_method(smlt_spritesheet_t* self, smlt_garbage_collect_method_t method) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Spritesheet>*>(self))->set_garbage_collection_method(static_cast<smlt::GarbageCollectMethod>(method));
+}
+
+smlt_path_t* smlt_spritesheet_source(const smlt_spritesheet_t* self) {
+    return reinterpret_cast<smlt_path_t*>(new smlt::Path((*reinterpret_cast<const std::shared_ptr<smlt::Spritesheet>*>(self))->source()));
+}
+
+void smlt_spritesheet_set_source(smlt_spritesheet_t* self, const smlt_path_t* source) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Spritesheet>*>(self))->set_source((*reinterpret_cast<const smlt::Path*>(source)));
+}
+
+void smlt_spritesheet_set_name(smlt_spritesheet_t* self, const char* name) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Spritesheet>*>(self))->set_name(name);
+}
+
+char* smlt_spritesheet_name(const smlt_spritesheet_t* self) {
+    return smlt_c_strdup(((*reinterpret_cast<const std::shared_ptr<smlt::Spritesheet>*>(self))->name()).c_str());
+}
+
+bool smlt_spritesheet_has_name(const smlt_spritesheet_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Spritesheet>*>(self))->has_name();
 }
 
 } /* extern "C" */

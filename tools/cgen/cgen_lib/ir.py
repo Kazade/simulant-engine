@@ -48,6 +48,16 @@ class ClassBinding:
     is_abstract: bool = False
     source_file: str = ""
     extra_includes: List[str] = field(default_factory=list)
+    # StageNode-hierarchy classes get real Vala inheritance + a generated
+    # smlt_stage_node_create_child_X() factory instead of the ordinary
+    # [Compact]/extern-methods vapi treatment -- see HAND_WRITTEN_VALA_CLASSES
+    # and the Vala emitter's stage-node code path.
+    is_stage_node_hierarchy: bool = False
+    # Qualified name of the class to use as this one's direct Vala base
+    # (the nearest StageNode-chain ancestor that's itself independently
+    # wrapped, or "smlt::StageNode" as a flattening fallback). Only
+    # meaningful when is_stage_node_hierarchy is True.
+    direct_base_qualified_name: str = ""
 
     @property
     def has_create(self):

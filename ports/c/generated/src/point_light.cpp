@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/nodes/light.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -13,6 +15,11 @@ extern "C" {
 
 const char* smlt_point_light_node_type_name(const smlt_point_light_t* self) {
     return reinterpret_cast<const smlt::PointLight*>(self)->node_type_name();
+}
+
+smlt_point_light_t* smlt_stage_node_create_child_point_light(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::PointLight>();
+    return reinterpret_cast<smlt_point_light_t*>(node);
 }
 
 } /* extern "C" */

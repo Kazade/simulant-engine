@@ -42,6 +42,14 @@ typedef struct {
      * previous parent, otherwise a borrowed pointer -- do not destroy it. */
     void (*on_parent_set)(smlt_stage_node_t* self, const smlt_stage_node_t* old_parent,
                           const smlt_stage_node_t* new_parent, void* user_data);
+
+    /* Optional. Called exactly once, right before this instance's memory
+     * is actually reclaimed -- NOT the same moment as on_destroy(), which
+     * can veto the destroy and doesn't mean the object is really gone.
+     * Lets a language binding release a reference it pinned when it set
+     * user_data (see smlt_stage_node_set_user_data() below), the same
+     * reasoning as smlt_scene_vtable_t's delete_user_data. */
+    void (*on_deleted)(void* user_data);
 } smlt_stage_node_vtable_t;
 
 /* Registers a new custom stage node type on `scene`, named `type_name`
@@ -67,6 +75,24 @@ smlt_stage_node_t* smlt_stage_node_create_custom(smlt_scene_t* scene, smlt_stage
  * harmless but has no effect / always returns NULL. */
 void smlt_stage_node_set_user_data(smlt_stage_node_t* self, void* user_data);
 void* smlt_stage_node_get_user_data(const smlt_stage_node_t* self);
+
+/* StageNode::destroy() is inherited from DestroyableObject, a non-first
+ * base -- the generator's scanner now flattens public methods from any
+ * such base onto the derived class directly (see
+ * iter_inherited_public_members() in clangutil.py), so smlt_stage_node_
+ * destroy() in the generated stage_node.h is that flattened method, not a
+ * synthesized `delete` (StageNode's manager-owned lifetime suppresses
+ * that -- see MANAGED_LIFETIME_BASES in scanner.py). This is the correct
+ * way to release a StageNode (it goes through the owning scene's node
+ * manager via DestroyableObject::destroy()'s virtual finalize_destroy());
+ * never call smlt_destroyable_object_destroy() on one, which *is* the
+ * synthesized `delete` for a bare DestroyableObject and would corrupt the
+ * manager's pool. */
+
+/* StageNode::scene is a C++ Property<> smart member; the generator's
+ * scanner recognizes Property<> fields directly and mechanically wraps
+ * them (see smlt_stage_node_scene() in the generated stage_node.h), so no
+ * hand-written equivalent lives here. */
 
 #ifdef __cplusplus
 }

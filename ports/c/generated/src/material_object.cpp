@@ -246,4 +246,24 @@ const smlt_material_object_t* smlt_material_object_parent_material_object(const 
     return reinterpret_cast<const smlt_material_object_t*>((reinterpret_cast<const smlt::MaterialObject*>(self)->parent_material_object()));
 }
 
+bool smlt_material_object_set_property_value(smlt_material_object_t* self, unsigned int hsh, const char* name, const bool* value) {
+    return reinterpret_cast<smlt::MaterialObject*>(self)->set_property_value(hsh, name, (*value));
+}
+
+bool smlt_material_object_clear_override(smlt_material_object_t* self, const char* name) {
+    return reinterpret_cast<smlt::MaterialObject*>(self)->clear_override(name);
+}
+
+bool smlt_material_object_check_existance(const smlt_material_object_t* self, const char* property_name) {
+    return reinterpret_cast<const smlt::MaterialObject*>(self)->check_existance(property_name);
+}
+
+bool smlt_material_object_property_type(const smlt_material_object_t* self, const char* property_name, smlt_material_property_type_t* type) {
+    return reinterpret_cast<const smlt::MaterialObject*>(self)->property_type(property_name, reinterpret_cast<smlt::MaterialPropertyType*>(type));
+}
+
+bool smlt_material_object_on_check_existence(const smlt_material_object_t* self, unsigned int hsh) {
+    return reinterpret_cast<const smlt::MaterialObject*>(self)->on_check_existence(hsh);
+}
+
 } /* extern "C" */

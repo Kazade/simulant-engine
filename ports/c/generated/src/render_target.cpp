@@ -40,7 +40,7 @@ void smlt_render_target_set_last_frame_rendered_id(smlt_render_target_t* self, u
     reinterpret_cast<smlt::RenderTarget*>(self)->set_last_frame_rendered_id(id);
 }
 
-const uint32_t* smlt_render_target_last_frame_rendered_id(const smlt_render_target_t* self) {
+const unsigned int* smlt_render_target_last_frame_rendered_id(const smlt_render_target_t* self) {
     return &(reinterpret_cast<const smlt::RenderTarget*>(self)->last_frame_rendered_id());
 }
 

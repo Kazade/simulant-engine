@@ -2039,40 +2039,6 @@ namespace Smlt {
         public extern void set_mesh(Mesh @value);
     }
 
-    [CCode (cname = "smlt_actor_t", has_type_id = false)]
-    [Compact]
-    public class Actor {
-        [CCode (cname = "smlt_actor_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_actor_aabb")]
-        public extern unowned Aabb aabb();
-        [CCode (cname = "smlt_actor_mesh_id")]
-        public extern ulong mesh_id(DetailLevel detail_level);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_actor_mesh")]
-        public extern Mesh mesh(DetailLevel detail_level);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_actor_best_mesh")]
-        public extern Mesh best_mesh(DetailLevel detail_level);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_actor_base_mesh")]
-        public extern Mesh base_mesh();
-        [CCode (cname = "smlt_actor_has_mesh")]
-        public extern bool has_mesh(DetailLevel detail_level);
-        [CCode (cname = "smlt_actor_has_any_mesh")]
-        public extern bool has_any_mesh();
-        [CCode (cname = "smlt_actor_has_multiple_meshes")]
-        public extern bool has_multiple_meshes();
-        [CCode (cname = "smlt_actor_set_mesh")]
-        public extern void set_mesh(Mesh mesh, DetailLevel detail_level);
-        [CCode (cname = "smlt_actor_has_animated_mesh")]
-        public extern bool has_animated_mesh();
-        [CCode (cname = "smlt_actor_use_material_slot")]
-        public extern void use_material_slot(MaterialSlot @var);
-        [CCode (cname = "smlt_actor_active_material_slot")]
-        public extern MaterialSlot active_material_slot();
-    }
-
     [CCode (cname = "smlt_actor_unused_t", has_type_id = false, free_function = "smlt_actor_unused_destroy")]
     [Compact]
     public class ActorUnused {
@@ -2097,35 +2063,6 @@ namespace Smlt {
     [CCode (cname = "smlt_animation_controller_meta_t", has_type_id = false, free_function = "smlt_animation_controller_meta_destroy")]
     [Compact]
     public class AnimationControllerMeta {
-    }
-
-    [CCode (cname = "smlt_animation_controller_t", has_type_id = false)]
-    [Compact]
-    public class AnimationController {
-        [CCode (cname = "smlt_animation_controller_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_animation_controller_on_create")]
-        public extern bool on_create(Params @params);
-        [CCode (cname = "smlt_animation_controller_play")]
-        public extern bool play(string animation, int32 loop_count);
-        [CCode (cname = "smlt_animation_controller_queue")]
-        public extern bool queue(string name);
-        [CCode (cname = "smlt_animation_controller_pause")]
-        public extern void pause();
-        [CCode (cname = "smlt_animation_controller_is_paused")]
-        public extern bool is_paused();
-        [CCode (cname = "smlt_animation_controller_resume")]
-        public extern void resume();
-        [CCode (cname = "smlt_animation_controller_set_animation_speed")]
-        public extern void set_animation_speed(float speed);
-        [CCode (cname = "smlt_animation_controller_on_update")]
-        public extern void on_update(float dt);
-        [CCode (cname = "smlt_animation_controller_seek")]
-        public extern void seek(float time);
-        [CCode (cname = "smlt_animation_controller_animation_duration")]
-        public extern float animation_duration(string animation);
-        [CCode (cname = "smlt_animation_controller_push_animation")]
-        public extern void push_animation(Animation a);
     }
 
     [CCode (cname = "smlt_animation_controller_unused_t", has_type_id = false, free_function = "smlt_animation_controller_unused_destroy")]
@@ -2310,54 +2247,6 @@ namespace Smlt {
         public extern void set_font_size(uint16 @value);
     }
 
-    [CCode (cname = "smlt_application_t", has_type_id = false, free_function = "smlt_application_destroy")]
-    [Compact]
-    public class Application {
-        [CCode (cname = "smlt_application_profiling_enabled")]
-        public extern bool profiling_enabled();
-        [CCode (cname = "smlt_application_run")]
-        public extern int32 run();
-        [CCode (cname = "smlt_application_initialized")]
-        public extern bool initialized();
-        [CCode (cname = "smlt_application_process_id")]
-        public extern uint process_id();
-        [CCode (cname = "smlt_application_thread_id")]
-        public extern ulong thread_id();
-        [CCode (cname = "smlt_application_ram_usage_in_bytes")]
-        public extern int64 ram_usage_in_bytes();
-        [CCode (cname = "smlt_application_run_frame")]
-        public extern bool run_frame();
-        [CCode (cname = "smlt_application_run_update")]
-        public extern void run_update(float dt);
-        [CCode (cname = "smlt_application_run_fixed_updates")]
-        public extern void run_fixed_updates();
-        [CCode (cname = "smlt_application_request_frame_time")]
-        public extern void request_frame_time(float ms);
-        [CCode (cname = "smlt_application_update_coroutines")]
-        public extern void update_coroutines();
-        [CCode (cname = "smlt_application_stop_all_coroutines")]
-        public extern void stop_all_coroutines();
-        [CCode (cname = "smlt_application_stop_running")]
-        public extern void stop_running();
-        [CCode (cname = "smlt_application_is_shutting_down")]
-        public extern bool is_shutting_down();
-        [CCode (cname = "smlt_application_shutdown")]
-        public extern void shutdown();
-        [CCode (cname = "smlt_application_activate_language")]
-        public extern bool activate_language(string language_code);
-        [CCode (cname = "smlt_application_activate_language_from_arb_data")]
-        public extern bool activate_language_from_arb_data(uint8* data, ulong byte_size);
-        /** Caller owns the returned string; free it with Smlt.free_string(). */
-        [CCode (cname = "smlt_application_active_language")]
-        public extern unowned string active_language();
-        [CCode (cname = "smlt_application_platform_state")]
-        public extern void* platform_state();
-        [CCode (cname = "smlt_application_set_updates_enabled")]
-        public extern void set_updates_enabled(uint mask);
-        [CCode (cname = "smlt_application_ensure_lua_ready")]
-        public extern unowned LuaInterpreter ensure_lua_ready();
-    }
-
     [CCode (cname = "smlt_arg_parser_t", has_type_id = false, free_function = "smlt_arg_parser_destroy")]
     [Compact]
     public class ArgParser {
@@ -2370,44 +2259,6 @@ namespace Smlt {
     [CCode (cname = "smlt_armature_meta_t", has_type_id = false, free_function = "smlt_armature_meta_destroy")]
     [Compact]
     public class ArmatureMeta {
-    }
-
-    [CCode (cname = "smlt_armature_t", has_type_id = false)]
-    [Compact]
-    public class Armature {
-        [CCode (cname = "smlt_armature_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_armature_extra_mesh_param_prefix")]
-        public static extern unowned string extra_mesh_param_prefix();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_armature_add_mesh")]
-        public extern Mesh add_mesh(Mesh source);
-        [CCode (cname = "smlt_armature_mesh_count")]
-        public extern ulong mesh_count();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_armature_source_mesh")]
-        public extern Mesh source_mesh(ulong i);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_armature_skinned_mesh")]
-        public extern Mesh skinned_mesh(ulong i);
-        [CCode (cname = "smlt_armature_update_skinning")]
-        public extern void update_skinning();
-        [CCode (cname = "smlt_armature_mark_skinning_dirty")]
-        public extern void mark_skinning_dirty();
-        [CCode (cname = "smlt_armature_mark_joints_dirty")]
-        public extern void mark_joints_dirty();
-        [CCode (cname = "smlt_armature_joint_count")]
-        public extern ulong joint_count();
-        [CCode (cname = "smlt_armature_joint")]
-        public extern unowned Joint joint(ulong index);
-        [CCode (cname = "smlt_armature_find_joint")]
-        public extern unowned Joint find_joint(string name);
-        [CCode (cname = "smlt_armature_aabb")]
-        public extern unowned Aabb aabb();
-        [CCode (cname = "smlt_armature_use_material_slot")]
-        public extern void use_material_slot(MaterialSlot @var);
-        [CCode (cname = "smlt_armature_active_material_slot")]
-        public extern MaterialSlot active_material_slot();
     }
 
     [CCode (cname = "smlt_armature_unused_t", has_type_id = false, free_function = "smlt_armature_unused_destroy")]
@@ -2458,7 +2309,7 @@ namespace Smlt {
         public extern void destroy_prefab(ulong id);
         /** Caller owns the result; free with the matching release/destroy. */
         [CCode (cname = "smlt_asset_manager_create_prefab")]
-        public extern Prefab create_prefab(StageNode root, GarbageCollectMethod garbage_collect);
+        public extern Prefab create_prefab(void* root, GarbageCollectMethod garbage_collect);
         /** Caller owns the result; free with the matching release/destroy. */
         [CCode (cname = "smlt_asset_manager_load_texture")]
         public extern Texture load_texture(Path filename, GarbageCollectMethod garbage_collect);
@@ -2645,11 +2496,15 @@ namespace Smlt {
     public class AssetMissingError {
         [CCode (cname = "smlt_asset_missing_error_create")]
         public AssetMissingError(string what);
+        [CCode (cname = "smlt_asset_missing_error_what")]
+        public extern unowned string what();
     }
 
     [CCode (cname = "smlt_asset_t", has_type_id = false, free_function = "smlt_asset_release")]
     [Compact]
     public class Asset {
+        [CCode (cname = "smlt_asset_data")]
+        public extern unowned GenericDataCarrier data();
         [CCode (cname = "smlt_asset_asset_manager")]
         public extern unowned AssetManager asset_manager();
         [CCode (cname = "smlt_asset_asset_manager_mut")]
@@ -2667,41 +2522,18 @@ namespace Smlt {
         public extern void set_source(Path source);
         [CCode (cname = "smlt_asset_estimated_size_in_bytes")]
         public extern uint64 estimated_size_in_bytes();
+        [CCode (cname = "smlt_asset_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_asset_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_asset_has_name")]
+        public extern bool has_name();
     }
 
     [CCode (cname = "smlt_audio_source_meta_t", has_type_id = false, free_function = "smlt_audio_source_meta_destroy")]
     [Compact]
     public class AudioSourceMeta {
-    }
-
-    [CCode (cname = "smlt_audio_source_t", has_type_id = false)]
-    [Compact]
-    public class AudioSource {
-        [CCode (cname = "smlt_audio_source_get_scene")]
-        public extern unowned Scene get_scene();
-        [CCode (cname = "smlt_audio_source_set_scene")]
-        public extern void set_scene(Scene @value);
-        [CCode (cname = "smlt_audio_source_node_type_name")]
-        public extern unowned string node_type_name();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_audio_source_play_sound")]
-        public extern PlayingSoundPtr play_sound(Sound sound_id, AudioRepeat repeat, DistanceModel model);
-        [CCode (cname = "smlt_audio_source_stop_sound")]
-        public extern bool stop_sound(ulong sound_id);
-        [CCode (cname = "smlt_audio_source_playing_sound_count")]
-        public extern uint8 playing_sound_count();
-        [CCode (cname = "smlt_audio_source_played_sound_count")]
-        public extern uint8 played_sound_count();
-        [CCode (cname = "smlt_audio_source_is_sound_playing")]
-        public extern bool is_sound_playing();
-        [CCode (cname = "smlt_audio_source_update_source")]
-        public extern void update_source(float dt);
-        [CCode (cname = "smlt_audio_source_on_create")]
-        public extern bool on_create(Params @params);
-        [CCode (cname = "smlt_audio_source_on_destroy")]
-        public extern bool on_destroy();
-        [CCode (cname = "smlt_audio_source_source_update_thread")]
-        public static extern void source_update_thread();
     }
 
     [CCode (cname = "smlt_audio_source_unused_t", has_type_id = false, free_function = "smlt_audio_source_unused_destroy")]
@@ -2729,6 +2561,8 @@ namespace Smlt {
     public class BackgroundLoadException {
         [CCode (cname = "smlt_background_load_exception_create")]
         public BackgroundLoadException();
+        [CCode (cname = "smlt_background_load_exception_what")]
+        public extern unowned string what();
     }
 
     [CCode (cname = "smlt_batcher_material_change_watcher_t", has_type_id = false, free_function = "smlt_batcher_material_change_watcher_destroy")]
@@ -2776,6 +2610,8 @@ namespace Smlt {
     public class BatcherRenderQueue {
         [CCode (cname = "smlt_batcher_render_queue_create")]
         public BatcherRenderQueue();
+        [CCode (cname = "smlt_batcher_render_queue_reset")]
+        public extern void reset(void* stage, BatcherRenderGroupFactory render_group_factory, void* camera);
         [CCode (cname = "smlt_batcher_render_queue_clear")]
         public extern void clear();
         [CCode (cname = "smlt_batcher_render_queue_traverse")]
@@ -2790,7 +2626,7 @@ namespace Smlt {
     [Compact]
     public class BatcherRenderQueueVisitor {
         [CCode (cname = "smlt_batcher_render_queue_visitor_start_traversal")]
-        public extern void start_traversal(BatcherRenderQueue queue, uint64 frame_id, StageNode stage);
+        public extern void start_traversal(BatcherRenderQueue queue, uint64 frame_id, void* stage);
         [CCode (cname = "smlt_batcher_render_queue_visitor_change_render_group")]
         public extern void change_render_group(BatcherRenderGroup prev, BatcherRenderGroup next);
         [CCode (cname = "smlt_batcher_render_queue_visitor_change_material_pass")]
@@ -2798,7 +2634,7 @@ namespace Smlt {
         [CCode (cname = "smlt_batcher_render_queue_visitor_visit")]
         public extern void visit(Renderable arg0, MaterialPass arg1, uint arg2);
         [CCode (cname = "smlt_batcher_render_queue_visitor_end_traversal")]
-        public extern void end_traversal(BatcherRenderQueue queue, StageNode stage);
+        public extern void end_traversal(BatcherRenderQueue queue, void* stage);
     }
 
     [CCode (cname = "smlt_binary_t", has_type_id = false, free_function = "smlt_binary_release")]
@@ -2812,6 +2648,24 @@ namespace Smlt {
         public extern uint8* data();
         [CCode (cname = "smlt_binary_data_size_in_bytes")]
         public extern ulong data_size_in_bytes();
+        [CCode (cname = "smlt_binary_asset_manager")]
+        public extern unowned AssetManager asset_manager();
+        [CCode (cname = "smlt_binary_age")]
+        public extern int age();
+        [CCode (cname = "smlt_binary_set_garbage_collection_method")]
+        public extern void set_garbage_collection_method(GarbageCollectMethod method);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_binary_source")]
+        public extern Path source();
+        [CCode (cname = "smlt_binary_set_source")]
+        public extern void set_source(Path source);
+        [CCode (cname = "smlt_binary_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_binary_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_binary_has_name")]
+        public extern bool has_name();
     }
 
     [CCode (cname = "smlt_boundable_entity_t", has_type_id = false, free_function = "smlt_boundable_entity_destroy")]
@@ -2823,6 +2677,24 @@ namespace Smlt {
         /** Caller owns the result; free with the matching release/destroy. */
         [CCode (cname = "smlt_boundable_entity_center")]
         public extern Vec3 center();
+        [CCode (cname = "smlt_boundable_entity_aabb")]
+        public extern unowned Aabb aabb();
+        [CCode (cname = "smlt_boundable_entity_width")]
+        public extern float width();
+        [CCode (cname = "smlt_boundable_entity_height")]
+        public extern float height();
+        [CCode (cname = "smlt_boundable_entity_depth")]
+        public extern float depth();
+        [CCode (cname = "smlt_boundable_entity_half_width")]
+        public extern float half_width();
+        [CCode (cname = "smlt_boundable_entity_half_height")]
+        public extern float half_height();
+        [CCode (cname = "smlt_boundable_entity_half_depth")]
+        public extern float half_depth();
+        [CCode (cname = "smlt_boundable_entity_diameter")]
+        public extern float diameter();
+        [CCode (cname = "smlt_boundable_entity_radius")]
+        public extern float radius();
     }
 
     [CCode (cname = "smlt_boundable_t", has_type_id = false, free_function = "smlt_boundable_destroy")]
@@ -2853,15 +2725,6 @@ namespace Smlt {
     public class Camera2dMeta {
     }
 
-    [CCode (cname = "smlt_camera_2d_t", has_type_id = false)]
-    [Compact]
-    public class Camera2d {
-        [CCode (cname = "smlt_camera_2d_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_camera_2d_on_create")]
-        public extern bool on_create(Params @params);
-    }
-
     [CCode (cname = "smlt_camera_2d_unused_t", has_type_id = false, free_function = "smlt_camera_2d_unused_destroy")]
     [Compact]
     public class Camera2dUnused {
@@ -2870,15 +2733,6 @@ namespace Smlt {
     [CCode (cname = "smlt_camera_3d_meta_t", has_type_id = false, free_function = "smlt_camera_3d_meta_destroy")]
     [Compact]
     public class Camera3dMeta {
-    }
-
-    [CCode (cname = "smlt_camera_3d_t", has_type_id = false)]
-    [Compact]
-    public class Camera3d {
-        [CCode (cname = "smlt_camera_3d_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_camera_3d_on_create")]
-        public extern bool on_create(Params @params);
     }
 
     [CCode (cname = "smlt_camera_3d_unused_t", has_type_id = false, free_function = "smlt_camera_3d_unused_destroy")]
@@ -2894,36 +2748,6 @@ namespace Smlt {
     [CCode (cname = "smlt_camera_params_t", has_type_id = false, free_function = "smlt_camera_params_destroy")]
     [Compact]
     public class CameraParams {
-    }
-
-    [CCode (cname = "smlt_camera_t", has_type_id = false)]
-    [Compact]
-    public class Camera {
-        [CCode (cname = "smlt_camera_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_camera_aabb")]
-        public extern unowned Aabb aabb();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_camera_transformed_aabb")]
-        public extern Aabb transformed_aabb();
-        [CCode (cname = "smlt_camera_view_matrix")]
-        public extern unowned Mat4 view_matrix();
-        [CCode (cname = "smlt_camera_projection_matrix")]
-        public extern unowned Mat4 projection_matrix();
-        [CCode (cname = "smlt_camera_frustum")]
-        public extern unowned Frustum frustum();
-        [CCode (cname = "smlt_camera_frustum_mut")]
-        public extern unowned Frustum frustum_mut();
-        [CCode (cname = "smlt_camera_set_projection_matrix")]
-        public extern void set_projection_matrix(Mat4 matrix);
-        [CCode (cname = "smlt_camera_set_perspective_projection")]
-        public extern void set_perspective_projection(Degrees fov, float aspect, float near, float far);
-        [CCode (cname = "smlt_camera_set_orthographic_projection")]
-        public extern void set_orthographic_projection(float left, float right, float bottom, float top, float near, float far);
-        [CCode (cname = "smlt_camera_set_orthographic_projection_from_height")]
-        public extern float set_orthographic_projection_from_height(float desired_height_in_units, float ratio);
-        [CCode (cname = "smlt_camera_on_create")]
-        public extern bool on_create(Params @params);
     }
 
     [CCode (cname = "smlt_camera_unused_t", has_type_id = false, free_function = "smlt_camera_unused_destroy")]
@@ -2996,18 +2820,18 @@ namespace Smlt {
     [Compact]
     public class Collision {
         [CCode (cname = "smlt_collision_get_other_body")]
-        public extern unowned PhysicsBody get_other_body();
+        public extern void* get_other_body();
         [CCode (cname = "smlt_collision_set_other_body")]
-        public extern void set_other_body(PhysicsBody @value);
+        public extern void set_other_body(void* @value);
         /** Caller owns the returned string; free it with Smlt.free_string(). */
         [CCode (cname = "smlt_collision_get_other_collider_name")]
         public extern unowned string get_other_collider_name();
         [CCode (cname = "smlt_collision_set_other_collider_name")]
         public extern void set_other_collider_name(string @value);
         [CCode (cname = "smlt_collision_get_this_body")]
-        public extern unowned PhysicsBody get_this_body();
+        public extern void* get_this_body();
         [CCode (cname = "smlt_collision_set_this_body")]
-        public extern void set_this_body(PhysicsBody @value);
+        public extern void set_this_body(void* @value);
         /** Caller owns the returned string; free it with Smlt.free_string(). */
         [CCode (cname = "smlt_collision_get_this_collider_name")]
         public extern unowned string get_this_collider_name();
@@ -3116,6 +2940,12 @@ namespace Smlt {
     public class Compositor {
         [CCode (cname = "smlt_compositor_create")]
         public Compositor(Window window);
+        [CCode (cname = "smlt_compositor_window")]
+        public extern unowned Window window();
+        [CCode (cname = "smlt_compositor_create_layer")]
+        public extern unowned Layer create_layer(void* subtree, void* camera, Viewport viewport, Texture target, int32 priority);
+        [CCode (cname = "smlt_compositor_find_layer")]
+        public extern unowned Layer find_layer(string name);
         [CCode (cname = "smlt_compositor_destroy_all_layers")]
         public extern void destroy_all_layers();
         [CCode (cname = "smlt_compositor_has_layer")]
@@ -3126,6 +2956,10 @@ namespace Smlt {
         public extern void run();
         [CCode (cname = "smlt_compositor_clean_destroyed_layers")]
         public extern void clean_destroyed_layers();
+        [CCode (cname = "smlt_compositor_destroy_object")]
+        public extern void destroy_object(Layer pip);
+        [CCode (cname = "smlt_compositor_destroy_object_immediately")]
+        public extern void destroy_object_immediately(Layer pipeline);
     }
 
     [CCode (cname = "smlt_contact_filter_t", has_type_id = false, free_function = "smlt_contact_filter_destroy")]
@@ -3150,7 +2984,7 @@ namespace Smlt {
     [Compact]
     public class ContactList {
         [CCode (cname = "smlt_contact_list_create")]
-        public ContactList(PhysicsBody body);
+        public ContactList(void* body);
         /** Caller owns the result; free with the matching release/destroy. */
         [CCode (cname = "smlt_contact_list_begin")]
         public extern ContactListIterator begin();
@@ -3179,9 +3013,9 @@ namespace Smlt {
         [CCode (cname = "smlt_contact_point_set_separation")]
         public extern void set_separation(float @value);
         [CCode (cname = "smlt_contact_point_get_other_body")]
-        public extern unowned PhysicsBody get_other_body();
+        public extern void* get_other_body();
         [CCode (cname = "smlt_contact_point_set_other_body")]
-        public extern void set_other_body(PhysicsBody @value);
+        public extern void set_other_body(void* @value);
         /** Caller owns the returned string; free it with Smlt.free_string(). */
         [CCode (cname = "smlt_contact_point_get_other_collider")]
         public extern unowned string get_other_collider();
@@ -3194,11 +3028,6 @@ namespace Smlt {
     public class Contact {
         [CCode (cname = "smlt_contact_create")]
         public Contact(Fixture a, Fixture b);
-    }
-
-    [CCode (cname = "smlt_container_node_t", has_type_id = false)]
-    [Compact]
-    public class ContainerNode {
     }
 
     [CCode (cname = "smlt_core_material_props_t", has_type_id = false, free_function = "smlt_core_material_props_destroy")]
@@ -3347,17 +3176,6 @@ namespace Smlt {
     public class CylindricalBillboardMeta {
     }
 
-    [CCode (cname = "smlt_cylindrical_billboard_t", has_type_id = false)]
-    [Compact]
-    public class CylindricalBillboard {
-        [CCode (cname = "smlt_cylindrical_billboard_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_cylindrical_billboard_set_target")]
-        public extern void set_target(StageNode target);
-        [CCode (cname = "smlt_cylindrical_billboard_aabb")]
-        public extern unowned Aabb aabb();
-    }
-
     [CCode (cname = "smlt_cylindrical_billboard_unused_t", has_type_id = false, free_function = "smlt_cylindrical_billboard_unused_destroy")]
     [Compact]
     public class CylindricalBillboardUnused {
@@ -3373,29 +3191,6 @@ namespace Smlt {
     public class DebugScopedLog {
         [CCode (cname = "smlt_debug_scoped_log_create")]
         public DebugScopedLog(string text, string file, uint32 line);
-    }
-
-    [CCode (cname = "smlt_debug_t", has_type_id = false)]
-    [Compact]
-    public class Debug {
-        [CCode (cname = "smlt_debug_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_debug_draw_ray")]
-        public extern void draw_ray(Vec3 start, Vec3 dir, Color color, Seconds duration, bool depth_test);
-        [CCode (cname = "smlt_debug_draw_line")]
-        public extern void draw_line(Vec3 start, Vec3 end, Color color, Seconds duration, bool depth_test);
-        [CCode (cname = "smlt_debug_draw_point")]
-        public extern void draw_point(Vec3 position, Color color, Seconds duration, bool depth_test);
-        [CCode (cname = "smlt_debug_on_init")]
-        public extern bool on_init();
-        [CCode (cname = "smlt_debug_set_point_size")]
-        public extern void set_point_size(float ps);
-        [CCode (cname = "smlt_debug_point_size")]
-        public extern float point_size();
-        [CCode (cname = "smlt_debug_set_line_width")]
-        public extern void set_line_width(float size);
-        [CCode (cname = "smlt_debug_line_width")]
-        public extern float line_width();
     }
 
     [CCode (cname = "smlt_debug_unused_t", has_type_id = false, free_function = "smlt_debug_unused_destroy")]
@@ -3460,15 +3255,6 @@ namespace Smlt {
     public class DirectionalLightMeta {
     }
 
-    [CCode (cname = "smlt_directional_light_t", has_type_id = false)]
-    [Compact]
-    public class DirectionalLight {
-        [CCode (cname = "smlt_directional_light_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_directional_light_on_create")]
-        public extern bool on_create(Params @params);
-    }
-
     [CCode (cname = "smlt_directional_light_unused_t", has_type_id = false, free_function = "smlt_directional_light_unused_destroy")]
     [Compact]
     public class DirectionalLightUnused {
@@ -3477,15 +3263,6 @@ namespace Smlt {
     [CCode (cname = "smlt_dynamic_body_meta_t", has_type_id = false, free_function = "smlt_dynamic_body_meta_destroy")]
     [Compact]
     public class DynamicBodyMeta {
-    }
-
-    [CCode (cname = "smlt_dynamic_body_t", has_type_id = false)]
-    [Compact]
-    public class DynamicBody {
-        [CCode (cname = "smlt_dynamic_body_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_dynamic_body_aabb")]
-        public extern unowned Aabb aabb();
     }
 
     [CCode (cname = "smlt_dynamic_body_unused_t", has_type_id = false, free_function = "smlt_dynamic_body_unused_destroy")]
@@ -3612,7 +3389,7 @@ namespace Smlt {
     [Compact]
     public class Fixture {
         [CCode (cname = "smlt_fixture_body")]
-        public extern unowned PhysicsBody body();
+        public extern void* body();
         [CCode (cname = "smlt_fixture_kind")]
         public extern uint16 kind();
     }
@@ -3620,19 +3397,6 @@ namespace Smlt {
     [CCode (cname = "smlt_fly_controller_meta_t", has_type_id = false, free_function = "smlt_fly_controller_meta_destroy")]
     [Compact]
     public class FlyControllerMeta {
-    }
-
-    [CCode (cname = "smlt_fly_controller_t", has_type_id = false)]
-    [Compact]
-    public class FlyController {
-        [CCode (cname = "smlt_fly_controller_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_fly_controller_set_speed")]
-        public extern void set_speed(float v);
-        [CCode (cname = "smlt_fly_controller_speed")]
-        public extern float speed();
-        [CCode (cname = "smlt_fly_controller_on_late_update")]
-        public extern void on_late_update(float dt);
     }
 
     [CCode (cname = "smlt_fly_controller_unused_t", has_type_id = false, free_function = "smlt_fly_controller_unused_destroy")]
@@ -3695,6 +3459,8 @@ namespace Smlt {
     [CCode (cname = "smlt_font_t", has_type_id = false, free_function = "smlt_font_release")]
     [Compact]
     public class Font {
+        [CCode (cname = "smlt_font_data")]
+        public extern unowned GenericDataCarrier data();
         /** Caller owns the returned string; free it with Smlt.free_string(). */
         [CCode (cname = "smlt_font_generate_name")]
         public static extern unowned string generate_name(string family, uint16* size, FontWeight weight, FontStyle style);
@@ -3716,6 +3482,24 @@ namespace Smlt {
         public extern int16 descent();
         [CCode (cname = "smlt_font_line_gap")]
         public extern int16 line_gap();
+        [CCode (cname = "smlt_font_asset_manager")]
+        public extern unowned AssetManager asset_manager();
+        [CCode (cname = "smlt_font_age")]
+        public extern int age();
+        [CCode (cname = "smlt_font_set_garbage_collection_method")]
+        public extern void set_garbage_collection_method(GarbageCollectMethod method);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_font_source")]
+        public extern Path source();
+        [CCode (cname = "smlt_font_set_source")]
+        public extern void set_source(Path source);
+        [CCode (cname = "smlt_font_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_font_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_font_has_name")]
+        public extern bool has_name();
     }
 
     [CCode (cname = "smlt_formatter_t", has_type_id = false, free_function = "smlt_formatter_destroy")]
@@ -3731,9 +3515,9 @@ namespace Smlt {
     [Compact]
     public class FrameUnpacker {
         [CCode (cname = "smlt_frame_unpacker_prepare_unpack")]
-        public extern void prepare_unpack(uint32 current_frame, uint32 next_frame, float t, Debug debug);
+        public extern void prepare_unpack(uint32 current_frame, uint32 next_frame, float t, void* debug);
         [CCode (cname = "smlt_frame_unpacker_unpack_frame")]
-        public extern void unpack_frame(uint32 current_frame, uint32 next_frame, float t, VertexData @out, Debug debug);
+        public extern void unpack_frame(uint32 current_frame, uint32 next_frame, float t, VertexData @out, void* debug);
     }
 
     [CCode (cname = "smlt_frustum_t", has_type_id = false, free_function = "smlt_frustum_destroy")]
@@ -3855,6 +3639,8 @@ namespace Smlt {
     public class GenericNoSuchData {
         [CCode (cname = "smlt_generic_no_such_data_create")]
         public GenericNoSuchData(string what);
+        [CCode (cname = "smlt_generic_no_such_data_what")]
+        public extern unowned string what();
     }
 
     [CCode (cname = "smlt_geom_culler_options_t", has_type_id = false, free_function = "smlt_geom_culler_options_destroy")]
@@ -3877,17 +3663,6 @@ namespace Smlt {
     [CCode (cname = "smlt_geom_meta_t", has_type_id = false, free_function = "smlt_geom_meta_destroy")]
     [Compact]
     public class GeomMeta {
-    }
-
-    [CCode (cname = "smlt_geom_t", has_type_id = false)]
-    [Compact]
-    public class Geom {
-        [CCode (cname = "smlt_geom_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_geom_aabb")]
-        public extern unowned Aabb aabb();
-        [CCode (cname = "smlt_geom_on_create")]
-        public extern bool on_create(Params @params);
     }
 
     [CCode (cname = "smlt_geom_unused_t", has_type_id = false, free_function = "smlt_geom_unused_destroy")]
@@ -3978,7 +3753,7 @@ namespace Smlt {
         [CCode (cname = "smlt_index_data_index")]
         public extern void index(uint32 idx);
         [CCode (cname = "smlt_index_data_index_array")]
-        public extern void index_array(uint32* indexes, ulong count);
+        public extern void index_array(uint* indexes, ulong count);
         [CCode (cname = "smlt_index_data_done")]
         public extern void done();
         [CCode (cname = "smlt_index_data_last_updated")]
@@ -4057,6 +3832,10 @@ namespace Smlt {
     public class InputManager {
         [CCode (cname = "smlt_input_manager_create")]
         public InputManager(InputState controller);
+        [CCode (cname = "smlt_input_manager_state")]
+        public extern unowned InputState state();
+        [CCode (cname = "smlt_input_manager_onscreen_keyboard")]
+        public extern void* onscreen_keyboard();
         [CCode (cname = "smlt_input_manager_new_axis")]
         public extern unowned InputAxis new_axis(string name);
         [CCode (cname = "smlt_input_manager_destroy_axises")]
@@ -4103,22 +3882,17 @@ namespace Smlt {
     [CCode (cname = "smlt_interpreter_t", has_type_id = false, free_function = "smlt_interpreter_destroy")]
     [Compact]
     public class Interpreter {
+        [CCode (cname = "smlt_interpreter_update")]
+        public extern void update(float dt);
+        [CCode (cname = "smlt_interpreter_late_update")]
+        public extern void late_update(float dt);
+        [CCode (cname = "smlt_interpreter_fixed_update")]
+        public extern void fixed_update(float step);
     }
 
     [CCode (cname = "smlt_joint_meta_t", has_type_id = false, free_function = "smlt_joint_meta_destroy")]
     [Compact]
     public class JointMeta {
-    }
-
-    [CCode (cname = "smlt_joint_t", has_type_id = false)]
-    [Compact]
-    public class Joint {
-        [CCode (cname = "smlt_joint_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_joint_joint_index")]
-        public extern int joint_index();
-        [CCode (cname = "smlt_joint_armature")]
-        public extern unowned Armature armature();
     }
 
     [CCode (cname = "smlt_joint_unused_t", has_type_id = false, free_function = "smlt_joint_unused_destroy")]
@@ -4211,15 +3985,6 @@ namespace Smlt {
     public class KinematicBodyMeta {
     }
 
-    [CCode (cname = "smlt_kinematic_body_t", has_type_id = false)]
-    [Compact]
-    public class KinematicBody {
-        [CCode (cname = "smlt_kinematic_body_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_kinematic_body_aabb")]
-        public extern unowned Aabb aabb();
-    }
-
     [CCode (cname = "smlt_kinematic_body_unused_t", has_type_id = false, free_function = "smlt_kinematic_body_unused_destroy")]
     [Compact]
     public class KinematicBodyUnused {
@@ -4228,8 +3993,14 @@ namespace Smlt {
     [CCode (cname = "smlt_layer_t", has_type_id = false, free_function = "smlt_layer_destroy")]
     [Compact]
     public class Layer {
+        [CCode (cname = "smlt_layer_create")]
+        public Layer(Compositor render_sequence, void* subtree, void* camera);
+        [CCode (cname = "smlt_layer_viewport")]
+        public extern unowned Viewport viewport();
+        [CCode (cname = "smlt_layer_camera")]
+        public extern void* camera();
         [CCode (cname = "smlt_layer_stage_node")]
-        public extern unowned StageNode stage_node();
+        public extern void* stage_node();
         /** Caller owns the result; free with the matching release/destroy. */
         [CCode (cname = "smlt_layer_target")]
         public extern Texture target();
@@ -4237,17 +4008,31 @@ namespace Smlt {
         public extern uint32 clear_flags();
         [CCode (cname = "smlt_layer_priority")]
         public extern int32 priority();
+        [CCode (cname = "smlt_layer_set_priority")]
+        public extern unowned Layer set_priority(int32 priority);
         [CCode (cname = "smlt_layer_deactivate")]
         public extern void deactivate();
         [CCode (cname = "smlt_layer_activate")]
         public extern void activate();
         [CCode (cname = "smlt_layer_is_active")]
         public extern bool is_active();
+        [CCode (cname = "smlt_layer_set_viewport")]
+        public extern unowned Layer set_viewport(Viewport v);
+        [CCode (cname = "smlt_layer_set_target")]
+        public extern unowned Layer set_target(Texture t);
+        [CCode (cname = "smlt_layer_set_clear_flags")]
+        public extern unowned Layer set_clear_flags(uint32 viewport_clear_flags);
+        [CCode (cname = "smlt_layer_set_detail_level_distances")]
+        public extern unowned Layer set_detail_level_distances(float nearest_cutoff, float near_cutoff, float mid_cutoff, float far_cutoff);
         [CCode (cname = "smlt_layer_detail_level_at_distance")]
         public extern DetailLevel detail_level_at_distance(float dist);
+        [CCode (cname = "smlt_layer_set_name")]
+        public extern unowned Layer set_name(string name);
         /** Caller owns the returned string; free it with Smlt.free_string(). */
         [CCode (cname = "smlt_layer_name")]
         public extern unowned string name();
+        [CCode (cname = "smlt_layer_set_camera")]
+        public extern unowned Layer set_camera(void* c);
         [CCode (cname = "smlt_layer_is_complete")]
         public extern bool is_complete();
         [CCode (cname = "smlt_layer_set_activation_mode")]
@@ -4256,36 +4041,6 @@ namespace Smlt {
         public extern LayerActivationMode activation_mode();
         [CCode (cname = "smlt_layer_id")]
         public extern uint32 id();
-    }
-
-    [CCode (cname = "smlt_light_t", has_type_id = false)]
-    [Compact]
-    public class Light {
-        [CCode (cname = "smlt_light_set_type")]
-        public extern void set_type(LightType type);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_light_direction")]
-        public extern Vec3 direction();
-        [CCode (cname = "smlt_light_set_direction")]
-        public extern void set_direction(Vec3 dir);
-        [CCode (cname = "smlt_light_set_direction_xyz")]
-        public extern void set_direction_xyz(float x, float y, float z);
-        [CCode (cname = "smlt_light_set_range")]
-        public extern void set_range(float range);
-        [CCode (cname = "smlt_light_set_intensity")]
-        public extern void set_intensity(float intensity);
-        [CCode (cname = "smlt_light_set_color")]
-        public extern void set_color(Color color);
-        [CCode (cname = "smlt_light_light_type")]
-        public extern LightType light_type();
-        [CCode (cname = "smlt_light_color")]
-        public extern unowned Color color();
-        [CCode (cname = "smlt_light_range")]
-        public extern float range();
-        [CCode (cname = "smlt_light_intensity")]
-        public extern float intensity();
-        [CCode (cname = "smlt_light_aabb")]
-        public extern unowned Aabb aabb();
     }
 
     [CCode (cname = "smlt_lighting_settings_t", has_type_id = false, free_function = "smlt_lighting_settings_destroy")]
@@ -4306,6 +4061,8 @@ namespace Smlt {
     [CCode (cname = "smlt_loader_t", has_type_id = false, free_function = "smlt_loader_destroy")]
     [Compact]
     public class Loader {
+        [CCode (cname = "smlt_loader_vfs")]
+        public extern unowned VirtualFileSystem vfs();
         [CCode (cname = "smlt_loader_set_vfs")]
         public extern void set_vfs(VirtualFileSystem locator);
     }
@@ -4324,6 +4081,10 @@ namespace Smlt {
     [CCode (cname = "smlt_loaders_base_texture_loader_t", has_type_id = false, free_function = "smlt_loaders_base_texture_loader_destroy")]
     [Compact]
     public class LoadersBaseTextureLoader {
+        [CCode (cname = "smlt_loaders_base_texture_loader_vfs")]
+        public extern unowned VirtualFileSystem vfs();
+        [CCode (cname = "smlt_loaders_base_texture_loader_set_vfs")]
+        public extern void set_vfs(VirtualFileSystem locator);
     }
 
     [CCode (cname = "smlt_loaders_heightmap_loader_t", has_type_id = false, free_function = "smlt_loaders_heightmap_loader_destroy")]
@@ -4331,6 +4092,10 @@ namespace Smlt {
     public class LoadersHeightmapLoader {
         [CCode (cname = "smlt_loaders_heightmap_loader_create")]
         public LoadersHeightmapLoader(Texture texture);
+        [CCode (cname = "smlt_loaders_heightmap_loader_vfs")]
+        public extern unowned VirtualFileSystem vfs();
+        [CCode (cname = "smlt_loaders_heightmap_loader_set_vfs")]
+        public extern void set_vfs(VirtualFileSystem locator);
     }
 
     [CCode (cname = "smlt_loaders_heightmap_loader_type_t", has_type_id = false, free_function = "smlt_loaders_heightmap_loader_type_destroy")]
@@ -4342,6 +4107,8 @@ namespace Smlt {
         public extern unowned string name();
         [CCode (cname = "smlt_loaders_heightmap_loader_type_supports")]
         public extern bool supports(Path filename);
+        [CCode (cname = "smlt_loaders_heightmap_loader_type_has_hint")]
+        public extern bool has_hint(LoaderHint hint);
     }
 
     [CCode (cname = "smlt_local_asset_manager_t", has_type_id = false, free_function = "smlt_local_asset_manager_destroy")]
@@ -4353,6 +4120,194 @@ namespace Smlt {
         public extern bool init();
         [CCode (cname = "smlt_local_asset_manager_clean_up")]
         public extern void clean_up();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_load_particle_script")]
+        public extern ParticleScript load_particle_script(Path filename, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        [CCode (cname = "smlt_local_asset_manager_destroy_particle_script")]
+        public extern void destroy_particle_script(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_particle_script")]
+        public extern ParticleScript particle_script(ulong id);
+        [CCode (cname = "smlt_local_asset_manager_particle_script_count")]
+        public extern ulong particle_script_count();
+        [CCode (cname = "smlt_local_asset_manager_has_particle_script")]
+        public extern bool has_particle_script(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_find_particle_script")]
+        public extern ParticleScript find_particle_script(string name);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_load_prefab")]
+        public extern Prefab load_prefab(Path filename, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_prefab")]
+        public extern Prefab prefab(ulong id);
+        [CCode (cname = "smlt_local_asset_manager_prefab_count")]
+        public extern ulong prefab_count();
+        [CCode (cname = "smlt_local_asset_manager_has_prefab")]
+        public extern bool has_prefab(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_find_prefab")]
+        public extern Prefab find_prefab(string name);
+        [CCode (cname = "smlt_local_asset_manager_destroy_prefab")]
+        public extern void destroy_prefab(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_create_prefab")]
+        public extern Prefab create_prefab(void* root, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_load_texture")]
+        public extern Texture load_texture(Path filename, GarbageCollectMethod garbage_collect);
+        [CCode (cname = "smlt_local_asset_manager_destroy_texture")]
+        public extern void destroy_texture(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_texture")]
+        public extern Texture texture(ulong id);
+        [CCode (cname = "smlt_local_asset_manager_texture_count")]
+        public extern ulong texture_count();
+        [CCode (cname = "smlt_local_asset_manager_has_texture")]
+        public extern bool has_texture(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_find_texture")]
+        public extern Texture find_texture(string alias);
+        [CCode (cname = "smlt_local_asset_manager_destroy_mesh")]
+        public extern void destroy_mesh(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_mesh")]
+        public extern Mesh mesh(ulong id);
+        [CCode (cname = "smlt_local_asset_manager_mesh_count")]
+        public extern ulong mesh_count();
+        [CCode (cname = "smlt_local_asset_manager_has_mesh")]
+        public extern bool has_mesh(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_find_mesh")]
+        public extern Mesh find_mesh(string name);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_load_material")]
+        public extern Material load_material(Path filename, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        [CCode (cname = "smlt_local_asset_manager_destroy_material")]
+        public extern void destroy_material(ulong* id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_material")]
+        public extern Material material(ulong* id);
+        [CCode (cname = "smlt_local_asset_manager_material_count")]
+        public extern ulong material_count();
+        [CCode (cname = "smlt_local_asset_manager_has_material")]
+        public extern bool has_material(ulong* id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_find_material")]
+        public extern Material find_material(string name);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_load_sound")]
+        public extern Sound load_sound(Path filename, SoundFlags flags, GarbageCollectMethod garbage_collect);
+        [CCode (cname = "smlt_local_asset_manager_destroy_sound")]
+        public extern void destroy_sound(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_sound")]
+        public extern Sound sound(ulong id);
+        [CCode (cname = "smlt_local_asset_manager_sound_count")]
+        public extern ulong sound_count();
+        [CCode (cname = "smlt_local_asset_manager_has_sound")]
+        public extern bool has_sound(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_find_sound")]
+        public extern Sound find_sound(string name);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_load_binary")]
+        public extern Binary load_binary(Path filename, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_binary")]
+        public extern Binary binary(ulong id);
+        [CCode (cname = "smlt_local_asset_manager_binary_count")]
+        public extern ulong binary_count();
+        [CCode (cname = "smlt_local_asset_manager_has_binary")]
+        public extern bool has_binary(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_find_binary")]
+        public extern Binary find_binary(string name);
+        [CCode (cname = "smlt_local_asset_manager_destroy_binary")]
+        public extern void destroy_binary(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_create_font_from_memory")]
+        public extern Font create_font_from_memory(uint8* data, ulong size, FontFlags flags, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_create_font_from_family")]
+        public extern Font create_font_from_family(string family, FontFlags flags, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_load_font")]
+        public extern Font load_font(Path filename, FontFlags flags, GarbageCollectMethod garbage_collect);
+        [CCode (cname = "smlt_local_asset_manager_destroy_font")]
+        public extern void destroy_font(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_font")]
+        public extern Font font(ulong id);
+        [CCode (cname = "smlt_local_asset_manager_font_count")]
+        public extern ulong font_count();
+        [CCode (cname = "smlt_local_asset_manager_has_font")]
+        public extern bool has_font(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_find_font")]
+        public extern Font find_font(string alias);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_load_spritesheet")]
+        public extern Spritesheet load_spritesheet(Path filename, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        [CCode (cname = "smlt_local_asset_manager_destroy_spritesheet")]
+        public extern void destroy_spritesheet(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_spritesheet")]
+        public extern Spritesheet spritesheet(ulong id);
+        [CCode (cname = "smlt_local_asset_manager_spritesheet_count")]
+        public extern ulong spritesheet_count();
+        [CCode (cname = "smlt_local_asset_manager_has_spritesheet")]
+        public extern bool has_spritesheet(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_find_spritesheet")]
+        public extern Spritesheet find_spritesheet(string name);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_create_texture")]
+        public extern Texture create_texture(uint16 width, uint16 height, TextureFormat format, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_create_material")]
+        public extern Material create_material(GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_create_mesh")]
+        public extern Mesh create_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_load_mesh")]
+        public extern Mesh load_mesh(Path path, VertexSpecification desired_specification, MeshLoadOptions options, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_create_mesh_from_submesh")]
+        public extern Mesh create_mesh_from_submesh(SubMesh submesh, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_create_mesh_from_heightmap")]
+        public extern Mesh create_mesh_from_heightmap(Path image_file, HeightmapSpecification spec, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_create_mesh_as_cube_with_submesh_per_face")]
+        public extern Mesh create_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_create_material_from_texture")]
+        public extern Material create_material_from_texture(Texture texture, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        [CCode (cname = "smlt_local_asset_manager_update")]
+        public extern void update(float dt);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_default_material")]
+        public extern Material default_material();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_clone_material")]
+        public extern Material clone_material(ulong* mat_id, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_local_asset_manager_clone_default_material")]
+        public extern Material clone_default_material(GarbageCollectMethod garbage_collect);
+        [CCode (cname = "smlt_local_asset_manager_base_manager")]
+        public extern unowned AssetManager base_manager();
+        [CCode (cname = "smlt_local_asset_manager_destroy_all")]
+        public extern void destroy_all();
+        [CCode (cname = "smlt_local_asset_manager_run_garbage_collection")]
+        public extern void run_garbage_collection();
+        [CCode (cname = "smlt_local_asset_manager_is_base_manager")]
+        public extern bool is_base_manager();
+        [CCode (cname = "smlt_local_asset_manager_child_manager_count")]
+        public extern ulong child_manager_count();
+        [CCode (cname = "smlt_local_asset_manager_child_manager")]
+        public extern unowned AssetManager child_manager(ulong i);
     }
 
     [CCode (cname = "smlt_logger_t", has_type_id = false, free_function = "smlt_logger_destroy")]
@@ -4380,7 +4335,7 @@ namespace Smlt {
     [Compact]
     public class Manipulator {
         [CCode (cname = "smlt_manipulator_manipulate")]
-        public extern void manipulate(ParticleSystem system, Particle particles, ulong particle_count, float dt);
+        public extern void manipulate(void* system, Particle particles, ulong particle_count, float dt);
         [CCode (cname = "smlt_manipulator_set_linear_curve")]
         public extern void set_linear_curve(float rate);
         [CCode (cname = "smlt_manipulator_set_bell_curve")]
@@ -4656,6 +4611,16 @@ namespace Smlt {
         public extern void set_color_material(ColorMaterial cm);
         [CCode (cname = "smlt_material_object_parent_material_object")]
         public extern unowned MaterialObject parent_material_object();
+        [CCode (cname = "smlt_material_object_set_property_value")]
+        public extern bool set_property_value(uint hsh, string name, bool* @value);
+        [CCode (cname = "smlt_material_object_clear_override")]
+        public extern bool clear_override(string name);
+        [CCode (cname = "smlt_material_object_check_existance")]
+        public extern bool check_existance(string property_name);
+        [CCode (cname = "smlt_material_object_property_type")]
+        public extern bool property_type(string property_name, MaterialPropertyType type);
+        [CCode (cname = "smlt_material_object_on_check_existence")]
+        public extern bool on_check_existence(uint hsh);
     }
 
     [CCode (cname = "smlt_material_pass_t", has_type_id = false, free_function = "smlt_material_pass_destroy")]
@@ -4678,7 +4643,7 @@ namespace Smlt {
         [CCode (cname = "smlt_material_pass_set_property_value_float")]
         public extern bool set_property_value_float(uint hsh, string name, float* @value);
         [CCode (cname = "smlt_material_pass_set_property_value_int32")]
-        public extern bool set_property_value_int32(uint hsh, string name, int32* @value);
+        public extern bool set_property_value_int32(uint hsh, string name, int* @value);
         [CCode (cname = "smlt_material_pass_set_property_value_mat3")]
         public extern bool set_property_value_mat3(uint hsh, string name, Mat3 @value);
         [CCode (cname = "smlt_material_pass_set_property_value_mat4")]
@@ -4805,6 +4770,48 @@ namespace Smlt {
         public extern void set_stencil_ops(StencilOp fail, StencilOp depth_fail, StencilOp pass);
         [CCode (cname = "smlt_material_pass_set_polygon_list_target")]
         public extern void set_polygon_list_target(PolygonListTarget v);
+        [CCode (cname = "smlt_material_pass_set_metallic_roughness_map")]
+        public extern void set_metallic_roughness_map(Texture texture);
+        [CCode (cname = "smlt_material_pass_set_base_color_map")]
+        public extern void set_base_color_map(Texture texture);
+        [CCode (cname = "smlt_material_pass_set_light_map")]
+        public extern void set_light_map(Texture texture);
+        [CCode (cname = "smlt_material_pass_set_normal_map")]
+        public extern void set_normal_map(Texture texture);
+        [CCode (cname = "smlt_material_pass_base_color_map_matrix")]
+        public extern unowned Mat4 base_color_map_matrix();
+        [CCode (cname = "smlt_material_pass_light_map_matrix")]
+        public extern unowned Mat4 light_map_matrix();
+        [CCode (cname = "smlt_material_pass_normal_map_matrix")]
+        public extern unowned Mat4 normal_map_matrix();
+        [CCode (cname = "smlt_material_pass_metallic_roughness_map_matrix")]
+        public extern unowned Mat4 metallic_roughness_map_matrix();
+        [CCode (cname = "smlt_material_pass_set_base_color_map_matrix")]
+        public extern void set_base_color_map_matrix(Mat4 mat);
+        [CCode (cname = "smlt_material_pass_set_light_map_matrix")]
+        public extern void set_light_map_matrix(Mat4 mat);
+        [CCode (cname = "smlt_material_pass_set_normal_map_matrix")]
+        public extern void set_normal_map_matrix(Mat4 mat);
+        [CCode (cname = "smlt_material_pass_set_metallic_roughness_map_matrix")]
+        public extern void set_metallic_roughness_map_matrix(Mat4 mat);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_material_pass_base_color_map")]
+        public extern Texture base_color_map();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_material_pass_light_map")]
+        public extern Texture light_map();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_material_pass_normal_map")]
+        public extern Texture normal_map();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_material_pass_metallic_roughness_map")]
+        public extern Texture metallic_roughness_map();
+        [CCode (cname = "smlt_material_pass_parent_material_object")]
+        public extern unowned MaterialObject parent_material_object();
+        [CCode (cname = "smlt_material_pass_clear_override")]
+        public extern bool clear_override(string name);
+        [CCode (cname = "smlt_material_pass_check_existance")]
+        public extern bool check_existance(string property_name);
     }
 
     [CCode (cname = "smlt_material_property_overrider_t", has_type_id = false, free_function = "smlt_material_property_overrider_destroy")]
@@ -4815,7 +4822,7 @@ namespace Smlt {
         [CCode (cname = "smlt_material_property_overrider_set_property_value_float")]
         public extern bool set_property_value_float(uint hsh, string name, float* @value);
         [CCode (cname = "smlt_material_property_overrider_set_property_value_int32")]
-        public extern bool set_property_value_int32(uint hsh, string name, int32* @value);
+        public extern bool set_property_value_int32(uint hsh, string name, int* @value);
         [CCode (cname = "smlt_material_property_overrider_set_property_value_color")]
         public extern bool set_property_value_color(uint hsh, string name, Color @value);
         [CCode (cname = "smlt_material_property_overrider_set_property_value_mat3")]
@@ -4845,6 +4852,8 @@ namespace Smlt {
     [CCode (cname = "smlt_material_t", has_type_id = false, free_function = "smlt_material_release")]
     [Compact]
     public class Material {
+        [CCode (cname = "smlt_material_data")]
+        public extern unowned GenericDataCarrier data();
         [CCode (cname = "smlt_material_asset_type_name")]
         public extern unowned string asset_type_name();
         [CCode (cname = "smlt_material_estimated_size_in_bytes")]
@@ -4860,7 +4869,7 @@ namespace Smlt {
         [CCode (cname = "smlt_material_set_property_value_float")]
         public extern bool set_property_value_float(uint hsh, string name, float* @value);
         [CCode (cname = "smlt_material_set_property_value_int32")]
-        public extern bool set_property_value_int32(uint hsh, string name, int32* @value);
+        public extern bool set_property_value_int32(uint hsh, string name, int* @value);
         [CCode (cname = "smlt_material_set_property_value_mat3")]
         public extern bool set_property_value_mat3(uint hsh, string name, Mat3 @value);
         [CCode (cname = "smlt_material_set_property_value_mat4")]
@@ -4959,6 +4968,66 @@ namespace Smlt {
         public extern bool property_type(string name, MaterialPropertyType type);
         [CCode (cname = "smlt_material_on_check_existence")]
         public extern bool on_check_existence(uint hsh);
+        [CCode (cname = "smlt_material_asset_manager")]
+        public extern unowned AssetManager asset_manager();
+        [CCode (cname = "smlt_material_age")]
+        public extern int age();
+        [CCode (cname = "smlt_material_set_garbage_collection_method")]
+        public extern void set_garbage_collection_method(GarbageCollectMethod method);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_material_source")]
+        public extern Path source();
+        [CCode (cname = "smlt_material_set_source")]
+        public extern void set_source(Path source);
+        [CCode (cname = "smlt_material_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_material_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_material_has_name")]
+        public extern bool has_name();
+        [CCode (cname = "smlt_material_set_metallic_roughness_map")]
+        public extern void set_metallic_roughness_map(Texture texture);
+        [CCode (cname = "smlt_material_set_base_color_map")]
+        public extern void set_base_color_map(Texture texture);
+        [CCode (cname = "smlt_material_set_light_map")]
+        public extern void set_light_map(Texture texture);
+        [CCode (cname = "smlt_material_set_normal_map")]
+        public extern void set_normal_map(Texture texture);
+        [CCode (cname = "smlt_material_base_color_map_matrix")]
+        public extern unowned Mat4 base_color_map_matrix();
+        [CCode (cname = "smlt_material_light_map_matrix")]
+        public extern unowned Mat4 light_map_matrix();
+        [CCode (cname = "smlt_material_normal_map_matrix")]
+        public extern unowned Mat4 normal_map_matrix();
+        [CCode (cname = "smlt_material_metallic_roughness_map_matrix")]
+        public extern unowned Mat4 metallic_roughness_map_matrix();
+        [CCode (cname = "smlt_material_set_base_color_map_matrix")]
+        public extern void set_base_color_map_matrix(Mat4 mat);
+        [CCode (cname = "smlt_material_set_light_map_matrix")]
+        public extern void set_light_map_matrix(Mat4 mat);
+        [CCode (cname = "smlt_material_set_normal_map_matrix")]
+        public extern void set_normal_map_matrix(Mat4 mat);
+        [CCode (cname = "smlt_material_set_metallic_roughness_map_matrix")]
+        public extern void set_metallic_roughness_map_matrix(Mat4 mat);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_material_base_color_map")]
+        public extern Texture base_color_map();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_material_light_map")]
+        public extern Texture light_map();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_material_normal_map")]
+        public extern Texture normal_map();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_material_metallic_roughness_map")]
+        public extern Texture metallic_roughness_map();
+        [CCode (cname = "smlt_material_parent_material_object")]
+        public extern unowned MaterialObject parent_material_object();
+        [CCode (cname = "smlt_material_clear_override")]
+        public extern bool clear_override(string name);
+        [CCode (cname = "smlt_material_check_existance")]
+        public extern bool check_existance(string property_name);
     }
 
     [CCode (cname = "smlt_memory_logger_t", has_type_id = false, free_function = "smlt_memory_logger_destroy")]
@@ -4973,28 +5042,6 @@ namespace Smlt {
     [CCode (cname = "smlt_mesh_instancer_meta_t", has_type_id = false, free_function = "smlt_mesh_instancer_meta_destroy")]
     [Compact]
     public class MeshInstancerMeta {
-    }
-
-    [CCode (cname = "smlt_mesh_instancer_t", has_type_id = false)]
-    [Compact]
-    public class MeshInstancer {
-        [CCode (cname = "smlt_mesh_instancer_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_mesh_instancer_aabb")]
-        public extern unowned Aabb aabb();
-        [CCode (cname = "smlt_mesh_instancer_set_mesh")]
-        public extern void set_mesh(Mesh mesh);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_mesh_instancer_mesh")]
-        public extern Mesh mesh();
-        [CCode (cname = "smlt_mesh_instancer_create_mesh_instance")]
-        public extern ulong create_mesh_instance(Vec3 position, Quaternion rotation);
-        [CCode (cname = "smlt_mesh_instancer_destroy_mesh_instance")]
-        public extern bool destroy_mesh_instance(ulong mid);
-        [CCode (cname = "smlt_mesh_instancer_show_mesh_instance")]
-        public extern bool show_mesh_instance(ulong mid);
-        [CCode (cname = "smlt_mesh_instancer_hide_mesh_instance")]
-        public extern bool hide_mesh_instance(ulong mid);
     }
 
     [CCode (cname = "smlt_mesh_instancer_unused_t", has_type_id = false, free_function = "smlt_mesh_instancer_unused_destroy")]
@@ -5043,6 +5090,12 @@ namespace Smlt {
     [CCode (cname = "smlt_mesh_t", has_type_id = false, free_function = "smlt_mesh_release")]
     [Compact]
     public class Mesh {
+        [CCode (cname = "smlt_mesh_adjacency_info")]
+        public extern unowned AdjacencyInfo adjacency_info();
+        [CCode (cname = "smlt_mesh_vertex_data")]
+        public extern unowned VertexData vertex_data();
+        [CCode (cname = "smlt_mesh_data")]
+        public extern unowned GenericDataCarrier data();
         [CCode (cname = "smlt_mesh_asset_type_name")]
         public extern unowned string asset_type_name();
         [CCode (cname = "smlt_mesh_estimated_size_in_bytes")]
@@ -5051,10 +5104,34 @@ namespace Smlt {
         public extern void reset(VertexSpecification vertex_specification);
         [CCode (cname = "smlt_mesh_is_skinned")]
         public extern bool is_skinned();
+        [CCode (cname = "smlt_mesh_create_submesh")]
+        public extern unowned SubMesh create_submesh(string name, Material material, MeshArrangement arrangement);
+        [CCode (cname = "smlt_mesh_create_submesh2")]
+        public extern unowned SubMesh create_submesh2(string name, Material material, IndexType index_type, MeshArrangement arrangement);
+        [CCode (cname = "smlt_mesh_create_submesh_as_capsule")]
+        public extern unowned SubMesh create_submesh_as_capsule(string name, Material material, float diameter, float length, ulong segment_count, ulong vertical_segment_count, ulong ring_count);
+        [CCode (cname = "smlt_mesh_create_submesh_as_sphere")]
+        public extern unowned SubMesh create_submesh_as_sphere(string name, Material material, float diameter, ulong slices, ulong stacks);
+        [CCode (cname = "smlt_mesh_create_submesh_as_cylinder")]
+        public extern unowned SubMesh create_submesh_as_cylinder(string name, Material material, float diameter, float length, ulong segments, ulong stacks);
+        [CCode (cname = "smlt_mesh_create_submesh_as_icosphere")]
+        public extern unowned SubMesh create_submesh_as_icosphere(string name, Material material, float diameter, uint32 subdivisions);
+        [CCode (cname = "smlt_mesh_create_submesh_as_rectangle")]
+        public extern unowned SubMesh create_submesh_as_rectangle(string name, Material material, float width, float height, Vec3 offset);
+        [CCode (cname = "smlt_mesh_create_submesh_as_cube")]
+        public extern unowned SubMesh create_submesh_as_cube(string name, Material material, float size);
+        [CCode (cname = "smlt_mesh_create_submesh_as_box")]
+        public extern unowned SubMesh create_submesh_as_box(string name, Material material, float width, float height, float depth, Vec3 offset);
         [CCode (cname = "smlt_mesh_submesh_count")]
         public extern ulong submesh_count();
         [CCode (cname = "smlt_mesh_has_submesh")]
         public extern bool has_submesh(string name);
+        [CCode (cname = "smlt_mesh_find_submesh")]
+        public extern unowned SubMesh find_submesh(string name);
+        [CCode (cname = "smlt_mesh_find_submesh_with_material")]
+        public extern unowned SubMesh find_submesh_with_material(Material mat);
+        [CCode (cname = "smlt_mesh_first_submesh")]
+        public extern unowned SubMesh first_submesh();
         [CCode (cname = "smlt_mesh_destroy_submesh")]
         public extern void destroy_submesh(string name);
         [CCode (cname = "smlt_mesh_set_material")]
@@ -5082,6 +5159,50 @@ namespace Smlt {
         public extern void generate_adjacency_info();
         [CCode (cname = "smlt_mesh_has_adjacency_info")]
         public extern bool has_adjacency_info();
+        [CCode (cname = "smlt_mesh_width")]
+        public extern float width();
+        [CCode (cname = "smlt_mesh_height")]
+        public extern float height();
+        [CCode (cname = "smlt_mesh_depth")]
+        public extern float depth();
+        [CCode (cname = "smlt_mesh_half_width")]
+        public extern float half_width();
+        [CCode (cname = "smlt_mesh_half_height")]
+        public extern float half_height();
+        [CCode (cname = "smlt_mesh_half_depth")]
+        public extern float half_depth();
+        [CCode (cname = "smlt_mesh_diameter")]
+        public extern float diameter();
+        [CCode (cname = "smlt_mesh_radius")]
+        public extern float radius();
+        [CCode (cname = "smlt_mesh_asset_manager")]
+        public extern unowned AssetManager asset_manager();
+        [CCode (cname = "smlt_mesh_age")]
+        public extern int age();
+        [CCode (cname = "smlt_mesh_set_garbage_collection_method")]
+        public extern void set_garbage_collection_method(GarbageCollectMethod method);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_mesh_source")]
+        public extern Path source();
+        [CCode (cname = "smlt_mesh_set_source")]
+        public extern void set_source(Path source);
+        [CCode (cname = "smlt_mesh_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_mesh_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_mesh_has_name")]
+        public extern bool has_name();
+        [CCode (cname = "smlt_mesh_add_animation")]
+        public extern void add_animation(string name, uint32 start_frame, uint32 end_frame, float fps);
+        [CCode (cname = "smlt_mesh_has_animations")]
+        public extern bool has_animations();
+        [CCode (cname = "smlt_mesh_animation_count")]
+        public extern ulong animation_count();
+        [CCode (cname = "smlt_mesh_set_default_fps")]
+        public extern void set_default_fps(float fps);
+        [CCode (cname = "smlt_mesh_default_fps")]
+        public extern float default_fps();
     }
 
     [CCode (cname = "smlt_modifier_key_state_t", has_type_id = false, free_function = "smlt_modifier_key_state_destroy")]
@@ -5239,25 +5360,6 @@ namespace Smlt {
         public extern float af();
     }
 
-    [CCode (cname = "smlt_panel_t", has_type_id = false)]
-    [Compact]
-    public class Panel {
-        [CCode (cname = "smlt_panel_on_init")]
-        public extern bool on_init();
-        [CCode (cname = "smlt_panel_on_clean_up")]
-        public extern void on_clean_up();
-        [CCode (cname = "smlt_panel_is_active")]
-        public extern bool is_active();
-        [CCode (cname = "smlt_panel_activate")]
-        public extern void activate();
-        [CCode (cname = "smlt_panel_deactivate")]
-        public extern void deactivate();
-        [CCode (cname = "smlt_panel_on_key_down")]
-        public extern void on_key_down(KeyEvent evt);
-        [CCode (cname = "smlt_panel_set_activation_key")]
-        public extern void set_activation_key(KeyboardCode code);
-    }
-
     [CCode (cname = "smlt_params_t", has_type_id = false, free_function = "smlt_params_destroy")]
     [Compact]
     public class Params {
@@ -5277,6 +5379,8 @@ namespace Smlt {
     [CCode (cname = "smlt_particle_script_t", has_type_id = false, free_function = "smlt_particle_script_release")]
     [Compact]
     public class ParticleScript {
+        [CCode (cname = "smlt_particle_script_data")]
+        public extern unowned GenericDataCarrier data();
         [CCode (cname = "smlt_particle_script_asset_type_name")]
         public extern unowned string asset_type_name();
         [CCode (cname = "smlt_particle_script_estimated_size_in_bytes")]
@@ -5320,51 +5424,29 @@ namespace Smlt {
         public extern void set_cull_each(bool v);
         [CCode (cname = "smlt_particle_script_set_material")]
         public extern void set_material(Material material);
+        [CCode (cname = "smlt_particle_script_asset_manager")]
+        public extern unowned AssetManager asset_manager();
+        [CCode (cname = "smlt_particle_script_age")]
+        public extern int age();
+        [CCode (cname = "smlt_particle_script_set_garbage_collection_method")]
+        public extern void set_garbage_collection_method(GarbageCollectMethod method);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_particle_script_source")]
+        public extern Path source();
+        [CCode (cname = "smlt_particle_script_set_source")]
+        public extern void set_source(Path source);
+        [CCode (cname = "smlt_particle_script_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_particle_script_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_particle_script_has_name")]
+        public extern bool has_name();
     }
 
     [CCode (cname = "smlt_particle_system_meta_t", has_type_id = false, free_function = "smlt_particle_system_meta_destroy")]
     [Compact]
     public class ParticleSystemMeta {
-    }
-
-    [CCode (cname = "smlt_particle_system_t", has_type_id = false)]
-    [Compact]
-    public class ParticleSystem {
-        [CCode (cname = "smlt_particle_system_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_particle_system_aabb")]
-        public extern unowned Aabb aabb();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_particle_system_transformed_aabb")]
-        public extern Aabb transformed_aabb();
-        [CCode (cname = "smlt_particle_system_emitters_active")]
-        public extern bool emitters_active();
-        [CCode (cname = "smlt_particle_system_set_emitters_active")]
-        public extern void set_emitters_active(bool @value);
-        [CCode (cname = "smlt_particle_system_set_destroy_on_completion")]
-        public extern void set_destroy_on_completion(bool @value);
-        [CCode (cname = "smlt_particle_system_destroy_on_completion")]
-        public extern bool destroy_on_completion();
-        [CCode (cname = "smlt_particle_system_has_active_emitters")]
-        public extern bool has_active_emitters();
-        [CCode (cname = "smlt_particle_system_update_when_hidden")]
-        public extern bool update_when_hidden();
-        [CCode (cname = "smlt_particle_system_set_update_when_hidden")]
-        public extern void set_update_when_hidden(bool @value);
-        [CCode (cname = "smlt_particle_system_vertex_data")]
-        public extern unowned VertexData vertex_data();
-        [CCode (cname = "smlt_particle_system_script")]
-        public extern unowned ParticleScript script();
-        [CCode (cname = "smlt_particle_system_on_update")]
-        public extern void on_update(float dt);
-        [CCode (cname = "smlt_particle_system_particle_count")]
-        public extern ulong particle_count();
-        [CCode (cname = "smlt_particle_system_particle")]
-        public extern unowned Particle particle(ulong i);
-        [CCode (cname = "smlt_particle_system_set_space")]
-        public extern void set_space(ParticleSystemSpace space);
-        [CCode (cname = "smlt_particle_system_space")]
-        public extern ParticleSystemSpace space();
     }
 
     [CCode (cname = "smlt_particle_system_unused_t", has_type_id = false, free_function = "smlt_particle_system_unused_destroy")]
@@ -5412,19 +5494,6 @@ namespace Smlt {
         public extern uint8 get_emitter_index();
         [CCode (cname = "smlt_particle_set_emitter_index")]
         public extern void set_emitter_index(uint8 @value);
-    }
-
-    [CCode (cname = "smlt_partitioner_t", has_type_id = false)]
-    [Compact]
-    public class Partitioner {
-        [CCode (cname = "smlt_partitioner_add_stage_node")]
-        public extern void add_stage_node(StageNode node);
-        [CCode (cname = "smlt_partitioner_update_stage_node")]
-        public extern void update_stage_node(StageNode node, Aabb bounds);
-        [CCode (cname = "smlt_partitioner_remove_stage_node")]
-        public extern void remove_stage_node(StageNode node);
-        [CCode (cname = "smlt_partitioner_apply_writes")]
-        public extern void apply_writes();
     }
 
     [CCode (cname = "smlt_partitioner_write_slots_t", has_type_id = false, free_function = "smlt_partitioner_write_slots_destroy")]
@@ -5501,37 +5570,6 @@ namespace Smlt {
         public extern void set_initial_rotation(Quaternion @value);
     }
 
-    [CCode (cname = "smlt_physics_body_t", has_type_id = false)]
-    [Compact]
-    public class PhysicsBody {
-        [CCode (cname = "smlt_physics_body_add_box_collider")]
-        public extern void add_box_collider(Vec3 size, PhysicsMaterial properties, uint16 kind, Vec3 offset, Quaternion rotation);
-        [CCode (cname = "smlt_physics_body_add_sphere_collider")]
-        public extern void add_sphere_collider(float diameter, PhysicsMaterial properties, uint16 kind, Vec3 offset);
-        [CCode (cname = "smlt_physics_body_add_capsule_collider")]
-        public extern void add_capsule_collider(Vec3 v0, Vec3 v1, float diameter, PhysicsMaterial properties, uint16 kind);
-        [CCode (cname = "smlt_physics_body_add_triangle_collider")]
-        public extern void add_triangle_collider(Vec3 v1, Vec3 v2, Vec3 v3, PhysicsMaterial properties, uint16 kind);
-        [CCode (cname = "smlt_physics_body_register_collision_listener")]
-        public extern void register_collision_listener(CollisionListener listener);
-        [CCode (cname = "smlt_physics_body_unregister_collision_listener")]
-        public extern void unregister_collision_listener(CollisionListener listener);
-        [CCode (cname = "smlt_physics_body_type")]
-        public extern PhysicsBodyType type();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_physics_body_position")]
-        public extern Vec3 position();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_physics_body_orientation")]
-        public extern Quaternion orientation();
-        [CCode (cname = "smlt_physics_body_set_position")]
-        public extern void set_position(Vec3 position);
-        [CCode (cname = "smlt_physics_body_set_orientation")]
-        public extern void set_orientation(Quaternion rotation);
-        [CCode (cname = "smlt_physics_body_contacts")]
-        public extern unowned ContactList contacts();
-    }
-
     [CCode (cname = "smlt_physics_material_t", has_type_id = false, free_function = "smlt_physics_material_destroy")]
     [Compact]
     public class PhysicsMaterial {
@@ -5577,7 +5615,26 @@ namespace Smlt {
         [CCode (cname = "smlt_physics_service_set_contact_filter")]
         public extern void set_contact_filter(ContactFilter filter);
         [CCode (cname = "smlt_physics_service_set_debug")]
-        public extern void set_debug(Debug debug);
+        public extern void set_debug(void* debug);
+        [CCode (cname = "smlt_physics_service_update")]
+        public extern void update(float dt);
+        [CCode (cname = "smlt_physics_service_late_update")]
+        public extern void late_update(float dt);
+        [CCode (cname = "smlt_physics_service_fixed_update")]
+        public extern void fixed_update(float step);
+        [CCode (cname = "smlt_physics_service_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_physics_service_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_physics_service_has_name")]
+        public extern bool has_name();
+        [CCode (cname = "smlt_physics_service_destroy_2")]
+        public extern bool destroy_2();
+        [CCode (cname = "smlt_physics_service_destroy_immediately")]
+        public extern bool destroy_immediately();
+        [CCode (cname = "smlt_physics_service_is_destroyed")]
+        public extern bool is_destroyed();
     }
 
     [CCode (cname = "smlt_pixel_t", has_type_id = false, free_function = "smlt_pixel_destroy")]
@@ -5673,13 +5730,6 @@ namespace Smlt {
     public class PointLightMeta {
     }
 
-    [CCode (cname = "smlt_point_light_t", has_type_id = false)]
-    [Compact]
-    public class PointLight {
-        [CCode (cname = "smlt_point_light_node_type_name")]
-        public extern unowned string node_type_name();
-    }
-
     [CCode (cname = "smlt_point_light_unused_t", has_type_id = false, free_function = "smlt_point_light_unused_destroy")]
     [Compact]
     public class PointLightUnused {
@@ -5706,15 +5756,6 @@ namespace Smlt {
     [CCode (cname = "smlt_prefab_instance_meta_t", has_type_id = false, free_function = "smlt_prefab_instance_meta_destroy")]
     [Compact]
     public class PrefabInstanceMeta {
-    }
-
-    [CCode (cname = "smlt_prefab_instance_t", has_type_id = false)]
-    [Compact]
-    public class PrefabInstance {
-        [CCode (cname = "smlt_prefab_instance_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_prefab_instance_on_create")]
-        public extern bool on_create(Params @params);
     }
 
     [CCode (cname = "smlt_prefab_instance_unused_t", has_type_id = false, free_function = "smlt_prefab_instance_unused_destroy")]
@@ -5746,6 +5787,8 @@ namespace Smlt {
     [CCode (cname = "smlt_prefab_t", has_type_id = false, free_function = "smlt_prefab_release")]
     [Compact]
     public class Prefab {
+        [CCode (cname = "smlt_prefab_data")]
+        public extern unowned GenericDataCarrier data();
         [CCode (cname = "smlt_prefab_asset_type_name")]
         public extern unowned string asset_type_name();
         [CCode (cname = "smlt_prefab_estimated_size_in_bytes")]
@@ -5764,6 +5807,24 @@ namespace Smlt {
         public extern bool has_animations();
         [CCode (cname = "smlt_prefab_animation_count")]
         public extern ulong animation_count();
+        [CCode (cname = "smlt_prefab_asset_manager")]
+        public extern unowned AssetManager asset_manager();
+        [CCode (cname = "smlt_prefab_age")]
+        public extern int age();
+        [CCode (cname = "smlt_prefab_set_garbage_collection_method")]
+        public extern void set_garbage_collection_method(GarbageCollectMethod method);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_prefab_source")]
+        public extern Path source();
+        [CCode (cname = "smlt_prefab_set_source")]
+        public extern void set_source(Path source);
+        [CCode (cname = "smlt_prefab_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_prefab_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_prefab_has_name")]
+        public extern bool has_name();
     }
 
     [CCode (cname = "smlt_printable_t", has_type_id = false, free_function = "smlt_printable_destroy")]
@@ -5928,9 +5989,9 @@ namespace Smlt {
     [Compact]
     public class RayCastResult {
         [CCode (cname = "smlt_ray_cast_result_get_other_body")]
-        public extern unowned PhysicsBody get_other_body();
+        public extern void* get_other_body();
         [CCode (cname = "smlt_ray_cast_result_set_other_body")]
-        public extern void set_other_body(PhysicsBody @value);
+        public extern void set_other_body(void* @value);
         [CCode (cname = "smlt_ray_cast_result_get_distance")]
         public extern float get_distance();
         [CCode (cname = "smlt_ray_cast_result_set_distance")]
@@ -5977,81 +6038,6 @@ namespace Smlt {
         public extern bool intersects_sphere(Vec3 center, float radius, Vec3 intersection, Vec3 normal, float* distance);
     }
 
-    [CCode (cname = "smlt_reactive_body_t", has_type_id = false)]
-    [Compact]
-    public class ReactiveBody {
-        [CCode (cname = "smlt_reactive_body_create_sphere_joint")]
-        public extern unowned SphereJoint create_sphere_joint(ReactiveBody other, Vec3 this_relative_anchor, Vec3 other_relative_anchor);
-        [CCode (cname = "smlt_reactive_body_sphere_joint_count")]
-        public extern ulong sphere_joint_count();
-        [CCode (cname = "smlt_reactive_body_mass")]
-        public extern float mass();
-        [CCode (cname = "smlt_reactive_body_set_mass")]
-        public extern void set_mass(float m);
-        [CCode (cname = "smlt_reactive_body_set_center_of_mass")]
-        public extern void set_center_of_mass(Vec3 com);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_reactive_body_center_of_mass")]
-        public extern Vec3 center_of_mass();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_reactive_body_absolute_center_of_mass")]
-        public extern Vec3 absolute_center_of_mass();
-        [CCode (cname = "smlt_reactive_body_add_force")]
-        public extern void add_force(Vec3 force);
-        [CCode (cname = "smlt_reactive_body_add_force_at_position")]
-        public extern void add_force_at_position(Vec3 force, Vec3 position);
-        [CCode (cname = "smlt_reactive_body_add_relative_force")]
-        public extern void add_relative_force(Vec3 force);
-        [CCode (cname = "smlt_reactive_body_add_torque")]
-        public extern void add_torque(Vec3 torque);
-        [CCode (cname = "smlt_reactive_body_add_relative_torque")]
-        public extern void add_relative_torque(Vec3 torque);
-        [CCode (cname = "smlt_reactive_body_add_impulse")]
-        public extern void add_impulse(Vec3 impulse);
-        [CCode (cname = "smlt_reactive_body_add_impulse_at_position")]
-        public extern void add_impulse_at_position(Vec3 impulse, Vec3 position);
-        [CCode (cname = "smlt_reactive_body_add_acceleration_force")]
-        public extern void add_acceleration_force(Vec3 acc);
-        [CCode (cname = "smlt_reactive_body_add_acceleration_force_at_position")]
-        public extern void add_acceleration_force_at_position(Vec3 force, Vec3 position);
-        [CCode (cname = "smlt_reactive_body_set_linear_damping")]
-        public extern void set_linear_damping(float d);
-        [CCode (cname = "smlt_reactive_body_set_angular_damping")]
-        public extern void set_angular_damping(Vec3 d);
-        [CCode (cname = "smlt_reactive_body_set_angular_damping_uniform")]
-        public extern void set_angular_damping_uniform(float d);
-        [CCode (cname = "smlt_reactive_body_set_angular_sleep_tolerance")]
-        public extern void set_angular_sleep_tolerance(float x);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_reactive_body_linear_velocity")]
-        public extern Vec3 linear_velocity();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_reactive_body_linear_velocity_at")]
-        public extern Vec3 linear_velocity_at(Vec3 position);
-        [CCode (cname = "smlt_reactive_body_set_linear_velocity")]
-        public extern void set_linear_velocity(Vec3 vel);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_reactive_body_angular_velocity")]
-        public extern Vec3 angular_velocity();
-        [CCode (cname = "smlt_reactive_body_set_angular_velocity")]
-        public extern void set_angular_velocity(Vec3 vel);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_reactive_body_forward")]
-        public extern Vec3 forward();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_reactive_body_right")]
-        public extern Vec3 right();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_reactive_body_up")]
-        public extern Vec3 up();
-        [CCode (cname = "smlt_reactive_body_is_awake")]
-        public extern bool is_awake();
-        [CCode (cname = "smlt_reactive_body_lock_rotation")]
-        public extern void lock_rotation(bool x, bool y, bool z);
-        [CCode (cname = "smlt_reactive_body_on_destroy")]
-        public extern bool on_destroy();
-    }
-
     [CCode (cname = "smlt_render_target_t", has_type_id = false, free_function = "smlt_render_target_destroy")]
     [Compact]
     public class RenderTarget {
@@ -6069,7 +6055,7 @@ namespace Smlt {
         [CCode (cname = "smlt_render_target_set_last_frame_rendered_id")]
         public extern void set_last_frame_rendered_id(uint32 id);
         [CCode (cname = "smlt_render_target_last_frame_rendered_id")]
-        public extern uint32* last_frame_rendered_id();
+        public extern uint* last_frame_rendered_id();
     }
 
     [CCode (cname = "smlt_renderable_t", has_type_id = false, free_function = "smlt_renderable_destroy")]
@@ -6145,6 +6131,8 @@ namespace Smlt {
     [CCode (cname = "smlt_renderer_t", has_type_id = false, free_function = "smlt_renderer_destroy")]
     [Compact]
     public class Renderer {
+        [CCode (cname = "smlt_renderer_window")]
+        public extern unowned Window window();
         [CCode (cname = "smlt_renderer_init_context")]
         public extern void init_context();
         /** Caller owns the returned string; free it with Smlt.free_string(). */
@@ -6182,6 +6170,9 @@ namespace Smlt {
         public extern void prepare_texture(Texture texture);
         [CCode (cname = "smlt_renderer_prepare_material")]
         public extern void prepare_material(Material material);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_renderer_prepare_render_group")]
+        public extern BatcherRenderGroupKey prepare_render_group(BatcherRenderGroup group, Renderable renderable, MaterialPass material_pass, int8 priority, uint8 pass_number, bool is_blended, float distance_to_camera, uint16 texture_id);
     }
 
     [CCode (cname = "smlt_resolution_t", has_type_id = false, free_function = "smlt_resolution_destroy")]
@@ -6205,7 +6196,13 @@ namespace Smlt {
     [Compact]
     public class SceneCompositor {
         [CCode (cname = "smlt_scene_compositor_create")]
-        public SceneCompositor(Scene scene, Compositor global_compositor);
+        public SceneCompositor(void* scene, Compositor global_compositor);
+        [CCode (cname = "smlt_scene_compositor_global_compositor")]
+        public extern unowned Compositor global_compositor();
+        [CCode (cname = "smlt_scene_compositor_create_layer")]
+        public extern unowned Layer create_layer(void* subtree, void* camera, int32 priority);
+        [CCode (cname = "smlt_scene_compositor_find_layer")]
+        public extern unowned Layer find_layer(string name);
         [CCode (cname = "smlt_scene_compositor_destroy_all_layers")]
         public extern void destroy_all_layers();
     }
@@ -6213,63 +6210,8 @@ namespace Smlt {
     [CCode (cname = "smlt_scene_load_exception_t", has_type_id = false, free_function = "smlt_scene_load_exception_destroy")]
     [Compact]
     public class SceneLoadException {
-    }
-
-    [CCode (cname = "smlt_scene_manager_t", has_type_id = false, free_function = "smlt_scene_manager_destroy")]
-    [Compact]
-    public class SceneManager {
-        [CCode (cname = "smlt_scene_manager_create")]
-        public SceneManager(Window window);
-        [CCode (cname = "smlt_scene_manager_has_scene")]
-        public extern bool has_scene(string route);
-        [CCode (cname = "smlt_scene_manager_unload")]
-        public extern void unload(string route);
-        [CCode (cname = "smlt_scene_manager_destroy_all")]
-        public extern void destroy_all();
-        [CCode (cname = "smlt_scene_manager_clean_destroyed_scenes")]
-        public extern void clean_destroyed_scenes();
-        [CCode (cname = "smlt_scene_manager_is_loaded")]
-        public extern bool is_loaded(string route);
-        [CCode (cname = "smlt_scene_manager_reset")]
-        public extern void reset();
-        [CCode (cname = "smlt_scene_manager_scene_queued_for_activation")]
-        public extern bool scene_queued_for_activation();
-        [CCode (cname = "smlt_scene_manager_unregister_scene")]
-        public extern void unregister_scene(string name);
-        [CCode (cname = "smlt_scene_manager_register_scene_from_library")]
-        public extern bool register_scene_from_library(string name, Path path);
-        [CCode (cname = "smlt_scene_manager_register_scene_from_source")]
-        public extern bool register_scene_from_source(string script_data, string class_name);
-        [CCode (cname = "smlt_scene_manager_register_scene_from_file")]
-        public extern bool register_scene_from_file(Path script, string class_name);
-    }
-
-    [CCode (cname = "smlt_scene_t", has_type_id = false)]
-    [Compact]
-    public class Scene {
-        [CCode (cname = "smlt_scene_load")]
-        public extern void load();
-        [CCode (cname = "smlt_scene_unload")]
-        public extern void unload();
-        [CCode (cname = "smlt_scene_activate")]
-        public extern void activate();
-        [CCode (cname = "smlt_scene_deactivate")]
-        public extern void deactivate();
-        [CCode (cname = "smlt_scene_is_loaded")]
-        public extern bool is_loaded();
-        [CCode (cname = "smlt_scene_is_active")]
-        public extern bool is_active();
-        /** Caller owns the returned string; free it with Smlt.free_string(). */
-        [CCode (cname = "smlt_scene_name")]
-        public extern unowned string name();
-        [CCode (cname = "smlt_scene_set_name")]
-        public extern void set_name(string name);
-        [CCode (cname = "smlt_scene_unload_on_deactivate")]
-        public extern bool unload_on_deactivate();
-        [CCode (cname = "smlt_scene_set_unload_on_deactivate")]
-        public extern void set_unload_on_deactivate(bool v);
-        [CCode (cname = "smlt_scene_node_type_name")]
-        public extern unowned string node_type_name();
+        [CCode (cname = "smlt_scene_load_exception_what")]
+        public extern unowned string what();
     }
 
     [CCode (cname = "smlt_scenes_splash_t", has_type_id = false)]
@@ -6301,6 +6243,10 @@ namespace Smlt {
         public extern unowned string name();
         [CCode (cname = "smlt_screen_update")]
         public extern void update(float dt);
+        [CCode (cname = "smlt_screen_exists")]
+        public extern bool exists(string identifier);
+        [CCode (cname = "smlt_screen_unstash")]
+        public extern void unstash(string identifier);
     }
 
     [CCode (cname = "smlt_sdl2_window_t", has_type_id = false, free_function = "smlt_sdl2_window_destroy")]
@@ -6308,6 +6254,18 @@ namespace Smlt {
     public class Sdl2Window {
         [CCode (cname = "smlt_sdl2_window_create")]
         public Sdl2Window();
+        [CCode (cname = "smlt_sdl2_window_app")]
+        public extern void* app();
+        [CCode (cname = "smlt_sdl2_window_renderer")]
+        public extern unowned Renderer renderer();
+        [CCode (cname = "smlt_sdl2_window_data")]
+        public extern unowned GenericDataCarrier data();
+        [CCode (cname = "smlt_sdl2_window_input")]
+        public extern unowned InputManager input();
+        [CCode (cname = "smlt_sdl2_window_input_state")]
+        public extern unowned InputState input_state();
+        [CCode (cname = "smlt_sdl2_window_compositor")]
+        public extern unowned Compositor compositor();
         [CCode (cname = "smlt_sdl2_window_set_title")]
         public extern void set_title(string title);
         [CCode (cname = "smlt_sdl2_window_show_cursor")]
@@ -6315,7 +6273,83 @@ namespace Smlt {
         [CCode (cname = "smlt_sdl2_window_lock_cursor")]
         public extern void lock_cursor(bool cursor_locked);
         [CCode (cname = "smlt_sdl2_window_cursor_position")]
-        public extern void cursor_position(int32* mouse_x, int32* mouse_y);
+        public extern void cursor_position(int* mouse_x, int* mouse_y);
+        [CCode (cname = "smlt_sdl2_window_create_window")]
+        public extern bool create_window(uint16 width, uint16 height, uint8 bpp, bool fullscreen, bool enable_vsync);
+        [CCode (cname = "smlt_sdl2_window_swap_buffers")]
+        public extern void swap_buffers();
+        [CCode (cname = "smlt_sdl2_window_width")]
+        public extern uint16 width();
+        [CCode (cname = "smlt_sdl2_window_height")]
+        public extern uint16 height();
+        [CCode (cname = "smlt_sdl2_window_is_fullscreen")]
+        public extern bool is_fullscreen();
+        [CCode (cname = "smlt_sdl2_window_vsync_enabled")]
+        public extern bool vsync_enabled();
+        [CCode (cname = "smlt_sdl2_window_aspect_ratio")]
+        public extern float aspect_ratio();
+        [CCode (cname = "smlt_sdl2_window_set_logging_level")]
+        public extern void set_logging_level(LogLevel level);
+        [CCode (cname = "smlt_sdl2_window_logging_level")]
+        public extern LogLevel logging_level();
+        [CCode (cname = "smlt_sdl2_window_reset")]
+        public extern void reset();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_sdl2_window_coordinate_from_normalized")]
+        public extern Vec2 coordinate_from_normalized(float rx, float ry);
+        [CCode (cname = "smlt_sdl2_window_on_finger_down")]
+        public extern void on_finger_down(uint touch_id, float normalized_x, float normalized_y, float pressure);
+        [CCode (cname = "smlt_sdl2_window_on_finger_up")]
+        public extern void on_finger_up(uint touch_id, float normalized_x, float normalized_y);
+        [CCode (cname = "smlt_sdl2_window_on_finger_motion")]
+        public extern void on_finger_motion(uint touch_id, float normalized_x, float normalized_y, float dx, float dy);
+        [CCode (cname = "smlt_sdl2_window_on_key_down")]
+        public extern void on_key_down(KeyboardCode code, ModifierKeyState modifiers);
+        [CCode (cname = "smlt_sdl2_window_on_key_up")]
+        public extern void on_key_up(KeyboardCode code, ModifierKeyState modifiers);
+        [CCode (cname = "smlt_sdl2_window_screen_count")]
+        public extern ulong screen_count();
+        [CCode (cname = "smlt_sdl2_window_screen")]
+        public extern unowned Screen screen(string name);
+        [CCode (cname = "smlt_sdl2_window_create_screen")]
+        public extern unowned Screen create_screen(string name, uint16 width, uint16 height, ScreenFormat format, uint16 refresh_rate);
+        [CCode (cname = "smlt_sdl2_window_destroy_screen")]
+        public extern void destroy_screen(string name);
+        [CCode (cname = "smlt_sdl2_window_initialize_assets_and_devices")]
+        public extern bool initialize_assets_and_devices();
+        [CCode (cname = "smlt_sdl2_window_clean_up")]
+        public extern void clean_up();
+        [CCode (cname = "smlt_sdl2_window_audio_listener")]
+        public extern void* audio_listener();
+        [CCode (cname = "smlt_sdl2_window_set_audio_listener")]
+        public extern void set_audio_listener(void* node);
+        [CCode (cname = "smlt_sdl2_window_has_explicit_audio_listener")]
+        public extern bool has_explicit_audio_listener();
+        [CCode (cname = "smlt_sdl2_window_has_context")]
+        public extern bool has_context();
+        [CCode (cname = "smlt_sdl2_window_has_focus")]
+        public extern bool has_focus();
+        [CCode (cname = "smlt_sdl2_window_set_has_focus")]
+        public extern void set_has_focus(bool v);
+        [CCode (cname = "smlt_sdl2_window_set_escape_to_quit")]
+        public extern void set_escape_to_quit(bool @value);
+        [CCode (cname = "smlt_sdl2_window_escape_to_quit_enabled")]
+        public extern bool escape_to_quit_enabled();
+        [CCode (cname = "smlt_sdl2_window_set_clear_every_frame")]
+        public extern void set_clear_every_frame(uint32 clear_flags, Color color);
+        [CCode (cname = "smlt_sdl2_window_clear_every_frame_flags")]
+        public extern uint32 clear_every_frame_flags();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_sdl2_window_clear_every_frame_color")]
+        public extern Color clear_every_frame_color();
+        [CCode (cname = "smlt_sdl2_window_set_last_frame_rendered_id")]
+        public extern void set_last_frame_rendered_id(uint32 id);
+        [CCode (cname = "smlt_sdl2_window_last_frame_rendered_id")]
+        public extern uint* last_frame_rendered_id();
+        [CCode (cname = "smlt_sdl2_window_register_event_listener")]
+        public extern void register_event_listener(EventListener listener);
+        [CCode (cname = "smlt_sdl2_window_unregister_event_listener")]
+        public extern void unregister_event_listener(EventListener listener);
     }
 
     [CCode (cname = "smlt_seconds_t", has_type_id = false, free_function = "smlt_seconds_destroy")]
@@ -6343,22 +6377,24 @@ namespace Smlt {
         public extern void late_update(float dt);
         [CCode (cname = "smlt_service_fixed_update")]
         public extern void fixed_update(float step);
+        [CCode (cname = "smlt_service_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_service_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_service_has_name")]
+        public extern bool has_name();
+        [CCode (cname = "smlt_service_destroy_2")]
+        public extern bool destroy_2();
+        [CCode (cname = "smlt_service_destroy_immediately")]
+        public extern bool destroy_immediately();
+        [CCode (cname = "smlt_service_is_destroyed")]
+        public extern bool is_destroyed();
     }
 
     [CCode (cname = "smlt_shadow_caster_meta_t", has_type_id = false, free_function = "smlt_shadow_caster_meta_destroy")]
     [Compact]
     public class ShadowCasterMeta {
-    }
-
-    [CCode (cname = "smlt_shadow_caster_t", has_type_id = false)]
-    [Compact]
-    public class ShadowCaster {
-        [CCode (cname = "smlt_shadow_caster_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_shadow_caster_shadow_volume_vertex_data")]
-        public extern unowned VertexData shadow_volume_vertex_data();
-        [CCode (cname = "smlt_shadow_caster_shadow_volume_index_data")]
-        public extern unowned IndexData shadow_volume_index_data();
     }
 
     [CCode (cname = "smlt_shadow_caster_unused_t", has_type_id = false, free_function = "smlt_shadow_caster_unused_destroy")]
@@ -6384,6 +6420,191 @@ namespace Smlt {
         /** Caller owns the result; free with the matching release/destroy. */
         [CCode (cname = "smlt_shared_asset_manager_default_material_filename")]
         public extern Path default_material_filename();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_load_particle_script")]
+        public extern ParticleScript load_particle_script(Path filename, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        [CCode (cname = "smlt_shared_asset_manager_destroy_particle_script")]
+        public extern void destroy_particle_script(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_particle_script")]
+        public extern ParticleScript particle_script(ulong id);
+        [CCode (cname = "smlt_shared_asset_manager_particle_script_count")]
+        public extern ulong particle_script_count();
+        [CCode (cname = "smlt_shared_asset_manager_has_particle_script")]
+        public extern bool has_particle_script(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_find_particle_script")]
+        public extern ParticleScript find_particle_script(string name);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_load_prefab")]
+        public extern Prefab load_prefab(Path filename, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_prefab")]
+        public extern Prefab prefab(ulong id);
+        [CCode (cname = "smlt_shared_asset_manager_prefab_count")]
+        public extern ulong prefab_count();
+        [CCode (cname = "smlt_shared_asset_manager_has_prefab")]
+        public extern bool has_prefab(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_find_prefab")]
+        public extern Prefab find_prefab(string name);
+        [CCode (cname = "smlt_shared_asset_manager_destroy_prefab")]
+        public extern void destroy_prefab(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_create_prefab")]
+        public extern Prefab create_prefab(void* root, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_load_texture")]
+        public extern Texture load_texture(Path filename, GarbageCollectMethod garbage_collect);
+        [CCode (cname = "smlt_shared_asset_manager_destroy_texture")]
+        public extern void destroy_texture(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_texture")]
+        public extern Texture texture(ulong id);
+        [CCode (cname = "smlt_shared_asset_manager_texture_count")]
+        public extern ulong texture_count();
+        [CCode (cname = "smlt_shared_asset_manager_has_texture")]
+        public extern bool has_texture(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_find_texture")]
+        public extern Texture find_texture(string alias);
+        [CCode (cname = "smlt_shared_asset_manager_destroy_mesh")]
+        public extern void destroy_mesh(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_mesh")]
+        public extern Mesh mesh(ulong id);
+        [CCode (cname = "smlt_shared_asset_manager_mesh_count")]
+        public extern ulong mesh_count();
+        [CCode (cname = "smlt_shared_asset_manager_has_mesh")]
+        public extern bool has_mesh(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_find_mesh")]
+        public extern Mesh find_mesh(string name);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_load_material")]
+        public extern Material load_material(Path filename, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        [CCode (cname = "smlt_shared_asset_manager_destroy_material")]
+        public extern void destroy_material(ulong* id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_material")]
+        public extern Material material(ulong* id);
+        [CCode (cname = "smlt_shared_asset_manager_material_count")]
+        public extern ulong material_count();
+        [CCode (cname = "smlt_shared_asset_manager_has_material")]
+        public extern bool has_material(ulong* id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_find_material")]
+        public extern Material find_material(string name);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_load_sound")]
+        public extern Sound load_sound(Path filename, SoundFlags flags, GarbageCollectMethod garbage_collect);
+        [CCode (cname = "smlt_shared_asset_manager_destroy_sound")]
+        public extern void destroy_sound(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_sound")]
+        public extern Sound sound(ulong id);
+        [CCode (cname = "smlt_shared_asset_manager_sound_count")]
+        public extern ulong sound_count();
+        [CCode (cname = "smlt_shared_asset_manager_has_sound")]
+        public extern bool has_sound(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_find_sound")]
+        public extern Sound find_sound(string name);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_load_binary")]
+        public extern Binary load_binary(Path filename, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_binary")]
+        public extern Binary binary(ulong id);
+        [CCode (cname = "smlt_shared_asset_manager_binary_count")]
+        public extern ulong binary_count();
+        [CCode (cname = "smlt_shared_asset_manager_has_binary")]
+        public extern bool has_binary(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_find_binary")]
+        public extern Binary find_binary(string name);
+        [CCode (cname = "smlt_shared_asset_manager_destroy_binary")]
+        public extern void destroy_binary(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_create_font_from_memory")]
+        public extern Font create_font_from_memory(uint8* data, ulong size, FontFlags flags, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_create_font_from_family")]
+        public extern Font create_font_from_family(string family, FontFlags flags, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_load_font")]
+        public extern Font load_font(Path filename, FontFlags flags, GarbageCollectMethod garbage_collect);
+        [CCode (cname = "smlt_shared_asset_manager_destroy_font")]
+        public extern void destroy_font(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_font")]
+        public extern Font font(ulong id);
+        [CCode (cname = "smlt_shared_asset_manager_font_count")]
+        public extern ulong font_count();
+        [CCode (cname = "smlt_shared_asset_manager_has_font")]
+        public extern bool has_font(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_find_font")]
+        public extern Font find_font(string alias);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_load_spritesheet")]
+        public extern Spritesheet load_spritesheet(Path filename, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        [CCode (cname = "smlt_shared_asset_manager_destroy_spritesheet")]
+        public extern void destroy_spritesheet(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_spritesheet")]
+        public extern Spritesheet spritesheet(ulong id);
+        [CCode (cname = "smlt_shared_asset_manager_spritesheet_count")]
+        public extern ulong spritesheet_count();
+        [CCode (cname = "smlt_shared_asset_manager_has_spritesheet")]
+        public extern bool has_spritesheet(ulong id);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_find_spritesheet")]
+        public extern Spritesheet find_spritesheet(string name);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_create_texture")]
+        public extern Texture create_texture(uint16 width, uint16 height, TextureFormat format, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_create_material")]
+        public extern Material create_material(GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_create_mesh")]
+        public extern Mesh create_mesh(VertexSpecification vertex_specification, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_load_mesh")]
+        public extern Mesh load_mesh(Path path, VertexSpecification desired_specification, MeshLoadOptions options, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_create_mesh_from_submesh")]
+        public extern Mesh create_mesh_from_submesh(SubMesh submesh, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_create_mesh_from_heightmap")]
+        public extern Mesh create_mesh_from_heightmap(Path image_file, HeightmapSpecification spec, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_create_mesh_as_cube_with_submesh_per_face")]
+        public extern Mesh create_mesh_as_cube_with_submesh_per_face(float width, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_create_material_from_texture")]
+        public extern Material create_material_from_texture(Texture texture, GarbageCollectMethod garbage_collect, bool use_asset_cache);
+        [CCode (cname = "smlt_shared_asset_manager_update")]
+        public extern void update(float dt);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_clone_material")]
+        public extern Material clone_material(ulong* mat_id, GarbageCollectMethod garbage_collect);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_shared_asset_manager_clone_default_material")]
+        public extern Material clone_default_material(GarbageCollectMethod garbage_collect);
+        [CCode (cname = "smlt_shared_asset_manager_base_manager")]
+        public extern unowned AssetManager base_manager();
+        [CCode (cname = "smlt_shared_asset_manager_destroy_all")]
+        public extern void destroy_all();
+        [CCode (cname = "smlt_shared_asset_manager_run_garbage_collection")]
+        public extern void run_garbage_collection();
+        [CCode (cname = "smlt_shared_asset_manager_is_base_manager")]
+        public extern bool is_base_manager();
+        [CCode (cname = "smlt_shared_asset_manager_child_manager_count")]
+        public extern ulong child_manager_count();
+        [CCode (cname = "smlt_shared_asset_manager_child_manager")]
+        public extern unowned AssetManager child_manager(ulong i);
     }
 
     [CCode (cname = "smlt_sibling_iterator_pair_t", has_type_id = false, free_function = "smlt_sibling_iterator_pair_destroy")]
@@ -6461,6 +6682,8 @@ namespace Smlt {
     public class SkyboxImageDuplicateError {
         [CCode (cname = "smlt_skybox_image_duplicate_error_create")]
         public SkyboxImageDuplicateError(string what);
+        [CCode (cname = "smlt_skybox_image_duplicate_error_what")]
+        public extern unowned string what();
     }
 
     [CCode (cname = "smlt_skybox_image_not_found_error_t", has_type_id = false, free_function = "smlt_skybox_image_not_found_error_destroy")]
@@ -6468,26 +6691,13 @@ namespace Smlt {
     public class SkyboxImageNotFoundError {
         [CCode (cname = "smlt_skybox_image_not_found_error_create")]
         public SkyboxImageNotFoundError(string what);
+        [CCode (cname = "smlt_skybox_image_not_found_error_what")]
+        public extern unowned string what();
     }
 
     [CCode (cname = "smlt_skybox_meta_t", has_type_id = false, free_function = "smlt_skybox_meta_destroy")]
     [Compact]
     public class SkyboxMeta {
-    }
-
-    [CCode (cname = "smlt_skybox_t", has_type_id = false)]
-    [Compact]
-    public class Skybox {
-        [CCode (cname = "smlt_skybox_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_skybox_set_size")]
-        public extern void set_size(float size);
-        [CCode (cname = "smlt_skybox_size")]
-        public extern float size();
-        [CCode (cname = "smlt_skybox_generate")]
-        public extern void generate(Path up, Path down, Path left, Path right, Path front, Path back, TextureFlags flags);
-        [CCode (cname = "smlt_skybox_aabb")]
-        public extern unowned Aabb aabb();
     }
 
     [CCode (cname = "smlt_skybox_unused_t", has_type_id = false, free_function = "smlt_skybox_unused_destroy")]
@@ -6500,29 +6710,6 @@ namespace Smlt {
     public class SmoothFollowMeta {
     }
 
-    [CCode (cname = "smlt_smooth_follow_t", has_type_id = false)]
-    [Compact]
-    public class SmoothFollow {
-        [CCode (cname = "smlt_smooth_follow_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_smooth_follow_on_late_update")]
-        public extern void on_late_update(float dt);
-        [CCode (cname = "smlt_smooth_follow_has_target")]
-        public extern bool has_target();
-        [CCode (cname = "smlt_smooth_follow_target")]
-        public extern unowned StageNode target();
-        [CCode (cname = "smlt_smooth_follow_set_follow_distance")]
-        public extern void set_follow_distance(float dist);
-        [CCode (cname = "smlt_smooth_follow_set_follow_height")]
-        public extern void set_follow_height(float height);
-        [CCode (cname = "smlt_smooth_follow_set_damping")]
-        public extern void set_damping(float damping);
-        [CCode (cname = "smlt_smooth_follow_set_rotation_damping")]
-        public extern void set_rotation_damping(float damping);
-        [CCode (cname = "smlt_smooth_follow_set_following_enabled")]
-        public extern void set_following_enabled(bool v);
-    }
-
     [CCode (cname = "smlt_smooth_follow_unused_t", has_type_id = false, free_function = "smlt_smooth_follow_unused_destroy")]
     [Compact]
     public class SmoothFollowUnused {
@@ -6531,6 +6718,8 @@ namespace Smlt {
     [CCode (cname = "smlt_sound_driver_t", has_type_id = false, free_function = "smlt_sound_driver_destroy")]
     [Compact]
     public class SoundDriver {
+        [CCode (cname = "smlt_sound_driver_window")]
+        public extern unowned Window window();
         [CCode (cname = "smlt_sound_driver_startup")]
         public extern bool startup();
         [CCode (cname = "smlt_sound_driver_shutdown")]
@@ -6571,6 +6760,8 @@ namespace Smlt {
     [CCode (cname = "smlt_sound_t", has_type_id = false, free_function = "smlt_sound_release")]
     [Compact]
     public class Sound {
+        [CCode (cname = "smlt_sound_data")]
+        public extern unowned GenericDataCarrier data();
         [CCode (cname = "smlt_sound_asset_type_name")]
         public extern unowned string asset_type_name();
         [CCode (cname = "smlt_sound_estimated_size_in_bytes")]
@@ -6593,33 +6784,40 @@ namespace Smlt {
         public extern ulong stream_length();
         [CCode (cname = "smlt_sound_driver")]
         public extern unowned SoundDriver driver();
+        [CCode (cname = "smlt_sound_asset_manager")]
+        public extern unowned AssetManager asset_manager();
+        [CCode (cname = "smlt_sound_age")]
+        public extern int age();
+        [CCode (cname = "smlt_sound_set_garbage_collection_method")]
+        public extern void set_garbage_collection_method(GarbageCollectMethod method);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_sound_source")]
+        public extern Path source();
+        [CCode (cname = "smlt_sound_set_source")]
+        public extern void set_source(Path source);
+        [CCode (cname = "smlt_sound_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_sound_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_sound_has_name")]
+        public extern bool has_name();
     }
 
     [CCode (cname = "smlt_sphere_joint_t", has_type_id = false, free_function = "smlt_sphere_joint_destroy")]
     [Compact]
     public class SphereJoint {
         [CCode (cname = "smlt_sphere_joint_create")]
-        public SphereJoint(ReactiveBody a, ReactiveBody b, Vec3 aoff, Vec3 boff);
+        public SphereJoint(void* a, void* b, Vec3 aoff, Vec3 boff);
         [CCode (cname = "smlt_sphere_joint_first_body")]
-        public extern unowned ReactiveBody first_body();
+        public extern void* first_body();
         [CCode (cname = "smlt_sphere_joint_second_body")]
-        public extern unowned ReactiveBody second_body();
+        public extern void* second_body();
     }
 
     [CCode (cname = "smlt_spherical_billboard_meta_t", has_type_id = false, free_function = "smlt_spherical_billboard_meta_destroy")]
     [Compact]
     public class SphericalBillboardMeta {
-    }
-
-    [CCode (cname = "smlt_spherical_billboard_t", has_type_id = false)]
-    [Compact]
-    public class SphericalBillboard {
-        [CCode (cname = "smlt_spherical_billboard_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_spherical_billboard_set_target")]
-        public extern void set_target(StageNode target);
-        [CCode (cname = "smlt_spherical_billboard_aabb")]
-        public extern unowned Aabb aabb();
     }
 
     [CCode (cname = "smlt_spherical_billboard_unused_t", has_type_id = false, free_function = "smlt_spherical_billboard_unused_destroy")]
@@ -6630,44 +6828,6 @@ namespace Smlt {
     [CCode (cname = "smlt_sprite_meta_t", has_type_id = false, free_function = "smlt_sprite_meta_destroy")]
     [Compact]
     public class SpriteMeta {
-    }
-
-    [CCode (cname = "smlt_sprite_t", has_type_id = false)]
-    [Compact]
-    public class Sprite {
-        [CCode (cname = "smlt_sprite_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_sprite_on_create")]
-        public extern bool on_create(Params @params);
-        [CCode (cname = "smlt_sprite_on_destroy")]
-        public extern bool on_destroy();
-        [CCode (cname = "smlt_sprite_on_update")]
-        public extern void on_update(float dt);
-        [CCode (cname = "smlt_sprite_set_render_dimensions")]
-        public extern void set_render_dimensions(float width, float height);
-        [CCode (cname = "smlt_sprite_set_render_dimensions_from_width")]
-        public extern void set_render_dimensions_from_width(float width);
-        [CCode (cname = "smlt_sprite_set_render_dimensions_from_height")]
-        public extern void set_render_dimensions_from_height(float height);
-        [CCode (cname = "smlt_sprite_set_render_priority")]
-        public extern void set_render_priority(int8 priority);
-        [CCode (cname = "smlt_sprite_set_alpha")]
-        public extern void set_alpha(float alpha);
-        [CCode (cname = "smlt_sprite_alpha")]
-        public extern float alpha();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_sprite_material")]
-        public extern Material material();
-        [CCode (cname = "smlt_sprite_set_spritesheet")]
-        public extern void set_spritesheet(Spritesheet spritesheet);
-        [CCode (cname = "smlt_sprite_set_spritesheet_from_texture")]
-        public extern void set_spritesheet_from_texture(Texture texture, uint32 frame_width, uint32 frame_height, SpritesheetAttrs attrs);
-        [CCode (cname = "smlt_sprite_flip_vertically")]
-        public extern void flip_vertically(bool @value);
-        [CCode (cname = "smlt_sprite_flip_horizontally")]
-        public extern void flip_horizontally(bool @value);
-        [CCode (cname = "smlt_sprite_aabb")]
-        public extern unowned Aabb aabb();
     }
 
     [CCode (cname = "smlt_sprite_unused_t", has_type_id = false, free_function = "smlt_sprite_unused_destroy")]
@@ -6747,6 +6907,8 @@ namespace Smlt {
     [CCode (cname = "smlt_spritesheet_t", has_type_id = false, free_function = "smlt_spritesheet_release")]
     [Compact]
     public class Spritesheet {
+        [CCode (cname = "smlt_spritesheet_data")]
+        public extern unowned GenericDataCarrier data();
         [CCode (cname = "smlt_spritesheet_asset_type_name")]
         public extern unowned string asset_type_name();
         [CCode (cname = "smlt_spritesheet_estimated_size_in_bytes")]
@@ -6768,6 +6930,24 @@ namespace Smlt {
         public extern ulong animation_count();
         [CCode (cname = "smlt_spritesheet_animation")]
         public extern unowned SpritesheetAnimation animation(ulong i);
+        [CCode (cname = "smlt_spritesheet_asset_manager")]
+        public extern unowned AssetManager asset_manager();
+        [CCode (cname = "smlt_spritesheet_age")]
+        public extern int age();
+        [CCode (cname = "smlt_spritesheet_set_garbage_collection_method")]
+        public extern void set_garbage_collection_method(GarbageCollectMethod method);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_spritesheet_source")]
+        public extern Path source();
+        [CCode (cname = "smlt_spritesheet_set_source")]
+        public extern void set_source(Path source);
+        [CCode (cname = "smlt_spritesheet_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_spritesheet_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_spritesheet_has_name")]
+        public extern bool has_name();
     }
 
     [CCode (cname = "smlt_stage_meta_t", has_type_id = false, free_function = "smlt_stage_meta_destroy")]
@@ -6779,26 +6959,26 @@ namespace Smlt {
     [Compact]
     public class StageNodeFinders {
         [CCode (cname = "smlt_stage_node_finders_find_descendent_by_id")]
-        public static extern unowned StageNode find_descendent_by_id(uint id, StageNode organism);
+        public static extern void* find_descendent_by_id(uint id, void* organism);
         [CCode (cname = "smlt_stage_node_finders_find_descendent")]
-        public static extern unowned StageNode find_descendent(string name, StageNode organism);
+        public static extern void* find_descendent(string name, void* organism);
         [CCode (cname = "smlt_stage_node_finders_find_ancestor")]
-        public static extern unowned StageNode find_ancestor(string name, StageNode organism);
+        public static extern void* find_ancestor(string name, void* organism);
     }
 
     [CCode (cname = "smlt_stage_node_manager_t", has_type_id = false, free_function = "smlt_stage_node_manager_destroy")]
     [Compact]
     public class StageNodeManager {
         [CCode (cname = "smlt_stage_node_manager_create")]
-        public StageNodeManager(Scene scene);
+        public StageNodeManager(void* scene);
         [CCode (cname = "smlt_stage_node_manager_get_node")]
-        public extern unowned StageNode get_node(uint id);
+        public extern void* get_node(uint id);
         [CCode (cname = "smlt_stage_node_manager_has_node")]
         public extern bool has_node(uint id);
         [CCode (cname = "smlt_stage_node_manager_create_node_by_name")]
-        public extern unowned StageNode create_node_by_name(string name, Params @params, StageNode @base);
+        public extern void* create_node_by_name(string name, Params @params, void* @base);
         [CCode (cname = "smlt_stage_node_manager_create_node_by_type")]
-        public extern unowned StageNode create_node_by_type(uint type, Params @params, StageNode @base);
+        public extern void* create_node_by_type(uint type, Params @params, void* @base);
         [CCode (cname = "smlt_stage_node_manager_register_stage_node_from_source")]
         public extern bool register_stage_node_from_source(string script_data, string class_name);
         [CCode (cname = "smlt_stage_node_manager_register_stage_node_from_file")]
@@ -6821,149 +7001,6 @@ namespace Smlt {
         /** Caller owns the returned string; free it with Smlt.free_string(). */
         [CCode (cname = "smlt_stage_node_path_to_string")]
         public extern unowned string to_string();
-    }
-
-    [CCode (cname = "smlt_stage_node_t", has_type_id = false)]
-    [Compact]
-    public class StageNode {
-        [CCode (cname = "smlt_stage_node_find_descendent_with_id")]
-        public extern unowned StageNode find_descendent_with_id(uint id);
-        [CCode (cname = "smlt_stage_node_find_descendent_with_id_mut")]
-        public extern unowned StageNode find_descendent_with_id_mut(uint id);
-        [CCode (cname = "smlt_stage_node_is_root")]
-        public extern bool is_root();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_stage_node_node_path")]
-        public extern StageNodePath node_path();
-        [CCode (cname = "smlt_stage_node_first_sibling")]
-        public extern unowned StageNode first_sibling();
-        [CCode (cname = "smlt_stage_node_first_sibling_mut")]
-        public extern unowned StageNode first_sibling_mut();
-        [CCode (cname = "smlt_stage_node_next_sibling")]
-        public extern unowned StageNode next_sibling();
-        [CCode (cname = "smlt_stage_node_next_sibling_mut")]
-        public extern unowned StageNode next_sibling_mut();
-        [CCode (cname = "smlt_stage_node_parent")]
-        public extern unowned StageNode parent();
-        [CCode (cname = "smlt_stage_node_parent_mut")]
-        public extern unowned StageNode parent_mut();
-        [CCode (cname = "smlt_stage_node_first_child")]
-        public extern unowned StageNode first_child();
-        [CCode (cname = "smlt_stage_node_first_child_mut")]
-        public extern unowned StageNode first_child_mut();
-        [CCode (cname = "smlt_stage_node_last_child")]
-        public extern unowned StageNode last_child();
-        [CCode (cname = "smlt_stage_node_last_child_mut")]
-        public extern unowned StageNode last_child_mut();
-        [CCode (cname = "smlt_stage_node_child_at")]
-        public extern unowned StageNode child_at(ulong i);
-        [CCode (cname = "smlt_stage_node_child_count")]
-        public extern ulong child_count();
-        [CCode (cname = "smlt_stage_node_has_parent")]
-        public extern bool has_parent();
-        [CCode (cname = "smlt_stage_node_remove_from_parent")]
-        public extern void remove_from_parent();
-        [CCode (cname = "smlt_stage_node_set_parent")]
-        public extern void set_parent(StageNode new_parent, TransformRetainMode transform_retain);
-        [CCode (cname = "smlt_stage_node_create_child")]
-        public extern unowned StageNode create_child(string name, Params args);
-        [CCode (cname = "smlt_stage_node_adopt_children")]
-        public extern void adopt_children(StageNode node);
-        [CCode (cname = "smlt_stage_node_create_mixin")]
-        public extern unowned StageNode create_mixin(string node_name, Params @params);
-        [CCode (cname = "smlt_stage_node_find_mixin")]
-        public extern unowned StageNode find_mixin(string name);
-        [CCode (cname = "smlt_stage_node_mixin_count")]
-        public extern ulong mixin_count();
-        [CCode (cname = "smlt_stage_node_base")]
-        public extern unowned StageNode @base();
-        [CCode (cname = "smlt_stage_node_base_mut")]
-        public extern unowned StageNode base_mut();
-        [CCode (cname = "smlt_stage_node_is_mixin")]
-        public extern bool is_mixin();
-        [CCode (cname = "smlt_stage_node_generates_renderables_for_descendents")]
-        public extern bool generates_renderables_for_descendents();
-        [CCode (cname = "smlt_stage_node_update")]
-        public extern void update(float dt);
-        [CCode (cname = "smlt_stage_node_late_update")]
-        public extern void late_update(float dt);
-        [CCode (cname = "smlt_stage_node_fixed_update")]
-        public extern void fixed_update(float step);
-        [CCode (cname = "smlt_stage_node_count_nodes_by_type")]
-        public extern ulong count_nodes_by_type(uint type_id, bool include_destroyed);
-        [CCode (cname = "smlt_stage_node_is_part_of_active_pipeline")]
-        public extern bool is_part_of_active_pipeline();
-        [CCode (cname = "smlt_stage_node_load_tree")]
-        public extern unowned StageNode load_tree(Path path, TreeLoadOptions opts);
-        [CCode (cname = "smlt_stage_node_create_params")]
-        public extern unowned Params create_params();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_stage_node_each_ancestor")]
-        public extern AncestorIteratorPair each_ancestor();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_stage_node_each_ancestor_mut")]
-        public extern AncestorIteratorPair each_ancestor_mut();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_stage_node_each_descendent")]
-        public extern DescendentIteratorPair each_descendent();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_stage_node_each_descendent_mut")]
-        public extern DescendentIteratorPair each_descendent_mut();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_stage_node_each_sibling")]
-        public extern SiblingIteratorPair each_sibling();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_stage_node_each_sibling_mut")]
-        public extern SiblingIteratorPair each_sibling_mut();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_stage_node_each_child")]
-        public extern ChildIteratorPair each_child();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_stage_node_each_child_mut")]
-        public extern ChildIteratorPair each_child_mut();
-        /** Caller owns the returned string; free it with Smlt.free_string(). */
-        [CCode (cname = "smlt_stage_node_repr")]
-        public extern unowned string repr();
-        [CCode (cname = "smlt_stage_node_node_type")]
-        public extern uint node_type();
-        [CCode (cname = "smlt_stage_node_is_visible")]
-        public extern bool is_visible();
-        [CCode (cname = "smlt_stage_node_is_intended_visible")]
-        public extern bool is_intended_visible();
-        [CCode (cname = "smlt_stage_node_set_visible")]
-        public extern void set_visible(bool visible);
-        [CCode (cname = "smlt_stage_node_parent_is_scene")]
-        public extern bool parent_is_scene();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_stage_node_transformed_aabb")]
-        public extern Aabb transformed_aabb();
-        [CCode (cname = "smlt_stage_node_aabb")]
-        public extern unowned Aabb aabb();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_stage_node_recursive_aabb")]
-        public extern Aabb recursive_aabb();
-        [CCode (cname = "smlt_stage_node_shadow_cast")]
-        public extern ShadowCast shadow_cast();
-        [CCode (cname = "smlt_stage_node_set_shadow_cast")]
-        public extern void set_shadow_cast(ShadowCast cast);
-        [CCode (cname = "smlt_stage_node_shadow_receive")]
-        public extern ShadowReceive shadow_receive();
-        [CCode (cname = "smlt_stage_node_set_shadow_receive")]
-        public extern void set_shadow_receive(ShadowReceive receive);
-        [CCode (cname = "smlt_stage_node_find_descendent_with_name")]
-        public extern unowned StageNode find_descendent_with_name(string name);
-        [CCode (cname = "smlt_stage_node_set_cullable")]
-        public extern void set_cullable(bool v);
-        [CCode (cname = "smlt_stage_node_is_cullable")]
-        public extern bool is_cullable();
-        [CCode (cname = "smlt_stage_node_set_precedence")]
-        public extern void set_precedence(int16 precedence);
-        [CCode (cname = "smlt_stage_node_precedence")]
-        public extern int16 precedence();
-        [CCode (cname = "smlt_stage_node_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_stage_node_get_transform")]
-        public extern unowned Transform get_transform();
     }
 
     [CCode (cname = "smlt_stage_node_type_info_t", has_type_id = false, free_function = "smlt_stage_node_type_info_destroy")]
@@ -7009,15 +7046,6 @@ namespace Smlt {
     public class StageParams {
     }
 
-    [CCode (cname = "smlt_stage_t", has_type_id = false)]
-    [Compact]
-    public class Stage {
-        [CCode (cname = "smlt_stage_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_stage_aabb")]
-        public extern unowned Aabb aabb();
-    }
-
     [CCode (cname = "smlt_stage_unused_t", has_type_id = false, free_function = "smlt_stage_unused_destroy")]
     [Compact]
     public class StageUnused {
@@ -7036,25 +7064,14 @@ namespace Smlt {
         [CCode (cname = "smlt_staged_write_set_new_bounds")]
         public extern void set_new_bounds(Aabb @value);
         [CCode (cname = "smlt_staged_write_get_node")]
-        public extern unowned StageNode get_node();
+        public extern void* get_node();
         [CCode (cname = "smlt_staged_write_set_node")]
-        public extern void set_node(StageNode @value);
+        public extern void set_node(void* @value);
     }
 
     [CCode (cname = "smlt_static_body_meta_t", has_type_id = false, free_function = "smlt_static_body_meta_destroy")]
     [Compact]
     public class StaticBodyMeta {
-    }
-
-    [CCode (cname = "smlt_static_body_t", has_type_id = false)]
-    [Compact]
-    public class StaticBody {
-        [CCode (cname = "smlt_static_body_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_static_body_add_mesh_collider")]
-        public extern void add_mesh_collider(Mesh mesh, PhysicsMaterial properties, uint16 kind, Vec3 position, Quaternion orientation, Vec3 scale);
-        [CCode (cname = "smlt_static_body_aabb")]
-        public extern unowned Aabb aabb();
     }
 
     [CCode (cname = "smlt_static_body_unused_t", has_type_id = false, free_function = "smlt_static_body_unused_destroy")]
@@ -7065,17 +7082,6 @@ namespace Smlt {
     [CCode (cname = "smlt_stats_panel_meta_t", has_type_id = false, free_function = "smlt_stats_panel_meta_destroy")]
     [Compact]
     public class StatsPanelMeta {
-    }
-
-    [CCode (cname = "smlt_stats_panel_t", has_type_id = false)]
-    [Compact]
-    public class StatsPanel {
-        [CCode (cname = "smlt_stats_panel_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_stats_panel_on_init")]
-        public extern bool on_init();
-        [CCode (cname = "smlt_stats_panel_on_clean_up")]
-        public extern void on_clean_up();
     }
 
     [CCode (cname = "smlt_stats_panel_unused_t", has_type_id = false, free_function = "smlt_stats_panel_unused_destroy")]
@@ -7142,6 +7148,10 @@ namespace Smlt {
     public class SubMesh {
         [CCode (cname = "smlt_sub_mesh_create")]
         public SubMesh(Mesh parent, string name, Material material, MeshArrangement arrangement);
+        [CCode (cname = "smlt_sub_mesh_mesh")]
+        public extern unowned Mesh mesh();
+        [CCode (cname = "smlt_sub_mesh_index_data")]
+        public extern unowned IndexData index_data();
         [CCode (cname = "smlt_sub_mesh_type")]
         public extern SubmeshType type();
         [CCode (cname = "smlt_sub_mesh_add_vertex_range")]
@@ -7178,6 +7188,13 @@ namespace Smlt {
         public extern bool contributes_to_edge_list();
         [CCode (cname = "smlt_sub_mesh_aabb")]
         public extern unowned Aabb aabb();
+        [CCode (cname = "smlt_sub_mesh_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_sub_mesh_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_sub_mesh_has_name")]
+        public extern bool has_name();
     }
 
     [CCode (cname = "smlt_tag_game_controller_id_t", has_type_id = false, free_function = "smlt_tag_game_controller_id_destroy")]
@@ -7367,8 +7384,6 @@ namespace Smlt {
         public extern bool is_paletted_format();
         [CCode (cname = "smlt_texture_palette_size")]
         public extern uint32 palette_size();
-        [CCode (cname = "smlt_texture_update_palette")]
-        public extern bool update_palette(uint8* palette);
         [CCode (cname = "smlt_texture_blur")]
         public extern bool blur(BlurType blur_type, ulong radius);
         [CCode (cname = "smlt_texture_resize")]
@@ -7462,6 +7477,35 @@ namespace Smlt {
         public extern uint8* stash_paletted_data();
         [CCode (cname = "smlt_texture_adopt_data")]
         public extern void adopt_data(uint8* data, uint32 size);
+        [CCode (cname = "smlt_texture_asset_manager")]
+        public extern unowned AssetManager asset_manager();
+        [CCode (cname = "smlt_texture_age")]
+        public extern int age();
+        [CCode (cname = "smlt_texture_set_garbage_collection_method")]
+        public extern void set_garbage_collection_method(GarbageCollectMethod method);
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_texture_source")]
+        public extern Path source();
+        [CCode (cname = "smlt_texture_set_source")]
+        public extern void set_source(Path source);
+        [CCode (cname = "smlt_texture_set_name")]
+        public extern void set_name(string name);
+        /** Caller owns the returned string; free it with Smlt.free_string(). */
+        [CCode (cname = "smlt_texture_name")]
+        public extern unowned string name();
+        [CCode (cname = "smlt_texture_has_name")]
+        public extern bool has_name();
+        [CCode (cname = "smlt_texture_set_clear_every_frame")]
+        public extern void set_clear_every_frame(uint32 clear_flags, Color color);
+        [CCode (cname = "smlt_texture_clear_every_frame_flags")]
+        public extern uint32 clear_every_frame_flags();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_texture_clear_every_frame_color")]
+        public extern Color clear_every_frame_color();
+        [CCode (cname = "smlt_texture_set_last_frame_rendered_id")]
+        public extern void set_last_frame_rendered_id(uint32 id);
+        [CCode (cname = "smlt_texture_last_frame_rendered_id")]
+        public extern uint* last_frame_rendered_id();
     }
 
     [CCode (cname = "smlt_thread_callable_wrapper_base_t", has_type_id = false, free_function = "smlt_thread_callable_wrapper_base_destroy")]
@@ -7476,6 +7520,8 @@ namespace Smlt {
     public class ThreadMutexInitialisationError {
         [CCode (cname = "smlt_thread_mutex_initialisation_error_create")]
         public ThreadMutexInitialisationError();
+        [CCode (cname = "smlt_thread_mutex_initialisation_error_what")]
+        public extern unowned string what();
     }
 
     [CCode (cname = "smlt_thread_mutex_t", has_type_id = false, free_function = "smlt_thread_mutex_destroy")]
@@ -7496,6 +7542,8 @@ namespace Smlt {
     public class ThreadPromiseFailedError {
         [CCode (cname = "smlt_thread_promise_failed_error_create")]
         public ThreadPromiseFailedError();
+        [CCode (cname = "smlt_thread_promise_failed_error_what")]
+        public extern unowned string what();
     }
 
     [CCode (cname = "smlt_thread_recursive_mutex_t", has_type_id = false, free_function = "smlt_thread_recursive_mutex_destroy")]
@@ -7759,15 +7807,6 @@ namespace Smlt {
     public class UiButtonMeta {
     }
 
-    [CCode (cname = "smlt_ui_button_t", has_type_id = false)]
-    [Compact]
-    public class UiButton {
-        [CCode (cname = "smlt_ui_button_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_ui_button_on_create")]
-        public extern bool on_create(Params @params);
-    }
-
     [CCode (cname = "smlt_ui_button_unused_t", has_type_id = false, free_function = "smlt_ui_button_unused_destroy")]
     [Compact]
     public class UiButtonUnused {
@@ -7776,26 +7815,6 @@ namespace Smlt {
     [CCode (cname = "smlt_ui_frame_meta_t", has_type_id = false, free_function = "smlt_ui_frame_meta_destroy")]
     [Compact]
     public class UiFrameMeta {
-    }
-
-    [CCode (cname = "smlt_ui_frame_t", has_type_id = false)]
-    [Compact]
-    public class UiFrame {
-        [CCode (cname = "smlt_ui_frame_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_ui_frame_on_create")]
-        public extern bool on_create(Params @params);
-        [CCode (cname = "smlt_ui_frame_pack_child")]
-        public extern bool pack_child(UiWidget widget);
-        [CCode (cname = "smlt_ui_frame_unpack_child")]
-        public extern bool unpack_child(UiWidget widget, UiChildCleanup clean_up);
-        [CCode (cname = "smlt_ui_frame_set_layout_direction")]
-        public extern void set_layout_direction(UiLayoutDirection dir);
-        [CCode (cname = "smlt_ui_frame_set_space_between")]
-        public extern void set_space_between(UiPx spacing);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_frame_space_between")]
-        public extern UiPx space_between();
     }
 
     [CCode (cname = "smlt_ui_frame_unused_t", has_type_id = false, free_function = "smlt_ui_frame_unused_destroy")]
@@ -7823,21 +7842,6 @@ namespace Smlt {
         public extern void set_size(UiUiCoord @value);
     }
 
-    [CCode (cname = "smlt_ui_image_t", has_type_id = false)]
-    [Compact]
-    public class UiImage {
-        [CCode (cname = "smlt_ui_image_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_ui_image_set_texture")]
-        public extern void set_texture(Texture texture_id);
-        [CCode (cname = "smlt_ui_image_set_source_rect")]
-        public extern void set_source_rect(UiUiCoord bottom_left, UiUiCoord size);
-        [CCode (cname = "smlt_ui_image_set_resize_mode")]
-        public extern bool set_resize_mode(UiResizeMode resize_mode);
-        [CCode (cname = "smlt_ui_image_on_create")]
-        public extern bool on_create(Params @params);
-    }
-
     [CCode (cname = "smlt_ui_image_unused_t", has_type_id = false, free_function = "smlt_ui_image_unused_destroy")]
     [Compact]
     public class UiImageUnused {
@@ -7846,49 +7850,6 @@ namespace Smlt {
     [CCode (cname = "smlt_ui_keyboard_meta_t", has_type_id = false, free_function = "smlt_ui_keyboard_meta_destroy")]
     [Compact]
     public class UiKeyboardMeta {
-    }
-
-    [CCode (cname = "smlt_ui_keyboard_t", has_type_id = false)]
-    [Compact]
-    public class UiKeyboard {
-        [CCode (cname = "smlt_ui_keyboard_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_ui_keyboard_cursor_up")]
-        public extern void cursor_up();
-        [CCode (cname = "smlt_ui_keyboard_cursor_down")]
-        public extern void cursor_down();
-        [CCode (cname = "smlt_ui_keyboard_cursor_right")]
-        public extern void cursor_right();
-        [CCode (cname = "smlt_ui_keyboard_cursor_left")]
-        public extern void cursor_left();
-        [CCode (cname = "smlt_ui_keyboard_cursor_to_char")]
-        public extern bool cursor_to_char(uint16 displayed_char);
-        [CCode (cname = "smlt_ui_keyboard_cursor_to_return")]
-        public extern void cursor_to_return();
-        [CCode (cname = "smlt_ui_keyboard_cursor_to_case_toggle")]
-        public extern void cursor_to_case_toggle();
-        [CCode (cname = "smlt_ui_keyboard_cursor_to_backspace")]
-        public extern void cursor_to_backspace();
-        [CCode (cname = "smlt_ui_keyboard_cursor_to_ok")]
-        public extern void cursor_to_ok();
-        [CCode (cname = "smlt_ui_keyboard_cursor_to_space")]
-        public extern void cursor_to_space();
-        [CCode (cname = "smlt_ui_keyboard_activate")]
-        public extern void activate();
-        [CCode (cname = "smlt_ui_keyboard_cancel")]
-        public extern void cancel();
-        [CCode (cname = "smlt_ui_keyboard_set_mode")]
-        public extern void set_mode(UiKeyboardMode mode);
-        [CCode (cname = "smlt_ui_keyboard_mode")]
-        public extern UiKeyboardMode mode();
-        [CCode (cname = "smlt_ui_keyboard_is_keyboard_integration_enabled")]
-        public extern bool is_keyboard_integration_enabled();
-        [CCode (cname = "smlt_ui_keyboard_set_keyboard_integration_enabled")]
-        public extern void set_keyboard_integration_enabled(bool @value);
-        [CCode (cname = "smlt_ui_keyboard_set_font")]
-        public extern void set_font(Font font);
-        [CCode (cname = "smlt_ui_keyboard_entry")]
-        public extern unowned UiTextEntry entry();
     }
 
     [CCode (cname = "smlt_ui_keyboard_unused_t", has_type_id = false, free_function = "smlt_ui_keyboard_unused_destroy")]
@@ -7901,15 +7862,6 @@ namespace Smlt {
     public class UiLabelMeta {
     }
 
-    [CCode (cname = "smlt_ui_label_t", has_type_id = false)]
-    [Compact]
-    public class UiLabel {
-        [CCode (cname = "smlt_ui_label_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_ui_label_on_create")]
-        public extern bool on_create(Params @params);
-    }
-
     [CCode (cname = "smlt_ui_label_unused_t", has_type_id = false, free_function = "smlt_ui_label_unused_destroy")]
     [Compact]
     public class UiLabelUnused {
@@ -7918,33 +7870,6 @@ namespace Smlt {
     [CCode (cname = "smlt_ui_progress_bar_meta_t", has_type_id = false, free_function = "smlt_ui_progress_bar_meta_destroy")]
     [Compact]
     public class UiProgressBarMeta {
-    }
-
-    [CCode (cname = "smlt_ui_progress_bar_t", has_type_id = false)]
-    [Compact]
-    public class UiProgressBar {
-        [CCode (cname = "smlt_ui_progress_bar_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_ui_progress_bar_pulse")]
-        public extern void pulse();
-        [CCode (cname = "smlt_ui_progress_bar_set_pulse_step")]
-        public extern void set_pulse_step(UiPx @value);
-        [CCode (cname = "smlt_ui_progress_bar_set_pulse_fraction")]
-        public extern void set_pulse_fraction(float @value);
-        [CCode (cname = "smlt_ui_progress_bar_set_value")]
-        public extern void set_value(float @value);
-        [CCode (cname = "smlt_ui_progress_bar_set_range")]
-        public extern void set_range(float min, float max);
-        [CCode (cname = "smlt_ui_progress_bar_value")]
-        public extern float @value();
-        [CCode (cname = "smlt_ui_progress_bar_min")]
-        public extern float min();
-        [CCode (cname = "smlt_ui_progress_bar_max")]
-        public extern float max();
-        [CCode (cname = "smlt_ui_progress_bar_current_mode")]
-        public extern UiProgressBarMode current_mode();
-        [CCode (cname = "smlt_ui_progress_bar_on_update")]
-        public extern void on_update(float dt);
     }
 
     [CCode (cname = "smlt_ui_progress_bar_unused_t", has_type_id = false, free_function = "smlt_ui_progress_bar_unused_destroy")]
@@ -7964,11 +7889,11 @@ namespace Smlt {
         [CCode (cname = "smlt_ui_px_create_from_int")]
         public UiPx.from_int(int* rhs);
         [CCode (cname = "smlt_ui_px_create_from_uint16")]
-        public UiPx.from_uint16(uint16* rhs);
+        public UiPx.from_uint16(uint* rhs);
         [CCode (cname = "smlt_ui_px_create_from_uint")]
-        public UiPx.from_uint(uint* rhs);
+        public UiPx.from_uint(ulong* rhs);
         [CCode (cname = "smlt_ui_px_create_from_ulong")]
-        public UiPx.from_ulong(ulong* rhs);
+        public UiPx.from_ulong(uint16* rhs);
         [CCode (cname = "smlt_ui_px_get_value")]
         public extern int16 get_value();
         [CCode (cname = "smlt_ui_px_set_value")]
@@ -8055,21 +7980,6 @@ namespace Smlt {
     [CCode (cname = "smlt_ui_text_entry_meta_t", has_type_id = false, free_function = "smlt_ui_text_entry_meta_destroy")]
     [Compact]
     public class UiTextEntryMeta {
-    }
-
-    [CCode (cname = "smlt_ui_text_entry_t", has_type_id = false)]
-    [Compact]
-    public class UiTextEntry {
-        [CCode (cname = "smlt_ui_text_entry_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_ui_text_entry_insert_character")]
-        public extern void insert_character(uint16 c);
-        [CCode (cname = "smlt_ui_text_entry_backspace_character")]
-        public extern bool backspace_character();
-        [CCode (cname = "smlt_ui_text_entry_caret_left")]
-        public extern bool caret_left();
-        [CCode (cname = "smlt_ui_text_entry_caret_right")]
-        public extern bool caret_right();
     }
 
     [CCode (cname = "smlt_ui_text_entry_unused_t", has_type_id = false, free_function = "smlt_ui_text_entry_unused_destroy")]
@@ -8365,15 +8275,6 @@ namespace Smlt {
     public class UiUiManagerMeta {
     }
 
-    [CCode (cname = "smlt_ui_ui_manager_t", has_type_id = false)]
-    [Compact]
-    public class UiUiManager {
-        [CCode (cname = "smlt_ui_ui_manager_node_type_name")]
-        public extern unowned string node_type_name();
-        [CCode (cname = "smlt_ui_ui_manager_config")]
-        public extern unowned UiUiConfig config();
-    }
-
     [CCode (cname = "smlt_ui_ui_manager_unused_t", has_type_id = false, free_function = "smlt_ui_ui_manager_unused_destroy")]
     [Compact]
     public class UiUiManagerUnused {
@@ -8476,149 +8377,6 @@ namespace Smlt {
         public extern float get_opacity();
         [CCode (cname = "smlt_ui_widget_style_set_opacity")]
         public extern void set_opacity(float @value);
-    }
-
-    [CCode (cname = "smlt_ui_widget_t", has_type_id = false)]
-    [Compact]
-    public class UiWidget {
-        [CCode (cname = "smlt_ui_widget_on_init")]
-        public extern bool on_init();
-        [CCode (cname = "smlt_ui_widget_on_clean_up")]
-        public extern void on_clean_up();
-        [CCode (cname = "smlt_ui_widget_on_create")]
-        public extern bool on_create(Params @params);
-        [CCode (cname = "smlt_ui_widget_resize")]
-        public extern void resize(UiPx width, UiPx height);
-        [CCode (cname = "smlt_ui_widget_resize_px_rem")]
-        public extern void resize_px_rem(UiPx width, UiRem height);
-        [CCode (cname = "smlt_ui_widget_resize_rem_px")]
-        public extern void resize_rem_px(UiRem width, UiPx height);
-        [CCode (cname = "smlt_ui_widget_resize_rem_rem")]
-        public extern void resize_rem_rem(UiRem width, UiRem height);
-        [CCode (cname = "smlt_ui_widget_set_font")]
-        public extern void set_font(Font font);
-        [CCode (cname = "smlt_ui_widget_set_font_family_px")]
-        public extern void set_font_family_px(string family, UiPx size, FontWeight weight, FontStyle style);
-        [CCode (cname = "smlt_ui_widget_set_font_family_rem")]
-        public extern void set_font_family_rem(string family, UiRem size, FontWeight weight, FontStyle style);
-        [CCode (cname = "smlt_ui_widget_is_focused")]
-        public extern bool is_focused();
-        [CCode (cname = "smlt_ui_widget_focus")]
-        public extern void focus();
-        [CCode (cname = "smlt_ui_widget_blur")]
-        public extern void blur();
-        [CCode (cname = "smlt_ui_widget_focus_next_in_chain")]
-        public extern void focus_next_in_chain(UiChangeFocusBehaviour behaviour);
-        [CCode (cname = "smlt_ui_widget_focus_previous_in_chain")]
-        public extern void focus_previous_in_chain(UiChangeFocusBehaviour behaviour);
-        [CCode (cname = "smlt_ui_widget_click")]
-        public extern void click();
-        [CCode (cname = "smlt_ui_widget_set_text_alignment")]
-        public extern void set_text_alignment(UiTextAlignment alignment);
-        [CCode (cname = "smlt_ui_widget_text_alignment")]
-        public extern UiTextAlignment text_alignment();
-        [CCode (cname = "smlt_ui_widget_set_border_width")]
-        public extern void set_border_width(UiPx x);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_border_width")]
-        public extern UiPx border_width();
-        [CCode (cname = "smlt_ui_widget_set_border_radius")]
-        public extern void set_border_radius(UiPx x);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_border_radius")]
-        public extern UiPx border_radius();
-        [CCode (cname = "smlt_ui_widget_set_border_color")]
-        public extern void set_border_color(Color color);
-        [CCode (cname = "smlt_ui_widget_set_overflow")]
-        public extern void set_overflow(UiOverflowType type);
-        [CCode (cname = "smlt_ui_widget_set_padding")]
-        public extern void set_padding(UiPx x);
-        [CCode (cname = "smlt_ui_widget_set_padding_per_side")]
-        public extern void set_padding_per_side(UiPx left, UiPx right, UiPx bottom, UiPx top);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_padding")]
-        public extern UiUInt4 padding();
-        [CCode (cname = "smlt_ui_widget_set_resize_mode")]
-        public extern bool set_resize_mode(UiResizeMode resize_mode);
-        [CCode (cname = "smlt_ui_widget_resize_mode")]
-        public extern UiResizeMode resize_mode();
-        [CCode (cname = "smlt_ui_widget_wrap_mode")]
-        public extern UiWrapMode wrap_mode();
-        [CCode (cname = "smlt_ui_widget_set_wrap_mode")]
-        public extern void set_wrap_mode(UiWrapMode mode);
-        [CCode (cname = "smlt_ui_widget_has_background_image")]
-        public extern bool has_background_image();
-        [CCode (cname = "smlt_ui_widget_has_foreground_image")]
-        public extern bool has_foreground_image();
-        [CCode (cname = "smlt_ui_widget_set_background_image")]
-        public extern void set_background_image(Texture texture);
-        [CCode (cname = "smlt_ui_widget_set_background_image_source_rect")]
-        public extern void set_background_image_source_rect(UiUiCoord bottom_left, UiUiCoord size);
-        [CCode (cname = "smlt_ui_widget_set_background_color")]
-        public extern void set_background_color(Color color);
-        [CCode (cname = "smlt_ui_widget_set_foreground_color")]
-        public extern void set_foreground_color(Color color);
-        [CCode (cname = "smlt_ui_widget_set_foreground_image")]
-        public extern void set_foreground_image(Texture texture);
-        [CCode (cname = "smlt_ui_widget_set_foreground_image_source_rect")]
-        public extern void set_foreground_image_source_rect(UiUiCoord bottom_left, UiUiCoord size);
-        [CCode (cname = "smlt_ui_widget_set_text_color")]
-        public extern void set_text_color(Color color);
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_requested_width")]
-        public extern UiPx requested_width();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_requested_height")]
-        public extern UiPx requested_height();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_content_width")]
-        public extern UiPx content_width();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_content_height")]
-        public extern UiPx content_height();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_outer_width")]
-        public extern UiPx outer_width();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_outer_height")]
-        public extern UiPx outer_height();
-        [CCode (cname = "smlt_ui_widget_aabb")]
-        public extern unowned Aabb aabb();
-        [CCode (cname = "smlt_ui_widget_fingerdown")]
-        public extern void fingerdown(uint8 finger_id);
-        [CCode (cname = "smlt_ui_widget_fingerup")]
-        public extern void fingerup(uint8 finger_id);
-        [CCode (cname = "smlt_ui_widget_fingerenter")]
-        public extern void fingerenter(uint8 finger_id);
-        [CCode (cname = "smlt_ui_widget_fingermove")]
-        public extern void fingermove(uint8 finger_id);
-        [CCode (cname = "smlt_ui_widget_fingerleave")]
-        public extern void fingerleave(uint8 finger_id);
-        [CCode (cname = "smlt_ui_widget_is_pressed_by_finger")]
-        public extern bool is_pressed_by_finger(uint8 finger_id);
-        [CCode (cname = "smlt_ui_widget_is_pressed")]
-        public extern bool is_pressed();
-        [CCode (cname = "smlt_ui_widget_force_release")]
-        public extern void force_release();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_anchor_point")]
-        public extern Vec2 anchor_point();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_line_height")]
-        public extern UiPx line_height();
-        [CCode (cname = "smlt_ui_widget_set_precedence")]
-        public extern void set_precedence(int16 precedence);
-        [CCode (cname = "smlt_ui_widget_precedence")]
-        public extern int16 precedence();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_border_material")]
-        public extern Material border_material();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_background_material")]
-        public extern Material background_material();
-        /** Caller owns the result; free with the matching release/destroy. */
-        [CCode (cname = "smlt_ui_widget_foreground_material")]
-        public extern Material foreground_material();
     }
 
     [CCode (cname = "smlt_updateable_t", has_type_id = false, free_function = "smlt_updateable_destroy")]
@@ -9236,17 +8994,31 @@ namespace Smlt {
     public class WindowHolder {
         [CCode (cname = "smlt_window_holder_create")]
         public WindowHolder(Window window);
+        [CCode (cname = "smlt_window_holder_window")]
+        public extern unowned Window window();
     }
 
     [CCode (cname = "smlt_window_t", has_type_id = false, free_function = "smlt_window_destroy")]
     [Compact]
     public class Window {
+        [CCode (cname = "smlt_window_app")]
+        public extern void* app();
+        [CCode (cname = "smlt_window_renderer")]
+        public extern unowned Renderer renderer();
+        [CCode (cname = "smlt_window_data")]
+        public extern unowned GenericDataCarrier data();
+        [CCode (cname = "smlt_window_input")]
+        public extern unowned InputManager input();
+        [CCode (cname = "smlt_window_input_state")]
+        public extern unowned InputState input_state();
+        [CCode (cname = "smlt_window_compositor")]
+        public extern unowned Compositor compositor();
         [CCode (cname = "smlt_window_create_window")]
         public extern bool create_window(uint16 width, uint16 height, uint8 bpp, bool fullscreen, bool enable_vsync);
         [CCode (cname = "smlt_window_set_title")]
         public extern void set_title(string title);
         [CCode (cname = "smlt_window_cursor_position")]
-        public extern void cursor_position(int32* mouse_x, int32* mouse_y);
+        public extern void cursor_position(int* mouse_x, int* mouse_y);
         [CCode (cname = "smlt_window_show_cursor")]
         public extern void show_cursor(bool cursor_shown);
         [CCode (cname = "smlt_window_lock_cursor")]
@@ -9303,9 +9075,9 @@ namespace Smlt {
         [CCode (cname = "smlt_window_clean_up")]
         public extern void clean_up();
         [CCode (cname = "smlt_window_audio_listener")]
-        public extern unowned StageNode audio_listener();
+        public extern void* audio_listener();
         [CCode (cname = "smlt_window_set_audio_listener")]
-        public extern void set_audio_listener(StageNode node);
+        public extern void set_audio_listener(void* node);
         [CCode (cname = "smlt_window_has_explicit_audio_listener")]
         public extern bool has_explicit_audio_listener();
         [CCode (cname = "smlt_window_has_context")]
@@ -9318,17 +9090,32 @@ namespace Smlt {
         public extern void set_escape_to_quit(bool @value);
         [CCode (cname = "smlt_window_escape_to_quit_enabled")]
         public extern bool escape_to_quit_enabled();
+        [CCode (cname = "smlt_window_set_clear_every_frame")]
+        public extern void set_clear_every_frame(uint32 clear_flags, Color color);
+        [CCode (cname = "smlt_window_clear_every_frame_flags")]
+        public extern uint32 clear_every_frame_flags();
+        /** Caller owns the result; free with the matching release/destroy. */
+        [CCode (cname = "smlt_window_clear_every_frame_color")]
+        public extern Color clear_every_frame_color();
+        [CCode (cname = "smlt_window_set_last_frame_rendered_id")]
+        public extern void set_last_frame_rendered_id(uint32 id);
+        [CCode (cname = "smlt_window_last_frame_rendered_id")]
+        public extern uint* last_frame_rendered_id();
+        [CCode (cname = "smlt_window_register_event_listener")]
+        public extern void register_event_listener(EventListener listener);
+        [CCode (cname = "smlt_window_unregister_event_listener")]
+        public extern void unregister_event_listener(EventListener listener);
     }
 
     [CCode (cname = "smlt_with_base_t", has_type_id = false, free_function = "smlt_with_base_destroy")]
     [Compact]
     public class WithBase {
         [CCode (cname = "smlt_with_base_create")]
-        public WithBase(StageNode @base);
+        public WithBase(void* @base);
         [CCode (cname = "smlt_with_base_get_base")]
-        public extern unowned StageNode get_base();
+        public extern void* get_base();
         [CCode (cname = "smlt_with_base_set_base")]
-        public extern void set_base(StageNode @value);
+        public extern void set_base(void* @value);
     }
 
     [CCode (cname = "smlt_block_header_t", has_type_id = false)]
@@ -9761,10 +9548,7 @@ namespace Smlt {
     public static extern void calculate_ratios_from_viewport(ViewportType type, float* x, float* y, float* width, float* height);
 
     [CCode (cname = "smlt_get_app")]
-    public static extern unowned Application get_app();
-
-    [CCode (cname = "smlt_terrain_recalculate_terrain_normals")]
-    public static extern void terrain_recalculate_terrain_normals(Mesh terrain);
+    public static extern void* get_app();
 
     [CCode (cname = "smlt_terrain_smooth_terrain")]
     public static extern void terrain_smooth_terrain(Mesh terrain, uint32 iterations);
@@ -9787,11 +9571,11 @@ namespace Smlt {
     [CCode (cname = "smlt_procedural_mesh_box")]
     public static extern void procedural_mesh_box(Mesh mesh, float width, float height, float depth, ProceduralMeshStyle style);
 
-    [CCode (cname = "smlt_procedural_mesh_circle")]
-    public static extern unowned SubMesh procedural_mesh_circle(Mesh mesh, float diameter, int32 point_count, float x_offset, float y_offset, float z_offset);
+    [CCode (cname = "smlt_procedural_mesh_sphere")]
+    public static extern void procedural_mesh_sphere(SubMesh mesh, float diameter, int32 slices, int32 stacks);
 
-    [CCode (cname = "smlt_procedural_mesh_circle_outline")]
-    public static extern unowned SubMesh procedural_mesh_circle_outline(Mesh mesh, float diameter, int32 point_count, float x_offset, float y_offset, float z_offset);
+    [CCode (cname = "smlt_procedural_mesh_cylinder")]
+    public static extern void procedural_mesh_cylinder(SubMesh submesh, float diameter, float length, int32 segments, int32 stacks);
 
     [CCode (cname = "smlt_procedural_mesh_icosphere")]
     public static extern void procedural_mesh_icosphere(SubMesh @out, float diameter, uint32 subdivisions);

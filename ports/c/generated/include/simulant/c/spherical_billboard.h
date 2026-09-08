@@ -15,6 +15,12 @@ const char* smlt_spherical_billboard_node_type_name(const smlt_spherical_billboa
 void smlt_spherical_billboard_set_target(smlt_spherical_billboard_t* self, smlt_stage_node_t* target);
 const smlt_aabb_t* smlt_spherical_billboard_aabb(const smlt_spherical_billboard_t* self);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::SphericalBillboard as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_spherical_billboard_t* smlt_stage_node_create_child_spherical_billboard(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

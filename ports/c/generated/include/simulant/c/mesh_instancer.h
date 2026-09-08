@@ -19,6 +19,20 @@ unsigned long smlt_mesh_instancer_create_mesh_instance(smlt_mesh_instancer_t* se
 bool smlt_mesh_instancer_destroy_mesh_instance(smlt_mesh_instancer_t* self, unsigned long mid);
 bool smlt_mesh_instancer_show_mesh_instance(smlt_mesh_instancer_t* self, unsigned long mid);
 bool smlt_mesh_instancer_hide_mesh_instance(smlt_mesh_instancer_t* self, unsigned long mid);
+float smlt_mesh_instancer_width(const smlt_mesh_instancer_t* self);
+float smlt_mesh_instancer_height(const smlt_mesh_instancer_t* self);
+float smlt_mesh_instancer_depth(const smlt_mesh_instancer_t* self);
+float smlt_mesh_instancer_half_width(const smlt_mesh_instancer_t* self);
+float smlt_mesh_instancer_half_height(const smlt_mesh_instancer_t* self);
+float smlt_mesh_instancer_half_depth(const smlt_mesh_instancer_t* self);
+float smlt_mesh_instancer_diameter(const smlt_mesh_instancer_t* self);
+float smlt_mesh_instancer_radius(const smlt_mesh_instancer_t* self);
+
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::MeshInstancer as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_mesh_instancer_t* smlt_stage_node_create_child_mesh_instancer(smlt_stage_node_t* parent);
 
 #ifdef __cplusplus
 }

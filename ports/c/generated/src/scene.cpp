@@ -6,10 +6,48 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/scenes/scene.h"
+#include "simulant/application.h"
+#include "simulant/path.h"
+#include "simulant/input/input_manager.h"
+#include "simulant/compositor.h"
+#include "simulant/asset_manager.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/nodes/stage_node_path.h"
+#include "simulant/window.h"
+#include "simulant/scenes/scene_manager.h"
+#include "simulant/utils/params.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
 extern "C" {
+
+smlt_window_t* smlt_scene_window(smlt_scene_t* self) {
+    return reinterpret_cast<smlt_window_t*>(reinterpret_cast<smlt::Scene*>(self)->window.get());
+}
+
+smlt_application_t* smlt_scene_app(smlt_scene_t* self) {
+    return reinterpret_cast<smlt_application_t*>(reinterpret_cast<smlt::Scene*>(self)->app.get());
+}
+
+smlt_input_manager_t* smlt_scene_input(smlt_scene_t* self) {
+    return reinterpret_cast<smlt_input_manager_t*>(reinterpret_cast<smlt::Scene*>(self)->input.get());
+}
+
+smlt_scene_manager_t* smlt_scene_scenes(smlt_scene_t* self) {
+    return reinterpret_cast<smlt_scene_manager_t*>(reinterpret_cast<smlt::Scene*>(self)->scenes.get());
+}
+
+smlt_scene_compositor_t* smlt_scene_compositor(smlt_scene_t* self) {
+    return reinterpret_cast<smlt_scene_compositor_t*>(reinterpret_cast<smlt::Scene*>(self)->compositor.get());
+}
+
+smlt_lighting_settings_t* smlt_scene_lighting(smlt_scene_t* self) {
+    return reinterpret_cast<smlt_lighting_settings_t*>(reinterpret_cast<smlt::Scene*>(self)->lighting.get());
+}
+
+smlt_asset_manager_t* smlt_scene_assets(smlt_scene_t* self) {
+    return reinterpret_cast<smlt_asset_manager_t*>(reinterpret_cast<smlt::Scene*>(self)->assets.get());
+}
 
 void smlt_scene_load(smlt_scene_t* self) {
     reinterpret_cast<smlt::Scene*>(self)->load();
@@ -53,6 +91,22 @@ void smlt_scene_set_unload_on_deactivate(smlt_scene_t* self, bool v) {
 
 const char* smlt_scene_node_type_name(const smlt_scene_t* self) {
     return reinterpret_cast<const smlt::Scene*>(self)->node_type_name();
+}
+
+smlt_stage_node_t* smlt_scene_get_node(const smlt_scene_t* self, unsigned int id) {
+    return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<const smlt::Scene*>(self)->get_node(id)));
+}
+
+bool smlt_scene_has_node(const smlt_scene_t* self, unsigned int id) {
+    return reinterpret_cast<const smlt::Scene*>(self)->has_node(id);
+}
+
+smlt_stage_node_t* smlt_scene_create_node(smlt_scene_t* self, unsigned int type, const smlt_params_t* params, smlt_stage_node_t* base) {
+    return reinterpret_cast<smlt_stage_node_t*>((reinterpret_cast<smlt::Scene*>(self)->create_node(type, (*reinterpret_cast<const smlt::Params*>(params)), reinterpret_cast<smlt::StageNode*>(base))));
+}
+
+bool smlt_scene_register_stage_node(smlt_scene_t* self, const smlt_path_t* script_file, const char* class_name) {
+    return reinterpret_cast<smlt::Scene*>(self)->register_stage_node((*reinterpret_cast<const smlt::Path*>(script_file)), class_name);
 }
 
 } /* extern "C" */

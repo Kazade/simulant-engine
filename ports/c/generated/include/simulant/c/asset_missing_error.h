@@ -13,6 +13,7 @@ extern "C" {
 
 void smlt_asset_missing_error_destroy(smlt_asset_missing_error_t* self);
 smlt_asset_missing_error_t* smlt_asset_missing_error_create(const char* what);
+const char* smlt_asset_missing_error_what(const smlt_asset_missing_error_t* self);
 
 #ifdef __cplusplus
 }

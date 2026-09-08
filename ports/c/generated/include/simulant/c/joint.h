@@ -15,6 +15,12 @@ const char* smlt_joint_node_type_name(const smlt_joint_t* self);
 int smlt_joint_joint_index(const smlt_joint_t* self);
 smlt_armature_t* smlt_joint_armature(const smlt_joint_t* self);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::Joint as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_joint_t* smlt_stage_node_create_child_joint(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

@@ -15,6 +15,12 @@ const char* smlt_shadow_caster_node_type_name(const smlt_shadow_caster_t* self);
 const smlt_vertex_data_t* smlt_shadow_caster_shadow_volume_vertex_data(const smlt_shadow_caster_t* self);
 const smlt_index_data_t* smlt_shadow_caster_shadow_volume_index_data(const smlt_shadow_caster_t* self);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::ShadowCaster as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_shadow_caster_t* smlt_stage_node_create_child_shadow_caster(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/nodes/fly_controller.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -25,6 +27,11 @@ float smlt_fly_controller_speed(const smlt_fly_controller_t* self) {
 
 void smlt_fly_controller_on_late_update(smlt_fly_controller_t* self, float dt) {
     reinterpret_cast<smlt::FlyController*>(self)->on_late_update(dt);
+}
+
+smlt_fly_controller_t* smlt_stage_node_create_child_fly_controller(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::FlyController>();
+    return reinterpret_cast<smlt_fly_controller_t*>(node);
 }
 
 } /* extern "C" */

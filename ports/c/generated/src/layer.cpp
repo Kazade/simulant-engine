@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/layer.h"
+#include "simulant/nodes/camera.h"
 #include "simulant/compositor.h"
 #include "simulant/viewport.h"
 #include "simulant/nodes/stage_node.h"
@@ -17,6 +18,18 @@ extern "C" {
 
 void smlt_layer_destroy(smlt_layer_t* self) {
     delete reinterpret_cast<smlt::Layer*>(self);
+}
+
+smlt_viewport_t* smlt_layer_viewport(smlt_layer_t* self) {
+    return reinterpret_cast<smlt_viewport_t*>(reinterpret_cast<smlt::Layer*>(self)->viewport.get());
+}
+
+smlt_layer_t* smlt_layer_create(smlt_compositor_t* render_sequence, smlt_stage_node_t* subtree, smlt_camera_t* camera) {
+    return reinterpret_cast<smlt_layer_t*>(new smlt::Layer(reinterpret_cast<smlt::Compositor*>(render_sequence), reinterpret_cast<smlt::StageNode*>(subtree), reinterpret_cast<smlt::Camera*>(camera)));
+}
+
+smlt_camera_t* smlt_layer_camera(const smlt_layer_t* self) {
+    return reinterpret_cast<smlt_camera_t*>((reinterpret_cast<const smlt::Layer*>(self)->camera()));
 }
 
 smlt_stage_node_t* smlt_layer_stage_node(const smlt_layer_t* self) {
@@ -35,6 +48,10 @@ int32_t smlt_layer_priority(const smlt_layer_t* self) {
     return reinterpret_cast<const smlt::Layer*>(self)->priority();
 }
 
+smlt_layer_t* smlt_layer_set_priority(smlt_layer_t* self, int32_t priority) {
+    return reinterpret_cast<smlt_layer_t*>((reinterpret_cast<smlt::Layer*>(self)->set_priority(priority)));
+}
+
 void smlt_layer_deactivate(smlt_layer_t* self) {
     reinterpret_cast<smlt::Layer*>(self)->deactivate();
 }
@@ -47,12 +64,36 @@ bool smlt_layer_is_active(const smlt_layer_t* self) {
     return reinterpret_cast<const smlt::Layer*>(self)->is_active();
 }
 
+smlt_layer_t* smlt_layer_set_viewport(smlt_layer_t* self, const smlt_viewport_t* v) {
+    return reinterpret_cast<smlt_layer_t*>((reinterpret_cast<smlt::Layer*>(self)->set_viewport((*reinterpret_cast<const smlt::Viewport*>(v)))));
+}
+
+smlt_layer_t* smlt_layer_set_target(smlt_layer_t* self, smlt_texture_t* t) {
+    return reinterpret_cast<smlt_layer_t*>((reinterpret_cast<smlt::Layer*>(self)->set_target((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(t)))));
+}
+
+smlt_layer_t* smlt_layer_set_clear_flags(smlt_layer_t* self, uint32_t viewport_clear_flags) {
+    return reinterpret_cast<smlt_layer_t*>((reinterpret_cast<smlt::Layer*>(self)->set_clear_flags(viewport_clear_flags)));
+}
+
+smlt_layer_t* smlt_layer_set_detail_level_distances(smlt_layer_t* self, float nearest_cutoff, float near_cutoff, float mid_cutoff, float far_cutoff) {
+    return reinterpret_cast<smlt_layer_t*>((reinterpret_cast<smlt::Layer*>(self)->set_detail_level_distances(nearest_cutoff, near_cutoff, mid_cutoff, far_cutoff)));
+}
+
 smlt_detail_level_t smlt_layer_detail_level_at_distance(const smlt_layer_t* self, float dist) {
     return static_cast<smlt_detail_level_t>(reinterpret_cast<const smlt::Layer*>(self)->detail_level_at_distance(dist));
 }
 
+smlt_layer_t* smlt_layer_set_name(smlt_layer_t* self, const char* name) {
+    return reinterpret_cast<smlt_layer_t*>((reinterpret_cast<smlt::Layer*>(self)->set_name(std::string(name ? name : ""))));
+}
+
 char* smlt_layer_name(const smlt_layer_t* self) {
     return smlt_c_strdup((reinterpret_cast<const smlt::Layer*>(self)->name()).c_str());
+}
+
+smlt_layer_t* smlt_layer_set_camera(smlt_layer_t* self, smlt_camera_t* c) {
+    return reinterpret_cast<smlt_layer_t*>((reinterpret_cast<smlt::Layer*>(self)->set_camera(reinterpret_cast<smlt::Camera*>(c))));
 }
 
 bool smlt_layer_is_complete(const smlt_layer_t* self) {

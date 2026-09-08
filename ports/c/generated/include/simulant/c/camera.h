@@ -24,6 +24,12 @@ void smlt_camera_set_orthographic_projection(smlt_camera_t* self, float left, fl
 float smlt_camera_set_orthographic_projection_from_height(smlt_camera_t* self, float desired_height_in_units, float ratio);
 bool smlt_camera_on_create(smlt_camera_t* self, const smlt_params_t* params);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::Camera as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_camera_t* smlt_stage_node_create_child_camera(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

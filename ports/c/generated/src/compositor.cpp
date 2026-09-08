@@ -6,8 +6,12 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/compositor.h"
+#include "simulant/nodes/camera.h"
+#include "simulant/layer.h"
 #include "simulant/renderers/renderer.h"
+#include "simulant/viewport.h"
 #include "simulant/nodes/stage_node.h"
+#include "simulant/texture.h"
 #include "simulant/window.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
@@ -18,8 +22,20 @@ void smlt_compositor_destroy(smlt_compositor_t* self) {
     delete reinterpret_cast<smlt::Compositor*>(self);
 }
 
+smlt_window_t* smlt_compositor_window(smlt_compositor_t* self) {
+    return reinterpret_cast<smlt_window_t*>(reinterpret_cast<smlt::Compositor*>(self)->window.get());
+}
+
 smlt_compositor_t* smlt_compositor_create(smlt_window_t* window) {
     return reinterpret_cast<smlt_compositor_t*>(new smlt::Compositor(reinterpret_cast<smlt::Window*>(window)));
+}
+
+smlt_layer_t* smlt_compositor_create_layer(smlt_compositor_t* self, smlt_stage_node_t* subtree, smlt_camera_t* camera, const smlt_viewport_t* viewport, smlt_texture_t* target, int32_t priority) {
+    return reinterpret_cast<smlt_layer_t*>((reinterpret_cast<smlt::Compositor*>(self)->create_layer(reinterpret_cast<smlt::StageNode*>(subtree), reinterpret_cast<smlt::Camera*>(camera), (*reinterpret_cast<const smlt::Viewport*>(viewport)), (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(target)), priority)));
+}
+
+smlt_layer_t* smlt_compositor_find_layer(smlt_compositor_t* self, const char* name) {
+    return reinterpret_cast<smlt_layer_t*>((reinterpret_cast<smlt::Compositor*>(self)->find_layer(std::string(name ? name : ""))));
 }
 
 void smlt_compositor_destroy_all_layers(smlt_compositor_t* self) {
@@ -40,6 +56,14 @@ void smlt_compositor_run(smlt_compositor_t* self) {
 
 void smlt_compositor_clean_destroyed_layers(smlt_compositor_t* self) {
     reinterpret_cast<smlt::Compositor*>(self)->clean_destroyed_layers();
+}
+
+void smlt_compositor_destroy_object(smlt_compositor_t* self, smlt_layer_t* pip) {
+    reinterpret_cast<smlt::Compositor*>(self)->destroy_object(reinterpret_cast<smlt::Layer*>(pip));
+}
+
+void smlt_compositor_destroy_object_immediately(smlt_compositor_t* self, smlt_layer_t* pipeline) {
+    reinterpret_cast<smlt::Compositor*>(self)->destroy_object_immediately(reinterpret_cast<smlt::Layer*>(pipeline));
 }
 
 } /* extern "C" */

@@ -7,6 +7,7 @@
 #include <memory>
 #include "simulant/renderers/batching/render_queue.h"
 #include "simulant/renderers/batching/renderable.h"
+#include "simulant/nodes/camera.h"
 #include "simulant/nodes/stage_node.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
@@ -19,6 +20,10 @@ void smlt_batcher_render_queue_destroy(smlt_batcher_render_queue_t* self) {
 
 smlt_batcher_render_queue_t* smlt_batcher_render_queue_create(void) {
     return reinterpret_cast<smlt_batcher_render_queue_t*>(new smlt::batcher::RenderQueue());
+}
+
+void smlt_batcher_render_queue_reset(smlt_batcher_render_queue_t* self, smlt_stage_node_t* stage, smlt_batcher_render_group_factory_t* render_group_factory, smlt_camera_t* camera) {
+    reinterpret_cast<smlt::batcher::RenderQueue*>(self)->reset(reinterpret_cast<smlt::StageNode*>(stage), reinterpret_cast<smlt::batcher::RenderGroupFactory*>(render_group_factory), reinterpret_cast<smlt::Camera*>(camera));
 }
 
 void smlt_batcher_render_queue_clear(smlt_batcher_render_queue_t* self) {

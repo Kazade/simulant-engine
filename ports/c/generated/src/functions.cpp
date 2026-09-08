@@ -36,10 +36,11 @@
 #include "simulant/meshes/submesh.h"
 #include "simulant/nodes/stage_node.h"
 #include "simulant/platform.h"
-#include "simulant/procedural/mesh/circle.h"
 #include "simulant/procedural/mesh/cube.h"
+#include "simulant/procedural/mesh/cylinder.h"
 #include "simulant/procedural/mesh/icosphere.h"
 #include "simulant/procedural/mesh/rectangle.h"
+#include "simulant/procedural/mesh/sphere.h"
 #include "simulant/renderers/batching/render_queue.h"
 #include "simulant/sound_driver.h"
 #include "simulant/texture.h"
@@ -406,10 +407,6 @@ smlt_application_t* smlt_get_app(void) {
     return reinterpret_cast<smlt_application_t*>((smlt::get_app()));
 }
 
-void smlt_terrain_recalculate_terrain_normals(smlt_mesh_t* terrain) {
-    smlt::terrain::recalculate_terrain_normals((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(terrain)));
-}
-
 void smlt_terrain_smooth_terrain(smlt_mesh_t* terrain, uint32_t iterations) {
     smlt::terrain::smooth_terrain((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(terrain)), iterations);
 }
@@ -438,12 +435,12 @@ void smlt_procedural_mesh_box(smlt_mesh_t* mesh, float width, float height, floa
     smlt::procedural::mesh::box((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(mesh)), width, height, depth, static_cast<smlt::procedural::MeshStyle>(style));
 }
 
-smlt_sub_mesh_t* smlt_procedural_mesh_circle(smlt_mesh_t* mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
-    return reinterpret_cast<smlt_sub_mesh_t*>((smlt::procedural::mesh::circle((*reinterpret_cast<smlt::Mesh*>(mesh)), diameter, point_count, x_offset, y_offset, z_offset)));
+void smlt_procedural_mesh_sphere(smlt_sub_mesh_t* mesh, float diameter, int32_t slices, int32_t stacks) {
+    smlt::procedural::mesh::sphere(reinterpret_cast<smlt::SubMesh*>(mesh), diameter, slices, stacks);
 }
 
-smlt_sub_mesh_t* smlt_procedural_mesh_circle_outline(smlt_mesh_t* mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset) {
-    return reinterpret_cast<smlt_sub_mesh_t*>((smlt::procedural::mesh::circle_outline((*reinterpret_cast<smlt::Mesh*>(mesh)), diameter, point_count, x_offset, y_offset, z_offset)));
+void smlt_procedural_mesh_cylinder(smlt_sub_mesh_t* submesh, float diameter, float length, int32_t segments, int32_t stacks) {
+    smlt::procedural::mesh::cylinder(reinterpret_cast<smlt::SubMesh*>(submesh), diameter, length, segments, stacks);
 }
 
 void smlt_procedural_mesh_icosphere(smlt_sub_mesh_t* out, float diameter, uint32_t subdivisions) {

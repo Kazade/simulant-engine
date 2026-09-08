@@ -11,6 +11,8 @@
 extern "C" {
 #endif
 
+smlt_generic_data_carrier_t* smlt_stage_node_data(smlt_stage_node_t* self);
+smlt_scene_t* smlt_stage_node_scene(smlt_stage_node_t* self);
 const smlt_stage_node_t* smlt_stage_node_find_descendent_with_id(const smlt_stage_node_t* self, unsigned int id);
 smlt_stage_node_t* smlt_stage_node_find_descendent_with_id_mut(smlt_stage_node_t* self, unsigned int id);
 bool smlt_stage_node_is_root(const smlt_stage_node_t* self);
@@ -74,6 +76,25 @@ void smlt_stage_node_set_precedence(smlt_stage_node_t* self, int16_t precedence)
 int16_t smlt_stage_node_precedence(const smlt_stage_node_t* self);
 const char* smlt_stage_node_node_type_name(const smlt_stage_node_t* self);
 smlt_transform_t* smlt_stage_node_get_transform(const smlt_stage_node_t* self);
+bool smlt_stage_node_destroy(smlt_stage_node_t* self);
+bool smlt_stage_node_destroy_immediately(smlt_stage_node_t* self);
+bool smlt_stage_node_is_destroyed(const smlt_stage_node_t* self);
+void smlt_stage_node_set_render_priority(smlt_stage_node_t* self, signed char priority);
+signed char smlt_stage_node_render_priority(const smlt_stage_node_t* self);
+void smlt_stage_node_set_name(smlt_stage_node_t* self, const char* name);
+char* smlt_stage_node_name(const smlt_stage_node_t* self);
+bool smlt_stage_node_has_name(const smlt_stage_node_t* self);
+smlt_vec3_t* smlt_stage_node_center(const smlt_stage_node_t* self);
+float smlt_stage_node_width(const smlt_stage_node_t* self);
+float smlt_stage_node_height(const smlt_stage_node_t* self);
+float smlt_stage_node_depth(const smlt_stage_node_t* self);
+float smlt_stage_node_half_width(const smlt_stage_node_t* self);
+float smlt_stage_node_half_height(const smlt_stage_node_t* self);
+float smlt_stage_node_half_depth(const smlt_stage_node_t* self);
+float smlt_stage_node_diameter(const smlt_stage_node_t* self);
+float smlt_stage_node_radius(const smlt_stage_node_t* self);
+bool smlt_stage_node_init(smlt_stage_node_t* self);
+void smlt_stage_node_clean_up(smlt_stage_node_t* self);
 
 /* This class is abstract in C++ (has pure virtual methods): no
  * smlt_..._create() is generated for it. Instances reached via

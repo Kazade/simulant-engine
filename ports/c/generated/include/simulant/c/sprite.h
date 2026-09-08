@@ -11,6 +11,8 @@
 extern "C" {
 #endif
 
+smlt_actor_t* smlt_sprite_actor(smlt_sprite_t* self);
+smlt_key_frame_animation_state_t* smlt_sprite_animations(smlt_sprite_t* self);
 const char* smlt_sprite_node_type_name(const smlt_sprite_t* self);
 bool smlt_sprite_on_create(smlt_sprite_t* self, const smlt_params_t* params);
 bool smlt_sprite_on_destroy(smlt_sprite_t* self);
@@ -27,6 +29,17 @@ void smlt_sprite_set_spritesheet_from_texture(smlt_sprite_t* self, smlt_texture_
 void smlt_sprite_flip_vertically(smlt_sprite_t* self, bool value);
 void smlt_sprite_flip_horizontally(smlt_sprite_t* self, bool value);
 const smlt_aabb_t* smlt_sprite_aabb(const smlt_sprite_t* self);
+void smlt_sprite_add_animation(smlt_sprite_t* self, const char* name, uint32_t start_frame, uint32_t end_frame, float fps);
+bool smlt_sprite_has_animations(const smlt_sprite_t* self);
+unsigned long smlt_sprite_animation_count(const smlt_sprite_t* self);
+void smlt_sprite_set_default_fps(smlt_sprite_t* self, float fps);
+float smlt_sprite_default_fps(const smlt_sprite_t* self);
+
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::Sprite as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_sprite_t* smlt_stage_node_create_child_sprite(smlt_stage_node_t* parent);
 
 #ifdef __cplusplus
 }

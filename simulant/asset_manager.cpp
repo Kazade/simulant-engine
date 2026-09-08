@@ -1091,6 +1091,10 @@ ParticleScriptPtr AssetManager::particle_script(AssetID id) {
     GET_X(ParticleScript, particle_script, particle_script_manager_);
 }
 
+const ParticleScriptPtr AssetManager::particle_script(AssetID id) const {
+    GET_X(ParticleScript, particle_script, particle_script_manager_);
+}
+
 std::size_t AssetManager::particle_script_count() const {
     return particle_script_manager_.count();
 }

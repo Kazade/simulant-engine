@@ -12,6 +12,8 @@ extern "C" {
 #endif
 
 void smlt_input_manager_destroy(smlt_input_manager_t* self);
+smlt_input_state_t* smlt_input_manager_state(smlt_input_manager_t* self);
+smlt_ui_keyboard_t* smlt_input_manager_onscreen_keyboard(smlt_input_manager_t* self);
 smlt_input_manager_t* smlt_input_manager_create(smlt_input_state_t* controller);
 smlt_input_axis_t* smlt_input_manager_new_axis(smlt_input_manager_t* self, const char* name);
 void smlt_input_manager_destroy_axises(smlt_input_manager_t* self, const char* name);

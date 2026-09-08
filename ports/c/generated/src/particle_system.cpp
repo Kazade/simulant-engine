@@ -13,6 +13,8 @@
 #include "simulant/nodes/particles/particle.h"
 #include "simulant/viewport.h"
 #include "simulant/assets/particle_script.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -84,6 +86,11 @@ void smlt_particle_system_set_space(smlt_particle_system_t* self, smlt_particle_
 
 smlt_particle_system_space_t smlt_particle_system_space(const smlt_particle_system_t* self) {
     return static_cast<smlt_particle_system_space_t>(reinterpret_cast<const smlt::ParticleSystem*>(self)->space());
+}
+
+smlt_particle_system_t* smlt_stage_node_create_child_particle_system(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::ParticleSystem>();
+    return reinterpret_cast<smlt_particle_system_t*>(node);
 }
 
 } /* extern "C" */

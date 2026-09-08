@@ -7,11 +7,14 @@
 #include <memory>
 #include "simulant/renderers/renderer.h"
 #include "simulant/color.h"
+#include "simulant/renderers/batching/render_queue.h"
 #include "simulant/renderers/batching/renderable.h"
+#include "simulant/nodes/camera.h"
 #include "simulant/viewport.h"
 #include "simulant/assets/material.h"
 #include "simulant/interfaces.h"
 #include "simulant/texture.h"
+#include "simulant/window.h"
 #include "simulant/types.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
@@ -20,6 +23,10 @@ extern "C" {
 
 void smlt_renderer_destroy(smlt_renderer_t* self) {
     delete reinterpret_cast<smlt::Renderer*>(self);
+}
+
+smlt_window_t* smlt_renderer_window(smlt_renderer_t* self) {
+    return reinterpret_cast<smlt_window_t*>(reinterpret_cast<smlt::Renderer*>(self)->window.get());
 }
 
 void smlt_renderer_init_context(smlt_renderer_t* self) {
@@ -58,7 +65,7 @@ unsigned long smlt_renderer_max_texture_size(const smlt_renderer_t* self) {
     return reinterpret_cast<const smlt::Renderer*>(self)->max_texture_size();
 }
 
-bool smlt_renderer_read_pixels(smlt_renderer_t* self, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint8_t* out_rgba) {
+bool smlt_renderer_read_pixels(smlt_renderer_t* self, uint32_t x, uint32_t y, uint32_t width, uint32_t height, unsigned char* out_rgba) {
     return reinterpret_cast<smlt::Renderer*>(self)->read_pixels(x, y, width, height, out_rgba);
 }
 
@@ -92,6 +99,10 @@ void smlt_renderer_prepare_texture(smlt_renderer_t* self, smlt_texture_t* textur
 
 void smlt_renderer_prepare_material(smlt_renderer_t* self, smlt_material_t* material) {
     reinterpret_cast<smlt::Renderer*>(self)->prepare_material(reinterpret_cast<smlt::Material*>(material));
+}
+
+smlt_batcher_render_group_key_t* smlt_renderer_prepare_render_group(smlt_renderer_t* self, smlt_batcher_render_group_t* group, const smlt_renderable_t* renderable, const smlt_material_pass_t* material_pass, signed char priority, uint8_t pass_number, bool is_blended, float distance_to_camera, uint16_t texture_id) {
+    return reinterpret_cast<smlt_batcher_render_group_key_t*>(new smlt::batcher::RenderGroupKey(reinterpret_cast<smlt::Renderer*>(self)->prepare_render_group(reinterpret_cast<smlt::batcher::RenderGroup*>(group), reinterpret_cast<const smlt::Renderable*>(renderable), reinterpret_cast<const smlt::MaterialPass*>(material_pass), priority, pass_number, is_blended, distance_to_camera, texture_id)));
 }
 
 } /* extern "C" */

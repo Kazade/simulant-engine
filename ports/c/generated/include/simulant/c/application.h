@@ -12,6 +12,18 @@ extern "C" {
 #endif
 
 void smlt_application_destroy(smlt_application_t* self);
+smlt_window_t* smlt_application_window(smlt_application_t* self);
+smlt_generic_data_carrier_t* smlt_application_data(smlt_application_t* self);
+smlt_scene_manager_t* smlt_application_scenes(smlt_application_t* self);
+smlt_arg_parser_t* smlt_application_args(smlt_application_t* self);
+smlt_app_config_t* smlt_application_config(smlt_application_t* self);
+smlt_shared_asset_manager_t* smlt_application_shared_assets(smlt_application_t* self);
+smlt_time_keeper_t* smlt_application_time_keeper(smlt_application_t* self);
+smlt_stats_recorder_t* smlt_application_stats(smlt_application_t* self);
+smlt_virtual_file_system_t* smlt_application_vfs(smlt_application_t* self);
+smlt_sound_driver_t* smlt_application_sound_driver(smlt_application_t* self);
+smlt_material_value_pool_t* smlt_application_material_value_pool(smlt_application_t* self);
+smlt_scene_t* smlt_application_overlay(smlt_application_t* self);
 bool smlt_application_profiling_enabled(const smlt_application_t* self);
 int32_t smlt_application_run(smlt_application_t* self);
 bool smlt_application_initialized(const smlt_application_t* self);
@@ -28,7 +40,7 @@ void smlt_application_stop_running(smlt_application_t* self);
 bool smlt_application_is_shutting_down(const smlt_application_t* self);
 void smlt_application_shutdown(smlt_application_t* self);
 bool smlt_application_activate_language(smlt_application_t* self, const char* language_code);
-bool smlt_application_activate_language_from_arb_data(smlt_application_t* self, const uint8_t* data, unsigned long byte_size);
+bool smlt_application_activate_language_from_arb_data(smlt_application_t* self, const unsigned char* data, unsigned long byte_size);
 char* smlt_application_active_language(const smlt_application_t* self);
 void* smlt_application_platform_state(smlt_application_t* self);
 void smlt_application_set_updates_enabled(smlt_application_t* self, unsigned int mask);

@@ -12,7 +12,9 @@ extern "C" {
 #endif
 
 void smlt_loaders_heightmap_loader_destroy(smlt_loaders_heightmap_loader_t* self);
+smlt_virtual_file_system_t* smlt_loaders_heightmap_loader_vfs(smlt_loaders_heightmap_loader_t* self);
 smlt_loaders_heightmap_loader_t* smlt_loaders_heightmap_loader_create(smlt_texture_t* texture);
+void smlt_loaders_heightmap_loader_set_vfs(smlt_loaders_heightmap_loader_t* self, smlt_virtual_file_system_t* locator);
 
 #ifdef __cplusplus
 }

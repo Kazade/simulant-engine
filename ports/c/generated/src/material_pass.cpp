@@ -12,6 +12,7 @@
 #include "simulant/math/vec2.h"
 #include "simulant/math/vec3.h"
 #include "simulant/math/vec4.h"
+#include "simulant/assets/materials/material_object.h"
 #include "simulant/texture.h"
 #include "simulant/types.h"
 #include "simulant/c/simulant_c.h"
@@ -55,7 +56,7 @@ bool smlt_material_pass_set_property_value_float(smlt_material_pass_t* self, uns
     return reinterpret_cast<smlt::MaterialPass*>(self)->set_property_value(hsh, name, (*value));
 }
 
-bool smlt_material_pass_set_property_value_int32(smlt_material_pass_t* self, unsigned int hsh, const char* name, const int32_t* value) {
+bool smlt_material_pass_set_property_value_int32(smlt_material_pass_t* self, unsigned int hsh, const char* name, const int* value) {
     return reinterpret_cast<smlt::MaterialPass*>(self)->set_property_value(hsh, name, (*value));
 }
 
@@ -309,6 +310,82 @@ void smlt_material_pass_set_stencil_ops(smlt_material_pass_t* self, smlt_stencil
 
 void smlt_material_pass_set_polygon_list_target(smlt_material_pass_t* self, smlt_polygon_list_target_t v) {
     reinterpret_cast<smlt::MaterialPass*>(self)->set_polygon_list_target(static_cast<smlt::PolygonListTarget>(v));
+}
+
+void smlt_material_pass_set_metallic_roughness_map(smlt_material_pass_t* self, smlt_texture_t* texture) {
+    reinterpret_cast<smlt::MaterialPass*>(self)->set_metallic_roughness_map((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(texture)));
+}
+
+void smlt_material_pass_set_base_color_map(smlt_material_pass_t* self, smlt_texture_t* texture) {
+    reinterpret_cast<smlt::MaterialPass*>(self)->set_base_color_map((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(texture)));
+}
+
+void smlt_material_pass_set_light_map(smlt_material_pass_t* self, smlt_texture_t* texture) {
+    reinterpret_cast<smlt::MaterialPass*>(self)->set_light_map((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(texture)));
+}
+
+void smlt_material_pass_set_normal_map(smlt_material_pass_t* self, smlt_texture_t* texture) {
+    reinterpret_cast<smlt::MaterialPass*>(self)->set_normal_map((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(texture)));
+}
+
+const smlt_mat4_t* smlt_material_pass_base_color_map_matrix(const smlt_material_pass_t* self) {
+    return reinterpret_cast<const smlt_mat4_t*>(&(reinterpret_cast<const smlt::MaterialPass*>(self)->base_color_map_matrix()));
+}
+
+const smlt_mat4_t* smlt_material_pass_light_map_matrix(const smlt_material_pass_t* self) {
+    return reinterpret_cast<const smlt_mat4_t*>(&(reinterpret_cast<const smlt::MaterialPass*>(self)->light_map_matrix()));
+}
+
+const smlt_mat4_t* smlt_material_pass_normal_map_matrix(const smlt_material_pass_t* self) {
+    return reinterpret_cast<const smlt_mat4_t*>(&(reinterpret_cast<const smlt::MaterialPass*>(self)->normal_map_matrix()));
+}
+
+const smlt_mat4_t* smlt_material_pass_metallic_roughness_map_matrix(const smlt_material_pass_t* self) {
+    return reinterpret_cast<const smlt_mat4_t*>(&(reinterpret_cast<const smlt::MaterialPass*>(self)->metallic_roughness_map_matrix()));
+}
+
+void smlt_material_pass_set_base_color_map_matrix(smlt_material_pass_t* self, const smlt_mat4_t* mat) {
+    reinterpret_cast<smlt::MaterialPass*>(self)->set_base_color_map_matrix((*reinterpret_cast<const smlt::Mat4*>(mat)));
+}
+
+void smlt_material_pass_set_light_map_matrix(smlt_material_pass_t* self, const smlt_mat4_t* mat) {
+    reinterpret_cast<smlt::MaterialPass*>(self)->set_light_map_matrix((*reinterpret_cast<const smlt::Mat4*>(mat)));
+}
+
+void smlt_material_pass_set_normal_map_matrix(smlt_material_pass_t* self, const smlt_mat4_t* mat) {
+    reinterpret_cast<smlt::MaterialPass*>(self)->set_normal_map_matrix((*reinterpret_cast<const smlt::Mat4*>(mat)));
+}
+
+void smlt_material_pass_set_metallic_roughness_map_matrix(smlt_material_pass_t* self, const smlt_mat4_t* mat) {
+    reinterpret_cast<smlt::MaterialPass*>(self)->set_metallic_roughness_map_matrix((*reinterpret_cast<const smlt::Mat4*>(mat)));
+}
+
+smlt_texture_t* smlt_material_pass_base_color_map(const smlt_material_pass_t* self) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>(reinterpret_cast<const smlt::MaterialPass*>(self)->base_color_map()));
+}
+
+smlt_texture_t* smlt_material_pass_light_map(const smlt_material_pass_t* self) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>(reinterpret_cast<const smlt::MaterialPass*>(self)->light_map()));
+}
+
+smlt_texture_t* smlt_material_pass_normal_map(const smlt_material_pass_t* self) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>(reinterpret_cast<const smlt::MaterialPass*>(self)->normal_map()));
+}
+
+smlt_texture_t* smlt_material_pass_metallic_roughness_map(const smlt_material_pass_t* self) {
+    return reinterpret_cast<smlt_texture_t*>(new std::shared_ptr<smlt::Texture>(reinterpret_cast<const smlt::MaterialPass*>(self)->metallic_roughness_map()));
+}
+
+const smlt_material_object_t* smlt_material_pass_parent_material_object(const smlt_material_pass_t* self) {
+    return reinterpret_cast<const smlt_material_object_t*>((reinterpret_cast<const smlt::MaterialPass*>(self)->parent_material_object()));
+}
+
+bool smlt_material_pass_clear_override(smlt_material_pass_t* self, const char* name) {
+    return reinterpret_cast<smlt::MaterialPass*>(self)->clear_override(name);
+}
+
+bool smlt_material_pass_check_existance(const smlt_material_pass_t* self, const char* property_name) {
+    return reinterpret_cast<const smlt::MaterialPass*>(self)->check_existance(property_name);
 }
 
 } /* extern "C" */

@@ -18,6 +18,11 @@ void smlt_panel_activate(smlt_panel_t* self);
 void smlt_panel_deactivate(smlt_panel_t* self);
 void smlt_panel_on_key_down(smlt_panel_t* self, const smlt_key_event_t* evt);
 void smlt_panel_set_activation_key(smlt_panel_t* self, smlt_keyboard_code_t code);
+void smlt_panel_handle_touch_begin(smlt_panel_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y, float pressure);
+void smlt_panel_handle_touch_end(smlt_panel_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y);
+void smlt_panel_handle_touch_move(smlt_panel_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y, float dx, float dy);
+void smlt_panel_handle_key_down(smlt_panel_t* self, smlt_window_t* window, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers);
+void smlt_panel_handle_key_up(smlt_panel_t* self, smlt_window_t* window, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers);
 
 /* This class is abstract in C++ (has pure virtual methods): no
  * smlt_..._create() is generated for it. Instances reached via

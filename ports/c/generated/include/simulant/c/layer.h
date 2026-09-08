@@ -12,15 +12,25 @@ extern "C" {
 #endif
 
 void smlt_layer_destroy(smlt_layer_t* self);
+smlt_viewport_t* smlt_layer_viewport(smlt_layer_t* self);
+smlt_layer_t* smlt_layer_create(smlt_compositor_t* render_sequence, smlt_stage_node_t* subtree, smlt_camera_t* camera);
+smlt_camera_t* smlt_layer_camera(const smlt_layer_t* self);
 smlt_stage_node_t* smlt_layer_stage_node(const smlt_layer_t* self);
 smlt_texture_t* smlt_layer_target(const smlt_layer_t* self);
 uint32_t smlt_layer_clear_flags(const smlt_layer_t* self);
 int32_t smlt_layer_priority(const smlt_layer_t* self);
+smlt_layer_t* smlt_layer_set_priority(smlt_layer_t* self, int32_t priority);
 void smlt_layer_deactivate(smlt_layer_t* self);
 void smlt_layer_activate(smlt_layer_t* self);
 bool smlt_layer_is_active(const smlt_layer_t* self);
+smlt_layer_t* smlt_layer_set_viewport(smlt_layer_t* self, const smlt_viewport_t* v);
+smlt_layer_t* smlt_layer_set_target(smlt_layer_t* self, smlt_texture_t* t);
+smlt_layer_t* smlt_layer_set_clear_flags(smlt_layer_t* self, uint32_t viewport_clear_flags);
+smlt_layer_t* smlt_layer_set_detail_level_distances(smlt_layer_t* self, float nearest_cutoff, float near_cutoff, float mid_cutoff, float far_cutoff);
 smlt_detail_level_t smlt_layer_detail_level_at_distance(const smlt_layer_t* self, float dist);
+smlt_layer_t* smlt_layer_set_name(smlt_layer_t* self, const char* name);
 char* smlt_layer_name(const smlt_layer_t* self);
+smlt_layer_t* smlt_layer_set_camera(smlt_layer_t* self, smlt_camera_t* c);
 bool smlt_layer_is_complete(const smlt_layer_t* self);
 void smlt_layer_set_activation_mode(smlt_layer_t* self, smlt_layer_activation_mode_t mode);
 smlt_layer_activation_mode_t smlt_layer_activation_mode(const smlt_layer_t* self);

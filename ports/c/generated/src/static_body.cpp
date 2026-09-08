@@ -11,6 +11,8 @@
 #include "simulant/math/vec3.h"
 #include "simulant/meshes/mesh.h"
 #include "simulant/nodes/physics/material.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -26,6 +28,11 @@ void smlt_static_body_add_mesh_collider(smlt_static_body_t* self, smlt_mesh_t* m
 
 const smlt_aabb_t* smlt_static_body_aabb(const smlt_static_body_t* self) {
     return reinterpret_cast<const smlt_aabb_t*>(&(reinterpret_cast<const smlt::StaticBody*>(self)->aabb()));
+}
+
+smlt_static_body_t* smlt_stage_node_create_child_static_body(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::StaticBody>();
+    return reinterpret_cast<smlt_static_body_t*>(node);
 }
 
 } /* extern "C" */

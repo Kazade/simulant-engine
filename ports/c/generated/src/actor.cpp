@@ -7,14 +7,21 @@
 #include <memory>
 #include "simulant/nodes/actor.h"
 #include "simulant/math/aabb.h"
+#include "simulant/animation.h"
 #include "simulant/meshes/mesh.h"
 #include "simulant/renderers/batching/render_queue.h"
 #include "simulant/nodes/camera.h"
 #include "simulant/viewport.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
 extern "C" {
+
+smlt_key_frame_animation_state_t* smlt_actor_animation_state(smlt_actor_t* self) {
+    return reinterpret_cast<smlt_key_frame_animation_state_t*>(reinterpret_cast<smlt::Actor*>(self)->animation_state.get());
+}
 
 const char* smlt_actor_node_type_name(const smlt_actor_t* self) {
     return reinterpret_cast<const smlt::Actor*>(self)->node_type_name();
@@ -66,6 +73,43 @@ void smlt_actor_use_material_slot(smlt_actor_t* self, smlt_material_slot_t var) 
 
 smlt_material_slot_t smlt_actor_active_material_slot(const smlt_actor_t* self) {
     return static_cast<smlt_material_slot_t>(reinterpret_cast<const smlt::Actor*>(self)->active_material_slot());
+}
+
+float smlt_actor_width(const smlt_actor_t* self) {
+    return reinterpret_cast<const smlt::Actor*>(self)->width();
+}
+
+float smlt_actor_height(const smlt_actor_t* self) {
+    return reinterpret_cast<const smlt::Actor*>(self)->height();
+}
+
+float smlt_actor_depth(const smlt_actor_t* self) {
+    return reinterpret_cast<const smlt::Actor*>(self)->depth();
+}
+
+float smlt_actor_half_width(const smlt_actor_t* self) {
+    return reinterpret_cast<const smlt::Actor*>(self)->half_width();
+}
+
+float smlt_actor_half_height(const smlt_actor_t* self) {
+    return reinterpret_cast<const smlt::Actor*>(self)->half_height();
+}
+
+float smlt_actor_half_depth(const smlt_actor_t* self) {
+    return reinterpret_cast<const smlt::Actor*>(self)->half_depth();
+}
+
+float smlt_actor_diameter(const smlt_actor_t* self) {
+    return reinterpret_cast<const smlt::Actor*>(self)->diameter();
+}
+
+float smlt_actor_radius(const smlt_actor_t* self) {
+    return reinterpret_cast<const smlt::Actor*>(self)->radius();
+}
+
+smlt_actor_t* smlt_stage_node_create_child_actor(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::Actor>();
+    return reinterpret_cast<smlt_actor_t*>(node);
 }
 
 } /* extern "C" */

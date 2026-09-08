@@ -6,8 +6,10 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/texture.h"
+#include "simulant/color.h"
 #include "simulant/path.h"
 #include "simulant/math/vec2.h"
+#include "simulant/asset_manager.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -39,10 +41,6 @@ bool smlt_texture_is_paletted_format(const smlt_texture_t* self) {
 
 uint32_t smlt_texture_palette_size(const smlt_texture_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Texture>*>(self))->palette_size();
-}
-
-bool smlt_texture_update_palette(smlt_texture_t* self, const uint8_t* palette) {
-    return (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->update_palette(palette);
 }
 
 bool smlt_texture_blur(smlt_texture_t* self, smlt_blur_type_t blur_type, unsigned long radius) {
@@ -93,7 +91,7 @@ void smlt_texture_set_mipmap_generation(smlt_texture_t* self, smlt_mipmap_genera
     (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->set_mipmap_generation(static_cast<smlt::MipmapGenerate>(type));
 }
 
-const uint8_t* smlt_texture_data(const smlt_texture_t* self) {
+const unsigned char* smlt_texture_data(const smlt_texture_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Texture>*>(self))->data();
 }
 
@@ -109,11 +107,11 @@ unsigned long smlt_texture_required_data_size(smlt_texture_format_t fmt, uint16_
     return smlt::Texture::required_data_size(static_cast<smlt::TextureFormat>(fmt), width, height);
 }
 
-void smlt_texture_set_data(smlt_texture_t* self, const uint8_t* data, unsigned long size) {
+void smlt_texture_set_data(smlt_texture_t* self, const unsigned char* data, unsigned long size) {
     (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->set_data(data, size);
 }
 
-uint8_t* smlt_texture_map_data(smlt_texture_t* self, unsigned long size) {
+unsigned char* smlt_texture_map_data(smlt_texture_t* self, unsigned long size) {
     return (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->map_data(size);
 }
 
@@ -221,12 +219,64 @@ void smlt_texture_set_has_mipmaps(smlt_texture_t* self, bool v) {
     (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->_set_has_mipmaps(v);
 }
 
-uint8_t* smlt_texture_stash_paletted_data(smlt_texture_t* self) {
+unsigned char* smlt_texture_stash_paletted_data(smlt_texture_t* self) {
     return (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->_stash_paletted_data();
 }
 
-void smlt_texture_adopt_data(smlt_texture_t* self, uint8_t* data, uint32_t size) {
+void smlt_texture_adopt_data(smlt_texture_t* self, unsigned char* data, uint32_t size) {
     (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->_adopt_data(data, size);
+}
+
+smlt_asset_manager_t* smlt_texture_asset_manager(smlt_texture_t* self) {
+    return reinterpret_cast<smlt_asset_manager_t*>(&((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->asset_manager()));
+}
+
+int smlt_texture_age(const smlt_texture_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Texture>*>(self))->age();
+}
+
+void smlt_texture_set_garbage_collection_method(smlt_texture_t* self, smlt_garbage_collect_method_t method) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->set_garbage_collection_method(static_cast<smlt::GarbageCollectMethod>(method));
+}
+
+smlt_path_t* smlt_texture_source(const smlt_texture_t* self) {
+    return reinterpret_cast<smlt_path_t*>(new smlt::Path((*reinterpret_cast<const std::shared_ptr<smlt::Texture>*>(self))->source()));
+}
+
+void smlt_texture_set_source(smlt_texture_t* self, const smlt_path_t* source) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->set_source((*reinterpret_cast<const smlt::Path*>(source)));
+}
+
+void smlt_texture_set_name(smlt_texture_t* self, const char* name) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->set_name(name);
+}
+
+char* smlt_texture_name(const smlt_texture_t* self) {
+    return smlt_c_strdup(((*reinterpret_cast<const std::shared_ptr<smlt::Texture>*>(self))->name()).c_str());
+}
+
+bool smlt_texture_has_name(const smlt_texture_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Texture>*>(self))->has_name();
+}
+
+void smlt_texture_set_clear_every_frame(smlt_texture_t* self, uint32_t clear_flags, const smlt_color_t* color) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->set_clear_every_frame(clear_flags, (*reinterpret_cast<const smlt::Color*>(color)));
+}
+
+uint32_t smlt_texture_clear_every_frame_flags(const smlt_texture_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Texture>*>(self))->clear_every_frame_flags();
+}
+
+smlt_color_t* smlt_texture_clear_every_frame_color(const smlt_texture_t* self) {
+    return reinterpret_cast<smlt_color_t*>(new smlt::Color((*reinterpret_cast<const std::shared_ptr<smlt::Texture>*>(self))->clear_every_frame_color()));
+}
+
+void smlt_texture_set_last_frame_rendered_id(smlt_texture_t* self, uint32_t id) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->set_last_frame_rendered_id(id);
+}
+
+const unsigned int* smlt_texture_last_frame_rendered_id(const smlt_texture_t* self) {
+    return &((*reinterpret_cast<const std::shared_ptr<smlt::Texture>*>(self))->last_frame_rendered_id());
 }
 
 } /* extern "C" */

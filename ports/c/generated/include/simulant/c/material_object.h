@@ -69,6 +69,11 @@ smlt_shade_model_t smlt_material_object_shade_model(const smlt_material_object_t
 smlt_color_material_t smlt_material_object_color_material(const smlt_material_object_t* self);
 void smlt_material_object_set_color_material(smlt_material_object_t* self, smlt_color_material_t cm);
 const smlt_material_object_t* smlt_material_object_parent_material_object(const smlt_material_object_t* self);
+bool smlt_material_object_set_property_value(smlt_material_object_t* self, unsigned int hsh, const char* name, const bool* value);
+bool smlt_material_object_clear_override(smlt_material_object_t* self, const char* name);
+bool smlt_material_object_check_existance(const smlt_material_object_t* self, const char* property_name);
+bool smlt_material_object_property_type(const smlt_material_object_t* self, const char* property_name, smlt_material_property_type_t* type);
+bool smlt_material_object_on_check_existence(const smlt_material_object_t* self, unsigned int hsh);
 
 /* This class is abstract in C++ (has pure virtual methods): no
  * smlt_..._create() is generated for it. Instances reached via

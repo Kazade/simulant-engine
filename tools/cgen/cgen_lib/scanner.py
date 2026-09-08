@@ -10,7 +10,7 @@ methods, a curated set of operators, and public fields; anything it can't
 map to a consistent C signature is dropped with a logged warning, not a
 hard failure.
 """
-from clang.cindex import AccessSpecifier, CursorKind
+from clang.cindex import AccessSpecifier, CursorKind, TypeKind
 
 from . import clangutil, log, naming
 from .ir import (ClassBinding, Enumerator, EnumBinding, FreeFunction, Method,
@@ -256,8 +256,42 @@ class Scanner:
                                    and not member.is_deleted_method())
                 break
 
+        # Distinct from has_managed_lifetime (also true for smlt::Asset):
+        # StageNode-derived classes additionally get real Vala inheritance
+        # instead of the ordinary flat [Compact] treatment (see
+        # HAND_WRITTEN_VALA_CLASSES in vapi_emitter.py). Scene (and its
+        # subclasses, e.g. scenes::Splash) are StageNode-derived too, but
+        # excluded here: Scene is its own separately hand-written class
+        # (constructed via register_scene<T>(), never create_child<T>()),
+        # not part of this generic node-hierarchy tree.
+        is_scene_or_subclass = qn == "smlt::Scene" or clangutil.is_derived_from(
+            cursor, "smlt::Scene", self._derived_from_cache)
+        is_stage_node_hierarchy = not is_scene_or_subclass and (
+            qn == "smlt::StageNode" or clangutil.is_derived_from(
+                cursor, "smlt::StageNode", self._derived_from_cache))
+        direct_base_qualified_name = ""
+        if is_stage_node_hierarchy and qn != "smlt::StageNode":
+            direct_base_qualified_name = clangutil.direct_base_in_chain(
+                cursor, "smlt::StageNode", self._derived_from_cache)
+
+        # Scanner-internal only (not part of the IR): whichever direct base
+        # continues this class's StageNode ancestry, if any -- reachable
+        # some other way already (real Vala inheritance for the hierarchy
+        # proper, or the hand-written as_stage_node() upcast for Scene), so
+        # _iter_inherited_public_members() below must not flatten it a
+        # second time. Distinct from direct_base_qualified_name, which is
+        # also used by vapi_emitter.py to decide Scene's *own* Vala base --
+        # Scene must not get one (see is_scene_or_subclass above), even
+        # though it still needs this same skip for the flattening pass.
+        stage_node_chain_skip = ""
+        if qn != "smlt::StageNode" and (is_stage_node_hierarchy or is_scene_or_subclass):
+            stage_node_chain_skip = clangutil.direct_base_in_chain(
+                cursor, "smlt::StageNode", self._derived_from_cache)
+
         binding = ClassBinding(cpp_qualified_name=qn, base_name=base_name, c_type=c_type,
-                                is_abstract=is_abstract, source_file=cursor.location.file.name)
+                                is_abstract=is_abstract, source_file=cursor.location.file.name,
+                                is_stage_node_hierarchy=is_stage_node_hierarchy,
+                                direct_base_qualified_name=direct_base_qualified_name)
 
         if uses_shared_ptr:
             # Named _release rather than _destroy: this deletes the
@@ -305,6 +339,24 @@ class Scanner:
         # is declared -- only explicit, user-declared constructors below
         # ever produce a _create().
 
+        # Every directly-declared CXX_METHOD/FIELD_DECL name, *regardless of
+        # access specifier* -- C++ name hiding doesn't care about access
+        # level, only scope: a private override still hides a public base
+        # method of the same name from unqualified lookup through a
+        # pointer statically typed as *this* class, it just also makes
+        # calling it here illegal. Missing this produced a real bug (found
+        # via a build failure, not a warning): SDL2Window overrides
+        # Window::initialize_virtual_screen()/_init_window()/_init_renderer()
+        # as *private*, so the public-members-only loop below never added
+        # them here, and the flattening pass then happily "found" Window's
+        # public version and generated a call that didn't compile (private
+        # within this context). Collected up front, before either loop
+        # needs it.
+        own_member_names = {
+            m.spelling for m in cursor.get_children()
+            if m.kind in (CursorKind.CXX_METHOD, CursorKind.FIELD_DECL)
+        }
+
         for member in cursor.get_children():
             if member.access_specifier != AccessSpecifier.PUBLIC:
                 continue
@@ -337,6 +389,30 @@ class Scanner:
 
             # nested CLASS_DECL/STRUCT_DECL/ENUM_DECL are handled by the
             # outer traversal in extract(), not here.
+
+        # Flatten public methods/fields inherited from any base *other*
+        # than the one this class's own Vala class already inherits from
+        # for free (see stage_node_chain_skip above and
+        # iter_inherited_public_members()'s docstring for why -- the
+        # Sprite/KeyFrameAnimated::add_animation() case this was written
+        # for). `seen_names` starts from this class's own directly-declared
+        # members: a same-named member declared directly here (bound or
+        # not) hides a base member of that name from ordinary unqualified
+        # C++ lookup exactly the same way, so flattening it too would
+        # either collide or silently call the wrong overload set.
+        seen_names = set(own_member_names)
+        for member in clangutil.iter_inherited_public_members(cursor, stage_node_chain_skip):
+            name = member.spelling
+            if name in seen_names:
+                continue
+            seen_names.add(name)
+            if self._ignored(member):
+                log.info(f"'{clangutil.qualified_name(member)}' is in the ignore list, skipping")
+                continue
+            if member.kind == CursorKind.CXX_METHOD:
+                self._try_bind_method(member, qn, base_name, c_type, method_candidates, uses_shared_ptr)
+            elif member.kind == CursorKind.FIELD_DECL:
+                self._try_bind_field(member, qn, base_name, c_type, binding, uses_shared_ptr)
 
         self._flush_overloads(ctor_candidates, binding.methods)
         for candidates in method_candidates.values():
@@ -452,7 +528,91 @@ class Scanner:
                         is_operator=is_operator)
         method_candidates.setdefault(proposed, []).append((proposed, method, member))
 
+    # Property<some_smart_ptr<T>>::get() (see simulant/generic/property.h's
+    # Getter specializations) all unwrap one level to return T* -- same as
+    # a plain T* member, just via .lock()/.get() first instead of a direct
+    # dereference. _property_target_type() below treats them uniformly.
+    _SMART_PTR_QUALIFIED_NAMES = {"std::unique_ptr", "std::shared_ptr", "std::weak_ptr"}
+
+    def _property_target_type(self, field_type):
+        """If `field_type` is `smlt::Property<MP>` for some *data* member
+        pointer MP (i.e. S_DEFINE_PROPERTY(name, &Class::field_), not
+        S_DEFINE_PROPERTY(name, &Class::some_method)), returns the clang
+        Type of whatever Property<MP>::get() returns a pointer *to* --
+        None if `field_type` isn't a Property<> specialization at all, or
+        MP turned out to be a member *function* pointer instead (already
+        handled by the ordinary method scan, since a function-backed
+        property is just a real method with a Property<> wrapper on top).
+        """
+        canon = field_type.get_canonical()
+        if canon.kind != TypeKind.RECORD or canon.get_num_template_arguments() != 1:
+            return None
+        decl = canon.get_declaration()
+        if decl is None or clangutil.qualified_name(decl) != "smlt::Property":
+            return None
+        member_ptr_type = canon.get_template_argument_type(0)
+        if member_ptr_type.kind != TypeKind.MEMBERPOINTER:
+            return None
+        value_type = member_ptr_type.get_pointee()
+        value_canon = value_type.get_canonical()
+        if value_canon.kind == TypeKind.POINTER:
+            return value_canon.get_pointee()
+        if value_canon.kind == TypeKind.RECORD:
+            value_decl = value_canon.get_declaration()
+            if (value_decl is not None
+                    and clangutil.qualified_name(value_decl) in self._SMART_PTR_QUALIFIED_NAMES
+                    and value_canon.get_num_template_arguments() >= 1):
+                # unique_ptr's canonical form carries 2 template args (T,
+                # its default_delete<T> deleter) even though only T is ever
+                # written explicitly; shared_ptr/weak_ptr report just 1.
+                # Either way T itself is always the first argument.
+                return value_canon.get_template_argument_type(0)
+            return value_type  # plain value member -- get() returns &member
+        return None  # primitive/enum/etc: Property<> over these is unused today
+
+    def _try_bind_property_field(self, member, qn, base_name, c_type, binding, uses_shared_ptr):
+        """Handles S_DEFINE_PROPERTY(name, &Class::field_) -- a Property<>
+        wrapping a private data member the scanner otherwise has no way to
+        reach (there's no real accessor method in the AST to bind, unlike
+        S_DEFINE_PROPERTY(name, &Class::get_method)). Property<>::get() is
+        public even when the wrapped member isn't (see property.h), so the
+        generated C++ body can call it directly with no friend access
+        needed. Returns True if it handled `member` (whether or not a
+        method was ultimately produced), False if `member` isn't a
+        Property<> field at all and the caller should fall back to
+        ordinary field handling.
+        """
+        field_name = member.spelling
+        ctx = f"{qn}::{field_name} (property)"
+        target_type = self._property_target_type(member.type)
+        if target_type is None:
+            return False
+
+        record_hit = self.type_mapper._record_info(target_type)
+        if record_hit is None:
+            log.warning(f"{ctx}: target type '{target_type.spelling}' is outside the "
+                        f"wrapped API, skipping")
+            return True
+        info, target_qn = record_hit
+        if info is None:
+            log.warning(f"{ctx}: target type '{target_qn}' is outside the wrapped API, skipping")
+            return True
+
+        c_name = naming.c_func_name(base_name, field_name)
+        receiver = self._self_receiver(qn, False, uses_shared_ptr)
+        binding.methods.append(Method(
+            cpp_name=field_name, c_name=c_name,
+            params=[Param("self", qn, f"{c_type}*", "")],
+            return_spec=ReturnSpec(
+                c_type=f"{info.c_type}*",
+                stmt_template=f"return reinterpret_cast<{info.c_type}*>({{call}});"),
+            call_expr=f"{receiver}->{field_name}.get()",
+        ))
+        return True
+
     def _try_bind_field(self, member, qn, base_name, c_type, binding, uses_shared_ptr):
+        if self._try_bind_property_field(member, qn, base_name, c_type, binding, uses_shared_ptr):
+            return
         field_name = member.spelling
         ctx = f"{qn}::{field_name} (field)"
         getter_name = naming.c_func_name(base_name, f"get_{field_name}")

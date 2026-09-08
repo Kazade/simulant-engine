@@ -9,10 +9,17 @@ namespace {
 
 class CScene: public smlt::Scene {
 public:
-    CScene(smlt::Window* window, smlt_scene_vtable_t vtable, void* user_data) :
+    CScene(smlt::Window* window, smlt_scene_vtable_t vtable, void* ctx) :
         Scene(window),
-        vtable_(vtable),
-        user_data_(user_data) {}
+        vtable_(vtable) {
+        user_data_ = vtable_.create_user_data ? vtable_.create_user_data(self(), ctx) : ctx;
+    }
+
+    ~CScene() override {
+        if(vtable_.delete_user_data) {
+            vtable_.delete_user_data(user_data_);
+        }
+    }
 
     void set_user_data(void* user_data) {
         user_data_ = user_data;
@@ -77,14 +84,14 @@ private:
 extern "C" {
 
 void smlt_scene_register_type(smlt_scene_manager_t* scene_manager, const char* name,
-                              const smlt_scene_vtable_t* vtable, void* user_data) {
+                              const smlt_scene_vtable_t* vtable, void* ctx) {
     auto* manager = reinterpret_cast<smlt::SceneManager*>(scene_manager);
     // Copied by value: register_scene()'s factory closure isn't invoked
     // until this route is first activated, by which point a vtable built
     // on the caller's stack (e.g. inside an init() callback) may already
     // be gone.
     smlt_scene_vtable_t vtable_copy = vtable ? *vtable : smlt_scene_vtable_t{};
-    manager->register_scene<CScene>(std::string(name), vtable_copy, user_data);
+    manager->register_scene<CScene>(std::string(name), vtable_copy, ctx);
 }
 
 void smlt_scene_manager_activate(smlt_scene_manager_t* self, const char* route) {
@@ -108,9 +115,12 @@ void* smlt_scene_get_user_data(const smlt_scene_t* self) {
     return scene ? scene->user_data() : nullptr;
 }
 
-smlt_asset_manager_t* smlt_scene_assets(smlt_scene_t* self) {
-    auto* scene = reinterpret_cast<smlt::Scene*>(self);
-    return reinterpret_cast<smlt_asset_manager_t*>(scene->assets.get());
+smlt_stage_node_t* smlt_scene_as_stage_node(smlt_scene_t* self) {
+    // Implicit Scene* -> StageNode* upcast, done in real C++ so the
+    // compiler applies whatever base-offset adjustment Scene's multiple
+    // inheritance actually needs (not assumed to be zero).
+    smlt::StageNode* node = reinterpret_cast<smlt::Scene*>(self);
+    return reinterpret_cast<smlt_stage_node_t*>(node);
 }
 
 } // extern "C"

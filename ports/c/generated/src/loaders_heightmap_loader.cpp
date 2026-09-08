@@ -9,6 +9,7 @@
 #include "simulant/path.h"
 #include "simulant/loadable.h"
 #include "simulant/texture.h"
+#include "simulant/vfs.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -18,8 +19,16 @@ void smlt_loaders_heightmap_loader_destroy(smlt_loaders_heightmap_loader_t* self
     delete reinterpret_cast<smlt::loaders::HeightmapLoader*>(self);
 }
 
+smlt_virtual_file_system_t* smlt_loaders_heightmap_loader_vfs(smlt_loaders_heightmap_loader_t* self) {
+    return reinterpret_cast<smlt_virtual_file_system_t*>(reinterpret_cast<smlt::loaders::HeightmapLoader*>(self)->vfs.get());
+}
+
 smlt_loaders_heightmap_loader_t* smlt_loaders_heightmap_loader_create(smlt_texture_t* texture) {
     return reinterpret_cast<smlt_loaders_heightmap_loader_t*>(new smlt::loaders::HeightmapLoader((*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(texture))));
+}
+
+void smlt_loaders_heightmap_loader_set_vfs(smlt_loaders_heightmap_loader_t* self, smlt_virtual_file_system_t* locator) {
+    reinterpret_cast<smlt::loaders::HeightmapLoader*>(self)->set_vfs(reinterpret_cast<smlt::VirtualFileSystem*>(locator));
 }
 
 } /* extern "C" */

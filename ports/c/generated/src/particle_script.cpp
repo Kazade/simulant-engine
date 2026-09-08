@@ -6,7 +6,10 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/assets/particle_script.h"
+#include "simulant/path.h"
+#include "simulant/asset_manager.h"
 #include "simulant/assets/material.h"
+#include "simulant/generic/data_carrier.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -14,6 +17,10 @@ extern "C" {
 
 void smlt_particle_script_release(smlt_particle_script_t* self) {
     delete reinterpret_cast<std::shared_ptr<smlt::ParticleScript>*>(self);
+}
+
+smlt_generic_data_carrier_t* smlt_particle_script_data(smlt_particle_script_t* self) {
+    return reinterpret_cast<smlt_generic_data_carrier_t*>((*reinterpret_cast<std::shared_ptr<smlt::ParticleScript>*>(self))->data.get());
 }
 
 const char* smlt_particle_script_asset_type_name(const smlt_particle_script_t* self) {
@@ -98,6 +105,38 @@ void smlt_particle_script_set_cull_each(smlt_particle_script_t* self, bool v) {
 
 void smlt_particle_script_set_material(smlt_particle_script_t* self, smlt_material_t* material) {
     (*reinterpret_cast<std::shared_ptr<smlt::ParticleScript>*>(self))->set_material((*reinterpret_cast<std::shared_ptr<smlt::Material>*>(material)));
+}
+
+smlt_asset_manager_t* smlt_particle_script_asset_manager(smlt_particle_script_t* self) {
+    return reinterpret_cast<smlt_asset_manager_t*>(&((*reinterpret_cast<std::shared_ptr<smlt::ParticleScript>*>(self))->asset_manager()));
+}
+
+int smlt_particle_script_age(const smlt_particle_script_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::ParticleScript>*>(self))->age();
+}
+
+void smlt_particle_script_set_garbage_collection_method(smlt_particle_script_t* self, smlt_garbage_collect_method_t method) {
+    (*reinterpret_cast<std::shared_ptr<smlt::ParticleScript>*>(self))->set_garbage_collection_method(static_cast<smlt::GarbageCollectMethod>(method));
+}
+
+smlt_path_t* smlt_particle_script_source(const smlt_particle_script_t* self) {
+    return reinterpret_cast<smlt_path_t*>(new smlt::Path((*reinterpret_cast<const std::shared_ptr<smlt::ParticleScript>*>(self))->source()));
+}
+
+void smlt_particle_script_set_source(smlt_particle_script_t* self, const smlt_path_t* source) {
+    (*reinterpret_cast<std::shared_ptr<smlt::ParticleScript>*>(self))->set_source((*reinterpret_cast<const smlt::Path*>(source)));
+}
+
+void smlt_particle_script_set_name(smlt_particle_script_t* self, const char* name) {
+    (*reinterpret_cast<std::shared_ptr<smlt::ParticleScript>*>(self))->set_name(name);
+}
+
+char* smlt_particle_script_name(const smlt_particle_script_t* self) {
+    return smlt_c_strdup(((*reinterpret_cast<const std::shared_ptr<smlt::ParticleScript>*>(self))->name()).c_str());
+}
+
+bool smlt_particle_script_has_name(const smlt_particle_script_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::ParticleScript>*>(self))->has_name();
 }
 
 } /* extern "C" */

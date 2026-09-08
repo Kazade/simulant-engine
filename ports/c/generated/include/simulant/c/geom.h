@@ -11,9 +11,24 @@
 extern "C" {
 #endif
 
+smlt_geom_culler_t* smlt_geom_culler(smlt_geom_t* self);
 const char* smlt_geom_node_type_name(const smlt_geom_t* self);
 const smlt_aabb_t* smlt_geom_aabb(const smlt_geom_t* self);
 bool smlt_geom_on_create(smlt_geom_t* self, const smlt_params_t* params);
+float smlt_geom_width(const smlt_geom_t* self);
+float smlt_geom_height(const smlt_geom_t* self);
+float smlt_geom_depth(const smlt_geom_t* self);
+float smlt_geom_half_width(const smlt_geom_t* self);
+float smlt_geom_half_height(const smlt_geom_t* self);
+float smlt_geom_half_depth(const smlt_geom_t* self);
+float smlt_geom_diameter(const smlt_geom_t* self);
+float smlt_geom_radius(const smlt_geom_t* self);
+
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::Geom as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_geom_t* smlt_stage_node_create_child_geom(smlt_stage_node_t* parent);
 
 #ifdef __cplusplus
 }

@@ -25,4 +25,40 @@ smlt_vec3_t* smlt_boundable_entity_center(const smlt_boundable_entity_t* self) {
     return reinterpret_cast<smlt_vec3_t*>(new smlt::Vec3(reinterpret_cast<const smlt::BoundableEntity*>(self)->center()));
 }
 
+const smlt_aabb_t* smlt_boundable_entity_aabb(const smlt_boundable_entity_t* self) {
+    return reinterpret_cast<const smlt_aabb_t*>(&(reinterpret_cast<const smlt::BoundableEntity*>(self)->aabb()));
+}
+
+float smlt_boundable_entity_width(const smlt_boundable_entity_t* self) {
+    return reinterpret_cast<const smlt::BoundableEntity*>(self)->width();
+}
+
+float smlt_boundable_entity_height(const smlt_boundable_entity_t* self) {
+    return reinterpret_cast<const smlt::BoundableEntity*>(self)->height();
+}
+
+float smlt_boundable_entity_depth(const smlt_boundable_entity_t* self) {
+    return reinterpret_cast<const smlt::BoundableEntity*>(self)->depth();
+}
+
+float smlt_boundable_entity_half_width(const smlt_boundable_entity_t* self) {
+    return reinterpret_cast<const smlt::BoundableEntity*>(self)->half_width();
+}
+
+float smlt_boundable_entity_half_height(const smlt_boundable_entity_t* self) {
+    return reinterpret_cast<const smlt::BoundableEntity*>(self)->half_height();
+}
+
+float smlt_boundable_entity_half_depth(const smlt_boundable_entity_t* self) {
+    return reinterpret_cast<const smlt::BoundableEntity*>(self)->half_depth();
+}
+
+float smlt_boundable_entity_diameter(const smlt_boundable_entity_t* self) {
+    return reinterpret_cast<const smlt::BoundableEntity*>(self)->diameter();
+}
+
+float smlt_boundable_entity_radius(const smlt_boundable_entity_t* self) {
+    return reinterpret_cast<const smlt::BoundableEntity*>(self)->radius();
+}
+
 } /* extern "C" */

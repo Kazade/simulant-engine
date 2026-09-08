@@ -24,6 +24,12 @@ void smlt_animation_controller_seek(smlt_animation_controller_t* self, float tim
 float smlt_animation_controller_animation_duration(const smlt_animation_controller_t* self, const char* animation);
 void smlt_animation_controller_push_animation(smlt_animation_controller_t* self, const smlt_animation_t* a);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::AnimationController as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_animation_controller_t* smlt_stage_node_create_child_animation_controller(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 void smlt_sound_release(smlt_sound_t* self);
+smlt_generic_data_carrier_t* smlt_sound_data(smlt_sound_t* self);
 const char* smlt_sound_asset_type_name(const smlt_sound_t* self);
 uint64_t smlt_sound_estimated_size_in_bytes(const smlt_sound_t* self);
 uint32_t smlt_sound_sample_rate(const smlt_sound_t* self);
@@ -23,6 +24,14 @@ uint8_t smlt_sound_channels(const smlt_sound_t* self);
 void smlt_sound_set_channels(smlt_sound_t* self, uint8_t ch);
 unsigned long smlt_sound_stream_length(const smlt_sound_t* self);
 smlt_sound_driver_t* smlt_sound_driver(const smlt_sound_t* self);
+smlt_asset_manager_t* smlt_sound_asset_manager(smlt_sound_t* self);
+int smlt_sound_age(const smlt_sound_t* self);
+void smlt_sound_set_garbage_collection_method(smlt_sound_t* self, smlt_garbage_collect_method_t method);
+smlt_path_t* smlt_sound_source(const smlt_sound_t* self);
+void smlt_sound_set_source(smlt_sound_t* self, const smlt_path_t* source);
+void smlt_sound_set_name(smlt_sound_t* self, const char* name);
+char* smlt_sound_name(const smlt_sound_t* self);
+bool smlt_sound_has_name(const smlt_sound_t* self);
 
 #ifdef __cplusplus
 }

@@ -13,6 +13,7 @@ extern "C" {
 
 void smlt_thread_promise_failed_error_destroy(smlt_thread_promise_failed_error_t* self);
 smlt_thread_promise_failed_error_t* smlt_thread_promise_failed_error_create(void);
+const char* smlt_thread_promise_failed_error_what(const smlt_thread_promise_failed_error_t* self);
 
 #ifdef __cplusplus
 }

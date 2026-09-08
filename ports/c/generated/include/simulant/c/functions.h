@@ -98,7 +98,6 @@ bool smlt_has_spaces(const char* s);
 void smlt_params_set(smlt_params_t* params, const smlt_node_param_t* p, const char* x);
 void smlt_calculate_ratios_from_viewport(smlt_viewport_type_t type, float* x, float* y, float* width, float* height);
 smlt_application_t* smlt_get_app(void);
-void smlt_terrain_recalculate_terrain_normals(smlt_mesh_t* terrain);
 void smlt_terrain_smooth_terrain(smlt_mesh_t* terrain, uint32_t iterations);
 unsigned long smlt_polylist_max(unsigned long a, unsigned long b);
 smlt_sub_mesh_t* smlt_procedural_mesh_new_rectangle_submesh(smlt_mesh_t* mesh, smlt_material_t* mat, float width, float height, float x_offset, float y_offset, float z_offset);
@@ -106,8 +105,8 @@ smlt_sub_mesh_t* smlt_procedural_mesh_rectangle(smlt_mesh_t* mesh, smlt_material
 smlt_sub_mesh_t* smlt_procedural_mesh_rectangle_outline(smlt_mesh_t* mesh, smlt_material_t* material, float width, float height, float x_offset, float y_offset, float z_offset, bool clear);
 void smlt_procedural_mesh_cube(smlt_mesh_t* mesh, float width, smlt_procedural_mesh_style_t style);
 void smlt_procedural_mesh_box(smlt_mesh_t* mesh, float width, float height, float depth, smlt_procedural_mesh_style_t style);
-smlt_sub_mesh_t* smlt_procedural_mesh_circle(smlt_mesh_t* mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset);
-smlt_sub_mesh_t* smlt_procedural_mesh_circle_outline(smlt_mesh_t* mesh, float diameter, int32_t point_count, float x_offset, float y_offset, float z_offset);
+void smlt_procedural_mesh_sphere(smlt_sub_mesh_t* mesh, float diameter, int32_t slices, int32_t stacks);
+void smlt_procedural_mesh_cylinder(smlt_sub_mesh_t* submesh, float diameter, float length, int32_t segments, int32_t stacks);
 void smlt_procedural_mesh_icosphere(smlt_sub_mesh_t* out, float diameter, uint32_t subdivisions);
 smlt_platform_t* smlt_get_platform(void);
 

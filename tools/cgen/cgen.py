@@ -185,7 +185,11 @@ def main(argv=None):
 
     if args.vapi and not args.no_vapi:
         os.makedirs(os.path.dirname(os.path.abspath(args.vapi)), exist_ok=True)
-        VapiEmitter(namespace=args.vapi_namespace).write(ir, args.vapi)
+        vapi_emitter = VapiEmitter(namespace=args.vapi_namespace)
+        vapi_emitter.write(ir, args.vapi)
+        vala_dir = os.path.dirname(os.path.abspath(args.vapi))
+        vapi_emitter.write_managed_classes(ir, os.path.join(vala_dir, "generated"),
+                                           os.path.join(vala_dir, "runtime", "custom"))
 
     log.status(f"done: {log.warning_count()} warning(s), {log.error_count()} error(s)")
 

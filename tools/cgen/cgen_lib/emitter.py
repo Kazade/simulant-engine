@@ -115,6 +115,16 @@ class Emitter:
         self._write_file(path, "\n".join(lines))
 
     # ------------------------------------------------------------------ class header/source
+    def _create_child_factory_name(self, cls):
+        return f"smlt_stage_node_create_child_{cls.base_name}"
+
+    def _wants_create_child_factory(self, cls):
+        # StageNode itself has no "create a child StageNode" -- there's no
+        # concrete type to construct. Abstract classes (Light,
+        # ContainerNode, ...) can't be create_child<T>()'d directly either
+        # -- only their concrete leaf subclasses.
+        return cls.is_stage_node_hierarchy and cls.cpp_qualified_name != "smlt::StageNode" and not cls.is_abstract
+
     def _write_class_header(self, cls):
         path = os.path.join(self.include_dir, f"{cls.base_name}.h")
         lines = [HEADER_BANNER, "#pragma once", "", '#include "simulant/c/types.h"', "",
@@ -126,6 +136,13 @@ class Emitter:
             lines.append("/* This class is abstract in C++ (has pure virtual methods): no")
             lines.append(" * smlt_..._create() is generated for it. Instances reached via")
             lines.append(" * other API calls can still be used with the functions above. */")
+        if self._wants_create_child_factory(cls):
+            lines.append("")
+            lines.append("/* StageNode::create_child<T>() equivalent: constructs a new")
+            lines.append(f" * {cls.cpp_qualified_name} as a child of `parent` (any StageNode,")
+            lines.append(" * including a Scene). Manager-owned like every StageNode -- release")
+            lines.append(" * with smlt_stage_node_destroy(), not a type-specific destroy. */")
+            lines.append(f"{cls.c_type}* {self._create_child_factory_name(cls)}(smlt_stage_node_t* parent);")
         lines.append("")
         lines.append(C_LINKAGE_CLOSE)
         self._write_file(path, "\n".join(lines))
@@ -133,6 +150,13 @@ class Emitter:
     def _write_class_source(self, cls):
         path = os.path.join(self.src_dir, f"{cls.base_name}.cpp")
         includes = [cls.source_file] + list(cls.extra_includes)
+        if self._wants_create_child_factory(cls):
+            # For StageNode::create_child<T>(), used by the factory below --
+            # its template body needs smlt::Scene complete (it's only
+            # forward-declared from stage_node.h itself), matching why
+            # stage_node_ext.cpp includes scenes/scene.h too.
+            includes.append(os.path.join(self.repo_root, "simulant", "nodes", "stage_node.h"))
+            includes.append(os.path.join(self.repo_root, "simulant", "scenes", "scene.h"))
         include_lines = [f'#include "{_rel_include(inc, self.repo_root)}"' for inc in includes]
         # <cstdint>/<cstddef> unconditionally: a header may only compile in
         # the real engine because something included earlier already
@@ -145,6 +169,14 @@ class Emitter:
             body = m.return_spec.stmt_template.format(call=m.call_expr)
             lines.append(f"{m.return_spec.c_type} {m.c_name}({_param_decl_list(m.params)}) {{")
             lines.append(f"    {body}")
+            lines.append("}")
+            lines.append("")
+        if self._wants_create_child_factory(cls):
+            factory = self._create_child_factory_name(cls)
+            lines.append(f"{cls.c_type}* {factory}(smlt_stage_node_t* parent) {{")
+            lines.append(f"    auto* node = reinterpret_cast<smlt::StageNode*>(parent)"
+                         f"->create_child<{cls.cpp_qualified_name}>();")
+            lines.append(f"    return reinterpret_cast<{cls.c_type}*>(node);")
             lines.append("}")
             lines.append("")
         lines.append("} /* extern \"C\" */")

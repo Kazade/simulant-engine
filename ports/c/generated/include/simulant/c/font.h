@@ -12,7 +12,8 @@ extern "C" {
 #endif
 
 void smlt_font_release(smlt_font_t* self);
-char* smlt_font_generate_name(const char* family, const uint16_t* size, smlt_font_weight_t weight, smlt_font_style_t style);
+smlt_generic_data_carrier_t* smlt_font_data(smlt_font_t* self);
+char* smlt_font_generate_name(const char* family, const unsigned short* size, smlt_font_weight_t weight, smlt_font_style_t style);
 const char* smlt_font_asset_type_name(const smlt_font_t* self);
 uint64_t smlt_font_estimated_size_in_bytes(const smlt_font_t* self);
 bool smlt_font_on_init(smlt_font_t* self);
@@ -22,6 +23,14 @@ uint16_t smlt_font_size(const smlt_font_t* self);
 int16_t smlt_font_ascent(const smlt_font_t* self);
 int16_t smlt_font_descent(const smlt_font_t* self);
 int16_t smlt_font_line_gap(const smlt_font_t* self);
+smlt_asset_manager_t* smlt_font_asset_manager(smlt_font_t* self);
+int smlt_font_age(const smlt_font_t* self);
+void smlt_font_set_garbage_collection_method(smlt_font_t* self, smlt_garbage_collect_method_t method);
+smlt_path_t* smlt_font_source(const smlt_font_t* self);
+void smlt_font_set_source(smlt_font_t* self, const smlt_path_t* source);
+void smlt_font_set_name(smlt_font_t* self, const char* name);
+char* smlt_font_name(const smlt_font_t* self);
+bool smlt_font_has_name(const smlt_font_t* self);
 
 #ifdef __cplusplus
 }

@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 void smlt_scene_load_exception_destroy(smlt_scene_load_exception_t* self);
+const char* smlt_scene_load_exception_what(const smlt_scene_load_exception_t* self);
 
 #ifdef __cplusplus
 }

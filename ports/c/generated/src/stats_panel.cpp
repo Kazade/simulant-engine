@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/nodes/stats_panel.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -21,6 +23,11 @@ bool smlt_stats_panel_on_init(smlt_stats_panel_t* self) {
 
 void smlt_stats_panel_on_clean_up(smlt_stats_panel_t* self) {
     reinterpret_cast<smlt::StatsPanel*>(self)->on_clean_up();
+}
+
+smlt_stats_panel_t* smlt_stage_node_create_child_stats_panel(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::StatsPanel>();
+    return reinterpret_cast<smlt_stats_panel_t*>(node);
 }
 
 } /* extern "C" */

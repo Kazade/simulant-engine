@@ -15,4 +15,8 @@ void smlt_scene_load_exception_destroy(smlt_scene_load_exception_t* self) {
     delete reinterpret_cast<smlt::SceneLoadException*>(self);
 }
 
+const char* smlt_scene_load_exception_what(const smlt_scene_load_exception_t* self) {
+    return reinterpret_cast<const smlt::SceneLoadException*>(self)->what();
+}
+
 } /* extern "C" */

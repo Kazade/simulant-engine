@@ -12,6 +12,8 @@ extern "C" {
 #endif
 
 void smlt_sub_mesh_destroy(smlt_sub_mesh_t* self);
+smlt_mesh_t* smlt_sub_mesh_mesh(smlt_sub_mesh_t* self);
+smlt_index_data_t* smlt_sub_mesh_index_data(smlt_sub_mesh_t* self);
 smlt_sub_mesh_t* smlt_sub_mesh_create(smlt_mesh_t* parent, const char* name, smlt_material_t* material, smlt_mesh_arrangement_t arrangement);
 smlt_submesh_type_t smlt_sub_mesh_type(const smlt_sub_mesh_t* self);
 bool smlt_sub_mesh_add_vertex_range(smlt_sub_mesh_t* self, uint32_t start, uint32_t count);
@@ -30,6 +32,9 @@ void smlt_sub_mesh_set_base_color(smlt_sub_mesh_t* self, const smlt_color_t* col
 void smlt_sub_mesh_set_contributes_to_edge_list(smlt_sub_mesh_t* self, bool v);
 bool smlt_sub_mesh_contributes_to_edge_list(const smlt_sub_mesh_t* self);
 const smlt_aabb_t* smlt_sub_mesh_aabb(const smlt_sub_mesh_t* self);
+void smlt_sub_mesh_set_name(smlt_sub_mesh_t* self, const char* name);
+char* smlt_sub_mesh_name(const smlt_sub_mesh_t* self);
+bool smlt_sub_mesh_has_name(const smlt_sub_mesh_t* self);
 
 #ifdef __cplusplus
 }

@@ -6,6 +6,9 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/font.h"
+#include "simulant/path.h"
+#include "simulant/asset_manager.h"
+#include "simulant/generic/data_carrier.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -15,7 +18,11 @@ void smlt_font_release(smlt_font_t* self) {
     delete reinterpret_cast<std::shared_ptr<smlt::Font>*>(self);
 }
 
-char* smlt_font_generate_name(const char* family, const uint16_t* size, smlt_font_weight_t weight, smlt_font_style_t style) {
+smlt_generic_data_carrier_t* smlt_font_data(smlt_font_t* self) {
+    return reinterpret_cast<smlt_generic_data_carrier_t*>((*reinterpret_cast<std::shared_ptr<smlt::Font>*>(self))->data.get());
+}
+
+char* smlt_font_generate_name(const char* family, const unsigned short* size, smlt_font_weight_t weight, smlt_font_style_t style) {
     return smlt_c_strdup((smlt::Font::generate_name(std::string(family ? family : ""), (*size), static_cast<smlt::FontWeight>(weight), static_cast<smlt::FontStyle>(style))).c_str());
 }
 
@@ -53,6 +60,38 @@ int16_t smlt_font_descent(const smlt_font_t* self) {
 
 int16_t smlt_font_line_gap(const smlt_font_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Font>*>(self))->line_gap();
+}
+
+smlt_asset_manager_t* smlt_font_asset_manager(smlt_font_t* self) {
+    return reinterpret_cast<smlt_asset_manager_t*>(&((*reinterpret_cast<std::shared_ptr<smlt::Font>*>(self))->asset_manager()));
+}
+
+int smlt_font_age(const smlt_font_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Font>*>(self))->age();
+}
+
+void smlt_font_set_garbage_collection_method(smlt_font_t* self, smlt_garbage_collect_method_t method) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Font>*>(self))->set_garbage_collection_method(static_cast<smlt::GarbageCollectMethod>(method));
+}
+
+smlt_path_t* smlt_font_source(const smlt_font_t* self) {
+    return reinterpret_cast<smlt_path_t*>(new smlt::Path((*reinterpret_cast<const std::shared_ptr<smlt::Font>*>(self))->source()));
+}
+
+void smlt_font_set_source(smlt_font_t* self, const smlt_path_t* source) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Font>*>(self))->set_source((*reinterpret_cast<const smlt::Path*>(source)));
+}
+
+void smlt_font_set_name(smlt_font_t* self, const char* name) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Font>*>(self))->set_name(name);
+}
+
+char* smlt_font_name(const smlt_font_t* self) {
+    return smlt_c_strdup(((*reinterpret_cast<const std::shared_ptr<smlt::Font>*>(self))->name()).c_str());
+}
+
+bool smlt_font_has_name(const smlt_font_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Font>*>(self))->has_name();
 }
 
 } /* extern "C" */

@@ -18,6 +18,10 @@ void smlt_loader_destroy(smlt_loader_t* self) {
     delete reinterpret_cast<smlt::Loader*>(self);
 }
 
+smlt_virtual_file_system_t* smlt_loader_vfs(smlt_loader_t* self) {
+    return reinterpret_cast<smlt_virtual_file_system_t*>(reinterpret_cast<smlt::Loader*>(self)->vfs.get());
+}
+
 void smlt_loader_set_vfs(smlt_loader_t* self, smlt_virtual_file_system_t* locator) {
     reinterpret_cast<smlt::Loader*>(self)->set_vfs(reinterpret_cast<smlt::VirtualFileSystem*>(locator));
 }

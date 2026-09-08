@@ -44,7 +44,7 @@ smlt_hat_position_t smlt_game_controller_hat_state(const smlt_game_controller_t*
     return static_cast<smlt_hat_position_t>(reinterpret_cast<const smlt::GameController*>(self)->hat_state(hat));
 }
 
-const uint8_t* smlt_game_controller_platform_data(const smlt_game_controller_t* self) {
+const unsigned char* smlt_game_controller_platform_data(const smlt_game_controller_t* self) {
     return reinterpret_cast<const smlt::GameController*>(self)->platform_data();
 }
 

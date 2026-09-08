@@ -44,9 +44,15 @@ def _normalize(spelling: str) -> str:
 
 
 def _is_std_string(t) -> bool:
+    # Checked against both sugared (`std::string`) and canonical spellings.
+    # The canonical form expands the full template argument list (char
+    # traits, allocator) and may or may not carry the __cxx11 inline
+    # namespace depending on the active libstdc++ ABI, so this is a prefix
+    # match rather than a fixed set of exact spellings.
     s = _normalize(t.spelling)
-    return s in ("std::string", "std::__cxx11::string", "std::__cxx11::basic_string<char>",
-                 "basic_string<char>")
+    if s in ("std::string", "std::__cxx11::string"):
+        return True
+    return s.startswith("std::__cxx11::basic_string<char") or s.startswith("std::basic_string<char")
 
 
 class Unsupported(Exception):
@@ -148,19 +154,26 @@ class TypeMapper:
         """Raises Unsupported(reason) if the type can't be bound."""
         t = clang_type
         spelling = t.spelling
+        # A typedef'd pointer/reference (CameraPtr, StageNodePtr, ...) has
+        # TypeKind.TYPEDEF here, not POINTER/LVALUEREFERENCE -- same story
+        # as size_t/uint32_t needing canonicalization in _is_primitivelike.
+        # Route on the canonical kind so these aren't missed entirely; the
+        # pointee is likewise taken from the canonical type so it's fully
+        # unwrapped too.
+        canon_kind = t.get_canonical().kind
 
-        if t.kind == TypeKind.RVALUEREFERENCE:
+        if canon_kind == TypeKind.RVALUEREFERENCE:
             raise Unsupported(f"rvalue reference parameter '{name}' ({spelling})")
 
-        if t.kind == TypeKind.LVALUEREFERENCE:
-            pointee = t.get_pointee()
+        if canon_kind == TypeKind.LVALUEREFERENCE:
+            pointee = t.get_canonical().get_pointee()
             return self._bind_indirect_param(pointee, name, spelling, ctx, was_ref=True)
 
-        if t.kind == TypeKind.POINTER:
-            pointee = t.get_pointee()
+        if canon_kind == TypeKind.POINTER:
+            pointee = t.get_canonical().get_pointee()
             return self._bind_indirect_param(pointee, name, spelling, ctx, was_ref=False)
 
-        if t.kind in (TypeKind.CONSTANTARRAY, TypeKind.INCOMPLETEARRAY, TypeKind.VARIABLEARRAY):
+        if canon_kind in (TypeKind.CONSTANTARRAY, TypeKind.INCOMPLETEARRAY, TypeKind.VARIABLEARRAY):
             raise Unsupported(f"array parameter '{name}' ({spelling})")
 
         if self._is_primitivelike(t):
@@ -259,18 +272,22 @@ class TypeMapper:
         """Raises Unsupported(reason) if the type can't be bound."""
         t = clang_type
         spelling = t.spelling
+        # See the matching comment in bind_param: route on the canonical
+        # kind so a typedef'd pointer/reference (CameraPtr, LayerPtr, ...)
+        # isn't missed just because Type.kind reports TYPEDEF for it.
+        canon_kind = t.get_canonical().kind
 
-        if t.kind == TypeKind.VOID:
+        if canon_kind == TypeKind.VOID:
             return ReturnSpec(c_type="void", stmt_template="{call};")
 
-        if t.kind == TypeKind.RVALUEREFERENCE:
+        if canon_kind == TypeKind.RVALUEREFERENCE:
             raise Unsupported(f"function returns an rvalue reference ({spelling})")
 
-        if t.kind in (TypeKind.LVALUEREFERENCE, TypeKind.POINTER):
-            pointee = t.get_pointee()
-            return self._bind_indirect_return(pointee, spelling, was_pointer=(t.kind == TypeKind.POINTER))
+        if canon_kind in (TypeKind.LVALUEREFERENCE, TypeKind.POINTER):
+            pointee = t.get_canonical().get_pointee()
+            return self._bind_indirect_return(pointee, spelling, was_pointer=(canon_kind == TypeKind.POINTER))
 
-        if t.kind in (TypeKind.CONSTANTARRAY, TypeKind.INCOMPLETEARRAY):
+        if canon_kind in (TypeKind.CONSTANTARRAY, TypeKind.INCOMPLETEARRAY):
             raise Unsupported(f"function returns an array ({spelling})")
 
         if self._is_primitivelike(t):

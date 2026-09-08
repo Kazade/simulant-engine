@@ -8,6 +8,8 @@
 #include "simulant/nodes/ui/keyboard.h"
 #include "simulant/nodes/ui/text_entry.h"
 #include "simulant/font.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -87,6 +89,11 @@ void smlt_ui_keyboard_set_font(smlt_ui_keyboard_t* self, smlt_font_t* font) {
 
 smlt_ui_text_entry_t* smlt_ui_keyboard_entry(smlt_ui_keyboard_t* self) {
     return reinterpret_cast<smlt_ui_text_entry_t*>((reinterpret_cast<smlt::ui::Keyboard*>(self)->entry()));
+}
+
+smlt_ui_keyboard_t* smlt_stage_node_create_child_ui_keyboard(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::ui::Keyboard>();
+    return reinterpret_cast<smlt_ui_keyboard_t*>(node);
 }
 
 } /* extern "C" */

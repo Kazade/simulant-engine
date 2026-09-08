@@ -100,14 +100,4 @@ void* smlt_application_get_user_data(const smlt_application_t* self) {
     return app ? app->user_data() : nullptr;
 }
 
-smlt_scene_manager_t* smlt_application_scenes(smlt_application_t* self) {
-    auto* app = reinterpret_cast<smlt::Application*>(self);
-    return reinterpret_cast<smlt_scene_manager_t*>(app->scenes.get());
-}
-
-smlt_window_t* smlt_application_window(smlt_application_t* self) {
-    auto* app = reinterpret_cast<smlt::Application*>(self);
-    return reinterpret_cast<smlt_window_t*>(app->window.get());
-}
-
 } // extern "C"

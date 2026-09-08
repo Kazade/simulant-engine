@@ -7,6 +7,8 @@
 #include <memory>
 #include "simulant/nodes/camera.h"
 #include "simulant/utils/params.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -18,6 +20,11 @@ const char* smlt_camera_3d_node_type_name(const smlt_camera_3d_t* self) {
 
 bool smlt_camera_3d_on_create(smlt_camera_3d_t* self, const smlt_params_t* params) {
     return reinterpret_cast<smlt::Camera3D*>(self)->on_create((*reinterpret_cast<const smlt::Params*>(params)));
+}
+
+smlt_camera_3d_t* smlt_stage_node_create_child_camera_3d(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::Camera3D>();
+    return reinterpret_cast<smlt_camera_3d_t*>(node);
 }
 
 } /* extern "C" */

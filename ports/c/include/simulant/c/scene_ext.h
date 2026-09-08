@@ -41,6 +41,31 @@ typedef struct {
      * (Scene::on_update()/on_fixed_update()), not instead of it. */
     void (*on_update)(smlt_scene_t* self, float dt, void* user_data);
     void (*on_fixed_update)(smlt_scene_t* self, float step, void* user_data);
+
+    /* Optional. If set, called once right after construction of *each*
+     * instance activated under this route (before on_load()), and its
+     * return value becomes that instance's user_data (instead of `ctx`,
+     * see smlt_scene_register_type() below, directly) -- lets a caller
+     * that wants fresh per-activation state (e.g. a language binding
+     * constructing a new managed object each time, mirroring C++'s own
+     * register_scene<T>(name) constructing a fresh T() per activation)
+     * get it, without every plain-C caller needing to care. `self` is
+     * already valid as an opaque handle at this point (its address is
+     * fixed), even though construction isn't complete -- do not call
+     * anything on it yet beyond storing the pointer. NULL means "use
+     * `ctx` itself as user_data", matching the older behavior of a
+     * single fixed value shared by every activation. */
+    void* (*create_user_data)(smlt_scene_t* self, void* ctx);
+
+    /* Optional. Called exactly once, right before this instance's memory
+     * is actually reclaimed -- NOT the same moment as on_destroy()/
+     * on_unload(), which can run without the object being torn down
+     * (Scene reload keeps a route registered across many load/unload
+     * cycles). This is the correct place for a language binding to
+     * release a reference it pinned in create_user_data(); doing it in
+     * on_unload() instead would be wrong the moment a route is
+     * deactivated and later reactivated without ever being destroyed. */
+    void (*delete_user_data)(void* user_data);
 } smlt_scene_vtable_t;
 
 /* Registers a new custom scene type under `name` on `scene_manager`
@@ -48,13 +73,12 @@ typedef struct {
  * registration time -- it does not need to outlive this call, even though
  * instances aren't actually constructed until `name` is first activated
  * (a temporary/stack-local vtable built inside an init() callback is
- * fine). `user_data` is likewise captured at registration time and handed
- * to every instance activated under this name (mirroring how
- * SceneManager::register_scene<T>(name, args...) forwards args to every
- * instance it constructs). Registering the same name twice is a no-op
- * that keeps the first registration, logged as a warning by the engine. */
+ * fine). `ctx` is likewise captured at registration time; what happens
+ * with it per-instance depends on vtable->create_user_data (see above).
+ * Registering the same name twice is a no-op that keeps the first
+ * registration, logged as a warning by the engine. */
 void smlt_scene_register_type(smlt_scene_manager_t* scene_manager, const char* name,
-                              const smlt_scene_vtable_t* vtable, void* user_data);
+                              const smlt_scene_vtable_t* vtable, void* ctx);
 
 /* SceneManager::activate<Args...>() is a template cgen.py can't wrap;
  * this is the zero-extra-args case, which is what registration via
@@ -71,13 +95,18 @@ smlt_scene_t* smlt_scene_manager_active_scene(const smlt_scene_manager_t* self);
 void smlt_scene_set_user_data(smlt_scene_t* self, void* user_data);
 void* smlt_scene_get_user_data(const smlt_scene_t* self);
 
-/* Scene::assets is a C++ Property<> smart member (see
- * smlt_application_scenes() in application_ext.h for the same situation
- * on Application); this is the hand-written equivalent. Borrowed -- do
- * not destroy. Use it to load/create textures, materials, meshes, etc.
- * (see asset_manager.h and the *Ptr-returning methods on the relevant
- * asset classes, e.g. texture.h, material.h). */
-smlt_asset_manager_t* smlt_scene_assets(smlt_scene_t* self);
+/* Scene::assets/compositor/input are C++ Property<> smart members --
+ * the generator's scanner now recognizes Property<> fields directly and
+ * mechanically wraps them (see smlt_scene_assets()/_compositor()/_input()
+ * in the generated scene.h), so no hand-written equivalent lives here
+ * anymore.
+ *
+ * Scene is-a StageNode (its first base class in C++), so it can be used
+ * anywhere a generic StageNode is expected -- e.g. as the `subtree`
+ * argument to smlt_scene_compositor_create_layer(), or as the `parent`
+ * argument to the create_child helpers in stage_node_ext.h. Borrowed --
+ * do not destroy the result separately from `self`. */
+smlt_stage_node_t* smlt_scene_as_stage_node(smlt_scene_t* self);
 
 #ifdef __cplusplus
 }

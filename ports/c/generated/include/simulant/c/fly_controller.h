@@ -16,6 +16,12 @@ void smlt_fly_controller_set_speed(smlt_fly_controller_t* self, float v);
 float smlt_fly_controller_speed(const smlt_fly_controller_t* self);
 void smlt_fly_controller_on_late_update(smlt_fly_controller_t* self, float dt);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::FlyController as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_fly_controller_t* smlt_stage_node_create_child_fly_controller(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

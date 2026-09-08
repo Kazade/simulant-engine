@@ -12,12 +12,27 @@ extern "C" {
 #endif
 
 void smlt_mesh_release(smlt_mesh_t* self);
+smlt_adjacency_info_t* smlt_mesh_adjacency_info(smlt_mesh_t* self);
+smlt_vertex_data_t* smlt_mesh_vertex_data(smlt_mesh_t* self);
+smlt_generic_data_carrier_t* smlt_mesh_data(smlt_mesh_t* self);
 const char* smlt_mesh_asset_type_name(const smlt_mesh_t* self);
 uint64_t smlt_mesh_estimated_size_in_bytes(const smlt_mesh_t* self);
 void smlt_mesh_reset(smlt_mesh_t* self, const smlt_vertex_specification_t* vertex_specification);
 bool smlt_mesh_is_skinned(const smlt_mesh_t* self);
+smlt_sub_mesh_t* smlt_mesh_create_submesh(smlt_mesh_t* self, const char* name, smlt_material_t* material, smlt_mesh_arrangement_t arrangement);
+smlt_sub_mesh_t* smlt_mesh_create_submesh2(smlt_mesh_t* self, const char* name, smlt_material_t* material, smlt_index_type_t index_type, smlt_mesh_arrangement_t arrangement);
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_capsule(smlt_mesh_t* self, const char* name, smlt_material_t* material, float diameter, float length, unsigned long segment_count, unsigned long vertical_segment_count, unsigned long ring_count);
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_sphere(smlt_mesh_t* self, const char* name, smlt_material_t* material, float diameter, unsigned long slices, unsigned long stacks);
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_cylinder(smlt_mesh_t* self, const char* name, smlt_material_t* material, float diameter, float length, unsigned long segments, unsigned long stacks);
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_icosphere(smlt_mesh_t* self, const char* name, smlt_material_t* material, float diameter, uint32_t subdivisions);
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_rectangle(smlt_mesh_t* self, const char* name, smlt_material_t* material, float width, float height, const smlt_vec3_t* offset);
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_cube(smlt_mesh_t* self, const char* name, smlt_material_t* material, float size);
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_box(smlt_mesh_t* self, const char* name, smlt_material_t* material, float width, float height, float depth, const smlt_vec3_t* offset);
 unsigned long smlt_mesh_submesh_count(const smlt_mesh_t* self);
 bool smlt_mesh_has_submesh(const smlt_mesh_t* self, const char* name);
+smlt_sub_mesh_t* smlt_mesh_find_submesh(const smlt_mesh_t* self, const char* name);
+smlt_sub_mesh_t* smlt_mesh_find_submesh_with_material(const smlt_mesh_t* self, smlt_material_t* mat);
+smlt_sub_mesh_t* smlt_mesh_first_submesh(const smlt_mesh_t* self);
 void smlt_mesh_destroy_submesh(smlt_mesh_t* self, const char* name);
 void smlt_mesh_set_material(smlt_mesh_t* self, smlt_material_t* material);
 void smlt_mesh_set_color(smlt_mesh_t* self, const smlt_color_t* color);
@@ -31,6 +46,27 @@ uint32_t smlt_mesh_animation_frames(const smlt_mesh_t* self);
 smlt_mesh_animation_type_t smlt_mesh_animation_type(const smlt_mesh_t* self);
 void smlt_mesh_generate_adjacency_info(smlt_mesh_t* self);
 bool smlt_mesh_has_adjacency_info(const smlt_mesh_t* self);
+float smlt_mesh_width(const smlt_mesh_t* self);
+float smlt_mesh_height(const smlt_mesh_t* self);
+float smlt_mesh_depth(const smlt_mesh_t* self);
+float smlt_mesh_half_width(const smlt_mesh_t* self);
+float smlt_mesh_half_height(const smlt_mesh_t* self);
+float smlt_mesh_half_depth(const smlt_mesh_t* self);
+float smlt_mesh_diameter(const smlt_mesh_t* self);
+float smlt_mesh_radius(const smlt_mesh_t* self);
+smlt_asset_manager_t* smlt_mesh_asset_manager(smlt_mesh_t* self);
+int smlt_mesh_age(const smlt_mesh_t* self);
+void smlt_mesh_set_garbage_collection_method(smlt_mesh_t* self, smlt_garbage_collect_method_t method);
+smlt_path_t* smlt_mesh_source(const smlt_mesh_t* self);
+void smlt_mesh_set_source(smlt_mesh_t* self, const smlt_path_t* source);
+void smlt_mesh_set_name(smlt_mesh_t* self, const char* name);
+char* smlt_mesh_name(const smlt_mesh_t* self);
+bool smlt_mesh_has_name(const smlt_mesh_t* self);
+void smlt_mesh_add_animation(smlt_mesh_t* self, const char* name, uint32_t start_frame, uint32_t end_frame, float fps);
+bool smlt_mesh_has_animations(const smlt_mesh_t* self);
+unsigned long smlt_mesh_animation_count(const smlt_mesh_t* self);
+void smlt_mesh_set_default_fps(smlt_mesh_t* self, float fps);
+float smlt_mesh_default_fps(const smlt_mesh_t* self);
 
 #ifdef __cplusplus
 }

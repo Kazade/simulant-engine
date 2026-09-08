@@ -7,6 +7,8 @@
 #include <memory>
 #include "simulant/nodes/ui/label.h"
 #include "simulant/utils/params.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -18,6 +20,11 @@ const char* smlt_ui_label_node_type_name(const smlt_ui_label_t* self) {
 
 bool smlt_ui_label_on_create(smlt_ui_label_t* self, const smlt_params_t* params) {
     return reinterpret_cast<smlt::ui::Label*>(self)->on_create((*reinterpret_cast<const smlt::Params*>(params)));
+}
+
+smlt_ui_label_t* smlt_stage_node_create_child_ui_label(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::ui::Label>();
+    return reinterpret_cast<smlt_ui_label_t*>(node);
 }
 
 } /* extern "C" */

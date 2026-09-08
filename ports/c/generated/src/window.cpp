@@ -6,10 +6,16 @@
 #include <cstdint>
 #include <memory>
 #include "simulant/window.h"
+#include "simulant/application.h"
+#include "simulant/color.h"
+#include "simulant/input/input_manager.h"
 #include "simulant/math/vec2.h"
+#include "simulant/compositor.h"
 #include "simulant/renderers/renderer.h"
 #include "simulant/nodes/stage_node.h"
 #include "simulant/event_listener.h"
+#include "simulant/generic/data_carrier.h"
+#include "simulant/input/input_state.h"
 #include "simulant/screen.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
@@ -20,6 +26,30 @@ void smlt_window_destroy(smlt_window_t* self) {
     delete reinterpret_cast<smlt::Window*>(self);
 }
 
+smlt_application_t* smlt_window_app(smlt_window_t* self) {
+    return reinterpret_cast<smlt_application_t*>(reinterpret_cast<smlt::Window*>(self)->app.get());
+}
+
+smlt_renderer_t* smlt_window_renderer(smlt_window_t* self) {
+    return reinterpret_cast<smlt_renderer_t*>(reinterpret_cast<smlt::Window*>(self)->renderer.get());
+}
+
+smlt_generic_data_carrier_t* smlt_window_data(smlt_window_t* self) {
+    return reinterpret_cast<smlt_generic_data_carrier_t*>(reinterpret_cast<smlt::Window*>(self)->data.get());
+}
+
+smlt_input_manager_t* smlt_window_input(smlt_window_t* self) {
+    return reinterpret_cast<smlt_input_manager_t*>(reinterpret_cast<smlt::Window*>(self)->input.get());
+}
+
+smlt_input_state_t* smlt_window_input_state(smlt_window_t* self) {
+    return reinterpret_cast<smlt_input_state_t*>(reinterpret_cast<smlt::Window*>(self)->input_state.get());
+}
+
+smlt_compositor_t* smlt_window_compositor(smlt_window_t* self) {
+    return reinterpret_cast<smlt_compositor_t*>(reinterpret_cast<smlt::Window*>(self)->compositor.get());
+}
+
 bool smlt_window_create_window(smlt_window_t* self, uint16_t width, uint16_t height, uint8_t bpp, bool fullscreen, bool enable_vsync) {
     return reinterpret_cast<smlt::Window*>(self)->create_window(width, height, bpp, fullscreen, enable_vsync);
 }
@@ -28,7 +58,7 @@ void smlt_window_set_title(smlt_window_t* self, const char* title) {
     reinterpret_cast<smlt::Window*>(self)->set_title(std::string(title ? title : ""));
 }
 
-void smlt_window_cursor_position(smlt_window_t* self, int32_t* mouse_x, int32_t* mouse_y) {
+void smlt_window_cursor_position(smlt_window_t* self, int* mouse_x, int* mouse_y) {
     reinterpret_cast<smlt::Window*>(self)->cursor_position((*mouse_x), (*mouse_y));
 }
 
@@ -170,6 +200,34 @@ void smlt_window_set_escape_to_quit(smlt_window_t* self, bool value) {
 
 bool smlt_window_escape_to_quit_enabled(const smlt_window_t* self) {
     return reinterpret_cast<const smlt::Window*>(self)->escape_to_quit_enabled();
+}
+
+void smlt_window_set_clear_every_frame(smlt_window_t* self, uint32_t clear_flags, const smlt_color_t* color) {
+    reinterpret_cast<smlt::Window*>(self)->set_clear_every_frame(clear_flags, (*reinterpret_cast<const smlt::Color*>(color)));
+}
+
+uint32_t smlt_window_clear_every_frame_flags(const smlt_window_t* self) {
+    return reinterpret_cast<const smlt::Window*>(self)->clear_every_frame_flags();
+}
+
+smlt_color_t* smlt_window_clear_every_frame_color(const smlt_window_t* self) {
+    return reinterpret_cast<smlt_color_t*>(new smlt::Color(reinterpret_cast<const smlt::Window*>(self)->clear_every_frame_color()));
+}
+
+void smlt_window_set_last_frame_rendered_id(smlt_window_t* self, uint32_t id) {
+    reinterpret_cast<smlt::Window*>(self)->set_last_frame_rendered_id(id);
+}
+
+const unsigned int* smlt_window_last_frame_rendered_id(const smlt_window_t* self) {
+    return &(reinterpret_cast<const smlt::Window*>(self)->last_frame_rendered_id());
+}
+
+void smlt_window_register_event_listener(smlt_window_t* self, smlt_event_listener_t* listener) {
+    reinterpret_cast<smlt::Window*>(self)->register_event_listener(reinterpret_cast<smlt::EventListener*>(listener));
+}
+
+void smlt_window_unregister_event_listener(smlt_window_t* self, smlt_event_listener_t* listener) {
+    reinterpret_cast<smlt::Window*>(self)->unregister_event_listener(reinterpret_cast<smlt::EventListener*>(listener));
 }
 
 } /* extern "C" */

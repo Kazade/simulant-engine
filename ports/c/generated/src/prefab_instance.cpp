@@ -7,6 +7,8 @@
 #include <memory>
 #include "simulant/nodes/prefab_instance.h"
 #include "simulant/utils/params.h"
+#include "simulant/nodes/stage_node.h"
+#include "simulant/scenes/scene.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -18,6 +20,11 @@ const char* smlt_prefab_instance_node_type_name(const smlt_prefab_instance_t* se
 
 bool smlt_prefab_instance_on_create(smlt_prefab_instance_t* self, const smlt_params_t* params) {
     return reinterpret_cast<smlt::PrefabInstance*>(self)->on_create((*reinterpret_cast<const smlt::Params*>(params)));
+}
+
+smlt_prefab_instance_t* smlt_stage_node_create_child_prefab_instance(smlt_stage_node_t* parent) {
+    auto* node = reinterpret_cast<smlt::StageNode*>(parent)->create_child<smlt::PrefabInstance>();
+    return reinterpret_cast<smlt_prefab_instance_t*>(node);
 }
 
 } /* extern "C" */

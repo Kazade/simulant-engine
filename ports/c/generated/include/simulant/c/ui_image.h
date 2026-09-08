@@ -17,6 +17,12 @@ void smlt_ui_image_set_source_rect(smlt_ui_image_t* self, const smlt_ui_ui_coord
 bool smlt_ui_image_set_resize_mode(smlt_ui_image_t* self, smlt_ui_resize_mode_t resize_mode);
 bool smlt_ui_image_on_create(smlt_ui_image_t* self, const smlt_params_t* params);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::ui::Image as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_ui_image_t* smlt_stage_node_create_child_ui_image(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif

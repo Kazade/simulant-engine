@@ -12,6 +12,9 @@ extern "C" {
 #endif
 
 void smlt_interpreter_destroy(smlt_interpreter_t* self);
+void smlt_interpreter_update(smlt_interpreter_t* self, float dt);
+void smlt_interpreter_late_update(smlt_interpreter_t* self, float dt);
+void smlt_interpreter_fixed_update(smlt_interpreter_t* self, float step);
 
 #ifdef __cplusplus
 }

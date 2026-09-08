@@ -7,11 +7,16 @@
 #include <memory>
 #include "simulant/meshes/mesh.h"
 #include "simulant/color.h"
+#include "simulant/path.h"
 #include "simulant/math/aabb.h"
 #include "simulant/math/mat4.h"
 #include "simulant/math/vec3.h"
 #include "simulant/vertex_data.h"
+#include "simulant/meshes/adjacency_info.h"
+#include "simulant/meshes/submesh.h"
+#include "simulant/asset_manager.h"
 #include "simulant/assets/material.h"
+#include "simulant/generic/data_carrier.h"
 #include "simulant/types.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
@@ -20,6 +25,18 @@ extern "C" {
 
 void smlt_mesh_release(smlt_mesh_t* self) {
     delete reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self);
+}
+
+smlt_adjacency_info_t* smlt_mesh_adjacency_info(smlt_mesh_t* self) {
+    return reinterpret_cast<smlt_adjacency_info_t*>((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->adjacency_info.get());
+}
+
+smlt_vertex_data_t* smlt_mesh_vertex_data(smlt_mesh_t* self) {
+    return reinterpret_cast<smlt_vertex_data_t*>((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->vertex_data.get());
+}
+
+smlt_generic_data_carrier_t* smlt_mesh_data(smlt_mesh_t* self) {
+    return reinterpret_cast<smlt_generic_data_carrier_t*>((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->data.get());
 }
 
 const char* smlt_mesh_asset_type_name(const smlt_mesh_t* self) {
@@ -38,12 +55,60 @@ bool smlt_mesh_is_skinned(const smlt_mesh_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->is_skinned();
 }
 
+smlt_sub_mesh_t* smlt_mesh_create_submesh(smlt_mesh_t* self, const char* name, smlt_material_t* material, smlt_mesh_arrangement_t arrangement) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->create_submesh(std::string(name ? name : ""), (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(material)), static_cast<smlt::MeshArrangement>(arrangement))));
+}
+
+smlt_sub_mesh_t* smlt_mesh_create_submesh2(smlt_mesh_t* self, const char* name, smlt_material_t* material, smlt_index_type_t index_type, smlt_mesh_arrangement_t arrangement) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->create_submesh(std::string(name ? name : ""), (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(material)), static_cast<smlt::IndexType>(index_type), static_cast<smlt::MeshArrangement>(arrangement))));
+}
+
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_capsule(smlt_mesh_t* self, const char* name, smlt_material_t* material, float diameter, float length, unsigned long segment_count, unsigned long vertical_segment_count, unsigned long ring_count) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->create_submesh_as_capsule(std::string(name ? name : ""), (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(material)), diameter, length, segment_count, vertical_segment_count, ring_count)));
+}
+
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_sphere(smlt_mesh_t* self, const char* name, smlt_material_t* material, float diameter, unsigned long slices, unsigned long stacks) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->create_submesh_as_sphere(std::string(name ? name : ""), (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(material)), diameter, slices, stacks)));
+}
+
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_cylinder(smlt_mesh_t* self, const char* name, smlt_material_t* material, float diameter, float length, unsigned long segments, unsigned long stacks) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->create_submesh_as_cylinder(std::string(name ? name : ""), (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(material)), diameter, length, segments, stacks)));
+}
+
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_icosphere(smlt_mesh_t* self, const char* name, smlt_material_t* material, float diameter, uint32_t subdivisions) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->create_submesh_as_icosphere(std::string(name ? name : ""), (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(material)), diameter, subdivisions)));
+}
+
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_rectangle(smlt_mesh_t* self, const char* name, smlt_material_t* material, float width, float height, const smlt_vec3_t* offset) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->create_submesh_as_rectangle(std::string(name ? name : ""), (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(material)), width, height, (*reinterpret_cast<const smlt::Vec3*>(offset)))));
+}
+
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_cube(smlt_mesh_t* self, const char* name, smlt_material_t* material, float size) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->create_submesh_as_cube(std::string(name ? name : ""), (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(material)), size)));
+}
+
+smlt_sub_mesh_t* smlt_mesh_create_submesh_as_box(smlt_mesh_t* self, const char* name, smlt_material_t* material, float width, float height, float depth, const smlt_vec3_t* offset) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->create_submesh_as_box(std::string(name ? name : ""), (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(material)), width, height, depth, (*reinterpret_cast<const smlt::Vec3*>(offset)))));
+}
+
 unsigned long smlt_mesh_submesh_count(const smlt_mesh_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->submesh_count();
 }
 
 bool smlt_mesh_has_submesh(const smlt_mesh_t* self, const char* name) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->has_submesh(std::string(name ? name : ""));
+}
+
+smlt_sub_mesh_t* smlt_mesh_find_submesh(const smlt_mesh_t* self, const char* name) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->find_submesh(std::string(name ? name : ""))));
+}
+
+smlt_sub_mesh_t* smlt_mesh_find_submesh_with_material(const smlt_mesh_t* self, smlt_material_t* mat) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->find_submesh_with_material((*reinterpret_cast<std::shared_ptr<smlt::Material>*>(mat)))));
+}
+
+smlt_sub_mesh_t* smlt_mesh_first_submesh(const smlt_mesh_t* self) {
+    return reinterpret_cast<smlt_sub_mesh_t*>(((*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->first_submesh()));
 }
 
 void smlt_mesh_destroy_submesh(smlt_mesh_t* self, const char* name) {
@@ -96,6 +161,90 @@ void smlt_mesh_generate_adjacency_info(smlt_mesh_t* self) {
 
 bool smlt_mesh_has_adjacency_info(const smlt_mesh_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->has_adjacency_info();
+}
+
+float smlt_mesh_width(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->width();
+}
+
+float smlt_mesh_height(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->height();
+}
+
+float smlt_mesh_depth(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->depth();
+}
+
+float smlt_mesh_half_width(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->half_width();
+}
+
+float smlt_mesh_half_height(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->half_height();
+}
+
+float smlt_mesh_half_depth(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->half_depth();
+}
+
+float smlt_mesh_diameter(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->diameter();
+}
+
+float smlt_mesh_radius(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->radius();
+}
+
+smlt_asset_manager_t* smlt_mesh_asset_manager(smlt_mesh_t* self) {
+    return reinterpret_cast<smlt_asset_manager_t*>(&((*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->asset_manager()));
+}
+
+int smlt_mesh_age(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->age();
+}
+
+void smlt_mesh_set_garbage_collection_method(smlt_mesh_t* self, smlt_garbage_collect_method_t method) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->set_garbage_collection_method(static_cast<smlt::GarbageCollectMethod>(method));
+}
+
+smlt_path_t* smlt_mesh_source(const smlt_mesh_t* self) {
+    return reinterpret_cast<smlt_path_t*>(new smlt::Path((*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->source()));
+}
+
+void smlt_mesh_set_source(smlt_mesh_t* self, const smlt_path_t* source) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->set_source((*reinterpret_cast<const smlt::Path*>(source)));
+}
+
+void smlt_mesh_set_name(smlt_mesh_t* self, const char* name) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->set_name(name);
+}
+
+char* smlt_mesh_name(const smlt_mesh_t* self) {
+    return smlt_c_strdup(((*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->name()).c_str());
+}
+
+bool smlt_mesh_has_name(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->has_name();
+}
+
+void smlt_mesh_add_animation(smlt_mesh_t* self, const char* name, uint32_t start_frame, uint32_t end_frame, float fps) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->add_animation(std::string(name ? name : ""), start_frame, end_frame, fps);
+}
+
+bool smlt_mesh_has_animations(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->has_animations();
+}
+
+unsigned long smlt_mesh_animation_count(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->animation_count();
+}
+
+void smlt_mesh_set_default_fps(smlt_mesh_t* self, float fps) {
+    (*reinterpret_cast<std::shared_ptr<smlt::Mesh>*>(self))->set_default_fps(fps);
+}
+
+float smlt_mesh_default_fps(const smlt_mesh_t* self) {
+    return (*reinterpret_cast<const std::shared_ptr<smlt::Mesh>*>(self))->default_fps();
 }
 
 } /* extern "C" */

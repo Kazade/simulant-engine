@@ -19,7 +19,7 @@ void smlt_game_controller_stop_rumble(smlt_game_controller_t* self);
 bool smlt_game_controller_button_state(const smlt_game_controller_t* self, smlt_joystick_button_t button);
 float smlt_game_controller_axis_state(const smlt_game_controller_t* self, smlt_joystick_axis_t axis);
 smlt_hat_position_t smlt_game_controller_hat_state(const smlt_game_controller_t* self, signed char hat);
-const uint8_t* smlt_game_controller_platform_data(const smlt_game_controller_t* self);
+const unsigned char* smlt_game_controller_platform_data(const smlt_game_controller_t* self);
 
 #ifdef __cplusplus
 }

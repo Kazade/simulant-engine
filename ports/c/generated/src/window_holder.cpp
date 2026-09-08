@@ -16,6 +16,10 @@ void smlt_window_holder_destroy(smlt_window_holder_t* self) {
     delete reinterpret_cast<smlt::WindowHolder*>(self);
 }
 
+smlt_window_t* smlt_window_holder_window(smlt_window_holder_t* self) {
+    return reinterpret_cast<smlt_window_t*>(reinterpret_cast<smlt::WindowHolder*>(self)->window.get());
+}
+
 smlt_window_holder_t* smlt_window_holder_create(smlt_window_t* window) {
     return reinterpret_cast<smlt_window_holder_t*>(new smlt::WindowHolder(reinterpret_cast<smlt::Window*>(window)));
 }

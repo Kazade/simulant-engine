@@ -12,12 +12,17 @@ extern "C" {
 #endif
 
 void smlt_compositor_destroy(smlt_compositor_t* self);
+smlt_window_t* smlt_compositor_window(smlt_compositor_t* self);
 smlt_compositor_t* smlt_compositor_create(smlt_window_t* window);
+smlt_layer_t* smlt_compositor_create_layer(smlt_compositor_t* self, smlt_stage_node_t* subtree, smlt_camera_t* camera, const smlt_viewport_t* viewport, smlt_texture_t* target, int32_t priority);
+smlt_layer_t* smlt_compositor_find_layer(smlt_compositor_t* self, const char* name);
 void smlt_compositor_destroy_all_layers(smlt_compositor_t* self);
 bool smlt_compositor_has_layer(smlt_compositor_t* self, const char* name);
 void smlt_compositor_set_renderer(smlt_compositor_t* self, smlt_renderer_t* renderer);
 void smlt_compositor_run(smlt_compositor_t* self);
 void smlt_compositor_clean_destroyed_layers(smlt_compositor_t* self);
+void smlt_compositor_destroy_object(smlt_compositor_t* self, smlt_layer_t* pip);
+void smlt_compositor_destroy_object_immediately(smlt_compositor_t* self, smlt_layer_t* pipeline);
 
 #ifdef __cplusplus
 }

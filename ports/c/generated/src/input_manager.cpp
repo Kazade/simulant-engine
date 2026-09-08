@@ -7,6 +7,7 @@
 #include <memory>
 #include "simulant/input/input_manager.h"
 #include "simulant/input/input_axis.h"
+#include "simulant/nodes/ui/keyboard.h"
 #include "simulant/input/input_state.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
@@ -15,6 +16,14 @@ extern "C" {
 
 void smlt_input_manager_destroy(smlt_input_manager_t* self) {
     delete reinterpret_cast<smlt::InputManager*>(self);
+}
+
+smlt_input_state_t* smlt_input_manager_state(smlt_input_manager_t* self) {
+    return reinterpret_cast<smlt_input_state_t*>(reinterpret_cast<smlt::InputManager*>(self)->state.get());
+}
+
+smlt_ui_keyboard_t* smlt_input_manager_onscreen_keyboard(smlt_input_manager_t* self) {
+    return reinterpret_cast<smlt_ui_keyboard_t*>(reinterpret_cast<smlt::InputManager*>(self)->onscreen_keyboard.get());
 }
 
 smlt_input_manager_t* smlt_input_manager_create(smlt_input_state_t* controller) {

@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 void smlt_particle_script_release(smlt_particle_script_t* self);
+smlt_generic_data_carrier_t* smlt_particle_script_data(smlt_particle_script_t* self);
 const char* smlt_particle_script_asset_type_name(const smlt_particle_script_t* self);
 uint64_t smlt_particle_script_estimated_size_in_bytes(const smlt_particle_script_t* self);
 unsigned long smlt_particle_script_emitter_count(const smlt_particle_script_t* self);
@@ -33,6 +34,14 @@ void smlt_particle_script_set_particle_width(smlt_particle_script_t* self, float
 void smlt_particle_script_set_particle_height(smlt_particle_script_t* self, float h);
 void smlt_particle_script_set_cull_each(smlt_particle_script_t* self, bool v);
 void smlt_particle_script_set_material(smlt_particle_script_t* self, smlt_material_t* material);
+smlt_asset_manager_t* smlt_particle_script_asset_manager(smlt_particle_script_t* self);
+int smlt_particle_script_age(const smlt_particle_script_t* self);
+void smlt_particle_script_set_garbage_collection_method(smlt_particle_script_t* self, smlt_garbage_collect_method_t method);
+smlt_path_t* smlt_particle_script_source(const smlt_particle_script_t* self);
+void smlt_particle_script_set_source(smlt_particle_script_t* self, const smlt_path_t* source);
+void smlt_particle_script_set_name(smlt_particle_script_t* self, const char* name);
+char* smlt_particle_script_name(const smlt_particle_script_t* self);
+bool smlt_particle_script_has_name(const smlt_particle_script_t* self);
 
 #ifdef __cplusplus
 }

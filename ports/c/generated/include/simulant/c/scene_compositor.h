@@ -12,7 +12,10 @@ extern "C" {
 #endif
 
 void smlt_scene_compositor_destroy(smlt_scene_compositor_t* self);
+smlt_compositor_t* smlt_scene_compositor_global_compositor(smlt_scene_compositor_t* self);
 smlt_scene_compositor_t* smlt_scene_compositor_create(smlt_scene_t* scene, smlt_compositor_t* global_compositor);
+smlt_layer_t* smlt_scene_compositor_create_layer(smlt_scene_compositor_t* self, smlt_stage_node_t* subtree, smlt_camera_t* camera, int32_t priority);
+smlt_layer_t* smlt_scene_compositor_find_layer(smlt_scene_compositor_t* self, const char* name);
 void smlt_scene_compositor_destroy_all_layers(smlt_scene_compositor_t* self);
 
 #ifdef __cplusplus

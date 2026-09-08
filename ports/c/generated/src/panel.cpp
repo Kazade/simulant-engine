@@ -7,6 +7,7 @@
 #include <memory>
 #include "simulant/panels/panel.h"
 #include "simulant/event_listener.h"
+#include "simulant/window.h"
 #include "simulant/c/simulant_c.h"
 #include "smlt_c_util.h"
 
@@ -38,6 +39,26 @@ void smlt_panel_on_key_down(smlt_panel_t* self, const smlt_key_event_t* evt) {
 
 void smlt_panel_set_activation_key(smlt_panel_t* self, smlt_keyboard_code_t code) {
     reinterpret_cast<smlt::Panel*>(self)->set_activation_key(static_cast<smlt::KeyboardCode>(code));
+}
+
+void smlt_panel_handle_touch_begin(smlt_panel_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y, float pressure) {
+    reinterpret_cast<smlt::Panel*>(self)->handle_touch_begin(reinterpret_cast<smlt::Window*>(window), touch_id, normalized_x, normalized_y, pressure);
+}
+
+void smlt_panel_handle_touch_end(smlt_panel_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y) {
+    reinterpret_cast<smlt::Panel*>(self)->handle_touch_end(reinterpret_cast<smlt::Window*>(window), touch_id, normalized_x, normalized_y);
+}
+
+void smlt_panel_handle_touch_move(smlt_panel_t* self, smlt_window_t* window, unsigned int touch_id, float normalized_x, float normalized_y, float dx, float dy) {
+    reinterpret_cast<smlt::Panel*>(self)->handle_touch_move(reinterpret_cast<smlt::Window*>(window), touch_id, normalized_x, normalized_y, dx, dy);
+}
+
+void smlt_panel_handle_key_down(smlt_panel_t* self, smlt_window_t* window, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers) {
+    reinterpret_cast<smlt::Panel*>(self)->handle_key_down(reinterpret_cast<smlt::Window*>(window), static_cast<smlt::KeyboardCode>(code), (*reinterpret_cast<const smlt::ModifierKeyState*>(modifiers)));
+}
+
+void smlt_panel_handle_key_up(smlt_panel_t* self, smlt_window_t* window, smlt_keyboard_code_t code, const smlt_modifier_key_state_t* modifiers) {
+    reinterpret_cast<smlt::Panel*>(self)->handle_key_up(reinterpret_cast<smlt::Window*>(window), static_cast<smlt::KeyboardCode>(code), (*reinterpret_cast<const smlt::ModifierKeyState*>(modifiers)));
 }
 
 } /* extern "C" */

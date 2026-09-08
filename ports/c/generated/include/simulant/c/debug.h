@@ -21,6 +21,12 @@ float smlt_debug_point_size(const smlt_debug_t* self);
 void smlt_debug_set_line_width(smlt_debug_t* self, float size);
 float smlt_debug_line_width(const smlt_debug_t* self);
 
+/* StageNode::create_child<T>() equivalent: constructs a new
+ * smlt::Debug as a child of `parent` (any StageNode,
+ * including a Scene). Manager-owned like every StageNode -- release
+ * with smlt_stage_node_destroy(), not a type-specific destroy. */
+smlt_debug_t* smlt_stage_node_create_child_debug(smlt_stage_node_t* parent);
+
 #ifdef __cplusplus
 }
 #endif
