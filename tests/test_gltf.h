@@ -469,6 +469,123 @@ const std::string GLTF_FILE_CYCLE_B = R"(
 }
 )";
 
+// SMLT_scene_script: a "scene"-type script (smlt.define_scene) plus a
+// "stage_node"-type script (smlt.define_node) declared on the gltf's
+// default scene. The single gltf node uses extras.s_node to request the
+// custom Lua node type by name, proving that the stage_node script really
+// is registered (via LuaScene's constructor) before the gltf's own node
+// graph is instantiated as a PrefabInstance. Both scripts are embedded as
+// base64 data: URIs rather than external .lua files.
+//
+// Decoded scene script:
+//   GltfTestScene = smlt.define_scene("gltf_test_scene")
+//
+// Decoded stage_node script:
+//   GltfCustomNode = smlt.define_node("gltf_custom_node")
+//
+//   function GltfCustomNode:on_create()
+//       return true
+//   end
+const std::string GLTF_FILE_SCENE_SCRIPT = R"(
+{
+  "scene": 0,
+  "scenes" : [
+    {
+      "nodes" : [ 0 ],
+      "extensions": {
+        "SMLT_scene_script": {
+          "scripts": [
+            {
+              "uri": "data:text/plain;base64,R2x0ZlRlc3RTY2VuZSA9IHNtbHQuZGVmaW5lX3NjZW5lKCJnbHRmX3Rlc3Rfc2NlbmUiKQo=",
+              "language": "lua",
+              "type": "scene",
+              "class": "GltfTestScene"
+            },
+            {
+              "uri": "data:text/plain;base64,R2x0ZkN1c3RvbU5vZGUgPSBzbWx0LmRlZmluZV9ub2RlKCJnbHRmX2N1c3RvbV9ub2RlIikKCmZ1bmN0aW9uIEdsdGZDdXN0b21Ob2RlOm9uX2NyZWF0ZSgpCiAgICByZXR1cm4gdHJ1ZQplbmQK",
+              "language": "lua",
+              "type": "stage_node",
+              "class": "GltfCustomNode"
+            }
+          ]
+        }
+      }
+    }
+  ],
+
+  "nodes" : [
+    {
+      "name": "gltf_root_node",
+      "extras": { "s_node": "gltf_custom_node" }
+    }
+  ],
+
+  "asset" : {
+    "version" : "2.0"
+  }
+}
+)";
+
+// Same as above but with two "scene"-type scripts declared, which must be
+// rejected at registration time.
+const std::string GLTF_FILE_SCENE_SCRIPT_DUPLICATE_SCENE = R"(
+{
+  "scene": 0,
+  "scenes" : [
+    {
+      "nodes" : [ 0 ],
+      "extensions": {
+        "SMLT_scene_script": {
+          "scripts": [
+            {
+              "uri": "data:text/plain;base64,R2x0ZlRlc3RTY2VuZSA9IHNtbHQuZGVmaW5lX3NjZW5lKCJnbHRmX3Rlc3Rfc2NlbmUiKQo=",
+              "language": "lua",
+              "type": "scene",
+              "class": "GltfTestScene"
+            },
+            {
+              "uri": "data:text/plain;base64,R2x0ZlRlc3RTY2VuZSA9IHNtbHQuZGVmaW5lX3NjZW5lKCJnbHRmX3Rlc3Rfc2NlbmUiKQo=",
+              "language": "lua",
+              "type": "scene",
+              "class": "GltfTestScene"
+            }
+          ]
+        }
+      }
+    }
+  ],
+
+  "nodes" : [
+    { "name": "gltf_root_node" }
+  ],
+
+  "asset" : {
+    "version" : "2.0"
+  }
+}
+)";
+
+// No SMLT_scene_script extension at all, so register_scene() (the gltf
+// overload) must fail — there's no "scene"-type script to instantiate.
+const std::string GLTF_FILE_SCENE_SCRIPT_MISSING = R"(
+{
+  "scene": 0,
+  "scenes" : [
+    {
+      "nodes" : [ 0 ]
+    }
+  ],
+
+  "nodes" : [
+    { "name": "gltf_root_node" }
+  ],
+
+  "asset" : {
+    "version" : "2.0"
+  }
+}
+)";
+
 class GLTFLoaderTests: public smlt::test::SimulantTestCase {
 public:
     void test_load_gltf_file() {
@@ -684,6 +801,94 @@ public:
         assert_equal(std::string("stage"),
                      std::string(b_ref->node_type_name()));
         assert_equal((std::size_t)0, b_ref->child_count());
+    }
+};
+
+class GLTFSceneScriptTests: public smlt::test::SimulantTestCase {
+public:
+    // Registers a scene directly from a gltf's SMLT_scene_script
+    // extension, resolves it (without activating, so the shared "main"
+    // fixture used by other tests is left alone), loads it, and verifies:
+    //  - the route name came from smlt.define_scene() inside the
+    //    "scene"-type script (per register_scene(Path,class_name)'s
+    //    existing convention)
+    //  - the "stage_node"-type script was registered on the instance
+    //    *before* the gltf's node graph is instantiated, since the gltf's
+    //    node requests that custom type by name via extras.s_node
+    //  - the gltf's node graph was instantiated as if by a PrefabInstance
+    void test_register_scene_from_gltf() {
+        auto temp_dir = Path::system_temp_dir();
+        auto test_file = temp_dir.append("scene_script.gltf");
+
+        std::ofstream fileout(test_file.str().c_str());
+        assert_true(fileout.good());
+        fileout.write(GLTF_FILE_SCENE_SCRIPT.c_str(),
+                       GLTF_FILE_SCENE_SCRIPT.size());
+        fileout.close();
+
+        assert_true(application->scenes->register_scene(test_file));
+        assert_true(application->scenes->has_scene("gltf_test_scene"));
+
+        auto gltf_scene =
+            application->scenes->resolve_scene("gltf_test_scene");
+        assert_is_not_null(gltf_scene.get());
+
+        // The stage_node script must already be registered by construction
+        // time (before on_load / PrefabInstance creation).
+        auto maybe_info =
+            gltf_scene->registered_stage_node_info("gltf_custom_node");
+        assert_true(maybe_info);
+
+        gltf_scene->load();
+
+        auto maybe_prefab_info =
+            gltf_scene->registered_stage_node_info("prefab_instance");
+        assert_true(maybe_prefab_info);
+        assert_equal(1, (int)gltf_scene
+                             ->nodes_by_type(maybe_prefab_info.value().type)
+                             .size());
+
+        auto prefab_instance =
+            gltf_scene->nodes_by_type(maybe_prefab_info.value().type)[0];
+        assert_true(prefab_instance->child_count() > 0);
+
+        auto gltf_node = prefab_instance->child_at(0);
+        assert_equal(gltf_node->name(), "gltf_root_node");
+
+        // Proves the custom stage_node type (requested via extras.s_node)
+        // was actually used, not the default "stage" type.
+        assert_equal(std::string("gltf_custom_node"),
+                     std::string(gltf_node->node_type_name()));
+    }
+
+    // A gltf declaring two "scene"-type scripts is ambiguous and must be
+    // rejected at registration time.
+    void test_gltf_scene_script_rejects_multiple_scene_entries() {
+        auto temp_dir = Path::system_temp_dir();
+        auto test_file = temp_dir.append("scene_script_dup.gltf");
+
+        std::ofstream fileout(test_file.str().c_str());
+        assert_true(fileout.good());
+        fileout.write(GLTF_FILE_SCENE_SCRIPT_DUPLICATE_SCENE.c_str(),
+                       GLTF_FILE_SCENE_SCRIPT_DUPLICATE_SCENE.size());
+        fileout.close();
+
+        assert_false(application->scenes->register_scene(test_file));
+    }
+
+    // A gltf with no SMLT_scene_script extension at all has no "scene"
+    // script to instantiate, so registration must fail.
+    void test_gltf_without_scene_script_fails_to_register() {
+        auto temp_dir = Path::system_temp_dir();
+        auto test_file = temp_dir.append("scene_script_missing.gltf");
+
+        std::ofstream fileout(test_file.str().c_str());
+        assert_true(fileout.good());
+        fileout.write(GLTF_FILE_SCENE_SCRIPT_MISSING.c_str(),
+                       GLTF_FILE_SCENE_SCRIPT_MISSING.size());
+        fileout.close();
+
+        assert_false(application->scenes->register_scene(test_file));
     }
 };
 

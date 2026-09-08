@@ -2210,5 +2210,126 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
     return true;
 }
 
+/* Resolves a script "uri" (either an external file path or a base64
+ * data: URI) into raw source text. External paths are resolved via the
+ * VFS, which by the time this is called has the gltf file's own folder
+ * temporarily inserted as a search path (see find_scene_scripts below),
+ * mirroring how buffer/image uris are resolved in into(). */
+static bool resolve_script_source(const std::string& uri, std::string& out) {
+    const char* b64_marker = "base64,";
+    auto marker_pos = uri.find(b64_marker);
+    if(uri.rfind("data:", 0) == 0 && marker_pos != std::string::npos) {
+        auto decoded =
+            smlt::base64_decode(uri.substr(marker_pos + strlen(b64_marker)));
+        if(!decoded) {
+            S_ERROR("Failed to decode base64 script data");
+            return false;
+        }
+        out.assign(decoded->begin(), decoded->end());
+        return true;
+    }
+
+    auto stream = smlt::get_app()->vfs->read_file(uri);
+    if(!stream) {
+        S_ERROR("Unable to open script file: {0}", uri);
+        return false;
+    }
+
+    out = stream->str();
+    return true;
+}
+
+bool GLTFLoader::find_scene_scripts(std::vector<SceneScriptDef>& out) {
+    // Detect glb vs plain gltf and locate the JSON chunk, mirroring the
+    // equivalent code at the top of into(). Duplicated rather than shared
+    // since into() also needs the binary buffer chunk that script parsing
+    // has no use for.
+    uint32_t magic;
+    data_->read((char*)&magic, sizeof(magic));
+    if(magic == 0x46546C67) {
+        uint32_t version;
+        uint32_t file_length;
+        uint32_t chunk_length;
+        uint32_t chunk_type;
+
+        data_->read((char*)&version, sizeof(version));
+        if(version != 2) {
+            S_ERROR("Unsupported glTF version: {0}", version);
+            return false;
+        }
+
+        data_->read((char*)&file_length, sizeof(file_length));
+        data_->read((char*)&chunk_length, sizeof(chunk_length));
+        data_->read((char*)&chunk_type, sizeof(chunk_type));
+        if(chunk_type != 0x4E4F534A) {
+            S_ERROR("First chunk is not JSON");
+            return false;
+        }
+    } else {
+        data_->seekg(0, std::ios::beg);
+    }
+
+    auto js = json_read(this->data_);
+    if(!check_gltf_version(js)) {
+        return false;
+    }
+
+    auto maybe_scene_it = find_scene(js);
+    if(!maybe_scene_it) {
+        S_ERROR("No scene in gltf file");
+        return false;
+    }
+
+    /* Relative script uris resolve against the gltf's own folder, exactly
+     * like buffer/image uris do in into(). */
+    auto folder = filename_.parent();
+    auto added = smlt::get_app()->vfs->insert_search_path(0, folder);
+    raii::Finally finally([&]() {
+        if(added) {
+            smlt::get_app()->vfs->remove_search_path(folder);
+        }
+    });
+
+    auto scripts_it =
+        maybe_scene_it.value()["extensions"]["SMLT_scene_script"]["scripts"];
+    if(!scripts_it.is_valid()) {
+        return true; // No scripts declared - not an error.
+    }
+
+    for(auto& entry: scripts_it) {
+        auto script_it = entry.to_iterator();
+
+        SceneScriptDef def;
+        def.language = script_it["language"]->to_str().value_or("");
+        def.type = script_it["type"]->to_str().value_or("");
+        def.class_name = script_it["class"]->to_str().value_or("");
+        auto uri = script_it["uri"]->to_str().value_or("");
+
+        if(def.language != "lua") {
+            S_ERROR("SMLT_scene_script: unsupported language '{0}'",
+                    def.language);
+            return false;
+        }
+
+        if(def.type != "scene" && def.type != "stage_node") {
+            S_ERROR("SMLT_scene_script: unknown type '{0}'", def.type);
+            return false;
+        }
+
+        if(def.class_name.empty() || uri.empty()) {
+            S_ERROR("SMLT_scene_script: entry missing 'class' or 'uri'");
+            return false;
+        }
+
+        if(!resolve_script_source(uri, def.source)) {
+            return false;
+        }
+
+        out.push_back(def);
+    }
+
+    return true;
+}
+
 } // namespace loaders
 } // namespace smlt

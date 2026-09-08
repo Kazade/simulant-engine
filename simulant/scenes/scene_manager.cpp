@@ -19,6 +19,8 @@
 
 #include "scene_manager.h"
 #include "scene.h"
+#include "../asset_manager.h"
+#include "../loaders/gltf_loader.h"
 #include "../window.h"
 #include "../application.h"
 #include "../scripting/lua/interpreter.h"
@@ -187,8 +189,10 @@ bool SceneManager::register_scene(const char* script_data,
     return register_scene_from_lua_state(lua->lua_state(), class_name);
 }
 
-bool SceneManager::register_scene_from_lua_state(lua_State* L,
-                                                 const char* class_name) {
+bool SceneManager::register_scene_from_lua_state(
+    lua_State* L, const char* class_name, PrefabPtr prefab,
+    const std::vector<std::pair<std::string, std::string>>&
+        stage_node_scripts) {
     luabridge::LuaRef klass = luabridge::getGlobal(L, class_name);
     if(klass.isNil()) {
         S_ERROR("Unable to find specified class in Lua file: {0}", class_name);
@@ -214,8 +218,17 @@ bool SceneManager::register_scene_from_lua_state(lua_State* L,
     // torn down) would call luaL_unref on already-freed Lua memory.
     std::string klass_name(class_name);
 
+    // Converted once here (rather than captured as pairs and converted on
+    // every instantiation) since LuaStageNodeScriptDef is only visible in
+    // this .cpp — the header keeps this method's signature Lua-agnostic.
+    std::vector<LuaStageNodeScriptDef> node_script_defs;
+    for(auto& p: stage_node_scripts) {
+        node_script_defs.push_back({p.first, p.second});
+    }
+
     _store_scene_factory(
-        name, [L, klass_name, name, this](Window* window) -> ScenePtr {
+        name, [L, klass_name, name, prefab, node_script_defs,
+               this](Window* window) -> ScenePtr {
         lua_getglobal(L, klass_name.c_str());
         if(lua_isnil(L, -1)) {
             lua_pop(L, 1);
@@ -233,8 +246,9 @@ bool SceneManager::register_scene_from_lua_state(lua_State* L,
             luabridge::LuaRef instance =
                 *constructor.call<luabridge::LuaRef>(klass, window);
 
-            std::shared_ptr<LuaScene> ret(new LuaScene(window, instance),
-                                          &SceneManager::deleter<LuaScene>);
+            std::shared_ptr<LuaScene> ret(
+                new LuaScene(window, instance, prefab, node_script_defs),
+                &SceneManager::deleter<LuaScene>);
 
             // Wire the wrapper table to the real C++ scene using a raw
             // table set so that __newindex metamethods (if any) are
@@ -258,6 +272,65 @@ bool SceneManager::register_scene_from_lua_state(lua_State* L,
     });
 
     return true;
+}
+
+bool SceneManager::register_scene(const Path& gltf_path) {
+    auto loader = smlt::get_app()->loader_for(gltf_path);
+    if(!loader) {
+        S_ERROR("Unable to find a loader for: {0}", gltf_path.str());
+        return false;
+    }
+
+    auto gltf_loader = std::dynamic_pointer_cast<loaders::GLTFLoader>(loader);
+    if(!gltf_loader) {
+        S_ERROR("Not a gltf/glb file: {0}", gltf_path.str());
+        return false;
+    }
+
+    std::vector<loaders::GLTFLoader::SceneScriptDef> scripts;
+    if(!gltf_loader->find_scene_scripts(scripts)) {
+        return false;
+    }
+
+    const loaders::GLTFLoader::SceneScriptDef* scene_script = nullptr;
+    std::vector<std::pair<std::string, std::string>> stage_node_scripts;
+    for(auto& s: scripts) {
+        if(s.type == "scene") {
+            if(scene_script) {
+                S_ERROR("gltf file '{0}' declares more than one "
+                        "SMLT_scene_script of type 'scene'",
+                        gltf_path.str());
+                return false;
+            }
+            scene_script = &s;
+        } else {
+            stage_node_scripts.push_back({s.source, s.class_name});
+        }
+    }
+
+    if(!scene_script) {
+        S_ERROR("gltf file '{0}' has no SMLT_scene_script of type 'scene'",
+                gltf_path.str());
+        return false;
+    }
+
+    // Loaded once here; every future instantiation of this route reuses the
+    // same Prefab template, exactly like any other Prefab asset shared
+    // across multiple PrefabInstance nodes.
+    auto prefab = smlt::get_app()->shared_assets->load_prefab(gltf_path);
+    if(!prefab) {
+        S_ERROR("Unable to load gltf scene graph: {0}", gltf_path.str());
+        return false;
+    }
+
+    auto lua = smlt::get_app()->ensure_lua_ready();
+    if(!lua->load_string(scene_script->source.c_str())) {
+        return false;
+    }
+
+    return register_scene_from_lua_state(lua->lua_state(),
+                                         scene_script->class_name.c_str(),
+                                         prefab, stage_node_scripts);
 }
 
 }
