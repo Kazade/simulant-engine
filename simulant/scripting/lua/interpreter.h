@@ -33,6 +33,7 @@
 #endif
 // clang-format on
 #include "../../generic/optional.h"
+#include "../../nodes/prefab_instance.h"
 #include "../../nodes/stage_node.h"
 #include "../../path.h"
 #include "../../scenes/scene.h"
@@ -253,6 +254,17 @@ private:
     std::set<NodeParam> params_;
 };
 
+/* A Lua stage-node script to auto-register (via register_stage_node) when a
+ * LuaScene is constructed, before any content is created. This lets a scene
+ * bring its own Lua-authored node types along with it (used by scenes
+ * registered from a gltf's SMLT_scene_script extension, where a
+ * "stage_node"-type entry needs to exist by the time the gltf's own nodes
+ * are instantiated). */
+struct LuaStageNodeScriptDef {
+    std::string source;
+    std::string class_name;
+};
+
 class LuaScene: public Scene {
 private:
     struct Pimpl {
@@ -263,19 +275,38 @@ private:
     };
 
     Pimpl* ref_ = nullptr;
+    PrefabPtr prefab_;
 
     friend class SceneManager;
 
 public:
-    LuaScene(Window* window, luabridge::LuaRef instance) :
+    LuaScene(Window* window, luabridge::LuaRef instance,
+             PrefabPtr prefab = PrefabPtr(),
+             const std::vector<LuaStageNodeScriptDef>& stage_node_scripts = {}) :
         Scene(window),
-        ref_(new Pimpl(instance)) {}
+        ref_(new Pimpl(instance)),
+        prefab_(prefab) {
+
+        for(auto& def: stage_node_scripts) {
+            if(!register_stage_node(def.source.c_str(), def.class_name.c_str())) {
+                S_ERROR("Failed to register stage node script class '{0}'",
+                        def.class_name);
+            }
+        }
+    }
 
     ~LuaScene() override {
         delete ref_;
     }
 
     void on_load() override {
+        // Instantiate the gltf's own node graph (if any) before running the
+        // script's own on_load, exactly as if it were a PrefabInstance
+        // created first thing in a hand-written C++ Scene::on_load().
+        if(prefab_) {
+            create_child<PrefabInstance>(prefab_);
+        }
+
         call_lua_method("on_load");
     }
 

@@ -341,10 +341,27 @@ public:
     bool register_scene(const Path& script, const char* class_name);
     bool register_scene(const char* script_data, const char* class_name);
 
+    /* Registers a scene directly from a .gltf/.glb file's SMLT_scene_script
+     * extension (see GLTFLoader::SceneScriptDef for the JSON shape). The
+     * gltf's default scene must declare exactly one script of type "scene"
+     * — that script's class is instantiated as the Scene, and the gltf's
+     * own node graph is instantiated inside it as if by a PrefabInstance.
+     * Any "stage_node"-type scripts are registered on each scene instance
+     * before that happens, so the gltf's nodes can reference them by name.
+     * The route name, as with the text-script overloads above, comes from
+     * smlt.define_scene() inside the "scene"-type script. */
+    bool register_scene(const Path& gltf_path);
+
 private:
-    /* Shared implementation used by both register_scene overloads above
-       after the Lua state has been loaded. */
-    bool register_scene_from_lua_state(lua_State* L, const char* class_name);
+    /* Shared implementation used by all three register_scene overloads
+       above once the Lua state has been loaded. When gltf_path is set
+       (non-empty, only for the gltf overload) the prefab is loaded lazily
+       inside the factory — at scene instantiation, not registration — so
+       that unused routes don't hold heavyweight asset data in memory. */
+    bool register_scene_from_lua_state(
+        lua_State* L, const char* class_name, Path gltf_path = Path(),
+        const std::vector<std::pair<std::string, std::string>>&
+            stage_node_scripts = {});
 
     void _store_scene_factory(const std::string& name, SceneFactory func) {
         scene_factories_[name] = func;
