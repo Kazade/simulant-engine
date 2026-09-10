@@ -39,15 +39,15 @@ smlt_ui_px_t* smlt_ui_px_create_from_int(const int* rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px((*rhs)));
 }
 
-smlt_ui_px_t* smlt_ui_px_create_from_uint16(const unsigned int* rhs) {
+smlt_ui_px_t* smlt_ui_px_create_from_uint16(const uint16_t* rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px((*rhs)));
 }
 
-smlt_ui_px_t* smlt_ui_px_create_from_uint(const unsigned long* rhs) {
+smlt_ui_px_t* smlt_ui_px_create_from_uint(const unsigned int* rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px((*rhs)));
 }
 
-smlt_ui_px_t* smlt_ui_px_create_from_ulong(const unsigned short* rhs) {
+smlt_ui_px_t* smlt_ui_px_create_from_ulong(const unsigned long* rhs) {
     return reinterpret_cast<smlt_ui_px_t*>(new smlt::ui::Px((*rhs)));
 }
 

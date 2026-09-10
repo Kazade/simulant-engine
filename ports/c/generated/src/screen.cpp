@@ -20,7 +20,7 @@ smlt_screen_t* smlt_screen_create(smlt_window_t* window, const char* name, uint1
     return reinterpret_cast<smlt_screen_t*>(new smlt::Screen(reinterpret_cast<smlt::Window*>(window), std::string(name ? name : ""), w, h, static_cast<smlt::ScreenFormat>(format), refresh));
 }
 
-void smlt_screen_render(smlt_screen_t* self, const unsigned char* data) {
+void smlt_screen_render(smlt_screen_t* self, const uint8_t* data) {
     reinterpret_cast<smlt::Screen*>(self)->render(data);
 }
 

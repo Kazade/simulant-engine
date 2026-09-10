@@ -66,12 +66,35 @@ if(VALAC_EXECUTABLE)
   target_include_directories(simulant-vala PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
   target_link_libraries(simulant-vala PUBLIC simulant-c simulant)
 
-  find_package(PkgConfig REQUIRED)
-  pkg_check_modules(SIMULANT_VALA_GLIB REQUIRED glib-2.0 gobject-2.0)
-  target_include_directories(simulant-vala PRIVATE ${SIMULANT_VALA_GLIB_INCLUDE_DIRS})
-  target_compile_options(simulant-vala PRIVATE ${SIMULANT_VALA_GLIB_CFLAGS_OTHER})
-  target_link_libraries(simulant-vala PUBLIC ${SIMULANT_VALA_GLIB_LIBRARIES})
-  target_link_directories(simulant-vala PUBLIC ${SIMULANT_VALA_GLIB_LIBRARY_DIRS})
+  # valac deliberately emits its vtable dispatch wrappers with a void*
+  # first parameter and assigns them straight to our typed function
+  # pointer fields, e.g.
+  #
+  #     void __smlt_scene_dispatch_on_load_...(void* _self_, void* user_data);
+  #     vtable.on_load = __smlt_scene_dispatch_on_load_...;   /* wants smlt_scene_t* */
+  #
+  # relying on those having identical representation, which they do. GCC
+  # 14 made -Wincompatible-pointer-types an error by default, so whether
+  # this builds comes down to the individual compiler's default rather
+  # than anything about the code: it's a warning on the GCC 16 host here
+  # and a hard error on the sh-elf GCC 15.2 used for Dreamcast.
+  #
+  # Demoted back to a warning rather than silenced, so a *genuine* pointer
+  # mismatch in this generated code would still be visible. The real fix
+  # is for cgen.py to emit casts in the vtable assignments; until then this
+  # keeps the generated sources building the same way everywhere.
+  if(NOT CMAKE_C_COMPILER_ID MATCHES "MSVC")
+    target_compile_options(simulant-vala PRIVATE -Wno-error=incompatible-pointer-types)
+  endif()
+
+  # Our own vendored glib (deps/glib), built for whatever platform Simulant
+  # itself is being built for -- see cmake/BuildGLib.cmake for why this
+  # exists instead of a plain pkg_check_modules(glib-2.0 gobject-2.0)
+  # against the system's glib (short version: there usually isn't one, on
+  # Dreamcast/PSP).
+  include(${CMAKE_SOURCE_DIR}/cmake/BuildGLib.cmake)
+  simulant_build_glib()
+  target_link_libraries(simulant-vala PUBLIC SimulantGLib::glib SimulantGLib::gobject)
   # Regression check, not a build dependency of anything: transpiles
   # tests/smoke_test.vala against the checked-in .vapi to catch it drifting
   # out of sync with ports/c/generated/ (e.g. after a manual edit, or a

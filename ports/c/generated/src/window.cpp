@@ -58,7 +58,7 @@ void smlt_window_set_title(smlt_window_t* self, const char* title) {
     reinterpret_cast<smlt::Window*>(self)->set_title(std::string(title ? title : ""));
 }
 
-void smlt_window_cursor_position(smlt_window_t* self, int* mouse_x, int* mouse_y) {
+void smlt_window_cursor_position(smlt_window_t* self, int32_t* mouse_x, int32_t* mouse_y) {
     reinterpret_cast<smlt::Window*>(self)->cursor_position((*mouse_x), (*mouse_y));
 }
 
@@ -218,7 +218,7 @@ void smlt_window_set_last_frame_rendered_id(smlt_window_t* self, uint32_t id) {
     reinterpret_cast<smlt::Window*>(self)->set_last_frame_rendered_id(id);
 }
 
-const unsigned int* smlt_window_last_frame_rendered_id(const smlt_window_t* self) {
+const uint32_t* smlt_window_last_frame_rendered_id(const smlt_window_t* self) {
     return &(reinterpret_cast<const smlt::Window*>(self)->last_frame_rendered_id());
 }
 

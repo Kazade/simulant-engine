@@ -62,7 +62,7 @@ unsigned long smlt_asset_manager_binary_count(const smlt_asset_manager_t* self);
 bool smlt_asset_manager_has_binary(const smlt_asset_manager_t* self, unsigned long id);
 smlt_binary_t* smlt_asset_manager_find_binary(smlt_asset_manager_t* self, const char* name);
 void smlt_asset_manager_destroy_binary(smlt_asset_manager_t* self, unsigned long id);
-smlt_font_t* smlt_asset_manager_create_font_from_memory(smlt_asset_manager_t* self, const unsigned char* data, unsigned long size, const smlt_font_flags_t* flags, smlt_garbage_collect_method_t garbage_collect);
+smlt_font_t* smlt_asset_manager_create_font_from_memory(smlt_asset_manager_t* self, const uint8_t* data, unsigned long size, const smlt_font_flags_t* flags, smlt_garbage_collect_method_t garbage_collect);
 smlt_font_t* smlt_asset_manager_create_font_from_family(smlt_asset_manager_t* self, const char* family, const smlt_font_flags_t* flags, smlt_garbage_collect_method_t garbage_collect);
 smlt_font_t* smlt_asset_manager_load_font(smlt_asset_manager_t* self, const smlt_path_t* filename, const smlt_font_flags_t* flags, smlt_garbage_collect_method_t garbage_collect);
 void smlt_asset_manager_destroy_font(smlt_asset_manager_t* self, unsigned long id);

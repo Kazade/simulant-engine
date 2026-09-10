@@ -54,10 +54,6 @@ void smlt_scene_manager_unregister_scene(smlt_scene_manager_t* self, const char*
     reinterpret_cast<smlt::SceneManager*>(self)->unregister_scene(std::string(name ? name : ""));
 }
 
-bool smlt_scene_manager_register_scene_from_library(smlt_scene_manager_t* self, const char* name, const smlt_path_t* path) {
-    return reinterpret_cast<smlt::SceneManager*>(self)->register_scene_from_library(std::string(name ? name : ""), (*reinterpret_cast<const smlt::Path*>(path)));
-}
-
 bool smlt_scene_manager_register_scene_from_source(smlt_scene_manager_t* self, const char* script_data, const char* class_name) {
     return reinterpret_cast<smlt::SceneManager*>(self)->register_scene(script_data, class_name);
 }

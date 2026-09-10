@@ -43,6 +43,34 @@ def _normalize(spelling: str) -> str:
     return spelling.replace("const ", "").replace("volatile ", "").strip()
 
 
+def _pointee_preserving_sugar(t):
+    """Like `t.get_canonical().get_pointee()`, but keeps typedef sugar on
+    the pointee itself where possible (e.g. a `uint32_t*` parameter keeps
+    its pointee spelled `uint32_t`, not fully resolved to `unsigned int`)
+    -- calling get_canonical() on the *pointer* first, as bind_param()/
+    bind_return() used to do unconditionally, canonicalizes the pointee
+    right along with it, discarding that sugar before _primitive_c_type()
+    ever gets a chance to check it against PRESERVED_TYPEDEFS.
+
+    This actually matters, not just cosmetically: on Linux, uint32_t and
+    unsigned int are the same canonical type, so the generated code was
+    identical either way and this bug was invisible. On a target where
+    they're not (confirmed cross-compiling for PSP: PSPSDK's newlib
+    typedefs uint32_t to `unsigned long`, not `unsigned int`), a
+    generated `unsigned int*` parameter binding a real `uint32_t*` C++
+    parameter is an actual type mismatch, not just an ugly signature.
+
+    Only falls back to the fully-canonical pointee (losing the sugar,
+    same as before) when `t` itself is hidden behind an *outer* typedef
+    (e.g. `CameraPtr`/`StageNodePtr` for `T*`) -- plain TYPEDEF-kind
+    types don't support get_pointee() at all until canonicalized, so
+    there's no sugar to lose there that wasn't already gone.
+    """
+    if t.kind in (TypeKind.POINTER, TypeKind.LVALUEREFERENCE, TypeKind.RVALUEREFERENCE):
+        return t.get_pointee()
+    return t.get_canonical().get_pointee()
+
+
 def _is_std_string(t) -> bool:
     # Checked against both sugared (`std::string`) and canonical spellings.
     # The canonical form expands the full template argument list (char
@@ -166,11 +194,11 @@ class TypeMapper:
             raise Unsupported(f"rvalue reference parameter '{name}' ({spelling})")
 
         if canon_kind == TypeKind.LVALUEREFERENCE:
-            pointee = t.get_canonical().get_pointee()
+            pointee = _pointee_preserving_sugar(t)
             return self._bind_indirect_param(pointee, name, spelling, ctx, was_ref=True)
 
         if canon_kind == TypeKind.POINTER:
-            pointee = t.get_canonical().get_pointee()
+            pointee = _pointee_preserving_sugar(t)
             return self._bind_indirect_param(pointee, name, spelling, ctx, was_ref=False)
 
         if canon_kind in (TypeKind.CONSTANTARRAY, TypeKind.INCOMPLETEARRAY, TypeKind.VARIABLEARRAY):
@@ -284,7 +312,7 @@ class TypeMapper:
             raise Unsupported(f"function returns an rvalue reference ({spelling})")
 
         if canon_kind in (TypeKind.LVALUEREFERENCE, TypeKind.POINTER):
-            pointee = t.get_canonical().get_pointee()
+            pointee = _pointee_preserving_sugar(t)
             return self._bind_indirect_return(pointee, spelling, was_pointer=(canon_kind == TypeKind.POINTER))
 
         if canon_kind in (TypeKind.CONSTANTARRAY, TypeKind.INCOMPLETEARRAY):

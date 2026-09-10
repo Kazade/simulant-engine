@@ -50,7 +50,7 @@ prepare:linux-x64-gcc11:
     DOCKERFILE: >- # Generate a Dockerfile for the build image
       FROM fedora:33\n
       RUN dnf update -y && dnf clean all\n
-      RUN dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers\n
+      RUN dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers vala\n
   before_script: # Put the variable into a Dockerfile
     - echo -e $DOCKERFILE > Dockerfile
     - cat Dockerfile
@@ -159,32 +159,56 @@ build:psp-mips-gcc:debug:
   image: kazade/psp-sdk
   variables:
     TARGET: psp-mips-gcc
+  before_script:
+    - apk add --no-cache vala || true
   script:
     - mkdir -p ${TARGET}/debug
     - cd ${TARGET}/debug
-    - psp-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - psp-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/ports/
       - ${TARGET}/debug/assets/
       - ${TARGET}/debug/tests/EBOOT.PBP
+      # Vendored glib/gobject (+ its pcre2/libffi/proxy-libintl subproject
+      # deps) that libsimulant-vala.a's PUBLIC link interface requires --
+      # see cmake/BuildGLib.cmake. Best-effort: only present if valac was
+      # found above and simulant-vala actually built.
+      - ${TARGET}/debug/deps/glib-build/glib/*.a
+      - ${TARGET}/debug/deps/glib-build/glib/*.h
+      - ${TARGET}/debug/deps/glib-build/gobject/*.a
+      - ${TARGET}/debug/deps/glib-build/gobject/*.h
+      - ${TARGET}/debug/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/debug/deps/glib-build/subprojects/libffi-*/src/libffi.a
+      - ${TARGET}/debug/deps/glib-build/subprojects/proxy-libintl-*/libintl.a
 
 build:psp-mips-gcc:release:
   stage: build
   image: kazade/psp-sdk
   variables:
     TARGET: psp-mips-gcc
+  before_script:
+    - apk add --no-cache vala || true
   script:
     - mkdir -p ${TARGET}/release
     - cd ${TARGET}/release
-    - psp-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - psp-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
   artifacts:
     paths:
       - ${TARGET}/release/simulant/
+      - ${TARGET}/release/ports/
       - ${TARGET}/release/assets/
       - ${TARGET}/release/tests/EBOOT.PBP
+      - ${TARGET}/release/deps/glib-build/glib/*.a
+      - ${TARGET}/release/deps/glib-build/glib/*.h
+      - ${TARGET}/release/deps/glib-build/gobject/*.a
+      - ${TARGET}/release/deps/glib-build/gobject/*.h
+      - ${TARGET}/release/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/release/deps/glib-build/subprojects/libffi-*/src/libffi.a
+      - ${TARGET}/release/deps/glib-build/subprojects/proxy-libintl-*/libintl.a
 
 test:psp-mips-gcc:
   stage: test
@@ -218,6 +242,22 @@ test:psp-mips-gcc:
     paths:
       - ${TARGET}/debug/simulant/libsimulant.a
       - ${TARGET}/release/simulant/libsimulant.a
+      - ${TARGET}/debug/ports/
+      - ${TARGET}/release/ports/
+      - ${TARGET}/debug/deps/glib-build/glib/*.a
+      - ${TARGET}/debug/deps/glib-build/glib/*.h
+      - ${TARGET}/debug/deps/glib-build/gobject/*.a
+      - ${TARGET}/debug/deps/glib-build/gobject/*.h
+      - ${TARGET}/debug/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/debug/deps/glib-build/subprojects/libffi-*/src/libffi.a
+      - ${TARGET}/debug/deps/glib-build/subprojects/proxy-libintl-*/libintl.a
+      - ${TARGET}/release/deps/glib-build/glib/*.a
+      - ${TARGET}/release/deps/glib-build/glib/*.h
+      - ${TARGET}/release/deps/glib-build/gobject/*.a
+      - ${TARGET}/release/deps/glib-build/gobject/*.h
+      - ${TARGET}/release/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/release/deps/glib-build/subprojects/libffi-*/src/libffi.a
+      - ${TARGET}/release/deps/glib-build/subprojects/proxy-libintl-*/libintl.a
 
 build:windows-x64-vcxx:release:
   stage: build
@@ -249,7 +289,7 @@ build:windows-x64-mingw:release:
   script:
     - mkdir -p ${TARGET}/release
     - cd ${TARGET}/release
-    - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
     - cp $MINGW_BIN_DIR/zlib1.dll simulant/
     - cp $MINGW_BIN_DIR/SDL2.dll simulant/
@@ -261,6 +301,13 @@ build:windows-x64-mingw:release:
   artifacts:
     paths:
       - ${TARGET}/release/simulant/*.dll
+      - ${TARGET}/release/ports/
+      - ${TARGET}/release/deps/glib-build/glib/*.a
+      - ${TARGET}/release/deps/glib-build/glib/*.h
+      - ${TARGET}/release/deps/glib-build/gobject/*.a
+      - ${TARGET}/release/deps/glib-build/gobject/*.h
+      - ${TARGET}/release/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/release/deps/glib-build/subprojects/libffi-*/src/libffi.a
 
 build:windows-x64-mingw:debug:
   stage: build
@@ -271,7 +318,7 @@ build:windows-x64-mingw:debug:
   script:
     - mkdir -p ${TARGET}/debug
     - cd ${TARGET}/debug
-    - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - sleep 5 && set -m && mingw64-cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
     - cp $MINGW_BIN_DIR/zlib1.dll simulant/
     - cp $MINGW_BIN_DIR/SDL2.dll simulant/
@@ -286,10 +333,17 @@ build:windows-x64-mingw:debug:
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/ports/
       - ${TARGET}/debug/assets/
       - ${TARGET}/debug/tests/simulant_tests.exe
       - ${TARGET}/debug/tests/*.*
       - ${TARGET}/debug/tests/*.dll
+      - ${TARGET}/debug/deps/glib-build/glib/*.a
+      - ${TARGET}/debug/deps/glib-build/glib/*.h
+      - ${TARGET}/debug/deps/glib-build/gobject/*.a
+      - ${TARGET}/debug/deps/glib-build/gobject/*.h
+      - ${TARGET}/debug/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/debug/deps/glib-build/subprojects/libffi-*/src/libffi.a
 
 test:windows-x64-mingw:
   stage: test
@@ -393,23 +447,32 @@ build:evercade-armv7-gcc:
   image: kazade/evercade-sdk
   variables:
     TARGET: evercade-armv7-gcc
+  # Note: valac is deliberately not installed here. cmake/BuildGLib.cmake's
+  # cross-compile handling only special-cases PLATFORM_PSP/PLATFORM_DREAMCAST;
+  # its else() branch assumes a native host build, so enabling valac (and
+  # therefore simulant-vala, which pulls in a from-source glib build) here
+  # would try to configure glib's Meson build as if compiling natively with
+  # this toolchain's cross-compiler, which isn't supported and would likely
+  # break the whole job. simulant-c (no glib dependency) still builds fine.
   script:
     - mkdir -p ${TARGET}/debug
     - cd ${TARGET}/debug
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Evercade.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Evercade.cmake -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
     - cd ../..
     - mkdir -p ${TARGET}/release
     - cd ${TARGET}/release
-    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Evercade.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Evercade.cmake -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/ports/
       - ${TARGET}/debug/assets/
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/debug/tests/*.*
       - ${TARGET}/release/simulant/
+      - ${TARGET}/release/ports/
       - ${TARGET}/release/assets/
       - ${TARGET}/release/tests/simulant_tests
 
@@ -418,23 +481,28 @@ build:raspberrypi-armv7-gcc:
   image: kazade/raspberrypi-sdk
   variables:
     TARGET: raspberrypi-armv7-gcc
+  # Note: valac deliberately not installed -- see the same note on
+  # build:evercade-armv7-gcc above; cmake/BuildGLib.cmake has no cross-file
+  # support for this toolchain, so simulant-vala can't build here yet.
   script:
     - mkdir -p ${TARGET}/debug
     - cd ${TARGET}/debug
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/RaspberryPi.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/RaspberryPi.cmake -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
     - cd ../..
     - mkdir -p ${TARGET}/release
     - cd ${TARGET}/release
-    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/RaspberryPi.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/RaspberryPi.cmake -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/ports/
       - ${TARGET}/debug/assets/
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/debug/tests/*.*
       - ${TARGET}/release/simulant/
+      - ${TARGET}/release/ports/
       - ${TARGET}/release/assets/
       - ${TARGET}/release/tests/simulant_tests
 
@@ -446,23 +514,37 @@ build:linux-x64-gcc11:
   script:
     - mkdir -p ${TARGET}/debug
     - cd ${TARGET}/debug
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
     - cd ../..
     - mkdir -p ${TARGET}/release
     - cd ${TARGET}/release
-    - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - cmake -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/ports/
       - ${TARGET}/debug/assets/
       - ${TARGET}/debug/tests/simulant_tests
       - ${TARGET}/debug/tests/*.*
       - ${TARGET}/release/simulant/
+      - ${TARGET}/release/ports/
       - ${TARGET}/release/assets/
       - ${TARGET}/release/tests/simulant_tests
       - ${TARGET}/release/tests/*.*
+      - ${TARGET}/debug/deps/glib-build/glib/*.a
+      - ${TARGET}/debug/deps/glib-build/glib/*.h
+      - ${TARGET}/debug/deps/glib-build/gobject/*.a
+      - ${TARGET}/debug/deps/glib-build/gobject/*.h
+      - ${TARGET}/debug/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/debug/deps/glib-build/subprojects/libffi-*/src/libffi.a
+      - ${TARGET}/release/deps/glib-build/glib/*.a
+      - ${TARGET}/release/deps/glib-build/glib/*.h
+      - ${TARGET}/release/deps/glib-build/gobject/*.a
+      - ${TARGET}/release/deps/glib-build/gobject/*.h
+      - ${TARGET}/release/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/release/deps/glib-build/subprojects/libffi-*/src/libffi.a
 
 test:linux-x64-gcc11-debug:
   stage: test
@@ -571,26 +653,44 @@ build:dreamcast-sh4-gcc:
   image: kazade/dreamcast-sdk
   variables:
     TARGET: dreamcast-sh4-gcc
+  before_script:
+    - dnf install -y vala || true
   script:
     - source /etc/bash.bashrc
     - mkdir -p ${TARGET}/debug
     - cd ${TARGET}/debug
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
     - cd ../..
     - mkdir -p ${TARGET}/release
     - cd ${TARGET}/release
-    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../../toolchains/Dreamcast.cmake -DSIMULANT_BUILD_SAMPLES=OFF -DSIMULANT_BUILD_C_BINDINGS=ON ../..
     - make -j3
   artifacts:
     paths:
       - ${TARGET}/debug/simulant/
+      - ${TARGET}/debug/ports/
       - ${TARGET}/debug/assets/
       - ${TARGET}/debug/tests/*.*
       - ${TARGET}/release/tests/simulant_tests.elf
       - ${TARGET}/release/tests/*.*
       - ${TARGET}/release/assets/
       - ${TARGET}/release/simulant/
+      - ${TARGET}/release/ports/
+      - ${TARGET}/debug/deps/glib-build/glib/*.a
+      - ${TARGET}/debug/deps/glib-build/glib/*.h
+      - ${TARGET}/debug/deps/glib-build/gobject/*.a
+      - ${TARGET}/debug/deps/glib-build/gobject/*.h
+      - ${TARGET}/debug/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/debug/deps/glib-build/subprojects/libffi-*/src/libffi.a
+      - ${TARGET}/debug/deps/glib-build/subprojects/proxy-libintl-*/libintl.a
+      - ${TARGET}/release/deps/glib-build/glib/*.a
+      - ${TARGET}/release/deps/glib-build/glib/*.h
+      - ${TARGET}/release/deps/glib-build/gobject/*.a
+      - ${TARGET}/release/deps/glib-build/gobject/*.h
+      - ${TARGET}/release/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/release/deps/glib-build/subprojects/libffi-*/src/libffi.a
+      - ${TARGET}/release/deps/glib-build/subprojects/proxy-libintl-*/libintl.a
 
 test:dreamcast-sh4-gcc:
   # Nitrocast is failing on stack unwinding and until that is fixed
@@ -619,6 +719,22 @@ test:dreamcast-sh4-gcc:
       - ${TARGET}/debug/simulant/*.a
       - ${TARGET}/release/simulant/*.a
       - ${TARGET}/release/*.out
+      - ${TARGET}/debug/ports/
+      - ${TARGET}/release/ports/
+      - ${TARGET}/debug/deps/glib-build/glib/*.a
+      - ${TARGET}/debug/deps/glib-build/glib/*.h
+      - ${TARGET}/debug/deps/glib-build/gobject/*.a
+      - ${TARGET}/debug/deps/glib-build/gobject/*.h
+      - ${TARGET}/debug/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/debug/deps/glib-build/subprojects/libffi-*/src/libffi.a
+      - ${TARGET}/debug/deps/glib-build/subprojects/proxy-libintl-*/libintl.a
+      - ${TARGET}/release/deps/glib-build/glib/*.a
+      - ${TARGET}/release/deps/glib-build/glib/*.h
+      - ${TARGET}/release/deps/glib-build/gobject/*.a
+      - ${TARGET}/release/deps/glib-build/gobject/*.h
+      - ${TARGET}/release/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
+      - ${TARGET}/release/deps/glib-build/subprojects/libffi-*/src/libffi.a
+      - ${TARGET}/release/deps/glib-build/subprojects/proxy-libintl-*/libintl.a
 
 .deploy:deploy:
   stage: deploy
@@ -635,9 +751,45 @@ test:dreamcast-sh4-gcc:
     - mkdir -p ./upload/${TARGET}/lib/debug
     - mkdir -p ./upload/${TARGET}/lib/release
     - mkdir -p ./upload/${TARGET}/include/simulant
+    - mkdir -p ./upload/${TARGET}/include/vapi
+    - mkdir -p ./upload/${TARGET}/include/glib-vendor
     - cp ${TARGET}/release/simulant/*.${LIB_EXT} ./upload/${TARGET}/lib/release/
     - cp ${TARGET}/debug/simulant/*.${LIB_EXT} ./upload/${TARGET}/lib/debug/
+    # libsimulant-c and libsimulant-vala are always static (.a), regardless of LIB_EXT,
+    # and are only produced where SIMULANT_BUILD_C_BINDINGS/valac are available, so these
+    # are best-effort copies.
+    - cp ${TARGET}/release/ports/c/*.a ./upload/${TARGET}/lib/release/ 2>/dev/null || true
+    - cp ${TARGET}/debug/ports/c/*.a ./upload/${TARGET}/lib/debug/ 2>/dev/null || true
+    - cp ${TARGET}/release/ports/vala/*.a ./upload/${TARGET}/lib/release/ 2>/dev/null || true
+    - cp ${TARGET}/debug/ports/vala/*.a ./upload/${TARGET}/lib/debug/ 2>/dev/null || true
+    # libsimulant-vala.a's PUBLIC link interface requires glib/gobject (and
+    # their own pcre2/libffi/proxy-libintl deps) -- see cmake/BuildGLib.cmake
+    # -- so these are bundled too, otherwise the package would be unusable
+    # from Vala. Also best-effort: only present where simulant-vala built.
+    - cp ${TARGET}/release/deps/glib-build/glib/*.a ./upload/${TARGET}/lib/release/ 2>/dev/null || true
+    - cp ${TARGET}/debug/deps/glib-build/glib/*.a ./upload/${TARGET}/lib/debug/ 2>/dev/null || true
+    - cp ${TARGET}/release/deps/glib-build/gobject/*.a ./upload/${TARGET}/lib/release/ 2>/dev/null || true
+    - cp ${TARGET}/debug/deps/glib-build/gobject/*.a ./upload/${TARGET}/lib/debug/ 2>/dev/null || true
+    - cp ${TARGET}/release/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a ./upload/${TARGET}/lib/release/ 2>/dev/null || true
+    - cp ${TARGET}/debug/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a ./upload/${TARGET}/lib/debug/ 2>/dev/null || true
+    - cp ${TARGET}/release/deps/glib-build/subprojects/libffi-*/src/libffi.a ./upload/${TARGET}/lib/release/ 2>/dev/null || true
+    - cp ${TARGET}/debug/deps/glib-build/subprojects/libffi-*/src/libffi.a ./upload/${TARGET}/lib/debug/ 2>/dev/null || true
+    - cp ${TARGET}/release/deps/glib-build/subprojects/proxy-libintl-*/libintl.a ./upload/${TARGET}/lib/release/ 2>/dev/null || true
+    - cp ${TARGET}/debug/deps/glib-build/subprojects/proxy-libintl-*/libintl.a ./upload/${TARGET}/lib/debug/ 2>/dev/null || true
     - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
+    - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' ports/c/generated/include/simulant ./upload/${TARGET}/include
+    - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' ports/c/include/simulant ./upload/${TARGET}/include
+    - cp ports/vala/*.vapi ./upload/${TARGET}/include/vapi/
+    - cp ${TARGET}/release/ports/vala/simulant-vala.vapi ./upload/${TARGET}/include/vapi/ 2>/dev/null || true
+    - cp ${TARGET}/release/ports/vala/simulant-vala.h ./upload/${TARGET}/include/vapi/ 2>/dev/null || true
+    # Mirrors deps/glib's own layout (glib/, gobject/ subdirs) merged with
+    # the platform's build-generated headers (glibconfig.h, glib-enumtypes.h,
+    # gversionmacros.h, glib-visibility.h, gobject-visibility.h, ...) so a
+    # consumer's include path is just include/glib-vendor(/glib|/gobject).
+    - rsync -avm -L --include='*.h' -f 'hide,! */' deps/glib/glib ./upload/${TARGET}/include/glib-vendor/
+    - rsync -avm -L --include='*.h' -f 'hide,! */' deps/glib/gobject ./upload/${TARGET}/include/glib-vendor/
+    - cp ${TARGET}/release/deps/glib-build/glib/*.h ./upload/${TARGET}/include/glib-vendor/glib/ 2>/dev/null || true
+    - cp ${TARGET}/release/deps/glib-build/gobject/*.h ./upload/${TARGET}/include/glib-vendor/gobject/ 2>/dev/null || true
     - cd upload
     - zip -r ${TARGET}.zip ${TARGET}/
     - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a

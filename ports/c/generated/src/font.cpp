@@ -22,7 +22,7 @@ smlt_generic_data_carrier_t* smlt_font_data(smlt_font_t* self) {
     return reinterpret_cast<smlt_generic_data_carrier_t*>((*reinterpret_cast<std::shared_ptr<smlt::Font>*>(self))->data.get());
 }
 
-char* smlt_font_generate_name(const char* family, const unsigned short* size, smlt_font_weight_t weight, smlt_font_style_t style) {
+char* smlt_font_generate_name(const char* family, const uint16_t* size, smlt_font_weight_t weight, smlt_font_style_t style) {
     return smlt_c_strdup((smlt::Font::generate_name(std::string(family ? family : ""), (*size), static_cast<smlt::FontWeight>(weight), static_cast<smlt::FontStyle>(style))).c_str());
 }
 

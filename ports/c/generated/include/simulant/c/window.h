@@ -20,7 +20,7 @@ smlt_input_state_t* smlt_window_input_state(smlt_window_t* self);
 smlt_compositor_t* smlt_window_compositor(smlt_window_t* self);
 bool smlt_window_create_window(smlt_window_t* self, uint16_t width, uint16_t height, uint8_t bpp, bool fullscreen, bool enable_vsync);
 void smlt_window_set_title(smlt_window_t* self, const char* title);
-void smlt_window_cursor_position(smlt_window_t* self, int* mouse_x, int* mouse_y);
+void smlt_window_cursor_position(smlt_window_t* self, int32_t* mouse_x, int32_t* mouse_y);
 void smlt_window_show_cursor(smlt_window_t* self, bool cursor_shown);
 void smlt_window_lock_cursor(smlt_window_t* self, bool cursor_locked);
 void smlt_window_check_events(smlt_window_t* self);
@@ -60,7 +60,7 @@ void smlt_window_set_clear_every_frame(smlt_window_t* self, uint32_t clear_flags
 uint32_t smlt_window_clear_every_frame_flags(const smlt_window_t* self);
 smlt_color_t* smlt_window_clear_every_frame_color(const smlt_window_t* self);
 void smlt_window_set_last_frame_rendered_id(smlt_window_t* self, uint32_t id);
-const unsigned int* smlt_window_last_frame_rendered_id(const smlt_window_t* self);
+const uint32_t* smlt_window_last_frame_rendered_id(const smlt_window_t* self);
 void smlt_window_register_event_listener(smlt_window_t* self, smlt_event_listener_t* listener);
 void smlt_window_unregister_event_listener(smlt_window_t* self, smlt_event_listener_t* listener);
 

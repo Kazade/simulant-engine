@@ -144,14 +144,6 @@ public Scene? active_scene() { return Scene.active(native); }
             _c_scene_manager_unregister_scene(native, name);
         }
 
-        [CCode (cname = "smlt_scene_manager_register_scene_from_library", cheader_filename = "simulant/c/scene_manager.h")]
-        private static extern bool _c_scene_manager_register_scene_from_library(void* self, string name, Path path);
-
-        [CCode (cname = "smlt_vala_scene_manager_register_scene_from_library")]
-        public bool register_scene_from_library(string name, Path path) {
-            return _c_scene_manager_register_scene_from_library(native, name, path);
-        }
-
         [CCode (cname = "smlt_scene_manager_register_scene_from_source", cheader_filename = "simulant/c/scene_manager.h")]
         private static extern bool _c_scene_manager_register_scene_from_source(void* self, string script_data, string class_name);
 

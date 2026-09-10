@@ -40,7 +40,7 @@ void smlt_application_stop_running(smlt_application_t* self);
 bool smlt_application_is_shutting_down(const smlt_application_t* self);
 void smlt_application_shutdown(smlt_application_t* self);
 bool smlt_application_activate_language(smlt_application_t* self, const char* language_code);
-bool smlt_application_activate_language_from_arb_data(smlt_application_t* self, const unsigned char* data, unsigned long byte_size);
+bool smlt_application_activate_language_from_arb_data(smlt_application_t* self, const uint8_t* data, unsigned long byte_size);
 char* smlt_application_active_language(const smlt_application_t* self);
 void* smlt_application_platform_state(smlt_application_t* self);
 void smlt_application_set_updates_enabled(smlt_application_t* self, unsigned int mask);

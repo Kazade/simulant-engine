@@ -30,12 +30,12 @@ void smlt_texture_set_texture_wrap_v(smlt_texture_t* self, smlt_texture_wrap_t w
 void smlt_texture_set_texture_wrap_w(smlt_texture_t* self, smlt_texture_wrap_t wrap_w);
 void smlt_texture_set_auto_upload(smlt_texture_t* self, bool v);
 void smlt_texture_set_mipmap_generation(smlt_texture_t* self, smlt_mipmap_generate_t type);
-const unsigned char* smlt_texture_data(const smlt_texture_t* self);
+const uint8_t* smlt_texture_data(const smlt_texture_t* self);
 uint32_t smlt_texture_data_size(const smlt_texture_t* self);
 unsigned long smlt_texture_texel_size(const smlt_texture_t* self);
 unsigned long smlt_texture_required_data_size(smlt_texture_format_t fmt, uint16_t width, uint16_t height);
-void smlt_texture_set_data(smlt_texture_t* self, const unsigned char* data, unsigned long size);
-unsigned char* smlt_texture_map_data(smlt_texture_t* self, unsigned long size);
+void smlt_texture_set_data(smlt_texture_t* self, const uint8_t* data, unsigned long size);
+uint8_t* smlt_texture_map_data(smlt_texture_t* self, unsigned long size);
 void smlt_texture_free(smlt_texture_t* self);
 bool smlt_texture_has_data(const smlt_texture_t* self);
 void smlt_texture_flush(smlt_texture_t* self);
@@ -62,8 +62,8 @@ bool smlt_texture_data_dirty(const smlt_texture_t* self);
 void smlt_texture_set_data_clean(smlt_texture_t* self);
 bool smlt_texture_params_dirty(const smlt_texture_t* self);
 void smlt_texture_set_has_mipmaps(smlt_texture_t* self, bool v);
-unsigned char* smlt_texture_stash_paletted_data(smlt_texture_t* self);
-void smlt_texture_adopt_data(smlt_texture_t* self, unsigned char* data, uint32_t size);
+uint8_t* smlt_texture_stash_paletted_data(smlt_texture_t* self);
+void smlt_texture_adopt_data(smlt_texture_t* self, uint8_t* data, uint32_t size);
 smlt_asset_manager_t* smlt_texture_asset_manager(smlt_texture_t* self);
 int smlt_texture_age(const smlt_texture_t* self);
 void smlt_texture_set_garbage_collection_method(smlt_texture_t* self, smlt_garbage_collect_method_t method);
@@ -76,7 +76,7 @@ void smlt_texture_set_clear_every_frame(smlt_texture_t* self, uint32_t clear_fla
 uint32_t smlt_texture_clear_every_frame_flags(const smlt_texture_t* self);
 smlt_color_t* smlt_texture_clear_every_frame_color(const smlt_texture_t* self);
 void smlt_texture_set_last_frame_rendered_id(smlt_texture_t* self, uint32_t id);
-const unsigned int* smlt_texture_last_frame_rendered_id(const smlt_texture_t* self);
+const uint32_t* smlt_texture_last_frame_rendered_id(const smlt_texture_t* self);
 
 #ifdef __cplusplus
 }

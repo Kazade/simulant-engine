@@ -12,6 +12,6 @@ RUN cargo build --release
 FROM pspdev/pspdev:latest
 MAINTAINER kazade <kazade@gmail.com>
 
-RUN apk add --no-cache python3 py3-pip
+RUN apk add --no-cache python3 py3-pip vala
 
 COPY --from=pspbuild-builder /pspbuild/target/release/pspbuild /usr/local/bin/pspbuild

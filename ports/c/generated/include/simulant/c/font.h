@@ -13,7 +13,7 @@ extern "C" {
 
 void smlt_font_release(smlt_font_t* self);
 smlt_generic_data_carrier_t* smlt_font_data(smlt_font_t* self);
-char* smlt_font_generate_name(const char* family, const unsigned short* size, smlt_font_weight_t weight, smlt_font_style_t style);
+char* smlt_font_generate_name(const char* family, const uint16_t* size, smlt_font_weight_t weight, smlt_font_style_t style);
 const char* smlt_font_asset_type_name(const smlt_font_t* self);
 uint64_t smlt_font_estimated_size_in_bytes(const smlt_font_t* self);
 bool smlt_font_on_init(smlt_font_t* self);

@@ -55,7 +55,7 @@ void smlt_index_data_index(smlt_index_data_t* self, uint32_t idx) {
     reinterpret_cast<smlt::IndexData*>(self)->index(idx);
 }
 
-void smlt_index_data_index_array(smlt_index_data_t* self, unsigned int* indexes, unsigned long count) {
+void smlt_index_data_index_array(smlt_index_data_t* self, uint32_t* indexes, unsigned long count) {
     reinterpret_cast<smlt::IndexData*>(self)->index(indexes, count);
 }
 
@@ -83,7 +83,7 @@ bool smlt_index_data_not_equals(const smlt_index_data_t* self, const smlt_index_
     return reinterpret_cast<const smlt::IndexData*>(self)->operator!=((*reinterpret_cast<const smlt::IndexData*>(other)));
 }
 
-const unsigned char* smlt_index_data_data(const smlt_index_data_t* self) {
+const uint8_t* smlt_index_data_data(const smlt_index_data_t* self) {
     return reinterpret_cast<const smlt::IndexData*>(self)->data();
 }
 

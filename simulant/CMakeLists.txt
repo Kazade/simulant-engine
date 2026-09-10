@@ -40,16 +40,22 @@ IF(PLATFORM_PSP)
   FILE(GLOB_RECURSE PSP_FILES renderers/psp/*.c*)
   SET(SIMULANT_FILES ${SIMULANT_FILES} ${PSP_FILES})
 
-  link_libraries(
-        pspdebug
-        pspdisplay
-        pspge
-        pspgu
-        pspvfpu
-        pspctrl
-        pspaudio
-        pspgum
-    )
+  # Deliberately not link_libraries(pspdebug pspdisplay pspge pspgu
+  # pspvfpu pspctrl pspaudio pspgum) here: toolchains/PSP.cmake's
+  # CMAKE_CXX_STANDARD_LIBRARIES already appends every one of these, in
+  # the canonical psp-config --libs order, to the *end* of every link
+  # line project-wide. Adding them again here (directory-scoped,
+  # inherited by every subdirectory added afterwards) put a second,
+  # differently-ordered copy right after libsimulant.a in every
+  # executable's link line -- confirmed via real hardware/PPSSPP testing
+  # that this is exactly what psp-fixup-imports' build-time warning
+  # ("could not fixup imports, stubs out of order -- ensure the SDK
+  # libraries are linked in last") was about: it silently produced a
+  # corrupted sceDisplay import table (PPSSPP logged "Unknown syscall
+  # from known HLE module 'sceDisplay'" for NIDs that should have
+  # resolved fine), so sceDisplaySetFrameBuf/sceDisplaySetMode never
+  # actually ran -- a permanent black screen despite the app otherwise
+  # booting and running normally.
 ENDIF()
 
 IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR SIMULANT_USE_ALDC)

@@ -221,11 +221,11 @@ bool smlt_vertex_data_interp_vertex(smlt_vertex_data_t* self, uint32_t source_id
     return reinterpret_cast<smlt::VertexData*>(self)->interp_vertex(source_idx, (*reinterpret_cast<const smlt::VertexData*>(dest_state)), dest_idx, (*reinterpret_cast<smlt::VertexData*>(out)), out_idx, interp);
 }
 
-const unsigned char* smlt_vertex_data_data(const smlt_vertex_data_t* self) {
+const uint8_t* smlt_vertex_data_data(const smlt_vertex_data_t* self) {
     return reinterpret_cast<const smlt::VertexData*>(self)->data();
 }
 
-unsigned char* smlt_vertex_data_data_mut(smlt_vertex_data_t* self) {
+uint8_t* smlt_vertex_data_data_mut(smlt_vertex_data_t* self) {
     return reinterpret_cast<smlt::VertexData*>(self)->data();
 }
 

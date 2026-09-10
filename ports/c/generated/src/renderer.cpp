@@ -65,7 +65,7 @@ unsigned long smlt_renderer_max_texture_size(const smlt_renderer_t* self) {
     return reinterpret_cast<const smlt::Renderer*>(self)->max_texture_size();
 }
 
-bool smlt_renderer_read_pixels(smlt_renderer_t* self, uint32_t x, uint32_t y, uint32_t width, uint32_t height, unsigned char* out_rgba) {
+bool smlt_renderer_read_pixels(smlt_renderer_t* self, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint8_t* out_rgba) {
     return reinterpret_cast<smlt::Renderer*>(self)->read_pixels(x, y, width, height, out_rgba);
 }
 

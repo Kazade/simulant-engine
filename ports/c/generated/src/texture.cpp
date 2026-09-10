@@ -91,7 +91,7 @@ void smlt_texture_set_mipmap_generation(smlt_texture_t* self, smlt_mipmap_genera
     (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->set_mipmap_generation(static_cast<smlt::MipmapGenerate>(type));
 }
 
-const unsigned char* smlt_texture_data(const smlt_texture_t* self) {
+const uint8_t* smlt_texture_data(const smlt_texture_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Texture>*>(self))->data();
 }
 
@@ -107,11 +107,11 @@ unsigned long smlt_texture_required_data_size(smlt_texture_format_t fmt, uint16_
     return smlt::Texture::required_data_size(static_cast<smlt::TextureFormat>(fmt), width, height);
 }
 
-void smlt_texture_set_data(smlt_texture_t* self, const unsigned char* data, unsigned long size) {
+void smlt_texture_set_data(smlt_texture_t* self, const uint8_t* data, unsigned long size) {
     (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->set_data(data, size);
 }
 
-unsigned char* smlt_texture_map_data(smlt_texture_t* self, unsigned long size) {
+uint8_t* smlt_texture_map_data(smlt_texture_t* self, unsigned long size) {
     return (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->map_data(size);
 }
 
@@ -219,11 +219,11 @@ void smlt_texture_set_has_mipmaps(smlt_texture_t* self, bool v) {
     (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->_set_has_mipmaps(v);
 }
 
-unsigned char* smlt_texture_stash_paletted_data(smlt_texture_t* self) {
+uint8_t* smlt_texture_stash_paletted_data(smlt_texture_t* self) {
     return (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->_stash_paletted_data();
 }
 
-void smlt_texture_adopt_data(smlt_texture_t* self, unsigned char* data, uint32_t size) {
+void smlt_texture_adopt_data(smlt_texture_t* self, uint8_t* data, uint32_t size) {
     (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->_adopt_data(data, size);
 }
 
@@ -275,7 +275,7 @@ void smlt_texture_set_last_frame_rendered_id(smlt_texture_t* self, uint32_t id) 
     (*reinterpret_cast<std::shared_ptr<smlt::Texture>*>(self))->set_last_frame_rendered_id(id);
 }
 
-const unsigned int* smlt_texture_last_frame_rendered_id(const smlt_texture_t* self) {
+const uint32_t* smlt_texture_last_frame_rendered_id(const smlt_texture_t* self) {
     return &((*reinterpret_cast<const std::shared_ptr<smlt::Texture>*>(self))->last_frame_rendered_id());
 }
 

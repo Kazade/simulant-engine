@@ -21,7 +21,6 @@ bool smlt_scene_manager_is_loaded(const smlt_scene_manager_t* self, const char* 
 void smlt_scene_manager_reset(smlt_scene_manager_t* self);
 bool smlt_scene_manager_scene_queued_for_activation(const smlt_scene_manager_t* self);
 void smlt_scene_manager_unregister_scene(smlt_scene_manager_t* self, const char* name);
-bool smlt_scene_manager_register_scene_from_library(smlt_scene_manager_t* self, const char* name, const smlt_path_t* path);
 bool smlt_scene_manager_register_scene_from_source(smlt_scene_manager_t* self, const char* script_data, const char* class_name);
 bool smlt_scene_manager_register_scene_from_file(smlt_scene_manager_t* self, const smlt_path_t* script, const char* class_name);
 

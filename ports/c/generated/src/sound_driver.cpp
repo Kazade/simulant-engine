@@ -38,7 +38,7 @@ void smlt_sound_driver_stop_source(smlt_sound_driver_t* self, unsigned int sourc
     reinterpret_cast<smlt::SoundDriver*>(self)->stop_source(source_id);
 }
 
-void smlt_sound_driver_upload_buffer_data(smlt_sound_driver_t* self, unsigned int buffer, smlt_audio_data_format_t format, const unsigned char* data, unsigned long bytes, uint32_t frequency) {
+void smlt_sound_driver_upload_buffer_data(smlt_sound_driver_t* self, unsigned int buffer, smlt_audio_data_format_t format, const uint8_t* data, unsigned long bytes, uint32_t frequency) {
     reinterpret_cast<smlt::SoundDriver*>(self)->upload_buffer_data(buffer, static_cast<smlt::AudioDataFormat>(format), data, bytes, frequency);
 }
 

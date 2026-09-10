@@ -60,6 +60,19 @@ macro(create_pbp_file)
             COMMENT "Copying ELF to psp_artifact directory."
     )
 
+    # Has to run immediately before psp-fixup-imports: that tool assumes each
+    # imported module's stub entries are contiguous, which isn't true for
+    # programs that reference PSP syscalls from many static libraries, and it
+    # fails *silently* (imports resolving to the wrong syscall, or to
+    # nothing) rather than failing the build. See cmake/psp_reorder_stubs.py.
+    add_custom_command(
+            TARGET ${ARG_TARGET}
+            POST_BUILD COMMAND
+            ${SIMULANT_PYTHON} "${SIMULANT_PSP_REORDER_STUBS}"
+            "$<TARGET_FILE_DIR:${ARG_TARGET}>/psp_artifact/${ARG_TARGET}"
+            COMMENT "Regrouping PSP import stubs"
+    )
+
     add_custom_command(
             TARGET ${ARG_TARGET}
             POST_BUILD COMMAND

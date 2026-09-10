@@ -14,7 +14,7 @@ extern "C" {
 void smlt_binary_release(smlt_binary_t* self);
 const char* smlt_binary_asset_type_name(const smlt_binary_t* self);
 uint64_t smlt_binary_estimated_size_in_bytes(const smlt_binary_t* self);
-const unsigned char* smlt_binary_data(const smlt_binary_t* self);
+const uint8_t* smlt_binary_data(const smlt_binary_t* self);
 unsigned long smlt_binary_data_size_in_bytes(const smlt_binary_t* self);
 smlt_asset_manager_t* smlt_binary_asset_manager(smlt_binary_t* self);
 int smlt_binary_age(const smlt_binary_t* self);

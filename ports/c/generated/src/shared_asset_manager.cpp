@@ -214,7 +214,7 @@ void smlt_shared_asset_manager_destroy_binary(smlt_shared_asset_manager_t* self,
     reinterpret_cast<smlt::SharedAssetManager*>(self)->destroy_binary(id);
 }
 
-smlt_font_t* smlt_shared_asset_manager_create_font_from_memory(smlt_shared_asset_manager_t* self, const unsigned char* data, unsigned long size, const smlt_font_flags_t* flags, smlt_garbage_collect_method_t garbage_collect) {
+smlt_font_t* smlt_shared_asset_manager_create_font_from_memory(smlt_shared_asset_manager_t* self, const uint8_t* data, unsigned long size, const smlt_font_flags_t* flags, smlt_garbage_collect_method_t garbage_collect) {
     return reinterpret_cast<smlt_font_t*>(new std::shared_ptr<smlt::Font>(reinterpret_cast<smlt::SharedAssetManager*>(self)->create_font_from_memory(data, size, (*reinterpret_cast<const smlt::FontFlags*>(flags)), static_cast<smlt::GarbageCollectMethod>(garbage_collect))));
 }
 

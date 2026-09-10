@@ -126,6 +126,20 @@ string(REGEX REPLACE "([\\/\\-]O)3" "\\12"
 string(REGEX REPLACE "([\\/\\-]O)3" "\\12"
   CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
 
+# Used by create_pbp_file() below, which regroups import stubs before
+# handing the ELF to psp-fixup-imports -- see cmake/psp_reorder_stubs.py for
+# why that's needed. Resolved here (rather than in CreatePBP.cmake) because
+# this is the file that knows where the repository root is.
+set(SIMULANT_PSP_REORDER_STUBS "${CMAKE_CURRENT_LIST_DIR}/../cmake/psp_reorder_stubs.py")
+# Deliberately not find_program(... REQUIRED): that needs CMake 3.18 and this
+# project still declares 3.9. Checked explicitly instead.
+find_program(SIMULANT_PYTHON NAMES python3 python)
+if(NOT SIMULANT_PYTHON)
+    message(FATAL_ERROR
+        "python3 is required to package a PSP EBOOT (see "
+        "cmake/psp_reorder_stubs.py), but no python3/python was found.")
+endif()
+
 # File defining macro outputting PSP-specific EBOOT.PBP out of passed executable target:
 include("${CMAKE_CURRENT_LIST_DIR}/CreatePBP.cmake")
 

@@ -59,7 +59,7 @@ bool smlt_material_set_property_value_float(smlt_material_t* self, unsigned int 
     return (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_property_value(hsh, name, (*value));
 }
 
-bool smlt_material_set_property_value_int32(smlt_material_t* self, unsigned int hsh, const char* name, const int* value) {
+bool smlt_material_set_property_value_int32(smlt_material_t* self, unsigned int hsh, const char* name, const int32_t* value) {
     return (*reinterpret_cast<std::shared_ptr<smlt::Material>*>(self))->set_property_value(hsh, name, (*value));
 }
 

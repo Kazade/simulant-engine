@@ -58,4 +58,4 @@ COPY --from=build /opt/toolchains /opt/toolchains
 COPY --from=build /etc/bash.bashrc /etc/bash.bashrc
 COPY --from=build /root/.bashrc /root/.bashrc
 COPY --from=build /opt/toolchains/dc/kos/utils/mkdcdisc/build/mkdcdisc /usr/bin/mkdcdisc
-RUN dnf install -y cmake make libpng genisoimage findutils git pkgconf-pkg-config libisofs
+RUN dnf install -y cmake make libpng genisoimage findutils git pkgconf-pkg-config libisofs vala

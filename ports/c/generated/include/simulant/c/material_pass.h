@@ -20,7 +20,7 @@ uint8_t smlt_material_pass_max_iterations(const smlt_material_pass_t* self);
 const smlt_material_t* smlt_material_pass_material(const smlt_material_pass_t* self);
 bool smlt_material_pass_set_property_value_bool(smlt_material_pass_t* self, unsigned int hsh, const char* name, const bool* value);
 bool smlt_material_pass_set_property_value_float(smlt_material_pass_t* self, unsigned int hsh, const char* name, const float* value);
-bool smlt_material_pass_set_property_value_int32(smlt_material_pass_t* self, unsigned int hsh, const char* name, const int* value);
+bool smlt_material_pass_set_property_value_int32(smlt_material_pass_t* self, unsigned int hsh, const char* name, const int32_t* value);
 bool smlt_material_pass_set_property_value_mat3(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_mat3_t* value);
 bool smlt_material_pass_set_property_value_mat4(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_mat4_t* value);
 bool smlt_material_pass_set_property_value_vec2(smlt_material_pass_t* self, unsigned int hsh, const char* name, const smlt_vec2_t* value);

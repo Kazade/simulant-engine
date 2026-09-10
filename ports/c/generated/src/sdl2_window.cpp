@@ -67,7 +67,7 @@ void smlt_sdl2_window_lock_cursor(smlt_sdl2_window_t* self, bool cursor_locked) 
     reinterpret_cast<smlt::SDL2Window*>(self)->lock_cursor(cursor_locked);
 }
 
-void smlt_sdl2_window_cursor_position(smlt_sdl2_window_t* self, int* mouse_x, int* mouse_y) {
+void smlt_sdl2_window_cursor_position(smlt_sdl2_window_t* self, int32_t* mouse_x, int32_t* mouse_y) {
     reinterpret_cast<smlt::SDL2Window*>(self)->cursor_position((*mouse_x), (*mouse_y));
 }
 
@@ -207,7 +207,7 @@ void smlt_sdl2_window_set_last_frame_rendered_id(smlt_sdl2_window_t* self, uint3
     reinterpret_cast<smlt::SDL2Window*>(self)->set_last_frame_rendered_id(id);
 }
 
-const unsigned int* smlt_sdl2_window_last_frame_rendered_id(const smlt_sdl2_window_t* self) {
+const uint32_t* smlt_sdl2_window_last_frame_rendered_id(const smlt_sdl2_window_t* self) {
     return &(reinterpret_cast<const smlt::SDL2Window*>(self)->last_frame_rendered_id());
 }
 

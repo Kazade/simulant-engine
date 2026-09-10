@@ -3753,7 +3753,7 @@ namespace Smlt {
         [CCode (cname = "smlt_index_data_index")]
         public extern void index(uint32 idx);
         [CCode (cname = "smlt_index_data_index_array")]
-        public extern void index_array(uint* indexes, ulong count);
+        public extern void index_array(uint32* indexes, ulong count);
         [CCode (cname = "smlt_index_data_done")]
         public extern void done();
         [CCode (cname = "smlt_index_data_last_updated")]
@@ -4643,7 +4643,7 @@ namespace Smlt {
         [CCode (cname = "smlt_material_pass_set_property_value_float")]
         public extern bool set_property_value_float(uint hsh, string name, float* @value);
         [CCode (cname = "smlt_material_pass_set_property_value_int32")]
-        public extern bool set_property_value_int32(uint hsh, string name, int* @value);
+        public extern bool set_property_value_int32(uint hsh, string name, int32* @value);
         [CCode (cname = "smlt_material_pass_set_property_value_mat3")]
         public extern bool set_property_value_mat3(uint hsh, string name, Mat3 @value);
         [CCode (cname = "smlt_material_pass_set_property_value_mat4")]
@@ -4822,7 +4822,7 @@ namespace Smlt {
         [CCode (cname = "smlt_material_property_overrider_set_property_value_float")]
         public extern bool set_property_value_float(uint hsh, string name, float* @value);
         [CCode (cname = "smlt_material_property_overrider_set_property_value_int32")]
-        public extern bool set_property_value_int32(uint hsh, string name, int* @value);
+        public extern bool set_property_value_int32(uint hsh, string name, int32* @value);
         [CCode (cname = "smlt_material_property_overrider_set_property_value_color")]
         public extern bool set_property_value_color(uint hsh, string name, Color @value);
         [CCode (cname = "smlt_material_property_overrider_set_property_value_mat3")]
@@ -4869,7 +4869,7 @@ namespace Smlt {
         [CCode (cname = "smlt_material_set_property_value_float")]
         public extern bool set_property_value_float(uint hsh, string name, float* @value);
         [CCode (cname = "smlt_material_set_property_value_int32")]
-        public extern bool set_property_value_int32(uint hsh, string name, int* @value);
+        public extern bool set_property_value_int32(uint hsh, string name, int32* @value);
         [CCode (cname = "smlt_material_set_property_value_mat3")]
         public extern bool set_property_value_mat3(uint hsh, string name, Mat3 @value);
         [CCode (cname = "smlt_material_set_property_value_mat4")]
@@ -6055,7 +6055,7 @@ namespace Smlt {
         [CCode (cname = "smlt_render_target_set_last_frame_rendered_id")]
         public extern void set_last_frame_rendered_id(uint32 id);
         [CCode (cname = "smlt_render_target_last_frame_rendered_id")]
-        public extern uint* last_frame_rendered_id();
+        public extern uint32* last_frame_rendered_id();
     }
 
     [CCode (cname = "smlt_renderable_t", has_type_id = false, free_function = "smlt_renderable_destroy")]
@@ -6273,7 +6273,7 @@ namespace Smlt {
         [CCode (cname = "smlt_sdl2_window_lock_cursor")]
         public extern void lock_cursor(bool cursor_locked);
         [CCode (cname = "smlt_sdl2_window_cursor_position")]
-        public extern void cursor_position(int* mouse_x, int* mouse_y);
+        public extern void cursor_position(int32* mouse_x, int32* mouse_y);
         [CCode (cname = "smlt_sdl2_window_create_window")]
         public extern bool create_window(uint16 width, uint16 height, uint8 bpp, bool fullscreen, bool enable_vsync);
         [CCode (cname = "smlt_sdl2_window_swap_buffers")]
@@ -6345,7 +6345,7 @@ namespace Smlt {
         [CCode (cname = "smlt_sdl2_window_set_last_frame_rendered_id")]
         public extern void set_last_frame_rendered_id(uint32 id);
         [CCode (cname = "smlt_sdl2_window_last_frame_rendered_id")]
-        public extern uint* last_frame_rendered_id();
+        public extern uint32* last_frame_rendered_id();
         [CCode (cname = "smlt_sdl2_window_register_event_listener")]
         public extern void register_event_listener(EventListener listener);
         [CCode (cname = "smlt_sdl2_window_unregister_event_listener")]
@@ -7505,7 +7505,7 @@ namespace Smlt {
         [CCode (cname = "smlt_texture_set_last_frame_rendered_id")]
         public extern void set_last_frame_rendered_id(uint32 id);
         [CCode (cname = "smlt_texture_last_frame_rendered_id")]
-        public extern uint* last_frame_rendered_id();
+        public extern uint32* last_frame_rendered_id();
     }
 
     [CCode (cname = "smlt_thread_callable_wrapper_base_t", has_type_id = false, free_function = "smlt_thread_callable_wrapper_base_destroy")]
@@ -7889,11 +7889,11 @@ namespace Smlt {
         [CCode (cname = "smlt_ui_px_create_from_int")]
         public UiPx.from_int(int* rhs);
         [CCode (cname = "smlt_ui_px_create_from_uint16")]
-        public UiPx.from_uint16(uint* rhs);
+        public UiPx.from_uint16(uint16* rhs);
         [CCode (cname = "smlt_ui_px_create_from_uint")]
-        public UiPx.from_uint(ulong* rhs);
+        public UiPx.from_uint(uint* rhs);
         [CCode (cname = "smlt_ui_px_create_from_ulong")]
-        public UiPx.from_ulong(uint16* rhs);
+        public UiPx.from_ulong(ulong* rhs);
         [CCode (cname = "smlt_ui_px_get_value")]
         public extern int16 get_value();
         [CCode (cname = "smlt_ui_px_set_value")]
@@ -9018,7 +9018,7 @@ namespace Smlt {
         [CCode (cname = "smlt_window_set_title")]
         public extern void set_title(string title);
         [CCode (cname = "smlt_window_cursor_position")]
-        public extern void cursor_position(int* mouse_x, int* mouse_y);
+        public extern void cursor_position(int32* mouse_x, int32* mouse_y);
         [CCode (cname = "smlt_window_show_cursor")]
         public extern void show_cursor(bool cursor_shown);
         [CCode (cname = "smlt_window_lock_cursor")]
@@ -9100,7 +9100,7 @@ namespace Smlt {
         [CCode (cname = "smlt_window_set_last_frame_rendered_id")]
         public extern void set_last_frame_rendered_id(uint32 id);
         [CCode (cname = "smlt_window_last_frame_rendered_id")]
-        public extern uint* last_frame_rendered_id();
+        public extern uint32* last_frame_rendered_id();
         [CCode (cname = "smlt_window_register_event_listener")]
         public extern void register_event_listener(EventListener listener);
         [CCode (cname = "smlt_window_unregister_event_listener")]

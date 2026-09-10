@@ -140,7 +140,7 @@ bool smlt_application_activate_language(smlt_application_t* self, const char* la
     return reinterpret_cast<smlt::Application*>(self)->activate_language(std::string(language_code ? language_code : ""));
 }
 
-bool smlt_application_activate_language_from_arb_data(smlt_application_t* self, const unsigned char* data, unsigned long byte_size) {
+bool smlt_application_activate_language_from_arb_data(smlt_application_t* self, const uint8_t* data, unsigned long byte_size) {
     return reinterpret_cast<smlt::Application*>(self)->activate_language_from_arb_data(data, byte_size);
 }
 

@@ -25,7 +25,7 @@ uint64_t smlt_binary_estimated_size_in_bytes(const smlt_binary_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Binary>*>(self))->estimated_size_in_bytes();
 }
 
-const unsigned char* smlt_binary_data(const smlt_binary_t* self) {
+const uint8_t* smlt_binary_data(const smlt_binary_t* self) {
     return (*reinterpret_cast<const std::shared_ptr<smlt::Binary>*>(self))->data();
 }
 

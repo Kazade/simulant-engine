@@ -13,7 +13,7 @@ extern "C" {
 
 void smlt_screen_destroy(smlt_screen_t* self);
 smlt_screen_t* smlt_screen_create(smlt_window_t* window, const char* name, uint16_t w, uint16_t h, smlt_screen_format_t format, uint16_t refresh);
-void smlt_screen_render(smlt_screen_t* self, const unsigned char* data);
+void smlt_screen_render(smlt_screen_t* self, const uint8_t* data);
 uint16_t smlt_screen_height(const smlt_screen_t* self);
 uint16_t smlt_screen_width(const smlt_screen_t* self);
 smlt_screen_format_t smlt_screen_format(const smlt_screen_t* self);

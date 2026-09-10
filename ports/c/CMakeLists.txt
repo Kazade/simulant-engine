@@ -12,6 +12,21 @@
 # (string ownership, ...) that aren't part of the public API surface.
 
 file(GLOB SIMULANT_C_GENERATED_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/generated/src/*.cpp)
+
+# sdl2_window.cpp is mechanically generated because cgen.py scans every
+# header reachable from simulant.h on the *host* running it (normally
+# Linux), with no notion of which platform the result will actually be
+# compiled for -- smlt::SDL2Window is real and wrapped correctly, but
+# only actually part of the engine's own build on desktop-ish platforms
+# (see the SDL2Window/sdl2_window.cpp entry in simulant/CMakeLists.txt's
+# own platform if/elseif chain: Dreamcast/PSP/Android all use their own
+# native window class instead). Compiling the generated wrapper for one
+# of those platforms fails immediately on `#include <SDL.h>`, which
+# doesn't exist there -- same reasoning, same fix as that file.
+if(PLATFORM_DREAMCAST OR PLATFORM_PSP OR ANDROID)
+  list(FILTER SIMULANT_C_GENERATED_SOURCES EXCLUDE REGEX "/sdl2_window\\.cpp$")
+endif()
+
 file(GLOB SIMULANT_C_HANDWRITTEN_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 set(SIMULANT_C_RUNTIME_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/runtime/smlt_c_util.cpp)
 

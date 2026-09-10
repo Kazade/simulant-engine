@@ -22,7 +22,7 @@ void smlt_renderer_apply_viewport(smlt_renderer_t* self, const smlt_render_targe
 void smlt_renderer_clear(smlt_renderer_t* self, const smlt_render_target_t* target, const smlt_color_t* color, uint32_t clear_flags);
 void smlt_renderer_do_swap_buffers(smlt_renderer_t* self);
 unsigned long smlt_renderer_max_texture_size(const smlt_renderer_t* self);
-bool smlt_renderer_read_pixels(smlt_renderer_t* self, uint32_t x, uint32_t y, uint32_t width, uint32_t height, unsigned char* out_rgba);
+bool smlt_renderer_read_pixels(smlt_renderer_t* self, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint8_t* out_rgba);
 bool smlt_renderer_texture_format_is_native(smlt_renderer_t* self, smlt_texture_format_t fmt);
 bool smlt_renderer_texture_format_is_usable(smlt_renderer_t* self, smlt_texture_format_t fmt);
 bool smlt_renderer_supports_gpu_programs(const smlt_renderer_t* self);

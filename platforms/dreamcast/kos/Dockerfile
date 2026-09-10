@@ -4,7 +4,7 @@
 FROM registry.fedoraproject.org/fedora-minimal:30 as Build
 MAINTAINER kazade <kazade@gmail.com>
 
-RUN microdnf -y update && microdnf clean all && microdnf -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim && microdnf clean all && pip install -U pip
+RUN microdnf -y update && microdnf clean all && microdnf -y install automake make git hostname glibc-static bison elfutils flex glibc-devel binutils binutils-devel gdb tar xz bzip2 patch gcc gcc-c++ texinfo libjpeg-turbo-devel libpng-devel python3 cmake mpfr-devel gmp-devel libmpc-devel  openssl-devel python-devel python-setuptools libffi-devel genisoimage unzip python-pip elfutils-libelf-devel wodim vala && microdnf clean all && pip install -U pip
 RUN mkdir -p /opt/toolchains/dc
 RUN git clone https://github.com/Kazade/KallistiOS.git /opt/toolchains/dc/kos
 RUN git clone --recursive git://git.code.sf.net/p/cadcdev/kos-ports /opt/toolchains/dc/kos-ports

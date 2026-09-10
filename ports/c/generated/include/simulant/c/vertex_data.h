@@ -62,8 +62,8 @@ uint32_t smlt_vertex_data_copy_vertex_to_another(smlt_vertex_data_t* self, smlt_
 unsigned long smlt_vertex_data_extend(smlt_vertex_data_t* self, const smlt_vertex_data_t* other);
 void smlt_vertex_data_transform_by(smlt_vertex_data_t* self, const smlt_mat4_t* transform);
 bool smlt_vertex_data_interp_vertex(smlt_vertex_data_t* self, uint32_t source_idx, const smlt_vertex_data_t* dest_state, uint32_t dest_idx, smlt_vertex_data_t* out, uint32_t out_idx, float interp);
-const unsigned char* smlt_vertex_data_data(const smlt_vertex_data_t* self);
-unsigned char* smlt_vertex_data_data_mut(smlt_vertex_data_t* self);
+const uint8_t* smlt_vertex_data_data(const smlt_vertex_data_t* self);
+uint8_t* smlt_vertex_data_data_mut(smlt_vertex_data_t* self);
 unsigned long smlt_vertex_data_data_size(const smlt_vertex_data_t* self);
 smlt_vertex_attribute_t smlt_vertex_data_attribute_for_type(const smlt_vertex_data_t* self, smlt_vertex_attribute_type_t type);
 void smlt_vertex_data_reserve(smlt_vertex_data_t* self, uint32_t size);
