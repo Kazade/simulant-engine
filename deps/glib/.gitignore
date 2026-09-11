@@ -1,0 +1,37 @@
+# for all subdirectories
+TAGS
+tags
+.libs
+.deps
+*.o
+*.lo
+*.la
+*.pc
+.*.swp
+.sw?
+*.gcno
+*.gcda
+*.gcov
+*.sourcefiles
+*.stp
+*.exe
+*.def
+*.test
+*.log
+*.trs
+
+/glib-lcov.info
+/glib-lcov/
+
+# Meson
+/meson-build/
+/subprojects/*/
+/subprojects/.wraplock
+!/subprojects/packagefiles
+# gvdb is a [wrap-git] subproject (fetched via `git clone` at configure
+# time, unlike pcre2/libffi which are [wrap-file] tarballs); vendored here
+# in-tree like the rest of deps/glib so building never needs network access.
+!/subprojects/gvdb
+
+# Generated Meson cross-compilation files for CI
+vs2019-arm64.txt

@@ -1,0 +1,34 @@
+--- a/src/mips/o32.S
++++ b/src/mips/o32.S
+@@ -41,7 +41,6 @@
+ #define FP_OFF		(SIZEOF_FRAME - 2 * FFI_SIZEOF_ARG)
+ #define RA_OFF		(SIZEOF_FRAME - 1 * FFI_SIZEOF_ARG)
+ 
+-	.abicalls
+ 	.text
+ 	.align	2
+ 	.globl	ffi_call_O32
+@@ -299,11 +298,7 @@
+ $LFB1:
+ 	# Prologue
+ 	.frame	$fp, SIZEOF_FRAME2, ra
+-	.set	noreorder
+-	.cpload	t9
+-	.set	reorder
+ 	SUBU	$sp, SIZEOF_FRAME2
+-	.cprestore GP_OFF2
+ $LCFI10:
+ 
+ 	REG_S	$16, S0_OFF2($sp)	 # Save s0
+@@ -356,11 +351,7 @@
+ $LFB2:
+ 	# Prologue
+ 	.frame	$fp, SIZEOF_FRAME2, ra
+-	.set	noreorder
+-	.cpload	t9
+-	.set	reorder
+ 	SUBU	$sp, SIZEOF_FRAME2
+-	.cprestore GP_OFF2
+ $LCFI20:
+ 	REG_S	$16, S0_OFF2($sp)	 # Save s0
+ 	REG_S	$fp, FP_OFF2($sp)	 # Save frame pointer

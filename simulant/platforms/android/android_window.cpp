@@ -549,7 +549,7 @@ void AndroidWindow::check_events() {
 
     struct android_poll_source* source;
     int events = 0;
-    ALooper_pollAll(0, nullptr, &events, (void**) &source);
+    ALooper_pollOnce(0, nullptr, &events, (void**) &source);
 
     if (source != nullptr) {
         source->process(aapp, source);

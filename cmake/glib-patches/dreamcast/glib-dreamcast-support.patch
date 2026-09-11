@@ -1,0 +1,55 @@
+--- a/gio/meson.build
++++ b/gio/meson.build
+@@ -18,7 +18,7 @@
+ 
+ gnetworking_h_nameser_compat_include = ''
+ 
+-if host_system not in ['windows', 'android']
++if host_system not in ['windows', 'android', 'dreamcast']
+   # Don't check for C_IN on Android since it does not define it in public
+   # headers, we define it ourselves wherever necessary
+   if not cc.compiles('''#include <sys/types.h>
+@@ -39,7 +39,7 @@
+ 
+ network_libs = [ ]
+ network_args = [ ]
+-if host_system != 'windows'
++if host_system != 'windows' and host_system != 'dreamcast'
+   # res_query()
+   res_query_test = '''#include <resolv.h>
+                       int main (int argc, char ** argv) {
+--- a/glib/glib-unix.c
++++ b/glib/glib-unix.c
+@@ -1006,6 +1006,10 @@
+   g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_NOSYS,
+                "g_unix_fd_query_path() not supported on HURD");
+   return NULL;
++#elif defined (__DREAMCAST__)
++  g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_NOSYS,
++               "g_unix_fd_query_path() not supported on Dreamcast");
++  return NULL;
+ #else
+   #error "g_unix_fd_query_path() not supported on this platform"
+ #endif
+--- a/glib/gnulib/meson.build
++++ b/glib/gnulib/meson.build
+@@ -381,7 +381,7 @@
+ gnulib_lib = static_library('gnulib', gnulib_sources,
+   dependencies : [libm],
+   include_directories : [configinc, glibinc, include_directories ('.')],
+-  pic : true,
++  pic : host_system != 'dreamcast',
+   c_args : ['-DGCC_LINT=1', '-DLIBDIR="@0@"'.format(glib_libdir), '-DG_LOG_DOMAIN="GLib"',
+             glib_c_args_internal, extra_gnulib_args],
+   gnu_symbol_visibility : 'hidden',
+--- a/glib/libcharset/meson.build
++++ b/glib/libcharset/meson.build
+@@ -6,7 +6,7 @@
+ 
+ charset_lib = static_library('charset', 'localcharset.c',
+   include_directories : configinc,
+-  pic : true,
++  pic : host_system != 'dreamcast',
+   c_args : [
+     '-DGLIB_CHARSETALIAS_DIR="@0@"'.format(glib_charsetaliasdir),
+     extra_charset_args,

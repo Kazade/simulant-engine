@@ -13,6 +13,3 @@
 [submodule "deps/sh4zam"]
 	path = deps/sh4zam
 	url = https://github.com/gyrovorbis/sh4zam.git
-[submodule "deps/glib"]
-	path = deps/glib
-	url = https://gitlab.com/simulant/glib.git

@@ -1,0 +1,21 @@
+#!/bin/sh
+# Wraps the real sh-elf-gcc solely to drop Meson's hardcoded `-pthread`
+# driver flag, which this toolchain rejects outright ("unrecognized
+# command-line option '-pthread'").
+#
+# Meson's thread_flags() hardcodes -pthread for every compiler except a
+# handful of special-cased OSes, none of which apply here, and it isn't
+# overridable from a cross-file or project meson.build.
+#
+# Dropped rather than translated: GCC suggests '-fpthread', but on this
+# toolchain that's "valid for Modula-2 but not for C" -- accepted as a no-op
+# with a warning on every single compile. KOS provides pthreads through
+# libkallisti, which is always linked, so no driver flag is needed at all.
+args=""
+for arg in "$@"; do
+    if [ "$arg" = "-pthread" ]; then
+        continue
+    fi
+    args="$args $arg"
+done
+exec "@SIMULANT_DC_REAL_GCC@" $args

@@ -1,0 +1,10 @@
+--- a/meson.build
++++ b/meson.build
+@@ -247,6 +247,7 @@
+   target = 'MIPS'
+   asm_sources = ['o32.S', 'n32.S']
+ elif host_cpu_family in ['mips', 'mips64'] and host_system in [
++  'psp',
+   'linux',
+   'openbsd',
+   'freebsd',

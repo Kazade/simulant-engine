@@ -1,0 +1,16 @@
+#!/bin/sh
+# Wraps the real psp-gcc solely to translate Meson's hardcoded `-pthread`
+# driver flag into the `-fpthread` spelling PSPSDK's GCC actually accepts
+# -- see cmake/GLibCrossFilePSP.cmake for the full explanation (short
+# version: Meson's thread_flags() hardcodes -pthread for every compiler
+# except a few special-cased OSes, none of which apply to PSP, and that
+# isn't overridable from a cross-file or project meson.build).
+args=""
+for arg in "$@"; do
+    if [ "$arg" = "-pthread" ]; then
+        args="$args -fpthread"
+    else
+        args="$args $arg"
+    fi
+done
+exec "@SIMULANT_PSP_REAL_GCC@" $args

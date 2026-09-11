@@ -1,0 +1,11 @@
+#!/bin/sh
+# See psp-gcc in this same directory -- identical reasoning, for C++.
+args=""
+for arg in "$@"; do
+    if [ "$arg" = "-pthread" ]; then
+        args="$args -fpthread"
+    else
+        args="$args $arg"
+    fi
+done
+exec "@SIMULANT_PSP_REAL_GXX@" $args

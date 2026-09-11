@@ -1,0 +1,43 @@
+--- a/src/sh/sysv.S
++++ b/src/sh/sysv.S
+@@ -30,8 +30,16 @@
+ #ifdef HAVE_MACHINE_ASM_H
+ #include <machine/asm.h>
+ #else
+-/* XXX these lose for some platforms, I'm sure. */
+-#define CNAME(x) x
++/* Honour the target's assembler-level symbol prefix. Bare-metal SH
++   toolchains (sh-elf, as used by KallistiOS) prefix every C symbol with an
++   underscore, so a label written literally as `ffi_call_SYSV` here does not
++   match the `_ffi_call_SYSV` the C side emits, and the link fails on
++   undefined references to libffi's own assembly entry points. SH-Linux
++   toolchains use no prefix, where __USER_LABEL_PREFIX__ is empty and this
++   reduces to the original behaviour. */
++#define CONCAT_(a, b) a ## b
++#define CONCAT(a, b) CONCAT_(a, b)
++#define CNAME(x) CONCAT(__USER_LABEL_PREFIX__, x)
+ #define ENTRY(x) .globl CNAME(x); .type CNAME(x),%function; CNAME(x):
+ #endif
+ 
+@@ -492,7 +500,7 @@
+ .ffi_call_SYSV_end:
+         .size    CNAME(ffi_call_SYSV),.ffi_call_SYSV_end-CNAME(ffi_call_SYSV)
+ 
+-.globl	ffi_closure_helper_SYSV
++.globl	CNAME(ffi_closure_helper_SYSV)
+ 
+ ENTRY(ffi_closure_SYSV)
+ .LFB2:
+@@ -600,10 +608,10 @@
+ L_got:
+ 	.long	_GLOBAL_OFFSET_TABLE_
+ L_helper:
+-	.long	ffi_closure_helper_SYSV@GOTOFF
++	.long	CNAME(ffi_closure_helper_SYSV)@GOTOFF
+ #else
+ L_helper:
+-	.long	ffi_closure_helper_SYSV
++	.long	CNAME(ffi_closure_helper_SYSV)
+ #endif
+ L_table:
+ 	.short L_case_v - 0b	/* FFI_TYPE_VOID */

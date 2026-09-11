@@ -14,6 +14,7 @@ RUN cd /opt/toolchains/dc/kos/utils/kos-chain && cp Makefile.dreamcast.cfg Makef
 
 # Switch to the 15.2.0 toolchain
 # RUN sed -i 's/toolchain_profile=stable/toolchain_profile=15.2.1-dev/' /opt/toolchains/dc/kos/utils/kos-chain/Makefile.cfg
+RUN sed -i 's/#gnu_mirror=mirrors.kernel.org/gnu_mirror=mirrors.kernel.org/' /opt/toolchains/dc/kos/utils/kos-chain/Makefile.cfg
 
 # Speed up compilation
 RUN sed -i 's/makejobs=2/makejobs=8/' /opt/toolchains/dc/kos/utils/kos-chain/Makefile.cfg
@@ -58,4 +59,7 @@ COPY --from=build /opt/toolchains /opt/toolchains
 COPY --from=build /etc/bash.bashrc /etc/bash.bashrc
 COPY --from=build /root/.bashrc /root/.bashrc
 COPY --from=build /opt/toolchains/dc/kos/utils/mkdcdisc/build/mkdcdisc /usr/bin/mkdcdisc
-RUN dnf install -y cmake make libpng genisoimage findutils git pkgconf-pkg-config libisofs vala
+RUN dnf install -y cmake make libpng genisoimage findutils git pkgconf-pkg-config libisofs vala ninja-build python3-pip
+# deps/glib (glib 2.90) requires meson >= 1.4.0; Fedora 37 only ships
+# 1.0.1, so it comes from pip rather than dnf. See cmake/BuildGLib.cmake.
+RUN pip3 install --upgrade meson

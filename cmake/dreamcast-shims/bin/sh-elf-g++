@@ -1,0 +1,11 @@
+#!/bin/sh
+# C++ counterpart of the sh-elf-gcc wrapper alongside this file -- see there
+# for why Meson's hardcoded -pthread has to be dropped for this toolchain.
+args=""
+for arg in "$@"; do
+    if [ "$arg" = "-pthread" ]; then
+        continue
+    fi
+    args="$args $arg"
+done
+exec "@SIMULANT_DC_REAL_GXX@" $args

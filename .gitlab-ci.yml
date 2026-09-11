@@ -50,7 +50,9 @@ prepare:linux-x64-gcc11:
     DOCKERFILE: >- # Generate a Dockerfile for the build image
       FROM fedora:33\n
       RUN dnf update -y && dnf clean all\n
-      RUN dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers vala\n
+      RUN dnf install -y cmake make gcc-c++ python SDL2-devel openal-soft-devel zlib-devel mesa-libGL-devel SDL2 openal-soft mesa-libGL libstdc++ pulseaudio pulseaudio-utils xorg-x11-server-Xvfb xorg-x11-drv-dummy dpkg mesa-dri-drivers vala ninja-build python3-pip\n
+      # deps/glib (glib 2.90) needs meson >= 1.4.0; Fedora 33 ships 0.59.\n
+      RUN pip3 install --upgrade meson\n
   before_script: # Put the variable into a Dockerfile
     - echo -e $DOCKERFILE > Dockerfile
     - cat Dockerfile
@@ -124,6 +126,12 @@ prepare:deploy:
       - gradle/.gradle/caches/
       - gradle/.gradle/notifications/
       - gradle/.gradle/wrapper/
+  before_script:
+    # valac builds ports/vala; meson+ninja build deps/glib (Fedora 43's meson
+    # is 1.8.5, new enough for glib 2.90's `meson_version >= 1.4.0`).
+    # Installed here as well as in platforms/android/Dockerfile, since CI
+    # pulls the published image.
+    - dnf install -y vala meson ninja-build || true
   script:
     - cd gradle
     - export ABI_FILTERS=${ABI}
@@ -133,10 +141,31 @@ prepare:deploy:
     - mv gradle/simulant/build/outputs/aar/simulant-${BUILD_TYPE}.aar ${TARGET}/${BUILD_TYPE}/simulant/simulant-${BUILD_TYPE}.aar
     # - mkdir -p ${TARGET}/${BUILD_TYPE}/tests
     # - mv gradle/tests/build/outputs/apk/${BUILD_TYPE}/* ${TARGET}/${BUILD_TYPE}/tests
+    # The .aar is a Java-consumption format and carries none of these, so the
+    # static libraries a C/Vala consumer has to link are collected separately,
+    # one directory per ABI (AGP builds each ABI in its own CMake tree). Found
+    # by name rather than by a hardcoded .cxx/ layout, which AGP has changed
+    # between versions.
+    - |
+      for abi in $(echo "${ABI}" | tr ';' ' '); do
+        mkdir -p ${TARGET}/${BUILD_TYPE}/abi/${abi}
+        find gradle/simulant -path "*/${abi}/*" \
+          \( -name 'libsimulant-c.a' -o -name 'libsimulant-vala.a' \
+             -o -name 'libglib-2.0.a' -o -name 'libgobject-2.0.a' \
+             -o -name 'libpcre2-8.a' -o -name 'libffi.a' -o -name 'libintl.a' \) \
+          -exec cp {} ${TARGET}/${BUILD_TYPE}/abi/${abi}/ \;
+      done
+    # valac's generated .vapi/.h describe the same API for every ABI, so one
+    # copy is enough -- placed in the layout the other platforms build
+    # directly, so .deploy:deploy needs no Android-specific handling.
+    - mkdir -p ${TARGET}/${BUILD_TYPE}/ports/vala
+    - find gradle/simulant \( -name 'simulant-vala.vapi' -o -name 'simulant-vala.h' \) -exec cp {} ${TARGET}/${BUILD_TYPE}/ports/vala/ \;
   artifacts:
     paths:
       - ${TARGET}/${BUILD_TYPE}/simulant/
       - ${TARGET}/${BUILD_TYPE}/tests/
+      - ${TARGET}/${BUILD_TYPE}/abi/
+      - ${TARGET}/${BUILD_TYPE}/ports/vala/
 
 build:android-all-clang:release:
   extends: .build:android
@@ -160,7 +189,9 @@ build:psp-mips-gcc:debug:
   variables:
     TARGET: psp-mips-gcc
   before_script:
-    - apk add --no-cache vala || true
+    # meson+ninja build deps/glib, valac builds ports/vala. Installed here as
+    # well as in platforms/psp/Dockerfile, since CI pulls the published image.
+    - apk add --no-cache vala meson ninja || true
   script:
     - mkdir -p ${TARGET}/debug
     - cd ${TARGET}/debug
@@ -190,7 +221,9 @@ build:psp-mips-gcc:release:
   variables:
     TARGET: psp-mips-gcc
   before_script:
-    - apk add --no-cache vala || true
+    # meson+ninja build deps/glib, valac builds ports/vala. Installed here as
+    # well as in platforms/psp/Dockerfile, since CI pulls the published image.
+    - apk add --no-cache vala meson ninja || true
   script:
     - mkdir -p ${TARGET}/release
     - cd ${TARGET}/release
@@ -308,6 +341,10 @@ build:windows-x64-mingw:release:
       - ${TARGET}/release/deps/glib-build/gobject/*.h
       - ${TARGET}/release/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
       - ${TARGET}/release/deps/glib-build/subprojects/libffi-*/src/libffi.a
+      # Windows forces the static proxy-libintl fallback rather than
+      # linking Fedora's mingw64-gettext import library, which would make
+      # consumers need libintl-8.dll -- see cmake/BuildGLib.cmake.
+      - ${TARGET}/release/deps/glib-build/subprojects/proxy-libintl-*/libintl.a
 
 build:windows-x64-mingw:debug:
   stage: build
@@ -344,6 +381,7 @@ build:windows-x64-mingw:debug:
       - ${TARGET}/debug/deps/glib-build/gobject/*.h
       - ${TARGET}/debug/deps/glib-build/subprojects/pcre2-*/libpcre2-8.a
       - ${TARGET}/debug/deps/glib-build/subprojects/libffi-*/src/libffi.a
+      - ${TARGET}/debug/deps/glib-build/subprojects/proxy-libintl-*/libintl.a
 
 test:windows-x64-mingw:
   stage: test
@@ -654,7 +692,12 @@ build:dreamcast-sh4-gcc:
   variables:
     TARGET: dreamcast-sh4-gcc
   before_script:
-    - dnf install -y vala || true
+    # valac builds ports/vala; meson+ninja build deps/glib. Installed here as
+    # well as in platforms/dreamcast/Dockerfile, since CI pulls the published
+    # image. glib 2.90 needs meson >= 1.4.0 and Fedora 37 only ships 1.0.1,
+    # so meson comes from pip.
+    - dnf install -y vala ninja-build python3-pip || true
+    - pip3 install --upgrade meson || true
   script:
     - source /etc/bash.bashrc
     - mkdir -p ${TARGET}/debug
@@ -776,6 +819,11 @@ test:dreamcast-sh4-gcc:
     - cp ${TARGET}/debug/deps/glib-build/subprojects/libffi-*/src/libffi.a ./upload/${TARGET}/lib/debug/ 2>/dev/null || true
     - cp ${TARGET}/release/deps/glib-build/subprojects/proxy-libintl-*/libintl.a ./upload/${TARGET}/lib/release/ 2>/dev/null || true
     - cp ${TARGET}/debug/deps/glib-build/subprojects/proxy-libintl-*/libintl.a ./upload/${TARGET}/lib/debug/ 2>/dev/null || true
+    # Android builds several ABIs at once and collects them into abi/<abi>/
+    # (see .build:android); every other target is a single architecture and
+    # has no abi/ directory at all, so this is a no-op there.
+    - cp -r ${TARGET}/release/abi/. ./upload/${TARGET}/lib/release/ 2>/dev/null || true
+    - cp -r ${TARGET}/debug/abi/. ./upload/${TARGET}/lib/debug/ 2>/dev/null || true
     - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' simulant ./upload/${TARGET}/include
     - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' ports/c/generated/include/simulant ./upload/${TARGET}/include
     - rsync -avm -L --include='*.h' --include='*.hpp' --include='*.inc' -f 'hide,! */' ports/c/include/simulant ./upload/${TARGET}/include

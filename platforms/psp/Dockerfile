@@ -12,6 +12,8 @@ RUN cargo build --release
 FROM pspdev/pspdev:latest
 MAINTAINER kazade <kazade@gmail.com>
 
-RUN apk add --no-cache python3 py3-pip vala
+# meson + ninja build deps/glib (see cmake/BuildGLib.cmake); vala builds
+# ports/vala. Alpine's meson (1.11) satisfies glib's `meson_version >= 1.4.0`.
+RUN apk add --no-cache python3 py3-pip vala meson ninja
 
 COPY --from=pspbuild-builder /pspbuild/target/release/pspbuild /usr/local/bin/pspbuild
