@@ -133,6 +133,7 @@ public:
     bool has_prefab(AssetID id) const;
     PrefabPtr find_prefab(const std::string& name);
     void destroy_prefab(AssetID id);
+    void each_prefab(std::function<void(uint32_t, PrefabPtr)> callback);
 
     PrefabPtr create_prefab(
         const smlt::StageNode* root = nullptr,
@@ -148,6 +149,7 @@ public:
     std::size_t texture_count() const;
     bool has_texture(AssetID id) const;
     TexturePtr find_texture(const std::string& alias);
+    void each_texture(std::function<void(uint32_t, TexturePtr)> callback);
 
     /* Mesh API */
     void destroy_mesh(AssetID id);
@@ -156,6 +158,7 @@ public:
     std::size_t mesh_count() const;
     bool has_mesh(AssetID id) const;
     MeshPtr find_mesh(const std::string& name);
+    void each_mesh(std::function<void(uint32_t, MeshPtr)> callback);
 
     /* Material API */
     /* Note: unlike other asset types, use_asset_cache defaults to false here.
@@ -173,6 +176,7 @@ public:
     std::size_t material_count() const;
     bool has_material(const AssetID& id) const;
     MaterialPtr find_material(const std::string& name);
+    void each_material(std::function<void(uint32_t, MaterialPtr)> callback);
 
     /* Sound API */
     SoundPtr load_sound(
@@ -184,6 +188,7 @@ public:
     std::size_t sound_count() const;
     bool has_sound(AssetID id) const;
     SoundPtr find_sound(const std::string& name);
+    void each_sound(std::function<void(uint32_t, SoundPtr)> callback);
 
     /* Load raw binary data from a file */
     BinaryPtr load_binary(

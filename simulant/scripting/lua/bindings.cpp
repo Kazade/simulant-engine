@@ -107,6 +107,7 @@ void lua_bind(lua_State* state) {
         //   scene.input    -> InputManager
         //   scene:create_child(type_name, params)
         //   scene:create_mixin(type_name, params)
+        //   scene:find_descendent_with_name(name)
         // ----------------------------------------------------------------
         .beginClass<Scene>("Scene")
         .addProperty("transform", [](Scene* s) -> Transform* { return s->get_transform(); })
@@ -120,6 +121,10 @@ void lua_bind(lua_State* state) {
         })
         .addFunction("create_mixin", [](Scene* scene, const std::string& name, luabridge::LuaRef params_table) -> StageNode* {
             return scene->create_mixin(name, lua_table_to_params(params_table));
+        })
+        .addFunction("find_descendent_with_name",
+            [](Scene* scene, const std::string& name) -> StageNode* {
+            return scene->find_descendent_with_name(name);
         })
         .endClass()
         // ----------------------------------------------------------------

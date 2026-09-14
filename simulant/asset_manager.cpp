@@ -382,6 +382,10 @@ std::size_t AssetManager::mesh_count() const {
     return mesh_manager_.count();
 }
 
+void AssetManager::each_mesh(std::function<void(uint32_t, MeshPtr)> callback) {
+    mesh_manager_.each(callback);
+}
+
 MaterialPtr AssetManager::create_material(GarbageCollectMethod garbage_collect) {
     auto mat = new_x(this, material_manager_, garbage_collect);
     log_asset_alloc(mat);
@@ -485,6 +489,10 @@ std::size_t AssetManager::material_count() const {
     return material_manager_.count();
 }
 
+void AssetManager::each_material(std::function<void(uint32_t, MaterialPtr)> callback) {
+    material_manager_.each(callback);
+}
+
 TexturePtr AssetManager::create_texture(uint16_t width, uint16_t height, TextureFormat format, GarbageCollectMethod garbage_collect) {
     auto tex = new_x(this, texture_manager_, garbage_collect, width, height,
                       format);
@@ -577,6 +585,10 @@ std::size_t AssetManager::texture_count() const {
     return texture_manager_.count();
 }
 
+void AssetManager::each_texture(std::function<void(uint32_t, TexturePtr)> callback) {
+    texture_manager_.each(callback);
+}
+
 SoundPtr AssetManager::load_sound(const Path& path, const SoundFlags &flags, GarbageCollectMethod garbage_collect) {
     auto resolved = get_app()->vfs->locate_file(path);
     if(!resolved.has_value()) {
@@ -638,6 +650,10 @@ std::size_t AssetManager::sound_count() const {
 
 bool AssetManager::has_sound(AssetID s) const {
     return sound_manager_.contains(s);
+}
+
+void AssetManager::each_sound(std::function<void(uint32_t, SoundPtr)> callback) {
+    sound_manager_.each(callback);
 }
 
 void AssetManager::destroy_sound(AssetID t) {
@@ -907,6 +923,10 @@ PrefabPtr AssetManager::find_prefab(const std::string& name) {
 
 void AssetManager::destroy_prefab(AssetID id) {
     prefab_manager_.set_garbage_collection_method(id, GARBAGE_COLLECT_PERIODIC);
+}
+
+void AssetManager::each_prefab(std::function<void(uint32_t, PrefabPtr)> callback) {
+    prefab_manager_.each(callback);
 }
 
 FontPtr AssetManager::load_font(const Path& filename, const FontFlags& flags, GarbageCollectMethod garbage_collect) {
