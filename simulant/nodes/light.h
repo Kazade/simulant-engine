@@ -113,6 +113,7 @@ public:
 
 private:
     bool on_create(Params params) override {
+        bool explicit_position = params.contains("position");
         if(!clean_params<PointLight>(params)) {
             return false;
         }
@@ -122,8 +123,12 @@ private:
         }
 
         set_type(LIGHT_TYPE_POINT);
-        transform->set_position(
-            params.get<FloatArray>("position").value_or(Vec3()));
+        if(explicit_position) {
+            transform->set_position(
+                params.get<FloatArray>("position").value());
+        }
+        // else: keep whatever Light::on_create already applied from
+        // "translation"/"position" (e.g. a GLTF-authored transform).
         return true;
     }
 };
@@ -139,6 +144,9 @@ public:
         Light(owner, Meta::node_type) {}
 
     bool on_create(Params params) override {
+        bool explicit_direction = params.contains("direction");
+        bool has_rotation = params.contains("rotation");
+
         if(!clean_params<DirectionalLight>(params)) {
             return false;
         }
@@ -148,8 +156,13 @@ public:
         }
 
         set_type(LIGHT_TYPE_DIRECTIONAL);
-        auto direction = params.get<FloatArray>("direction");
-        set_direction(direction.value_or(Vec3(1, -0.5, 0)));
+        if(!explicit_direction && has_rotation) {
+            // GLTF's KHR_lights_punctual convention: a light points down
+            // its node's local -Z axis, rotated by the node's orientation.
+            set_direction(transform->orientation().forward());
+        } else {
+            set_direction(params.get<FloatArray>("direction").value());
+        }
         return true;
     }
 };

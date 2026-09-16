@@ -109,7 +109,7 @@ void lua_bind(lua_State* state) {
         //   scene:create_mixin(type_name, params)
         //   scene:find_descendent_with_name(name)
         // ----------------------------------------------------------------
-        .beginClass<Scene>("Scene")
+        .deriveClass<Scene, StageNode>("Scene")
         .addProperty("transform", [](Scene* s) -> Transform* { return s->get_transform(); })
         .addProperty("assets", [](Scene* s) -> AssetManager* { return s->assets.get(); })
         .addProperty("input", [](Scene* s) -> InputManager* { return s->input.get(); })

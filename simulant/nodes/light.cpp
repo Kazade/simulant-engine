@@ -36,6 +36,6 @@ bool Light::on_create(Params args) {
     Color c = args.get<FloatArray>("color").value_or(smlt::Color::white());
     set_color(c);
 
-    return true;
+    return StageNode::on_create(args);
 }
 } // namespace smlt

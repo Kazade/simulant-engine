@@ -273,13 +273,16 @@ void PSPRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
         state.intensity = light->intensity();
         state.range = light->range();
 
-        /* Pre-normalise direction for directional lights */
+        /* Pre-normalised toward-light direction for directional lights.
+         * position already stores -pointing_dir (set_direction negates on
+         * write), so pos.xyz = view_rot * (-pointing_dir) = toward_light in
+         * eye space. No further negation needed. */
         if(state.position[3] < 0.5f) {
             float len = sqrtf(pos.x*pos.x + pos.y*pos.y + pos.z*pos.z);
             if(len > 1e-8f) {
-                state.dir[0] = -pos.x / len;
-                state.dir[1] = -pos.y / len;
-                state.dir[2] = -pos.z / len;
+                state.dir[0] = pos.x / len;
+                state.dir[1] = pos.y / len;
+                state.dir[2] = pos.z / len;
             }
         }
     }

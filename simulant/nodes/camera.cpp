@@ -161,10 +161,9 @@ bool Camera2D::on_create(Params params) {
     proj[14] = -(f + n) / (f - n);
     proj[15] = 1.0f;
 
-    Params new_params;
     FloatArray matrix(proj.data(), proj.data() + 16);
-    new_params.set<FloatArray>("projection_matrix", matrix);
-    return Camera::on_create(new_params);
+    params.set<FloatArray>("projection_matrix", matrix);
+    return Camera::on_create(params);
 }
 
 bool Camera3D::on_create(Params params) {
@@ -199,10 +198,9 @@ bool Camera3D::on_create(Params params) {
         proj[15] = 0.0f;
     }
 
-    Params new_params;
     FloatArray matrix(proj.data(), proj.data() + 16);
-    new_params.set<FloatArray>("projection_matrix", matrix);
-    return Camera::on_create(new_params);
+    params.set<FloatArray>("projection_matrix", matrix);
+    return Camera::on_create(params);
 }
 
 } // namespace smlt

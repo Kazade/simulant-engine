@@ -229,19 +229,6 @@ bool SceneManager::register_scene_from_lua_state(
     _store_scene_factory(
         name, [L, klass_name, name, gltf_path, node_script_defs,
                this](Window* window) -> ScenePtr {
-        // Load the gltf prefab lazily — at scene instantiation, not at
-        // registration. This keeps unused routes from holding heavyweight
-        // asset data in memory.
-        PrefabPtr prefab;
-        if(!gltf_path.str().empty()) {
-            prefab = smlt::get_app()->shared_assets->load_prefab(gltf_path);
-            if(!prefab) {
-                S_ERROR("Unable to load gltf scene graph: {0}",
-                        gltf_path.str());
-                return ScenePtr();
-            }
-        }
-
         lua_getglobal(L, klass_name.c_str());
         if(lua_isnil(L, -1)) {
             lua_pop(L, 1);
@@ -260,7 +247,7 @@ bool SceneManager::register_scene_from_lua_state(
                 *constructor.call<luabridge::LuaRef>(klass, window);
 
             std::shared_ptr<LuaScene> ret(
-                new LuaScene(window, instance, prefab, node_script_defs),
+                new LuaScene(window, instance, PrefabPtr(), node_script_defs),
                 &SceneManager::deleter<LuaScene>);
 
             // Wire the wrapper table to the real C++ scene using a raw
@@ -269,6 +256,21 @@ bool SceneManager::register_scene_from_lua_state(
             // binding (create_child, assets, window, etc).
             instance.rawsetField("_cpp_node",
                                  static_cast<Scene*>(ret.get()));
+
+            // Load the gltf prefab lazily - at scene instantiation, not at
+            // registration, so unused routes don't hold heavyweight asset
+            // data in memory - and into this scene's own asset manager
+            // (rather than the shared one) so the assets' lifetime matches
+            // the scene's, the same as a hand-written Scene::on_load()
+            // calling assets->load_prefab(...).
+            if(!gltf_path.str().empty()) {
+                ret->prefab_ = ret->assets->load_prefab(gltf_path);
+                if(!ret->prefab_) {
+                    S_ERROR("Unable to load gltf scene graph: {0}",
+                            gltf_path.str());
+                    return ScenePtr();
+                }
+            }
 
             if(!ret->init()) {
                 S_ERROR("Failed to initialize the Scene");
