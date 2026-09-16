@@ -145,6 +145,12 @@ struct AppConfig {
          * Left empty by default, which disables memory logging entirely
          * with no performance cost. */
         std::string memory_log_path = "";
+
+        /* If set to true, textures loaded from embedded glTF image data
+         * (a base64 data URI or a .glb binary chunk, as opposed to an
+         * external file) are additionally dumped to a temp file on disk,
+         * with the texture's source() pointed at it. */
+        bool dump_embedded_textures_to_disk = false;
     } development;
 };
 

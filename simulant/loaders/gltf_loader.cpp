@@ -3,9 +3,11 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <set>
 #include <sstream>
 
+#include "../application.h"
 #include "../asset_manager.h"
 #include "../assets/prefab.h"
 #include "../generic/raii.h"
@@ -647,6 +649,34 @@ TextureFilter calculate_filter(int magFilter, int minFilter) {
     }
 }
 
+/* Writes the still-encoded (PNG/JPEG) bytes of an embedded glTF image to a
+ * temp file and points the texture's source() at it, so tooling that loads
+ * thumbnails from source() (e.g. Simulant Studio's asset browser) can show
+ * something real instead of nothing - embedded textures otherwise have no
+ * on-disk file. Gated behind a dev-only config flag; shipped games never
+ * pay this disk/memory cost. */
+static void maybe_dump_embedded_texture(const smlt::TexturePtr& tex,
+                                        const std::vector<uint8_t>& encoded,
+                                        const std::string& ext) {
+    if(!smlt::get_app()->config->development.dump_embedded_textures_to_disk) {
+        return;
+    }
+
+    auto filename = "simulant_embedded_texture_" +
+                    std::to_string(tex->id()) + "." + ext;
+    auto path = smlt::Path::system_temp_dir().append(filename);
+
+    std::ofstream out(path.str(), std::ios::binary);
+    if(!out) {
+        return;
+    }
+
+    out.write(reinterpret_cast<const char*>(encoded.data()), encoded.size());
+    out.close();
+
+    tex->set_source(path);
+}
+
 class VectorStreamBuf: public std::streambuf {
 public:
     VectorStreamBuf(std::vector<uint8_t>& vec) {
@@ -795,6 +825,7 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
                 auto tex = assets->create_texture(8, 8);
                 loader.into(*tex);
                 tex->flush();
+                maybe_dump_embedded_texture(tex, buff.data, "png");
                 return tex;
             } else if(mime == "image/jpeg") {
                 S_VERBOSE("Loading jpeg from stream");
@@ -802,6 +833,7 @@ static smlt::TexturePtr load_texture(AssetManager* assets, JSONIterator& js,
                 auto tex = assets->create_texture(8, 8);
                 loader.into(*tex);
                 tex->flush();
+                maybe_dump_embedded_texture(tex, buff.data, "jpg");
                 return tex;
             } else {
                 S_ERROR("Unsupported texture format");
