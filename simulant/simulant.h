@@ -66,6 +66,7 @@
 #include "nodes/audio_source.h"
 #include "nodes/camera.h"
 #include "nodes/debug.h"
+#include "nodes/gizmo.h"
 #include "nodes/locators/node_locator.h"
 #include "nodes/particle_system.h"
 #include "nodes/prefab_instance.h"

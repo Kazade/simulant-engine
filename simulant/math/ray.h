@@ -2,6 +2,7 @@
 
 #include "vec3.h"
 #include "aabb.h"
+#include "plane.h"
 
 namespace smlt {
 
@@ -25,6 +26,8 @@ struct Ray {
     ) const;
 
     bool intersects_sphere(const Vec3& center, const float radius, Vec3* intersection=nullptr, Vec3* normal = nullptr, float* distance=nullptr) const;
+
+    bool intersects_plane(const Plane& plane, Vec3* intersection=nullptr, float* distance=nullptr) const;
 };
 
 

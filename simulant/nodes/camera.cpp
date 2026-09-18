@@ -105,15 +105,10 @@ smlt::optional<Vec3> Camera::project_point(const RenderTarget& target,
 smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target,
                                              const Viewport& viewport,
                                              const Vec3& win) {
-    /*
-     * WARNING: This function is untested (FIXME) !!!
-     */
-
-    Mat4 A, m;
     Vec4 in;
 
-    A = view_matrix() * projection_matrix();
-    m = A.inversed();
+    Mat4 proj_inv = projection_matrix().inversed();
+    Mat4 view_inv = view_matrix().inversed();
 
     float vx = float(target.width()) * viewport.x();
     float vy = float(target.height()) * viewport.y();
@@ -125,7 +120,7 @@ smlt::optional<Vec3> Camera::unproject_point(const RenderTarget& target,
     in.z = 2.0f * win.z - 1.0f;
     in.w = 1.0f;
 
-    Vec4 out = m * in;
+    Vec4 out = view_inv * (proj_inv * in);
 
     if(out.w == 0.0f) {
         return smlt::optional<Vec3>();

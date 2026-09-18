@@ -27,7 +27,23 @@ void Transform::set_position(const Vec3& position) {
     signal_change_attempted();
     if(has_parent()) {
         Vec3 ppos = parent_->position();
-        set_translation_if_necessary(position - ppos);
+        auto prot = parent_->orientation();
+        prot.inverse();
+
+        Vec3 local = prot * (position - ppos);
+
+        Vec3 pscale = parent_->scale();
+        if(pscale.x != 0.0f) {
+            local.x /= pscale.x;
+        }
+        if(pscale.y != 0.0f) {
+            local.y /= pscale.y;
+        }
+        if(pscale.z != 0.0f) {
+            local.z /= pscale.z;
+        }
+
+        set_translation_if_necessary(local);
     } else {
         set_translation_if_necessary(position);
     }

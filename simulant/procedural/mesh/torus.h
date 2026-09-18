@@ -16,16 +16,25 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PROC_MESH_H_INCLUDED
-#define PROC_MESH_H_INCLUDED
+#ifndef TORUS_H
+#define TORUS_H
 
-#include "mesh/rectangle.h"
-#include "mesh/cube.h"
-#include "mesh/sphere.h"
-#include "mesh/circle.h"
-#include "mesh/cylinder.h"
-#include "mesh/cone.h"
-#include "mesh/torus.h"
-#include "mesh/icosphere.h"
+#include <cstdint>
+#include "../../types.h"
 
-#endif // MESH_H_INCLUDED
+namespace smlt {
+
+class Mesh;
+
+namespace procedural {
+namespace mesh {
+
+// Ring lies flat in the XZ plane, centered on the origin.
+void torus(SubMeshPtr submesh, float major_radius, float minor_radius,
+          int32_t major_segments=24, int32_t minor_segments=12);
+
+}
+}
+}
+
+#endif // TORUS_H

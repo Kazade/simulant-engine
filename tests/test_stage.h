@@ -12,6 +12,29 @@ using namespace smlt;
 class StageTests : public smlt::test::SimulantTestCase {
 public:
 
+    void test_set_position_accounts_for_parent_rotation() {
+        auto m = scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
+        auto parent = scene->create_child<smlt::Actor>(m);
+        auto child = scene->create_child<smlt::Actor>(m);
+        child->set_parent(parent);
+
+        parent->transform->set_position(Vec3(5.0f, 0.0f, 0.0f));
+        parent->transform->set_orientation(
+            Quaternion(Vec3(0, 1, 0), Degrees(90)));
+
+        // set_position() is documented as setting the *absolute world*
+        // position, so this must land exactly here regardless of the
+        // parent's rotation - a child positioned via set_position() used
+        // to get silently re-rotated by the parent's current orientation
+        // (only invisible when the parent had an identity orientation).
+        child->transform->set_position(Vec3(10.0f, 0.0f, 0.0f));
+
+        auto pos = child->transform->position();
+        assert_close(pos.x, 10.0f, 0.001f);
+        assert_close(pos.y, 0.0f, 0.001f);
+        assert_close(pos.z, 0.0f, 0.001f);
+    }
+
     void test_actor_destruction() {
         auto destroyed_count = 0;
 

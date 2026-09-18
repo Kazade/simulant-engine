@@ -32,6 +32,7 @@
 #include "../nodes/fly_controller.h"
 #include "../nodes/frustum_culler.h"
 #include "../nodes/geom.h"
+#include "../nodes/gizmo.h"
 #include "../nodes/joint.h"
 #include "../nodes/light.h"
 #include "../nodes/mesh_instancer.h"
@@ -97,6 +98,7 @@ void Scene::register_builtin_nodes() {
     register_stage_node<PointLight>();
     register_stage_node<MeshInstancer>();
     register_stage_node<FrustumCuller>();
+    register_stage_node<Gizmo>();
     register_stage_node<CylindricalBillboard>();
     register_stage_node<SphericalBillboard>();
     register_stage_node<ParticleSystem>();

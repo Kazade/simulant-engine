@@ -76,6 +76,67 @@ public:
         assert_close(a[15], 1.0f, 0.00001f);
     }
 
+    void test_inverse_of_perspective_projection() {
+        auto proj = Mat4::as_projection(Degrees(45.0f), 1.333f, 1.0f, 100.0f);
+        auto inv = proj.inversed();
+
+        auto identity = proj * inv;
+        const float E = 0.001f;
+        for(uint32_t i = 0; i < 16; ++i) {
+            float expected = (i == 0 || i == 5 || i == 10 || i == 15) ? 1.0f : 0.0f;
+            assert_close(identity[i], expected, E);
+        }
+    }
+
+    // NOTE: deliberately no test here inverting a combined
+    // projection*view matrix in one shot (i.e. `(proj * view).inversed()`)
+    // - Mat4::inversed()'s general (non block-triangular) path currently
+    // gives incorrect results for that specific kind of matrix (neither a
+    // pure projection matrix nor a pure affine transform). Discovered
+    // while implementing Camera::unproject_point(), which works around it
+    // by inverting the projection and view matrices separately instead -
+    // see test_inverse_via_separate_proj_and_view() below, and the
+    // comment in Camera::unproject_point().
+
+    void test_inverse_of_affine_view_matrix() {
+        auto rot = Mat4::as_rotation(Quaternion(Vec3(0, 1, 0), Degrees(30)));
+        auto irot = rot.inversed();
+        auto trns = Mat4::as_translation(-Vec3(1.0f, 2.0f, 3.0f));
+        auto view = irot * trns;
+
+        auto view_inv = view.inversed();
+        auto identity = view * view_inv;
+
+        const float E = 0.001f;
+        for(uint32_t i = 0; i < 16; ++i) {
+            float expected = (i == 0 || i == 5 || i == 10 || i == 15) ? 1.0f : 0.0f;
+            assert_close(identity[i], expected, E);
+        }
+    }
+
+    void test_inverse_via_separate_proj_and_view() {
+        auto proj = Mat4::as_projection(Degrees(45.0f), 1.333f, 1.0f, 100.0f);
+        auto rot = Mat4::as_rotation(Quaternion(Vec3(0, 1, 0), Degrees(30)));
+        auto irot = rot.inversed();
+        auto trns = Mat4::as_translation(-Vec3(1.0f, 2.0f, 3.0f));
+        auto view = irot * trns;
+
+        Vec4 world_point(5.0f, -2.0f, 10.0f, 1.0f);
+        Vec4 clip = proj * (view * world_point);
+
+        // Round-trip using separate inverses (avoids ever inverting the
+        // combined, non-affine projection*view matrix directly).
+        auto proj_inv = proj.inversed();
+        auto view_inv = view.inversed();
+        Vec4 roundtrip = view_inv * (proj_inv * clip);
+
+        const float E = 0.01f;
+        assert_close(roundtrip.x, world_point.x, E);
+        assert_close(roundtrip.y, world_point.y, E);
+        assert_close(roundtrip.z, world_point.z, E);
+        assert_close(roundtrip.w, world_point.w, E);
+    }
+
     void test_trs() {
         auto trans = Vec3(10.0f, 20.0f, 30.0f);
         auto rot = Quaternion(0.259f, 0.0f, 0.0f, 0.966f);

@@ -16,16 +16,24 @@
  *     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PROC_MESH_H_INCLUDED
-#define PROC_MESH_H_INCLUDED
+#ifndef CONE_H
+#define CONE_H
 
-#include "mesh/rectangle.h"
-#include "mesh/cube.h"
-#include "mesh/sphere.h"
-#include "mesh/circle.h"
-#include "mesh/cylinder.h"
-#include "mesh/cone.h"
-#include "mesh/torus.h"
-#include "mesh/icosphere.h"
+#include <cstdint>
+#include "../../types.h"
 
-#endif // MESH_H_INCLUDED
+namespace smlt {
+
+class Mesh;
+
+namespace procedural {
+namespace mesh {
+
+// Apex at +length/2 on Y, circular base (capped) at -length/2.
+void cone(SubMeshPtr submesh, float diameter, float length, int32_t segments=20);
+
+}
+}
+}
+
+#endif // CONE_H

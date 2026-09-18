@@ -568,6 +568,14 @@ private:
      * offscreen) */
     bool cullable_ = true;
 
+    /* Marks this node (and, by convention, anything an editor/tool builds
+     * under it) as tooling-only: it renders and behaves like any other
+     * node, but isn't part of the actual scene/game content. A host
+     * application's own tree views should skip these, and a future scene
+     * serializer should never write them out. Not set for regular game
+     * content; e.g. Simulant Studio's transform gizmo sets this. */
+    bool editor_only_ = false;
+
     /* Passed to coroutines and used to detect when the object has been
      * destroyed */
     std::shared_ptr<bool> alive_marker_ = std::make_shared<bool>(true);
@@ -782,6 +790,18 @@ public:
         return mixins_.size();
     }
 
+    /* Mixins are deliberately excluded from each_child()/each_descendent()
+     * (see add_mixin()), so anything that needs to visit them explicitly -
+     * e.g. the render-queue traversal, so a mixin with its own renderable
+     * geometry actually draws - should use this rather than reaching into
+     * mixins_ directly. */
+    template<typename Func>
+    void each_mixin(Func&& callback) const {
+        for(auto& m: mixins_) {
+            callback(m.second.ptr);
+        }
+    }
+
     StageNode* base() {
         return base_;
     }
@@ -903,6 +923,13 @@ public:
 
     void set_cullable(bool v);
     bool is_cullable() const;
+
+    void set_editor_only(bool v) {
+        editor_only_ = v;
+    }
+    bool is_editor_only() const {
+        return editor_only_;
+    }
 
     void set_precedence(int16_t precedence);
 

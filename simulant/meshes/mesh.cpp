@@ -273,6 +273,28 @@ SubMeshPtr Mesh::create_submesh_as_cylinder(const std::string& name,
     return sm;
 }
 
+SubMeshPtr Mesh::create_submesh_as_cone(const std::string& name,
+    MaterialPtr material, float diameter, float length, std::size_t segments) {
+
+    SubMesh* sm = create_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+
+    procedural::mesh::cone(sm, diameter, length, (int32_t) segments);
+
+    return sm;
+}
+
+SubMeshPtr Mesh::create_submesh_as_torus(const std::string& name,
+    MaterialPtr material, float major_radius, float minor_radius,
+    std::size_t major_segments, std::size_t minor_segments) {
+
+    SubMesh* sm = create_submesh(name, material, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_TRIANGLES);
+
+    procedural::mesh::torus(sm, major_radius, minor_radius,
+        (int32_t) major_segments, (int32_t) minor_segments);
+
+    return sm;
+}
+
 SubMeshPtr Mesh::create_submesh_as_capsule(
     const std::string& name,
     MaterialPtr material, float diameter, float length,

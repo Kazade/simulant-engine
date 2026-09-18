@@ -257,6 +257,21 @@ public:
         std::size_t stacks
     );
 
+    SubMeshPtr create_submesh_as_cone(const std::string& name,
+        MaterialPtr material,
+        float diameter,
+        float length,
+        std::size_t segments=20
+    );
+
+    SubMeshPtr create_submesh_as_torus(const std::string& name,
+        MaterialPtr material,
+        float major_radius,
+        float minor_radius,
+        std::size_t major_segments=24,
+        std::size_t minor_segments=12
+    );
+
     SubMeshPtr create_submesh_as_icosphere(const std::string& name,
         MaterialPtr material,
         float diameter,

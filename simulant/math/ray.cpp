@@ -123,7 +123,33 @@ bool Ray::intersects_sphere(const Vec3& center, const float radius, Vec3 *inters
         *normal = (pos - center).normalized();
     }
 
-    return true; 
+    return true;
+}
+
+bool Ray::intersects_plane(const Plane& plane, Vec3* intersection, float* distance) const {
+    const Vec3 rdir = dir.normalized();
+    const float denom = plane.n.dot(rdir);
+
+    if(denom > -EPSILON && denom < EPSILON) {
+        // Ray is (near) parallel to the plane
+        return false;
+    }
+
+    const float t = (plane.d - plane.n.dot(start)) / denom;
+    if(t < 0.0f) {
+        // Plane is behind the ray origin
+        return false;
+    }
+
+    if(distance) {
+        *distance = t;
+    }
+
+    if(intersection) {
+        *intersection = start + (rdir * t);
+    }
+
+    return true;
 }
 
 }

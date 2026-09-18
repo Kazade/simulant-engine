@@ -31,6 +31,13 @@ inline void traverse_bfs(StageNode* start, Func&& func) {
                 bfs_queue.push_back(&child);
             }
         }
+        // Mixins are deliberately excluded from each_child() (they aren't
+        // part of the normal scene tree), so they need visiting explicitly
+        // here for any renderable geometry they (or their own children) own
+        // to actually reach the render queue.
+        node->each_mixin([&](StageNode* mixin) {
+            bfs_queue.push_back(mixin);
+        });
         func(node);
     }
 }

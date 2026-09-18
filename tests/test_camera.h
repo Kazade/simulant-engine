@@ -38,6 +38,24 @@ public:
         assert_equal(window->height() / 2, p1.y);
     }
 
+    void test_project_unproject_roundtrip() {
+        auto camera = camera_;
+        camera->transform->set_position(Vec3(1, 2, 5));
+        camera->set_perspective_projection(Degrees(60.0), float(window->width()) / float(window->height()));
+
+        Vec3 world_point(0.5f, -1.0f, -8.0f);
+
+        auto screen = camera->project_point(*window, Viewport(), world_point);
+        assert_true(bool(screen));
+
+        auto unprojected = camera->unproject_point(*window, Viewport(), screen.value());
+        assert_true(bool(unprojected));
+
+        assert_close(unprojected->x, world_point.x, 0.01f);
+        assert_close(unprojected->y, world_point.y, 0.01f);
+        assert_close(unprojected->z, world_point.z, 0.01f);
+    }
+
     void test_look_at() {
         Vec3 pos(0, 0, -1);
 
