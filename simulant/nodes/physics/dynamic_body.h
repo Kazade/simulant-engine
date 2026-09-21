@@ -15,7 +15,7 @@ class DynamicBody: public ReactiveBody {
 public:
     FindResult<Debug> debug = smlt::FindChild<Debug>(this);
 
-    S_DEFINE_STAGE_NODE_META("dynamic_body");
+    S_DEFINE_STAGE_NODE_META("dynamic_body", smlt::STAGE_NODE_USAGE_MIXIN_ONLY);
     S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(DynamicBody);
 
     DynamicBody(Scene* owner) :

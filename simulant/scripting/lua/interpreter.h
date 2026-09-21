@@ -245,6 +245,12 @@ public:
         return node_type_name_.c_str();
     }
 
+    // Lua-scripted node types have no way (yet) to declare an intended
+    // usage of their own, so default to the permissive option.
+    virtual StageNodeUsage node_usage() const override {
+        return STAGE_NODE_USAGE_EITHER;
+    }
+
     virtual std::set<NodeParam> node_params() const override {
         return params_;
     }

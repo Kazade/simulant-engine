@@ -11,7 +11,7 @@ class Scene;
 class KinematicBody: public ReactiveBody {
 
 public:
-    S_DEFINE_STAGE_NODE_META("kinematic_body");
+    S_DEFINE_STAGE_NODE_META("kinematic_body", smlt::STAGE_NODE_USAGE_MIXIN_ONLY);
     S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(KinematicBody);
 
     KinematicBody(Scene* owner) :

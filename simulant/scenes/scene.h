@@ -185,6 +185,12 @@ public:
         return "Scene";
     }
 
+    // A Scene is the root of a whole node tree, never something you'd
+    // create standalone within one or attach as a mixin.
+    StageNodeUsage node_usage() const override {
+        return STAGE_NODE_USAGE_NODE_ONLY;
+    }
+
     // Scenes don't take parameters (for now...)
     std::set<NodeParam> node_params() const override {
         return std::set<NodeParam>();

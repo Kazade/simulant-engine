@@ -10,7 +10,7 @@ namespace smlt {
 class StaticBody: public PhysicsBody {
 
 public:
-    S_DEFINE_STAGE_NODE_META("static_body");
+    S_DEFINE_STAGE_NODE_META("static_body", smlt::STAGE_NODE_USAGE_MIXIN_ONLY);
     S_DEFINE_CORE_PHYSICS_BODY_PROPERTIES(StaticBody);
 
     S_DEFINE_STAGE_NODE_PARAM(StaticBody, "mesh", MeshPtr, MeshPtr(),

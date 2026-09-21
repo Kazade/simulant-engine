@@ -58,7 +58,7 @@ class Viewport;
  * serializer too. */
 class Gizmo: public StageNode, public EventListener {
 public:
-    S_DEFINE_STAGE_NODE_META("gizmo");
+    S_DEFINE_STAGE_NODE_META("gizmo", smlt::STAGE_NODE_USAGE_MIXIN_ONLY);
 
     enum GizmoMode {
         GIZMO_MODE_TRANSLATE,

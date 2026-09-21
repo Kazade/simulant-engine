@@ -38,7 +38,7 @@ class Armature;
  */
 class Joint: public StageNode {
 public:
-    S_DEFINE_STAGE_NODE_META("joint");
+    S_DEFINE_STAGE_NODE_META("joint", smlt::STAGE_NODE_USAGE_NODE_ONLY);
 
     S_DEFINE_STAGE_NODE_PARAM(
         Joint, "joint_index", int, -1,

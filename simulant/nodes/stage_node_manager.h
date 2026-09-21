@@ -16,6 +16,7 @@ class Params;
 
 typedef std::function<StageNode*(void*)> StageNodeConstructFunction;
 typedef std::function<void(StageNode*)> StageNodeDestructFunction;
+typedef std::function<std::set<NodeParam>()> StageNodeParamQueryFunction;
 
 struct StageNodeTypeInfo {
     StageNodeType type;
@@ -25,6 +26,21 @@ struct StageNodeTypeInfo {
 
     StageNodeConstructFunction constructor;
     StageNodeDestructFunction destructor;
+
+    // Returns this type's on_create() param schema (name/type/default/
+    // required) without needing an instance - lets tooling (e.g. the
+    // editor's "create node" dialog) build a form for any registered type
+    // purely from its name. Bound in register_stage_node<T>() to
+    // get_node_params<T>(), which is otherwise only reachable when T is
+    // known at compile time.
+    StageNodeParamQueryFunction param_query;
+
+    // Mirrors T::Meta::usage_kind (see S_DEFINE_STAGE_NODE_META) - whether
+    // this type is meant to be created standalone, only ever attached as a
+    // mixin, or either. Defaults to the permissive EITHER for types that
+    // don't set it explicitly (e.g. Lua-scripted node types, which have no
+    // way to declare this yet).
+    StageNodeUsage usage = STAGE_NODE_USAGE_EITHER;
 };
 
 class Scene;
@@ -171,6 +187,15 @@ public:
         return true;
     }
 
+    // All node types registered on this scene (built-ins from
+    // Scene::register_builtin_nodes(), plus any Lua-scripted types the
+    // scene registered itself) - e.g. for the editor's "create node" UI
+    // to enumerate what's available and query each type's param schema.
+    const std::unordered_map<StageNodeType, StageNodeTypeInfo>&
+        registered_nodes() const {
+        return registered_nodes_;
+    }
+
     optional<StageNodeTypeInfo>
         registered_stage_node_info(const std::string& name) {
         for(auto& p: registered_nodes_) {
@@ -190,11 +215,25 @@ public:
             T::on_register(scene_);
         }
 
-        return register_stage_node(T::Meta::node_type, T::Meta::name, sizeof(T),
-                                   alignof(T),
-                                   std::bind(&StageNodeManager::standard_new<T>,
-                                             scene_, std::placeholders::_1),
-                                   &StageNodeManager::standard_delete<T>);
+        bool ok = register_stage_node(
+            T::Meta::node_type, T::Meta::name, sizeof(T), alignof(T),
+            std::bind(&StageNodeManager::standard_new<T>, scene_,
+                     std::placeholders::_1),
+            &StageNodeManager::standard_delete<T>);
+
+        if(ok) {
+            // Copy into a local first: StageNodeManager::at() takes its key
+            // by const&, and binding that reference directly to
+            // T::Meta::node_type (an in-class-initialized static const,
+            // never given an out-of-line definition) would odr-use it and
+            // fail to link.
+            StageNodeType type = T::Meta::node_type;
+            registered_nodes_.at(type).param_query =
+                []() { return get_node_params<T>(); };
+            registered_nodes_.at(type).usage = T::Meta::usage_kind;
+        }
+
+        return ok;
     }
 };
 

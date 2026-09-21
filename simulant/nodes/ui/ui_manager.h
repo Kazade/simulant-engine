@@ -52,7 +52,7 @@ class UIManager: public EventListener, public StageNode {
     friend class Widget;
 
 public:
-    S_DEFINE_STAGE_NODE_META("ui_manager");
+    S_DEFINE_STAGE_NODE_META("ui_manager", smlt::STAGE_NODE_USAGE_NODE_ONLY);
 
     UIManager(Scene* owner, UIConfig config = UIConfig());
     virtual ~UIManager();

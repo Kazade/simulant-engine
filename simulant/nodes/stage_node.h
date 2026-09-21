@@ -936,6 +936,7 @@ public:
     int16_t precedence() const;
 
     virtual const char* node_type_name() const = 0;
+    virtual StageNodeUsage node_usage() const = 0;
 
 protected:
     virtual bool on_create(Params params) {
@@ -1087,14 +1088,28 @@ typedef StageNode* StageNodePtr;
 
 #define S_STAGE_NODE_TYPE(alias) (smlt::fnv1<uint32_t>::hash(alias))
 
-#define S_DEFINE_STAGE_NODE_META(alias)                                        \
+// The trailing STAGE_NODE_USAGE_EITHER makes the usage argument optional:
+// S_DEFINE_STAGE_NODE_META("actor") and
+// S_DEFINE_STAGE_NODE_META("gizmo", smlt::STAGE_NODE_USAGE_MIXIN_ONLY) both
+// work, matching the optional-trailing-arg pattern S_DEFINE_STAGE_NODE_PARAM
+// already uses for its `required` argument.
+#define S_DEFINE_STAGE_NODE_META(...)                                          \
+    S_DEFINE_STAGE_NODE_META_(__VA_ARGS__)
+#define S_DEFINE_STAGE_NODE_META_(...)                                         \
+    S_DEFINE_STAGE_NODE_META__(__VA_ARGS__, smlt::STAGE_NODE_USAGE_EITHER)
+#define S_DEFINE_STAGE_NODE_META__(alias, usage, ...)                          \
     struct Meta {                                                              \
         const static smlt::StageNodeType node_type =                           \
             smlt::fnv1<uint32_t>::hash(alias);                                 \
         inline static const char* name = alias;                                \
+        const static smlt::StageNodeUsage usage_kind = usage;                  \
     };                                                                         \
     const char* node_type_name() const override {                              \
         return Meta::name;                                                     \
+    }                                                                          \
+                                                                               \
+    smlt::StageNodeUsage node_usage() const override {                        \
+        return Meta::usage_kind;                                              \
     }                                                                          \
                                                                                \
     std::set<smlt::NodeParam> node_params() const override {                   \

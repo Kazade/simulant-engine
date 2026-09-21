@@ -34,7 +34,7 @@ class Stage;
 
 class Stage: public StageNode {
 public:
-    S_DEFINE_STAGE_NODE_META("stage");
+    S_DEFINE_STAGE_NODE_META("stage", smlt::STAGE_NODE_USAGE_NODE_ONLY);
 
     Stage(Scene* owner);
 
