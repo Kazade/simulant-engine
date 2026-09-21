@@ -22,8 +22,6 @@ public:
     S_DEFINE_STAGE_NODE_PARAM(Camera, "projection_matrix", FloatArray, no_value,
                               "16 floats defining the projection matrix");
 
-    using ContainerNode::do_generate_renderables;
-
     Camera(Scene* owner);
     virtual ~Camera();
 
@@ -34,7 +32,12 @@ public:
     }
 
     const AABB transformed_aabb() const override {
-        return AABB(transform->position(), transform->position());
+        // Zero-size box at the camera's world position - AABB's 2-arg
+        // constructor takes (center, extents), so passing position() as
+        // both would wrongly make its extents as large as the position
+        // vector itself, rather than the zero-size point this is meant to
+        // be (per aabb() above).
+        return AABB(transform->position(), Vec3());
     }
 
     // Converts an OpenGL unit to window space
@@ -85,6 +88,17 @@ public:
         return StageNode::on_create(params);
     }
 
+    // Editor-only wireframe frustum, built on demand (see
+    // Application::is_editor_mode()) so shipped games pay zero memory cost
+    // for it - see do_generate_renderables().
+    void do_generate_renderables(batcher::RenderQueue* render_queue,
+                                 const Camera* frustum_camera,
+                                 const Viewport* viewport,
+                                 const DetailLevel detail_level,
+                                 Light** lights,
+                                 const std::size_t light_count,
+                                 bool respect_visibility = true) override;
+
 private:
     AABB bounds_;
     mutable Frustum frustum_;
@@ -97,6 +111,12 @@ private:
     void update_frustum() const;
 
     void on_transformation_changed() override;
+
+    MeshPtr visualisation_mesh_;
+    SubMeshPtr visualisation_submesh_ = nullptr;
+    bool visualisation_dirty_ = true;
+
+    void rebuild_visualisation_mesh();
 };
 
 class Camera2D: public Camera {

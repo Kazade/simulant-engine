@@ -2,6 +2,11 @@
 #include "actor.h"
 
 #include "../application.h"
+#include "../asset_manager.h"
+#include "../assets/material.h"
+#include "../meshes/mesh.h"
+#include "../renderers/batching/renderable.h"
+#include "../scenes/scene.h"
 #include "../stage.h"
 #include "../viewport.h"
 #include "../window.h"
@@ -51,6 +56,7 @@ void Camera::update_frustum() const {
 void Camera::set_projection_matrix(const Mat4& matrix) {
     projection_matrix_ = matrix;
     frustum_dirty_ = true;
+    visualisation_dirty_ = true;
     update_frustum();
 }
 
@@ -196,6 +202,111 @@ bool Camera3D::on_create(Params params) {
     FloatArray matrix(proj.data(), proj.data() + 16);
     params.set<FloatArray>("projection_matrix", matrix);
     return Camera::on_create(params);
+}
+
+void Camera::rebuild_visualisation_mesh() {
+    if(!visualisation_mesh_) {
+        visualisation_mesh_ =
+            scene->assets->create_mesh(VertexSpecification::POSITION_AND_DIFFUSE);
+
+        auto mat = scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
+        mat->set_cull_mode(CULL_MODE_NONE);
+        mat->set_depth_write_enabled(false);
+
+        visualisation_submesh_ = visualisation_mesh_->create_submesh(
+            "editor_frustum", mat, INDEX_TYPE_16_BIT, MESH_ARRANGEMENT_LINES);
+    }
+
+    auto& vdata = visualisation_mesh_->vertex_data;
+    auto& idata = visualisation_submesh_->index_data;
+
+    vdata->clear();
+    idata->clear();
+
+    // The 8 corners of the projection's clip-space cube, unprojected back
+    // into camera-local space - this works unchanged for both perspective
+    // (Camera3D) and orthographic (Camera2D) projections, since it only
+    // depends on the (invertible) projection matrix, not any per-type FOV/
+    // magnitude fields.
+    Mat4 inv_proj = projection_matrix().inversed();
+    Vec3 corners[8];
+    std::size_t i = 0;
+    for(float z: {-1.0f, 1.0f}) {
+        for(float y: {-1.0f, 1.0f}) {
+            for(float x: {-1.0f, 1.0f}) {
+                Vec4 clip(x, y, z, 1.0f);
+                Vec4 view = inv_proj * clip;
+                if(view.w != 0.0f) {
+                    view.x /= view.w;
+                    view.y /= view.w;
+                    view.z /= view.w;
+                }
+                corners[i++] = Vec3(view.x, view.y, view.z);
+            }
+        }
+    }
+
+    static const Color color(1.0f, 0.9f, 0.2f, 1.0f);
+    vdata->move_to_end();
+    for(auto& corner: corners) {
+        vdata->position(corner);
+        vdata->color(color);
+        vdata->move_next();
+    }
+    vdata->done();
+
+    // Corner indices, per the nested loop above: bit 2 = z, bit 1 = y, bit
+    // 0 = x, so e.g. corners[0] = (-1,-1,-1) and corners[3] = (1,1,-1).
+    const uint32_t near_quad[4] = {0, 1, 3, 2};
+    const uint32_t far_quad[4] = {4, 5, 7, 6};
+    for(int e = 0; e < 4; ++e) {
+        idata->index(near_quad[e]);
+        idata->index(near_quad[(e + 1) % 4]);
+        idata->index(far_quad[e]);
+        idata->index(far_quad[(e + 1) % 4]);
+        idata->index(near_quad[e]);
+        idata->index(far_quad[e]);
+    }
+    idata->done();
+
+    visualisation_dirty_ = false;
+}
+
+void Camera::do_generate_renderables(batcher::RenderQueue* render_queue,
+                                     const Camera*, const Viewport*,
+                                     const DetailLevel, Light**,
+                                     const std::size_t,
+                                     bool respect_visibility) {
+    if(!get_app()->is_editor_mode()) {
+        return;
+    }
+
+    // Editor-only cameras (e.g. the Studio's own viewport camera) are
+    // tooling, not scene content - they shouldn't draw a visualisation for
+    // themselves.
+    if(is_editor_only()) {
+        return;
+    }
+
+    if(respect_visibility && !is_visible()) {
+        return;
+    }
+
+    if(visualisation_dirty_) {
+        rebuild_visualisation_mesh();
+    }
+
+    Renderable renderable;
+    renderable.final_transformation = &transform->world_space_matrix();
+    renderable.render_priority = render_priority();
+    renderable.is_visible = is_visible();
+    renderable.arrangement = visualisation_submesh_->arrangement();
+    renderable.vertex_data = visualisation_mesh_->vertex_data.get();
+    renderable.index_data = visualisation_submesh_->index_data.get();
+    renderable.index_element_count = renderable.index_data->count();
+    renderable.material = visualisation_submesh_->material().get();
+    renderable.center = transform->position();
+    render_queue->insert_renderable(std::move(renderable));
 }
 
 } // namespace smlt

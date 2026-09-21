@@ -315,6 +315,27 @@ public:
         updates_enabled_ = mask;
     }
 
+    /**
+     * @brief set_editor_mode
+     * @param v
+     *
+     * When enabled, GLTF/Lua scenes still instantiate their authored node
+     * graph, but their scene script's own on_load() Lua hook is skipped -
+     * that hook is game logic (it may create gameplay-only cameras/layers/
+     * nodes), which an editor doesn't want run just to look at the scene.
+     *
+     * WARNING: This primarily exists for game tools such as editors. Using
+     * this feature in a game may cause issues when editing that game with
+     * such tools.
+     */
+    void set_editor_mode(bool v) {
+        editor_mode_ = v;
+    }
+
+    bool is_editor_mode() const {
+        return editor_mode_;
+    }
+
     LuaInterpreter* ensure_lua_ready();
 
 protected:
@@ -366,6 +387,7 @@ private:
     float frame_time_in_milliseconds_ = 0.0f;
 
     UpdateEnabledMask updates_enabled_ = ALL_UPDATES_ENABLED;
+    bool editor_mode_ = false;
 
     void _call_fixed_update(float dt) {
         fixed_update(dt);

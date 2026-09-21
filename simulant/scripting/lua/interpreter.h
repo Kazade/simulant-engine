@@ -32,6 +32,7 @@
 #pragma GCC diagnostic pop
 #endif
 // clang-format on
+#include "../../application.h"
 #include "../../generic/optional.h"
 #include "../../nodes/prefab_instance.h"
 #include "../../nodes/stage_node.h"
@@ -313,7 +314,12 @@ public:
             create_child<PrefabInstance>(prefab_);
         }
 
-        call_lua_method("on_load");
+        // The scene script's own on_load() is game logic (it may create
+        // gameplay-only cameras/layers/nodes) - editors want the authored
+        // node graph above without running it.
+        if(!smlt::get_app()->is_editor_mode()) {
+            call_lua_method("on_load");
+        }
     }
 
     void on_unload() override {

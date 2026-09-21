@@ -55,6 +55,7 @@ public:
     void set_range(float range) {
         range_ = range;
         bounds_ = AABB(Vec3(), range_);
+        visualisation_dirty_ = true;
     }
 
     void set_direction(const Vec3& dir) {
@@ -93,6 +94,16 @@ public:
 protected:
     bool on_create(Params params) override;
 
+    // Editor-only wireframe marker (a sphere for a point light's range, a
+    // small fixed-size marker for a directional light), built on demand
+    // (see Application::is_editor_mode()) so shipped games pay zero memory
+    // cost for it - see do_generate_renderables().
+    void do_generate_renderables(batcher::RenderQueue* render_queue,
+                                 const Camera* camera, const Viewport* viewport,
+                                 const DetailLevel detail_level,
+                                 Light** lights, const std::size_t light_count,
+                                 bool respect_visibility = true) override;
+
 private:
     LightType type_;
 
@@ -100,6 +111,12 @@ private:
     AABB bounds_;
     float range_ = 100.0f;
     float intensity_ = 1.0f;
+
+    MeshPtr visualisation_mesh_;
+    SubMeshPtr visualisation_submesh_ = nullptr;
+    bool visualisation_dirty_ = true;
+
+    void rebuild_visualisation_mesh();
 };
 
 class PointLight: public Light {
@@ -107,6 +124,19 @@ public:
     S_DEFINE_STAGE_NODE_META("point_light");
     S_DEFINE_STAGE_NODE_PARAM(PointLight, "position", FloatArray, Vec3(),
                               "The position of the light");
+    // Fallback must be something that converts to a 4-element FloatArray
+    // (r,g,b,a) - Color does, via its FloatArray conversion operator;
+    // Vec3 would silently produce only 3 elements and Color's own
+    // FloatArray constructor unconditionally reads arr[3] for alpha.
+    S_DEFINE_STAGE_NODE_PARAM(PointLight, "color", FloatArray,
+                              smlt::Color::white(), "The light's color");
+    // Matches Light::range_'s own default (see light.h) - declaring this
+    // param just makes the existing default discoverable/settable (e.g.
+    // from the editor's create-node dialog), it doesn't change it.
+    S_DEFINE_STAGE_NODE_PARAM(PointLight, "range", float, 100.0f,
+                              "The light's range/radius of influence");
+    S_DEFINE_STAGE_NODE_PARAM(PointLight, "intensity", float, 1.0f,
+                              "The light's intensity/brightness");
 
     PointLight(Scene* owner) :
         Light(owner, Meta::node_type) {}
@@ -139,6 +169,10 @@ public:
     S_DEFINE_STAGE_NODE_PARAM(DirectionalLight, "direction", FloatArray,
                               Vec3(1, -0.5, 0),
                               "The direction the light is pointing");
+    S_DEFINE_STAGE_NODE_PARAM(DirectionalLight, "color", FloatArray,
+                              smlt::Color::white(), "The light's color");
+    S_DEFINE_STAGE_NODE_PARAM(DirectionalLight, "intensity", float, 1.0f,
+                              "The light's intensity/brightness");
 
     DirectionalLight(Scene* owner) :
         Light(owner, Meta::node_type) {}
