@@ -360,7 +360,20 @@ public:
         param_(NodeParam(order, name, type_to_node_param_type<T>::value,
                          Params::to_param(fallback), desc, required)) {
 
-        get_node_params<C>().insert(param_);
+        // A subclass re-declaring a param already seeded by
+        // get_node_params() itself (e.g. PointLight re-declaring
+        // "position" with its own default) should replace that entry,
+        // not add a second one alongside it - the set's ordering is by
+        // declaration order, not name, so std::set's usual "insert is a
+        // no-op if an equivalent element exists" won't catch this.
+        auto& params = get_node_params<C>();
+        auto it = std::find_if(
+            params.begin(), params.end(),
+            [&](const NodeParam& p) { return p.name() == param_.name(); });
+        if(it != params.end()) {
+            params.erase(it);
+        }
+        params.insert(param_);
     }
 
     const NodeParam& param() const {
