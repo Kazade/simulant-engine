@@ -3,6 +3,7 @@
 #include "vec3.h"
 #include "aabb.h"
 #include "plane.h"
+#include "../generic/optional.h"
 
 namespace smlt {
 
@@ -18,7 +19,11 @@ struct Ray {
         dir(dir),
         dir_inv(Vec3(1.0f / dir.x, 1.0f / dir.y, 1.0f / dir.z)) {}
 
-    bool intersects_aabb(const AABB& aabb) const;
+    // Returns the ray parameter (t) of the nearest intersection point on a
+    // hit, letting callers rank multiple candidate AABBs by distance (e.g.
+    // for picking the nearest object under a cursor) without a second
+    // pass. No value if the ray doesn't intersect the AABB.
+    optional<float> intersects_aabb(const AABB& aabb) const;
 
     bool intersects_triangle(
         const Vec3& v1, const Vec3& v2, const Vec3& v3,

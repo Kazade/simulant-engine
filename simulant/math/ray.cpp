@@ -3,7 +3,7 @@
 
 namespace smlt {
 
-bool Ray::intersects_aabb(const AABB &aabb) const {
+optional<float> Ray::intersects_aabb(const AABB &aabb) const {
     //http://gamedev.stackexchange.com/a/18459/15125
     const Vec3 rdir = this->dir.normalized();
     const Vec3 dirfrac(fast_divide(1.0f, rdir.x), fast_divide(1.0f, rdir.y), fast_divide(1.0f, rdir.z));
@@ -20,15 +20,15 @@ bool Ray::intersects_aabb(const AABB &aabb) const {
 
     // if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behind us
     if(tmax < 0) {
-        return false;
+        return no_value;
     }
 
     // if tmin > tmax, ray doesn't intersect AABB
     if (tmin > tmax) {
-        return false;
+        return no_value;
     }
 
-    return true;
+    return tmin;
 }
 
 bool Ray::intersects_triangle(const Vec3 &v1, const Vec3 &v2, const Vec3 &v3, Vec3 *intersection, Vec3 *normal, float *distance) const {
