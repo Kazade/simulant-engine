@@ -104,7 +104,7 @@ extern "C" {
 
 /* DC: Newlib on GCC 17+ bundles __stack_chk_guard */
 #if __GNUC__ >= 17
-void *__stack_chk_guard;
+extern void *__stack_chk_guard;
 #else
 void *__stack_chk_guard = (void*)0x69420A55;
 #endif
