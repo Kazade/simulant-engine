@@ -102,7 +102,13 @@ namespace smlt { typedef SDL2Window SysWindow; }
 
 extern "C" {
 
-void *__stack_chk_guard = (void *)0x69420A55;
+/* DC: Newlib on GCC 17+ bundles __stack_chk_guard */
+#if __GNUC__ >= 17
+void *__stack_chk_guard;
+#else
+void *__stack_chk_guard = (void*)0x69420A55;
+#endif
+
 #if !defined(__WIN32__) && !defined(_MSC_VER)
 __attribute__((weak,noreturn)) void __stack_chk_fail(void) {
 
