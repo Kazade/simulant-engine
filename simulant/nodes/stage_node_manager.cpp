@@ -270,7 +270,9 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
     if(!node->init()) {
         S_ERROR("Failed to initialize node");
         destructor(node);
-        aligned_free(node);
+        if(mem) {
+            node_storage_.deallocate(mem);
+        }
         return nullptr;
     }
 
@@ -282,7 +284,9 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
         S_ERROR("Failed to create the node");
         node->clean_up();
         info->second.destructor(node);
-        aligned_free(node);
+        if(mem) {
+            node_storage_.deallocate(mem);
+        }
         return nullptr;
     }
 

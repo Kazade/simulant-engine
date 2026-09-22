@@ -256,6 +256,78 @@ public:
         return params_;
     }
 
+    // Calls a named Lua method on this node's script instance, if it
+    // exists, forwarding any C++ arguments through LuaBridge's argument
+    // conversion. Returns true if the method existed and was invoked
+    // (regardless of whether it raised a Lua error, which is logged rather
+    // than silently discarded) - mirrors LuaScene::call_lua_method() below,
+    // generalized to take arguments and made public so C++ code holding a
+    // LuaStageNode* (e.g. a picking/command-dispatch layer that identified
+    // a selected unit) can invoke its Lua-defined methods directly.
+    // There is no supported way to do this
+    // from *other Lua* scripts yet.
+    template<typename... Args>
+    bool call_lua_method(const char* name, Args&&... args) {
+        if(!ref_ || !ref_->instance) {
+            return false;
+        }
+
+        luabridge::LuaRef method = ref_->instance[name];
+        if(method.isNil() || !method.isFunction()) {
+            return false;
+        }
+
+        std::string err;
+        auto handler = [&err](lua_State* L) -> int {
+            if(lua_gettop(L) > 0 && lua_isstring(L, -1)) {
+                err = lua_tostring(L, -1);
+            }
+            return 1;
+        };
+
+        if(!method.callWithHandler(handler, ref_->instance,
+                                   std::forward<Args>(args)...)) {
+            S_ERROR("Lua error in {0}: {1}", name, err);
+        }
+
+        return true;
+    }
+
+    // Reads a field from this node's script instance and converts it to T
+    // via LuaBridge (e.g. bool/float/int/std::string). Returns no_value if
+    // the field doesn't exist or can't convert to T. Lets C++ code
+    // query Lua-side game state without a bespoke getter method for every field.
+    // See call_lua_method() above for the equivalent for invoking behaviour.
+    template<typename T>
+    optional<T> get_lua_field(const char* name) const {
+        if(!ref_ || !ref_->instance) {
+            return no_value;
+        }
+
+        luabridge::LuaRef field = ref_->instance[name];
+        if(field.isNil()) {
+            return no_value;
+        }
+
+        auto result = field.cast<T>();
+        if(!result) {
+            return no_value;
+        }
+
+        return *result;
+    }
+
+    // Returns true if this node's script instance defines a Lua method of
+    // this name (e.g. to check whether a selected node supports a
+    // particular order before issuing it).
+    bool has_lua_method(const char* name) const {
+        if(!ref_ || !ref_->instance) {
+            return false;
+        }
+        luabridge::LuaRef method = ref_->instance[name];
+        return !method.isNil() && method.isFunction();
+    }
+
 private:
     std::string node_type_name_;
     std::set<NodeParam> params_;

@@ -14,34 +14,67 @@
 namespace smlt {
 
 // Helper: convert a Lua table to Params
+//
+// Handles the value shapes Lua scripts actually pass:
+//   - number/boolean/string -> int-or-float/bool/string.
+//   - table (e.g. {x, y, z}) -> FloatArray, so the built-in position/
+//     orientation/scale/translation/rotation/scale_factor params every
+//     stage node accepts (see get_node_params() in nodes/stage_node.h) can
+//     actually be set via create_child_node()/create_mixin().
+//   - userdata wrapping a Mesh/Texture asset (e.g. the result of
+//     AssetManager:load_mesh()) -> MeshRef/TextureRef, so e.g.
+//     create_child_node(self, "actor", {mesh = mesh}) can populate the
+//     "mesh" param an Actor requires.
 static Params lua_table_to_params(luabridge::LuaRef table) {
     Params params;
     if(table.isNil() || !table.isTable()) {
         return params;
     }
-    
-    table.push();
-    lua_State* L = table.state();
-    lua_pushnil(L);
-    while(lua_next(L, -2) != 0) {
-        if(lua_type(L, -2) == LUA_TSTRING) {
-            std::string key = lua_tostring(L, -2);
-            if(lua_isnumber(L, -1)) {
-                double num = lua_tonumber(L, -1);
-                if(num == (int)num) {
-                    params.set(key, (int)num);
-                } else {
-                    params.set(key, (float)num);
+
+    for(auto [key, val] : luabridge::pairs(table)) {
+        if(!key.isString()) {
+            continue;
+        }
+        std::string k = key.cast<std::string>().valueOr("");
+        if(k.empty()) {
+            continue;
+        }
+
+        if(val.isNumber()) {
+            double num = val.cast<double>().valueOr(0.0);
+            if(num == (int)num) {
+                params.set(k, (int)num);
+            } else {
+                params.set(k, (float)num);
+            }
+        } else if(val.isBool()) {
+            params.set(k, val.cast<bool>().valueOr(false));
+        } else if(val.isString()) {
+            params.set(k, val.cast<std::string>().valueOr(""));
+        } else if(val.isTable()) {
+            FloatArray arr;
+            for(int i = 1;; ++i) {
+                luabridge::LuaRef item = val[i];
+                if(item.isNil()) {
+                    break;
                 }
-            } else if(lua_isboolean(L, -1)) {
-                params.set(key, (bool)lua_toboolean(L, -1));
-            } else if(lua_isstring(L, -1)) {
-                params.set(key, std::string(lua_tostring(L, -1)));
+                arr.push_back(item.cast<float>().valueOr(0.0f));
+            }
+            params.set(k, arr);
+        } else if(val.isUserdata()) {
+            auto mesh = val.cast<MeshPtr>();
+            if(mesh) {
+                params.set(k, MeshRef(*mesh));
+                continue;
+            }
+            auto texture = val.cast<TexturePtr>();
+            if(texture) {
+                params.set(k, TextureRef(*texture));
+                continue;
             }
         }
-        lua_pop(L, 1);
     }
-    lua_pop(L, 1);
+
     return params;
 }
 
