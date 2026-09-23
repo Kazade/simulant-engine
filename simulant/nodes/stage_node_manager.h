@@ -18,6 +18,28 @@ typedef std::function<StageNode*(void*)> StageNodeConstructFunction;
 typedef std::function<void(StageNode*)> StageNodeDestructFunction;
 typedef std::function<std::set<NodeParam>()> StageNodeParamQueryFunction;
 
+class StageNodeManager;
+
+/* Registers a factory for a native (C++) stage-node type under a plain
+ * string name, so that scripts - notably Lua scenes/nodes, which cannot
+ * instantiate C++ templates - can register that type on a scene by name
+ * (see Scene::register_native_stage_node). Applications call this once at
+ * startup, e.g.:
+ *
+ *   register_native_stage_node_type("my_node", [](StageNodeManager* m) {
+ *       return m->register_stage_node<MyNode>();
+ *   });
+ */
+typedef std::function<bool(StageNodeManager*)> NativeStageNodeRegistrar;
+
+void register_native_stage_node_type(const std::string& name,
+                                     NativeStageNodeRegistrar registrar);
+
+/* Invokes the factory registered for `name` against `manager`. Returns
+ * false (logging an error) if no such type has been registered. */
+bool register_native_stage_node_type_on(StageNodeManager* manager,
+                                        const std::string& name);
+
 struct StageNodeTypeInfo {
     StageNodeType type;
     std::string name;

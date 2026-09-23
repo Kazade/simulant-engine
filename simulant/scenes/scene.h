@@ -281,6 +281,62 @@ public:
     S_DEFINE_PROPERTY(compositor, &Scene::compositor_);
     S_DEFINE_PROPERTY(lighting, &Scene::lighting_);
     S_DEFINE_PROPERTY(assets, &Scene::assets_);
+
+    /* Public, Lua-friendly access to the arguments a scene was activated
+     * with. These exist so that Lua scenes (LuaScene) can read what the
+     * caller passed to SceneManager::activate(route, args...) - the
+     * protected get_load_arg<T>() template isn't reachable through a
+     * LuaBridge binding. Out-of-range/type-mismatched requests return a
+     * safe default rather than throwing. */
+    std::size_t num_load_args() const {
+        return load_args.size();
+    }
+
+    int load_arg_int(int i) const {
+        if(i < 0 || (std::size_t)i >= load_args.size()) {
+            return 0;
+        }
+        const auto& a = load_args[(std::size_t)i];
+        if(a.type() == typeid(int)) {
+            return any_cast<int>(a);
+        } else if(a.type() == typeid(float)) {
+            return (int)any_cast<float>(a);
+        } else if(a.type() == typeid(double)) {
+            return (int)any_cast<double>(a);
+        } else if(a.type() == typeid(bool)) {
+            return any_cast<bool>(a) ? 1 : 0;
+        }
+        return 0;
+    }
+
+    float load_arg_float(int i) const {
+        if(i < 0 || (std::size_t)i >= load_args.size()) {
+            return 0.0f;
+        }
+        const auto& a = load_args[(std::size_t)i];
+        if(a.type() == typeid(float)) {
+            return any_cast<float>(a);
+        } else if(a.type() == typeid(int)) {
+            return (float)any_cast<int>(a);
+        } else if(a.type() == typeid(double)) {
+            return (float)any_cast<double>(a);
+        }
+        return 0.0f;
+    }
+
+    std::string load_arg_string(int i) const {
+        if(i < 0 || (std::size_t)i >= load_args.size()) {
+            return "";
+        }
+        const auto& a = load_args[(std::size_t)i];
+        if(a.type() == typeid(std::string)) {
+            return any_cast<std::string>(a);
+        } else if(a.type() == typeid(const char*)) {
+            const char* s = any_cast<const char*>(a);
+            return s ? std::string(s) : std::string();
+        }
+        return "";
+    }
 };
 
 } // namespace smlt

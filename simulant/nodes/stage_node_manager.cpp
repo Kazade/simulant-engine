@@ -227,7 +227,7 @@ bool StageNodeManager::register_stage_node_from_lua_state(lua_State* L,
             // Pass all params directly so the constructor no longer needs to
             // read them back through the (not-yet-linked) Lua table.
             LuaStageNode* node = new(mem) LuaStageNode(
-                scene_, node_id, name, lua_params, instance);
+                scene_, node_id, name, lua_params, instance, klass);
 
             // Wire the wrapper table to the real C++ node using a raw table
             // set so that __newindex metamethods (if any) are bypassed.
@@ -300,4 +300,32 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
 
     return node;
 }
+} // namespace smlt
+
+namespace smlt {
+
+namespace {
+std::unordered_map<std::string, NativeStageNodeRegistrar>&
+native_stage_node_registry() {
+    static std::unordered_map<std::string, NativeStageNodeRegistrar> registry;
+    return registry;
+}
+} // namespace
+
+void register_native_stage_node_type(const std::string& name,
+                                     NativeStageNodeRegistrar registrar) {
+    native_stage_node_registry()[name] = std::move(registrar);
+}
+
+bool register_native_stage_node_type_on(StageNodeManager* manager,
+                                        const std::string& name) {
+    auto it = native_stage_node_registry().find(name);
+    if(it == native_stage_node_registry().end()) {
+        S_ERROR("No native stage node type registered under the name '{0}'",
+                name);
+        return false;
+    }
+    return it->second(manager);
+}
+
 } // namespace smlt

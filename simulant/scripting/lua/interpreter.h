@@ -45,17 +45,18 @@ namespace smlt {
 class LuaStageNode: public StageNode {
 private:
     struct Pimpl {
-        Pimpl(const luabridge::LuaRef& instance) :
-            instance(instance) {}
+        Pimpl(const luabridge::LuaRef& instance, const luabridge::LuaRef& klass) :
+            instance(instance), klass(klass) {}
 
         luabridge::LuaRef instance;
+        luabridge::LuaRef klass;
     };
 
     LuaStageNode(Scene* scene, StageNodeType node_type,
                  std::string node_type_name, std::set<NodeParam> params,
-                 luabridge::LuaRef instance) :
+                 luabridge::LuaRef instance, luabridge::LuaRef klass) :
         StageNode(scene, node_type),
-        ref_(new Pimpl(instance)),
+        ref_(new Pimpl(instance, klass)),
         node_type_name_(node_type_name),
         params_(params) {}
 
@@ -81,6 +82,55 @@ public:
     StageNodeType lua_get_node_type() const { return node_type(); }
     Transform* lua_get_transform() const { return get_transform(); }
     AssetManager* lua_get_assets() const;
+
+    /* Returns the Lua wrapper table that owns this node's script instance
+     * (the table create_child_node returns to Lua), so Lua-authored methods
+     * can be called with ordinary `obj:method(...)` syntax rather than the
+     * call_lua_method_* forwarding helpers. Defined out-of-line (needs the
+     * complete LuaInterpreter type). */
+    luabridge::LuaRef lua_instance() const;
+
+    /* Raw reads/writes against the script instance (its fields) and its
+     * class table (its methods), used by the __index/__newindex fallbacks
+     * registered on StageNode. Raw table access avoids recursing through the
+     * wrapper's own __index (which forwards unknown keys to _cpp_node). */
+    luabridge::LuaRef lua_index(const luabridge::LuaRef& key) const {
+        lua_State* L = key.state();
+        if(!ref_ || !ref_->instance) {
+            return luabridge::LuaRef(L);
+        }
+
+        // 1. A field stored directly on the instance table.
+        ref_->instance.push(L);
+        key.push(L);
+        lua_rawget(L, -2);
+        luabridge::LuaRef field = luabridge::LuaRef::fromStack(L, -1);
+        lua_pop(L, 2);
+        if(!field.isNil()) {
+            return field;
+        }
+
+        // 2. A method (or value) on the class table.
+        ref_->klass.push(L);
+        key.push(L);
+        lua_rawget(L, -2);
+        luabridge::LuaRef method = luabridge::LuaRef::fromStack(L, -1);
+        lua_pop(L, 2);
+        return method;
+    }
+
+    void lua_newindex(const luabridge::LuaRef& key,
+                      const luabridge::LuaRef& value) const {
+        if(!ref_ || !ref_->instance) {
+            return;
+        }
+        lua_State* L = key.state();
+        ref_->instance.push(L);
+        key.push(L);
+        value.push(L);
+        lua_rawset(L, -3);
+        lua_pop(L, 1);
+    }
 
     ~LuaStageNode() override {
         delete ref_;
@@ -328,6 +378,49 @@ public:
         return !method.isNil() && method.isFunction();
     }
 
+    // --- Lua-to-Lua convenience wrappers -------------------------------
+    // call_lua_method()/get_lua_field() above are C++ templates, which
+    // LuaBridge can't bind directly. These fixed-arity/typed wrappers let
+    // one Lua script invoke a method or read a field on another Lua node
+    // (e.g. a scene script calling a method on a node it holds).
+    bool call_lua_method_0(const char* name) {
+        return call_lua_method(name);
+    }
+    bool call_lua_method_f(const char* name, float a) {
+        return call_lua_method(name, a);
+    }
+    bool call_lua_method_ff(const char* name, float a, float b) {
+        return call_lua_method(name, a, b);
+    }
+    bool call_lua_method_fff(const char* name, float a, float b, float c) {
+        return call_lua_method(name, a, b, c);
+    }
+    bool call_lua_method_ffff(const char* name, float a, float b, float c,
+                              float d) {
+        return call_lua_method(name, a, b, c, d);
+    }
+    bool call_lua_method_s(const char* name, const std::string& a) {
+        return call_lua_method(name, a);
+    }
+
+    float get_lua_field_float(const char* name, float default_value) const {
+        auto v = get_lua_field<float>(name);
+        return v ? *v : default_value;
+    }
+    int get_lua_field_int(const char* name, int default_value) const {
+        auto v = get_lua_field<int>(name);
+        return v ? *v : default_value;
+    }
+    bool get_lua_field_bool(const char* name, bool default_value) const {
+        auto v = get_lua_field<bool>(name);
+        return v ? *v : default_value;
+    }
+    std::string get_lua_field_string(const char* name,
+                                     const std::string& default_value) const {
+        auto v = get_lua_field<std::string>(name);
+        return v ? *v : default_value;
+    }
+
 private:
     std::string node_type_name_;
     std::set<NodeParam> params_;
@@ -412,6 +505,19 @@ public:
         }
     }
 
+    /* Per-frame hooks. The base-class work must always run (Scene::on_update
+     * updates the node tree and services), so these call it first, then the
+     * optional Lua method. */
+    void on_update(float dt) override {
+        Scene::on_update(dt);
+        call_lua_method_float("on_update", dt);
+    }
+
+    void on_fixed_update(float step) override {
+        Scene::on_fixed_update(step);
+        call_lua_method_float("on_fixed_update", step);
+    }
+
 private:
     // Returns true if a Lua method of this name was found and invoked
     // (regardless of whether the call itself raised a Lua error, which is
@@ -435,6 +541,33 @@ private:
         };
 
         if(!method.callWithHandler(handler, ref_->instance)) {
+            S_ERROR("Lua error in {0}: {1}", name, err);
+        }
+
+        return true;
+    }
+
+    // As call_lua_method(), but forwards a single float argument (used for
+    // the on_update(dt)/on_fixed_update(step) hooks).
+    bool call_lua_method_float(const char* name, float value) {
+        if(!ref_ || !ref_->instance) {
+            return false;
+        }
+
+        luabridge::LuaRef method = ref_->instance[name];
+        if(method.isNil() || !method.isFunction()) {
+            return false;
+        }
+
+        std::string err;
+        auto handler = [&err](lua_State* L) -> int {
+            if(lua_gettop(L) > 0 && lua_isstring(L, -1)) {
+                err = lua_tostring(L, -1);
+            }
+            return 1;
+        };
+
+        if(!method.callWithHandler(handler, ref_->instance, value)) {
             S_ERROR("Lua error in {0}: {1}", name, err);
         }
 

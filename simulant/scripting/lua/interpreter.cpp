@@ -1,9 +1,18 @@
 
 #include "interpreter.h"
 #include "../../scenes/scene.h"
+#include "../../vfs.h"
 
 smlt::AssetManager* smlt::LuaStageNode::lua_get_assets() const {
     return get_scene() ? get_scene()->assets.get() : nullptr;
+}
+
+luabridge::LuaRef smlt::LuaStageNode::lua_instance() const {
+    if(ref_ && ref_->instance) {
+        return ref_->instance;
+    }
+    return luabridge::LuaRef(
+        smlt::get_app()->ensure_lua_ready()->lua_state());
 }
 
 bool smlt::LuaInterpreter::load_string(const char* data) {
@@ -22,14 +31,23 @@ bool smlt::LuaInterpreter::load_string(const char* data) {
 }
 
 bool smlt::LuaInterpreter::load_file(const Path& script) {
-    int result = luaL_loadfilex(state_, script.str().c_str(), NULL);
+    // Resolve the path through the VFS (like the other asset loaders) so
+    // register_stage_node()/register_scene() honour the search paths.
+    auto resolved = smlt::get_app()->vfs->locate_file(script);
+    if(!resolved) {
+        S_ERROR("Unable to load lua script: file not found: {0}",
+                script.str());
+        return false;
+    }
+
+    int result = luaL_loadfilex(state_, resolved->str().c_str(), NULL);
     if(result != LUA_OK) {
-        S_ERROR("Unable to load lua script");
+        S_ERROR("Unable to load lua script: {0}", lua_tostring(state_, -1));
         return false;
     }
 
     if(lua_pcall(state_, 0, 0, 0) != LUA_OK) {
-        S_ERROR("Unable to run lua script");
+        S_ERROR("Unable to run lua script: {0}", lua_tostring(state_, -1));
         return false;
     }
 
@@ -110,6 +128,11 @@ end)
 
 -- Helper to create a child node from a Lua script.
 -- Usage: local child = smlt.create_child_node(self, "stage", {param1 = value1})
+--
+-- Returns a StageNode handle. Lua-authored node types transparently proxy
+-- their script's methods/fields onto the handle via the __index/__newindex
+-- fallbacks registered on StageNode (see bindings.cpp), so child:foo() and
+-- child.bar work for both Lua methods/fields and C++ members.
 rawset(smlt, "create_child_node", function(parent_node, type_name, params)
     if not parent_node or not parent_node._cpp_node then
         return nil
