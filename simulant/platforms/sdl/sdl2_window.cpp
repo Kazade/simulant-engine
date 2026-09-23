@@ -85,7 +85,14 @@ void SDL2Window::cursor_position(int32_t& mouse_x, int32_t& mouse_y) {
 }
 
 int32_t SDL2Window::default_window_flags() const {
-    return SDL_WINDOW_OPENGL;
+    int32_t flags = SDL_WINDOW_OPENGL;
+    /* Headless/testing support: SIMULANT_HIDDEN_WINDOW creates the window
+     * without mapping it, so GL rendering (and readback) still work but no
+     * window appears on the user's desktop. */
+    if(std::getenv("SIMULANT_HIDDEN_WINDOW")) {
+        flags |= SDL_WINDOW_HIDDEN;
+    }
+    return flags;
 }
 
 int event_filter(void* user_data, SDL_Event* event) {
