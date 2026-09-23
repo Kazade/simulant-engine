@@ -220,6 +220,7 @@ std::list<StageNode*> StageNode::detach() {
     }
 
     first_child_ = nullptr;
+    last_child_ = nullptr;
 
     remove_from_parent();
 
@@ -244,9 +245,13 @@ void StageNode::set_parent(StageNode* new_parent, TransformRetainMode transform_
     }
 
     if(parent_ && parent_->first_child_) {
-        /* New parent already had children, so find the last
-         * one and attach there */
-        auto it = parent_->last_child();
+        /* Walk to the real tail of the list; last_child_ may be stale after
+         * a detach. */
+        auto it = parent_->first_child_;
+        while(it->next_) {
+            it = it->next_;
+        }
+        parent_->last_child_ = it;
         assert(it);
         assert(!it->next_);
 
