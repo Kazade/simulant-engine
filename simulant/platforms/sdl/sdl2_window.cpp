@@ -18,6 +18,7 @@
 //
 
 #include "SDL_rwops.h"
+#include <cstdlib>
 #ifdef __linux__
 #include <unistd.h>
 #elif defined(__WIN32__)
@@ -640,19 +641,22 @@ void SDL2Window::check_events() {
             case SDL_MOUSEMOTION: {
                 bool is_touch_device =
                     (event.motion.which == SDL_TOUCH_MOUSEID);
+                // InputState tracks a single mouse at MouseID(0); SDL's
+                // event.motion.which is the platform device id and may not
+                // be 0, so normalise it here. The EventListener callbacks
+                // below keep the real id.
                 input_state->_handle_mouse_motion(
-                    MouseID(event.motion.which), event.motion.x,
-                    height() - event.motion.y, event.motion.xrel,
-                    -event.motion.yrel);
+                    MouseID(0), event.motion.x, height() - event.motion.y,
+                    event.motion.xrel, -event.motion.yrel);
                 on_mouse_move(MouseID(event.motion.which), event.motion.x,
                               height() - event.motion.y, is_touch_device);
             } break;
             case SDL_MOUSEBUTTONDOWN: {
                 bool is_touch_device =
                     (event.button.which == SDL_TOUCH_MOUSEID);
+                // See the comment in the SDL_MOUSEMOTION case above.
                 input_state->_handle_mouse_down(
-                    MouseID(event.button.which),
-                    to_mouse_button_id(event.button.button));
+                    MouseID(0), to_mouse_button_id(event.button.button));
                 on_mouse_down(MouseID(event.button.which),
                               to_mouse_button_id(event.button.button),
                               event.button.x, height() - event.button.y,
@@ -661,9 +665,9 @@ void SDL2Window::check_events() {
             case SDL_MOUSEBUTTONUP: {
                 bool is_touch_device =
                     (event.button.which == SDL_TOUCH_MOUSEID);
+                // See the comment in the SDL_MOUSEMOTION case above.
                 input_state->_handle_mouse_up(
-                    MouseID(event.button.which),
-                    to_mouse_button_id(event.button.button));
+                    MouseID(0), to_mouse_button_id(event.button.button));
                 on_mouse_up(MouseID(event.button.which),
                             to_mouse_button_id(event.button.button),
                             event.button.x, height() - event.button.y,
