@@ -71,8 +71,16 @@ mat3 cotangent_frame(vec3 N, vec3 pos, vec2 uv) {
 
 void main() {
     vec4 base_color_tex = texture2D(s_base_color_map, frag_texcoord0);
-    vec3 base_color = mix(s_material_base_color.rgb, base_color_tex.rgb, base_color_tex.a);
-    float alpha = s_material_base_color.a * base_color_tex.a;
+    // BASE_COLOR_MAP_ENABLED = 1 (bit 0). When the material has no base
+    // colour texture, use its base colour directly instead of mixing in an
+    // unbound/default texture (which otherwise renders untextured materials
+    // as white).
+    bool base_color_mapped = (mod(float(s_textures_enabled), 2.0) >= 1.0);
+    vec3 base_color = base_color_mapped
+        ? mix(s_material_base_color.rgb, base_color_tex.rgb, base_color_tex.a)
+        : s_material_base_color.rgb;
+    float alpha = s_material_base_color.a
+        * (base_color_mapped ? base_color_tex.a : 1.0);
 
     base_color *= frag_color.rgb;
 
