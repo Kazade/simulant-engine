@@ -772,6 +772,25 @@ void Texture::set_data(const std::vector<uint8_t> &d) {
     set_data(&d[0], d.size());
 }
 
+void Texture::set_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g,
+                        uint8_t b, uint8_t a) {
+    if(format_ != TEXTURE_FORMAT_RGBA_4UB_8888) {
+        return;
+    }
+    if(x >= width_ || y >= height_ || !data_) {
+        return;
+    }
+    std::size_t idx = ((std::size_t)y * width_ + x) * 4;
+    if(idx + 3 >= data_size_) {
+        return;
+    }
+    data_[idx + 0] = r;
+    data_[idx + 1] = g;
+    data_[idx + 2] = b;
+    data_[idx + 3] = a;
+    data_dirty_ = true;
+}
+
 void Texture::_set_has_mipmaps(bool v) {
     has_mipmaps_ = v;
 }

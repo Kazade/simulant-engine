@@ -254,6 +254,12 @@ public:
     void set_data(const uint8_t* data, std::size_t size);
     void set_data(const std::vector<uint8_t>& data);
 
+    /* Writes a single RGBA8888 pixel and marks the texture's data dirty so
+     * it is re-uploaded. Out-of-bounds coordinates and non-RGBA formats are
+     * ignored. Intended for procedurally-updated textures from script. */
+    void set_pixel(uint16_t x, uint16_t y, uint8_t r, uint8_t g, uint8_t b,
+                   uint8_t a);
+
     /* Equivalent to calling resize() but returns a pointer
      * to the resized data for writing into */
     uint8_t* map_data(std::size_t size);
