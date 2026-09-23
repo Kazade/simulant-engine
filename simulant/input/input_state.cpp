@@ -99,16 +99,21 @@ void InputState::_handle_joystick_hat_motion(GameControllerID joypad_id, Joystic
 }
 
 bool InputState::keyboard_key_state(KeyboardID keyboard_id, KeyboardCode code) const {
-    if(keyboard_id.to_int8_t() < (int8_t)keyboards_.size()) {
-        return keyboards_[keyboard_id.to_int8_t()].keys[code];
+    // ALL_KEYBOARDS (-1) is a valid "no device" sentinel, so guard against
+    // it (and any out-of-range id) rather than indexing out of bounds.
+    int8_t id = keyboard_id.to_int8_t();
+    if(id >= 0 && (std::size_t)id < keyboards_.size()) {
+        return keyboards_[id].keys[code];
     }
 
     return false;
 }
 
 bool InputState::mouse_button_state(MouseID mouse_id, MouseButtonID button) const {
-    if(mouse_id.to_int8_t() < (int8_t)mice_.size()) {
-        return mice_[mouse_id.to_int8_t()].buttons[button];
+    // ALL_MICE (-1) is a valid "no device" sentinel.
+    int8_t id = mouse_id.to_int8_t();
+    if(id >= 0 && (std::size_t)id < mice_.size()) {
+        return mice_[id].buttons[button];
     }
 
     return false;
@@ -123,11 +128,25 @@ bool InputState::joystick_button_state(GameControllerID joystick_id, JoystickBut
 }
 
 float InputState::mouse_axis_state(MouseID mouse_id, MouseAxis axis) const {
-    if(mouse_id.to_int8_t() < (int8_t)mice_.size()) {
-        return mice_[mouse_id.to_int8_t()].axises[axis];
+    // ALL_MICE (-1) is a valid "no device" sentinel.
+    int8_t id = mouse_id.to_int8_t();
+    if(id >= 0 && (std::size_t)id < mice_.size()) {
+        return mice_[id].axises[axis];
     }
 
     return 0.0f;
+}
+
+Vec2 InputState::mouse_position(MouseID mouse_id) const {
+    // Absolute cursor position, or the zero vector for an out-of-range /
+    // sentinel id.
+    int8_t id = mouse_id.to_int8_t();
+    if(id >= 0 && (std::size_t)id < mice_.size()) {
+        auto& mouse = mice_[id];
+        return Vec2((float)mouse.x, (float)mouse.y);
+    }
+
+    return Vec2();
 }
 
 GameController *InputState::game_controller_by_id(GameControllerID id) {
