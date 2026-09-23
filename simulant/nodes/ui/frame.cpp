@@ -9,6 +9,25 @@ namespace ui {
 Frame::Frame(Scene* owner) :
     Widget(owner, Meta::node_type) {}
 
+Frame::~Frame() {
+    for(auto& p: child_destroy_connections_) {
+        p.second.disconnect();
+    }
+}
+
+void Frame::on_packed_child_destroyed(Widget* child) {
+    auto it = child_destroy_connections_.find(child);
+    if(it != child_destroy_connections_.end()) {
+        it->second.disconnect();
+        child_destroy_connections_.erase(it);
+    }
+
+    auto cit = std::find(children_.begin(), children_.end(), child);
+    if(cit != children_.end()) {
+        children_.erase(cit);
+    }
+}
+
 bool Frame::on_create(Params params) {
     if(!clean_params<Frame>(params)) {
         return false;
@@ -117,6 +136,11 @@ bool Frame::pack_child(Widget* widget) {
     if(it == children_.end()) {
         widget->set_parent(this); // Reparent
         children_.push_back(widget);
+        // Drop our pointer if the child is destroyed while packed.
+        child_destroy_connections_[widget] =
+            widget->signal_destroyed().connect([this, widget]() {
+            on_packed_child_destroyed(widget);
+        });
         rebuild_and_propagate_resize();
         return true;
     }
@@ -129,6 +153,13 @@ bool Frame::unpack_child(Widget* widget, ChildCleanup clean_up) {
     if(it != children_.end()) {
         children_.erase(
             std::remove(children_.begin(), children_.end(), widget));
+
+        auto cit = child_destroy_connections_.find(widget);
+        if(cit != child_destroy_connections_.end()) {
+            cit->second.disconnect();
+            child_destroy_connections_.erase(cit);
+        }
+
         if(clean_up == CHILD_CLEANUP_DESTROY) {
             widget->destroy();
         } else {

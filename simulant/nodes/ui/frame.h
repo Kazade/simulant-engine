@@ -4,6 +4,8 @@
 #include "simulant/utils/params.h"
 #include "widget.h"
 
+#include <unordered_map>
+
 namespace smlt {
 namespace ui {
 
@@ -39,6 +41,8 @@ public:
 
     Frame(Scene* owner);
 
+    virtual ~Frame();
+
     bool on_create(Params params) override;
 
     bool pack_child(Widget* widget);
@@ -57,6 +61,12 @@ public:
 
 private:
     std::vector<smlt::ui::Widget*> children_;
+
+    /* Tracks each packed child's destruction so its pointer is removed
+     * before a later layout pass dereferences freed memory. */
+    std::unordered_map<Widget*, sig::connection> child_destroy_connections_;
+    void on_packed_child_destroyed(Widget* child);
+
     LayoutDirection direction_ = LAYOUT_DIRECTION_TOP_TO_BOTTOM;
     Px space_between_;
 
