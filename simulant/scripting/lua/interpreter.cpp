@@ -7,14 +7,6 @@ smlt::AssetManager* smlt::LuaStageNode::lua_get_assets() const {
     return get_scene() ? get_scene()->assets.get() : nullptr;
 }
 
-luabridge::LuaRef smlt::LuaStageNode::lua_instance() const {
-    if(ref_ && ref_->instance) {
-        return ref_->instance;
-    }
-    return luabridge::LuaRef(
-        smlt::get_app()->ensure_lua_ready()->lua_state());
-}
-
 bool smlt::LuaInterpreter::load_string(const char* data) {
     int result = luaL_loadstring(state_, data);
     if(result != LUA_OK) {

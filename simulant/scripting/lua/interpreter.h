@@ -83,13 +83,6 @@ public:
     Transform* lua_get_transform() const { return get_transform(); }
     AssetManager* lua_get_assets() const;
 
-    /* Returns the Lua wrapper table that owns this node's script instance
-     * (the table create_child_node returns to Lua), so Lua-authored methods
-     * can be called with ordinary `obj:method(...)` syntax rather than the
-     * call_lua_method_* forwarding helpers. Defined out-of-line (needs the
-     * complete LuaInterpreter type). */
-    luabridge::LuaRef lua_instance() const;
-
     /* Raw reads/writes against the script instance (its fields) and its
      * class table (its methods), used by the __index/__newindex fallbacks
      * registered on StageNode. Raw table access avoids recursing through the
@@ -376,49 +369,6 @@ public:
         }
         luabridge::LuaRef method = ref_->instance[name];
         return !method.isNil() && method.isFunction();
-    }
-
-    // --- Lua-to-Lua convenience wrappers -------------------------------
-    // call_lua_method()/get_lua_field() above are C++ templates, which
-    // LuaBridge can't bind directly. These fixed-arity/typed wrappers let
-    // one Lua script invoke a method or read a field on another Lua node
-    // (e.g. a scene script calling a method on a node it holds).
-    bool call_lua_method_0(const char* name) {
-        return call_lua_method(name);
-    }
-    bool call_lua_method_f(const char* name, float a) {
-        return call_lua_method(name, a);
-    }
-    bool call_lua_method_ff(const char* name, float a, float b) {
-        return call_lua_method(name, a, b);
-    }
-    bool call_lua_method_fff(const char* name, float a, float b, float c) {
-        return call_lua_method(name, a, b, c);
-    }
-    bool call_lua_method_ffff(const char* name, float a, float b, float c,
-                              float d) {
-        return call_lua_method(name, a, b, c, d);
-    }
-    bool call_lua_method_s(const char* name, const std::string& a) {
-        return call_lua_method(name, a);
-    }
-
-    float get_lua_field_float(const char* name, float default_value) const {
-        auto v = get_lua_field<float>(name);
-        return v ? *v : default_value;
-    }
-    int get_lua_field_int(const char* name, int default_value) const {
-        auto v = get_lua_field<int>(name);
-        return v ? *v : default_value;
-    }
-    bool get_lua_field_bool(const char* name, bool default_value) const {
-        auto v = get_lua_field<bool>(name);
-        return v ? *v : default_value;
-    }
-    std::string get_lua_field_string(const char* name,
-                                     const std::string& default_value) const {
-        auto v = get_lua_field<std::string>(name);
-        return v ? *v : default_value;
     }
 
 private:

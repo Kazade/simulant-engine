@@ -292,59 +292,10 @@ void lua_bind(lua_State* state) {
         .addFunction("render_priority", [](StageNode* n) {
             return (int)n->render_priority();
         })
-        // Cross-node Lua calls/field reads, dynamically dispatched. Nodes
-        // returned by create_child() come back as StageNode* (the binding's
-        // static return type), so a Lua scene can't see LuaStageNode's own
-        // wrappers on them - these StageNode-level versions recover the
-        // LuaStageNode with dynamic_cast and forward.
+        // Returns true if this node's script defines the named method.
         .addFunction("has_lua_method", [](StageNode* n, const char* name) {
             auto* ln = dynamic_cast<LuaStageNode*>(n);
             return ln ? ln->has_lua_method(name) : false;
-        })
-        .addFunction("call_lua_method_0", [](StageNode* n, const char* name) {
-            auto* ln = dynamic_cast<LuaStageNode*>(n);
-            return ln ? ln->call_lua_method_0(name) : false;
-        })
-        .addFunction("call_lua_method_f", [](StageNode* n, const char* name, float a) {
-            auto* ln = dynamic_cast<LuaStageNode*>(n);
-            return ln ? ln->call_lua_method_f(name, a) : false;
-        })
-        .addFunction("call_lua_method_ff", [](StageNode* n, const char* name, float a, float b) {
-            auto* ln = dynamic_cast<LuaStageNode*>(n);
-            return ln ? ln->call_lua_method_ff(name, a, b) : false;
-        })
-        .addFunction("call_lua_method_ffff", [](StageNode* n, const char* name, float a, float b, float c, float d) {
-            auto* ln = dynamic_cast<LuaStageNode*>(n);
-            return ln ? ln->call_lua_method_ffff(name, a, b, c, d) : false;
-        })
-        .addFunction("call_lua_method_s", [](StageNode* n, const char* name, const std::string& a) {
-            auto* ln = dynamic_cast<LuaStageNode*>(n);
-            return ln ? ln->call_lua_method_s(name, a) : false;
-        })
-        .addFunction("get_lua_field_float", [](StageNode* n, const char* name, float def) {
-            auto* ln = dynamic_cast<LuaStageNode*>(n);
-            return ln ? ln->get_lua_field_float(name, def) : def;
-        })
-        .addFunction("get_lua_field_int", [](StageNode* n, const char* name, int def) {
-            auto* ln = dynamic_cast<LuaStageNode*>(n);
-            return ln ? ln->get_lua_field_int(name, def) : def;
-        })
-        .addFunction("get_lua_field_bool", [](StageNode* n, const char* name, bool def) {
-            auto* ln = dynamic_cast<LuaStageNode*>(n);
-            return ln ? ln->get_lua_field_bool(name, def) : def;
-        })
-        .addFunction("get_lua_field_string", [](StageNode* n, const char* name, const std::string& def) {
-            auto* ln = dynamic_cast<LuaStageNode*>(n);
-            return ln ? ln->get_lua_field_string(name, def) : def;
-        })
-        // Returns the Lua wrapper table for a Lua-authored node (or nil for a
-        // built-in node). See LuaStageNode::lua_instance(); this is what
-        // create_child_node returns so scripts can call Lua methods directly.
-        .addFunction("lua_instance", [](StageNode* n) -> luabridge::LuaRef {
-            auto* ln = dynamic_cast<LuaStageNode*>(n);
-            return ln ? ln->lua_instance()
-                      : luabridge::LuaRef(
-                            smlt::get_app()->ensure_lua_ready()->lua_state());
         })
         // Child creation from a node handle. Nodes created via
         // create_child() come back as StageNode*, so dynamic_cast to
@@ -1065,17 +1016,6 @@ void lua_bind(lua_State* state) {
         .addFunction("create_mixin", [](LuaStageNode* node, const std::string& name, luabridge::LuaRef params_table) -> StageNode* {
             return node->create_mixin(name, lua_table_to_params(params_table));
         })
-        // --- Lua-to-Lua cross-node calls/field reads (see interpreter.h) ---
-        .addFunction("call_lua_method_0", &LuaStageNode::call_lua_method_0)
-        .addFunction("call_lua_method_f", &LuaStageNode::call_lua_method_f)
-        .addFunction("call_lua_method_ff", &LuaStageNode::call_lua_method_ff)
-        .addFunction("call_lua_method_fff", &LuaStageNode::call_lua_method_fff)
-        .addFunction("call_lua_method_ffff", &LuaStageNode::call_lua_method_ffff)
-        .addFunction("call_lua_method_s", &LuaStageNode::call_lua_method_s)
-        .addFunction("get_lua_field_float", &LuaStageNode::get_lua_field_float)
-        .addFunction("get_lua_field_int", &LuaStageNode::get_lua_field_int)
-        .addFunction("get_lua_field_bool", &LuaStageNode::get_lua_field_bool)
-        .addFunction("get_lua_field_string", &LuaStageNode::get_lua_field_string)
         .addFunction("has_lua_method", &LuaStageNode::has_lua_method)
         .endClass();
 
