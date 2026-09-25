@@ -73,15 +73,17 @@ public:
         auto rock_light = create_child<smlt::PointLight>(
             Params()
                 .set("position", Vec3(-12.15f, -0.67f, 0.73f))
-                .set("color", lightCol * 23.0f));
+                .set("color", lightCol));
 
-        rock_light->set_intensity(1000.0f);
+        /* Intensity multiplies directly into the lighting term, so point
+         * lights use the same ~1 scale as the directional light. */
+        rock_light->set_intensity(2.0f);
 
         auto fairy_light = create_child<smlt::PointLight>(
             Params()
                 .set("position", Vec3())
-                .set("color", Color(0.5f, 0.85f, 1, 1) * 10));
-        fairy_light->set_intensity(1000.0f);
+                .set("color", Color(0.5f, 0.85f, 1, 1)));
+        fairy_light->set_intensity(1.5f);
         fairy_light->set_parent(fairy_actor_);
 
         // BezierPath

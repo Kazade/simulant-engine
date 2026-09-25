@@ -58,6 +58,27 @@ public:
         );
     }
 
+    void test_formatting_uint8() {
+        /* Regression test: uint8_t used to be streamed as a raw character
+         * because std::ostream has an operator<< for unsigned char. This
+         * silently broke generation of indexed uniform names such as
+         * "s_light_position[1]". */
+        assert_equal(
+            _F("{0}").format((uint8_t) 1),
+            "1"
+        );
+
+        assert_equal(
+            _F("[{0}]").format((uint8_t) 7),
+            "[7]"
+        );
+
+        assert_equal(
+            _F("{0} {1}").format((uint8_t) 0, (uint8_t) 255),
+            "0 255"
+        );
+    }
+
     void test_basic_formatting() {
         assert_equal(
             _F("{0} {0} {1} {2}").format(1, 2, 3),
