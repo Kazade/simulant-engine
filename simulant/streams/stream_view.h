@@ -27,13 +27,35 @@ public:
         stream_->seekg(g, std::ios_base::beg);
     }
 
+    /* Construct a view that only exposes a byte range [offset, offset+length)
+     * of the underlying stream. Used to stream an embedded chunk (e.g. the
+     * `data` chunk of a WAV) without copying it into memory. */
+    StreamView(std::shared_ptr<std::istream> stream, std::size_t offset,
+               std::size_t length):
+        stream_(stream),
+        begin_(offset),
+        cursor_(offset),
+        stream_size_(offset + length) {
+
+        auto g = stream_->tellg();
+        stream_->seekg(0, std::ios_base::end);
+        auto total = stream_->tellg();
+        stream_->seekg(g, std::ios_base::beg);
+
+        /* Clamp to what the underlying stream actually contains. */
+        if(total >= 0 &&
+           (std::streamoff)(offset + length) > (std::streamoff) total) {
+            stream_size_ = (std::size_t) total;
+        }
+    }
+
     StreamView& seekg(std::streamoff pos, std::ios_base::seekdir way) {
         if(way == std::ios_base::beg) {
-            cursor_ = pos;
+            cursor_ = (std::size_t) (begin_ + pos);
         } else if(way == std::ios_base::cur) {
-            cursor_ += pos;
+            cursor_ = (std::size_t) (cursor_ + pos);
         } else {
-            cursor_ = stream_size_ - pos;
+            cursor_ = (std::size_t) (stream_size_ - pos);
         }
 
         return *this;
@@ -50,10 +72,15 @@ public:
         return *this;
     }
 
+    std::size_t length() const {
+        return stream_size_ - begin_;
+    }
+
 private:
     std::shared_ptr<std::istream> stream_;
-    std::streampos cursor_;
-    std::size_t stream_size_;
+    std::streampos begin_ = 0;
+    std::streampos cursor_ = 0;
+    std::size_t stream_size_ = 0;
 };
 
 
