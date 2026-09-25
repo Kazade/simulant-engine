@@ -72,17 +72,27 @@ public:
     void set_channels(uint8_t ch) { channels_ = ch; }
 
     std::shared_ptr<std::istream>& input_stream() { return sound_data_; }
-    void set_input_stream(std::shared_ptr<std::istream> stream) {
+
+    /* The byte offset and length of the usable audio data within
+     * input_stream(). For formats that don't embed a chunk header (OGG) this
+     * is (0, whole stream). WAV streaming uses it to point at the `data`
+     * chunk so the whole file doesn't need to be copied into RAM. */
+    std::size_t stream_offset() const { return stream_offset_; }
+    std::size_t stream_length() const { return stream_length_; }
+
+    void set_input_stream(std::shared_ptr<std::istream> stream,
+                          std::size_t offset = 0, std::size_t length = 0) {
         sound_data_ = stream;
+        stream_offset_ = offset;
 
-        stream->seekg(0, std::ios_base::end);
-        int end = (int)stream->tellg();
-        stream->seekg(0, std::ios_base::beg);
-        stream_length_ = end;
-    }
-
-    std::size_t stream_length() const {
-        return stream_length_;
+        if(length) {
+            stream_length_ = length;
+        } else {
+            stream->seekg(0, std::ios_base::end);
+            auto end = stream->tellg();
+            stream->seekg(0, std::ios_base::beg);
+            stream_length_ = (end < 0) ? 0 : (std::size_t) end;
+        }
     }
 
     template<typename Func>
@@ -96,6 +106,8 @@ private:
     void init_source(PlayingSound& source);
 
     std::function<void (PlayingSound&)> init_playing_sound_;
+
+    std::size_t stream_offset_ = 0;
 
     SoundDriver* driver_ = nullptr;
     std::shared_ptr<std::istream> sound_data_;

@@ -23,8 +23,10 @@ static int convert_to_int(char* buffer, int len) {
     return a;
 }
 
-static bool read_fmt(std::istream* stream, Sound* sound, std::size_t len) {
+static bool read_fmt(const std::shared_ptr<std::istream>& stream,
+                     Sound* sound, std::size_t len, bool force_copy) {
     _S_UNUSED(len);
+    _S_UNUSED(force_copy);
 
     char buffer[4];
 
@@ -55,17 +57,32 @@ static bool read_fmt(std::istream* stream, Sound* sound, std::size_t len) {
     return true;
 }
 
-static bool read_junk(std::istream*, Sound*, std::size_t) {
+static bool read_junk(const std::shared_ptr<std::istream>&, Sound*,
+                      std::size_t, bool) {
     return true;
 }
 
-static bool read_data(std::istream* stream, Sound* sound, std::size_t len) {
+static bool read_data(const std::shared_ptr<std::istream>& stream,
+                      Sound* sound, std::size_t len, bool force_copy) {
+    auto format = sound->format();
+
+    /* Streaming path: don't copy the (potentially multi-megabyte) audio data
+     * into RAM. Keep the source stream alive in the Sound and remember the
+     * chunk's offset/length so playback can read directly from it. This
+     * matters a lot on memory constrained platforms (e.g. Dreamcast) where a
+     * single large std::vector + stringstream copy can exhaust the heap. */
+    if(!force_copy && format != AUDIO_DATA_FORMAT_MONO24 &&
+       format != AUDIO_DATA_FORMAT_STEREO24) {
+        const std::streamoff offset = stream->tellg();
+        sound->set_input_stream(stream,
+                                (offset < 0) ? 0 : (std::size_t) offset, len);
+        return true;
+    }
+
     std::vector<uint8_t> data;
 
     data.resize(len);
     stream->read((char*) &data[0], len);
-
-    auto format = sound->format();
 
     if(format == AUDIO_DATA_FORMAT_MONO24 || format == AUDIO_DATA_FORMAT_STEREO24) {
         // Downsample to 16 bit
@@ -91,7 +108,9 @@ static bool read_data(std::istream* stream, Sound* sound, std::size_t len) {
     return true;
 }
 
-typedef std::function<bool (std::istream* stream, Sound* sound, std::size_t len)> ChunkFunc;
+typedef std::function<bool (const std::shared_ptr<std::istream>& stream,
+                            Sound* sound, std::size_t len, bool force_copy)>
+    ChunkFunc;
 
 static ChunkFunc get_chunk_func(const std::string& name) {
     if(name == std::string("data")) return read_data;
@@ -100,7 +119,12 @@ static ChunkFunc get_chunk_func(const std::string& name) {
 }
 
 bool WAVLoader::into(Loadable& resource, const LoaderOptions& options) {
-    _S_UNUSED(options);
+    /* Default to streaming: the caller (AssetManager::load_sound) passes
+     * "stream" = flags.stream_audio, which defaults to true. */
+    bool stream_audio = true;
+    if(options.count("stream")) {
+        stream_audio = any_cast<bool>(options.at("stream"));
+    }
 
     Loadable* res_ptr = &resource;
     Sound* sound = dynamic_cast<Sound*>(res_ptr);
@@ -139,7 +163,7 @@ bool WAVLoader::into(Loadable& resource, const LoaderOptions& options) {
         uint32_t offset = data_->tellg();
 
         auto func = get_chunk_func(chunk_id);
-        if(!func(data_.get(), sound, size - 8)) {
+        if(!func(data_, sound, size - 8, !stream_audio)) {
             S_ERROR("Unsupported .wav format");
             return false;
         }
@@ -180,7 +204,9 @@ bool WAVLoader::into(Loadable& resource, const LoaderOptions& options) {
             return;
         }
 
-        auto stream = std::make_shared<StreamView>(sound_ptr->input_stream());
+        auto stream = std::make_shared<StreamView>(
+            sound_ptr->input_stream(), sound_ptr->stream_offset(),
+            sound_ptr->stream_length());
 
         S_DEBUG("Initialized stream_func for source instance {0}", &source);
 
@@ -189,7 +215,7 @@ bool WAVLoader::into(Loadable& resource, const LoaderOptions& options) {
 
             if(sound) {
                 const uint32_t buffer_size = sound->buffer_size();
-                const uint32_t remaining_in_bytes = sound->stream_length() - state->offset;
+                const uint32_t remaining_in_bytes = stream->length() - state->offset;
 
                 //assert((buffer_size % audio_data_format_byte_size(sound->format())) == 0);
 
