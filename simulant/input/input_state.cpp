@@ -62,6 +62,15 @@ void InputState::_handle_mouse_up(MouseID mouse_id, MouseButtonID button_id) {
     }
 }
 
+void InputState::_handle_mouse_wheel(MouseID mouse_id, float x, float y) {
+    if(mouse_id.to_int8_t() < (int8_t)mice_.size()) {
+        auto& mouse = mice_[mouse_id.to_int8_t()];
+        /* Accumulate: several wheel events can arrive between frames */
+        mouse.axises[MOUSE_AXIS_WHEEL] += y;
+        mouse.axises[MOUSE_AXIS_WHEEL_HORIZONTAL] += x;
+    }
+}
+
 void InputState::_handle_joystick_axis_motion(GameControllerID joypad_id, JoystickAxis axis, float value) {
     GameController* controller = game_controller_by_id(joypad_id);
     if(controller) {

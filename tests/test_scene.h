@@ -1,6 +1,9 @@
 #ifndef TEST_sceneS_H
 #define TEST_sceneS_H
 
+#include <set>
+#include <vector>
+
 #include "simulant/simulant.h"
 #include "simulant/test.h"
 #include "simulant/macros.h"
@@ -18,6 +21,36 @@ public:
 
     void test_unload() {
 
+    }
+
+    /* Stage node IDs only randomise the low 16 bits, so with many nodes of
+     * the same type a collision is likely. all_nodes_ is keyed by ID; a
+     * collision used to leave the second node untracked, so destroying it
+     * would deallocate the first node's memory. */
+    void test_node_ids_are_unique() {
+        std::set<StageNodeID> ids;
+        std::vector<StageNode*> nodes;
+
+        for(int i = 0; i < 2000; ++i) {
+            auto node = scene->create_child<smlt::Stage>();
+            assert_true(ids.insert(node->id()).second);
+            assert_true(scene->has_node(node->id()));
+            nodes.push_back(node);
+        }
+
+        auto* victim = nodes[nodes.size() / 2];
+        auto victim_id = victim->id();
+        victim->destroy_immediately();
+
+        assert_false(scene->has_node(victim_id));
+
+        for(auto* node: nodes) {
+            if(node == victim) {
+                continue;
+            }
+            assert_true(scene->has_node(node->id()));
+            node->destroy_immediately();
+        }
     }
 };
 

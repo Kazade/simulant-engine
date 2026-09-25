@@ -116,7 +116,9 @@ enum MouseAxis {
     MOUSE_AXIS_3,
     MOUSE_AXIS_MAX,
     MOUSE_AXIS_X = MOUSE_AXIS_0,
-    MOUSE_AXIS_Y = MOUSE_AXIS_1
+    MOUSE_AXIS_Y = MOUSE_AXIS_1,
+    MOUSE_AXIS_WHEEL = MOUSE_AXIS_2,
+    MOUSE_AXIS_WHEEL_HORIZONTAL = MOUSE_AXIS_3
 };
 
 enum JoystickAxis {
@@ -287,6 +289,7 @@ public:
     void _handle_mouse_motion(MouseID mouse_id, uint32_t x, uint32_t y, int32_t xrel, int32_t yrel);
     void _handle_mouse_down(MouseID mouse_id, MouseButtonID button_id);
     void _handle_mouse_up(MouseID mouse_id, MouseButtonID button_id);
+    void _handle_mouse_wheel(MouseID mouse_id, float x, float y);
 
     // value must be a value between -1.0f and 1.0f!
     void _handle_joystick_axis_motion(GameControllerID joypad_id, JoystickAxis axis, float value);

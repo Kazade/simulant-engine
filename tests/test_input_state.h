@@ -149,6 +149,47 @@ public:
         assert_false(controller_->mouse_button_state(MouseID(0), 0));
     }
 
+    void test_mouse_wheel_input() {
+        std::vector<MouseDeviceInfo> mice(1);
+        mice[0].id = 0;
+        mice[0].button_count = 3;
+        mice[0].axis_count = 4;
+
+        controller_->_update_mouse_devices(mice);
+
+        controller_->_handle_mouse_wheel(MouseID(0), 0.0f, 1.0f);
+        assert_close(
+            1.0f,
+            controller_->mouse_axis_state(MouseID(0), MOUSE_AXIS_WHEEL),
+            0.001f);
+
+        // Multiple wheel events between frames accumulate.
+        controller_->_handle_mouse_wheel(MouseID(0), 0.0f, -3.0f);
+        assert_close(
+            -2.0f,
+            controller_->mouse_axis_state(MouseID(0), MOUSE_AXIS_WHEEL),
+            0.001f);
+
+        controller_->_handle_mouse_wheel(MouseID(0), 2.0f, 0.0f);
+        assert_close(
+            2.0f,
+            controller_->mouse_axis_state(MouseID(0),
+                                          MOUSE_AXIS_WHEEL_HORIZONTAL),
+            0.001f);
+
+        // pre_update resets the wheel each frame, like the motion axes.
+        controller_->pre_update(0.1f);
+        assert_close(
+            0.0f,
+            controller_->mouse_axis_state(MouseID(0), MOUSE_AXIS_WHEEL),
+            0.001f);
+        assert_close(
+            0.0f,
+            controller_->mouse_axis_state(MouseID(0),
+                                          MOUSE_AXIS_WHEEL_HORIZONTAL),
+            0.001f);
+    }
+
     void test_too_many_keyboards() {
 
     }

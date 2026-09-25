@@ -5,6 +5,8 @@
 #include "../../compositor.h"
 #include "../../input/input_manager.h"
 #include "../../keycodes.h"
+#include "../../math/plane.h"
+#include "../../math/ray.h"
 #include "../../nodes/camera.h"
 #include "../../nodes/stage_node.h"
 #include "../../nodes/ui/button.h"
@@ -611,7 +613,18 @@ void lua_bind(lua_State* state) {
             [](InputState* s, int keyboard_id, int code) {
             return s->keyboard_key_state(KeyboardID(keyboard_id), (KeyboardCode)code);
         })
+        .addFunction("mouse_axis_state",
+            [](InputState* s, int mouse_id, int axis) {
+            return s->mouse_axis_state(MouseID(mouse_id), (MouseAxis)axis);
+        })
         .endClass()
+        // Mouse axis ids (for InputState:mouse_axis_state).
+        .beginNamespace("MouseAxis")
+        .addVariable("X", (int)MOUSE_AXIS_X)
+        .addVariable("Y", (int)MOUSE_AXIS_Y)
+        .addVariable("WHEEL", (int)MOUSE_AXIS_WHEEL)
+        .addVariable("WHEEL_HORIZONTAL", (int)MOUSE_AXIS_WHEEL_HORIZONTAL)
+        .endNamespace()
         // ----------------------------------------------------------------
         // NodeParam (opaque, used in parameter sets)
         // ----------------------------------------------------------------
@@ -820,6 +833,36 @@ void lua_bind(lua_State* state) {
         .addStaticFunction("none", &Color::none)
         .endClass()
         // ----------------------------------------------------------------
+        // Ray — a world-space ray with hit tests, e.g. for cursor picking.
+        // Obtain one from Camera:screen_ray(); intersects_aabb returns the
+        // hit distance (or nil) so callers can pick the nearest candidate.
+        // ----------------------------------------------------------------
+        .beginClass<Ray>("Ray")
+        .addFunction("intersects_aabb",
+            [](Ray* r, const Vec3& min, const Vec3& max) -> luabridge::LuaRef {
+            lua_State* L = smlt::get_app()->ensure_lua_ready()->lua_state();
+            AABB aabb;
+            aabb.set_min_max(min, max);
+            auto t = r->intersects_aabb(aabb);
+            if(!t) return luabridge::LuaRef(L);
+            return luabridge::LuaRef(L, (float)*t);
+        })
+        .addFunction("intersects_plane",
+            [](Ray* r, const Vec3& point, const Vec3& normal) -> luabridge::LuaRef {
+            lua_State* L = smlt::get_app()->ensure_lua_ready()->lua_state();
+            Vec3 intersection;
+            Plane plane(normal, normal.dot(point));
+            if(!r->intersects_plane(plane, &intersection)) {
+                return luabridge::LuaRef(L);
+            }
+            luabridge::LuaRef t = luabridge::newTable(L);
+            t["x"] = intersection.x;
+            t["y"] = intersection.y;
+            t["z"] = intersection.z;
+            return t;
+        })
+        .endClass()
+        // ----------------------------------------------------------------
         // Camera hierarchy — for creating render layers from Lua. Concrete
         // projection setup happens in Scene:create_perspective_camera() /
         // create_orthographic_camera().
@@ -834,6 +877,16 @@ void lua_bind(lua_State* state) {
             luabridge::LuaRef t = luabridge::newTable(L);
             t["x"] = p->x; t["y"] = p->y; t["z"] = p->z;
             return t;
+        })
+        // A world-space ray through a screen-space point (origin bottom-left).
+        .addFunction("screen_ray",
+            [](Camera* cam, Window* win, float x, float y) -> luabridge::LuaRef {
+            lua_State* L = smlt::get_app()->ensure_lua_ready()->lua_state();
+            Viewport viewport(VIEWPORT_TYPE_FULL);
+            auto near = cam->unproject_point(*win, viewport, Vec3(x, y, 0.0f));
+            auto far = cam->unproject_point(*win, viewport, Vec3(x, y, 1.0f));
+            if(!near || !far) return luabridge::LuaRef(L);
+            return luabridge::LuaRef(L, Ray(*near, (*far - *near).normalized()));
         })
         .addFunction("project",
             [](Camera* cam, Window* win, float x, float y, float z) -> luabridge::LuaRef {

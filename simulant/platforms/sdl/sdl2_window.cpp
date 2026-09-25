@@ -673,6 +673,17 @@ void SDL2Window::check_events() {
                             event.button.x, height() - event.button.y,
                             is_touch_device);
             } break;
+            case SDL_MOUSEWHEEL: {
+                // SDL reports the wheel delta directly; SDL_MOUSEWHEEL_FLIPPED
+                // reverses the sign.
+                float x = (float)event.wheel.x;
+                float y = (float)event.wheel.y;
+                if(event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED) {
+                    x = -x;
+                    y = -y;
+                }
+                input_state->_handle_mouse_wheel(MouseID(0), x, y);
+            } break;
             case SDL_FINGERMOTION: {
                 float x = event.tfinger.x;
                 float y = event.tfinger.y;
@@ -893,7 +904,7 @@ void SDL2Window::initialize_input_controller(InputState& controller) {
     MouseDeviceInfo mouse;
     mouse.id = 0;
     mouse.button_count = 3; // FIXME: Not always true
-    mouse.axis_count = 2;   // X + Y FIXME: Add scrollwheels
+    mouse.axis_count = 4;   // X + Y + scroll wheel (vertical + horizontal)
 
     KeyboardDeviceInfo keyboard;
     keyboard.id = 0;
