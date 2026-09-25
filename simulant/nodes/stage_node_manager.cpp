@@ -267,6 +267,14 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
     void* mem = (size) ? node_storage_.allocate(size, alignment) : nullptr;
     StageNode* node = constructor(mem);
 
+    /* The low 16 bits of a stage node ID are random, so two nodes of the
+     * same type can collide. all_nodes_ is keyed by ID; a collision would
+     * leave this node untracked and destroying it would free the other
+     * node's memory. Regenerate until the ID is unique. */
+    while(all_nodes_.count(node->id())) {
+        node->set_id(new_stage_node_id(type));
+    }
+
     if(!node->init()) {
         S_ERROR("Failed to initialize node");
         destructor(node);

@@ -39,6 +39,13 @@ public:
 
     IDType id() const { return id_; }
 
+    /* Allows an owner to replace a colliding ID before the object is
+     * published. Not intended for general use. */
+    void set_id(IDType id) {
+        assert(id > 0);
+        id_ = id;
+    }
+
     virtual bool operator==(const Identifiable<IDType>& rhs) const {
         return id() == rhs.id();
     }
