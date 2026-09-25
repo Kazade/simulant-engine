@@ -34,6 +34,33 @@ class GenericRenderer;
 class VBOManager;
 struct GPUBuffer;
 
+/* Cached uniform locations for the per-light shader uniforms. These depend
+ * only on the GPU program, so they're resolved once whenever the active
+ * program changes rather than rebuilt (with string formatting) for every
+ * renderable and every light. See resolve_light_uniform_locations(). Locations
+ * are int32_t to match GLint without pulling GL headers into this header;
+ * everything starts at -1 (an invalid GL location) so an unresolved cache can
+ * never be mistaken for 0. */
+struct LightUniformLocations {
+    static const uint8_t MAX_LIGHTS = 8;
+
+    int32_t position[MAX_LIGHTS];
+    int32_t color[MAX_LIGHTS];
+    int32_t intensity[MAX_LIGHTS];
+    int32_t range[MAX_LIGHTS];
+    int32_t count;
+
+    LightUniformLocations() {
+        for(uint8_t i = 0; i < MAX_LIGHTS; ++i) {
+            position[i] = -1;
+            color[i] = -1;
+            intensity[i] = -1;
+            range[i] = -1;
+        }
+        count = -1;
+    }
+};
+
 struct RenderState {
     Renderable* renderable;
     MaterialPass* pass;
@@ -62,6 +89,9 @@ private:
     GPUProgram* program_ = nullptr;
     const MaterialPass* pass_ = nullptr;
     const Light* light_ = nullptr;
+
+    /* Resolved lazily in change_material_pass; see LightUniformLocations. */
+    LightUniformLocations light_locs_;
 
     GL2RenderGroupImpl* current_group_ = nullptr;
 
@@ -112,6 +142,7 @@ private:
     std::shared_ptr<VBOManager> buffer_manager_;
 
     void set_light_uniforms(const MaterialPass* pass, GPUProgram* program,
+                            const LightUniformLocations& locs,
                             uint8_t light_id, const LightPtr light);
     void set_material_uniforms(const MaterialPass *pass, GPUProgram* program);
     void set_renderable_uniforms(const MaterialPass* pass, GPUProgram* program, const Renderable* renderable, Camera* camera);
