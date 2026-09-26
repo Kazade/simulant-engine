@@ -547,12 +547,27 @@ const static MouseID TOUCH_MOUSE_ID(0);
 void AndroidWindow::check_events() {
     android_app* aapp = (android_app*) get_app()->platform_state();
 
-    struct android_poll_source* source;
-    int events = 0;
-    ALooper_pollAll(0, nullptr, &events, (void**) &source);
+    // Drain every pending event without blocking. ALooper_pollAll() is
+    // unavailable in newer NDKs (it can miss wakes); ALooper_pollOnce()
+    // returns ALOOPER_POLL_TIMEOUT once nothing is left, or
+    // ALOOPER_POLL_CALLBACK if it only ran callbacks (so poll again).
+    while(true) {
+        struct android_poll_source* source = nullptr;
+        int events = 0;
+        int ident =
+            ALooper_pollOnce(0, nullptr, &events, (void**) &source);
 
-    if (source != nullptr) {
-        source->process(aapp, source);
+        if(ident == ALOOPER_POLL_CALLBACK) {
+            continue;
+        }
+
+        if(ident < 0) {
+            break;
+        }
+
+        if(source != nullptr) {
+            source->process(aapp, source);
+        }
     }
 
     if(aapp->destroyRequested) {

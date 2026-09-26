@@ -3,8 +3,8 @@ apply plugin: 'com.android.application'
 android {
 	namespace "dev.simulant.simulant_tests"
 
-    ndkVersion '25.2.9519653'
-    compileSdkVersion 32
+    ndkVersion '27.3.13750724'
+    compileSdkVersion 36
 
     defaultConfig {
         minSdkVersion 28

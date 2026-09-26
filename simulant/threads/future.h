@@ -189,9 +189,6 @@ private:
 template< class T >
 using decay_t = typename std::decay<T>::type;
 
-template< class T >
-using result_of_t = typename std::result_of<T>::type;
-
 template< bool B, class T = void >
 using enable_if_t = typename std::enable_if<B,T>::type;
 
@@ -230,8 +227,9 @@ void processor(std::shared_ptr<typename Future<ResultType>::FutureState> state, 
 }
 
 template<class Function, class ...Args>
-Future<result_of_t<Function(Args...)>> async(Function&& f, Args&&... args) {
-    typedef result_of_t<Function(Args...)> ResultType;
+Future<std::invoke_result_t<Function, Args...>> async(Function&& f,
+                                                    Args&&... args) {
+    typedef std::invoke_result_t<Function, Args...> ResultType;
     typedef std::shared_ptr<typename Future<ResultType>::FutureState> StateType;
     auto state = std::make_shared<typename Future<ResultType>::FutureState>();
 
