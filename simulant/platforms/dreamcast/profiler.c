@@ -7,18 +7,29 @@
 #include <dirent.h>
 
 #include <kos/version.h>
-#include <kos/thread.h>
 #include <dc/fs_dcload.h>
 
+#include <kos/irq.h>
+#include <arch/irq.h>
+#include <arch/timer.h>
+
 static char OUTPUT_FILENAME[128];
-static kthread_t* THREAD;
-static volatile bool PROFILER_RUNNING = false;
 static volatile bool PROFILER_RECORDING = false;
 
 #define BASE_ADDRESS 0x8c010000
-#define BUCKET_SIZE 10000
 
-#define INTERVAL_IN_MS 10
+/* Power-of-two bucket count so the hash lookup is a mask rather than a
+ * (45+ cycle) integer division inside the interrupt handler. */
+#define BUCKET_SIZE 8192
+#define BUCKET_MASK (BUCKET_SIZE - 1)
+
+/* Sampling rate. 1 kHz gives ~1 sample per 200k cycles - fine enough to see
+ * individual hot functions without meaningful overhead. */
+#define SAMPLE_HZ 1000
+
+/* Maximum number of distinct (pc, pr) pairs recorded. Static pool: the
+ * profiler runs from an interrupt handler, so it must never call malloc(). */
+#define MAX_ARC_COUNT 8192
 
 /* Simple hash table of samples. An array of Samples
  * but, each sample in that array can be the head of
@@ -31,14 +42,12 @@ typedef struct Arc {
 } Arc;
 
 static Arc ARCS[BUCKET_SIZE];
+static Arc ARC_POOL[MAX_ARC_COUNT];
+static size_t ARC_POOL_NEXT = 0;
+static size_t ARC_COUNT = 0;
 
 /* Hashing function for two uint32_ts */
-#define HASH_PAIR(x, y) ((x * 0x1f1f1f1f) ^ y)
-
-#define BUFFER_SIZE (1024 * 8)  // 8K buffer
-
-const static size_t MAX_ARC_COUNT = BUFFER_SIZE / sizeof(Arc);
-static size_t ARC_COUNT = 0;
+#define HASH_PAIR(x, y) (((x) * 0x1f1f1f1f) ^ (y))
 
 static bool WRITE_TO_STDOUT = false;
 
@@ -47,7 +56,11 @@ static bool write_samples_to_stdout();
 static void clear_samples();
 
 static Arc* new_arc(uint32_t PC, uint32_t PR) {
-    Arc* s = (Arc*) malloc(sizeof(Arc));
+    if(ARC_POOL_NEXT >= MAX_ARC_COUNT) {
+        return NULL; /* Pool exhausted: drop this sample. */
+    }
+
+    Arc* s = &ARC_POOL[ARC_POOL_NEXT++];
     s->count = 1;
     s->pc = PC;
     s->pr = PR;
@@ -58,14 +71,16 @@ static Arc* new_arc(uint32_t PC, uint32_t PR) {
     return s;
 }
 
+/* Called from the TMU1 interrupt handler. Must be short and non-blocking:
+ * no allocation, no I/O. Only the interrupt writes the table, so no locking
+ * is required as long as the timer is stopped before it is read. */
 static void record_thread(uint32_t PC, uint32_t PR) {
-    uint32_t bucket = HASH_PAIR(PC, PR) % BUCKET_SIZE;
+    uint32_t bucket = HASH_PAIR(PC, PR) & BUCKET_MASK;
 
     Arc* s = &ARCS[bucket];
 
     if(s->pc) {
-        /* Initialized sample in this bucket,
-         * does it match though? */
+        /* Initialized sample in this bucket, does it match though? */
         while(s->pc != PC || s->pr != PR) {
             if(s->next) {
                 s = s->next;
@@ -86,46 +101,18 @@ static void record_thread(uint32_t PC, uint32_t PR) {
     }
 }
 
-static int thd_each_cb(kthread_t* thd, void* data) {
+/* TMU1 underflow handler: record the interrupted PC. This is a true
+ * instantaneous sample of the code that was running, unlike reading another
+ * thread's saved context (which is only updated on a context switch and so
+ * biases samples towards blocking/scheduling points). */
+static void sampler_handler(irq_t source, irq_context_t* context, void* data) {
+    (void) source;
     (void) data;
 
+    record_thread(context->pc, context->pr);
 
-    /* Only record the main thread. In KOS, the initial thread running main()
-     * is labelled "[kernel]" — all other threads are system/worker threads. */
-    if(strcmp(thd->label, "[kernel]") != 0) {
-        return 0;
-    }
-
-    /* The idea is that if this code right here is running in the profiling
-     * thread, then all the PCs from the other threads are
-     * current. Obviouly thought between iterations the
-     * PC will change so it's not like this is a true snapshot
-     * in time across threads */
-    uint32_t PC = thd->context.pc;
-    uint32_t PR = thd->context.pr;
-    record_thread(PC, PR);
-    return 0;
-}
-
-static void record_samples() {
-    /* Go through all the active threads and increase
-     * the sample count for the PC for each of them */
-
-    size_t initial = ARC_COUNT;
-
-    thd_each(&thd_each_cb, NULL);
-
-    if(ARC_COUNT >= MAX_ARC_COUNT) {
-        /* TIME TO FLUSH! */
-        if(!write_samples(OUTPUT_FILENAME)) {
-            fprintf(stderr, "Error writing samples\n");
-        }
-    }
-
-    /* We log when the number of PCs recorded hits a certain increment */
-    if((initial != ARC_COUNT) && ((ARC_COUNT % 1000) == 0)) {
-        printf("-- %d arcs recorded...\n", ARC_COUNT);
-    }
+    /* Clear the underflow bit so the next interrupt can fire. */
+    timer_clear(TMU1);
 }
 
 /* Declared in KOS in fs_dcload.c */
@@ -232,17 +219,26 @@ static bool write_samples(const char* path) {
         return false;
     }
 
-    printf("-- Writing %d arcs\n", ARC_COUNT);
+    printf("-- Writing %d arcs\n", (int) ARC_COUNT);
 
-    /* Pass 1: build histogram bins from arc PCs, weighted by sample count */
+    /* Pass 1: build histogram bins from arc PCs, weighted by sample count.
+     * Samples can legitimately fall outside [lowest, highest) (e.g. inside the
+     * KOS kernel at 0x8c000000, below the app's base address), so clamp rather
+     * than indexing out of bounds. */
     Arc* root = ARCS;
     for(int i = 0; i < BUCKET_SIZE; ++i) {
         if(root->pc) {
-            bins[(root->pc - lowest_address) / bin_size] += (uint16_t) root->count;
+            if(root->pc >= lowest_address && root->pc < highest_address) {
+                bins[(root->pc - lowest_address) / bin_size] +=
+                    (uint16_t) root->count;
+            }
             Arc* s = root->next;
             while(s) {
                 assert(s->pc);
-                bins[(s->pc - lowest_address) / bin_size] += (uint16_t) s->count;
+                if(s->pc >= lowest_address && s->pc < highest_address) {
+                    bins[(s->pc - lowest_address) / bin_size] +=
+                        (uint16_t) s->count;
+                }
                 s = s->next;
             }
         }
@@ -254,7 +250,7 @@ static bool write_samples(const char* path) {
     hist_header.low_pc = lowest_address;
     hist_header.high_pc = highest_address;
     hist_header.hist_size = BIN_COUNT;
-    hist_header.prof_rate = 1000 / INTERVAL_IN_MS;  /* Hz, not ms */
+    hist_header.prof_rate = SAMPLE_HZ;  /* Hz, not ms */
     strcpy(hist_header.dimen, "seconds");
     hist_header.dimen_abbrev = 's';
 
@@ -264,7 +260,7 @@ static bool write_samples(const char* path) {
     fwrite(bins, sizeof(uint16_t), BIN_COUNT, out);
     free(bins);
 
-    /* Pass 2: write arc records (tag=1) */
+    /* Pass 2: write arc records (tag=1). */
     uint8_t arc_tag = 1;
 
 #ifndef NDEBUG
@@ -339,40 +335,7 @@ static bool write_samples_to_stdout() {
     return true;
 }
 
-
-static void* run(void* args) {
-    printf("-- Entered profiler thread!\n");
-
-    while(PROFILER_RUNNING){
-        if(PROFILER_RECORDING) {
-            record_samples();
-        }
-        /* originally the sleep was inside of `PROFILER_RECORDING` conditional block
-         * loop was not yielding unless `PROFILER_RECORDING` was `true`.
-         * `profiler_stop` sets `PROFILER_RECORDING` to `false`,
-         * then calls `profiler_clean_up`.
-         * At this point, the `while(PROFILER_RUNNING)` loop no longer yields the CPU.
-         * Without yielding, the high-prio prof thread starves `main`,
-         * so `profiler_clean_up` never gets to flip `PROFILER_RUNNING` to `false`.
-         * `thd_join` then hangs at exit. */
-        thd_sleep(INTERVAL_IN_MS);
-    }
-
-    printf("-- Profiler thread finished!\n");
-
-    return NULL;
-}
-
 void profiler_init(const char* output) {
-    kthread_attr_t profiler_attr;
-	profiler_attr.create_detached = 0;
-    /* using kthread attribute to bump stack size */
-	profiler_attr.stack_size = 32 * 1024;
-	profiler_attr.stack_ptr = NULL;
-    /* Lower priority is... er, higher */
-	profiler_attr.prio = PRIO_DEFAULT / 2;
-	profiler_attr.label = "dcprof";
-
     /* Store the filename */
     strncpy(OUTPUT_FILENAME, output, sizeof(OUTPUT_FILENAME));
 
@@ -382,50 +345,56 @@ void profiler_init(const char* output) {
         printf("Read-only filesytem. Writing samples to stdout\n");
     }
 
-    printf("Creating profiler thread...\n");
-    // Initialize the samples to zero
+    /* Initialize the samples to zero */
     memset(ARCS, 0, sizeof(ARCS));
+    ARC_POOL_NEXT = 0;
+    ARC_COUNT = 0;
+}
 
-    PROFILER_RUNNING = true;
-    THREAD = thd_create_ex(&profiler_attr, run, NULL);
+/* Turn the TMU1 sampling interrupt on. TMU1 is not used by KOS (TMU0 drives
+ * the scheduler, TMU2 the wall clock), so it is safe to claim for profiling. */
+static void sampler_enable(void) {
+    irq_set_handler(EXC_TMU1_TUNI1, sampler_handler, NULL);
+    timer_prime(TMU1, SAMPLE_HZ, 1);
+    timer_clear(TMU1);
+    timer_start(TMU1);
+}
 
-    printf("Thread started.\n");
+static void sampler_disable(void) {
+    timer_stop(TMU1);
+    timer_disable_ints(TMU1);
+    timer_clear(TMU1);
+    irq_set_handler(EXC_TMU1_TUNI1, NULL, NULL);
 }
 
 void profiler_start() {
-    assert(PROFILER_RUNNING);
-
     if(PROFILER_RECORDING) {
         return;
     }
 
     PROFILER_RECORDING = true;
     printf("Starting profiling...\n");
+    sampler_enable();
 }
 
 static void clear_samples() {
-    /* Free the samples we've collected to start again */
-    Arc* root = ARCS;
-    for(int i = 0; i < BUCKET_SIZE; ++i) {
-        Arc* s = root;
-        Arc* next = s->next;
+    /* No heap allocation is used for arcs, so just reset the table and pool. */
+    memset(ARCS, 0, sizeof(ARCS));
+    ARC_POOL_NEXT = 0;
+    ARC_COUNT = 0;
+}
 
-        // While we have a next pointer
-        while(next) {
-            s = next; // Point S at it
-            next = s->next; // Store the new next pointer
-            free(s); // Free S
-        }
-
-        // We've wiped the chain so we can now clear the root
-        // which is statically allocated
-        root->next = NULL;
-        root++;
+/* Drop all samples collected so far without writing them out. The sampler is
+ * briefly disabled so it can't fire while the table is being cleared. */
+void profiler_reset() {
+    if(!PROFILER_RECORDING) {
+        clear_samples();
+        return;
     }
 
-    // Wipe the lot
-    memset(ARCS, 0, sizeof(ARCS));
-    ARC_COUNT = 0;
+    sampler_disable();
+    clear_samples();
+    sampler_enable();
 }
 
 bool profiler_stop() {
@@ -435,19 +404,18 @@ bool profiler_stop() {
 
     printf("Stopping profiling...\n");
 
+    /* Stop the interrupt *before* reading/writing the table. */
+    sampler_disable();
     PROFILER_RECORDING = false;
+
     if(!write_samples(OUTPUT_FILENAME)) {
         printf("ERROR WRITING SAMPLES (RO filesystem?)! Outputting to stdout\n");
         return false;
     }
-
 
     return true;
 }
 
 void profiler_clean_up() {
     profiler_stop(); // Make sure everything is stopped
-
-    PROFILER_RUNNING = false;
-    thd_join(THREAD, NULL);
 }
