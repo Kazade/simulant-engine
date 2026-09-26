@@ -11,6 +11,8 @@
 #include "../../assets/material.h"
 #include "../../core/aligned_vector.h"
 #include "../../logging.h"
+#include "../../application.h"
+#include "../../stats_recorder.h"
 
 #ifdef __DREAMCAST__
 #include <kos.h>
@@ -34,35 +36,41 @@
 namespace smlt {
 
 /* ========================================================================
- * PVR Vertex type: 64-byte floating color format (Type 5)
- * Layout: flags, x, y, z, u, v, (padding), base_a/r/g/b, offset_a/r/g/b
+ * PVR Vertex type: 32-byte packed-color format
+ * Layout: flags, x, y, z, u, v, argb, oargb
+ *
+ * Colors stay in float through transform/clipping/lighting and are only
+ * clamped to [0,1] and quantized to bytes here, immediately before
+ * submission, minimizing TA input bandwidth and vertex-buffer footprint.
+ * The corresponding polygon header must use PVR_CLRFMT_ARGBPACKED. See
+ * pvr_build_poly_hdr.
  * ======================================================================== */
 #ifdef __DREAMCAST__
 typedef struct {
     uint32_t flags;     /* TA command (vertex flags) */
     float x, y, z;      /* Screen coordinates (x, y) and 1/w depth (z) */
     float u, v;         /* Texture coordinates */
-    uint32_t _pad0;     /* Padding to align to 32 bytes */
-    uint32_t _pad1;     /* Padding */
-    float base_a;       /* Base color alpha (0.0-1.0) */
-    float base_r;       /* Base color red */
-    float base_g;       /* Base color green */
-    float base_b;       /* Base color blue */
-    float offset_a;     /* Offset color alpha */
-    float offset_r;     /* Offset color red */
-    float offset_g;     /* Offset color green */
-    float offset_b;     /* Offset color blue */
-} __attribute__((aligned(32))) pvr_vertex_type5_t;
+    uint32_t argb;      /* Base color, packed 0xAARRGGBB */
+    uint32_t oargb;     /* Offset (specular) color, packed 0xAARRGGBB */
+} __attribute__((aligned(32))) pvr_vertex_packed_t;
 
 /* Texture size (power-of-2, 8..1024) -> PVR size index 0..7 */
 static inline uint32_t pvr_txr_size_idx(int sz) {
     return (uint32_t)(__builtin_ctz((unsigned)sz) - 3);
 }
 
+/* Clamp a color channel to [0,1] before packing to a byte. Deliberately not
+ * shz_clampf: that lowers to fminf/fmaxf, whose NaN/signed-zero handling drags
+ * in __fpclassifyf and made this the hottest part of vertex emission. NaN maps
+ * to 0 here, which is a safe color. */
+static inline float pvr_clamp01(float v) {
+    return v > 0.0f ? (v < 1.0f ? v : 1.0f) : 0.0f;
+}
+
 /* Build pvr_poly_hdr_t directly without going through pvr_poly_cxt_t.
  *
  * Fixed for all our draw calls:
- *   color format  = PVR_CLRFMT_4FLOATS
+ *   color format  = PVR_CLRFMT_ARGBPACKED (32-byte packed-color vertices)
  *   UV format     = PVR_UVFMT_32BIT  (= 0, contributes nothing)
  *   color clamp   = enabled
  *   txr_alpha     = PVR_TXRALPHA_ENABLE (= 0, contributes nothing)
@@ -96,7 +104,7 @@ static inline void pvr_build_poly_hdr(
              | ((uint32_t)specular   << PVR_TA_CMD_SPECULAR_SHIFT)
              | ((uint32_t)textured   << 3)
              | ((uint32_t)list_type  << PVR_TA_CMD_TYPE_SHIFT)
-             | (PVR_CLRFMT_4FLOATS   << PVR_TA_CMD_CLRFMT_SHIFT)
+             | (PVR_CLRFMT_ARGBPACKED << PVR_TA_CMD_CLRFMT_SHIFT)
              | ((uint32_t)shade_mode << PVR_TA_CMD_SHADE_SHIFT);
 
     /* mode1: depth compare (31:29) | cull (28:27)
@@ -155,12 +163,26 @@ PVRRenderQueueVisitor::PVRRenderQueueVisitor(PVRRenderer* renderer, CameraPtr ca
  * Traversal start/end - manage scene and list lifecycle
  * ======================================================================== */
 
+/* Maps a material pass to the PVR list its geometry belongs in. Shared by
+ * change_material_pass and the start-of-traversal direct-list selection. */
+static pvr_list_type_t list_type_for_pass(const MaterialPass* pass) {
+    const bool to_modifier =
+        (pass->polygon_list_target() == POLYGON_LIST_TARGET_MODIFIER);
+
+    switch(pass->blend_func()) {
+        case BLEND_NONE:
+            return to_modifier ? PVR_LIST_OP_MOD : PVR_LIST_OP_POLY;
+        case BLEND_MASK:
+            return to_modifier ? PVR_LIST_OP_MOD : PVR_LIST_PT_POLY;
+        default:
+            return to_modifier ? PVR_LIST_OP_MOD : PVR_LIST_TR_POLY;
+    }
+}
+
 void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
                                              uint64_t frame_id,
                                              StageNode* stage_node) {
-    _S_UNUSED(queue);
     _S_UNUSED(frame_id);
-    _S_UNUSED(stage_node);
 
     /* New camera pass — discard any light state cached against the previous
      * view matrix. */
@@ -173,6 +195,68 @@ void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
         ambient_[1] = a.g;
         ambient_[2] = a.b;
     }
+
+#ifdef __DREAMCAST__
+    /* Choose the single list to stream directly to the TA for this frame.
+     * Each list is weighted by the vertex/index work its renderables will
+     * cost; the dominant one is opened once here and its geometry written
+     * straight through the store queues. The remaining lists are RAM-buffered
+     * and drained in on_post_render.
+     *
+     * A PVR list may only be opened once per scene, and start_traversal() runs
+     * once per layer/pipeline, so the choice and the pvr_list_begin() happen
+     * on the first traversal only. Later layers submit into the already-open
+     * direct list, or buffer to the others. */
+    if(!renderer_->direct_list_chosen_) {
+        renderer_->direct_list_chosen_ = true;
+
+        size_t weight[PVRRenderer::PVR_LIST_COUNT] = {0};
+
+        const std::size_t n = queue.renderable_count();
+        for(std::size_t i = 0; i < n; ++i) {
+            const Renderable* r =
+                const_cast<batcher::RenderQueue&>(queue).renderable(i);
+            if(!r || !r->material) {
+                continue;
+            }
+
+            std::size_t elems = r->index_element_count;
+            if(!elems) {
+                for(std::size_t v = 0; v < r->vertex_range_count; ++v) {
+                    elems += r->vertex_ranges[v].count;
+                }
+            }
+            if(!elems) {
+                elems = 1;
+            }
+
+            const uint8_t passes = r->material->pass_count();
+            for(uint8_t p = 0; p < passes; ++p) {
+                const pvr_list_type_t lt =
+                    list_type_for_pass(r->material->pass(p));
+                weight[(size_t) lt] += elems;
+            }
+        }
+
+        pvr_list_type_t chosen = (pvr_list_type_t) -1;
+        size_t best = 0;
+        for(size_t i = 0; i < PVRRenderer::PVR_LIST_COUNT; ++i) {
+            if(weight[i] > best) {
+                best = weight[i];
+                chosen = (pvr_list_type_t) i;
+            }
+        }
+
+        renderer_->direct_list_ = chosen;
+        if(chosen != (pvr_list_type_t) -1) {
+            pvr_list_begin(chosen);
+            pvr_dr_init(&renderer_->dr_state_);
+            renderer_->prev_list_type_ = chosen;
+            renderer_->current_list_type_ = chosen;
+        }
+    }
+
+#endif
 }
 
 void PVRRenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
@@ -231,16 +315,7 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         (next->polygon_list_target() == POLYGON_LIST_TARGET_MODIFIER);
     emitting_modifier_volume_ = to_modifier;
 
-    if(blend == BLEND_NONE) {
-        renderer_->current_list_type_ =
-            to_modifier ? PVR_LIST_OP_MOD : PVR_LIST_OP_POLY;
-    } else if(blend == BLEND_MASK) {
-        renderer_->current_list_type_ =
-            to_modifier ? PVR_LIST_OP_MOD : PVR_LIST_PT_POLY;
-    } else {
-        renderer_->current_list_type_ =
-            to_modifier ? PVR_LIST_OP_MOD : PVR_LIST_TR_POLY;
-    }
+    renderer_->current_list_type_ = list_type_for_pass(next);
 
 #ifdef __DREAMCAST__
     /* Map blend modes to PVR blend factors */
@@ -418,6 +493,7 @@ void PVRRenderQueueVisitor::compute_light_state(LightPtr light,
 
     state.intensity = light->intensity();
     state.range = light->range();
+    state.inv_range = 1.0f / (state.range + 1e-8f);
 
     /* Pre-normalised toward-light direction for directional lights.
      * position already stores -pointing_dir (set_direction negates on write),
@@ -881,6 +957,29 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     float hw = 320.0f; /* Half-width */
     float hh = 240.0f; /* Half-height */
 
+    /* Append bytes to the current list: either to the RAM staging buffer, or
+     * (if this list was chosen as the direct list in start_traversal) straight
+     * to the TA via the store queues. */
+    auto submit_bytes = [&](const void* data, size_t size) {
+        const pvr_list_type_t list = renderer_->current_list_type_;
+        if(renderer_->is_list_direct(list)) {
+            /* Stream straight to the TA. pvr_dr_target() hands back a store
+             * queue window address, and shz_sq_memcpy32() is the purpose-built
+             * SQ copy: it stores the 32 bytes and flushes the queue itself, so
+             * no cache-line allocation or separate pvr_dr_commit() is needed. */
+            const uint8_t* src = reinterpret_cast<const uint8_t*>(data);
+            void* dest = pvr_dr_target(renderer_->dr_state_);
+            shz_sq_memcpy32(dest, src, size);
+        } else {
+            auto& buf = renderer_->buffer(list)
+                            .buffers[renderer_->current_buffer_index_];
+            const uint8_t* src = reinterpret_cast<const uint8_t*>(data);
+            std::size_t pos = buf.size();
+            buf.resize(pos + size);
+            memcpy(&buf[pos], src, size);
+        }
+    };
+
     /* ================================================================
      * Submit or buffer the pre-compiled polygon header.
      *
@@ -904,31 +1003,24 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     }
 
     /* Skip resubmitting a header that's byte-identical to the one already
-     * active for this list — the TA has to redundantly update its internal
-     * poly state on every header it sees even when nothing about it
-     * actually changed, so runs of renderables sharing a material pass (and
-     * shadow-receive flag, which is what `hdr_src` above already folds in)
-     * were paying for a resend on every single one. Cache lives per-list on
-     * the renderer — see its field comment — and is invalidated once per
-     * frame, so the first poly submitted to a list always sends its header
-     * regardless of what was cached from the previous frame. */
+     * active for this list: the TA updates its internal poly state for every
+     * header it sees, so resending an unchanged header for every renderable
+     * that shares a material pass (and shadow-receive flag, which `hdr_src`
+     * above folds in) is wasted work. The cache lives per-list on the
+     * renderer and is invalidated once per frame, so the first poly submitted
+     * to a list always sends its header. */
     bool& cache_valid = renderer_->last_header_valid_[renderer_->current_list_type_];
     pvr_poly_hdr_t& cache_bytes = renderer_->last_header_[renderer_->current_list_type_];
     const bool header_unchanged =
         cache_valid && std::memcmp(&cache_bytes, hdr_src, sizeof(pvr_poly_hdr_t)) == 0;
 
     if(!header_unchanged) {
-        if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
-            pvr_vertex_t* hdr_dest = static_cast<pvr_vertex_t*>(pvr_dr_target(renderer_->dr_state_));
-            shz_memcpy32(hdr_dest, hdr_src, sizeof(pvr_poly_hdr_t));
-            pvr_dr_commit(hdr_dest);
-        } else {
-            auto& buf = renderer_->buffer(renderer_->current_list_type_).buffers[renderer_->current_buffer_index_];
-            const uint8_t* hdr_bytes = reinterpret_cast<const uint8_t*>(hdr_src);
-            auto size = buf.size();
-            buf.resize(size + sizeof(pvr_poly_hdr_t));
-            shz_memcpy32(&buf[size], hdr_bytes, sizeof(pvr_poly_hdr_t));
-        }
+        /* All polygon lists, including OP_POLY, go through submit_bytes: a
+         * list is only opened (and thus switched to direct submission) once it
+         * is promoted, and it must stay open from then on. Opening OP_POLY
+         * eagerly in pre_render would mean a later promotion of another list
+         * closes it permanently, corrupting any OP_POLY geometry that follows. */
+        submit_bytes(hdr_src, sizeof(pvr_poly_hdr_t));
 
         cache_bytes = *hdr_src;
         cache_valid = true;
@@ -949,7 +1041,11 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     auto color_offset = spec.color_offset(false);
     auto normal_offset = spec.normal_offset(false);
 
-    auto color_mat_mode = material_pass->color_material();
+    const auto color_mat_mode = material_pass->color_material();
+    /* Hoisted out of the per-vertex loop: a constant per material pass. */
+    const bool color_replaces_base =
+        (color_mat_mode == COLOR_MATERIAL_DIFFUSE ||
+         color_mat_mode == COLOR_MATERIAL_AMBIENT_AND_DIFFUSE);
     bool lighting_enabled = material_pass->is_lighting_enabled() && normal_offset;
 
     /* ================================================================
@@ -960,7 +1056,12 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * the optional lighting pass uses xmtrx for modelview transforms and
      * computes lighting against a fixed-size light table.
      * ================================================================ */
-    static aligned_vector<ClipVertex, 32> work_vertices_;
+    /* Fixed transform scratch. Every slot below `count` is written before it
+     * is read and slots above are never read, so a plain array avoids the
+     * growth/initialization bookkeeping of a vector. The largest span any
+     * renderable produces here is well under the cap. */
+    static const uint32_t WORK_VERTEX_CAPACITY = 4096;
+    static ClipVertex work_vertices_[WORK_VERTEX_CAPACITY];
 
     /* Transform a contiguous batch of `count` vertices starting at source
      * vertex `base`.  On entry MVP must be loaded into xmtrx.  On exit:
@@ -972,7 +1073,11 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * If lighting was applied xmtrx is restored to MVP before return. */
     auto transform_batch = [&](uint32_t base, uint32_t count) {
         if(!count) return;
-        work_vertices_.resize(count);
+        /* All producers stay well under the cap (the widest is a level-chunk
+         * index span). Clamp defensively rather than overrunning the array. */
+        if(count > WORK_VERTEX_CAPACITY) {
+            count = WORK_VERTEX_CAPACITY;
+        }
 
         /* ------------------------------------------------------------
          * Pass 1: position × MVP (FTRV), UVs, and base colour (material ×
@@ -992,6 +1097,15 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             const uint8_t* row = raw_data + stride * base;
             for(uint32_t i = 0; i < count; ++i) {
                 ClipVertex& cv = work_vertices_[i];
+
+                /* Prefetch a few vertices ahead in both the source stream and
+                 * the scratch destination. A level chunk's vertex data is tens
+                 * of KB — far larger than the SH4's 16KB D-cache — and is read
+                 * again by the lighting pass, so keeping the sequential read
+                 * ahead of the cache hides external-memory latency. Prefetch
+                 * past the end of the buffer is harmless (PREF never faults). */
+                SHZ_PREFETCH(row + stride * 4);
+                SHZ_PREFETCH(&cv + 4);
 
                 const float* p = (const float*)(row + pos_offset);
                 shz_vec4_t clip = shz_xmtrx_transform_vec4(
@@ -1047,14 +1161,10 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                         vc_b = c[0]/255.0f; vc_g = c[1]/255.0f;
                         vc_r = c[2]/255.0f; vc_a = c[3]/255.0f;
                     }
-                    switch(color_mat_mode) {
-                        case COLOR_MATERIAL_DIFFUSE:
-                        case COLOR_MATERIAL_AMBIENT_AND_DIFFUSE:
-                            br = vc_r; bg = vc_g; bb = vc_b; ba = vc_a;
-                            break;
-                        default:
-                            br *= vc_r; bg *= vc_g; bb *= vc_b; ba *= vc_a;
-                            break;
+                    if(color_replaces_base) {
+                        br = vc_r; bg = vc_g; bb = vc_b; ba = vc_a;
+                    } else {
+                        br *= vc_r; bg *= vc_g; bb *= vc_b; ba *= vc_a;
                     }
                 }
 
@@ -1083,10 +1193,19 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             const float roughness_alphaSq = roughness_alpha * roughness_alpha;
             const float k                 = roughness_alpha * 0.5f;
             const float nm                = 1.0f - mat_metallic_;
+            /* Dielectrics (metallic == 0, the common case) have a constant F0
+             * of 0.04 and nm == 1, so the per-vertex F0 blend and the kD scale
+             * can both be skipped. Hoisted here, constant for the whole pass. */
+            const bool metallic_zero = (mat_metallic_ == 0.0f);
 
             const uint8_t* row = raw_data + stride * base;
             for(uint32_t i = 0; i < count; ++i) {
                 ClipVertex& cv = work_vertices_[i];
+
+                /* Same streaming prefetch as pass 1 — the source rows are
+                 * re-read here for normals and eye-space positions. */
+                SHZ_PREFETCH(row + stride * 4);
+                SHZ_PREFETCH(&cv + 4);
 
                 /* Recover base colour stashed by pass 1. */
                 const float br = cv.r;
@@ -1100,7 +1219,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 shz_vec4_t nv = shz_xmtrx_transform_vec4(
                     shz_vec4_init(n_ptr[0], n_ptr[1], n_ptr[2], 0.0f));
                 float Nx = nv.x, Ny = nv.y, Nz = nv.z;
-                float n_sq = shz_mag_sqr3f(Nx, Ny, Nz);
+                float n_sq = Nx*Nx + Ny*Ny + Nz*Nz;
                 if(n_sq > 1e-8f) {
                     float invn = shz_inv_sqrtf_fsrra(n_sq);
                     Nx *= invn; Ny *= invn; Nz *= invn;
@@ -1113,7 +1232,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
                 /* View direction (eye at origin in view space). */
                 float Vx = -pos_ex, Vy = -pos_ey, Vz = -pos_ez;
-                float v_mag_sq = shz_mag_sqr3f(Vx, Vy, Vz);
+                float v_mag_sq = Vx*Vx + Vy*Vy + Vz*Vz;
                 if(v_mag_sq > 1e-8f) {
                     float invv = shz_inv_sqrtf_fsrra(v_mag_sq);
                     Vx *= invv; Vy *= invv; Vz *= invv;
@@ -1121,19 +1240,24 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 float NdotV = Nx*Vx + Ny*Vy + Nz*Vz;
                 if(NdotV < 0.0001f) NdotV = 0.0001f;
 
-                const float F0_r = 0.04f + (br - 0.04f) * mat_metallic_;
-                const float F0_g = 0.04f + (bg - 0.04f) * mat_metallic_;
-                const float F0_b = 0.04f + (bb - 0.04f) * mat_metallic_;
+                float F0_r, F0_g, F0_b;
+                if(metallic_zero) {
+                    F0_r = F0_g = F0_b = 0.04f;
+                } else {
+                    F0_r = 0.04f + (br - 0.04f) * mat_metallic_;
+                    F0_g = 0.04f + (bg - 0.04f) * mat_metallic_;
+                    F0_b = 0.04f + (bb - 0.04f) * mat_metallic_;
+                }
 
                 /* Diffuse (+ambient) and specular are accumulated separately
                  * and submitted through the vertex's base/offset (oargb)
                  * colors respectively — the PVR's TSP adds them together
                  * (and clamps the result, via PVR_CLRCLAMP_ENABLE) at raster
-                 * time, so neither sum needs summing or clamping here. This
-                 * also fixes an accuracy issue the old combined-sum had:
-                 * specular no longer gets multiplied by the surface texture
-                 * when the two are later modulated together in hardware —
-                 * oargb is added post-modulate. */
+                 * time, so neither sum needs summing or clamping here.
+                 * Keeping them separate also means specular is added
+                 * post-texture-modulate (oargb is applied after the base color
+                 * is modulated by the texture), so it isn't tinted by the
+                 * surface texture. */
                 float total_r = br * ambient_[0];
                 float total_g = bg * ambient_[1];
                 float total_b = bb * ambient_[2];
@@ -1155,21 +1279,25 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                         Lx = lights_[li].position[0] - pos_ex;
                         Ly = lights_[li].position[1] - pos_ey;
                         Lz = lights_[li].position[2] - pos_ez;
-                        float l_sq = shz_mag_sqr3f(Lx, Ly, Lz);
+                        float l_sq = Lx*Lx + Ly*Ly + Lz*Lz;
                         if(l_sq > 1e-8f) {
                             float inv = shz_inv_sqrtf_fsrra(l_sq);
                             float dist = l_sq * inv;
                             Lx *= inv; Ly *= inv; Lz *= inv;
-                            att = 1.0f - dist / (lights_[li].range + 1e-8f);
-                            if(att < 0.0f) att = 0.0f;
+                            /* inv_range is constant per light, so this replaces
+                             * a per-vertex divide with a multiply. */
+                            att = 1.0f - dist * lights_[li].inv_range;
+                            /* Out of range: the whole light contributes nothing,
+                             * so skip all of its per-vertex shading work. */
+                            if(att <= 0.0f) continue;
                         }
                     }
 
-                    float NdotL = shz_dot6f(Nx, Ny, Nz, Lx, Ly, Lz);
+                    float NdotL = Nx*Lx + Ny*Ly + Nz*Lz;
                     if(NdotL <= 0.0f) continue;
 
                     float Hx = Lx + Vx, Hy = Ly + Vy, Hz = Lz + Vz;
-                    float h_sq = shz_mag_sqr3f(Hx, Hy, Hz);
+                    float h_sq = Hx*Hx + Hy*Hy + Hz*Hz;
                     if(h_sq > 1e-8f) {
                         float inv = shz_inv_sqrtf_fsrra(h_sq);
                         Hx *= inv; Hy *= inv; Hz *= inv;
@@ -1185,20 +1313,28 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     float Fg = F0_g + (1.0f - F0_g) * pow5;
                     float Fb = F0_b + (1.0f - F0_b) * pow5;
 
-                    float kD_r = (1.0f - Fr) * nm;
-                    float kD_g = (1.0f - Fg) * nm;
-                    float kD_b = (1.0f - Fb) * nm;
+                    float kD_r, kD_g, kD_b;
+                    if(metallic_zero) {
+                        kD_r = 1.0f - Fr;
+                        kD_g = 1.0f - Fg;
+                        kD_b = 1.0f - Fb;
+                    } else {
+                        kD_r = (1.0f - Fr) * nm;
+                        kD_g = (1.0f - Fg) * nm;
+                        kD_b = (1.0f - Fb) * nm;
+                    }
 
                     float d = NdotH * NdotH * (roughness_alphaSq - 1.0f) + 1.0f;
-                    float D = roughness_alphaSq / (d * d + 1e-7f);
+                    float D = roughness_alphaSq * shz_invf_fsrra(d * d + 1e-7f);
 
-                    float GV = NdotV / (NdotV * (1.0f - k) + k);
-                    float GL = NdotL / (NdotL * (1.0f - k) + k + 1e-7f);
-                    float G  = GV * GL;
-
-                    float denom = 4.0f * NdotV * NdotL;
-                    if(denom < 0.0001f) denom = 0.0001f;
-                    float spec = D * G / denom;
+                    /* Smith Schlick-GGX combined with the Cook-Torrance
+                     * 1/(4 NdotV NdotL) denominator. The NdotV/NdotL
+                     * numerators in GV/GL cancel those denominators exactly,
+                     * so the whole thing collapses to one reciprocal of the
+                     * two k-terms — no G, no denom, no divide. */
+                    float nv_term = NdotV * (1.0f - k) + k;
+                    float nl_term = NdotL * (1.0f - k) + k + 1e-7f;
+                    float spec = D * 0.25f * shz_invf_fsrra(nv_term * nl_term);
 
                     float scale = NdotL * lights_[li].intensity * att;
                     float light_r = scale * lights_[li].color[0];
@@ -1243,54 +1379,30 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                            float r, float g, float b, float a,
                            float sr, float sg, float sb,
                            bool is_last) {
-        pvr_vertex_type5_t vert;
+        pvr_vertex_packed_t vert;
         vert.flags = is_last ? PVR_CMD_VERTEX_EOL : PVR_CMD_VERTEX;
         vert.x = sx;
         vert.y = sy;
         vert.z = sz;
         vert.u = u;
         vert.v = v;
-        vert._pad0 = 0;
-        vert._pad1 = 0;
-        vert.base_a = a;
-        vert.base_r = r;
-        vert.base_g = g;
-        vert.base_b = b;
+
+        /* Clamp before quantizing: the PVR's color clamp only applies to
+         * float-color vertices, and a value >1 would wrap in the uint8
+         * conversion (e.g. 1.2 -> 50) producing wildly wrong colors.
+         * Lighting/specular routinely exceed 1.0. */
+        vert.argb = PVR_PACK_COLOR(
+            pvr_clamp01(a), pvr_clamp01(r), pvr_clamp01(g), pvr_clamp01(b));
+
         /* Offset alpha is ignored by the PVR's oargb unit — only rgb is
          * added to the post-texture-modulate color. */
-        vert.offset_a = 0.0f;
-        vert.offset_r = sr;
-        vert.offset_g = sg;
-        vert.offset_b = sb;
+        vert.oargb = PVR_PACK_COLOR(
+            1.0f, pvr_clamp01(sr), pvr_clamp01(sg), pvr_clamp01(sb));
 
-        if(renderer_->current_list_type_ == PVR_LIST_OP_POLY) {
-            /* Submit 64-byte Type 5 vertex via direct rendering (two 32-byte writes) */
-            pvr_vertex_t* dest1 = static_cast<pvr_vertex_t*>(pvr_dr_target(renderer_->dr_state_));
-            *((uint32_t*)dest1 + 0) = vert.flags;
-            *((float*)dest1 + 1) = vert.x;
-            *((float*)dest1 + 2) = vert.y;
-            *((float*)dest1 + 3) = vert.z;
-            *((float*)dest1 + 4) = vert.u;
-            *((float*)dest1 + 5) = vert.v;
-            *((uint32_t*)dest1 + 6) = 0;  /* padding */
-            *((uint32_t*)dest1 + 7) = 0;  /* padding */
-            pvr_dr_commit(dest1);
-
-            pvr_vertex_t* dest2 = static_cast<pvr_vertex_t*>(pvr_dr_target(renderer_->dr_state_));
-            *((float*)dest2 + 0) = vert.base_a;
-            *((float*)dest2 + 1) = vert.base_r;
-            *((float*)dest2 + 2) = vert.base_g;
-            *((float*)dest2 + 3) = vert.base_b;
-            *((float*)dest2 + 4) = vert.offset_a;
-            *((float*)dest2 + 5) = vert.offset_r;
-            *((float*)dest2 + 6) = vert.offset_g;
-            *((float*)dest2 + 7) = vert.offset_b;
-            pvr_dr_commit(dest2);
-        } else {
-            auto& buf = renderer_->buffer(renderer_->current_list_type_).buffers[renderer_->current_buffer_index_];
-            const uint8_t* vert_bytes = reinterpret_cast<const uint8_t*>(&vert);
-            buf.insert(buf.end(), vert_bytes, vert_bytes + sizeof(pvr_vertex_type5_t));
-        }
+        /* All lists (including OP_POLY) share submit_bytes, so only a list
+         * that has been promoted is ever opened mid-frame. See the promotion
+         * comment above. */
+        submit_bytes(&vert, sizeof(vert));
     };
 
     /* Viewport transform + perspective divide of a clip-space vertex.
@@ -1596,7 +1708,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         auto& buf = renderer_->buffer(renderer_->current_list_type_)
                         .buffers[renderer_->current_buffer_index_];
         buf.reserve(buf.size() +
-                    (vfactor * prim_verts + 8) * sizeof(pvr_vertex_type5_t));
+                    (vfactor * prim_verts + 8) * sizeof(pvr_vertex_packed_t));
     }
 
     if(renderable->index_element_count > 0 && renderable->index_data) {
@@ -1606,6 +1718,29 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         auto icount = renderable->index_element_count;
         const uint8_t* index_ptr = idata->data();
 
+        /* Fast path for the common case: 16-bit independent triangles (the
+         * level and most meshes). Resolving the index width once here avoids
+         * branching on the index type for every index fetched below. */
+        if(itype == INDEX_TYPE_16_BIT &&
+           renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES) {
+            const uint16_t* idx = (const uint16_t*) index_ptr;
+            if(icount == 0) return;
+
+            uint32_t base = 0xFFFFFFFFu, high = 0;
+            for(std::size_t i = 0; i < icount; ++i) {
+                const uint32_t v = idx[i];
+                if(v < base) base = v;
+                if(v > high) high = v;
+            }
+            transform_batch(base, high - base + 1);
+
+            for(std::size_t i = 0; i + 2 < icount; i += 3) {
+                const ClipVertex& v0 = work_vertices_[idx[i + 0] - base];
+                const ClipVertex& v1 = work_vertices_[idx[i + 1] - base];
+                const ClipVertex& v2 = work_vertices_[idx[i + 2] - base];
+                process_triangle(v0, v1, v2, (i + 5 >= icount));
+            }
+        } else {
         auto get_index = [&](std::size_t i) -> uint32_t {
             switch(itype) {
                 case INDEX_TYPE_8_BIT: return index_ptr[i];
@@ -1678,6 +1813,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 process_line(c0, c1);
             }
         }
+        } /* end generic indexed arrangements */
     } else {
         /* Non-indexed range-based rendering: each range is independent so
          * we transform it as its own batch. */
@@ -1736,6 +1872,24 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     process_line(work_vertices_[i - 1], work_vertices_[i]);
                 }
             }
+        }
+    }
+
+    /* Report polygon throughput for the stats panel / profiling, matching the
+     * GL renderers. Uses the same element/range accounting: for indexed
+     * geometry the index count, otherwise the summed vertex-range counts. */
+    {
+        uint32_t elements = 0;
+        if(renderable->index_element_count) {
+            elements = (uint32_t) renderable->index_element_count;
+        } else {
+            for(std::size_t i = 0; i < renderable->vertex_range_count; ++i) {
+                elements += renderable->vertex_ranges[i].count;
+            }
+        }
+        if(elements) {
+            get_app()->stats->increment_polygons_rendered(
+                renderable->arrangement, elements);
         }
     }
 

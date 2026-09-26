@@ -61,6 +61,10 @@ private:
 friend class PVRRenderQueueVisitor;
     PVRTextureManager texture_manager_;
 
+    /* Created once and reused across frames/layers by
+     * get_render_queue_visitor(). */
+    std::shared_ptr<PVRRenderQueueVisitor> render_queue_visitor_;
+
     pvr_list_type_t current_list_type_ = PVR_LIST_OP_POLY;
     pvr_list_type_t prev_list_type_ = (pvr_list_type_t) -1;
 
@@ -101,7 +105,11 @@ friend class PVRRenderQueueVisitor;
         aligned_vector<uint8_t, 32> buffers[2];
     };
 
-    ListDMABuffer buffers_[4] = {
+    /* One staging buffer per PVR list type, indexed directly by pvr_list_type_t
+     * (PVR_LIST_OP_POLY == 0 .. PVR_LIST_PT_POLY == 4). */
+    static const size_t PVR_LIST_COUNT = 5;
+    ListDMABuffer buffers_[PVR_LIST_COUNT] = {
+        { PVR_LIST_OP_POLY, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } },
         { PVR_LIST_OP_MOD, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } },
         { PVR_LIST_TR_POLY, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } },
         { PVR_LIST_TR_MOD, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } },
@@ -110,10 +118,27 @@ friend class PVRRenderQueueVisitor;
 
     uint8_t current_buffer_index_ = 0;
 
+    /* The single list streamed straight to the TA this frame. All other lists
+     * are RAM-staged and drained in on_post_render. A PVR list may only be
+     * opened once per scene, so the direct list is chosen and opened exactly
+     * once, at the start of the first traversal. Reset every frame. */
+    pvr_list_type_t direct_list_ = (pvr_list_type_t) -1;
+
+    /* A frame can be composed of several layers/pipelines, so the visitor's
+     * start_traversal() runs once per layer. The direct list must be chosen
+     * (and opened) exactly once per frame - on the first layer - because a
+     * PVR list may only be opened once per scene. Subsequent layers simply
+     * submit into the already-open direct list or RAM-buffer the rest. */
+    bool direct_list_chosen_ = false;
+
     ListDMABuffer& buffer(pvr_list_type_t t) {
-        int idx = t;
-        idx--;
+        const size_t idx = (size_t) t;
+        assert(idx < PVR_LIST_COUNT);
         return buffers_[idx];
+    }
+
+    bool is_list_direct(pvr_list_type_t list_type) const {
+        return direct_list_ == list_type;
     }
 
     void ensure_list_opened(pvr_list_type_t list_type);

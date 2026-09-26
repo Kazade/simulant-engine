@@ -18,6 +18,9 @@
 //
 
 #include "render_queue.h"
+#ifdef __DREAMCAST__
+#include <cstdio>
+#endif
 #include "../../assets/material.h"
 #include "../../nodes/actor.h"
 #include "../../nodes/camera.h"
@@ -70,6 +73,11 @@ void RenderQueue::reset(StageNode* stage, RenderGroupFactory* factory, CameraPtr
     render_group_factory_ = factory;
     camera_ = camera;
 
+    if(camera_) {
+        camera_forward_ = camera_->transform->forward();
+        camera_position_ = camera_->transform->position();
+    }
+
     clear();
 }
 
@@ -96,8 +104,7 @@ void RenderQueue::insert_renderable(Renderable&& renderable) {
     auto material = renderable.material;
     assert(material);
 
-    auto plane =
-        Plane(camera_->transform->forward(), camera_->transform->position());
+    auto plane = Plane(camera_forward_, camera_position_);
 
     auto pos = renderable.center;
     auto renderable_dist_to_camera = plane.distance_to(pos);
