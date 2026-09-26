@@ -110,7 +110,7 @@ public:
     void end_drag();
 
 private:
-    enum class Axis { X, Y, Z };
+    enum class Axis { X, Y, Z, ALL };
 
     // The gizmo is always drawn axis-aligned to *world* space, regardless
     // of the target's own orientation (matching the "Global" mode most

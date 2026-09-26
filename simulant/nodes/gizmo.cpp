@@ -46,6 +46,7 @@ const float RING_MAJOR_RADIUS = 1.5f;
 const float RING_MINOR_RADIUS = 0.03f;
 const float SCALE_SHAFT_LENGTH = 1.1f;
 const float SCALE_BOX_SIZE = 0.16f;
+const float SCALE_CENTER_SIZE = 0.22f;
 } // namespace
 
 bool Gizmo::on_create(Params params) {
@@ -88,6 +89,8 @@ Vec3 Gizmo::axis_direction(Axis axis) const {
             return Vec3(0, 1, 0);
         case Axis::Z:
             return Vec3(0, 0, 1);
+        case Axis::ALL:
+            return Vec3();
     }
     return Vec3(0, 1, 0);
 }
@@ -102,6 +105,8 @@ Quaternion Gizmo::axis_orientation(Axis axis) const {
             return Quaternion();
         case Axis::Z:
             return Quaternion(Vec3(1, 0, 0), Degrees(90));
+        case Axis::ALL:
+            return Quaternion();
     }
     return Quaternion();
 }
@@ -114,6 +119,8 @@ Color Gizmo::axis_color(Axis axis) const {
             return Color(0.2f, 0.85f, 0.2f, 1.0f);
         case Axis::Z:
             return Color(0.2f, 0.4f, 0.9f, 1.0f);
+        case Axis::ALL:
+            return Color::white();
     }
     return Color::white();
 }
@@ -225,6 +232,23 @@ void Gizmo::build_scale_handles() {
             {box, axis, SCALE_SHAFT_LENGTH + SCALE_BOX_SIZE * 0.5f,
              orientation});
     }
+
+    // A 4th handle at the gizmo's origin - dragging it scales all three
+    // axes together. White to stand out from the R/G/B per-axis handles,
+    // matching the Blender/Unity/Godot convention for a uniform-scale
+    // handle.
+    auto center_mat = axis_material(axis_color(Axis::ALL));
+
+    auto center_mesh = scene->assets->create_mesh(VertexSpecification::DEFAULT);
+    center_mesh->create_submesh_as_cube("center", center_mat,
+                                        SCALE_CENTER_SIZE);
+    recolor_mesh(center_mesh, axis_color(Axis::ALL));
+
+    auto center = create_child<Actor>(center_mesh);
+    center->set_editor_only(true);
+    disable_shadows(center);
+    scale_handles_.push_back(center);
+    handle_infos_.push_back({center, Axis::ALL, 0.0f, Quaternion()});
 }
 
 void Gizmo::set_mode(GizmoMode mode) {
@@ -251,6 +275,17 @@ void Gizmo::reposition_handles() {
         info.node->transform->set_position(
             origin + axis_direction(info.axis) * info.offset);
         info.node->transform->set_orientation(info.orientation);
+
+        // Handles are ordinary scene children of this (mixin) node, whose
+        // transform is literally the target's - so without this, a
+        // handle's world scale is target_scale * 1 (its own
+        // scale_factor_, left at the default), meaning scaling the
+        // target also visually scaled the gizmo. set_scale() takes an
+        // absolute world-space value, so this pins every handle back to
+        // its fixed authored size (built at a constant world size in
+        // build_translate/rotate/scale_handles()) regardless of the
+        // target's current scale.
+        info.node->transform->set_scale(Vec3(1.0f, 1.0f, 1.0f));
     }
 }
 
@@ -261,6 +296,16 @@ Plane Gizmo::drag_plane(Axis axis, Camera* camera) const {
     if(mode_ == GIZMO_MODE_ROTATE) {
         // The ring handle lies in the plane perpendicular to its axis.
         return Plane(axis_dir, origin);
+    }
+
+    if(axis == Axis::ALL) {
+        // No single axis line for the uniform-scale handle - just
+        // billboard a plane through the origin facing the camera.
+        Vec3 to_camera = camera->transform->position() - origin;
+        if(to_camera.length() < 1e-5f) {
+            to_camera = Vec3(0, 0, 1);
+        }
+        return Plane(to_camera.normalized(), origin);
     }
 
     // Translate/scale: use the plane that contains the axis line and
@@ -342,6 +387,18 @@ smlt::optional<Gizmo::Axis> Gizmo::hit_test(Camera* camera,
     Vec2 origin_2d(origin_screen->x, origin_screen->y);
 
     const float HIT_RADIUS_PX = 14.0f;
+
+    if(mode_ == GIZMO_MODE_SCALE) {
+        // Check the uniform-scale center handle first, before the
+        // per-axis segments (which also start at the origin) - this
+        // gives it priority so there's no ambiguity about which handle
+        // "wins" near the origin.
+        float dist = (screen_point - origin_2d).length();
+        if(dist < HIT_RADIUS_PX) {
+            return smlt::optional<Axis>(Axis::ALL);
+        }
+    }
+
     bool found = false;
     Axis best_axis = Axis::X;
     float best_dist = HIT_RADIUS_PX;
@@ -458,8 +515,25 @@ void Gizmo::update_drag(Camera* camera, const RenderTarget& target,
             break;
         }
         case GIZMO_MODE_SCALE: {
-            float d = delta.dot(axis_dir);
-            float factor = std::max(0.01f, 1.0f + d / SCALE_SHAFT_LENGTH);
+            float factor;
+            if(drag_axis_ == Axis::ALL) {
+                // No single axis to project onto - use the ratio of
+                // current to initial distance from the origin on the
+                // fixed drag plane instead, so dragging away from the
+                // object grows it and dragging toward it shrinks it,
+                // regardless of which direction around the handle the
+                // drag goes.
+                float start_dist =
+                    (drag_start_hit_point_ - drag_start_position_).length();
+                float current_dist =
+                    (hit.value() - drag_start_position_).length();
+                factor = (start_dist < 1e-5f)
+                            ? 1.0f
+                            : std::max(0.01f, current_dist / start_dist);
+            } else {
+                float d = delta.dot(axis_dir);
+                factor = std::max(0.01f, 1.0f + d / SCALE_SHAFT_LENGTH);
+            }
 
             Vec3 new_scale = drag_start_scale_;
             switch(drag_axis_) {
@@ -471,6 +545,9 @@ void Gizmo::update_drag(Camera* camera, const RenderTarget& target,
                     break;
                 case Axis::Z:
                     new_scale.z = drag_start_scale_.z * factor;
+                    break;
+                case Axis::ALL:
+                    new_scale = drag_start_scale_ * factor;
                     break;
             }
             transform->set_scale(new_scale);
