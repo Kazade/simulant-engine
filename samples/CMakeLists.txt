@@ -12,6 +12,7 @@ SET(SAMPLES
     cave
     anim
     anim_skin
+    benchmark
 )
 
 SET(EXE_EXTENSION ".elf")
