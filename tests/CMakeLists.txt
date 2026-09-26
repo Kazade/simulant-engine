@@ -43,8 +43,11 @@ ENDIF()
 ADD_EXECUTABLE(simulant_tests ${TEST_FILES} ${TEST_SOURCES} ${LIBGL_CONTAINERS} ${CMAKE_CURRENT_BINARY_DIR}/${TEST_MAIN_FILENAME}
     test_gltf.h)
 
-# Copy Lua test scripts from samples/tests/ to the build output directory
-# so tests can read them instead of writing to temp directories (Dreamcast-safe)
+# Copy Lua test scripts from tests/data/ to tests/data/ in the build output
+# directory so tests can read them instead of writing to temp directories
+# (Dreamcast-safe). The tests open them as "tests/data/<name>.lua", so this
+# keeps the same relative layout whether they run from the source root
+# (ctest) or from the build root (CI).
 FILE(GLOB LUA_TEST_SCRIPTS ${CMAKE_SOURCE_DIR}/tests/data/*.lua)
 FOREACH(script ${LUA_TEST_SCRIPTS})
   GET_FILENAME_COMPONENT(filename ${script} NAME)
@@ -52,7 +55,7 @@ FOREACH(script ${LUA_TEST_SCRIPTS})
         TARGET simulant_tests POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${script}
-            ${CMAKE_CURRENT_BINARY_DIR}/${filename}
+            ${CMAKE_CURRENT_BINARY_DIR}/data/${filename}
     )
 ENDFOREACH()
 
