@@ -1008,6 +1008,18 @@ protected:
 
     void on_transformation_change_attempted() override {}
 
+    static bool is_asset_param_type(NodeParamType type) {
+        return type == NODE_PARAM_TYPE_MESH_PTR ||
+               type == NODE_PARAM_TYPE_TEXTURE_PTR ||
+               type == NODE_PARAM_TYPE_PREFAB_PTR;
+    }
+
+    // Loads `path` through the owning scene's assets as the asset kind
+    // `type` names. No value if `type` isn't an asset-pointer type or the
+    // load fails.
+    optional<ParamValue> resolve_asset_param(NodeParamType type,
+                                             const std::string& path);
+
     template<typename N>
     bool clean_params(Params& params) {
         Params cleaned;
@@ -1024,6 +1036,28 @@ protected:
                 }
             } else if(passed) {
                 auto v = params.raw(name).value();
+
+                // Asset-pointer params may arrive as a path string (e.g.
+                // from glTF node extras, where there's no way to encode a
+                // pointer) - load the asset so the node gets a real ref.
+                if(std::holds_alternative<std::string>(v)) {
+                    auto resolved = resolve_asset_param(
+                        param.type(), std::get<std::string>(v));
+                    if(resolved) {
+                        v = resolved.value();
+                    } else if(is_asset_param_type(param.type())) {
+                        // Couldn't load it - treat as not provided, so a
+                        // required param fails creation cleanly.
+                        if(param.is_required() && !param.default_value()) {
+                            return false;
+                        }
+                        if(param.default_value()) {
+                            cleaned.set(name, param.default_value().value());
+                        }
+                        continue;
+                    }
+                }
+
                 cleaned.set(name, v);
             } else {
                 auto v = param.default_value().value();

@@ -275,12 +275,19 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
         node->set_id(new_stage_node_id(type));
     }
 
-    if(!node->init()) {
-        S_ERROR("Failed to initialize node");
-        destructor(node);
+    /* The memory came from node_storage_, so it must go back there (as in
+     * destroy_node()) - not to the system allocator via free(), which
+     * corrupts the heap. */
+    auto release_node_memory = [this](void* mem) {
         if(mem) {
             node_storage_.deallocate(mem);
         }
+    };
+
+    if(!node->init()) {
+        S_ERROR("Failed to initialize node");
+        destructor(node);
+        release_node_memory(mem);
         return nullptr;
     }
 
@@ -292,9 +299,7 @@ StageNode* StageNodeManager::create_node(StageNodeType type,
         S_ERROR("Failed to create the node");
         node->clean_up();
         info->second.destructor(node);
-        if(mem) {
-            node_storage_.deallocate(mem);
-        }
+        release_node_memory(mem);
         return nullptr;
     }
 

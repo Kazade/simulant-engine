@@ -1,6 +1,7 @@
 #include "../application.h"
 #include "../asset_manager.h"
 #include "../nodes/prefab_instance.h"
+#include "../scenes/scene.h"
 #include "../stage.h"
 #include "../window.h"
 #include "camera.h"
@@ -323,6 +324,44 @@ std::size_t StageNode::generate_renderables(batcher::RenderQueue* render_queue,
  * late_update. So we override _destroy here to tell the scene
  * that this node needs proper destroying
  */
+optional<ParamValue> StageNode::resolve_asset_param(NodeParamType type,
+                                                    const std::string& path) {
+    if(!is_asset_param_type(type) || !owner_ || path.empty()) {
+        return no_value;
+    }
+
+    auto assets = owner_->assets.get();
+
+    switch(type) {
+        case NODE_PARAM_TYPE_MESH_PTR: {
+            auto mesh = assets->load_mesh(Path(path));
+            if(mesh) {
+                return ParamValue(MeshRef(mesh));
+            }
+            break;
+        }
+        case NODE_PARAM_TYPE_TEXTURE_PTR: {
+            auto tex = assets->load_texture(Path(path));
+            if(tex) {
+                return ParamValue(TextureRef(tex));
+            }
+            break;
+        }
+        case NODE_PARAM_TYPE_PREFAB_PTR: {
+            auto prefab = assets->load_prefab(Path(path));
+            if(prefab) {
+                return ParamValue(PrefabRef(prefab));
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
+    S_ERROR("Unable to load asset '{0}' for node param", path);
+    return no_value;
+}
+
 void StageNode::finalize_destroy() {
     if(owner_) {
         // Go through the mixins and make sure they're destroyed

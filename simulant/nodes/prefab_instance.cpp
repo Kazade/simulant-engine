@@ -21,10 +21,18 @@ bool PrefabInstance::on_create(Params params) {
     /* Skinning needs no fixup here: any Armature built below owns its own
      * posed output mesh, so instantiating the same animated prefab any
      * number of times is safe. */
-    auto node_map = build_tree(prefab_ptr);
+    instantiate(prefab_ptr, this);
+
+    return StageNode::on_create(params);
+}
+
+std::map<uint32_t, StageNodePtr>
+    PrefabInstance::instantiate(const PrefabPtr& prefab_ptr,
+                                StageNode* parent) {
+    auto node_map = build_tree(prefab_ptr, parent);
 
     if(prefab_ptr->has_animations()) {
-        auto anims = create_mixin<AnimationController>();
+        auto anims = parent->create_mixin<AnimationController>();
 
         auto anim_factory =
             [&](const std::string name,
@@ -36,7 +44,7 @@ bool PrefabInstance::on_create(Params params) {
                     auto id = node_map.at(ch.target.id)->id();
                     Channel channel;
                     channel.path = ch.path;
-                    channel.target = FindDescendentByID(id, this);
+                    channel.target = FindDescendentByID(id, parent);
                     channel.data = ch.data;
                     channel.interpolation = ch.interpolation;
                     anim.channels.push_back(channel);
@@ -48,15 +56,15 @@ bool PrefabInstance::on_create(Params params) {
         prefab_ptr->each_animation(anim_factory);
     }
 
-    return StageNode::on_create(params);
+    return node_map;
 }
 
 std::map<uint32_t, StageNodePtr>
-    PrefabInstance::build_tree(const PrefabPtr& prefab) {
+    PrefabInstance::build_tree(const PrefabPtr& prefab, StageNode* root) {
     std::map<uint32_t, StageNodePtr> node_map;
 
     auto cb = [&](const PrefabKey& key, const PrefabNode& node) {
-        StageNodePtr parent = this;
+        StageNodePtr parent = root;
         if(key.path.size() > 1) {
             // Has a parent
             parent = node_map.at(key.path[key.path.size() - 2]);
@@ -113,9 +121,11 @@ StageNode* PrefabInstance::default_node_factory(StageNode* parent,
                 }
 
                 if(input.params.contains("mesh")) {
-                    mixin_params.set(
-                        "mesh",
-                        input.params.get<MeshRef>("mesh").value_or(MeshPtr()));
+                    // Raw, not get<MeshRef>(): "mesh" may be a path string
+                    // (from glTF extras), which the mixin's clean_params()
+                    // resolves to a loaded mesh.
+                    mixin_params.set("mesh",
+                                     input.params.raw("mesh").value());
                 }
 
                 auto new_mixin = ret->create_mixin(mixin_name, mixin_params);

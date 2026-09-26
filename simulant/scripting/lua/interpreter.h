@@ -422,11 +422,12 @@ public:
     }
 
     void on_load() override {
-        // Instantiate the gltf's own node graph (if any) before running the
-        // script's own on_load, exactly as if it were a PrefabInstance
-        // created first thing in a hand-written C++ Scene::on_load().
+        // Instantiate the gltf's own node graph (if any) directly under
+        // the scene before running the script's own on_load. It's not
+        // wrapped in a PrefabInstance: the nodes belong to this scene
+        // (PrefabInstances are references to *other* gltf files).
         if(prefab_) {
-            create_child<PrefabInstance>(prefab_);
+            PrefabInstance::instantiate(prefab_, this);
         }
 
         // The scene script's own on_load() is game logic (it may create

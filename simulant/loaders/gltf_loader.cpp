@@ -1613,6 +1613,9 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
             armature_node.params.set("rotation", Quaternion());
             armature_node.params.set("scale_factor", Vec3(1, 1, 1));
 
+            /* Loader-invented helper, not a node in the document */
+            armature_node.params.set("s_gltf_synthetic", true);
+
             for(std::size_t i = 0; i < armature.meshes.size(); ++i) {
                 auto key = (i == 0) ? std::string("mesh")
                                     : Armature::extra_mesh_param_prefix() +
@@ -1811,6 +1814,12 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
     prefab_node.params.set("rotation", std::get<1>(trn));
     prefab_node.params.set("scale_factor", std::get<2>(trn));
 
+    /* Record which glTF node this came from, so tooling (e.g. an editor
+     * saving the scene back out) can map live nodes back onto the
+     * document. Reserved key - dropped by clean_params like any other
+     * undeclared param, but kept in StageNode::create_params(). */
+    prefab_node.params.set("s_gltf_node", node_id);
+
     prefab.push_node(prefab_node, parent);
 
     /* glTF 2.1 "Shapes": if this node carries a boundingVolume, spawn the
@@ -1845,6 +1854,9 @@ static bool spawn_node_recursively(Prefab& prefab, int32_t parent, int node_id,
             shape_node.params.set("translation", bv_translation);
             shape_node.params.set("rotation", bv_rotation);
             shape_node.params.set("scale_factor", bv_scale);
+
+            /* Loader-invented helper, not a node in the document */
+            shape_node.params.set("s_gltf_synthetic", true);
 
             prefab.push_node(shape_node, prefab_node.id);
         } else {

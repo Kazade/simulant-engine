@@ -474,7 +474,7 @@ const std::string GLTF_FILE_CYCLE_B = R"(
 // default scene. The single gltf node uses extras.s_node to request the
 // custom Lua node type by name, proving that the stage_node script really
 // is registered (via LuaScene's constructor) before the gltf's own node
-// graph is instantiated as a PrefabInstance. Both scripts are embedded as
+// graph is instantiated under the scene. Both scripts are embedded as
 // base64 data: URIs rather than external .lua files.
 //
 // Decoded scene script:
@@ -815,7 +815,8 @@ public:
     //  - the "stage_node"-type script was registered on the instance
     //    *before* the gltf's node graph is instantiated, since the gltf's
     //    node requests that custom type by name via extras.s_node
-    //  - the gltf's node graph was instantiated as if by a PrefabInstance
+    //  - the gltf's node graph was instantiated directly under the scene,
+    //    not wrapped in a PrefabInstance
     void test_register_scene_from_gltf() {
         auto temp_dir = Path::system_temp_dir();
         auto test_file = temp_dir.append("scene_script.gltf");
@@ -834,7 +835,7 @@ public:
         assert_is_not_null(gltf_scene.get());
 
         // The stage_node script must already be registered by construction
-        // time (before on_load / PrefabInstance creation).
+        // time (before on_load instantiates the gltf's nodes).
         auto maybe_info =
             gltf_scene->registered_stage_node_info("gltf_custom_node");
         assert_true(maybe_info);
@@ -844,15 +845,13 @@ public:
         auto maybe_prefab_info =
             gltf_scene->registered_stage_node_info("prefab_instance");
         assert_true(maybe_prefab_info);
-        assert_equal(1, (int)gltf_scene
+        assert_equal(0, (int)gltf_scene
                              ->nodes_by_type(maybe_prefab_info.value().type)
                              .size());
 
-        auto prefab_instance =
-            gltf_scene->nodes_by_type(maybe_prefab_info.value().type)[0];
-        assert_true(prefab_instance->child_count() > 0);
+        assert_true(gltf_scene->child_count() > 0);
 
-        auto gltf_node = prefab_instance->child_at(0);
+        auto gltf_node = gltf_scene->child_at(0);
         assert_equal(gltf_node->name(), "gltf_root_node");
 
         // Proves the custom stage_node type (requested via extras.s_node)

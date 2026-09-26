@@ -221,6 +221,11 @@ public:
     void destroy_all();
     void clean_destroyed_scenes();
 
+    /* Frees any stage nodes/scenes that have been destroyed. Normally part
+     * of late_update(), but also run when late updates are disabled so
+     * pausing doesn't leak (and keep rendering) destroyed nodes. */
+    void clean_up_destroyed();
+
     bool is_loaded(const std::string& route) const;
     void reset();
 
@@ -345,7 +350,8 @@ public:
      * extension (see GLTFLoader::SceneScriptDef for the JSON shape). The
      * gltf's default scene must declare exactly one script of type "scene"
      * — that script's class is instantiated as the Scene, and the gltf's
-     * own node graph is instantiated inside it as if by a PrefabInstance.
+     * own node graph is instantiated directly under the scene (not
+     * wrapped in a PrefabInstance - see PrefabInstance::instantiate()).
      * Any "stage_node"-type scripts are registered on each scene instance
      * before that happens, so the gltf's nodes can reference them by name.
      * The route name, as with the text-script overloads above, comes from

@@ -51,6 +51,14 @@ void SceneManager::clean_destroyed_scenes() {
     scenes_queued_for_destruction_.clear();
 }
 
+void SceneManager::clean_up_destroyed() {
+    if(active_scene()) {
+        active_scene()->clean_up_destroyed_objects();
+    }
+
+    clean_destroyed_scenes();
+}
+
 void SceneManager::late_update(float dt) {
     auto app = get_app();
     auto window = (app) ? app->window.get() : nullptr;
@@ -62,12 +70,10 @@ void SceneManager::late_update(float dt) {
 
     if(active_scene()) {
         active_scene()->late_update(dt);
-
-        /* Anything destroyed must now be *really* destroyed */
-        active_scene()->clean_up_destroyed_objects();
     }
 
-    clean_destroyed_scenes();
+    /* Anything destroyed must now be *really* destroyed */
+    clean_up_destroyed();
 
     /* Finally, if a scene has been activated, do so! */
     if(scene_activation_trigger_) {
