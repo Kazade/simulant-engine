@@ -29,21 +29,17 @@ uint64_t DreamcastPlatform::available_ram_in_bytes() const {
         set_system_ram();
     }
 
-    struct mallinfo mi = mallinfo();
+    /* The heap grows upward from the end of the static image toward
+     * 0x8d000000. The real headroom is therefore the distance from the
+     * current program break to that ceiling. */
+    uintptr_t brk = (uintptr_t) sbrk(0);
+    const uintptr_t CEILING = 0x8d000000u;
 
-    /* Widen to 64-bit before subtracting - uordblks/stackSize/systemRam are
-     * all 32-bit on this target, and if their sum ever exceeds systemRam
-     * (e.g. because stackSize's estimate of the static image size is off)
-     * a 32-bit subtraction wraps to a huge value instead of going negative,
-     * which then wraps *again* when widened to uint64_t downstream in
-     * used_ram_in_bytes() - producing a nonsensical result that prints as a
-     * large negative "used RAM" figure. Clamp instead. */
-    uint64_t used = (uint64_t)mi.uordblks + (uint64_t)stackSize;
-    if(used >= systemRam) {
+    if(brk >= CEILING) {
         return 0;
     }
 
-    return systemRam - used;
+    return (uint64_t) (CEILING - brk);
 }
 
 uint64_t DreamcastPlatform::total_ram_in_bytes() const {
