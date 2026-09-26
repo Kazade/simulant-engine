@@ -743,6 +743,12 @@ void Application::run_coroutines_and_late_update() {
     update_coroutines();
 
     if(!late_update_enabled()) {
+        // Freeing destroyed nodes is housekeeping, not game logic - still
+        // do it, or anything destroyed while updates are paused (e.g. a
+        // node deleted in an editor) is never freed and keeps rendering.
+        if(scene_manager_) {
+            scene_manager_->clean_up_destroyed();
+        }
         return;
     }
 
