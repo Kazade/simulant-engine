@@ -66,6 +66,7 @@ CounterNode = smlt.define_node("counter_node")
 
 function CounterNode:on_create()
     self.value = 10
+    return true
 end
 
 function CounterNode:bump(n)
