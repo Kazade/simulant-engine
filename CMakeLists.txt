@@ -35,6 +35,7 @@ OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
 OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 OPTION(SIMULANT_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 OPTION(SIMULANT_PROFILE "Force profiling mode" OFF)
+OPTION(SIMULANT_LTO "Enable link-time optimization (disable for accurate gprof)" ON)
 OPTION(SIMULANT_FORCE_VERBOSE_LOGGING "Force verbose logging" OFF)
 OPTION(SIMULANT_CUSTOM_WINDOW "If on, no window subclasses will be included in the build" OFF)
 

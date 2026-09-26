@@ -101,10 +101,8 @@ static void record_thread(uint32_t PC, uint32_t PR) {
     }
 }
 
-/* TMU1 underflow handler: record the interrupted PC. This is a true
- * instantaneous sample of the code that was running, unlike reading another
- * thread's saved context (which is only updated on a context switch and so
- * biases samples towards blocking/scheduling points). */
+/* TMU1 underflow handler: record the interrupted PC, giving an instantaneous
+ * sample of the code that was running. */
 static void sampler_handler(irq_t source, irq_context_t* context, void* data) {
     (void) source;
     (void) data;

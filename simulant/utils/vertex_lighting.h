@@ -14,6 +14,9 @@ struct VertexLightState {
     float color[3]    = {1, 1, 1};
     float intensity   = 1.0f;
     float range       = 100.0f;
+    /* 1 / (range + eps), precomputed once per light per frame so the
+     * per-vertex attenuation is a multiply rather than a divide. */
+    float inv_range   = 0.01f;
 };
 
 /* Compute a PBR-approximate per-vertex colour.

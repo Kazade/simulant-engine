@@ -205,7 +205,7 @@ ENDIF()
 target_link_libraries(simulant PRIVATE sh4zam)
 target_include_directories(simulant PRIVATE ${CMAKE_SOURCE_DIR}/deps/sh4zam/include)
 
-if(FLTO_SUPPORTED)
+if(FLTO_SUPPORTED AND SIMULANT_LTO)
   message(STATUS "IPO / LTO enabled")
   set_property(TARGET simulant PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 else()
