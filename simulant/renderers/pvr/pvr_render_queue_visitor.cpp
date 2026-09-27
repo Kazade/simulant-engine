@@ -574,6 +574,241 @@ struct ClipVertex {
                           * a NaN or similar */
 };
 
+/* ========================================================================
+ * Per-vertex PBR lighting
+ * ======================================================================== */
+
+/* A light, compacted for the per-vertex loop: disabled slots are removed and
+ * all per-light constants are folded in up-front, so the loop never tests
+ * `enabled` or multiplies colour by intensity. */
+struct PackedLight {
+    float v[3];      /* Eye-space position (point) or unit toward-light dir */
+    float col[3];    /* colour × intensity */
+    float inv_range;
+    bool  point;
+};
+
+struct LightingParams {
+    const PackedLight* lights;
+    float ambient[3];
+    float metallic;
+    float nm;         /* 1 - metallic */
+    float a2;         /* GGX alpha² */
+    float k;          /* Schlick-GGX k */
+    float spec_scale; /* a2 / 4 (the Cook-Torrance 1/4) */
+};
+
+/* One light's contribution to a vertex, reduced to scalar weights on the
+ * light's colour. Returning scalars (rather than updating six RGB
+ * accumulators per light) keeps the kernel inside the SH4's 16 FP registers;
+ * light colours are applied once per vertex, after all lights are shaded.
+ *
+ * Dielectric (F0 = 0.04, so Fresnel F is scalar):
+ *   diffuse  += wd · col     wd = s·(1 - F)
+ *   specular += ws · col     ws = s·spec·F
+ * Metallic, with Schlick F_c = F0_c + (1 - F0_c)·f split per channel c:
+ *   diffuse_c  += (1 - F0_c) · wd · col_c         wd = s·nm·(1 - f)
+ *   specular_c += (ws + F0_c · wf) · col_c        ws = s·spec·f
+ *                                                 wf = s·spec·(1 - f) */
+struct LightWeights {
+    float wd, ws, wf;
+};
+
+/* Everything is derived from just two cosines, NdotL and LdotV. With unit L
+ * and V, |L+V|² = 2 + 2·LdotV, so writing t = (1 + LdotV)/2 gives
+ *   HdotV = sqrt(t)
+ *   NdotH = (NdotL + NdotV) / (2·sqrt(t))
+ * and a single FSRRA of t yields both — the half vector is never formed,
+ * normalised, or dotted. */
+template<bool Dielectric>
+static SHZ_FORCE_INLINE LightWeights shade_light(
+        const LightingParams& lp, float NdotL, float LdotV,
+        float NdotV_raw, float nv_term, float s) {
+
+    /* fabs guards FSRRA against t rounding a hair below zero when L ≈ -V. */
+    const float t  = 0.5f + 0.5f * LdotV;
+    const float rt = shz_inv_sqrtf_fsrra(shz_fabsf(t) + 1e-18f);
+    const float HdotV = t * rt;
+    float NdotH = (NdotL + NdotV_raw) * 0.5f * rt;
+    if(NdotH < 0.0f) NdotH = 0.0f;
+
+    const float om = 1.0f - HdotV;
+    float f = om * om; f *= f; f *= om;
+
+    /* GGX D and Smith Schlick-GGX folded with the 1/(4·NdotV·NdotL)
+     * denominator (the numerators cancel), all under one reciprocal:
+     *   spec = a²/4 / ((d² + ε) · nv_term · nl_term)
+     * The reciprocal is taken as FSRRA(x)² rather than FSRRA(x²) so a tiny
+     * x can't underflow. */
+    const float d = NdotH * NdotH * (lp.a2 - 1.0f) + 1.0f;
+    const float nl_term = NdotL * (1.0f - lp.k) + (lp.k + 1e-7f);
+    const float r = shz_inv_sqrtf_fsrra((d * d + 1e-7f) * nv_term * nl_term);
+    const float ss = s * lp.spec_scale * r * r;
+
+    LightWeights w;
+    if(Dielectric) {
+        const float F = 0.04f + 0.96f * f;
+        w.wd = s * (1.0f - F);
+        w.ws = ss * F;
+        w.wf = 0.0f;
+    } else {
+        w.wd = s * lp.nm * (1.0f - f);
+        w.ws = ss * f;
+        w.wf = ss * (1.0f - f);
+    }
+    return w;
+}
+
+/* Lights `count` vertices, reading base colour from cv.r/g/b and writing the
+ * lit diffuse (+ambient) to cv.r/g/b and specular to cv.sr/sg/sb.
+ *
+ * On entry XMTRX must hold the modelview with its (otherwise constant
+ * 0,0,0,1) fourth row replaced by q·M, where q is light 0's eye-space
+ * position or direction. One FTRV then yields both the eye-space vector in
+ * xyz and its dot product with q in w:
+ *   FTRV(p, 1).w = q·P    FTRV(n, 0).w = q·N
+ * which gives light 0's NdotL and LdotV with no further dot products.
+ * Every remaining dot product is a single FIPR. */
+template<bool Dielectric, int NumLights>
+static void light_vertices(const LightingParams& lp, ClipVertex* cv,
+                           const uint8_t* row, uint32_t count, uint32_t stride,
+                           uint32_t pos_offset, uint32_t normal_offset) {
+
+    const PackedLight* lights = lp.lights;
+    const float nv_k = 1.0f - lp.k;
+
+    const uint8_t* pos_row = row + pos_offset;
+    const uint8_t* nrm_row = row + normal_offset;
+
+    for(uint32_t i = 0; i < count; ++i, ++cv, pos_row += stride, nrm_row += stride) {
+        /* Same streaming prefetch as pass 1 — the source rows are re-read
+         * here for normals and eye-space positions. */
+        SHZ_PREFETCH(pos_row + stride * 4);
+        SHZ_PREFETCH(cv + 4);
+
+        const float* p = (const float*)pos_row;
+        const float* n = (const float*)nrm_row;
+
+        /* Unpacked to scalars immediately: left as shz_vec4_t, GCC keeps
+         * the unions in stack memory and round-trips every lane. */
+        const shz_vec4_t Pv = shz_xmtrx_transform_vec4(
+            shz_vec4_init(p[0], p[1], p[2], 1.0f));
+        const float Px = Pv.x, Py = Pv.y, Pz = Pv.z, Pw = Pv.w;
+        const shz_vec4_t Nv = shz_xmtrx_transform_vec4(
+            shz_vec4_init(n[0], n[1], n[2], 0.0f));
+        const float Nx = Nv.x, Ny = Nv.y, Nz = Nv.z, Nw = Nv.w;
+
+        const float NN = shz_mag_sqr3f(Nx, Ny, Nz);
+        const float PP = shz_mag_sqr3f(Px, Py, Pz);
+        const float NP = shz_dot6f(Nx, Ny, Nz, Px, Py, Pz);
+
+        /* N and V (= -P, eye at origin) are never normalised: their
+         * reciprocal lengths are folded into each cosine instead. The bias
+         * keeps FSRRA finite for a zero vector, whose dots are all exactly
+         * zero anyway (so every light is skipped, leaving ambient). */
+        const float invN = shz_inv_sqrtf_fsrra(NN + 1e-18f);
+        const float invV = shz_inv_sqrtf_fsrra(PP + 1e-18f);
+
+        const float NdotV_raw = -NP * invN * invV;
+        const float NdotV = (NdotV_raw < 0.0001f) ? 0.0001f : NdotV_raw;
+        const float nv_term = NdotV * nv_k + lp.k;
+
+        LightWeights w[NumLights];
+
+#pragma GCC unroll 4
+        for(int li = 0; li < NumLights; ++li) {
+            const PackedLight& L = lights[li];
+            w[li].wd = w[li].ws = w[li].wf = 0.0f;
+
+            /* Unnormalised N·L and L·V. */
+            float NL, LV;
+            float invL = 1.0f;
+            float att  = 1.0f;
+
+            if(L.point) {
+                const float lx = L.v[0] - Px;
+                const float ly = L.v[1] - Py;
+                const float lz = L.v[2] - Pz;
+                /* |L|² is taken directly rather than expanded from q·P, which
+                 * would cancel catastrophically for a light close to a vertex
+                 * that is far from the eye. */
+                const float LL = shz_mag_sqr3f(lx, ly, lz);
+                invL = shz_inv_sqrtf_fsrra(LL + 1e-18f);
+                /* inv_range is constant per light, so this is a multiply,
+                 * not a per-vertex divide. */
+                att = 1.0f - LL * invL * L.inv_range;
+                /* Out of range: skip all of this light's shading. Written as
+                 * !(x > 0) so it compiles to a single FCMP/GT. */
+                if(!(att > 0.0f)) continue;
+
+                if(li == 0) {
+                    /* (q - P)·N and (q - P)·(-P) from the FTRV w lanes. */
+                    NL = Nw - NP;
+                    LV = PP - Pw;
+                } else {
+                    NL =  shz_dot6f(Nx, Ny, Nz, lx, ly, lz);
+                    LV = -shz_dot6f(Px, Py, Pz, lx, ly, lz);
+                }
+            } else if(li == 0) {
+                NL =  Nw;
+                LV = -Pw;
+            } else {
+                NL =  shz_dot6f(Nx, Ny, Nz, L.v[0], L.v[1], L.v[2]);
+                LV = -shz_dot6f(Px, Py, Pz, L.v[0], L.v[1], L.v[2]);
+            }
+
+            const float NdotL = NL * invN * invL;
+            if(!(NdotL > 0.0f)) continue;
+            const float LdotV = LV * invL * invV;
+
+            w[li] = shade_light<Dielectric>(lp, NdotL, LdotV, NdotV_raw,
+                                            nv_term, NdotL * att);
+        }
+
+        /* Diffuse (+ambient) and specular are kept separate and submitted
+         * through the vertex's base/offset (oargb) colors respectively — the
+         * PVR's TSP adds them together (and clamps the result, via
+         * PVR_CLRCLAMP_ENABLE) at raster time, so neither sum needs summing
+         * or clamping here. Keeping them separate also means specular is
+         * added post-texture-modulate (oargb is applied after the base color
+         * is modulated by the texture), so it isn't tinted by the surface
+         * texture. */
+        float dr = 0.0f, dg = 0.0f, db = 0.0f;
+        float sr = 0.0f, sg = 0.0f, sb = 0.0f;
+        float fr = 0.0f, fg = 0.0f, fb = 0.0f;
+
+#pragma GCC unroll 4
+        for(int li = 0; li < NumLights; ++li) {
+            const float* c = lights[li].col;
+            dr += w[li].wd * c[0]; dg += w[li].wd * c[1]; db += w[li].wd * c[2];
+            sr += w[li].ws * c[0]; sg += w[li].ws * c[1]; sb += w[li].ws * c[2];
+            if(!Dielectric) {
+                fr += w[li].wf * c[0]; fg += w[li].wf * c[1]; fb += w[li].wf * c[2];
+            }
+        }
+
+        const float br = cv->r, bg = cv->g, bb = cv->b;
+        if(Dielectric) {
+            cv->r = br * (lp.ambient[0] + dr);
+            cv->g = bg * (lp.ambient[1] + dg);
+            cv->b = bb * (lp.ambient[2] + db);
+            cv->sr = sr;
+            cv->sg = sg;
+            cv->sb = sb;
+        } else {
+            const float F0r = 0.04f + (br - 0.04f) * lp.metallic;
+            const float F0g = 0.04f + (bg - 0.04f) * lp.metallic;
+            const float F0b = 0.04f + (bb - 0.04f) * lp.metallic;
+            cv->r = br * (lp.ambient[0] + (1.0f - F0r) * dr);
+            cv->g = bg * (lp.ambient[1] + (1.0f - F0g) * dg);
+            cv->b = bb * (lp.ambient[2] + (1.0f - F0b) * db);
+            cv->sr = sr + F0r * fr;
+            cv->sg = sg + F0g * fg;
+            cv->sb = sb + F0b * fb;
+        }
+    }
+}
+
 /* Check if a vertex is in front of the near plane (visible).
  * In clip space, the near plane is at z = -w for the standard projection. */
 static inline bool is_vertex_visible(const ClipVertex& v) {
@@ -976,7 +1211,10 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             const uint8_t* src = reinterpret_cast<const uint8_t*>(data);
             std::size_t pos = buf.size();
             buf.resize(pos + size);
-            memcpy(&buf[pos], src, size);
+            /* Every submission is a 32-byte header or vertex from a
+             * 32-byte-aligned source, and the staging buffer is a 32-byte
+             * aligned_vector that only ever grows in 32-byte steps. */
+            shz_memcpy32(&buf[pos], src, size);
         }
     };
 
@@ -1183,180 +1421,90 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
         /* ------------------------------------------------------------
          * Pass 2: per-vertex PBR lighting.
-         * Loads modelview into xmtrx so the normal and eye-space
-         * position transforms can also use FTRV.
+         * Loads modelview (with light 0 folded into its spare fourth row)
+         * into xmtrx so the normal and eye-space position transforms can
+         * also use FTRV.
          * ------------------------------------------------------------ */
         if(lighting_enabled) {
-            shz_xmtrx_load_4x4((shz_mat4x4_t*) modelview._native());
+            /* Compact the enabled lights and fold per-light constants. */
+            PackedLight packed[MAX_LIGHTS];
+            int light_count = 0;
+            for(int li = 0; li < MAX_LIGHTS; ++li) {
+                const VertexLightState& ls = lights_[li];
+                if(!ls.enabled) continue;
+                PackedLight& pl = packed[light_count++];
+                pl.point = (ls.position[3] >= 0.5f);
+                const float* v = pl.point ? ls.position : ls.dir;
+                pl.v[0] = v[0]; pl.v[1] = v[1]; pl.v[2] = v[2];
+                pl.col[0] = ls.color[0] * ls.intensity;
+                pl.col[1] = ls.color[1] * ls.intensity;
+                pl.col[2] = ls.color[2] * ls.intensity;
+                pl.inv_range = ls.inv_range;
+            }
 
-            const float roughness_alpha   = mat_roughness_ * mat_roughness_;
-            const float roughness_alphaSq = roughness_alpha * roughness_alpha;
-            const float k                 = roughness_alpha * 0.5f;
-            const float nm                = 1.0f - mat_metallic_;
-            /* Dielectrics (metallic == 0, the common case) have a constant F0
-             * of 0.04 and nm == 1, so the per-vertex F0 blend and the kD scale
-             * can both be skipped. Hoisted here, constant for the whole pass. */
-            const bool metallic_zero = (mat_metallic_ == 0.0f);
+            if(light_count == 0) {
+                /* Ambient only. Specular was already zeroed by pass 1, and
+                 * xmtrx still holds MVP. */
+                for(uint32_t i = 0; i < count; ++i) {
+                    ClipVertex& cv = work_vertices_[i];
+                    cv.r *= ambient_[0];
+                    cv.g *= ambient_[1];
+                    cv.b *= ambient_[2];
+                }
+                return;
+            }
 
+            /* Modelview with its fourth row replaced by q·M (q = light 0's
+             * position or direction) so each FTRV also returns the dot
+             * product with light 0 in w — see light_vertices(). */
+            /* Static rather than a local: shz_memcpy32 allocates whole cache
+             * lines (MOVCA.L) at the destination, so it must be genuinely
+             * 32-byte aligned, and SH4 GCC doesn't reliably honour over-
+             * alignment of stack variables (see Mat4). */
+            alignas(32) static shz_mat4x4_t lm;
+            shz_memcpy32(lm.elem, modelview._native(), sizeof(lm.elem));
+            const float* q = packed[0].v;
+            for(int c = 0; c < 4; ++c) {
+                const float* col = &lm.elem[c * 4];
+                lm.elem[c * 4 + 3] = q[0] * col[0] + q[1] * col[1] + q[2] * col[2];
+            }
+            shz_xmtrx_load_4x4(&lm);
+
+            const float roughness_alpha = mat_roughness_ * mat_roughness_;
+            LightingParams lp;
+            lp.lights     = packed;
+            lp.ambient[0] = ambient_[0];
+            lp.ambient[1] = ambient_[1];
+            lp.ambient[2] = ambient_[2];
+            lp.metallic   = mat_metallic_;
+            lp.nm         = 1.0f - mat_metallic_;
+            lp.a2         = roughness_alpha * roughness_alpha;
+            lp.k          = roughness_alpha * 0.5f;
+            lp.spec_scale = lp.a2 * 0.25f;
+
+            /* Specialised on light count (so light slots unroll and dead
+             * lanes drop out of the register allocation) and on dielectric
+             * materials (metallic == 0, the common case), whose constant F0
+             * of 0.04 makes Fresnel scalar per light. */
+            static_assert(MAX_LIGHTS == 2, "Update the light_vertices dispatch");
             const uint8_t* row = raw_data + stride * base;
-            for(uint32_t i = 0; i < count; ++i) {
-                ClipVertex& cv = work_vertices_[i];
-
-                /* Same streaming prefetch as pass 1 — the source rows are
-                 * re-read here for normals and eye-space positions. */
-                SHZ_PREFETCH(row + stride * 4);
-                SHZ_PREFETCH(&cv + 4);
-
-                /* Recover base colour stashed by pass 1. */
-                const float br = cv.r;
-                const float bg = cv.g;
-                const float bb = cv.b;
-
-                const float* p     = (const float*)(row + pos_offset);
-                const float* n_ptr = (const float*)(row + normal_offset);
-
-                /* Normal × modelview (w=0 drops translation). */
-                shz_vec4_t nv = shz_xmtrx_transform_vec4(
-                    shz_vec4_init(n_ptr[0], n_ptr[1], n_ptr[2], 0.0f));
-                float Nx = nv.x, Ny = nv.y, Nz = nv.z;
-                float n_sq = Nx*Nx + Ny*Ny + Nz*Nz;
-                if(n_sq > 1e-8f) {
-                    float invn = shz_inv_sqrtf_fsrra(n_sq);
-                    Nx *= invn; Ny *= invn; Nz *= invn;
-                }
-
-                /* Position × modelview → eye-space. */
-                shz_vec4_t ev = shz_xmtrx_transform_vec4(
-                    shz_vec4_init(p[0], p[1], p[2], 1.0f));
-                float pos_ex = ev.x, pos_ey = ev.y, pos_ez = ev.z;
-
-                /* View direction (eye at origin in view space). */
-                float Vx = -pos_ex, Vy = -pos_ey, Vz = -pos_ez;
-                float v_mag_sq = Vx*Vx + Vy*Vy + Vz*Vz;
-                if(v_mag_sq > 1e-8f) {
-                    float invv = shz_inv_sqrtf_fsrra(v_mag_sq);
-                    Vx *= invv; Vy *= invv; Vz *= invv;
-                }
-                float NdotV = Nx*Vx + Ny*Vy + Nz*Vz;
-                if(NdotV < 0.0001f) NdotV = 0.0001f;
-
-                float F0_r, F0_g, F0_b;
-                if(metallic_zero) {
-                    F0_r = F0_g = F0_b = 0.04f;
+            const bool dielectric = (mat_metallic_ == 0.0f);
+            if(light_count == 1) {
+                if(dielectric) {
+                    light_vertices<true, 1>(lp, work_vertices_, row, count,
+                                            stride, pos_offset, normal_offset);
                 } else {
-                    F0_r = 0.04f + (br - 0.04f) * mat_metallic_;
-                    F0_g = 0.04f + (bg - 0.04f) * mat_metallic_;
-                    F0_b = 0.04f + (bb - 0.04f) * mat_metallic_;
+                    light_vertices<false, 1>(lp, work_vertices_, row, count,
+                                             stride, pos_offset, normal_offset);
                 }
-
-                /* Diffuse (+ambient) and specular are accumulated separately
-                 * and submitted through the vertex's base/offset (oargb)
-                 * colors respectively — the PVR's TSP adds them together
-                 * (and clamps the result, via PVR_CLRCLAMP_ENABLE) at raster
-                 * time, so neither sum needs summing or clamping here.
-                 * Keeping them separate also means specular is added
-                 * post-texture-modulate (oargb is applied after the base color
-                 * is modulated by the texture), so it isn't tinted by the
-                 * surface texture. */
-                float total_r = br * ambient_[0];
-                float total_g = bg * ambient_[1];
-                float total_b = bb * ambient_[2];
-                float total_sr = 0.0f;
-                float total_sg = 0.0f;
-                float total_sb = 0.0f;
-
-                for(int li = 0; li < MAX_LIGHTS; ++li) {
-                    if(!lights_[li].enabled) continue;
-
-                    float Lx, Ly, Lz;
-                    float att = 1.0f;
-
-                    if(lights_[li].position[3] < 0.5f) {
-                        Lx = lights_[li].dir[0];
-                        Ly = lights_[li].dir[1];
-                        Lz = lights_[li].dir[2];
-                    } else {
-                        Lx = lights_[li].position[0] - pos_ex;
-                        Ly = lights_[li].position[1] - pos_ey;
-                        Lz = lights_[li].position[2] - pos_ez;
-                        float l_sq = Lx*Lx + Ly*Ly + Lz*Lz;
-                        if(l_sq > 1e-8f) {
-                            float inv = shz_inv_sqrtf_fsrra(l_sq);
-                            float dist = l_sq * inv;
-                            Lx *= inv; Ly *= inv; Lz *= inv;
-                            /* inv_range is constant per light, so this replaces
-                             * a per-vertex divide with a multiply. */
-                            att = 1.0f - dist * lights_[li].inv_range;
-                            /* Out of range: the whole light contributes nothing,
-                             * so skip all of its per-vertex shading work. */
-                            if(att <= 0.0f) continue;
-                        }
-                    }
-
-                    float NdotL = Nx*Lx + Ny*Ly + Nz*Lz;
-                    if(NdotL <= 0.0f) continue;
-
-                    float Hx = Lx + Vx, Hy = Ly + Vy, Hz = Lz + Vz;
-                    float h_sq = Hx*Hx + Hy*Hy + Hz*Hz;
-                    if(h_sq > 1e-8f) {
-                        float inv = shz_inv_sqrtf_fsrra(h_sq);
-                        Hx *= inv; Hy *= inv; Hz *= inv;
-                    }
-                    float NdotH = Nx*Hx + Ny*Hy + Nz*Hz;
-                    if(NdotH < 0.0f) NdotH = 0.0f;
-                    float HdotV = Hx*Vx + Hy*Vy + Hz*Vz;
-                    if(HdotV < 0.0f) HdotV = 0.0f;
-
-                    float omHdotV = 1.0f - HdotV;
-                    float pow5 = omHdotV * omHdotV; pow5 *= pow5; pow5 *= omHdotV;
-                    float Fr = F0_r + (1.0f - F0_r) * pow5;
-                    float Fg = F0_g + (1.0f - F0_g) * pow5;
-                    float Fb = F0_b + (1.0f - F0_b) * pow5;
-
-                    float kD_r, kD_g, kD_b;
-                    if(metallic_zero) {
-                        kD_r = 1.0f - Fr;
-                        kD_g = 1.0f - Fg;
-                        kD_b = 1.0f - Fb;
-                    } else {
-                        kD_r = (1.0f - Fr) * nm;
-                        kD_g = (1.0f - Fg) * nm;
-                        kD_b = (1.0f - Fb) * nm;
-                    }
-
-                    float d = NdotH * NdotH * (roughness_alphaSq - 1.0f) + 1.0f;
-                    float D = roughness_alphaSq * shz_invf_fsrra(d * d + 1e-7f);
-
-                    /* Smith Schlick-GGX combined with the Cook-Torrance
-                     * 1/(4 NdotV NdotL) denominator. The NdotV/NdotL
-                     * numerators in GV/GL cancel those denominators exactly,
-                     * so the whole thing collapses to one reciprocal of the
-                     * two k-terms — no G, no denom, no divide. */
-                    float nv_term = NdotV * (1.0f - k) + k;
-                    float nl_term = NdotL * (1.0f - k) + k + 1e-7f;
-                    float spec = D * 0.25f * shz_invf_fsrra(nv_term * nl_term);
-
-                    float scale = NdotL * lights_[li].intensity * att;
-                    float light_r = scale * lights_[li].color[0];
-                    float light_g = scale * lights_[li].color[1];
-                    float light_b = scale * lights_[li].color[2];
-
-                    total_r += kD_r * br * light_r;
-                    total_g += kD_g * bg * light_g;
-                    total_b += kD_b * bb * light_b;
-
-                    total_sr += spec * Fr * light_r;
-                    total_sg += spec * Fg * light_g;
-                    total_sb += spec * Fb * light_b;
+            } else {
+                if(dielectric) {
+                    light_vertices<true, 2>(lp, work_vertices_, row, count,
+                                            stride, pos_offset, normal_offset);
+                } else {
+                    light_vertices<false, 2>(lp, work_vertices_, row, count,
+                                             stride, pos_offset, normal_offset);
                 }
-
-                cv.r = total_r;
-                cv.g = total_g;
-                cv.b = total_b;
-                cv.sr = total_sr;
-                cv.sg = total_sg;
-                cv.sb = total_sb;
-                row += stride;
             }
 
             /* Restore MVP for any subsequent batch. */
