@@ -5,6 +5,7 @@
 #ifdef __DREAMCAST__
 #include <kos.h>
 #include <dc/pvr.h>
+#include <dc/sq.h>
 #include <dc/video.h>
 #include "../../deps/sh4zam/shz_sh4zam.h"
 
@@ -44,7 +45,15 @@ batcher::RenderGroupKey PVRRenderer::prepare_render_group(
 }
 
 std::shared_ptr<batcher::RenderQueueVisitor> PVRRenderer::get_render_queue_visitor(CameraPtr camera) {
-    return std::make_shared<PVRRenderQueueVisitor>(this, camera);
+    /* Reuse a single visitor across frames/layers. It is only ever used
+     * synchronously inside one Compositor::run_layer() call (which holds the
+     * context lock), so there is no aliasing hazard; only the camera changes. */
+    if(!render_queue_visitor_) {
+        render_queue_visitor_ = std::make_shared<PVRRenderQueueVisitor>(this, camera);
+    } else {
+        render_queue_visitor_->set_camera(camera);
+    }
+    return render_queue_visitor_;
 }
 
 void PVRRenderer::init_context() {
@@ -58,16 +67,18 @@ void PVRRenderer::init_context() {
          * OP_MOD is bumped from BINSIZE_0 so cheap-shadow modifier volumes
          * (submitted by ShadowCaster) have somewhere to land. */
         { PVR_BINSIZE_32, PVR_BINSIZE_32, PVR_BINSIZE_32, PVR_BINSIZE_0, PVR_BINSIZE_32 },
-        /* Vertex buffer size. Matched to GLdc's, which is the renderer this
-         * one is compared against for stability. Overrunning it isn't a soft
-         * failure: the TA raises TA_INPUT_OVERFLOW / ISP_OUTOFMEM, stops
-         * draining its input FIFO, and the next store-queue write to the TA
-         * stalls the SH4 on the external bus — a hard lockup on real
-         * hardware that emulators don't reproduce (they don't model the
-         * TA buffer limits). Headroom matters more here than in GLdc
-         * because every vertex we emit is a 64-byte Type 5 float-colour
-         * vertex, twice the size of GLdc's 32-byte packed-colour one. */
-        2560 * 256, /* Vertex buffer size */
+        /* Vertex buffer size. Overrunning it isn't a soft failure: the TA
+         * raises TA_INPUT_OVERFLOW / ISP_OUTOFMEM, stops draining its input
+         * FIFO, and the next store-queue write to the TA stalls the SH4 on the
+         * external bus — a hard lockup on real hardware that emulators don't
+         * reproduce (they don't model the TA buffer limits).
+         *
+         * 2MB: the benchmark's visible level is ~30k vertices (≈55k emitted as
+         * independent triangles) and the TA's internal vertex format is 32
+         * bytes/vertex, so ~1.75MB of vertex buffer is needed to avoid
+         * TA_INPUT_OVERFLOW. This fits inside the 4MB per-frame PVR structure
+         * budget with room left for textures. */
+        2 * 1024 * 1024, /* Vertex buffer size */
         /* DMA is only meaningful when hybrid rendering hands the deferred
          * lists to KOS via pvr_set_vertbuf(); with it off we push every list
          * to the TA through store queues ourselves and never assign a vertex
@@ -163,6 +174,8 @@ void PVRRenderer::pre_render() {
 
     prev_list_type_ = (pvr_list_type_t) -1;
     current_list_type_ = PVR_LIST_OP_POLY;
+    direct_list_ = (pvr_list_type_t) -1;
+    direct_list_chosen_ = false;
 
     /* Force the first poly submitted to each list this frame to send its
      * header — the TA's per-list poly state doesn't persist across
@@ -172,7 +185,10 @@ void PVRRenderer::pre_render() {
         valid = false;
     }
 
-    ensure_list_opened(current_list_type_);
+    /* The direct list is chosen and opened in the visitor's start_traversal(),
+     * after the render queue is built and immediately before any geometry is
+     * submitted. Opening a list mid-submission hard-locks the TA, so no list
+     * is ever opened outside of that single point. */
 #endif
 }
 
@@ -204,17 +220,25 @@ void PVRRenderer::ensure_list_opened(pvr_list_type_t list_type) {
 }
 
 void PVRRenderer::on_post_render() {
-
     // pvr_state is internal, ram_target is 9 uint32_t things in
     uint32_t* ram_target = ((uint32_t*) &pvr_state) + 9;
 
 #ifdef __DREAMCAST__
     if(scene_begun_) {
-        pvr_list_finish();
+        /* Close the direct list if one was opened this frame. */
+        if(prev_list_type_ >= 0) {
+            pvr_list_finish();
+        }
         prev_list_type_ = (pvr_list_type_t) -1;
 
 #if HYBRID_RENDERING_ENABLED
-        for(auto list_type: { PVR_LIST_OP_MOD, PVR_LIST_PT_POLY, PVR_LIST_TR_POLY }) {
+        for(auto list_type: { PVR_LIST_OP_POLY, PVR_LIST_OP_MOD, PVR_LIST_TR_POLY, PVR_LIST_TR_MOD, PVR_LIST_PT_POLY }) {
+            /* The direct list was streamed to the TA during traversal and has
+             * already been closed; it can't (and must not) be reopened. */
+            if(is_list_direct(list_type)) {
+                continue;
+            }
+
             auto& buf = buffer(list_type);
             auto& b = buf.buffers[current_buffer_index_];
             auto count = b.size();
@@ -237,38 +261,43 @@ void PVRRenderer::on_post_render() {
             pvr_vertbuf_written(buf.list_type, count);
         }
 #else
-        /* HYBRID_RENDERING_ENABLED is off: OP_MOD/TR_POLY/PT_POLY are still
-         * buffered in RAM during the frame exactly as above (the visitor
-         * doesn't know or care which flush mechanism is in use), but instead
-         * of handing the buffer to KOS's PVR-DMA machinery (pvr_set_vertbuf +
-         * the automatic DMA-out in pvr_scene_finish), we blast each buffer to
-         * the TA input directly via store queues. */
-        for(auto list_type: { PVR_LIST_OP_MOD, PVR_LIST_PT_POLY, PVR_LIST_TR_POLY }) {
+        /* HYBRID_RENDERING_ENABLED is off: each non-direct list was RAM-
+         * buffered during the frame. Blast each buffer to the TA input via
+         * store queues, one 32-byte transaction at a time. */
+        for(auto list_type: { PVR_LIST_OP_POLY, PVR_LIST_OP_MOD, PVR_LIST_TR_POLY, PVR_LIST_TR_MOD, PVR_LIST_PT_POLY }) {
+            /* The direct list was streamed to the TA during traversal; opening
+             * it again here would be an error. */
+            if(is_list_direct(list_type)) {
+                continue;
+            }
+
             auto& buf = buffer(list_type);
             auto& b = buf.buffers[current_buffer_index_];
 
-            pvr_list_begin(list_type);
-            /* Re-arm the store queues: the pvr_list_finish() that closed the
-             * previous list released them via pvr_dr_finish(). See
-             * ensure_list_opened(). */
-            pvr_dr_init(&dr_state_);
-
-            for(size_t offset = 0; offset < b.size(); offset += 32) {
-                void* dest = pvr_dr_target(dr_state_);
-                shz_memcpy32(dest, &b[offset], 32);
-                pvr_dr_commit(dest);
+            if(b.empty()) {
+                continue;
             }
+
+            pvr_list_begin(list_type);
+            /* Whole buffer in one SQ burst: shz_sq_memcpy32() stores 32-byte
+             * blocks back-to-back with a single FSCHG and flushes as it goes,
+             * rather than one cache-backed copy + commit per vertex. */
+            shz_sq_memcpy32(SQ_MASK_DEST((void*) PVR_TA_INPUT), &b[0], b.size());
             pvr_list_finish();
         }
         _S_UNUSED(ram_target);
 #endif
 
         S_VERBOSE("Finishing scene");
-
         pvr_scene_finish();
 
+        /* Clear both staging sets. We clear every frame anyway, so retaining
+         * the alternate set just doubles peak staging memory - fatal on a
+         * 16MB machine with multi-megabyte lists. (The double buffer only
+         * existed for the hybrid/DMA path where KOS owns both sets.) */
         for(auto& buf: buffers_) {
-            buf.buffers[current_buffer_index_].clear();
+            buf.buffers[0].clear();
+            buf.buffers[1].clear();
         }
 
         scene_begun_ = false;

@@ -186,6 +186,11 @@ private:
     RenderGroupFactory* render_group_factory_ = nullptr;
     CameraPtr camera_;
 
+    /* Camera basis captured once per traversal so insert_renderable() doesn't
+     * re-derive the transform for every renderable. */
+    Vec3 camera_forward_;
+    Vec3 camera_position_;
+
     /* Flat storage — pushed in arbitrary order, sorted at traverse time.
      * Avoids per-frame BST rebuild. */
     std::vector<std::pair<RenderGroup, Renderable>> render_queue_;

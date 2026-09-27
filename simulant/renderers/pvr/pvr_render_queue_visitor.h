@@ -17,6 +17,12 @@ class PVRRenderQueueVisitor : public batcher::RenderQueueVisitor {
 public:
     PVRRenderQueueVisitor(PVRRenderer* renderer, CameraPtr camera);
 
+    /* The renderer keeps one visitor alive and re-points it at the current
+     * camera each layer, rather than constructing/destroying one per frame. */
+    void set_camera(CameraPtr camera) {
+        camera_ = camera;
+    }
+
     void start_traversal(const batcher::RenderQueue& queue,
                          uint64_t frame_id,
                          StageNode* stage_node) override;

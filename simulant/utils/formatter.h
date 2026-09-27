@@ -37,6 +37,18 @@ private:
         return _format(str, c, (int16_t) v, std::forward<Args>(args)...);
     }
 
+    /* std::ostream streams unsigned char as a character, but uint8_t is
+     * overwhelmingly used as a small integer (light index, channel value,
+     * etc.) so promote it to a real integer here. Without this, formatting a
+     * uint8_t produced a raw byte - which silently broke indexed uniform
+     * names such as "s_light_position[1]" and left the renderer only ever
+     * applying light 0. */
+    template<typename... Args>
+    std::string _format(const std::string& str, int c, uint8_t v,
+                        Args&&... args) {
+        return _format(str, c, (unsigned int) v, std::forward<Args>(args)...);
+    }
+
     template<typename T, typename... Args>
     std::string _format(const std::string& str, int c, T&& v, Args&&... args) {
         std::stringstream ss;

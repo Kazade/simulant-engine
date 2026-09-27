@@ -100,55 +100,76 @@ batcher::RenderGroupKey GenericRenderer::prepare_render_group(
         renderable->precedence, texture_id);
 }
 
+/* Resolves the per-light uniform locations for `program` once, when the
+ * active program changes, rather than for every renderable. This removes the
+ * per-renderable string formatting, concatenation and hash lookups from the
+ * hot path while still populating every light slot. */
+static void resolve_light_uniform_locations(GPUProgram* program,
+                                            LightUniformLocations& out) {
+    auto resolve = [&](const char* base, int32_t* dst, uint8_t i) {
+        std::string indexed =
+            std::string(base) + "[" + std::to_string(i) + "]";
+        int32_t loc = program->locate_uniform(indexed, true);
+        if(loc < 0 && i == 0) {
+            /* The first light may be declared non-indexed (e.g. the scalar
+             * uniforms in default1). Fall back to the bare name. */
+            loc = program->locate_uniform(std::string(base), true);
+        }
+        dst[i] = loc;
+    };
+
+    for(uint8_t i = 0; i < LightUniformLocations::MAX_LIGHTS; ++i) {
+        resolve(LIGHT_POSITION_PROPERTY, out.position, i);
+        resolve(LIGHT_COLOR_PROPERTY, out.color, i);
+        resolve(LIGHT_INTENSITY_PROPERTY, out.intensity, i);
+        resolve(LIGHT_RANGE_PROPERTY, out.range, i);
+    }
+
+    out.count = program->locate_uniform(LIGHT_COUNT_PROPERTY, true);
+}
+
 void GenericRenderer::set_light_uniforms(const MaterialPass* pass,
-                                         GPUProgram* program, uint8_t light_id,
+                                         GPUProgram* program,
+                                         const LightUniformLocations& locs,
+                                         uint8_t light_id,
                                          const LightPtr light) {
     _S_UNUSED(pass);
 
-    LimitedVector<std::string, 2> suffixes;
-    suffixes.push_back(_F("[{0}]").format(light_id));
-    if(light_id == 0) {
-        suffixes.push_back("");
+    if(light_id >= LightUniformLocations::MAX_LIGHTS) {
+        return;
     }
 
-    for(std::size_t i = 0; i < suffixes.size(); ++i) {
-        auto sfx = suffixes[i];
-        auto pos_loc =
-            program->locate_uniform(LIGHT_POSITION_PROPERTY + sfx, true);
-        if(pos_loc > -1) {
-            auto pos = (light) ? light->transform->position() : Vec3();
-            if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
-                pos = light->direction();
-            }
-            auto vec =
-                (light)
-                    ? Vec4(pos, (light->light_type() == LIGHT_TYPE_DIRECTIONAL)
-                                    ? 0.0
-                                    : 1.0)
-                    : Vec4();
-            program->set_uniform_vec4(pos_loc, vec);
+    const GLint pos_loc = locs.position[light_id];
+    if(pos_loc > -1) {
+        auto pos = (light) ? light->transform->position() : Vec3();
+        if(light && light->light_type() == LIGHT_TYPE_DIRECTIONAL) {
+            pos = light->direction();
         }
+        auto vec =
+            (light)
+                ? Vec4(pos, (light->light_type() == LIGHT_TYPE_DIRECTIONAL)
+                                ? 0.0
+                                : 1.0)
+                : Vec4();
+        program->set_uniform_vec4(pos_loc, vec);
+    }
 
-        auto amb_loc =
-            program->locate_uniform(LIGHT_COLOR_PROPERTY + sfx, true);
-        if(amb_loc > -1) {
-            program->set_uniform_color(amb_loc, (light) ? light->color()
-                                                        : Color::none());
-        }
+    const GLint amb_loc = locs.color[light_id];
+    if(amb_loc > -1) {
+        program->set_uniform_color(amb_loc,
+                                   (light) ? light->color() : Color::none());
+    }
 
-        auto intensity_loc =
-            program->locate_uniform(LIGHT_INTENSITY_PROPERTY + sfx, true);
-        if(intensity_loc > -1) {
-            auto att = (light) ? light->intensity() : 0;
-            program->set_uniform_float(intensity_loc, att);
-        }
+    const GLint intensity_loc = locs.intensity[light_id];
+    if(intensity_loc > -1) {
+        auto att = (light) ? light->intensity() : 0;
+        program->set_uniform_float(intensity_loc, att);
+    }
 
-        auto range_loc =
-            program->locate_uniform(LIGHT_RANGE_PROPERTY + sfx, true);
-        if(range_loc > -1) {
-            auto att = (light) ? light->range() : 0;
-            program->set_uniform_float(range_loc, att);
-        }
+    const GLint range_loc = locs.range[light_id];
+    if(range_loc > -1) {
+        auto att = (light) ? light->range() : 0;
+        program->set_uniform_float(range_loc, att);
     }
 }
 
@@ -498,12 +519,11 @@ void GL2RenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
 void GL2RenderQueueVisitor::apply_lights(const LightPtr* lights,
                                          const uint8_t count) {
     for(std::size_t i = 0; i < count; ++i) {
-        renderer_->set_light_uniforms(pass_, program_, i, lights[i]);
+        renderer_->set_light_uniforms(pass_, program_, light_locs_, i, lights[i]);
     }
 
-    auto m_loc = program_->locate_uniform(LIGHT_COUNT_PROPERTY, true);
-    if(m_loc > -1) {
-        program_->set_uniform_int(m_loc, count);
+    if(light_locs_.count > -1) {
+        program_->set_uniform_int(light_locs_.count, count);
     }
 }
 
@@ -526,6 +546,10 @@ void GL2RenderQueueVisitor::change_material_pass(const MaterialPass* prev,
 
         program_->build();
         program_->activate();
+
+        /* Resolve the light uniform locations once for this program. */
+        light_locs_ = LightUniformLocations();
+        resolve_light_uniform_locations(program_, light_locs_);
     }
 
     if(!program_) {
