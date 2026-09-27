@@ -73,12 +73,11 @@ void PVRRenderer::init_context() {
          * external bus — a hard lockup on real hardware that emulators don't
          * reproduce (they don't model the TA buffer limits).
          *
-         * 2MB: the benchmark's visible level is ~30k vertices (≈55k emitted as
-         * independent triangles) and the TA's internal vertex format is 32
-         * bytes/vertex, so ~1.75MB of vertex buffer is needed to avoid
-         * TA_INPUT_OVERFLOW. This fits inside the 4MB per-frame PVR structure
-         * budget with room left for textures. */
-        2 * 1024 * 1024, /* Vertex buffer size */
+         * Sized from the benchmark's measured hardware peak of 1,438,164
+         * bytes (pvr_get_stats().vtx_buffer_used_max) plus 5% headroom,
+         * leaving the rest of the 4MB per-frame PVR structure budget for
+         * textures. */
+        1475 * 1024, /* Vertex buffer size (1,510,400 bytes) */
         /* DMA is only meaningful when hybrid rendering hands the deferred
          * lists to KOS via pvr_set_vertbuf(); with it off we push every list
          * to the TA through store queues ourselves and never assign a vertex
