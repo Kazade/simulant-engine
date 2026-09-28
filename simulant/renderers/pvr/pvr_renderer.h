@@ -9,9 +9,14 @@
 #endif
 
 /*
- * When enabled OP polys are sent to the PVR via store queues and all other
- * lists are sent over DMA. */
-#define HYBRID_RENDERING_ENABLED 0
+ * When enabled, the single "direct" list chosen each frame (see
+ * PVRRenderQueueVisitor::start_traversal) is still streamed to the TA via
+ * store queues during traversal, but every other list is RAM-staged during
+ * the frame and handed to KOS as a vertex buffer at end-of-frame, so
+ * pvr_scene_finish() DMAs it out instead of us blasting it via store queues
+ * ourselves. When disabled, all lists (direct and staged) go via store
+ * queues and no KOS DMA machinery is used at all. */
+#define HYBRID_RENDERING_ENABLED 1
 
 namespace smlt {
 

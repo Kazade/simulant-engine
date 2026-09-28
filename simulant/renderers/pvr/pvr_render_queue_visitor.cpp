@@ -819,14 +819,14 @@ static inline bool is_vertex_visible(const ClipVertex& v) {
  * does *not* filter them out. A single bad source position therefore turns
  * into a lockup, but only on the frames where it happens to straddle the near plane.
  *
- * Written as "inside the bounds" rather than "not outside" so NaN, which
- * compares false against both, is rejected along with Inf. */
+ * fabs (< LIMIT) rejects NaN (fabs(NaN) is NaN, which compares false) and Inf
+ * with a single comparison per component instead of two. */
 static inline bool is_clip_position_valid(float x, float y, float z, float w) {
     const float LIMIT = 1.0e18f;
-    return x > -LIMIT && x < LIMIT &&
-           y > -LIMIT && y < LIMIT &&
-           z > -LIMIT && z < LIMIT &&
-           w > -LIMIT && w < LIMIT;
+    return shz_fabsf(x) < LIMIT &&
+           shz_fabsf(y) < LIMIT &&
+           shz_fabsf(z) < LIMIT &&
+           shz_fabsf(w) < LIMIT;
 }
 
 /* Interpolate between two vertices at the near plane intersection.
@@ -996,7 +996,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         auto to_screen = [&](const ModVtx& v, float& sx, float& sy, float& sz) {
             float w = v.w;
             if(w < FLT_EPSILON) w = FLT_EPSILON; /* defensive; post-clip should be > 0 */
-            float inv_w = shz_invf(w);
+            float inv_w = shz_invf_fsrra(w); /* w >= FLT_EPSILON > 0 */
             sx = (v.x * hw + hw * w) * inv_w;
             sy = (-v.y * hh + hh * w) * inv_w;
             sz = inv_w;
@@ -1557,9 +1557,10 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * Returns screen-space x/y and the 1/w depth the PVR expects. */
     auto clip_to_screen = [&](const ClipVertex& cv,
                               float& sx, float& sy, float& sz) {
-        /* Apply viewport transform (done before perspective divide for PVR) */
-        float vx = cv.x * hw + hw * cv.w;
-        float vy = -cv.y * hh + hh * cv.w;
+        /* Apply viewport transform (done before perspective divide for PVR).
+         * Factored to 1 add + 1 mul per axis rather than 2 muls + 1 add. */
+        float vx = hw * (cv.x + cv.w);
+        float vy = hh * (cv.w - cv.y);
 
         /* Clamp rather than only special-casing exactly zero: a substituted or
          * interpolated vertex can land on a small or negative w, and 1/w for
@@ -1567,7 +1568,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
          * chokes on. Matches the modifier path's to_screen(). */
         float w = cv.w;
         if(w < FLT_EPSILON) w = FLT_EPSILON;
-        float inv_w = shz_invf(w);
+        float inv_w = shz_invf_fsrra(w); /* w >= FLT_EPSILON > 0 */
 
         sx = vx * inv_w;
         sy = vy * inv_w;

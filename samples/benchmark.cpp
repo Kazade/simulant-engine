@@ -1410,9 +1410,6 @@ int main(int argc, char* argv[]) {
     /* Keep the serial console quiet: every log line is a blocking write over
      * the dcload link and badly distorts timing (and the sampling profile). */
     config.log_level = LOG_LEVEL_ERROR;
-    /* Bypass ALdc/OpenAL on Dreamcast: the sound driver's thread has been
-     * implicated in bring-up hangs. */
-    config.development.force_sound_driver = "null";
 #else
     config.log_level = LOG_LEVEL_INFO;
 #endif

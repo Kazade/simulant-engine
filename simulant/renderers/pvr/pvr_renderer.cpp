@@ -188,6 +188,7 @@ void PVRRenderer::pre_render() {
      * after the render queue is built and immediately before any geometry is
      * submitted. Opening a list mid-submission hard-locks the TA, so no list
      * is ever opened outside of that single point. */
+
 #endif
 }
 
@@ -231,7 +232,12 @@ void PVRRenderer::on_post_render() {
         prev_list_type_ = (pvr_list_type_t) -1;
 
 #if HYBRID_RENDERING_ENABLED
-        for(auto list_type: { PVR_LIST_OP_POLY, PVR_LIST_OP_MOD, PVR_LIST_TR_POLY, PVR_LIST_TR_MOD, PVR_LIST_PT_POLY }) {
+        /* PVR_LIST_TR_MOD is excluded: its bin size is PVR_BINSIZE_0 in
+         * init_context() (this engine only ever submits modifier volumes to
+         * OP_MOD - see list_type_for_pass()), so the list is never in
+         * pvr_state.lists_enabled and pvr_set_vertbuf() would assert
+         * ("pvr_state.lists_enabled & BIT(list)" failed at pvr_scene.c). */
+        for(auto list_type: { PVR_LIST_OP_POLY, PVR_LIST_OP_MOD, PVR_LIST_TR_POLY, PVR_LIST_PT_POLY }) {
             /* The direct list was streamed to the TA during traversal and has
              * already been closed; it can't (and must not) be reopened. */
             if(is_list_direct(list_type)) {
@@ -290,14 +296,32 @@ void PVRRenderer::on_post_render() {
         S_VERBOSE("Finishing scene");
         pvr_scene_finish();
 
-        /* Clear both staging sets. We clear every frame anyway, so retaining
-         * the alternate set just doubles peak staging memory - fatal on a
-         * 16MB machine with multi-megabyte lists. (The double buffer only
-         * existed for the hybrid/DMA path where KOS owns both sets.) */
+#if HYBRID_RENDERING_ENABLED
+        /* pvr_scene_finish() just kicked off an asynchronous DMA out of
+         * buffers_[*].buffers[current_buffer_index_] for every non-direct
+         * list; that memory must stay valid (same address, same bytes)
+         * until the transfer drains. clear() on a trivial-type
+         * aligned_vector only resets size, it doesn't deallocate or touch
+         * the bytes, so it's safe to call immediately - the same index
+         * isn't written to again until this buffer comes back around two
+         * frames from now, by which point the DMA is long finished. Leave
+         * the *other* index alone: it's either mid-transfer from last frame
+         * or about to be filled by this frame's traversal. */
+        for(auto& buf: buffers_) {
+            buf.buffers[current_buffer_index_].clear();
+        }
+#else
+        /* Store-queue submission is synchronous - by the time
+         * shz_sq_memcpy32() returns, the data is already flushed to the TA,
+         * so there's no in-flight reader to protect and both staging sets
+         * can be dropped every frame. Retaining the alternate set would
+         * just double peak staging memory - fatal on a 16MB machine with
+         * multi-megabyte lists. */
         for(auto& buf: buffers_) {
             buf.buffers[0].clear();
             buf.buffers[1].clear();
         }
+#endif
 
         scene_begun_ = false;
     }
