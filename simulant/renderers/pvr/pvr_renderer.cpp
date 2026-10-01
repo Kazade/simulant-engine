@@ -35,13 +35,32 @@ batcher::RenderGroupKey PVRRenderer::prepare_render_group(
     const float distance_to_camera,
     uint16_t texture_id) {
 
-    _S_UNUSED(renderable);
-    _S_UNUSED(material_pass);
     _S_UNUSED(group);
 
-    return batcher::generate_render_group_key(
+    auto key = batcher::generate_render_group_key(
         priority, pass_number, is_blended, distance_to_camera,
         renderable->precedence, texture_id);
+
+    /* Opaque geometry: group by material pass instead of sorting by
+     * distance. The PVR is a tile-based deferred renderer, so opaque
+     * hidden-surface removal is per pixel and independent of submission
+     * order; depth order buys nothing, but it interleaves materials - about
+     * every other renderable changed pass, and each change_material_pass()
+     * is a few KB of property lookups and header building that also evicts
+     * the visitor's code from the 8KB instruction cache. The pass's address,
+     * hashed into the 10 bits the distance would have used, puts renderables
+     * sharing a pass next to each other (a collision only costs an extra
+     * pass change).
+     *
+     * Blended geometry keeps the distance order: coplanar translucent
+     * polygons (UI widgets, drawn at one depth and layered by precedence)
+     * are resolved by submission order even with the PVR's per-pixel
+     * autosort. */
+    if(!is_blended) {
+        const uintptr_t a = uintptr_t(material_pass) >> 4;
+        key.s.distance_to_camera = (a ^ (a >> 10) ^ (a >> 20)) & 1023;
+    }
+    return key;
 }
 
 std::shared_ptr<batcher::RenderQueueVisitor> PVRRenderer::get_render_queue_visitor(CameraPtr camera) {

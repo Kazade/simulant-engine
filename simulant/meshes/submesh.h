@@ -154,6 +154,18 @@ private:
      * there's a fast lookup for each submesh */
     AABB bounds_;
 
+    /* Sorted, de-duplicated vertex indices referenced by index_data_. Built
+     * the second time the bounds are recalculated (i.e. once the vertex data
+     * is evidently being updated repeatedly, e.g. by skinning) so that
+     * later recalculations visit each vertex once rather than once per
+     * index. Cleared whenever the index data changes. */
+    std::vector<uint32_t> bounds_indices_;
+    uint8_t bounds_recalc_count_ = 0;
+    void _invalidate_bounds_indices() {
+        bounds_indices_.clear();
+        bounds_recalc_count_ = 0;
+    }
+
 public:
     S_DEFINE_PROPERTY(mesh, &SubMesh::parent_);
     S_DEFINE_PROPERTY(index_data, &SubMesh::index_data_);

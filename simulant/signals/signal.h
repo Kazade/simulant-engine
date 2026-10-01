@@ -188,6 +188,9 @@ public:
 
     void operator()(Args... args) {
         Link* it = head_;
+        if(!it) {
+            return;     /* nothing to call, and nothing for shrink_to_fit */
+        }
 
         ++iterating_;
         while(it) {
@@ -318,14 +321,23 @@ private:
 template<typename Signature>
 class signal {
 private:
+    /* Created on the first connect. Most signals are never connected - every
+     * stage node has several, emitted every frame - so an unconnected signal
+     * costs neither a heap allocation nor, when emitted, a trip through a
+     * pointer to it. */
     ProtoSignal<Signature>* pimpl_ = nullptr;
+
+    ProtoSignal<Signature>* impl() {
+        if(!pimpl_) {
+            pimpl_ = new ProtoSignal<Signature>();
+        }
+        return pimpl_;
+    }
 
 public:
     typedef std::function<Signature> callback;
 
-    signal() {
-        pimpl_ = new ProtoSignal<Signature>();
-    }
+    signal() {}
 
     ~signal() {
         delete pimpl_;
@@ -333,13 +345,15 @@ public:
 
     template<typename... Args>
     void operator()(Args&&... args) {
-        (*pimpl_)(std::forward<Args>(args)...);
+        if(pimpl_) {
+            (*pimpl_)(std::forward<Args>(args)...);
+        }
     }
 
     /** Connect to the callback, but disconnect after the first call */
     Connection connect_once(const callback& func) {
         std::shared_ptr<Connection> conn = std::make_shared<Connection>();
-        *conn = pimpl_->connect([func, conn]() {
+        *conn = impl()->connect([func, conn]() {
             func();
             conn->disconnect();
         });
@@ -348,11 +362,11 @@ public:
     }
 
     Connection connect(const callback& func) {
-        return pimpl_->connect(func);
+        return impl()->connect(func);
     }
 
     std::size_t connection_count() const {
-        return pimpl_->connection_count();
+        return pimpl_ ? pimpl_->connection_count() : 0;
     }
 };
 
