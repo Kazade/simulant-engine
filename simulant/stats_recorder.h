@@ -44,7 +44,28 @@ public:
         polygons_rendered_ = 0;
     }
 
+    /* The number of polygons `element_count` vertices (or indices) make up
+     * in the given arrangement */
+    static uint32_t polygon_count(MeshArrangement arrangement, uint32_t element_count) {
+        switch(arrangement) {
+            case MESH_ARRANGEMENT_TRIANGLES: return element_count / 3;
+            case MESH_ARRANGEMENT_TRIANGLE_STRIP: return element_count - 2;
+            case MESH_ARRANGEMENT_TRIANGLE_FAN: return element_count - 2;
+            case MESH_ARRANGEMENT_LINES: return element_count / 2;
+            case MESH_ARRANGEMENT_LINE_STRIP: return element_count - 1;
+            case MESH_ARRANGEMENT_QUADS: return element_count / 4;
+        }
+        return 0;
+    }
+
     void increment_polygons_rendered(MeshArrangement arrangement, uint32_t element_count);
+
+    /* For renderers that total up polygon_count() themselves over a pass and
+     * report it once, rather than calling increment_polygons_rendered() for
+     * every renderable. */
+    void add_polygons_rendered(uint32_t count) {
+        polygons_rendered_ += count;
+    }
     uint32_t polygons_rendered() const {
         return polygons_rendered_;
     }

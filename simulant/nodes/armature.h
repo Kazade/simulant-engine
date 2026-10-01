@@ -152,6 +152,7 @@ private:
                                const Mesh::Skin& skin);
 
     void pose_mesh(const SkinnedMesh& entry);
+    void pose_mesh_generic(const SkinnedMesh& entry);
 
     void rebuild_aabb();
 

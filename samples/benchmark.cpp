@@ -157,40 +157,62 @@ void append_box(VertexData* vd, IndexData* id, const Vec3& c, const Vec3& size,
     }
 }
 
-void append_floor_quad(VertexData* vd, IndexData* id, float cx, float cz,
-                       float half, const Color& color, float tile) {
+/* Builds one chunk's floor as a single shared-vertex triangle strip instead
+ * of independent per-cell quads (spike: see if strips actually pay off when
+ * the geometry has genuine cross-primitive vertex reuse, unlike the boxes).
+ * Grid vertex (gx, gz) is the corner shared by up to four cells - the same
+ * corner a per-cell quad's "lower x / lower z" vertex sits at, so the strip
+ * winding below is derived to match append_box's validated non-flip
+ * (v0,v1,v2)+(v0,v2,v3) triangulation exactly (see the winding derivation
+ * in the accompanying commit/PR notes if this ever needs re-deriving).
+ *
+ * Colour is fixed rather than per-cell: a shared corner touches multiple
+ * cells at once, and vertex colour can't hold more than one value, so the
+ * alternating checkerboard tint (a per-cell-only property) is incompatible
+ * with sharing that corner. Traded for a single uniform tint - the average
+ * of the two checker colours - so the floor keeps roughly the same overall
+ * brightness. UV tiles continuously across the whole grid instead of
+ * resetting at each cell boundary; for a seamlessly-tiling texture (which
+ * TEX_TILE assumes) that reads the same as the per-cell version. */
+void append_floor_grid(VertexData* vd, IndexData* id, int x0, int x1,
+                       int z0, int z1, float half, const Color& color,
+                       float tile) {
+    const int w = x1 - x0;
+    const int h = z1 - z0;
+    if(w <= 0 || h <= 0) return;
+
     const uint32_t base = vd->count();
-    const float u = (2.0f * half) / tile;
-    vd->position(Vec3(cx + half, FLOOR_Y, cz - half));
-    vd->normal(Vec3(0, 1, 0));
-    vd->tex_coord0(0, 0);
-    vd->color(color);
-    vd->move_next();
+    const float uv_step = (2.0f * half) / tile;
+    const int stride = w + 1;
 
-    vd->position(Vec3(cx - half, FLOOR_Y, cz - half));
-    vd->normal(Vec3(0, 1, 0));
-    vd->tex_coord0(u, 0);
-    vd->color(color);
-    vd->move_next();
+    for(int gz = z0; gz <= z1; ++gz) {
+        for(int gx = x0; gx <= x1; ++gx) {
+            const Vec3 c = cell_center(gx, gz) - Vec3(half, 0.0f, half);
+            vd->position(Vec3(c.x, FLOOR_Y, c.z));
+            vd->normal(Vec3(0, 1, 0));
+            vd->tex_coord0((gx - x0) * uv_step, (gz - z0) * uv_step);
+            vd->color(color);
+            vd->move_next();
+        }
+    }
 
-    vd->position(Vec3(cx - half, FLOOR_Y, cz + half));
-    vd->normal(Vec3(0, 1, 0));
-    vd->tex_coord0(u, u);
-    vd->color(color);
-    vd->move_next();
+    auto grid_index = [&](int gx, int gz) -> uint32_t {
+        return base + (uint32_t)((gz - z0) * stride + (gx - x0));
+    };
 
-    vd->position(Vec3(cx + half, FLOOR_Y, cz + half));
-    vd->normal(Vec3(0, 1, 0));
-    vd->tex_coord0(0, u);
-    vd->color(color);
-    vd->move_next();
-
-    id->index(base);
-    id->index(base + 1);
-    id->index(base + 2);
-    id->index(base);
-    id->index(base + 2);
-    id->index(base + 3);
+    for(int gz = z0; gz < z1; ++gz) {
+        for(int gx = x0; gx <= x1; ++gx) {
+            id->index(grid_index(gx, gz));
+            id->index(grid_index(gx, gz + 1));
+        }
+        /* Degenerate connector to the next row (skipped after the last -
+         * nothing to connect to). Two zero-area triangles, cheap and
+         * harmless, that keep the whole grid as one continuous strip. */
+        if(gz + 1 < z1) {
+            id->index(grid_index(x1, gz + 1));
+            id->index(grid_index(x0, gz + 1));
+        }
+    }
 }
 
 } // namespace
@@ -517,8 +539,9 @@ private:
                                                 GARBAGE_COLLECT_NEVER);
                 auto wall_sub = mesh->create_submesh("walls", wall_mat,
                                                      INDEX_TYPE_16_BIT);
-                auto floor_sub = mesh->create_submesh("floor", floor_mat,
-                                                      INDEX_TYPE_16_BIT);
+                auto floor_sub = mesh->create_submesh(
+                    "floor", floor_mat, INDEX_TYPE_16_BIT,
+                    MESH_ARRANGEMENT_TRIANGLE_STRIP);
                 VertexData* vd = mesh->vertex_data;
                 IndexData* wid = wall_sub->index_data;
                 IndexData* fid = floor_sub->index_data;
@@ -576,17 +599,12 @@ private:
 
                 const uint32_t after_walls = vd->count();
 
-                for(int z = z0; z < z1; ++z) {
-                    for(int x = x0; x < x1; ++x) {
-                        const Vec3 center = cell_center(x, z);
-                        const bool alt = ((x + z) % 2) == 0;
-                        const Color col =
-                            alt ? Color(1.0f, 1.0f, 1.0f, 1.0f)
-                                : Color(0.72f, 0.78f, 0.88f, 1.0f);
-                        append_floor_quad(vd, fid, center.x, center.z, half,
-                                          col, TEX_TILE);
-                    }
-                }
+                /* Uniform tint - average of the two checker colours the
+                 * per-cell version alternated between. See the comment on
+                 * append_floor_grid for why a shared-vertex grid can't keep
+                 * the per-cell alternation. */
+                append_floor_grid(vd, fid, x0, x1, z0, z1, half,
+                                  Color(0.86f, 0.89f, 0.94f, 1.0f), TEX_TILE);
 
                 vd->done();
                 wid->done();
@@ -1410,9 +1428,6 @@ int main(int argc, char* argv[]) {
     /* Keep the serial console quiet: every log line is a blocking write over
      * the dcload link and badly distorts timing (and the sampling profile). */
     config.log_level = LOG_LEVEL_ERROR;
-    /* Bypass ALdc/OpenAL on Dreamcast: the sound driver's thread has been
-     * implicated in bring-up hangs. */
-    config.development.force_sound_driver = "null";
 #else
     config.log_level = LOG_LEVEL_INFO;
 #endif

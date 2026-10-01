@@ -263,6 +263,11 @@ void PVRRenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
                                            StageNode* stage_node) {
     _S_UNUSED(queue);
     _S_UNUSED(stage_node);
+
+    if(polygons_rendered_) {
+        get_app()->stats->add_polygons_rendered(polygons_rendered_);
+        polygons_rendered_ = 0;
+    }
 }
 
 /* ========================================================================
@@ -572,7 +577,12 @@ struct ClipVertex {
                           * so it never needs summing or clamping here. */
     bool ok;             /* False if the source position transformed to a
                           * a NaN or similar */
-};
+    /* Padded to exactly two cache lines, so pass 1 can claim a vertex's
+     * lines with MOVCA.L instead of reading them from RAM first: the
+     * work array is far bigger than the cache, so every line is cold. */
+    uint8_t pad[11];
+} __attribute__((aligned(32)));
+static_assert(sizeof(ClipVertex) == 64, "ClipVertex should be two cache lines");
 
 /* ========================================================================
  * Per-vertex PBR lighting
@@ -593,218 +603,244 @@ struct LightingParams {
     float ambient[3];
     float metallic;
     float nm;         /* 1 - metallic */
-    float a2;         /* GGX alpha² */
-    float k;          /* Schlick-GGX k */
-    float spec_scale; /* a2 / 4 (the Cook-Torrance 1/4) */
+    float a2;         /* GGX alpha², from which bp_n is derived */
+    float bp_n;       /* Blinn-Phong exponent equivalent to a2 */
+    float bp_nm1;     /* bp_n - 1 */
+    float bp_scale;   /* Blinn-Phong normalisation, (n + 2) / 8 */
 };
 
-/* One light's contribution to a vertex, reduced to scalar weights on the
- * light's colour. Returning scalars (rather than updating six RGB
- * accumulators per light) keeps the kernel inside the SH4's 16 FP registers;
- * light colours are applied once per vertex, after all lights are shaded.
+/* Per-vertex lighting, split into passes that each fit the SH4's 16
+ * single-precision FP registers.
  *
- * Dielectric (F0 = 0.04, so Fresnel F is scalar):
- *   diffuse  += wd · col     wd = s·(1 - F)
- *   specular += ws · col     ws = s·spec·F
- * Metallic, with Schlick F_c = F0_c + (1 - F0_c)·f split per channel c:
- *   diffuse_c  += (1 - F0_c) · wd · col_c         wd = s·nm·(1 - f)
- *   specular_c += (ws + F0_c · wf) · col_c        ws = s·spec·f
- *                                                 wf = s·spec·(1 - f) */
-struct LightWeights {
-    float wd, ws, wf;
+ * The previous single-loop kernel kept eye-space P and N, their reciprocal
+ * lengths, N.V, both lights' constants, per-light weights and nine colour
+ * accumulators live at once. That is far past 16 registers, so GCC reloaded
+ * every loop-invariant value (literal-pool constants, LightingParams and
+ * PackedLight fields) and spilled temporaries on every vertex: of ~400
+ * instructions per vertex only ~90 were lighting math, and because fmov has
+ * no displacement addressing each spill/reload also cost an address
+ * computation.
+ *
+ * Here each batch is processed in windows of LIGHT_WINDOW vertices:
+ *   1. geometry pass - two FTRVs per vertex, writes unit eye-space N, eye
+ *      position, 1/|P| and N.V to a scratch window;
+ *   2. one pass per light - only that light's constants are live, so they
+ *      can sit in registers for the whole pass;
+ *   3. combine pass - folds the accumulated terms into cv's colours.
+ * A window is small enough to stay in the operand cache across all passes,
+ * so revisiting it is cheap. Windowing is safe because a vertex's lighting
+ * depends on nothing but that vertex.
+ *
+ * On entry XMTRX must hold the modelview. Reads base colour from cv.r/g/b,
+ * writes lit diffuse (+ambient) to cv.r/g/b and specular to cv.sr/sg/sb. */
+/* Scratch row per vertex, as a flat float array rather than a struct so
+ * each pass addresses fields by constant offset. 16 floats = 64 bytes, so a
+ * row is exactly two cache lines. The order of the first eight is set by the
+ * geometry pass, which writes them back to front in the order it produces
+ * them. */
+enum : uint32_t {
+    LV_NDOTP,               /* N.P / |P| = -N.V, for the N.H identity */
+    LV_NX, LV_NY, LV_NZ,    /* unit eye-space normal */
+    LV_INVV,                /* 1/|P| */
+    LV_PX, LV_PY, LV_PZ,    /* eye-space position */
+    LV_W,                   /* per light: diffuse weight, specular weight */
+    LV_STRIDE = 16,
+    /* Dielectric combine output, over the weights: lit (ambient + diffuse)
+     * colour factor and specular colour. */
+    LV_DR = LV_W, LV_DG, LV_DB,
+    LV_SR = LV_W + 4, LV_SG, LV_SB
 };
+static_assert(LV_W + 2 * PVRRenderQueueVisitor::MAX_LIGHTS <= LV_STRIDE,
+              "LitVertex row too small");
+static_assert(LV_SB < LV_STRIDE, "LitVertex row too small");
 
-/* Everything is derived from just two cosines, NdotL and LdotV. With unit L
- * and V, |L+V|² = 2 + 2·LdotV, so writing t = (1 + LdotV)/2 gives
- *   HdotV = sqrt(t)
- *   NdotH = (NdotL + NdotV) / (2·sqrt(t))
- * and a single FSRRA of t yields both — the half vector is never formed,
- * normalised, or dotted. */
-template<bool Dielectric>
-static SHZ_FORCE_INLINE LightWeights shade_light(
-        const LightingParams& lp, float NdotL, float LdotV,
-        float NdotV_raw, float nv_term, float s) {
+/* Arguments for the geometry pass in pvr_lighting_sh4.s; layout is fixed by
+ * the assembly. Passed by pointer to keep everything in r4-r7. */
+struct PvrGeomArgs {
+    const uint8_t* pos;
+    const uint8_t* nrm;
+    uint32_t stride;
+    uint32_t n;
+    float* out;
+    float sqrt_eps;
+};
+static_assert(sizeof(PvrGeomArgs) == 24, "PvrGeomArgs layout is fixed by the asm");
+extern "C" void pvr_light_geometry_sh4(const PvrGeomArgs* args);
 
-    /* fabs guards FSRRA against t rounding a hair below zero when L ≈ -V. */
-    const float t  = 0.5f + 0.5f * LdotV;
-    const float rt = shz_inv_sqrtf_fsrra(shz_fabsf(t) + 1e-18f);
-    const float HdotV = t * rt;
-    float NdotH = (NdotL + NdotV_raw) * 0.5f * rt;
-    if(NdotH < 0.0f) NdotH = 0.0f;
-
-    const float om = 1.0f - HdotV;
-    float f = om * om; f *= f; f *= om;
-
-    /* GGX D and Smith Schlick-GGX folded with the 1/(4·NdotV·NdotL)
-     * denominator (the numerators cancel), all under one reciprocal:
-     *   spec = a²/4 / ((d² + ε) · nv_term · nl_term)
-     * The reciprocal is taken as FSRRA(x)² rather than FSRRA(x²) so a tiny
-     * x can't underflow. */
-    const float d = NdotH * NdotH * (lp.a2 - 1.0f) + 1.0f;
-    const float nl_term = NdotL * (1.0f - lp.k) + (lp.k + 1e-7f);
-    const float r = shz_inv_sqrtf_fsrra((d * d + 1e-7f) * nv_term * nl_term);
-    const float ss = s * lp.spec_scale * r * r;
-
-    LightWeights w;
-    if(Dielectric) {
-        const float F = 0.04f + 0.96f * f;
-        w.wd = s * (1.0f - F);
-        w.ws = ss * F;
-        w.wf = 0.0f;
-    } else {
-        w.wd = s * lp.nm * (1.0f - f);
-        w.ws = ss * f;
-        w.wf = ss * (1.0f - f);
-    }
-    return w;
-}
-
-/* Lights `count` vertices, reading base colour from cv.r/g/b and writing the
- * lit diffuse (+ambient) to cv.r/g/b and specular to cv.sr/sg/sb.
+/* One light over a window of scratch rows (pvr_lighting_sh4.s), directional
+ * or point: each writes doubled diffuse and specular weights at w, w + 1 of
+ * each row and uses slots 12-14 as scratch. The point light's attenuation is
+ * 1 - distance / range, clamped at 0. pvr_light_point_sh4 clobbers XMTRX.
+ * tools/sh4_asm/kbench/pointc.cpp keeps the C++ the point kernel replaced,
+ * as its reference.
  *
- * On entry XMTRX must hold the modelview with its (otherwise constant
- * 0,0,0,1) fourth row replaced by q·M, where q is light 0's eye-space
- * position or direction. One FTRV then yields both the eye-space vector in
- * xyz and its dot product with q in w:
- *   FTRV(p, 1).w = q·P    FTRV(n, 0).w = q·N
- * which gives light 0's NdotL and LdotV with no further dot products.
- * Every remaining dot product is a single FIPR. */
+ * Specular is normalised Blinn-Phong rather than GGX + Smith + Fresnel: the
+ * microfacet model needs ~10 constants on top of the light's own and so can
+ * never fit the SH4's 16 FP registers. Per-vertex lighting is
+ * Gouraud-interpolated by the PVR anyway, so the difference in lobe shape is
+ * small. N.H^n uses Schlick's rational approximation x / (n - (n-1)x): one
+ * reciprocal, runtime exponent, no pow. Fresnel is applied at normal
+ * incidence only, in the combine pass, which also makes the light passes
+ * identical for dielectrics and metals. */
+extern "C" void pvr_light_dir_sh4(float* rows, float* w, uint32_t n, const float* k);
+extern "C" void pvr_light_point_sh4(float* rows, float* w, uint32_t n, const float* k);
+
+/* Dielectric combine passes, for one and two lights (pvr_lighting_sh4.s):
+ * replace each row's weights with LV_DR.. and LV_SR... `w` is the first
+ * row's weights. */
+static_assert(LV_W == 8 && LV_DR == 8 && LV_SR == 12 && LV_STRIDE == 16,
+              "Scratch row layout is fixed by the asm");
+extern "C" void pvr_light_combine2_sh4(float* w, uint32_t n);
+extern "C" void pvr_light_combine1_sh4(float* w, uint32_t n);
+
+
+static const uint32_t LIGHT_WINDOW = 32;   /* = XFORM_WINDOW */
+
+
+
+/* Bias that keeps the geometry pass's reciprocal square roots finite for a
+ * zero-length N or P (at the eye): it is added squared, as 1e-18. */
+static const float LIGHT_SQRT_EPS = 1e-9f;
+/* A window's scratch: the lighting rows and the ClipVertex records pass 1
+ * writes, together (4KB), so that the two can never evict each other in
+ * the direct-mapped 16KB operand cache. (Separate arrays aliased every
+ * several windows, and pass 1 and pack then stalled on the cache though
+ * their data was small and nominally resident.) */
+struct WindowScratch {
+    float lit[LIGHT_WINDOW][LV_STRIDE];
+    ClipVertex cv[LIGHT_WINDOW];
+};
+alignas(32) static WindowScratch window_scratch_;
+static float (&lit_window_)[LIGHT_WINDOW][LV_STRIDE] = window_scratch_.lit;
+static ClipVertex (&cv_window_)[LIGHT_WINDOW] = window_scratch_.cv;
+
 template<bool Dielectric, int NumLights>
+__attribute__((noinline))
 static void light_vertices(const LightingParams& lp, ClipVertex* cv,
                            const uint8_t* row, uint32_t count, uint32_t stride,
                            uint32_t pos_offset, uint32_t normal_offset) {
 
-    const PackedLight* lights = lp.lights;
-    const float nv_k = 1.0f - lp.k;
+    /* One window per call: the caller slices batches to at most
+     * XFORM_WINDOW vertices, and the dielectric combine below leaves the
+     * light-colour matrix in XMTRX, so a second geometry pass here would
+     * transform by the wrong matrix. */
+    assert(count <= LIGHT_WINDOW);
+    {
+        const uint32_t start = 0;
+        const uint32_t n = count;
 
-    const uint8_t* pos_row = row + pos_offset;
-    const uint8_t* nrm_row = row + normal_offset;
+        /* 1. Geometry: eye-space P and unit N, 1/|P| and N.V per vertex
+         * (pvr_lighting_sh4.s). XMTRX holds the modelview. */
+        {
+            PvrGeomArgs ga;
+            ga.pos = row + stride * start + pos_offset;
+            ga.nrm = row + stride * start + normal_offset;
+            ga.stride = stride;
+            ga.n = n;
+            ga.out = lit_window_[0];
+            ga.sqrt_eps = LIGHT_SQRT_EPS;
+            pvr_light_geometry_sh4(&ga);
+        }
 
-    for(uint32_t i = 0; i < count; ++i, ++cv, pos_row += stride, nrm_row += stride) {
-        /* Same streaming prefetch as pass 1 — the source rows are re-read
-         * here for normals and eye-space positions. */
-        SHZ_PREFETCH(pos_row + stride * 4);
-        SHZ_PREFETCH(cv + 4);
-
-        const float* p = (const float*)pos_row;
-        const float* n = (const float*)nrm_row;
-
-        /* Unpacked to scalars immediately: left as shz_vec4_t, GCC keeps
-         * the unions in stack memory and round-trips every lane. */
-        const shz_vec4_t Pv = shz_xmtrx_transform_vec4(
-            shz_vec4_init(p[0], p[1], p[2], 1.0f));
-        const float Px = Pv.x, Py = Pv.y, Pz = Pv.z, Pw = Pv.w;
-        const shz_vec4_t Nv = shz_xmtrx_transform_vec4(
-            shz_vec4_init(n[0], n[1], n[2], 0.0f));
-        const float Nx = Nv.x, Ny = Nv.y, Nz = Nv.z, Nw = Nv.w;
-
-        const float NN = shz_mag_sqr3f(Nx, Ny, Nz);
-        const float PP = shz_mag_sqr3f(Px, Py, Pz);
-        const float NP = shz_dot6f(Nx, Ny, Nz, Px, Py, Pz);
-
-        /* N and V (= -P, eye at origin) are never normalised: their
-         * reciprocal lengths are folded into each cosine instead. The bias
-         * keeps FSRRA finite for a zero vector, whose dots are all exactly
-         * zero anyway (so every light is skipped, leaving ambient). */
-        const float invN = shz_inv_sqrtf_fsrra(NN + 1e-18f);
-        const float invV = shz_inv_sqrtf_fsrra(PP + 1e-18f);
-
-        const float NdotV_raw = -NP * invN * invV;
-        const float NdotV = (NdotV_raw < 0.0001f) ? 0.0001f : NdotV_raw;
-        const float nv_term = NdotV * nv_k + lp.k;
-
-        LightWeights w[NumLights];
-
+        /* 2. One pass per light. */
 #pragma GCC unroll 4
         for(int li = 0; li < NumLights; ++li) {
-            const PackedLight& L = lights[li];
-            w[li].wd = w[li].ws = w[li].wf = 0.0f;
-
-            /* Unnormalised N·L and L·V. */
-            float NL, LV;
-            float invL = 1.0f;
-            float att  = 1.0f;
-
+            const PackedLight& L = lp.lights[li];
+            const float sqrt8 = 2.8284271f;
             if(L.point) {
-                const float lx = L.v[0] - Px;
-                const float ly = L.v[1] - Py;
-                const float lz = L.v[2] - Pz;
-                /* |L|² is taken directly rather than expanded from q·P, which
-                 * would cancel catastrophically for a light close to a vertex
-                 * that is far from the eye. */
-                const float LL = shz_mag_sqr3f(lx, ly, lz);
-                invL = shz_inv_sqrtf_fsrra(LL + 1e-18f);
-                /* inv_range is constant per light, so this is a multiply,
-                 * not a per-vertex divide. */
-                att = 1.0f - LL * invL * L.inv_range;
-                /* Out of range: skip all of this light's shading. Written as
-                 * !(x > 0) so it compiles to a single FCMP/GT. */
-                if(!(att > 0.0f)) continue;
-
-                if(li == 0) {
-                    /* (q - P)·N and (q - P)·(-P) from the FTRV w lanes. */
-                    NL = Nw - NP;
-                    LV = PP - Pw;
-                } else {
-                    NL =  shz_dot6f(Nx, Ny, Nz, lx, ly, lz);
-                    LV = -shz_dot6f(Px, Py, Pz, lx, ly, lz);
-                }
-            } else if(li == 0) {
-                NL =  Nw;
-                LV = -Pw;
+                /* pvr_light_point_sh4: see its comment for k. XMTRX takes
+                 * (1, P) to (sqrt_eps, P - Lpos); the geometry pass is done
+                 * with the modelview, and the caller reloads MVP. */
+                alignas(8) float k[22] = {
+                    LIGHT_SQRT_EPS, -L.v[0], -L.v[1], -L.v[2],
+                    0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f,
+                    1.0f + 4e-6f,
+                    L.inv_range * 0.5f,
+                    0.5f,
+                    lp.bp_nm1 / sqrt8,
+                    -lp.bp_n,
+                    lp.bp_scale / sqrt8,
+                };
+                pvr_light_point_sh4(lit_window_[0], lit_window_[0] + LV_W + 2 * li, n, k);
             } else {
-                NL =  shz_dot6f(Nx, Ny, Nz, L.v[0], L.v[1], L.v[2]);
-                LV = -shz_dot6f(Px, Py, Pz, L.v[0], L.v[1], L.v[2]);
-            }
-
-            const float NdotL = NL * invN * invL;
-            if(!(NdotL > 0.0f)) continue;
-            const float LdotV = LV * invL * invV;
-
-            w[li] = shade_light<Dielectric>(lp, NdotL, LdotV, NdotV_raw,
-                                            nv_term, NdotL * att);
-        }
-
-        /* Diffuse (+ambient) and specular are kept separate and submitted
-         * through the vertex's base/offset (oargb) colors respectively — the
-         * PVR's TSP adds them together (and clamps the result, via
-         * PVR_CLRCLAMP_ENABLE) at raster time, so neither sum needs summing
-         * or clamping here. Keeping them separate also means specular is
-         * added post-texture-modulate (oargb is applied after the base color
-         * is modulated by the texture), so it isn't tinted by the surface
-         * texture. */
-        float dr = 0.0f, dg = 0.0f, db = 0.0f;
-        float sr = 0.0f, sg = 0.0f, sb = 0.0f;
-        float fr = 0.0f, fg = 0.0f, fb = 0.0f;
-
-#pragma GCC unroll 4
-        for(int li = 0; li < NumLights; ++li) {
-            const float* c = lights[li].col;
-            dr += w[li].wd * c[0]; dg += w[li].wd * c[1]; db += w[li].wd * c[2];
-            sr += w[li].ws * c[0]; sg += w[li].ws * c[1]; sb += w[li].ws * c[2];
-            if(!Dielectric) {
-                fr += w[li].wf * c[0]; fg += w[li].wf * c[1]; fb += w[li].wf * c[2];
+                /* pvr_light_dir_sh4: see its comment for k. */
+                alignas(8) float k[8] = {
+                    0.0f, -L.v[0], -L.v[1], -L.v[2],
+                    1.0f + 4e-6f,
+                    lp.bp_nm1 / sqrt8,
+                    -lp.bp_n,
+                    lp.bp_scale / sqrt8,
+                };
+                pvr_light_dir_sh4(lit_window_[0], lit_window_[0] + LV_W + 2 * li, n, k);
             }
         }
 
-        const float br = cv->r, bg = cv->g, bb = cv->b;
+        /* 3. Combine: light colours, Fresnel at normal incidence. Dielectrics
+         * write the lit colour factor and specular to the scratch rows, which
+         * pass 1 then applies (see transform_window); metals fold straight
+         * into cv. Diffuse (+ambient) and specular stay separate and go out
+         * through the vertex's base/offset (oargb) colours; the PVR's TSP
+         * adds and clamps them (PVR_CLRCLAMP_ENABLE), and applies specular
+         * after texture modulation so it isn't tinted by the surface. */
         if(Dielectric) {
-            cv->r = br * (lp.ambient[0] + dr);
-            cv->g = bg * (lp.ambient[1] + dg);
-            cv->b = bb * (lp.ambient[2] + db);
-            cv->sr = sr;
-            cv->sg = sg;
-            cv->sb = sb;
+            /* XMTRX is free once the geometry pass is done, so it holds the
+             * combine's constants: column 0 = light 0's colour, column 1 =
+             * light 1's (both pre-scaled by the 0.96 diffuse share of F0 =
+             * 0.04), column 3 = (ambient, 1). Then
+             *   FTRV(wd0, wd1, -, 1) = ambient + 0.96 * sum(wd * colour)
+             *   FTRV(ws0, ws1, -, 0) = 0.96 * sum(ws * colour)
+             * and the specular weights were already scaled by 0.04 / 0.96 in
+             * bp_scale, so the second is exactly the 4% specular. See
+             * pvr_light_combine*_sh4 in pvr_lighting_sh4.s. The caller
+             * reloads MVP afterwards. */
+            alignas(32) static shz_mat4x4_t cm;
+            float* m = cm.elem;
+            for(int col = 0; col < 2; ++col) {
+                const float* lc = (col < NumLights) ? lp.lights[col].col : nullptr;
+                /* x 0.5: the light passes store doubled weights */
+                m[col * 4 + 0] = lc ? lc[0] * 0.48f : 0.0f;
+                m[col * 4 + 1] = lc ? lc[1] * 0.48f : 0.0f;
+                m[col * 4 + 2] = lc ? lc[2] * 0.48f : 0.0f;
+                m[col * 4 + 3] = 0.0f;
+            }
+            m[8] = m[9] = m[10] = m[11] = 0.0f;
+            m[12] = lp.ambient[0]; m[13] = lp.ambient[1]; m[14] = lp.ambient[2];
+            m[15] = 1.0f;
+            shz_xmtrx_load_4x4(&cm);
+
+            if(NumLights > 1) {
+                pvr_light_combine2_sh4(lit_window_[0] + LV_W, n);
+            } else {
+                pvr_light_combine1_sh4(lit_window_[0] + LV_W, n);
+            }
         } else {
-            const float F0r = 0.04f + (br - 0.04f) * lp.metallic;
-            const float F0g = 0.04f + (bg - 0.04f) * lp.metallic;
-            const float F0b = 0.04f + (bb - 0.04f) * lp.metallic;
-            cv->r = br * (lp.ambient[0] + (1.0f - F0r) * dr);
-            cv->g = bg * (lp.ambient[1] + (1.0f - F0g) * dg);
-            cv->b = bb * (lp.ambient[2] + (1.0f - F0b) * db);
-            cv->sr = sr + F0r * fr;
-            cv->sg = sg + F0g * fg;
-            cv->sb = sb + F0b * fb;
+            const float ar = lp.ambient[0], ag = lp.ambient[1], ab = lp.ambient[2];
+            ClipVertex* c = cv + start;
+            for(uint32_t i = 0; i < n; ++i, ++c) {
+                const float* w = lit_window_[i] + LV_W;
+                float dr = 0.0f, dg = 0.0f, db = 0.0f;
+                float sr = 0.0f, sg = 0.0f, sb = 0.0f;
+#pragma GCC unroll 4
+                for(int li = 0; li < NumLights; ++li) {
+                    const float* col = lp.lights[li].col;
+                    /* the light passes store doubled weights */
+                    const float wd = 0.5f * *w++, ws = 0.5f * *w++;
+                    dr += wd * col[0]; dg += wd * col[1]; db += wd * col[2];
+                    sr += ws * col[0]; sg += ws * col[1]; sb += ws * col[2];
+                }
+
+                const float br = c->r, bg = c->g, bb = c->b;
+                const float mt = lp.metallic, nm = lp.nm;
+                const float F0r = 0.04f + (br - 0.04f) * mt;
+                const float F0g = 0.04f + (bg - 0.04f) * mt;
+                const float F0b = 0.04f + (bb - 0.04f) * mt;
+                c->r = br * (ar + nm * (1.0f - F0r) * dr);
+                c->g = bg * (ag + nm * (1.0f - F0g) * dg);
+                c->b = bb * (ab + nm * (1.0f - F0b) * db);
+                c->sr = F0r * sr; c->sg = F0g * sg; c->sb = F0b * sb;
+            }
         }
     }
 }
@@ -819,14 +855,346 @@ static inline bool is_vertex_visible(const ClipVertex& v) {
  * does *not* filter them out. A single bad source position therefore turns
  * into a lockup, but only on the frames where it happens to straddle the near plane.
  *
- * Written as "inside the bounds" rather than "not outside" so NaN, which
- * compares false against both, is rejected along with Inf. */
+ * fabs (< LIMIT) rejects NaN (fabs(NaN) is NaN, which compares false) and Inf
+ * with a single comparison per component instead of two. */
 static inline bool is_clip_position_valid(float x, float y, float z, float w) {
     const float LIMIT = 1.0e18f;
-    return x > -LIMIT && x < LIMIT &&
-           y > -LIMIT && y < LIMIT &&
-           z > -LIMIT && z < LIMIT &&
-           w > -LIMIT && w < LIMIT;
+    return shz_fabsf(x) < LIMIT &&
+           shz_fabsf(y) < LIMIT &&
+           shz_fabsf(z) < LIMIT &&
+           shz_fabsf(w) < LIMIT;
+}
+
+/* Pass 1 of the vertex transform (see transform_window): clip-space
+ * position, UVs and colour for a window of vertices.
+ *
+ * Everything the loop reads is passed in by value and specialised on, so the
+ * loop keeps it in registers: as part of a lambda capturing by reference,
+ * GCC reloaded stride, offsets, the colour format and the material colour
+ * through pointers every vertex, and re-tested the format, at ~180
+ * instructions a vertex. Missing attributes read a static default with a
+ * zero stride instead of branching. */
+enum Pass1Color { P1_COLOR_4F, P1_COLOR_3F, P1_COLOR_4UB_RGBA, P1_COLOR_4UB_BGRA };
+
+struct Pass1Args {
+    const uint8_t* pos; uint32_t pos_stride;
+    const uint8_t* uv; uint32_t uv_stride;
+    const uint8_t* col; uint32_t col_stride;
+    float base[4];          /* material colour, or 1 if the vertex colour replaces it */
+    const float* uvm;       /* affine UV matrix, if UVMat */
+    const float* lit;       /* first scratch row, if Lit (see LV_DR / LV_SR) */
+};
+
+/* Pass 1 in pvr_lighting_sh4.s, for 4F or absent colour and no UV matrix;
+ * layout fixed by the asm. Returns the number of vertices with a non-finite
+ * clip position (ok = false), whose position the caller replaces. */
+struct Pass1AsmArgs {
+    const uint8_t* pos;
+    const uint8_t* uv;
+    const uint8_t* col;
+    const float* lit;       /* D at +0, S at +16 */
+    ClipVertex* out;
+    uint32_t n;
+    int32_t pos_step, uv_step, col_step, lit_step;  /* stride - bytes post-incremented */
+    float material[4];
+    float limit;
+};
+static_assert(sizeof(Pass1AsmArgs) == 60, "Pass1AsmArgs layout is fixed by the asm");
+static_assert(offsetof(ClipVertex, ok) == 52 && sizeof(ClipVertex) == 64,
+              "ClipVertex layout is fixed by the asm");
+extern "C" uint32_t pvr_pass1_sh4(const Pass1AsmArgs* args);
+
+/* A lit row for unlit vertices: D = 1, S = 0. */
+alignas(32) static const float P1_UNLIT_ROW[8] = {1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+
+template<Pass1Color Color, bool Lit, bool UVMat>
+__attribute__((noinline))
+static void pass1_window(const Pass1Args& a, ClipVertex* cv, uint32_t count) {
+    const uint8_t* pos = a.pos;
+    const uint8_t* uv = a.uv;
+    const uint8_t* col = a.col;
+    const uint32_t ps = a.pos_stride, us = a.uv_stride, cs = a.col_stride;
+    const float mr = a.base[0], mg = a.base[1], mb = a.base[2], ma = a.base[3];
+    float m0 = 0, m1 = 0, m2 = 0, m3 = 0, m4 = 0, m5 = 0;
+    if(UVMat) {
+        m0 = a.uvm[0]; m1 = a.uvm[1]; m2 = a.uvm[2];
+        m3 = a.uvm[3]; m4 = a.uvm[4]; m5 = a.uvm[5];
+    }
+    const float* lit = a.lit;
+
+    for(uint32_t i = 0; i < count; ++i, ++cv) {
+        /* Keep the sequential reads ahead of the cache (PREF never faults). */
+        SHZ_PREFETCH(pos + ps * 4);
+
+        const float* p = (const float*) pos;
+        const shz_vec4_t clip = shz_xmtrx_transform_vec4(
+            shz_vec4_init(p[0], p[1], p[2], 1.0f));
+
+        /* Independent work while the FTRV completes. */
+        const float* t = (const float*) uv;
+        float u = t[0], v = t[1];
+        if(UVMat) {
+            const float u0 = u;
+            u = m0 * u0 + m1 * v + m2;
+            v = m3 * u0 + m4 * v + m5;
+        }
+
+        float r, g, b, al;
+        if(Color == P1_COLOR_4F || Color == P1_COLOR_3F) {
+            const float* c = (const float*) col;
+            r = c[0]; g = c[1]; b = c[2];
+            al = (Color == P1_COLOR_4F) ? c[3] : 1.0f;
+        } else {
+            const float k = 1.0f / 255.0f;
+            const float c0 = col[0] * k, c1 = col[1] * k, c2 = col[2] * k;
+            al = col[3] * k;
+            if(Color == P1_COLOR_4UB_RGBA) { r = c0; g = c1; b = c2; }
+            else { r = c2; g = c1; b = c0; }
+        }
+        r *= mr; g *= mg; b *= mb; al *= ma;
+
+        float sr = 0.0f, sg = 0.0f, sb = 0.0f;
+        if(Lit) {
+            r *= lit[LV_DR]; g *= lit[LV_DG]; b *= lit[LV_DB];
+            sr = lit[LV_SR]; sg = lit[LV_SG]; sb = lit[LV_SB];
+            lit += LV_STRIDE;
+        }
+
+        cv->u = u; cv->v = v;
+        cv->r = r; cv->g = g; cv->b = b; cv->a = al;
+        cv->sr = sr; cv->sg = sg; cv->sb = sb;
+
+        if(is_clip_position_valid(clip.x, clip.y, clip.z, clip.w)) {
+            cv->x = clip.x; cv->y = clip.y; cv->z = clip.z; cv->w = clip.w;
+            cv->ok = true;
+        } else {
+            /* Bad vertex position. Swap for a point that is guaranteed to
+             * test as behind the near plane (is_vertex_visible: 0 >= 1 is
+             * false), so it can never be emitted directly, and flag it so
+             * the clip path drops primitives that touch it rather than
+             * interpolating towards it. */
+            cv->x = 0.0f; cv->y = 0.0f; cv->z = 0.0f; cv->w = -1.0f;
+            cv->ok = false;
+        }
+
+        pos += ps; uv += us; col += cs;
+    }
+}
+
+template<Pass1Color Color, bool Lit>
+static void pass1_dispatch_uv(const Pass1Args& a, ClipVertex* cv, uint32_t count) {
+    if(a.uvm) pass1_window<Color, Lit, true>(a, cv, count);
+    else pass1_window<Color, Lit, false>(a, cv, count);
+}
+
+template<Pass1Color Color>
+static void pass1_dispatch_lit(const Pass1Args& a, ClipVertex* cv, uint32_t count) {
+    if(a.lit) pass1_dispatch_uv<Color, true>(a, cv, count);
+    else pass1_dispatch_uv<Color, false>(a, cv, count);
+}
+
+/* After the transform a batch's vertices are packed for submission (see
+ * pvr_pack_sh4), one 32-byte PVR vertex each, in work_ (see do_visit). The
+ * clipping path, which also needs a vertex's clip-space position, works it
+ * out again from the source vertex (see cv_at): it's needed for ~100
+ * triangles a frame, where storing it cost 32 more bytes of cache traffic
+ * per vertex, for every vertex. */
+
+/* Copy a 32-byte packed vertex as four 64-bit FPU moves (FPSCR.SZ=1)
+ * rather than eight 32-bit loads and stores: emission is bound by the
+ * load/store unit, and this halves its slots. `dst` is a store queue or a
+ * claimed cache line; both src and dst are 32-byte aligned. Uses fr0-fr7,
+ * which are caller-saved, and leaves XMTRX (the batch MVP) alone. */
+static SHZ_FORCE_INLINE void copy_vertex32(uint32_t* dst, const void* src) {
+    const void* s = src;
+    uint32_t* d = dst + 8;
+    __asm__ volatile(
+        "fschg\n\t"
+        "fmov @%[s]+, dr0\n\t"
+        "fmov @%[s]+, dr2\n\t"
+        "fmov @%[s]+, dr4\n\t"
+        "fmov @%[s]+, dr6\n\t"
+        "fmov dr6, @-%[d]\n\t"
+        "fmov dr4, @-%[d]\n\t"
+        "fmov dr2, @-%[d]\n\t"
+        "fmov dr0, @-%[d]\n\t"
+        "fschg"
+        : [s] "+r"(s), [d] "+r"(d)
+        : "m"(*(const char(*)[32]) src)
+        : "fr0", "fr1", "fr2", "fr3", "fr4", "fr5", "fr6", "fr7", "memory");
+}
+
+/* Emit one packed vertex to the next store queue (the direct list) or to the
+ * RAM staging cursor. The vertex's flags word is already PVR_CMD_VERTEX
+ * (only vertices that passed pvr_pack_sh4's test are emitted from here), so
+ * only the end of a strip needs its command word replacing. `q` is a local
+ * copy of KOS's pvr_dr_addr (see pvr_dr_target), kept in a register across
+ * the emission loops and written back by the caller. */
+static SHZ_FORCE_INLINE void put_packed_sq(uint32_t& q, const pvr_vertex_packed_t* v,
+                                           bool eol) {
+    q ^= 32;
+    uint32_t* d = reinterpret_cast<uint32_t*>(q);
+    copy_vertex32(d, v);
+    if(eol) d[0] = PVR_CMD_VERTEX_EOL;
+    __asm__ volatile("pref @%0" :: "r"(d) : "memory");
+}
+
+static SHZ_FORCE_INLINE void put_packed_ram(uint8_t*& cur, const pvr_vertex_packed_t* v,
+                                            bool eol) {
+    uint32_t* d = reinterpret_cast<uint32_t*>(cur);
+    /* A whole, cold cache line: claim it rather than read it. */
+    __asm__ volatile("movca.l %1, @%0" :: "r"(d), "z"(0) : "memory");
+    copy_vertex32(d, v);
+    if(eol) d[0] = PVR_CMD_VERTEX_EOL;
+    cur += 32;
+}
+
+/* Independent triangles from packed vertices. Everything the loop touches
+ * is a local, and the packed vertices of a few triangles ahead are
+ * prefetched: for a batch bigger than the cache they are long evicted by
+ * the time the topology walk reaches them. A triangle with any vertex that
+ * can't be submitted as-is (behind the near plane, or non-finite) goes to
+ * `slow`, the clipping path, unless none of them can (nothing to draw); `grow` makes room in the staging buffer. Both
+ * update `dr` / `cur` / `end` themselves, which is why those are
+ * references. */
+template<typename Index, typename Slow, typename Grow>
+__attribute__((noinline))
+static void emit_triangles(Index index, std::size_t ntris, const pvr_vertex_packed_t* pv,
+                           bool direct, uint8_t*& cur, uint8_t*& end,
+                           Slow slow, Grow grow) {
+    const std::size_t AHEAD = 4;
+    uint32_t q = pvr_dr_addr;
+    for(std::size_t t = 0; t < ntris; ++t) {
+        if(t + AHEAD < ntris) {
+            const std::size_t k = (t + AHEAD) * 3;
+            SHZ_PREFETCH(&pv[index(k + 0)]);
+            SHZ_PREFETCH(&pv[index(k + 1)]);
+            SHZ_PREFETCH(&pv[index(k + 2)]);
+        }
+        const uint32_t i0 = index(t * 3 + 0);
+        const uint32_t i1 = index(t * 3 + 1);
+        const uint32_t i2 = index(t * 3 + 2);
+        const pvr_vertex_packed_t* a = &pv[i0];
+        const pvr_vertex_packed_t* b = &pv[i1];
+        const pvr_vertex_packed_t* c = &pv[i2];
+        if(a->flags & b->flags & c->flags) {
+            if(direct) {
+                put_packed_sq(q, a, false);
+                put_packed_sq(q, b, false);
+                put_packed_sq(q, c, true);
+            } else {
+                if(end - cur < 96) grow();
+                put_packed_ram(cur, a, false);
+                put_packed_ram(cur, b, false);
+                put_packed_ram(cur, c, true);
+            }
+        } else if(a->flags | b->flags | c->flags) {
+            /* Partly visible: clip it. */
+            pvr_dr_addr = q;
+            slow(i0, i1, i2);
+            q = pvr_dr_addr;
+        } else {
+        }
+        /* Otherwise every vertex is behind the near plane (or poisoned,
+         * which tests the same) and the clipping path would emit nothing:
+         * skip it rather than unpacking three ClipVertex to find that out. */
+    }
+    pvr_dr_addr = q;
+}
+
+/* Pack a window of transformed vertices into ready-to-submit PVR vertices
+ * (pvr_lighting_sh4.s): screen position (viewport + perspective divide), UV
+ * and clamped, packed base and offset colours. Done once per vertex, while
+ * the window's ClipVertex slots are still in the cache, rather than per
+ * triangle corner at emission - indexed meshes reference each vertex
+ * several times. The flags word is PVR_CMD_VERTEX if the vertex can be
+ * submitted as-is (finite and in front of the near plane) and 0 if not;
+ * emission replaces it with the vertex's real command word, and any
+ * triangle with a 0 goes down the clipping path, which works from the
+ * ClipVertex. Assumes non-negative colours (true of
+ * every colour the transform produces from non-negative material and vertex
+ * colours); a negative channel would spill into its neighbour's byte.
+ * consts = {half width, half height, 127.5, -127.5}. */
+
+
+extern "C" void pvr_pack_sh4(const ClipVertex* in, pvr_vertex_packed_t* out, uint32_t n,
+                             const float* consts);
+static_assert(sizeof(pvr_vertex_packed_t) == 32, "pvr_pack_sh4 writes 32-byte vertices");
+
+/* A triangle strip from packed vertices, as sub-strips: runs of fully
+ * visible triangles stream straight out, and each triangle that isn't
+ * fully visible ends the current sub-strip and, if partly visible, goes to
+ * `slow` (the clipping path) as an independent triangle. Winding: the PVR
+ * flips it for every other triangle of a strip, so a sub-strip starting at
+ * an odd position of the original strip gets a degenerate lead vertex to
+ * restore the parity, and a clipped triangle at an odd position has its
+ * first two vertices swapped. Inside a sub-strip only the newly added
+ * vertex needs a visibility test - the other two were in the previous
+ * (visible) triangle. `count` is the strip's vertex count. */
+template<typename Index, typename Slow, typename Grow>
+__attribute__((noinline))
+static void emit_strip(Index index, std::size_t count, const pvr_vertex_packed_t* pv,
+                       bool direct, uint8_t*& cur, uint8_t*& end,
+                       Slow slow, Grow grow) {
+    if(count < 3) return;
+
+    uint32_t q = pvr_dr_addr;
+    auto put = [&](uint32_t i, bool eol) {
+        if(direct) {
+            put_packed_sq(q, &pv[i], eol);
+        } else {
+            if(end - cur < 32) grow();
+            put_packed_ram(cur, &pv[i], eol);
+        }
+    };
+
+    bool in_strip = false;
+    uint32_t pending = 0;   /* last vertex of the open sub-strip, not yet sent */
+    uint32_t i0 = index(0), i1 = index(1);
+    const std::size_t AHEAD = 8;
+    for(std::size_t pos = 0; pos + 2 < count; ++pos) {
+        if(pos + 2 + AHEAD < count) SHZ_PREFETCH(&pv[index(pos + 2 + AHEAD)]);
+        const uint32_t i2 = index(pos + 2);
+        if(in_strip && pv[i2].flags) {
+            /* Extend: the PVR already has the previous two vertices. */
+            put(pending, false);
+            pending = i2;
+        } else if(!in_strip && (pv[i0].flags & pv[i1].flags & pv[i2].flags)) {
+            /* Start a sub-strip. */
+            if(pos & 1) put(i0, false);
+            put(i0, false);
+            put(i1, false);
+            pending = i2;
+            in_strip = true;
+        } else {
+            /* Clip boundary or fully invisible: end any open sub-strip. */
+            if(in_strip) {
+                put(pending, true);
+                in_strip = false;
+            }
+            /* Partly visible: an individual clipped triangle. Fully
+             * invisible (all behind the near plane): nothing to draw. */
+            if(pv[i0].flags | pv[i1].flags | pv[i2].flags) {
+                pvr_dr_addr = q;
+                if(pos & 1) slow(i1, i0, i2);
+                else        slow(i0, i1, i2);
+                q = pvr_dr_addr;
+            }
+        }
+        i0 = i1;
+        i1 = i2;
+    }
+    if(in_strip) put(pending, true);
+    pvr_dr_addr = q;
+}
+
+static void pass1(const Pass1Args& a, Pass1Color color, ClipVertex* cv, uint32_t count) {
+    switch(color) {
+        case P1_COLOR_4F: pass1_dispatch_lit<P1_COLOR_4F>(a, cv, count); break;
+        case P1_COLOR_3F: pass1_dispatch_lit<P1_COLOR_3F>(a, cv, count); break;
+        case P1_COLOR_4UB_RGBA: pass1_dispatch_lit<P1_COLOR_4UB_RGBA>(a, cv, count); break;
+        case P1_COLOR_4UB_BGRA: pass1_dispatch_lit<P1_COLOR_4UB_BGRA>(a, cv, count); break;
+    }
 }
 
 /* Interpolate between two vertices at the near plane intersection.
@@ -896,12 +1264,283 @@ void PVRRenderQueueVisitor::visit(const Renderable* renderable,
     do_visit(renderable, pass, iteration);
 }
 
+#ifdef __DREAMCAST__
+/* The modifier-volume submission path (see the comment in do_visit). Out of
+ * line and cold: it only runs for ShadowCaster's volumes, and inline it made
+ * do_visit's body several KB bigger - the per-renderable path is what keeps
+ * missing the SH4's 8KB instruction cache. */
+__attribute__((noinline, cold))
+void PVRRenderQueueVisitor::do_visit_modifier_volume(const Renderable* renderable) {
+    const auto* vdata = renderable->vertex_data;
+    const auto* idata = renderable->index_data;
+    if(!vdata || !idata) return;
+    if(renderable->arrangement != MESH_ARRANGEMENT_TRIANGLES) {
+        /* TODO: support strip/fan; for now only TRIANGLES (what
+         * ShadowCaster emits). */
+        return;
+    }
+
+    std::size_t index_count = renderable->index_element_count;
+    if(index_count == 0) index_count = idata->count();
+    const std::size_t tri_count = index_count / 3;
+    if(tri_count == 0) return;
+
+    /* MVP for transforming the volume vertices to clip space. */
+    const auto& model = *renderable->final_transformation;
+    const auto& view = camera_->view_matrix();
+    const auto& projection = camera_->projection_matrix();
+    Mat4 mvp = projection * (view * model);
+
+    const float hw = 320.0f;
+    const float hh = 240.0f;
+
+    const auto& spec = vdata->vertex_specification();
+    const auto stride = vdata->stride();
+    const auto pos_offset = spec.position_offset(false);
+    const uint8_t* raw_data = vdata->data();
+
+    auto& buf = renderer_->buffer(renderer_->current_list_type_)
+                    .buffers[renderer_->current_buffer_index_];
+
+    shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp._native());
+
+    /* Position-only clip-space vertex. `ok` mirrors ClipVertex::ok. */
+    struct ModVtx { float x, y, z, w; bool ok; };
+
+    auto load_clip = [&](uint32_t vi) -> ModVtx {
+        const float* p = (const float*)(raw_data + stride * vi + pos_offset);
+        shz_vec4_t c = shz_xmtrx_transform_vec4(
+            shz_vec4_init(p[0], p[1], p[2], 1.0f));
+        if(!is_clip_position_valid(c.x, c.y, c.z, c.w)) {
+            /* Same substitution as the polygon path — see the comment in
+             * transform_batch. Always tests as behind the near plane, and
+             * flagged so the switch below drops any triangle touching it. */
+            return {0.0f, 0.0f, 0.0f, -1.0f, false};
+        }
+        return {c.x, c.y, c.z, c.w, true};
+    };
+
+    /* Linear interpolation in clip space. Callers only interpolate between
+     * two usable vertices. */
+    auto lerp_clip = [](const ModVtx& a, const ModVtx& b, float t) -> ModVtx {
+        return {
+            a.x + (b.x - a.x) * t,
+            a.y + (b.y - a.y) * t,
+            a.z + (b.z - a.z) * t,
+            a.w + (b.w - a.w) * t,
+            true,
+        };
+    };
+
+    /* Find the t (0..1) along edge a→b where it crosses the near plane
+     * (z + w = 0 in clip space). Callers only invoke this when the edge
+     * actually crosses, so the denominator is non-zero. */
+    auto near_clip_t = [](const ModVtx& a, const ModVtx& b) -> float {
+        float da = a.z + a.w;
+        float db = b.z + b.w;
+        float denom = db - da;
+        if(fabsf(denom) < 1e-7f) return 0.5f;
+        float t = -da / denom;
+        if(t < 0.0f) t = 0.0f;
+        if(t > 1.0f) t = 1.0f;
+        return t;
+    };
+
+    /* Perspective divide + viewport transform → screen-space + 1/w. */
+    auto to_screen = [&](const ModVtx& v, float& sx, float& sy, float& sz) {
+        float w = v.w;
+        if(w < FLT_EPSILON) w = FLT_EPSILON; /* defensive; post-clip should be > 0 */
+        float inv_w = shz_invf_fsrra(w); /* w >= FLT_EPSILON > 0 */
+        sx = (v.x * hw + hw * w) * inv_w;
+        sy = (-v.y * hh + hh * w) * inv_w;
+        sz = inv_w;
+    };
+
+    auto append_hdr = [&](const pvr_mod_hdr_t& hdr) {
+        std::size_t pos = buf.size();
+        buf.resize(pos + sizeof(pvr_mod_hdr_t));
+        shz_memcpy32(&buf[pos], &hdr, sizeof(pvr_mod_hdr_t));
+    };
+
+    /* Build a pvr_modifier_vol_t from three clip-space vertices and
+     * stage it through the deferred emission mechanism below. Near-plane
+     * clipping may produce a variable number of output triangles per
+     * input triangle (0, 1, or 2), so we don't know which one is "last"
+     * until we run out of input — emit each pending triangle as OTHER
+     * once we see another after it.
+     *
+     * The actual InsideLastPolygon OP is a SEPARATE synthetic triangle
+     * appended after staging (see the closure block below). Tagging one
+     * of the volume's own triangles wouldn't work: on the PVR the
+     * InsideLast OP is only registered in its bbox tiles, but the
+     * volume's parity is set by every side quad / cap triangle, so any
+     * tile reached by the volume but missed by the chosen closer would
+     * leak orphan STENCIL_VOLPAR into AREA1 (and contaminate the next
+     * volume in the list). */
+    float sb_min_x = FLT_MAX, sb_min_y = FLT_MAX;
+    float sb_max_x = -FLT_MAX, sb_max_y = -FLT_MAX;
+
+    bool has_prev = false;
+    bool emitted_other_hdr = false;
+    alignas(32) pvr_modifier_vol_t prev_vol;
+
+    auto stage_triangle = [&](const ModVtx& a, const ModVtx& b, const ModVtx& c) {
+        alignas(32) pvr_modifier_vol_t vol;
+        vol.flags = PVR_CMD_VERTEX_EOL;
+        to_screen(a, vol.ax, vol.ay, vol.az);
+        to_screen(b, vol.bx, vol.by, vol.bz);
+        to_screen(c, vol.cx, vol.cy, vol.cz);
+        vol.d1 = vol.d2 = vol.d3 = vol.d4 = vol.d5 = vol.d6 = 0;
+
+        /* Expand the screen-space bbox covering every tile the synthetic
+         * closer must reach. */
+        if(vol.ax < sb_min_x) sb_min_x = vol.ax;
+        if(vol.bx < sb_min_x) sb_min_x = vol.bx;
+        if(vol.cx < sb_min_x) sb_min_x = vol.cx;
+        if(vol.ax > sb_max_x) sb_max_x = vol.ax;
+        if(vol.bx > sb_max_x) sb_max_x = vol.bx;
+        if(vol.cx > sb_max_x) sb_max_x = vol.cx;
+        if(vol.ay < sb_min_y) sb_min_y = vol.ay;
+        if(vol.by < sb_min_y) sb_min_y = vol.by;
+        if(vol.cy < sb_min_y) sb_min_y = vol.cy;
+        if(vol.ay > sb_max_y) sb_max_y = vol.ay;
+        if(vol.by > sb_max_y) sb_max_y = vol.by;
+        if(vol.cy > sb_max_y) sb_max_y = vol.cy;
+
+        if(has_prev) {
+            /* The previously-staged triangle is now known not to be last:
+             * emit it as OTHER. */
+            if(!emitted_other_hdr) {
+                append_hdr(mod_hdr_other_);
+                emitted_other_hdr = true;
+            }
+            std::size_t pos = buf.size();
+            buf.resize(pos + sizeof(pvr_modifier_vol_t));
+            shz_memcpy32(&buf[pos], &prev_vol, sizeof(pvr_modifier_vol_t));
+        }
+        prev_vol = vol;
+        has_prev = true;
+    };
+
+    for(std::size_t t = 0; t < tri_count; ++t) {
+        const std::size_t base = renderable->first_index + t * 3;
+        const ModVtx v0 = load_clip(idata->at((uint32_t)(base + 0)));
+        const ModVtx v1 = load_clip(idata->at((uint32_t)(base + 1)));
+        const ModVtx v2 = load_clip(idata->at((uint32_t)(base + 2)));
+
+        const bool vis0 = (v0.z >= -v0.w);
+        const bool vis1 = (v1.z >= -v1.w);
+        const bool vis2 = (v2.z >= -v2.w);
+        const int mask = (vis0 ? 1 : 0) | (vis1 ? 2 : 0) | (vis2 ? 4 : 0);
+
+        /* See the matching guard in process_triangle: a poisoned vertex is
+         * always invisible, so only the clipped masks can drag it into the
+         * output via interpolation. */
+        if(mask != 7 && mask != 0 && !(v0.ok && v1.ok && v2.ok)) {
+            continue;
+        }
+
+        switch(mask) {
+            case 0: /* All behind the near plane: discard. */
+                break;
+            case 7: /* All in front: emit as-is. */
+                stage_triangle(v0, v1, v2);
+                break;
+            case 1: { /* Only v0 in front. */
+                ModVtx a = lerp_clip(v0, v1, near_clip_t(v0, v1));
+                ModVtx b = lerp_clip(v0, v2, near_clip_t(v0, v2));
+                stage_triangle(v0, a, b);
+                break;
+            }
+            case 2: { /* Only v1 in front. */
+                ModVtx a = lerp_clip(v1, v0, near_clip_t(v1, v0));
+                ModVtx b = lerp_clip(v1, v2, near_clip_t(v1, v2));
+                stage_triangle(a, v1, b);
+                break;
+            }
+            case 4: { /* Only v2 in front. */
+                ModVtx a = lerp_clip(v2, v1, near_clip_t(v2, v1));
+                ModVtx b = lerp_clip(v2, v0, near_clip_t(v2, v0));
+                stage_triangle(a, v2, b);
+                break;
+            }
+            case 3: { /* v0, v1 in front; v2 behind — produces a quad. */
+                ModVtx a = lerp_clip(v1, v2, near_clip_t(v1, v2));
+                ModVtx b = lerp_clip(v0, v2, near_clip_t(v0, v2));
+                stage_triangle(v0, v1, a);
+                stage_triangle(v0, a, b);
+                break;
+            }
+            case 5: { /* v0, v2 in front; v1 behind — produces a quad. */
+                ModVtx a = lerp_clip(v0, v1, near_clip_t(v0, v1));
+                ModVtx b = lerp_clip(v2, v1, near_clip_t(v2, v1));
+                stage_triangle(v0, a, b);
+                stage_triangle(v0, b, v2);
+                break;
+            }
+            case 6: { /* v1, v2 in front; v0 behind — produces a quad. */
+                ModVtx a = lerp_clip(v1, v0, near_clip_t(v1, v0));
+                ModVtx b = lerp_clip(v2, v0, near_clip_t(v2, v0));
+                stage_triangle(a, v1, v2);
+                stage_triangle(a, v2, b);
+                break;
+            }
+        }
+    }
+
+    /* Close the volume.
+     *
+     * Flush the still-pending staged triangle as OTHER (it stayed in
+     * prev_vol so we could potentially have used it as the closer; we
+     * deliberately don't, see the bbox comment above). Then append a
+     * synthetic closure triangle whose 3 vertices span the bbox of every
+     * staged triangle, so its OP is registered in every tile the volume
+     * touches and combine_modifier_volume fires there.
+     *
+     * The closer's z is fixed at a tiny positive value, well below KOS's
+     * default ISP_BACKGND_D (0.0001f) and any opaque polygon's stored
+     * 1/W. rasterize_modifier_triangle only flips STENCIL_VOLPAR where
+     * z >= depth_buf, so this triangle never alters parity — it exists
+     * purely to drive the per-tile fold. If clipping discarded every
+     * input triangle (has_prev == false), the volume is empty and we
+     * emit nothing. */
+    if(has_prev) {
+        if(!emitted_other_hdr) {
+            append_hdr(mod_hdr_other_);
+            emitted_other_hdr = true;
+        }
+        {
+            std::size_t pos = buf.size();
+            buf.resize(pos + sizeof(pvr_modifier_vol_t));
+            shz_memcpy32(&buf[pos], &prev_vol, sizeof(pvr_modifier_vol_t));
+        }
+
+        alignas(32) pvr_modifier_vol_t closer;
+        closer.flags = PVR_CMD_VERTEX_EOL;
+        const float close_z = 1.0e-10f;
+        closer.ax = sb_min_x; closer.ay = sb_min_y; closer.az = close_z;
+        closer.bx = sb_max_x; closer.by = sb_min_y; closer.bz = close_z;
+        closer.cx = sb_min_x; closer.cy = sb_max_y; closer.cz = close_z;
+        closer.d1 = closer.d2 = closer.d3 = closer.d4 = closer.d5 = closer.d6 = 0;
+
+        append_hdr(mod_hdr_include_);
+        {
+            std::size_t pos = buf.size();
+            buf.resize(pos + sizeof(pvr_modifier_vol_t));
+            shz_memcpy32(&buf[pos], &closer, sizeof(pvr_modifier_vol_t));
+        }
+    }
+}
+#endif
+
+
 void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                                       const MaterialPass* material_pass,
                                       batcher::Iteration iteration) {
     _S_UNUSED(iteration);
 
     if(!renderable || !material_pass) return;
+
 
     renderer_->prepare_to_render(renderable);
 
@@ -917,266 +1556,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * affected — what cheap-shadow uses to darken receivers).
      * ================================================================ */
     if(emitting_modifier_volume_) {
-        const auto* vdata = renderable->vertex_data;
-        const auto* idata = renderable->index_data;
-        if(!vdata || !idata) return;
-        if(renderable->arrangement != MESH_ARRANGEMENT_TRIANGLES) {
-            /* TODO: support strip/fan; for now only TRIANGLES (what
-             * ShadowCaster emits). */
-            return;
-        }
-
-        std::size_t index_count = renderable->index_element_count;
-        if(index_count == 0) index_count = idata->count();
-        const std::size_t tri_count = index_count / 3;
-        if(tri_count == 0) return;
-
-        /* MVP for transforming the volume vertices to clip space. */
-        const auto& model = *renderable->final_transformation;
-        const auto& view = camera_->view_matrix();
-        const auto& projection = camera_->projection_matrix();
-        Mat4 mvp = projection * (view * model);
-
-        const float hw = 320.0f;
-        const float hh = 240.0f;
-
-        const auto& spec = vdata->vertex_specification();
-        const auto stride = vdata->stride();
-        const auto pos_offset = spec.position_offset(false);
-        const uint8_t* raw_data = vdata->data();
-
-        auto& buf = renderer_->buffer(renderer_->current_list_type_)
-                        .buffers[renderer_->current_buffer_index_];
-
-        shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp._native());
-
-        /* Position-only clip-space vertex. `ok` mirrors ClipVertex::ok. */
-        struct ModVtx { float x, y, z, w; bool ok; };
-
-        auto load_clip = [&](uint32_t vi) -> ModVtx {
-            const float* p = (const float*)(raw_data + stride * vi + pos_offset);
-            shz_vec4_t c = shz_xmtrx_transform_vec4(
-                shz_vec4_init(p[0], p[1], p[2], 1.0f));
-            if(!is_clip_position_valid(c.x, c.y, c.z, c.w)) {
-                /* Same substitution as the polygon path — see the comment in
-                 * transform_batch. Always tests as behind the near plane, and
-                 * flagged so the switch below drops any triangle touching it. */
-                return {0.0f, 0.0f, 0.0f, -1.0f, false};
-            }
-            return {c.x, c.y, c.z, c.w, true};
-        };
-
-        /* Linear interpolation in clip space. Callers only interpolate between
-         * two usable vertices. */
-        auto lerp_clip = [](const ModVtx& a, const ModVtx& b, float t) -> ModVtx {
-            return {
-                a.x + (b.x - a.x) * t,
-                a.y + (b.y - a.y) * t,
-                a.z + (b.z - a.z) * t,
-                a.w + (b.w - a.w) * t,
-                true,
-            };
-        };
-
-        /* Find the t (0..1) along edge a→b where it crosses the near plane
-         * (z + w = 0 in clip space). Callers only invoke this when the edge
-         * actually crosses, so the denominator is non-zero. */
-        auto near_clip_t = [](const ModVtx& a, const ModVtx& b) -> float {
-            float da = a.z + a.w;
-            float db = b.z + b.w;
-            float denom = db - da;
-            if(fabsf(denom) < 1e-7f) return 0.5f;
-            float t = -da / denom;
-            if(t < 0.0f) t = 0.0f;
-            if(t > 1.0f) t = 1.0f;
-            return t;
-        };
-
-        /* Perspective divide + viewport transform → screen-space + 1/w. */
-        auto to_screen = [&](const ModVtx& v, float& sx, float& sy, float& sz) {
-            float w = v.w;
-            if(w < FLT_EPSILON) w = FLT_EPSILON; /* defensive; post-clip should be > 0 */
-            float inv_w = shz_invf(w);
-            sx = (v.x * hw + hw * w) * inv_w;
-            sy = (-v.y * hh + hh * w) * inv_w;
-            sz = inv_w;
-        };
-
-        auto append_hdr = [&](const pvr_mod_hdr_t& hdr) {
-            std::size_t pos = buf.size();
-            buf.resize(pos + sizeof(pvr_mod_hdr_t));
-            shz_memcpy32(&buf[pos], &hdr, sizeof(pvr_mod_hdr_t));
-        };
-
-        /* Build a pvr_modifier_vol_t from three clip-space vertices and
-         * stage it through the deferred emission mechanism below. Near-plane
-         * clipping may produce a variable number of output triangles per
-         * input triangle (0, 1, or 2), so we don't know which one is "last"
-         * until we run out of input — emit each pending triangle as OTHER
-         * once we see another after it.
-         *
-         * The actual InsideLastPolygon OP is a SEPARATE synthetic triangle
-         * appended after staging (see the closure block below). Tagging one
-         * of the volume's own triangles wouldn't work: on the PVR the
-         * InsideLast OP is only registered in its bbox tiles, but the
-         * volume's parity is set by every side quad / cap triangle, so any
-         * tile reached by the volume but missed by the chosen closer would
-         * leak orphan STENCIL_VOLPAR into AREA1 (and contaminate the next
-         * volume in the list). */
-        float sb_min_x = FLT_MAX, sb_min_y = FLT_MAX;
-        float sb_max_x = -FLT_MAX, sb_max_y = -FLT_MAX;
-
-        bool has_prev = false;
-        bool emitted_other_hdr = false;
-        alignas(32) pvr_modifier_vol_t prev_vol;
-
-        auto stage_triangle = [&](const ModVtx& a, const ModVtx& b, const ModVtx& c) {
-            alignas(32) pvr_modifier_vol_t vol;
-            vol.flags = PVR_CMD_VERTEX_EOL;
-            to_screen(a, vol.ax, vol.ay, vol.az);
-            to_screen(b, vol.bx, vol.by, vol.bz);
-            to_screen(c, vol.cx, vol.cy, vol.cz);
-            vol.d1 = vol.d2 = vol.d3 = vol.d4 = vol.d5 = vol.d6 = 0;
-
-            /* Expand the screen-space bbox covering every tile the synthetic
-             * closer must reach. */
-            if(vol.ax < sb_min_x) sb_min_x = vol.ax;
-            if(vol.bx < sb_min_x) sb_min_x = vol.bx;
-            if(vol.cx < sb_min_x) sb_min_x = vol.cx;
-            if(vol.ax > sb_max_x) sb_max_x = vol.ax;
-            if(vol.bx > sb_max_x) sb_max_x = vol.bx;
-            if(vol.cx > sb_max_x) sb_max_x = vol.cx;
-            if(vol.ay < sb_min_y) sb_min_y = vol.ay;
-            if(vol.by < sb_min_y) sb_min_y = vol.by;
-            if(vol.cy < sb_min_y) sb_min_y = vol.cy;
-            if(vol.ay > sb_max_y) sb_max_y = vol.ay;
-            if(vol.by > sb_max_y) sb_max_y = vol.by;
-            if(vol.cy > sb_max_y) sb_max_y = vol.cy;
-
-            if(has_prev) {
-                /* The previously-staged triangle is now known not to be last:
-                 * emit it as OTHER. */
-                if(!emitted_other_hdr) {
-                    append_hdr(mod_hdr_other_);
-                    emitted_other_hdr = true;
-                }
-                std::size_t pos = buf.size();
-                buf.resize(pos + sizeof(pvr_modifier_vol_t));
-                shz_memcpy32(&buf[pos], &prev_vol, sizeof(pvr_modifier_vol_t));
-            }
-            prev_vol = vol;
-            has_prev = true;
-        };
-
-        for(std::size_t t = 0; t < tri_count; ++t) {
-            const std::size_t base = renderable->first_index + t * 3;
-            const ModVtx v0 = load_clip(idata->at((uint32_t)(base + 0)));
-            const ModVtx v1 = load_clip(idata->at((uint32_t)(base + 1)));
-            const ModVtx v2 = load_clip(idata->at((uint32_t)(base + 2)));
-
-            const bool vis0 = (v0.z >= -v0.w);
-            const bool vis1 = (v1.z >= -v1.w);
-            const bool vis2 = (v2.z >= -v2.w);
-            const int mask = (vis0 ? 1 : 0) | (vis1 ? 2 : 0) | (vis2 ? 4 : 0);
-
-            /* See the matching guard in process_triangle: a poisoned vertex is
-             * always invisible, so only the clipped masks can drag it into the
-             * output via interpolation. */
-            if(mask != 7 && mask != 0 && !(v0.ok && v1.ok && v2.ok)) {
-                continue;
-            }
-
-            switch(mask) {
-                case 0: /* All behind the near plane: discard. */
-                    break;
-                case 7: /* All in front: emit as-is. */
-                    stage_triangle(v0, v1, v2);
-                    break;
-                case 1: { /* Only v0 in front. */
-                    ModVtx a = lerp_clip(v0, v1, near_clip_t(v0, v1));
-                    ModVtx b = lerp_clip(v0, v2, near_clip_t(v0, v2));
-                    stage_triangle(v0, a, b);
-                    break;
-                }
-                case 2: { /* Only v1 in front. */
-                    ModVtx a = lerp_clip(v1, v0, near_clip_t(v1, v0));
-                    ModVtx b = lerp_clip(v1, v2, near_clip_t(v1, v2));
-                    stage_triangle(a, v1, b);
-                    break;
-                }
-                case 4: { /* Only v2 in front. */
-                    ModVtx a = lerp_clip(v2, v1, near_clip_t(v2, v1));
-                    ModVtx b = lerp_clip(v2, v0, near_clip_t(v2, v0));
-                    stage_triangle(a, v2, b);
-                    break;
-                }
-                case 3: { /* v0, v1 in front; v2 behind — produces a quad. */
-                    ModVtx a = lerp_clip(v1, v2, near_clip_t(v1, v2));
-                    ModVtx b = lerp_clip(v0, v2, near_clip_t(v0, v2));
-                    stage_triangle(v0, v1, a);
-                    stage_triangle(v0, a, b);
-                    break;
-                }
-                case 5: { /* v0, v2 in front; v1 behind — produces a quad. */
-                    ModVtx a = lerp_clip(v0, v1, near_clip_t(v0, v1));
-                    ModVtx b = lerp_clip(v2, v1, near_clip_t(v2, v1));
-                    stage_triangle(v0, a, b);
-                    stage_triangle(v0, b, v2);
-                    break;
-                }
-                case 6: { /* v1, v2 in front; v0 behind — produces a quad. */
-                    ModVtx a = lerp_clip(v1, v0, near_clip_t(v1, v0));
-                    ModVtx b = lerp_clip(v2, v0, near_clip_t(v2, v0));
-                    stage_triangle(a, v1, v2);
-                    stage_triangle(a, v2, b);
-                    break;
-                }
-            }
-        }
-
-        /* Close the volume.
-         *
-         * Flush the still-pending staged triangle as OTHER (it stayed in
-         * prev_vol so we could potentially have used it as the closer; we
-         * deliberately don't, see the bbox comment above). Then append a
-         * synthetic closure triangle whose 3 vertices span the bbox of every
-         * staged triangle, so its OP is registered in every tile the volume
-         * touches and combine_modifier_volume fires there.
-         *
-         * The closer's z is fixed at a tiny positive value, well below KOS's
-         * default ISP_BACKGND_D (0.0001f) and any opaque polygon's stored
-         * 1/W. rasterize_modifier_triangle only flips STENCIL_VOLPAR where
-         * z >= depth_buf, so this triangle never alters parity — it exists
-         * purely to drive the per-tile fold. If clipping discarded every
-         * input triangle (has_prev == false), the volume is empty and we
-         * emit nothing. */
-        if(has_prev) {
-            if(!emitted_other_hdr) {
-                append_hdr(mod_hdr_other_);
-                emitted_other_hdr = true;
-            }
-            {
-                std::size_t pos = buf.size();
-                buf.resize(pos + sizeof(pvr_modifier_vol_t));
-                shz_memcpy32(&buf[pos], &prev_vol, sizeof(pvr_modifier_vol_t));
-            }
-
-            alignas(32) pvr_modifier_vol_t closer;
-            closer.flags = PVR_CMD_VERTEX_EOL;
-            const float close_z = 1.0e-10f;
-            closer.ax = sb_min_x; closer.ay = sb_min_y; closer.az = close_z;
-            closer.bx = sb_max_x; closer.by = sb_min_y; closer.bz = close_z;
-            closer.cx = sb_min_x; closer.cy = sb_max_y; closer.cz = close_z;
-            closer.d1 = closer.d2 = closer.d3 = closer.d4 = closer.d5 = closer.d6 = 0;
-
-            append_hdr(mod_hdr_include_);
-            {
-                std::size_t pos = buf.size();
-                buf.resize(pos + sizeof(pvr_modifier_vol_t));
-                shz_memcpy32(&buf[pos], &closer, sizeof(pvr_modifier_vol_t));
-            }
-        }
-
+        do_visit_modifier_volume(renderable);
         return;
     }
 
@@ -1188,6 +1568,15 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     Mat4 modelview = view * model;
     Mat4 mvp = projection * modelview;
 
+    /* The lighting geometry pass only uses the xyz of its transforms, so the
+     * modelview's fourth row is free: (0, 0, 0, sqrt_eps) makes P.w equal
+     * sqrt_eps, which folds FSRRA's bias into P.P (see
+     * pvr_lighting_sh4.s). */
+    alignas(8) shz_mat4x4_t light_modelview;
+    std::memcpy(&light_modelview, modelview._native(), sizeof(light_modelview));
+    light_modelview.elem[3] = light_modelview.elem[7] = light_modelview.elem[11] = 0.0f;
+    light_modelview.elem[15] = LIGHT_SQRT_EPS;
+
     /* Build viewport transform matrix */
     float hw = 320.0f; /* Half-width */
     float hh = 240.0f; /* Half-height */
@@ -1195,9 +1584,47 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     /* Append bytes to the current list: either to the RAM staging buffer, or
      * (if this list was chosen as the direct list in start_traversal) straight
      * to the TA via the store queues. */
+    /* While emitting into a RAM-staged list, vertices are written through a
+     * cursor into space grown in large steps (see stage_open below), rather
+     * than resizing the buffer per 32-byte vertex; the buffer is trimmed to
+     * what was written when do_visit returns. */
+    PVRRenderer::StagingBuffer* stage_buf = nullptr;
+    uint8_t* stage_cur = nullptr;
+    uint8_t* stage_end = nullptr;
+
+    auto stage_grow = [&](size_t need) {
+        uint8_t* base = reinterpret_cast<uint8_t*>(stage_buf->data());
+        const size_t used = stage_cur - base;
+        const size_t cap = stage_end - base;
+        size_t extra = cap / 2 + 4096;
+        if(extra < need) extra = need;
+        stage_buf->resize((cap + extra + 31) & ~size_t(31));
+        base = reinterpret_cast<uint8_t*>(stage_buf->data());
+        stage_cur = base + used;
+        stage_end = base + stage_buf->size();
+    };
+
+    /* The next 32 bytes of the staged list. Each is a whole cache line
+     * (the buffer is 32-byte aligned and grows in 32-byte steps), claimed
+     * with MOVCA.L so the cold staging buffer isn't read from RAM first. */
+    auto stage_next = [&]() -> uint32_t* {
+        if(stage_cur + 32 > stage_end) stage_grow(32);
+        uint32_t* d = reinterpret_cast<uint32_t*>(stage_cur);
+        __asm__ volatile("movca.l %1, @%0" :: "r"(d), "z"(0) : "memory");
+        stage_cur += 32;
+        return d;
+    };
+
     auto submit_bytes = [&](const void* data, size_t size) {
         const pvr_list_type_t list = renderer_->current_list_type_;
-        if(renderer_->is_list_direct(list)) {
+        if(stage_buf) {
+            /* Only ever 32-byte vertices here (see stage_open). */
+            const uint32_t* s = reinterpret_cast<const uint32_t*>(data);
+            uint32_t* d = stage_next();
+            d[0] = s[0]; d[1] = s[1]; d[2] = s[2]; d[3] = s[3];
+            d[4] = s[4]; d[5] = s[5]; d[6] = s[6]; d[7] = s[7];
+            _S_UNUSED(size);
+        } else if(renderer_->is_list_direct(list)) {
             /* Stream straight to the TA. pvr_dr_target() hands back a store
              * queue window address, and shz_sq_memcpy32() is the purpose-built
              * SQ copy: it stores the 32 bytes and flushes the queue itself, so
@@ -1299,136 +1726,73 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * growth/initialization bookkeeping of a vector. The largest span any
      * renderable produces here is well under the cap. */
     static const uint32_t WORK_VERTEX_CAPACITY = 4096;
-    static ClipVertex work_vertices_[WORK_VERTEX_CAPACITY];
+    /* Per batch vertex, packed for submission (see pvr_pack_sh4). The
+     * window's ClipVertex records only live in cv_window_ until they are
+     * packed. */
+    alignas(32) static pvr_vertex_packed_t work_[WORK_VERTEX_CAPACITY];
 
-    /* Transform a contiguous batch of `count` vertices starting at source
-     * vertex `base`.  On entry MVP must be loaded into xmtrx.  On exit:
-     *   - work_vertices_[i] corresponds to source vertex (base + i)
-     *   - x,y,z,w = clip-space position
-     *   - u,v     = texture coordinates
-     *   - r,g,b   = lit colour (lighting on) or base colour (lighting off)
-     *   - a       = final alpha
-     * If lighting was applied xmtrx is restored to MVP before return. */
-    auto transform_batch = [&](uint32_t base, uint32_t count) {
+    /* Transform + light the slice [first, first + count) of the batch that
+     * starts at source vertex `base`. See transform_batch below for why this
+     * works a window at a time. */
+    /* Pass 1's per-renderable constants (see pass1_window). */
+    static const float P1_ZERO_UV[2] = {0.0f, 0.0f};
+    static const float P1_ONE_COLOR[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    Pass1Color p1_color = P1_COLOR_4F;
+    bool p1_has_color = false;
+    if(color_offset) {
+        switch(spec.color_attribute) {
+            case VERTEX_ATTRIBUTE_4F: p1_color = P1_COLOR_4F; p1_has_color = true; break;
+            case VERTEX_ATTRIBUTE_3F: p1_color = P1_COLOR_3F; p1_has_color = true; break;
+            case VERTEX_ATTRIBUTE_4UB_RGBA:   /* == VERTEX_ATTRIBUTE_4UB */ p1_color = P1_COLOR_4UB_RGBA; p1_has_color = true; break;
+            case VERTEX_ATTRIBUTE_4UB_BGRA: p1_color = P1_COLOR_4UB_BGRA; p1_has_color = true; break;
+            default: break;   /* unsupported colour format: treated as absent */
+        }
+    }
+    Pass1Args p1_args;
+    p1_args.pos_stride = stride;
+    p1_args.uv = (const uint8_t*) P1_ZERO_UV;
+    p1_args.uv_stride = uv_offset ? stride : 0;
+    p1_args.col = (const uint8_t*) P1_ONE_COLOR;
+    p1_args.col_stride = p1_has_color ? stride : 0;
+    for(int k = 0; k < 4; ++k) {
+        p1_args.base[k] = (p1_has_color && color_replaces_base) ? 1.0f : mat_base_color_[k];
+    }
+    p1_args.uvm = (uv_offset && !uv_matrix_identity_) ? uv_matrix_ : nullptr;
+    p1_args.lit = nullptr;
+
+    /* The asm pass 1 covers 4F or absent colour without a UV matrix. */
+    const bool p1_asm = (!p1_has_color || p1_color == P1_COLOR_4F) && !p1_args.uvm;
+    Pass1AsmArgs p1_asm_args;
+    p1_asm_args.uv = (const uint8_t*) P1_ZERO_UV;
+    p1_asm_args.col = (const uint8_t*) P1_ONE_COLOR;
+    p1_asm_args.lit = P1_UNLIT_ROW;
+    p1_asm_args.pos_step = int32_t(stride) - 8;
+    p1_asm_args.uv_step = int32_t(p1_args.uv_stride) - 4;
+    p1_asm_args.col_step = int32_t(p1_args.col_stride) - 12;
+    p1_asm_args.lit_step = -24;
+    for(int k = 0; k < 4; ++k) p1_asm_args.material[k] = p1_args.base[k];
+    p1_asm_args.limit = 1e36f;
+
+    /* The next window's source rows, prefetched a slice at a time between
+     * this window's kernels (see transform_batch): the passes' compute hides
+     * the line fills, which otherwise stalled the geometry pass ~1.3 times
+     * a vertex. PREF never faults, so the slices needn't stop exactly at the
+     * end of the batch's data. */
+    const uint8_t* prefetch_cur = nullptr;
+    const uint8_t* prefetch_end = nullptr;
+    auto prefetch_rows = [&](uint32_t lines) {
+        for(; lines && prefetch_cur < prefetch_end; --lines, prefetch_cur += 32) {
+            SHZ_PREFETCH(prefetch_cur);
+        }
+    };
+
+    auto transform_window = [&](uint32_t base, uint32_t first, uint32_t count) {
         if(!count) return;
-        /* All producers stay well under the cap (the widest is a level-chunk
-         * index span). Clamp defensively rather than overrunning the array. */
-        if(count > WORK_VERTEX_CAPACITY) {
-            count = WORK_VERTEX_CAPACITY;
-        }
 
-        /* ------------------------------------------------------------
-         * Pass 1: position × MVP (FTRV), UVs, and base colour (material ×
-         * per-vertex colour) in a single sweep over the vertex rows.
-         *
-         * Position transform uses the MVP already loaded in xmtrx; the UV /
-         * colour work needs no matrix, so both fit in one loop. Merging them
-         * halves the number of passes over the source vertex buffer — on the
-         * SH4 the vertex data is the dominant memory-bandwidth cost, and for
-         * a batch larger than the D-cache the rows would otherwise be re-read
-         * from RAM on the second pass. The *base* colour is stashed in
-         * cv.r/g/b; the lighting pass below reads it back out and replaces it
-         * with the lit colour if lighting is on.
-         * ------------------------------------------------------------ */
-        {
-            const VertexAttribute color_attr = spec.color_attribute;
-            const uint8_t* row = raw_data + stride * base;
-            for(uint32_t i = 0; i < count; ++i) {
-                ClipVertex& cv = work_vertices_[i];
-
-                /* Prefetch a few vertices ahead in both the source stream and
-                 * the scratch destination. A level chunk's vertex data is tens
-                 * of KB — far larger than the SH4's 16KB D-cache — and is read
-                 * again by the lighting pass, so keeping the sequential read
-                 * ahead of the cache hides external-memory latency. Prefetch
-                 * past the end of the buffer is harmless (PREF never faults). */
-                SHZ_PREFETCH(row + stride * 4);
-                SHZ_PREFETCH(&cv + 4);
-
-                const float* p = (const float*)(row + pos_offset);
-                shz_vec4_t clip = shz_xmtrx_transform_vec4(
-                    shz_vec4_init(p[0], p[1], p[2], 1.0f));
-                cv.ok = is_clip_position_valid(clip.x, clip.y, clip.z, clip.w);
-                if(cv.ok) {
-                    cv.x = clip.x; cv.y = clip.y; cv.z = clip.z; cv.w = clip.w;
-                } else {
-                    /* Bad vertex postion.
-                     * Swap for a point that is guaranteed to test as behind the near
-                     * plane (is_vertex_visible: 0 >= 1 is false), so it can
-                     * never be emitted directly, and flag it so the clip path
-                     * drops primitives that touch it rather than interpolating
-                     * towards it */
-                    cv.x = 0.0f; cv.y = 0.0f; cv.z = 0.0f; cv.w = -1.0f;
-                }
-
-                if(uv_offset) {
-                    const float* t = (const float*)(row + uv_offset);
-                    if(uv_matrix_identity_) {
-                        cv.u = t[0];
-                        cv.v = t[1];
-                    } else {
-                        const float u = t[0];
-                        const float v = t[1];
-                        cv.u = uv_matrix_[0] * u + uv_matrix_[1] * v + uv_matrix_[2];
-                        cv.v = uv_matrix_[3] * u + uv_matrix_[4] * v + uv_matrix_[5];
-                    }
-                } else {
-                    cv.u = 0.0f; cv.v = 0.0f;
-                }
-
-                float br = mat_base_color_[0];
-                float bg = mat_base_color_[1];
-                float bb = mat_base_color_[2];
-                float ba = mat_base_color_[3];
-
-                if(color_offset) {
-                    float vc_r = 1.0f, vc_g = 1.0f, vc_b = 1.0f, vc_a = 1.0f;
-                    if(color_attr == VERTEX_ATTRIBUTE_4F) {
-                        const float* c = (const float*)(row + color_offset);
-                        vc_r = c[0]; vc_g = c[1]; vc_b = c[2]; vc_a = c[3];
-                    } else if(color_attr == VERTEX_ATTRIBUTE_3F) {
-                        const float* c = (const float*)(row + color_offset);
-                        vc_r = c[0]; vc_g = c[1]; vc_b = c[2];
-                    } else if(color_attr == VERTEX_ATTRIBUTE_4UB_RGBA ||
-                              color_attr == VERTEX_ATTRIBUTE_4UB) {
-                        const uint8_t* c = row + color_offset;
-                        vc_r = c[0]/255.0f; vc_g = c[1]/255.0f;
-                        vc_b = c[2]/255.0f; vc_a = c[3]/255.0f;
-                    } else if(color_attr == VERTEX_ATTRIBUTE_4UB_BGRA) {
-                        const uint8_t* c = row + color_offset;
-                        vc_b = c[0]/255.0f; vc_g = c[1]/255.0f;
-                        vc_r = c[2]/255.0f; vc_a = c[3]/255.0f;
-                    }
-                    if(color_replaces_base) {
-                        br = vc_r; bg = vc_g; bb = vc_b; ba = vc_a;
-                    } else {
-                        br *= vc_r; bg *= vc_g; bb *= vc_b; ba *= vc_a;
-                    }
-                }
-
-                cv.r = br;
-                cv.g = bg;
-                cv.b = bb;
-                cv.a = ba;
-                /* No specular unless the lighting pass below overwrites it —
-                 * covers both the lighting-disabled and no-normals cases. */
-                cv.sr = 0.0f;
-                cv.sg = 0.0f;
-                cv.sb = 0.0f;
-                row += stride;
-            }
-        }
-
-        /* ------------------------------------------------------------
-         * Pass 2: per-vertex PBR lighting.
-         * Loads modelview (with light 0 folded into its spare fourth row)
-         * into xmtrx so the normal and eye-space position transforms can
-         * also use FTRV.
-         * ------------------------------------------------------------ */
+        /* Compact the enabled lights and fold per-light constants. */
+        PackedLight packed[MAX_LIGHTS];
+        int light_count = 0;
         if(lighting_enabled) {
-            /* Compact the enabled lights and fold per-light constants. */
-            PackedLight packed[MAX_LIGHTS];
-            int light_count = 0;
             for(int li = 0; li < MAX_LIGHTS; ++li) {
                 const VertexLightState& ls = lights_[li];
                 if(!ls.enabled) continue;
@@ -1441,34 +1805,15 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 pl.col[2] = ls.color[2] * ls.intensity;
                 pl.inv_range = ls.inv_range;
             }
+        }
 
-            if(light_count == 0) {
-                /* Ambient only. Specular was already zeroed by pass 1, and
-                 * xmtrx still holds MVP. */
-                for(uint32_t i = 0; i < count; ++i) {
-                    ClipVertex& cv = work_vertices_[i];
-                    cv.r *= ambient_[0];
-                    cv.g *= ambient_[1];
-                    cv.b *= ambient_[2];
-                }
-                return;
-            }
-
-            /* Modelview with its fourth row replaced by q·M (q = light 0's
-             * position or direction) so each FTRV also returns the dot
-             * product with light 0 in w — see light_vertices(). */
-            /* Static rather than a local: shz_memcpy32 allocates whole cache
-             * lines (MOVCA.L) at the destination, so it must be genuinely
-             * 32-byte aligned, and SH4 GCC doesn't reliably honour over-
-             * alignment of stack variables (see Mat4). */
-            alignas(32) static shz_mat4x4_t lm;
-            shz_memcpy32(lm.elem, modelview._native(), sizeof(lm.elem));
-            const float* q = packed[0].v;
-            for(int c = 0; c < 4; ++c) {
-                const float* col = &lm.elem[c * 4];
-                lm.elem[c * 4 + 3] = q[0] * col[0] + q[1] * col[1] + q[2] * col[2];
-            }
-            shz_xmtrx_load_4x4(&lm);
+        /* ------------------------------------------------------------
+         * Per-vertex PBR lighting (light_vertices). Loads the modelview
+         * into xmtrx so the normal and eye-space position transforms can
+         * also use FTRV, and restores MVP afterwards.
+         * ------------------------------------------------------------ */
+        auto light_window = [&]() {
+            shz_xmtrx_load_4x4(&light_modelview);
 
             const float roughness_alpha = mat_roughness_ * mat_roughness_;
             LightingParams lp;
@@ -1479,36 +1824,163 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             lp.metallic   = mat_metallic_;
             lp.nm         = 1.0f - mat_metallic_;
             lp.a2         = roughness_alpha * roughness_alpha;
-            lp.k          = roughness_alpha * 0.5f;
-            lp.spec_scale = lp.a2 * 0.25f;
+
+            /* Blinn-Phong exponent matching the GGX alpha (Walter et al.
+             * 2007: n = 2 / alpha^2 - 2). With the engine's pi-folded
+             * convention the normalised lobe is (n + 2) / 8, which peaks at
+             * 1 / a2 - the same as GGX's D at N.H = 1. */
+            float bp_n = 2.0f / (lp.a2 + 1e-6f) - 2.0f;
+            bp_n = (bp_n < 1.0f) ? 1.0f : ((bp_n > 2048.0f) ? 2048.0f : bp_n);
+            lp.bp_n = bp_n;
+            lp.bp_nm1 = bp_n - 1.0f;
+            lp.bp_scale = (bp_n + 2.0f) * 0.125f;
+            /* Dielectrics apply F0 = 0.04 by running the specular weights
+             * through the same 0.96-scaled colour matrix as diffuse (see the
+             * combine pass), so pre-scale by 0.04 / 0.96 here. */
+            if(mat_metallic_ == 0.0f) {
+                lp.bp_scale *= 0.04f / 0.96f;
+            }
 
             /* Specialised on light count (so light slots unroll and dead
              * lanes drop out of the register allocation) and on dielectric
              * materials (metallic == 0, the common case), whose constant F0
              * of 0.04 makes Fresnel scalar per light. */
             static_assert(MAX_LIGHTS == 2, "Update the light_vertices dispatch");
-            const uint8_t* row = raw_data + stride * base;
+            const uint8_t* row = raw_data + stride * (base + first);
             const bool dielectric = (mat_metallic_ == 0.0f);
             if(light_count == 1) {
                 if(dielectric) {
-                    light_vertices<true, 1>(lp, work_vertices_, row, count,
+                    light_vertices<true, 1>(lp, cv_window_, row, count,
                                             stride, pos_offset, normal_offset);
                 } else {
-                    light_vertices<false, 1>(lp, work_vertices_, row, count,
+                    light_vertices<false, 1>(lp, cv_window_, row, count,
                                              stride, pos_offset, normal_offset);
                 }
             } else {
                 if(dielectric) {
-                    light_vertices<true, 2>(lp, work_vertices_, row, count,
+                    light_vertices<true, 2>(lp, cv_window_, row, count,
                                             stride, pos_offset, normal_offset);
                 } else {
-                    light_vertices<false, 2>(lp, work_vertices_, row, count,
+                    light_vertices<false, 2>(lp, cv_window_, row, count,
                                              stride, pos_offset, normal_offset);
                 }
             }
 
-            /* Restore MVP for any subsequent batch. */
             shz_xmtrx_load_4x4((shz_mat4x4_t*) mvp._native());
+        };
+
+        /* Dielectrics are lit before pass 1: their combine leaves the lit
+         * colour factor and specular in the scratch rows, and pass 1 applies
+         * them as it writes each ClipVertex, so no ClipVertex is written
+         * twice or read back (reading them back missed the cache about once
+         * a vertex). Metals need the base colour for Fresnel, so they are
+         * lit afterwards, straight into cv. */
+        const bool light_first = lighting_enabled && light_count > 0 && mat_metallic_ == 0.0f;
+        if(light_first) {
+            light_window();
+        }
+        prefetch_rows(16);
+
+        /* ------------------------------------------------------------
+         * Pass 1: position × MVP (FTRV), UVs, and base colour (material ×
+         * per-vertex colour) in a single sweep over the vertex rows.
+         *
+         * Position transform uses the MVP already loaded in xmtrx; the UV /
+         * colour work needs no matrix, so both fit in one loop. Merging them
+         * halves the number of passes over the source vertex buffer — on the
+         * SH4 the vertex data is the dominant memory-bandwidth cost, and for
+         * a batch larger than the D-cache the rows would otherwise be re-read
+         * from RAM on the second pass. For dielectrics the lighting above has
+         * already run and the lit colour is applied here; otherwise the
+         * *base* colour is stashed in cv.r/g/b and any lighting below reads
+         * it back out and replaces it.
+         * ------------------------------------------------------------ */
+        {
+            const uint8_t* row = raw_data + stride * (base + first);
+            Pass1Args a = p1_args;
+            a.pos = row + pos_offset;
+            if(uv_offset) a.uv = row + uv_offset;
+            if(p1_has_color) a.col = row + color_offset;
+            a.lit = light_first ? lit_window_[0] : nullptr;
+            ClipVertex* out = cv_window_;
+            if(p1_asm) {
+                Pass1AsmArgs aa = p1_asm_args;
+                aa.pos = a.pos;
+                if(uv_offset) aa.uv = a.uv;
+                if(p1_has_color) aa.col = a.col;
+                if(a.lit) {
+                    aa.lit = a.lit + LV_DR;
+                    aa.lit_step = LV_STRIDE * sizeof(float) - 24;
+                }
+                aa.out = out;
+                aa.n = count;
+
+
+                if(pvr_pass1_sh4(&aa)) {
+                    for(uint32_t i = 0; i < count; ++i) {
+                        if(!out[i].ok) {
+                            out[i].x = 0.0f; out[i].y = 0.0f; out[i].z = 0.0f; out[i].w = -1.0f;
+                        }
+                    }
+                }
+            } else {
+                pass1(a, p1_color, out, count);
+            }
+        }
+
+        if(lighting_enabled) {
+            if(light_count == 0) {
+                /* Ambient only. Specular was already zeroed by pass 1, and
+                 * xmtrx still holds MVP. */
+                for(uint32_t i = 0; i < count; ++i) {
+                    ClipVertex& cv = cv_window_[i];
+                    cv.r *= ambient_[0];
+                    cv.g *= ambient_[1];
+                    cv.b *= ambient_[2];
+                }
+            } else if(!light_first) {
+                light_window();
+            }
+        }
+
+        prefetch_rows(16);
+
+        alignas(8) static float pk_consts[4];
+        pk_consts[0] = hw; pk_consts[1] = hh; pk_consts[2] = 127.5f; pk_consts[3] = -127.5f;
+        pvr_pack_sh4(cv_window_, &work_[first], count, pk_consts);
+    };
+
+    /* Pass 1 (clip-space position, UV, base colour) and the lighting pass
+     * both walk the batch's vertices in order, so doing them a window at a
+     * time is equivalent to doing each over the whole batch - but keeps the
+     * window's source rows and ClipVertex slots in the operand cache between
+     * the two. Over a whole large batch (a level chunk is ~1800 vertices,
+     * ~100KB of ClipVertex alone) both were long evicted by the time the
+     * lighting pass reached them, costing ~26% of the lighting kernel in
+     * dcache stalls. The per-window setup it repeats is a few dozen
+     * instructions per 64 vertices. */
+    /* Transform a contiguous batch of `count` vertices starting at source
+     * vertex `base`. On entry MVP must be loaded into xmtrx, and still is on
+     * return. On exit work_[i] holds source vertex base + i, packed for
+     * submission. */
+    uint32_t work_base = 0;     /* source vertex of work_[0], for cv_at */
+    auto transform_batch = [&](uint32_t base, uint32_t count) {
+        work_base = base;
+        /* All producers stay well under the cap (the widest is a level-chunk
+         * index span). Clamp defensively rather than overrunning the array. */
+        if(count > WORK_VERTEX_CAPACITY) {
+            count = WORK_VERTEX_CAPACITY;
+        }
+        static const uint32_t XFORM_WINDOW = 32;
+        for(uint32_t first = 0; first < count; first += XFORM_WINDOW) {
+            const uint32_t n = (count - first < XFORM_WINDOW) ?
+                (count - first) : XFORM_WINDOW;
+            const uint32_t rest = count - first - n;
+            const uint32_t next = (rest < XFORM_WINDOW) ? rest : XFORM_WINDOW;
+            prefetch_cur = raw_data + stride * (base + first + n);
+            prefetch_end = prefetch_cur + stride * next;
+            transform_window(base, first, n);
+            prefetch_rows(~0u);   /* whatever the slices didn't reach */
         }
     };
 
@@ -1557,9 +2029,10 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * Returns screen-space x/y and the 1/w depth the PVR expects. */
     auto clip_to_screen = [&](const ClipVertex& cv,
                               float& sx, float& sy, float& sz) {
-        /* Apply viewport transform (done before perspective divide for PVR) */
-        float vx = cv.x * hw + hw * cv.w;
-        float vy = -cv.y * hh + hh * cv.w;
+        /* Apply viewport transform (done before perspective divide for PVR).
+         * Factored to 1 add + 1 mul per axis rather than 2 muls + 1 add. */
+        float vx = hw * (cv.x + cv.w);
+        float vy = hh * (cv.w - cv.y);
 
         /* Clamp rather than only special-casing exactly zero: a substituted or
          * interpolated vertex can land on a small or negative w, and 1/w for
@@ -1567,7 +2040,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
          * chokes on. Matches the modifier path's to_screen(). */
         float w = cv.w;
         if(w < FLT_EPSILON) w = FLT_EPSILON;
-        float inv_w = shz_invf(w);
+        float inv_w = shz_invf_fsrra(w); /* w >= FLT_EPSILON > 0 */
 
         sx = vx * inv_w;
         sy = vy * inv_w;
@@ -1582,6 +2055,8 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     cv.sr, cv.sg, cv.sb, is_last);
     };
 
+    const bool direct_list = renderer_->is_list_direct(renderer_->current_list_type_);
+
     /* Lambda to process a triangle with near-plane clipping */
     auto process_triangle = [&](const ClipVertex& v0, const ClipVertex& v1,
                                 const ClipVertex& v2, bool is_last_tri) {
@@ -1595,7 +2070,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
          * TA via a clip interpolation — drop the whole primitive instead. Only
          * the partially-visible masks need checking: mask 7 can't contain one,
          * and mask 0 emits nothing, which keeps the fully-visible fast path and
-         * the fully-culled path free of the test. sp_step, process_quad and
+         * the fully-culled path free of the test. emit_strip, process_quad and
          * process_line all funnel their clipped cases through here, so this is
          * the only place the check is needed. */
         if(visible_mask != 7 && visible_mask != 0 &&
@@ -1756,76 +2231,73 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     c1.r, c1.g, c1.b, c1.a, 0.0f, 0.0f, 0.0f, true);
     };
 
-    /* ================================================================
-     * Strip submission state (shared by indexed and non-indexed paths)
-     *
-     * The PVR assembles triangle strips natively: only the last vertex of
-     * an entire strip needs PVR_CMD_VERTEX_EOL.  Submitting N+2 vertices is
-     * therefore cheaper than N×3 vertices.  We maintain the following state:
-     *
-     *   sp_pending  – last vertex not yet committed (its EOL flag is unknown
-     *                 until we see what the next triangle looks like)
-     *   sp_in_strip – whether the pending vertex is part of an active sub-strip
-     *
-     * Winding parity: the PVR automatically flips winding for every other
-     * triangle in a strip.  When a clip boundary forces a sub-strip restart at
-     * an ODD original strip position, we prepend a single degenerate vertex
-     * (cv0 submitted twice) so the hardware's strip counter reaches the right
-     * parity.  The degenerate triangle is zero-area and produces no pixels.
-     * ================================================================ */
-    ClipVertex sp_pending;
-    bool sp_has_pending = false;
-    bool sp_in_strip    = false;
-
-    auto sp_flush = [&](bool eol) {
-        if(sp_has_pending) {
-            submit_clip_vertex(sp_pending, eol);
-            sp_has_pending = false;
+    /* A batch vertex as a ClipVertex, for the clipping path: clip position
+     * worked out again from the source vertex (as pass 1 does, including
+     * its treatment of non-finite positions), UV and colours from the packed
+     * vertex (so already clamped to [0, 1], which interpolating and
+     * re-packing is unaffected by). */
+    auto cv_at = [&](uint32_t i) __attribute__((noinline, cold)) -> ClipVertex {
+        const float* sp = (const float*)(raw_data + stride * (work_base + i) + pos_offset);
+        const Vec4 c = mvp * Vec4(sp[0], sp[1], sp[2], 1.0f);
+        const pvr_vertex_packed_t& p = work_[i];
+        const float k = 1.0f / 255.0f;
+        ClipVertex v;
+        v.ok = is_clip_position_valid(c.x, c.y, c.z, c.w);
+        if(v.ok) {
+            v.x = c.x; v.y = c.y; v.z = c.z; v.w = c.w;
+        } else {
+            v.x = 0.0f; v.y = 0.0f; v.z = 0.0f; v.w = -1.0f;
         }
+        v.u = p.u; v.v = p.v;
+        v.a = float((p.argb >> 24) & 255) * k;
+        v.r = float((p.argb >> 16) & 255) * k;
+        v.g = float((p.argb >> 8) & 255) * k;
+        v.b = float(p.argb & 255) * k;
+        v.sr = float((p.oargb >> 16) & 255) * k;
+        v.sg = float((p.oargb >> 8) & 255) * k;
+        v.sb = float(p.oargb & 255) * k;
+        return v;
     };
 
-    auto sp_step = [&](const ClipVertex& cv0, const ClipVertex& cv1,
-                       const ClipVertex& cv2, bool is_last, std::size_t pos) {
-        bool vis0 = is_vertex_visible(cv0);
-        bool vis1 = is_vertex_visible(cv1);
-        bool vis2 = is_vertex_visible(cv2);
-        int mask = (vis0 ? 1 : 0) | (vis1 ? 2 : 0) | (vis2 ? 4 : 0);
+    /* emit_triangles' / emit_strip's clipping path and staging growth. */
+    auto emit_slow_triangle = [&](uint32_t i0, uint32_t i1, uint32_t i2) {
+        process_triangle(cv_at(i0), cv_at(i1), cv_at(i2), true);
+    };
+    auto emit_grow = [&]() { stage_grow(96); };
 
-        if(mask == 7) {
-            /* All visible. */
-            if(!sp_in_strip) {
-                /* Start a new sub-strip.  At an odd original position the PVR
-                 * strip counter is in "even" mode after EOL; prepend cv0 twice
-                 * so the first real triangle is processed with odd winding. */
-                if(pos & 1) submit_clip_vertex(cv0, false);
-                submit_clip_vertex(cv0, false);
-                submit_clip_vertex(cv1, false);
-                sp_pending    = cv2;
-                sp_has_pending = true;
-                sp_in_strip   = true;
-            } else {
-                /* Extend the strip.  cv0 and cv1 are already in the PVR strip
-                 * register from previous submissions; only cv2 is new. */
-                sp_flush(false);
-                sp_pending    = cv2;
-                sp_has_pending = true;
-            }
-            if(is_last) {
-                sp_flush(true);
-                sp_in_strip = false;
-            }
-        } else {
-            /* Clip boundary or fully invisible: end any open sub-strip. */
-            if(sp_in_strip) {
-                sp_flush(true);
-                sp_in_strip = false;
-            }
-            if(mask != 0) {
-                /* Partially visible: fall back to an individual clipped
-                 * triangle.  Odd strip positions swap cv0/cv1 for winding. */
-                if(pos & 1) process_triangle(cv1, cv0, cv2, true);
-                else        process_triangle(cv0, cv1, cv2, true);
-            }
+    /* Fans, quads, lines and line strips: all through the (ClipVertex)
+     * clipping path, which is fine for how rarely they're used. Out of line
+     * and cold so they don't bulk out do_visit, whose common path has to
+     * share the SH4's 8KB instruction cache with the rest of the frame.
+     * `index(k)` is the work-array index of the k-th of `n` vertices. */
+    auto emit_other_arrangement = [&](auto index, std::size_t n) __attribute__((noinline, cold)) {
+        switch(renderable->arrangement) {
+            case MESH_ARRANGEMENT_TRIANGLE_FAN:
+                if(n >= 3) {
+                    const ClipVertex v0 = cv_at(index(0));
+                    for(std::size_t i = 1; i + 1 < n; i++) {
+                        process_triangle(v0, cv_at(index(i)), cv_at(index(i + 1)), true);
+                    }
+                }
+                break;
+            case MESH_ARRANGEMENT_QUADS:
+                for(std::size_t i = 0; i + 3 < n; i += 4) {
+                    process_quad(cv_at(index(i + 0)), cv_at(index(i + 1)),
+                                 cv_at(index(i + 2)), cv_at(index(i + 3)));
+                }
+                break;
+            case MESH_ARRANGEMENT_LINES:
+                for(std::size_t i = 0; i + 1 < n; i += 2) {
+                    process_line(cv_at(index(i + 0)), cv_at(index(i + 1)));
+                }
+                break;
+            case MESH_ARRANGEMENT_LINE_STRIP:
+                for(std::size_t i = 1; i < n; i++) {
+                    process_line(cv_at(index(i - 1)), cv_at(index(i)));
+                }
+                break;
+            default:
+                break;
         }
     };
 
@@ -1833,10 +2305,22 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * Submit geometry with near-plane clipping.
      *
      * Both paths first run transform_batch over the source vertex range
-     * that they need, then walk the topology referencing the cached
-     * ClipVertex slots in work_vertices_.
+     * that they need, then walk the topology referencing the packed
+     * vertices in work_.
      */
-    if(renderer_->current_list_type_ != PVR_LIST_OP_POLY) {
+
+    /* stage_open: a RAM-staged list gets room for the expected vertex count
+     * up front (stage_next grows it if clipping produces more), and is
+     * trimmed back to what was written on the way out. */
+    struct StageClose {
+        PVRRenderer::StagingBuffer*& buf;
+        uint8_t*& cur;
+        ~StageClose() {
+            if(buf) buf->resize(cur - reinterpret_cast<uint8_t*>(buf->data()));
+        }
+    } _stage_close{stage_buf, stage_cur};
+
+    if(!direct_list) {
         std::size_t prim_verts = 0;
         if(renderable->index_element_count > 0 && renderable->index_data) {
             prim_verts = renderable->index_element_count;
@@ -1855,8 +2339,12 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         }
         auto& buf = renderer_->buffer(renderer_->current_list_type_)
                         .buffers[renderer_->current_buffer_index_];
-        buf.reserve(buf.size() +
-                    (vfactor * prim_verts + 8) * sizeof(pvr_vertex_packed_t));
+        const std::size_t used = buf.size();
+        buf.resize(used + (vfactor * prim_verts + 8) * sizeof(pvr_vertex_packed_t));
+        stage_buf = &buf;
+        uint8_t* base = reinterpret_cast<uint8_t*>(buf.data());
+        stage_cur = base + used;
+        stage_end = base + buf.size();
     }
 
     if(renderable->index_element_count > 0 && renderable->index_data) {
@@ -1882,12 +2370,9 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             }
             transform_batch(base, high - base + 1);
 
-            for(std::size_t i = 0; i + 2 < icount; i += 3) {
-                const ClipVertex& v0 = work_vertices_[idx[i + 0] - base];
-                const ClipVertex& v1 = work_vertices_[idx[i + 1] - base];
-                const ClipVertex& v2 = work_vertices_[idx[i + 2] - base];
-                process_triangle(v0, v1, v2, (i + 5 >= icount));
-            }
+            emit_triangles([idx, base](std::size_t k) -> uint32_t { return idx[k] - base; },
+                           icount / 3, work_, direct_list,
+                           stage_cur, stage_end, emit_slow_triangle, emit_grow);
         } else {
         auto get_index = [&](std::size_t i) -> uint32_t {
             switch(itype) {
@@ -1913,112 +2398,73 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         transform_batch(base, high - base + 1);
 
         if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES) {
-            for(std::size_t i = 0; i + 2 < icount; i += 3) {
-                const ClipVertex& v0 = work_vertices_[get_index(i + 0) - base];
-                const ClipVertex& v1 = work_vertices_[get_index(i + 1) - base];
-                const ClipVertex& v2 = work_vertices_[get_index(i + 2) - base];
-                bool is_last = (i + 5 >= icount);
-                process_triangle(v0, v1, v2, is_last);
-            }
+            emit_triangles([&](std::size_t k) -> uint32_t { return get_index(k) - base; },
+                           icount / 3, work_, direct_list,
+                           stage_cur, stage_end, emit_slow_triangle, emit_grow);
         } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
             if(icount >= 3) {
-                for(std::size_t i = 0; i + 2 < icount; i++) {
-                    const ClipVertex& cv0 = work_vertices_[get_index(i + 0) - base];
-                    const ClipVertex& cv1 = work_vertices_[get_index(i + 1) - base];
-                    const ClipVertex& cv2 = work_vertices_[get_index(i + 2) - base];
-                    sp_step(cv0, cv1, cv2, (i + 3 >= icount), i);
-                }
-                sp_flush(true);
+                emit_strip([&](std::size_t k) -> uint32_t { return get_index(k) - base; },
+                           icount, work_, direct_list,
+                           stage_cur, stage_end, emit_slow_triangle, emit_grow);
             }
-        } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) {
-            if(icount >= 3) {
-                const ClipVertex& v0 = work_vertices_[get_index(0) - base];
-                for(std::size_t i = 1; i + 1 < icount; i++) {
-                    const ClipVertex& v1 = work_vertices_[get_index(i) - base];
-                    const ClipVertex& v2 = work_vertices_[get_index(i + 1) - base];
-                    bool is_last = (i + 2 >= icount);
-                    process_triangle(v0, v1, v2, is_last);
-                }
-            }
-        } else if(renderable->arrangement == MESH_ARRANGEMENT_QUADS) {
-            for(std::size_t i = 0; i + 3 < icount; i += 4) {
-                const ClipVertex& v0 = work_vertices_[get_index(i + 0) - base];
-                const ClipVertex& v1 = work_vertices_[get_index(i + 1) - base];
-                const ClipVertex& v2 = work_vertices_[get_index(i + 2) - base];
-                const ClipVertex& v3 = work_vertices_[get_index(i + 3) - base];
-                process_quad(v0, v1, v2, v3);
-            }
-        } else if(renderable->arrangement == MESH_ARRANGEMENT_LINES) {
-            for(std::size_t i = 0; i + 1 < icount; i += 2) {
-                const ClipVertex& c0 = work_vertices_[get_index(i + 0) - base];
-                const ClipVertex& c1 = work_vertices_[get_index(i + 1) - base];
-                process_line(c0, c1);
-            }
-        } else if(renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP) {
-            for(std::size_t i = 1; i < icount; i++) {
-                const ClipVertex& c0 = work_vertices_[get_index(i - 1) - base];
-                const ClipVertex& c1 = work_vertices_[get_index(i) - base];
-                process_line(c0, c1);
-            }
+        } else {
+            emit_other_arrangement([&](std::size_t k) -> uint32_t { return get_index(k) - base; },
+                                   icount);
         }
         } /* end generic indexed arrangements */
     } else {
-        /* Non-indexed range-based rendering: each range is independent so
-         * we transform it as its own batch. */
+        /* Non-indexed range-based rendering. Ranges are independent
+         * primitives, but they're often many small, adjacent ones (a particle
+         * system submits a 4-vertex strip per particle): when they pack
+         * densely into one span that fits the work array, transform the span
+         * once and emit each range from it, rather than paying the transform
+         * kernels' per-call setup for every range. Otherwise each range is
+         * its own batch. */
         const VertexRange* ranges = renderable->vertex_ranges;
         std::size_t range_count = renderable->vertex_range_count;
+
+        uint32_t lo = 0xFFFFFFFFu, hi = 0, used = 0;
+        for(std::size_t ri = 0; ri < range_count; ++ri) {
+            const uint32_t count = ranges[ri].count;
+            if(!count) continue;
+            const uint32_t start = ranges[ri].start;
+            if(start < lo) lo = start;
+            if(start + count > hi) hi = start + count;
+            used += count;
+        }
+        const bool one_batch = used && range_count > 1 &&
+                               hi - lo <= WORK_VERTEX_CAPACITY &&
+                               used * 2 >= hi - lo;
+        if(one_batch) {
+            transform_batch(lo, hi - lo);
+        }
+
         for(std::size_t ri = 0; ri < range_count; ++ri) {
             uint32_t start = ranges[ri].start;
             uint32_t count = ranges[ri].count;
             if(!count) continue;
 
-            transform_batch(start, count);
+            uint32_t first = 0;   /* work_ index of the range's first vertex */
+            if(one_batch) {
+                first = start - lo;
+            } else {
+                transform_batch(start, count);
+            }
 
             if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES) {
-                for(uint32_t i = 0; i + 2 < count; i += 3) {
-                    const ClipVertex& v0 = work_vertices_[i + 0];
-                    const ClipVertex& v1 = work_vertices_[i + 1];
-                    const ClipVertex& v2 = work_vertices_[i + 2];
-                    bool is_last = (i + 5 >= count) && (ri + 1 >= range_count);
-                    process_triangle(v0, v1, v2, is_last);
-                }
+                emit_triangles([first](std::size_t k) -> uint32_t { return first + uint32_t(k); },
+                               count / 3, work_, direct_list,
+                               stage_cur, stage_end, emit_slow_triangle, emit_grow);
             } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
                 if(count >= 3) {
-                    /* Each range is an independent strip; reset state. */
-                    sp_has_pending = false;
-                    sp_in_strip    = false;
-                    for(uint32_t i = 0; i + 2 < count; i++) {
-                        const ClipVertex& cv0 = work_vertices_[i + 0];
-                        const ClipVertex& cv1 = work_vertices_[i + 1];
-                        const ClipVertex& cv2 = work_vertices_[i + 2];
-                        bool is_last = (i + 3 >= count) && (ri + 1 >= range_count);
-                        sp_step(cv0, cv1, cv2, is_last, i);
-                    }
-                    sp_flush(true);
+                    /* Each range is an independent strip. */
+                    emit_strip([first](std::size_t k) -> uint32_t { return first + uint32_t(k); },
+                               count, work_, direct_list,
+                               stage_cur, stage_end, emit_slow_triangle, emit_grow);
                 }
-            } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_FAN) {
-                if(count >= 3) {
-                    const ClipVertex& v0 = work_vertices_[0];
-                    for(uint32_t i = 1; i + 1 < count; i++) {
-                        const ClipVertex& v1 = work_vertices_[i];
-                        const ClipVertex& v2 = work_vertices_[i + 1];
-                        bool is_last = (i + 2 >= count) && (ri + 1 >= range_count);
-                        process_triangle(v0, v1, v2, is_last);
-                    }
-                }
-            } else if(renderable->arrangement == MESH_ARRANGEMENT_QUADS) {
-                for(uint32_t i = 0; i + 3 < count; i += 4) {
-                    process_quad(work_vertices_[i + 0], work_vertices_[i + 1],
-                                 work_vertices_[i + 2], work_vertices_[i + 3]);
-                }
-            } else if(renderable->arrangement == MESH_ARRANGEMENT_LINES) {
-                for(uint32_t i = 0; i + 1 < count; i += 2) {
-                    process_line(work_vertices_[i + 0], work_vertices_[i + 1]);
-                }
-            } else if(renderable->arrangement == MESH_ARRANGEMENT_LINE_STRIP) {
-                for(uint32_t i = 1; i < count; i++) {
-                    process_line(work_vertices_[i - 1], work_vertices_[i]);
-                }
+            } else {
+                emit_other_arrangement([first](std::size_t k) -> uint32_t { return first + uint32_t(k); },
+                                       count);
             }
         }
     }
@@ -2036,7 +2482,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             }
         }
         if(elements) {
-            get_app()->stats->increment_polygons_rendered(
+            polygons_rendered_ += StatsRecorder::polygon_count(
                 renderable->arrangement, elements);
         }
     }

@@ -9,9 +9,14 @@
 #endif
 
 /*
- * When enabled OP polys are sent to the PVR via store queues and all other
- * lists are sent over DMA. */
-#define HYBRID_RENDERING_ENABLED 0
+ * When enabled, the single "direct" list chosen each frame (see
+ * PVRRenderQueueVisitor::start_traversal) is still streamed to the TA via
+ * store queues during traversal, but every other list is RAM-staged during
+ * the frame and handed to KOS as a vertex buffer at end-of-frame, so
+ * pvr_scene_finish() DMAs it out instead of us blasting it via store queues
+ * ourselves. When disabled, all lists (direct and staged) go via store
+ * queues and no KOS DMA machinery is used at all. */
+#define HYBRID_RENDERING_ENABLED 1
 
 namespace smlt {
 
@@ -100,20 +105,29 @@ friend class PVRRenderQueueVisitor;
         bool last_header_valid_[5] = {false, false, false, false, false};
     #endif
 
+    /* A byte whose default construction leaves it uninitialised, so that
+     * resize() on a staging buffer only moves its size: the visitor writes
+     * every byte it adds, and std::vector<uint8_t> would zero them first. */
+    struct StagingByte {
+        uint8_t v;
+        StagingByte() {}
+    };
+    typedef aligned_vector<StagingByte, 32> StagingBuffer;
+
     struct ListDMABuffer {
         pvr_list_type_t list_type = PVR_LIST_OP_POLY;
-        aligned_vector<uint8_t, 32> buffers[2];
+        StagingBuffer buffers[2];
     };
 
     /* One staging buffer per PVR list type, indexed directly by pvr_list_type_t
      * (PVR_LIST_OP_POLY == 0 .. PVR_LIST_PT_POLY == 4). */
     static const size_t PVR_LIST_COUNT = 5;
     ListDMABuffer buffers_[PVR_LIST_COUNT] = {
-        { PVR_LIST_OP_POLY, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } },
-        { PVR_LIST_OP_MOD, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } },
-        { PVR_LIST_TR_POLY, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } },
-        { PVR_LIST_TR_MOD, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } },
-        { PVR_LIST_PT_POLY, { aligned_vector<uint8_t, 32>(), aligned_vector<uint8_t, 32>() } }
+        { PVR_LIST_OP_POLY, { StagingBuffer(), StagingBuffer() } },
+        { PVR_LIST_OP_MOD, { StagingBuffer(), StagingBuffer() } },
+        { PVR_LIST_TR_POLY, { StagingBuffer(), StagingBuffer() } },
+        { PVR_LIST_TR_MOD, { StagingBuffer(), StagingBuffer() } },
+        { PVR_LIST_PT_POLY, { StagingBuffer(), StagingBuffer() } }
     };
 
     uint8_t current_buffer_index_ = 0;
