@@ -1723,8 +1723,10 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * ================================================================ */
     /* Fixed transform scratch. Every slot below `count` is written before it
      * is read and slots above are never read, so a plain array avoids the
-     * growth/initialization bookkeeping of a vector. The largest span any
-     * renderable produces here is well under the cap. */
+     * growth/initialization bookkeeping of a vector. Primitive lists whose
+     * vertices span more than this are drawn a chunk at a time (see
+     * emit_list); meshes do get that big (one of the cave sample's OBJ
+     * submeshes is a 5000-vertex range). */
     static const uint32_t WORK_VERTEX_CAPACITY = 4096;
     /* Per batch vertex, packed for submission (see pvr_pack_sh4). The
      * window's ClipVertex records only live in cv_window_ until they are
@@ -1964,10 +1966,16 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * return. On exit work_[i] holds source vertex base + i, packed for
      * submission. */
     uint32_t work_base = 0;     /* source vertex of work_[0], for cv_at */
-    auto transform_batch = [&](uint32_t base, uint32_t count) {
+    /* When set, work_[i] holds source vertex work_gather[i] instead (see
+     * emit_list's gather) */
+    const uint32_t* work_gather = nullptr;
+    /* always_inline: with the oversized-batch helpers' extra callers GCC
+     * otherwise outlines this (and the transform_window inlined in it),
+     * which measured ~13% slower over the benchmark's frame. */
+    auto transform_batch = [&](uint32_t base, uint32_t count) __attribute__((always_inline)) {
         work_base = base;
-        /* All producers stay well under the cap (the widest is a level-chunk
-         * index span). Clamp defensively rather than overrunning the array. */
+        /* emit_list and friends never ask for more (bigger lists go in
+         * chunks); clamp defensively rather than overrunning the array. */
         if(count > WORK_VERTEX_CAPACITY) {
             count = WORK_VERTEX_CAPACITY;
         }
@@ -2237,7 +2245,8 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
      * vertex (so already clamped to [0, 1], which interpolating and
      * re-packing is unaffected by). */
     auto cv_at = [&](uint32_t i) __attribute__((noinline, cold)) -> ClipVertex {
-        const float* sp = (const float*)(raw_data + stride * (work_base + i) + pos_offset);
+        const uint32_t src = work_gather ? work_gather[i] : work_base + i;
+        const float* sp = (const float*)(raw_data + stride * src + pos_offset);
         const Vec4 c = mvp * Vec4(sp[0], sp[1], sp[2], 1.0f);
         const pvr_vertex_packed_t& p = work_[i];
         const float k = 1.0f / 255.0f;
@@ -2347,6 +2356,115 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         stage_end = base + buf.size();
     }
 
+    /* A batch is transformed into work_, which holds WORK_VERTEX_CAPACITY
+     * vertices, so a primitive list whose vertices span more than that is
+     * drawn a chunk at a time, each chunk's span transformed on its own -
+     * by these, out of line and cold so the common path below stays as it
+     * was. `src(k)` is the source vertex of the list's k-th element. */
+
+    /* Triangles [0, ntris) of a triangle list. A chunk whose vertices span
+     * too much is halved until it fits; a single triangle whose vertices
+     * are too far apart for any batch has them gathered into work_[0..2]
+     * one at a time. */
+    auto emit_list = [&](auto src, std::size_t ntris) __attribute__((noinline, cold)) {
+        std::size_t t = 0, chunk = ntris;
+        while(t < ntris) {
+            const std::size_t n = (chunk < ntris - t) ? chunk : ntris - t;
+            uint32_t lo = 0xFFFFFFFFu, hi = 0;
+            for(std::size_t k = t * 3; k < (t + n) * 3; ++k) {
+                const uint32_t v = src(k);
+                if(v < lo) lo = v;
+                if(v > hi) hi = v;
+            }
+            if(hi - lo < WORK_VERTEX_CAPACITY) {
+                transform_batch(lo, hi - lo + 1);
+                const std::size_t k0 = t * 3;
+                emit_triangles([&](std::size_t k) -> uint32_t { return src(k0 + k) - lo; },
+                               n, work_, direct_list,
+                               stage_cur, stage_end, emit_slow_triangle, emit_grow);
+                t += n;
+            } else if(n > 1) {
+                chunk = n / 2;
+            } else {
+                /* Each vertex transformed on its own (into work_[0]) and
+                 * set aside, through transform_batch so that transform_window
+                 * keeps its single caller. */
+                uint32_t gathered[3];
+                pvr_vertex_packed_t packed[3];
+                for(uint32_t c = 0; c < 3; ++c) {
+                    gathered[c] = src(t * 3 + c);
+                    transform_batch(gathered[c], 1);
+                    packed[c] = work_[0];
+                }
+                for(uint32_t c = 0; c < 3; ++c) work_[c] = packed[c];
+                work_gather = gathered;
+                emit_triangles([](std::size_t k) -> uint32_t { return uint32_t(k); },
+                               1, work_, direct_list,
+                               stage_cur, stage_end, emit_slow_triangle, emit_grow);
+                work_gather = nullptr;
+                t += 1;
+            }
+        }
+    };
+
+    /* A triangle strip of `count` elements, as chunks that overlap by the two
+     * vertices the next triangle shares. emit_strip winds each chunk as a
+     * strip starting at an even position, so chunks start at even ones; a
+     * triangle that would leave the next start odd goes out on its own, with
+     * the odd-position winding (its first two vertices swapped). */
+    auto emit_strip_list = [&](auto src, std::size_t count) __attribute__((noinline, cold)) {
+        if(count < 3) return;
+        std::size_t p = 0, chunk = count;
+        while(p + 2 < count) {
+            if(p & 1) {
+                const uint32_t tri[3] = {src(p + 1), src(p), src(p + 2)};
+                emit_list([&tri](std::size_t k) -> uint32_t { return tri[k]; }, 1);
+                p += 1;
+                continue;
+            }
+            std::size_t n = (chunk < count - p) ? chunk : count - p;
+            if(p + n < count && (n & 1)) --n;      /* the next chunk starts even */
+            if(n < 3) n = 3;
+            uint32_t lo = 0xFFFFFFFFu, hi = 0;
+            for(std::size_t k = p; k < p + n; ++k) {
+                const uint32_t v = src(k);
+                if(v < lo) lo = v;
+                if(v > hi) hi = v;
+            }
+            if(hi - lo < WORK_VERTEX_CAPACITY) {
+                transform_batch(lo, hi - lo + 1);
+                const std::size_t k0 = p;
+                emit_strip([&](std::size_t k) -> uint32_t { return src(k0 + k) - lo; },
+                           n, work_, direct_list,
+                           stage_cur, stage_end, emit_slow_triangle, emit_grow);
+                p += n - 2;
+            } else if(n > 3) {
+                chunk = n / 2;
+            } else {
+                const uint32_t tri[3] = {src(p), src(p + 1), src(p + 2)};
+                emit_list([&tri](std::size_t k) -> uint32_t { return tri[k]; }, 1);
+                p += 1;
+            }
+        }
+    };
+
+    /* Fans, quads and lines aren't chunked: a span over the capacity is cut
+     * short rather than read past work_. */
+    auto emit_other_clamped = [&](auto src, std::size_t n, uint32_t lo, uint32_t span) __attribute__((noinline, cold)) {
+        if(span > WORK_VERTEX_CAPACITY) {
+            S_WARN_ONCE("PVR: a fan/quad/line batch spans {0} vertices, more than {1}; "
+                        "drawing only part of it", span, WORK_VERTEX_CAPACITY);
+            span = WORK_VERTEX_CAPACITY;
+        }
+        transform_batch(lo, span);
+        std::size_t m = n;
+        while(m && src(m - 1) - lo >= span) --m;
+        emit_other_arrangement([&](std::size_t k) -> uint32_t {
+            const uint32_t v = src(k) - lo;
+            return v < span ? v : 0;
+        }, m);
+    };
+
     if(renderable->index_element_count > 0 && renderable->index_data) {
         /* Indexed rendering. */
         const auto* idata = renderable->index_data;
@@ -2368,11 +2486,14 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                 if(v < base) base = v;
                 if(v > high) high = v;
             }
-            transform_batch(base, high - base + 1);
-
-            emit_triangles([idx, base](std::size_t k) -> uint32_t { return idx[k] - base; },
-                           icount / 3, work_, direct_list,
-                           stage_cur, stage_end, emit_slow_triangle, emit_grow);
+            if(high - base >= WORK_VERTEX_CAPACITY) {
+                emit_list([idx](std::size_t k) -> uint32_t { return idx[k]; }, icount / 3);
+            } else {
+                transform_batch(base, high - base + 1);
+                emit_triangles([idx, base](std::size_t k) -> uint32_t { return idx[k] - base; },
+                               icount / 3, work_, direct_list,
+                               stage_cur, stage_end, emit_slow_triangle, emit_grow);
+            }
         } else {
         auto get_index = [&](std::size_t i) -> uint32_t {
             switch(itype) {
@@ -2395,6 +2516,16 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             if(v < base) base = v;
             if(v > high) high = v;
         }
+
+        if(high - base >= WORK_VERTEX_CAPACITY) {
+            if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES) {
+                emit_list(get_index, icount / 3);
+            } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
+                emit_strip_list(get_index, icount);
+            } else {
+                emit_other_clamped(get_index, icount, base, high - base + 1);
+            }
+        } else {
         transform_batch(base, high - base + 1);
 
         if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES) {
@@ -2411,6 +2542,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             emit_other_arrangement([&](std::size_t k) -> uint32_t { return get_index(k) - base; },
                                    icount);
         }
+        } /* end batch within capacity */
         } /* end generic indexed arrangements */
     } else {
         /* Non-indexed range-based rendering. Ranges are independent
@@ -2443,6 +2575,18 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
             uint32_t start = ranges[ri].start;
             uint32_t count = ranges[ri].count;
             if(!count) continue;
+
+            if(count > WORK_VERTEX_CAPACITY) {
+                auto src = [start](std::size_t k) -> uint32_t { return start + uint32_t(k); };
+                if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLES) {
+                    emit_list(src, count / 3);
+                } else if(renderable->arrangement == MESH_ARRANGEMENT_TRIANGLE_STRIP) {
+                    emit_strip_list(src, count);   /* each range is its own strip */
+                } else {
+                    emit_other_clamped(src, count, start, count);
+                }
+                continue;
+            }
 
             uint32_t first = 0;   /* work_ index of the range's first vertex */
             if(one_batch) {
