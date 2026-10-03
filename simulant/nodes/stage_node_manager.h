@@ -55,7 +55,7 @@ struct StageNodeTypeInfo {
     // purely from its name. Bound in register_stage_node<T>() to
     // get_node_params<T>(), which is otherwise only reachable when T is
     // known at compile time.
-    StageNodeParamQueryFunction param_query;
+    StageNodeParamQueryFunction param_query = nullptr;
 
     // Mirrors T::Meta::usage_kind (see S_DEFINE_STAGE_NODE_META) - whether
     // this type is meant to be created standalone, only ever attached as a
