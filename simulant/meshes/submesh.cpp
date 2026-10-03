@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cfloat>
 
 #include "submesh.h"
@@ -210,38 +211,52 @@ void SubMesh::_recalc_bounds_indexed(AABB& bounds) {
 
     auto& pos_attr = vdata->vertex_specification().position_attribute;
 
-    /* Awful switching is for performance
-       FIXME: Is there a better way to do this? I guess templated lambda or method
-    */
-    if(pos_attr == VERTEX_ATTRIBUTE_2F) {
+    if(bounds_indices_.empty() && ++bounds_recalc_count_ >= 2) {
+        bounds_indices_.reserve(index_data_->count());
         for(auto idx: *index_data_) {
-            auto pos = vdata->position_at<Vec2>(idx);
-            if(pos->x < minx) minx = pos->x;
-            if(pos->y < miny) miny = pos->y;
-            if(pos->x > maxx) maxx = pos->x;
-            if(pos->y > maxy) maxy = pos->y;
+            bounds_indices_.push_back(idx);
         }
-    } else if(pos_attr == VERTEX_ATTRIBUTE_3F) {
-        for(auto idx: *index_data_) {
-            auto pos = vdata->position_at<Vec3>(idx);
-            if(pos->x < minx) minx = pos->x;
-            if(pos->y < miny) miny = pos->y;
-            if(pos->z < minz) minz = pos->z;
-            if(pos->x > maxx) maxx = pos->x;
-            if(pos->y > maxy) maxy = pos->y;
-            if(pos->z > maxz) maxz = pos->z;
+        std::sort(bounds_indices_.begin(), bounds_indices_.end());
+        bounds_indices_.erase(
+            std::unique(bounds_indices_.begin(), bounds_indices_.end()),
+            bounds_indices_.end());
+    }
+
+    const uint8_t* base = vdata->data();
+    const uint32_t stride = vdata->stride();
+    const uint32_t vcount = vdata->count();
+
+    /* Positions are always first in the vertex, so x and y are at +0 and
+     * +4 regardless of the attribute, and z at +8 for 3F/4F */
+    const bool has_z = pos_attr != VERTEX_ATTRIBUTE_2F;
+    assert(pos_attr == VERTEX_ATTRIBUTE_2F || pos_attr == VERTEX_ATTRIBUTE_3F ||
+           pos_attr == VERTEX_ATTRIBUTE_4F);
+
+    auto visit = [&](uint32_t idx) {
+        if(idx >= vcount) {
+            return;
+        }
+
+        const float* pos = (const float*)(base + idx * stride);
+        const float x = pos[0], y = pos[1];
+        if(x < minx) minx = x;
+        if(x > maxx) maxx = x;
+        if(y < miny) miny = y;
+        if(y > maxy) maxy = y;
+        if(has_z) {
+            const float z = pos[2];
+            if(z < minz) minz = z;
+            if(z > maxz) maxz = z;
+        }
+    };
+
+    if(!bounds_indices_.empty()) {
+        for(auto idx: bounds_indices_) {
+            visit(idx);
         }
     } else {
-        assert(pos_attr == VERTEX_ATTRIBUTE_4F);
-
         for(auto idx: *index_data_) {
-            auto pos = vdata->position_at<Vec4>(idx);
-            if(pos->x < minx) minx = pos->x;
-            if(pos->y < miny) miny = pos->y;
-            if(pos->z < minz) minz = pos->z;
-            if(pos->x > maxx) maxx = pos->x;
-            if(pos->y > maxy) maxy = pos->y;
-            if(pos->z > maxz) maxz = pos->z;
+            visit(idx);
         }
     }
 

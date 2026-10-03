@@ -229,11 +229,33 @@ static void build_renderables(
     const AABB node_aabb = node->transformed_aabb();
     const Vec3 node_center = node_aabb.center();
 
-    const uint32_t n = (uint32_t) lights_visible.size();
+    /* The lights that can reach this node. Every renderer attenuates a point
+     * light as 1 - distance / range, clamped at 0, so one whose range doesn't
+     * reach the node's bounds contributes exactly nothing to it - leaving it
+     * out changes nothing but frees its slot (MAX_LIGHTS_PER_RENDERABLE is
+     * small) for a light that does reach, and saves a lighting pass. */
+    static std::vector<Light*> node_lights;
+    node_lights.clear();
+    const Vec3 box_min = node_aabb.min(), box_max = node_aabb.max();
+    for(Light* light: lights_visible) {
+        if(light->light_type() != LIGHT_TYPE_DIRECTIONAL) {
+            const Vec3 p = light->transform->position();
+            const float dx = std::max(std::max(box_min.x - p.x, p.x - box_max.x), 0.0f);
+            const float dy = std::max(std::max(box_min.y - p.y, p.y - box_max.y), 0.0f);
+            const float dz = std::max(std::max(box_min.z - p.z, p.z - box_max.z), 0.0f);
+            const float r = light->range();
+            if(dx * dx + dy * dy + dz * dz >= r * r) {
+                continue;
+            }
+        }
+        node_lights.push_back(light);
+    }
+
+    const uint32_t n = (uint32_t) node_lights.size();
     const uint32_t k = std::min(MAX_LIGHTS_PER_RENDERABLE, n);
 
     if(n > k) {
-        /* O(k*n) selection to place the k best lights in lights_visible[0..k).
+        /* O(k*n) selection to place the k best lights in node_lights[0..k).
          * Directional lights always score lower (higher priority) than point lights. */
         auto score = [&](Light* light) -> float {
             if(light->light_type() == LIGHT_TYPE_DIRECTIONAL) return -1.0f;
@@ -241,12 +263,12 @@ static void build_renderables(
         };
         for(uint32_t i = 0; i < k; ++i) {
             uint32_t best = i;
-            float best_score = score(lights_visible[i]);
+            float best_score = score(node_lights[i]);
             for(uint32_t j = i + 1; j < n; ++j) {
-                float s = score(lights_visible[j]);
+                float s = score(node_lights[j]);
                 if(s < best_score) { best_score = s; best = j; }
             }
-            if(best != i) std::swap(lights_visible[i], lights_visible[best]);
+            if(best != i) std::swap(node_lights[i], node_lights[best]);
         }
     }
 
@@ -259,9 +281,7 @@ static void build_renderables(
     auto viewport = pipeline_stage->viewport.get();
 
     node->generate_renderables(render_queue_, camera, viewport, level,
-                               lights_visible.data(),
-                               std::min((std::size_t)MAX_LIGHTS_PER_RENDERABLE,
-                                        lights_visible.size()));
+                               node_lights.data(), k);
 }
 
 void Compositor::run_layer(LayerPtr pipeline_stage, int &actors_rendered) {

@@ -189,6 +189,7 @@ void Mesh::submesh_index_data_updated(SubMesh* sm) {
     /* Recalculate the bounds on the submesh, we store
      * this on the submesh itself so we can have a fast lookup
      * in rebuild_aabb() */
+    sm->_invalidate_bounds_indices();
     sm->_recalc_bounds(sm->bounds_);
     rebuild_aabb();
 }

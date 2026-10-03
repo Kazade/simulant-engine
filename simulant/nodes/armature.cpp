@@ -224,6 +224,8 @@ void Armature::update_joint_matrices(const Mat4& armature_world_inverse,
     for(std::size_t h = 0; h < count; ++h) {
         auto joint = joints_[h];
         if(!joint) {
+            /* Zeroed so that blending it in contributes nothing */
+            std::memset(joint_matrices_[h]._native(), 0, sizeof(Mat4));
             continue;
         }
 
@@ -254,6 +256,132 @@ void Armature::pose_mesh(const SkinnedMesh& entry) {
                     entry.source->name());
         return;
     }
+
+    const auto& output_spec = output_data->vertex_specification();
+    const uint32_t count = std::min(source_data->count(), output_data->count());
+
+    /* Everything the fast path touches is resolved to a base pointer and a
+     * stride up-front, rather than going through the per-vertex accessors
+     * (and their offset lookups) for every attribute of every vertex */
+    const bool has_positions = source_spec.has_positions();
+    const bool has_normals = source_spec.has_normals();
+    const bool fast =
+        source_spec.weight_attribute == VERTEX_ATTRIBUTE_4F &&
+        (!has_positions ||
+         (source_spec.position_attribute == VERTEX_ATTRIBUTE_3F &&
+          output_spec.position_attribute == VERTEX_ATTRIBUTE_3F)) &&
+        (!has_normals ||
+         (source_spec.normal_attribute == VERTEX_ATTRIBUTE_3F &&
+          output_spec.normal_attribute == VERTEX_ATTRIBUTE_3F));
+
+    if(!fast) {
+        pose_mesh_generic(entry);
+        return;
+    }
+
+    const uint32_t src_stride = source_data->stride();
+    const uint32_t dst_stride = output_data->stride();
+    const uint8_t* src = source_data->data();
+    uint8_t* dst = output_data->data();
+
+    const uint32_t pos_off = has_positions ? source_spec.position_offset() : 0;
+    const uint32_t dst_pos_off = has_positions ? output_spec.position_offset() : 0;
+    const uint32_t nrm_off = has_normals ? source_spec.normal_offset() : 0;
+    const uint32_t dst_nrm_off = has_normals ? output_spec.normal_offset() : 0;
+    const uint32_t wgt_off = source_spec.weight_offset();
+    const uint32_t jnt_off = source_spec.joint_offset();
+    const bool use_byte_joints = source_spec.joint_attribute == VERTEX_ATTRIBUTE_4UB;
+
+    /* Missing joints have zeroed matrices (see update_joint_matrices) so
+     * blending them is a no-op - only the range needs checking here */
+    const uint32_t joint_count = joint_matrices_.size();
+    const shz_mat4x4_t* matrices =
+        (const shz_mat4x4_t*)joint_matrices_.data();
+
+    for(uint32_t i = 0; i < count; ++i, src += src_stride, dst += dst_stride) {
+        const float* w = (const float*)(src + wgt_off);
+        float weights[4] = {w[0], w[1], w[2], w[3]};
+
+        uint32_t joints[4];
+        if(use_byte_joints) {
+            const uint8_t* j = src + jnt_off;
+            joints[0] = j[0]; joints[1] = j[1]; joints[2] = j[2]; joints[3] = j[3];
+        } else {
+            const uint16_t* j = (const uint16_t*)(src + jnt_off);
+            joints[0] = j[0]; joints[1] = j[1]; joints[2] = j[2]; joints[3] = j[3];
+        }
+
+        float sum = weights[0] + weights[1] + weights[2] + weights[3];
+
+        /* Not every format weights every vertex (MS3D in particular allows
+         * vertices with no bone at all). Blending zero joint matrices would
+         * collapse those vertices onto the origin, so leave them at their
+         * bind-pose position/normal instead. */
+        if(sum == 0.0f) {
+            if(has_positions) {
+                std::memcpy(dst + dst_pos_off, src + pos_off, sizeof(float) * 3);
+            }
+
+            if(has_normals) {
+                std::memcpy(dst + dst_nrm_off, src + nrm_off, sizeof(float) * 3);
+            }
+            continue;
+        }
+
+        if(sum > 1.01f) {
+            float inv_sum = shz_invf_fsrra(sum);
+            for(float& weight: weights) {
+                weight *= inv_sum;
+            }
+        }
+
+        shz_xmtrx_init_zero();
+        for(int j = 0; j < 4; ++j) {
+            if(weights[j] != 0.0f && joints[j] < joint_count) {
+                shz_xmtrx_blend(&matrices[joints[j]], weights[j]);
+            }
+        }
+
+        if(has_positions) {
+            const float* v = (const float*)(src + pos_off);
+            shz_vec3_t out =
+                shz_xmtrx_transform_point3(shz_vec3_init(v[0], v[1], v[2]));
+            float* o = (float*)(dst + dst_pos_off);
+            o[0] = out.x;
+            o[1] = out.y;
+            o[2] = out.z;
+        }
+
+        if(has_normals) {
+            const float* n = (const float*)(src + nrm_off);
+            shz_vec3_t out =
+                shz_xmtrx_transform_vec3(shz_vec3_init(n[0], n[1], n[2]));
+            float len2 = out.x * out.x + out.y * out.y + out.z * out.z;
+            float* o = (float*)(dst + dst_nrm_off);
+            if(len2 > 0.0f) {
+                float inv = shz_inv_sqrtf_fsrra(len2);
+                o[0] = out.x * inv;
+                o[1] = out.y * inv;
+                o[2] = out.z * inv;
+            } else {
+                o[0] = out.x;
+                o[1] = out.y;
+                o[2] = out.z;
+            }
+        }
+    }
+
+    /* This also refreshes the output mesh's AABB */
+    output_data->done();
+}
+
+/* Accessor-based fallback for vertex layouts the fast path in pose_mesh
+ * doesn't handle (packed normals, 2D/4D positions etc.) */
+void Armature::pose_mesh_generic(const SkinnedMesh& entry) {
+    auto source_data = entry.source->vertex_data.get();
+    auto output_data = entry.output->vertex_data.get();
+
+    const auto& source_spec = source_data->vertex_specification();
 
     const bool has_positions = source_spec.has_positions();
     const bool has_normals = source_spec.has_normals();

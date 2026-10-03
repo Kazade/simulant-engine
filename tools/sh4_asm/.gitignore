@@ -1,0 +1,4 @@
+__pycache__/
+kbench/kernels.s
+kbench/kbench.elf
+kbench/*.o

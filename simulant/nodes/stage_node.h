@@ -508,10 +508,6 @@ class alignas(32) StageNode:
     public TransformListener,
     public Loadable {
 
-    DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
-    DEFINE_SIGNAL(CleanedUpSignal,
-                  signal_cleaned_up); // Fired when the node is cleaned up
-                                      // later, following destroy
 private:
     /* Heirarchy */
 
@@ -530,12 +526,36 @@ private:
     template<typename F, typename T, typename... Args>
     friend T* impl::mixin_factory(F& factory, StageNode* base, Args&&... args);
 
-    StageNode* parent_ = nullptr;
+    /* Everything the per-frame tree walks (update, late_update,
+     * fixed_update and renderable generation) read for each node is kept
+     * together here, directly after the base class subobjects. Nodes are
+     * far larger than a cache line, so this keeps a walk to a couple of
+     * lines per node (together with the vptr, destroyed flag and update
+     * signals in the bases) rather than one per field. Keep it that way
+     * when adding members. */
     StageNode* next_ = nullptr;
-    StageNode* prev_ = nullptr;
     StageNode* first_child_ = nullptr;
+
+    struct MixinInfo {
+        sig::connection destroy_connection;
+        StageNode* ptr;
+    };
+
+    std::vector<std::pair<StageNodeType, MixinInfo>> mixins_;
+
+    bool is_visible_ = true;
+    bool self_and_parents_visible_ = true;
+
+    StageNode* parent_ = nullptr;
+    StageNode* prev_ = nullptr;
     StageNode* last_child_ = nullptr;
 
+    DEFINE_SIGNAL(BoundsUpdatedSignal, signal_bounds_updated);
+    DEFINE_SIGNAL(CleanedUpSignal,
+                  signal_cleaned_up); // Fired when the node is cleaned up
+                                      // later, following destroy
+
+private:
     Transform transform_;
 
     // FIXME: This is potentially quite wasteful outside of the
@@ -545,13 +565,6 @@ private:
 
     /* Mixin handling */
     StageNode* base_ = this;
-
-    struct MixinInfo {
-        sig::connection destroy_connection;
-        StageNode* ptr;
-    };
-
-    std::vector<std::pair<StageNodeType, MixinInfo>> mixins_;
 
     bool partitioner_dirty_ = false;
     bool partitioner_added_ = false;
@@ -563,9 +576,6 @@ private:
 
     /* How many pipelines is this node the root of? */
     uint16_t active_pipeline_count_ = 0;
-
-    bool is_visible_ = true;
-    bool self_and_parents_visible_ = true;
 
     /* Mutable so that AABB accesses can be const, but we delay
      * calculation until access */

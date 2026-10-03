@@ -68,6 +68,11 @@ private:
      * list, so do_visit can branch to the modifier-volume submission path. */
     bool emitting_modifier_volume_ = false;
 
+    /* Polygons submitted this traversal, reported to the StatsRecorder once in
+     * end_traversal rather than per renderable (the call out to it was
+     * cold in the instruction cache every time) */
+    uint32_t polygons_rendered_ = 0;
+
     VertexLightState lights_[MAX_LIGHTS];
     float ambient_[3] = {0.2f, 0.2f, 0.2f};
 
@@ -106,6 +111,10 @@ private:
     void do_visit(const Renderable* renderable,
                   const MaterialPass* material_pass,
                   batcher::Iteration iteration);
+
+    /* Modifier-volume submission (ShadowCaster's volumes), split out of
+     * do_visit so the common path stays small. */
+    void do_visit_modifier_volume(const Renderable* renderable);
 
 };
 
