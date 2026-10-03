@@ -224,8 +224,10 @@ void Armature::update_joint_matrices(const Mat4& armature_world_inverse,
     for(std::size_t h = 0; h < count; ++h) {
         auto joint = joints_[h];
         if(!joint) {
-            /* Zeroed so that blending it in contributes nothing */
-            std::memset(joint_matrices_[h]._native(), 0, sizeof(Mat4));
+            /* Zeroed so that blending it in contributes nothing. Just the 16
+             * floats: _native() is aligned within Mat4's padded storage, so
+             * sizeof(Mat4) would run past its end */
+            std::memset(joint_matrices_[h]._native(), 0, sizeof(float) * 16);
             continue;
         }
 
@@ -293,10 +295,10 @@ void Armature::pose_mesh(const SkinnedMesh& entry) {
     const bool use_byte_joints = source_spec.joint_attribute == VERTEX_ATTRIBUTE_4UB;
 
     /* Missing joints have zeroed matrices (see update_joint_matrices) so
-     * blending them is a no-op - only the range needs checking here */
+     * blending them is a no-op - only the range needs checking here. Each
+     * matrix is fetched through _native(): Mat4 pads its storage to align
+     * the floats, so joint_matrices_ isn't an array of shz_mat4x4_t. */
     const uint32_t joint_count = joint_matrices_.size();
-    const shz_mat4x4_t* matrices =
-        (const shz_mat4x4_t*)joint_matrices_.data();
 
     for(uint32_t i = 0; i < count; ++i, src += src_stride, dst += dst_stride) {
         const float* w = (const float*)(src + wgt_off);
@@ -338,7 +340,9 @@ void Armature::pose_mesh(const SkinnedMesh& entry) {
         shz_xmtrx_init_zero();
         for(int j = 0; j < 4; ++j) {
             if(weights[j] != 0.0f && joints[j] < joint_count) {
-                shz_xmtrx_blend(&matrices[joints[j]], weights[j]);
+                shz_xmtrx_blend(
+                    (const shz_mat4x4_t*)joint_matrices_[joints[j]]._native(),
+                    weights[j]);
             }
         }
 
