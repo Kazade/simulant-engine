@@ -10,8 +10,11 @@ public:
 
     void on_load() override {
 
+        /* The 3D layer renders world_ rather than the whole scene, so it
+         * doesn't also process the stats panel's widgets. */
+        world_ = create_child<smlt::Stage>();
         camera_ = create_child<smlt::Camera3D>();
-        auto pipeline = compositor->create_layer(this, camera_);
+        auto pipeline = compositor->create_layer(world_, camera_);
 
         pipeline->viewport->set_color(smlt::Color::black());
 
@@ -26,9 +29,10 @@ public:
         opts.override_texture_extension = ".dtex";
 #endif
 
-        // Meshes
-        cave_mesh_ = app->shared_assets->load_mesh(
-            "assets/samples/cave/cave.dcm", VertexSpecification::DEFAULT, opts);
+        // Meshes. The cave is an indexed glTF converted from cave.dcm with
+        // tools/dcm_to_gltf.py; its samplers make the textures bilinear.
+        auto cave_prefab =
+            app->shared_assets->load_prefab("assets/samples/cave/cave.glb");
         godray_mesh_ =
             app->shared_assets->load_mesh("assets/samples/cave/godray.obj",
                                           VertexSpecification::DEFAULT, opts);
@@ -37,11 +41,6 @@ public:
                                           VertexSpecification::DEFAULT, opts);
 
         // Materials + Textures
-        for(auto submesh: cave_mesh_->each_submesh()) {
-            submesh->material()->base_color_map()->set_texture_filter(
-                TextureFilter::TEXTURE_FILTER_BILINEAR);
-        }
-
         auto ray_mat = godray_mesh_->first_submesh()->material();
         ray_mat->set_blend_func(BlendType::BLEND_ADD);
         ray_mat->set_lighting_enabled(false);
@@ -57,9 +56,9 @@ public:
             TextureFilter::TEXTURE_FILTER_BILINEAR);
 
         // Geoms + Actors
-        cave_geom_ = create_child<smlt::Actor>(cave_mesh_);
-        fairy_actor_ = create_child<smlt::Actor>(fairy_mesh_);
-        godray_geom_ = create_child<smlt::Actor>(godray_mesh_);
+        cave_ = world_->create_child<smlt::PrefabInstance>(cave_prefab);
+        fairy_actor_ = world_->create_child<smlt::Actor>(fairy_mesh_);
+        godray_geom_ = world_->create_child<smlt::Actor>(godray_mesh_);
         fairy_actor_->set_render_priority(RENDER_PRIORITY_FOREGROUND);
 
         // Lights
@@ -73,17 +72,20 @@ public:
         auto rock_light = create_child<smlt::PointLight>(
             Params()
                 .set("position", Vec3(-12.15f, -0.67f, 0.73f))
-                .set("color", lightCol));
+                .set("color", lightCol)
+                .set("range", 5.0f));
 
         /* Intensity multiplies directly into the lighting term, so point
-         * lights use the same ~1 scale as the directional light. */
-        rock_light->set_intensity(2.0f);
+         * lights use the same ~1 scale as the directional light. Their
+         * ranges keep them local: attenuation is 1 - distance / range. */
+        rock_light->set_intensity(4.0f);
 
         auto fairy_light = create_child<smlt::PointLight>(
             Params()
                 .set("position", Vec3())
-                .set("color", Color(0.5f, 0.85f, 1, 1)));
-        fairy_light->set_intensity(1.5f);
+                .set("color", Color(0.5f, 0.85f, 1, 1))
+                .set("range", 5.0f));
+        fairy_light->set_intensity(3.0f);
         fairy_light->set_parent(fairy_actor_);
 
         // BezierPath
@@ -107,7 +109,7 @@ public:
         compositor->create_layer(stats_, panel_cam_,
                                  smlt::RENDER_PRIORITY_FOREGROUND);
 
-        debug_ = scene->create_child<Debug>();
+        debug_ = world_->create_child<Debug>();
     }
 
     void on_update(float dt) override {
@@ -167,6 +169,7 @@ public:
     }
 
 private:
+    Stage* world_ = nullptr;
     CameraPtr camera_;
 
     Debug* debug_ = nullptr;
@@ -174,11 +177,10 @@ private:
     SoundPtr sound_;
     PlayingSoundPtr player_;
 
-    MeshPtr cave_mesh_;
     MeshPtr godray_mesh_;
     MeshPtr fairy_mesh_;
 
-    ActorPtr cave_geom_;
+    PrefabInstance* cave_ = nullptr;
     ActorPtr godray_geom_;
     ActorPtr fairy_actor_;
 
