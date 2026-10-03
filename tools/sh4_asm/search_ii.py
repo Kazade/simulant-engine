@@ -19,9 +19,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 def kernels():
     c1o, c1b, c1r = G.comb_ops(1)
     c2o, c2b, c2r = G.comb_ops(2)
+    c3o, c3b, c3r = G.comb_ops(3)
     pko, pkb, pkr = G.pk_ops()
     return {
         "geo": (G.GEO_OPS, G.GEO_REUSE, 2, None, G.GEO_SETS[0], G.GEO_II),
+        "comb3": (c3o, c3r, 2, None, G.COMB_SETS[0], G.COMB_II[3]),
         "comb2": (c2o, c2r, 2, None, G.COMB_SETS[0], G.COMB_II[2]),
         "comb1": (c1o, c1r, 2, None, G.COMB_SETS[0], G.COMB_II[1]),
         "p1": (G.P1_OPS, G.P1_REUSE, 1, G.p1_extra, {}, G.P1_II),

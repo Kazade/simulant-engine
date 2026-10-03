@@ -685,11 +685,13 @@ extern "C" void pvr_light_geometry_sh4(const PvrGeomArgs* args);
 extern "C" void pvr_light_dir_sh4(float* rows, float* w, uint32_t n, const float* k);
 extern "C" void pvr_light_point_sh4(float* rows, float* w, uint32_t n, const float* k);
 
-/* Dielectric combine passes, for one and two lights (pvr_lighting_sh4.s):
- * replace each row's weights with LV_DR.. and LV_SR... `w` is the first
- * row's weights. */
+/* Dielectric combine passes, for one, two and three lights
+ * (pvr_lighting_sh4.s): replace each row's weights with LV_DR.. and LV_SR...
+ * `w` is the first row's weights. A third light's weights sit at LV_SR,
+ * LV_SR + 1, which the combine reads before it overwrites them. */
 static_assert(LV_W == 8 && LV_DR == 8 && LV_SR == 12 && LV_STRIDE == 16,
               "Scratch row layout is fixed by the asm");
+extern "C" void pvr_light_combine3_sh4(float* w, uint32_t n);
 extern "C" void pvr_light_combine2_sh4(float* w, uint32_t n);
 extern "C" void pvr_light_combine1_sh4(float* w, uint32_t n);
 
@@ -786,18 +788,18 @@ static void light_vertices(const LightingParams& lp, ClipVertex* cv,
          * after texture modulation so it isn't tinted by the surface. */
         if(Dielectric) {
             /* XMTRX is free once the geometry pass is done, so it holds the
-             * combine's constants: column 0 = light 0's colour, column 1 =
-             * light 1's (both pre-scaled by the 0.96 diffuse share of F0 =
-             * 0.04), column 3 = (ambient, 1). Then
-             *   FTRV(wd0, wd1, -, 1) = ambient + 0.96 * sum(wd * colour)
-             *   FTRV(ws0, ws1, -, 0) = 0.96 * sum(ws * colour)
+             * combine's constants: columns 0-2 = lights 0-2's colours (zero
+             * for absent lights; all pre-scaled by the 0.96 diffuse share of
+             * F0 = 0.04), column 3 = (ambient, 1). Then
+             *   FTRV(wd0, wd1, wd2, 1) = ambient + 0.96 * sum(wd * colour)
+             *   FTRV(ws0, ws1, ws2, 0) = 0.96 * sum(ws * colour)
              * and the specular weights were already scaled by 0.04 / 0.96 in
              * bp_scale, so the second is exactly the 4% specular. See
              * pvr_light_combine*_sh4 in pvr_lighting_sh4.s. The caller
              * reloads MVP afterwards. */
             alignas(32) static shz_mat4x4_t cm;
             float* m = cm.elem;
-            for(int col = 0; col < 2; ++col) {
+            for(int col = 0; col < 3; ++col) {
                 const float* lc = (col < NumLights) ? lp.lights[col].col : nullptr;
                 /* x 0.5: the light passes store doubled weights */
                 m[col * 4 + 0] = lc ? lc[0] * 0.48f : 0.0f;
@@ -805,12 +807,13 @@ static void light_vertices(const LightingParams& lp, ClipVertex* cv,
                 m[col * 4 + 2] = lc ? lc[2] * 0.48f : 0.0f;
                 m[col * 4 + 3] = 0.0f;
             }
-            m[8] = m[9] = m[10] = m[11] = 0.0f;
             m[12] = lp.ambient[0]; m[13] = lp.ambient[1]; m[14] = lp.ambient[2];
             m[15] = 1.0f;
             shz_xmtrx_load_4x4(&cm);
 
-            if(NumLights > 1) {
+            if(NumLights > 2) {
+                pvr_light_combine3_sh4(lit_window_[0] + LV_W, n);
+            } else if(NumLights > 1) {
                 pvr_light_combine2_sh4(lit_window_[0] + LV_W, n);
             } else {
                 pvr_light_combine1_sh4(lit_window_[0] + LV_W, n);
@@ -1847,7 +1850,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
              * lanes drop out of the register allocation) and on dielectric
              * materials (metallic == 0, the common case), whose constant F0
              * of 0.04 makes Fresnel scalar per light. */
-            static_assert(MAX_LIGHTS == 2, "Update the light_vertices dispatch");
+            static_assert(MAX_LIGHTS == 3, "Update the light_vertices dispatch");
             const uint8_t* row = raw_data + stride * (base + first);
             const bool dielectric = (mat_metallic_ == 0.0f);
             if(light_count == 1) {
@@ -1858,12 +1861,20 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
                     light_vertices<false, 1>(lp, cv_window_, row, count,
                                              stride, pos_offset, normal_offset);
                 }
-            } else {
+            } else if(light_count == 2) {
                 if(dielectric) {
                     light_vertices<true, 2>(lp, cv_window_, row, count,
                                             stride, pos_offset, normal_offset);
                 } else {
                     light_vertices<false, 2>(lp, cv_window_, row, count,
+                                             stride, pos_offset, normal_offset);
+                }
+            } else {
+                if(dielectric) {
+                    light_vertices<true, 3>(lp, cv_window_, row, count,
+                                            stride, pos_offset, normal_offset);
+                } else {
+                    light_vertices<false, 3>(lp, cv_window_, row, count,
                                              stride, pos_offset, normal_offset);
                 }
             }

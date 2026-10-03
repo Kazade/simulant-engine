@@ -27,7 +27,7 @@ static const uint32_t MAX_MATERIAL_PASSES = 4;
 #if defined(__PSP__)
 static const uint32_t MAX_LIGHTS_PER_RENDERABLE = 4;
 #elif defined(__DREAMCAST__)
-static const uint32_t MAX_LIGHTS_PER_RENDERABLE = 2;
+static const uint32_t MAX_LIGHTS_PER_RENDERABLE = 3;
 #else
 static const uint32_t MAX_LIGHTS_PER_RENDERABLE = 8;
 #endif
