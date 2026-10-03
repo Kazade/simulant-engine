@@ -282,20 +282,167 @@ _pvr_light_geometry_sh4:
     mov.l   @r15+, r8
 
 !
-! void pvr_light_combine2_sh4(float* w, uint32_t n)
+! void pvr_light_combine3_sh4(float* w, uint32_t n)
 !
-! r4 : the first scratch row's light weights: wd0, ws0, wd1, ws1 at +0..+12
+! r4 : the first scratch row's light weights: wd0, ws0, wd1, ws1 (wd2, ws2)
+!      at +0..+12 (+20)
 ! r5 : vertex count
 !
 ! On entry XMTRX holds column 0 = light 0's colour, column 1 = light 1's,
-! column 2 = 0, column 3 = (ambient, 1). Then with D = (wd0, wd1, -, 1) and
-! S = (ws0, ws1, -, 0)
+! column 2 = light 2's (0 for fewer lights), column 3 = (ambient, 1). Then
+! with D = (wd0, wd1, wd2, 1) and S = (ws0, ws1, ws2, 0)
 !   FTRV(D) = (ambient + sum(wd * colour), 1)
 !   FTRV(S) = (sum(ws * colour), 0)
 ! which replace the weights in each row: D's rgb at +0..+8 and S's at
 ! +16..+24 (64-byte row stride). Row 3 of the matrix keeps the w lanes at 1
-! and 0 and column 2 ignores lane 2, so after the setup below neither needs
-! rewriting per vertex.
+! and 0, so after the setup below they don't need rewriting per vertex; with
+! fewer than three lights lane 2 is never loaded and meets a zero column.
+!
+! 12 cycles per vertex (the two FTRVs hold FE for 8), pipelined as in the
+! geometry pass (a: fr0-7, row pointer r1; b: fr8-15, r5).
+!
+    .section .text._pvr_light_combine3_sh4, "ax", %progbits
+    .globl _pvr_light_combine3_sh4
+    .align 5
+_pvr_light_combine3_sh4:
+    fmov.s  fr12, @-r15
+    fmov.s  fr13, @-r15
+    fmov.s  fr14, @-r15
+    fmov.s  fr15, @-r15
+    mov     r5, r7
+    mov     r4, r1              ! a: row 0
+    mov     r4, r5
+    add     #64, r5             ! b: row 1
+    fldi1   fr3                 ! D.w
+    fldi0   fr7                 ! S.w
+    fldi1   fr11
+    fldi0   fr15
+    fldi0   fr2                 ! lane 2 meets a zero column; just keep it finite
+    fldi0   fr6
+    fldi0   fr10
+    fldi0   fr14
+    shlr    r7                  ! pairs; T = n & 1
+    movt    r6                  ! single-vertex tail count (all of n if n < 2)
+    tst     r7, r7
+    bt      .comb3_single
+    fmov.s  @r1+, fr0           !  0 v+0 LD0
+    fmov.s  @r1+, fr4           !  1 v+0 LS0
+    fmov.s  @r1+, fr1           !  2 v+0 LD1
+    fmov.s  @r1+, fr5           !  3 v+0 LS1
+    fmov.s  @r1+, fr2           !  7 v+0 LD2
+    ftrv    xmtrx, fv0          ! 10 v+0 TD
+    fmov.s  @r1, fr6            ! 11 v+0 LS2
+    fmov.s  @r5+, fr8           ! 12 v+1 LD0
+    fmov.s  @r5+, fr12          ! 13 v+1 LS0
+    fmov.s  @r5+, fr9           ! 14 v+1 LD1
+    ftrv    xmtrx, fv4          ! 14 v+0 TS
+    fmov.s  @r5+, fr13          ! 15 v+1 LS1
+    add     #-8, r1             ! 15 v+0 AB8
+    fmov.s  fr2, @-r1           ! 16 v+0 DB
+    fmov.s  fr1, @-r1           ! 17 v+0 DG
+    fmov.s  fr0, @-r1           ! 18 v+0 DR
+    fmov.s  @r5+, fr10          ! 19 v+1 LD2
+    add     #28, r1             ! 19 v+0 A28
+    fmov.s  fr6, @-r1           ! 20 v+0 SB
+    fmov.s  fr5, @-r1           ! 21 v+0 SG
+    fmov.s  fr4, @-r1           ! 22 v+0 SR
+    ftrv    xmtrx, fv8          ! 22 v+1 TD
+    fmov.s  @r5, fr14           ! 23 v+1 LS2
+    add     #112, r1            ! 23 v+0 AW
+    dt      r7                  ! kernel iterations = pairs - 1
+    bt      .comb3_epilogue
+    .align 5
+.comb3_kernel:
+    fmov.s  @r1+, fr0           !  0 v+0 LD0
+    dt      r7                  !  0 loop count
+    fmov.s  @r1+, fr4           !  1 v+0 LS0
+    fmov.s  @r1+, fr1           !  2 v+0 LD1
+    ftrv    xmtrx, fv12         !  2 v-1 TS
+    fmov.s  @r1+, fr5           !  3 v+0 LS1
+    add     #-8, r5             !  3 v-1 AB8
+    fmov.s  fr10, @-r5          !  4 v-1 DB
+    fmov.s  fr9, @-r5           !  5 v-1 DG
+    fmov.s  fr8, @-r5           !  6 v-1 DR
+    fmov.s  @r1+, fr2           !  7 v+0 LD2
+    add     #28, r5             !  7 v-1 A28
+    fmov.s  fr14, @-r5          !  8 v-1 SB
+    fmov.s  fr13, @-r5          !  9 v-1 SG
+    fmov.s  fr12, @-r5          ! 10 v-1 SR
+    ftrv    xmtrx, fv0          ! 10 v+0 TD
+    fmov.s  @r1, fr6            ! 11 v+0 LS2
+    add     #112, r5            ! 11 v-1 AW
+    fmov.s  @r5+, fr8           ! 12 v+1 LD0
+    fmov.s  @r5+, fr12          ! 13 v+1 LS0
+    fmov.s  @r5+, fr9           ! 14 v+1 LD1
+    ftrv    xmtrx, fv4          ! 14 v+0 TS
+    fmov.s  @r5+, fr13          ! 15 v+1 LS1
+    add     #-8, r1             ! 15 v+0 AB8
+    fmov.s  fr2, @-r1           ! 16 v+0 DB
+    fmov.s  fr1, @-r1           ! 17 v+0 DG
+    fmov.s  fr0, @-r1           ! 18 v+0 DR
+    fmov.s  @r5+, fr10          ! 19 v+1 LD2
+    add     #28, r1             ! 19 v+0 A28
+    fmov.s  fr6, @-r1           ! 20 v+0 SB
+    fmov.s  fr5, @-r1           ! 21 v+0 SG
+    fmov.s  fr4, @-r1           ! 22 v+0 SR
+    ftrv    xmtrx, fv8          ! 22 v+1 TD
+    fmov.s  @r5, fr14           ! 23 v+1 LS2
+    bf/s    .comb3_kernel
+    add     #112, r1            ! 23 v+0 AW
+.comb3_epilogue:
+    ftrv    xmtrx, fv12         !  2 v-1 TS
+    add     #-8, r5             !  3 v-1 AB8
+    fmov.s  fr10, @-r5          !  4 v-1 DB
+    fmov.s  fr9, @-r5           !  5 v-1 DG
+    fmov.s  fr8, @-r5           !  6 v-1 DR
+    add     #28, r5             !  7 v-1 A28
+    fmov.s  fr14, @-r5          !  8 v-1 SB
+    fmov.s  fr13, @-r5          !  9 v-1 SG
+    fmov.s  fr12, @-r5          ! 10 v-1 SR
+    add     #112, r5            ! 11 v-1 AW
+.comb3_single:
+    tst     r6, r6
+    bt      .comb3_done
+    fmov.s  @r1+, fr0           !  0 LD0
+    fmov.s  @r1+, fr4           !  1 LS0
+    fmov.s  @r1+, fr1           !  2 LD1
+    fmov.s  @r1+, fr5           !  3 LS1
+    fmov.s  @r1+, fr2           !  7 LD2
+    ftrv    xmtrx, fv0          ! 10 TD
+    fmov.s  @r1, fr6            ! 11 LS2
+    ftrv    xmtrx, fv4          ! 14 TS
+    add     #-8, r1             ! 15 AB8
+    fmov.s  fr2, @-r1           ! 16 DB
+    fmov.s  fr1, @-r1           ! 17 DG
+    fmov.s  fr0, @-r1           ! 18 DR
+    add     #28, r1             ! 19 A28
+    fmov.s  fr6, @-r1           ! 20 SB
+    fmov.s  fr5, @-r1           ! 21 SG
+    fmov.s  fr4, @-r1           ! 22 SR
+    add     #48, r1             ! 23 AW
+.comb3_done:
+    fmov.s  @r15+, fr15
+    fmov.s  @r15+, fr14
+    fmov.s  @r15+, fr13
+    rts
+    fmov.s  @r15+, fr12
+
+!
+! void pvr_light_combine2_sh4(float* w, uint32_t n)
+!
+! r4 : the first scratch row's light weights: wd0, ws0, wd1, ws1 (wd2, ws2)
+!      at +0..+12 (+20)
+! r5 : vertex count
+!
+! On entry XMTRX holds column 0 = light 0's colour, column 1 = light 1's,
+! column 2 = light 2's (0 for fewer lights), column 3 = (ambient, 1). Then
+! with D = (wd0, wd1, wd2, 1) and S = (ws0, ws1, ws2, 0)
+!   FTRV(D) = (ambient + sum(wd * colour), 1)
+!   FTRV(S) = (sum(ws * colour), 0)
+! which replace the weights in each row: D's rgb at +0..+8 and S's at
+! +16..+24 (64-byte row stride). Row 3 of the matrix keeps the w lanes at 1
+! and 0, so after the setup below they don't need rewriting per vertex; with
+! fewer than three lights lane 2 is never loaded and meets a zero column.
 !
 ! 11 cycles per vertex (the two FTRVs hold FE for 8), pipelined as in the
 ! geometry pass (a: fr0-7, row pointer r1; b: fr8-15, r5).
@@ -414,18 +561,19 @@ _pvr_light_combine2_sh4:
 !
 ! void pvr_light_combine1_sh4(float* w, uint32_t n)
 !
-! r4 : the first scratch row's light weights: wd0, ws0, wd1, ws1 at +0..+12
+! r4 : the first scratch row's light weights: wd0, ws0, wd1, ws1 (wd2, ws2)
+!      at +0..+12 (+20)
 ! r5 : vertex count
 !
 ! On entry XMTRX holds column 0 = light 0's colour, column 1 = light 1's,
-! column 2 = 0, column 3 = (ambient, 1). Then with D = (wd0, wd1, -, 1) and
-! S = (ws0, ws1, -, 0)
+! column 2 = light 2's (0 for fewer lights), column 3 = (ambient, 1). Then
+! with D = (wd0, wd1, wd2, 1) and S = (ws0, ws1, ws2, 0)
 !   FTRV(D) = (ambient + sum(wd * colour), 1)
 !   FTRV(S) = (sum(ws * colour), 0)
 ! which replace the weights in each row: D's rgb at +0..+8 and S's at
 ! +16..+24 (64-byte row stride). Row 3 of the matrix keeps the w lanes at 1
-! and 0 and column 2 ignores lane 2, so after the setup below neither needs
-! rewriting per vertex.
+! and 0, so after the setup below they don't need rewriting per vertex; with
+! fewer than three lights lane 2 is never loaded and meets a zero column.
 !
 ! 9 cycles per vertex (the two FTRVs hold FE for 8), pipelined as in the
 ! geometry pass (a: fr0-7, row pointer r1; b: fr8-15, r5).

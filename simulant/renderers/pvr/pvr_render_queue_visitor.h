@@ -40,7 +40,7 @@ public:
 
     void apply_lights(const LightPtr* lights, const uint8_t count) override;
 
-    static const int MAX_LIGHTS = 2;
+    static const int MAX_LIGHTS = 3;
 
     /* Number of distinct lights whose eye-space state we cache per frame.
      * apply_lights can be called once per renderable (and once per light for

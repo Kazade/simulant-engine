@@ -179,15 +179,30 @@ _pvr_light_geometry_sh4:
 # ---------------------------------------------------------------------------
 # Combine pass (dielectric)
 # ---------------------------------------------------------------------------
-COMB_II = {2: 11, 1: 9}
+COMB_II = {3: 12, 2: 11, 1: 9}
 
 
 def comb_ops(nlights):
-    """Scratch row -> scratch row: reads the weights at +32..+44, writes
-    D (ambient + diffuse) to +32..+40 and S (specular) to +48..+56."""
+    """Scratch row -> scratch row: reads the weights at +32..+44 (+52 for
+    three lights), writes D (ambient + diffuse) to +32..+40 and S
+    (specular) to +48..+56. A third light's weights are at +48, +52, under
+    S: each S store depends (through TS) on the loads of the same row, so
+    they're read before they're overwritten."""
     two = nlights == 2
     ops = [("LD0", "LS", "fmov.s  @{rw}+, {d0}", [])]
-    if two:
+    if nlights == 3:
+        ops += [
+            ("LS0", "LS", "fmov.s  @{rw}+, {s0}", [("LD0", 1)]),
+            ("LD1", "LS", "fmov.s  @{rw}+, {d1}", [("LS0", 1)]),
+            ("LS1", "LS", "fmov.s  @{rw}+, {s1}", [("LD1", 1)]),
+            ("LD2", "LS", "fmov.s  @{rw}+, {d2}", [("LS1", 1)]),
+            ("LS2", "LS", "fmov.s  @{rw}, {s2}", [("LD2", 1)]),
+            ("AB8", "EX", "add     #-8, {rw}", [("LS2", 1)]),
+            ("TD", "FE", "ftrv    xmtrx, {vD}", [("LD0", LOAD), ("LD1", LOAD), ("LD2", LOAD)]),
+            ("TS", "FE", "ftrv    xmtrx, {vS}", [("LS0", LOAD), ("LS1", LOAD), ("LS2", LOAD)]),
+        ]
+        last = "AB8"
+    elif two:
         ops += [
             ("LS0", "LS", "fmov.s  @{rw}+, {s0}", [("LD0", 1)]),
             ("LD1", "LS", "fmov.s  @{rw}+, {d1}", [("LS0", 1)]),
@@ -218,8 +233,10 @@ def comb_ops(nlights):
         ("LD0", ["DR", "AW"]), ("LS0", ["SR"]),
         ("TD", ["DB", "DG", "DR"]), ("TS", ["SB", "SG", "SR"]),
     ]
-    if two:
+    if nlights >= 2:
         reuse += [("LD1", ["DG"]), ("LS1", ["SG"])]
+    if nlights == 3:
+        reuse += [("LD2", ["DB"]), ("LS2", ["SB"])]
     return ops, {"TD": 4, "TS": 4}, reuse
 
 
@@ -238,7 +255,7 @@ def combine(nlights):
                                          single_subst=[("add     #112,", "add     #48,")])
     assert ip == 1
     L = "\n".join
-    zero1 = "" if nlights == 2 else """
+    zero1 = "" if nlights >= 2 else """
     fldi0   fr1                 ! light 1's lanes: never loaded, times a
     fldi0   fr5                 ! zero column
     fldi0   fr9
@@ -247,18 +264,19 @@ def combine(nlights):
 !
 ! void pvr_light_combine{nlights}_sh4(float* w, uint32_t n)
 !
-! r4 : the first scratch row's light weights: wd0, ws0, wd1, ws1 at +0..+12
+! r4 : the first scratch row's light weights: wd0, ws0, wd1, ws1 (wd2, ws2)
+!      at +0..+12 (+20)
 ! r5 : vertex count
 !
 ! On entry XMTRX holds column 0 = light 0's colour, column 1 = light 1's,
-! column 2 = 0, column 3 = (ambient, 1). Then with D = (wd0, wd1, -, 1) and
-! S = (ws0, ws1, -, 0)
+! column 2 = light 2's (0 for fewer lights), column 3 = (ambient, 1). Then
+! with D = (wd0, wd1, wd2, 1) and S = (ws0, ws1, ws2, 0)
 !   FTRV(D) = (ambient + sum(wd * colour), 1)
 !   FTRV(S) = (sum(ws * colour), 0)
 ! which replace the weights in each row: D's rgb at +0..+8 and S's at
 ! +16..+24 (64-byte row stride). Row 3 of the matrix keeps the w lanes at 1
-! and 0 and column 2 ignores lane 2, so after the setup below neither needs
-! rewriting per vertex.
+! and 0, so after the setup below they don't need rewriting per vertex; with
+! fewer than three lights lane 2 is never loaded and meets a zero column.
 !
 ! {II} cycles per vertex (the two FTRVs hold FE for 8), pipelined as in the
 ! geometry pass (a: fr0-7, row pointer r1; b: fr8-15, r5).
@@ -1132,5 +1150,5 @@ HEADER = """!! \\file
 """
 
 if __name__ == "__main__":
-    print(HEADER + geometry() + combine(2) + combine(1) + pass1() + pack() + light_dir()
+    print(HEADER + geometry() + combine(3) + combine(2) + combine(1) + pass1() + pack() + light_dir()
           + light_point(), end="")
