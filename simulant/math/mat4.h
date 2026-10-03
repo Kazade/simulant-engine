@@ -46,6 +46,19 @@ public:
     Mat4();
     static Mat4 zero();
 
+    /* Copy the 16 floats, not the raw storage: in a misaligned Mat4 (e.g. a
+     * call-result temporary, which GCC on SH4 only 4-byte aligns) they start
+     * 4 bytes in, so a byte-wise copy into an aligned one would shift the
+     * matrix by one element. */
+    Mat4(const Mat4& rhs) {
+        std::memcpy(data(), rhs.data(), sizeof(float) * 16);
+    }
+
+    Mat4& operator=(const Mat4& rhs) {
+        std::memcpy(data(), rhs.data(), sizeof(float) * 16);
+        return *this;
+    }
+
     Mat4(const FloatArray& arr) {
         std::copy(arr.begin(),
                   arr.begin() + std::min((unsigned)arr.size(), 16u), data());
