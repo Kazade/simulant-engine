@@ -67,18 +67,27 @@ static inline float pvr_clamp01(float v) {
     return v > 0.0f ? (v < 1.0f ? v : 1.0f) : 0.0f;
 }
 
-/* The depth value the PVR compares, given a clip-space z and w, and the
- * already-computed 1/w (which we have anyway for the perspective divide).
+/* Depth for orthographic projections.
  *
- * The PVR expects 1/w, larger = nearer. That breaks for orthographic
+ * The PVR compares 1/w, larger = nearer. That breaks for orthographic
  * projections: w is always 1, so every vertex in the scene gets the same
  * depth and nothing can be depth-ordered (every test is a tie). As GLdc does,
- * use 1/(1 + z) instead when w == 1. Ortho clip-space z runs from -1 (near)
- * to 1 (far) after near-plane clipping, so this stays positive (as
- * shz_invf_fsrra requires) and larger = nearer; the small extra avoids a
- * divide by zero exactly on the near plane. */
-static inline float pvr_depth(float z, float w, float inv_w) {
-    return (w == 1.0f) ? shz_invf_fsrra(1.0001f + z) : inv_w;
+ * use 1/(1 + z) instead. Ortho clip-space z runs from -1 (near) to 1 (far)
+ * after near-plane clipping, so this stays positive (as shz_invf_fsrra
+ * requires) and larger = nearer; the small extra avoids a divide by zero
+ * exactly on the near plane.
+ *
+ * Whether to use it is decided once per draw from the MVP (pvr_is_ortho)
+ * rather than per vertex, so it costs nothing for perspective draws: most
+ * vertices are packed by pvr_pack_sh4, which always writes 1/w, and only
+ * ortho draws then need their depths rewritten. */
+static inline float pvr_ortho_depth(float z) {
+    return shz_invf_fsrra(1.0001f + z);
+}
+
+/* True if the MVP's bottom row is (0, 0, 0, 1), so w is always 1 */
+static inline bool pvr_is_ortho(const Mat4& mvp) {
+    return mvp[3] == 0.0f && mvp[7] == 0.0f && mvp[11] == 0.0f && mvp[15] == 1.0f;
 }
 
 /* Build pvr_poly_hdr_t directly without going through pvr_poly_cxt_t.
@@ -1307,6 +1316,7 @@ void PVRRenderQueueVisitor::do_visit_modifier_volume(const Renderable* renderabl
     const auto& view = camera_->view_matrix();
     const auto& projection = camera_->projection_matrix();
     Mat4 mvp = projection * (view * model);
+    const bool ortho = pvr_is_ortho(mvp);
 
     const float hw = 320.0f;
     const float hh = 240.0f;
@@ -1370,7 +1380,7 @@ void PVRRenderQueueVisitor::do_visit_modifier_volume(const Renderable* renderabl
         float inv_w = shz_invf_fsrra(w); /* w >= FLT_EPSILON > 0 */
         sx = (v.x * hw + hw * w) * inv_w;
         sy = (-v.y * hh + hh * w) * inv_w;
-        sz = pvr_depth(v.z, v.w, inv_w);
+        sz = ortho ? pvr_ortho_depth(v.z) : inv_w;
     };
 
     auto append_hdr = [&](const pvr_mod_hdr_t& hdr) {
@@ -1584,6 +1594,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     /* Build the modelview-projection matrix */
     Mat4 modelview = view * model;
     Mat4 mvp = projection * modelview;
+    const bool ortho = pvr_is_ortho(mvp);
 
     /* The lighting geometry pass only uses the xyz of its transforms, so the
      * modelview's fourth row is free: (0, 0, 0, sqrt_eps) makes P.w equal
@@ -1975,6 +1986,15 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         alignas(8) static float pk_consts[4];
         pk_consts[0] = hw; pk_consts[1] = hh; pk_consts[2] = 127.5f; pk_consts[3] = -127.5f;
         pvr_pack_sh4(cv_window_, &work_[first], count, pk_consts);
+
+        /* pvr_pack_sh4 always writes 1/w as the depth, which is the same
+         * for every vertex of an ortho draw; replace it (see pvr_ortho_depth).
+         * The window's ClipVertex slots are still in the cache. */
+        if(ortho) {
+            for(uint32_t i = 0; i < count; ++i) {
+                work_[first + i].z = pvr_ortho_depth(cv_window_[i].z);
+            }
+        }
     };
 
     /* Pass 1 (clip-space position, UV, base colour) and the lighting pass
@@ -2077,7 +2097,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
         sx = vx * inv_w;
         sy = vy * inv_w;
-        sz = pvr_depth(cv.z, cv.w, inv_w);
+        sz = ortho ? pvr_ortho_depth(cv.z) : inv_w;
     };
 
     /* Lambda to do perspective divide and emit a ClipVertex. */
