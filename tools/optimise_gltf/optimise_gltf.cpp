@@ -9,7 +9,8 @@
  *      registers the "SMLT_dtex_texture" extension in extensionsUsed and adds
  *      {"SMLT_dtex_texture": {"uri": "..."}} to every image. External images
  *      get a .dtex written alongside the source; embedded images get the .dtex
- *      embedded as a data URI.
+ *      embedded as a data URI. Textures are vertically mirrored to match
+ *      the V flip applied by Simulant's glTF loader.
  *   3. Writes the result to a new, self-contained .glb file.
  *
  * This is intentionally a single translation unit with no third party
@@ -1121,6 +1122,11 @@ struct Options {
 };
 
 // texconv output is always compressed (VQ). Format is chosen per texture.
+//
+// The output is always vertically mirrored. Simulant's glTF loader negates V
+// (texcoords are written as (u, -v)) to match the PNG/JPEG loaders, which flip
+// image rows on load. The DTEX loader can't flip twiddled/VQ data at runtime,
+// so the .dtex must be stored pre-flipped or it is sampled upside-down.
 static bool run_texconv(const Options& opt, const fs::path& in, const fs::path& out,
                         const std::string& format) {
     std::string cmd = "\"" + opt.texconv + "\"";
@@ -1128,6 +1134,7 @@ static bool run_texconv(const Options& opt, const fs::path& in, const fs::path& 
     cmd += " -o \"" + out.string() + "\"";
     cmd += " -f " + format;
     cmd += " -c"; // always output a compressed texture
+    cmd += " --mirrorv"; // match the glTF loader's flipped V (see above)
     if(opt.mipmap) cmd += " -m";
     int rc = std::system(cmd.c_str());
     if(rc != 0) {
@@ -1343,7 +1350,8 @@ static void usage() {
         "  --texconv <path>          Path to the texconv binary\n"
         "  -h, --help                Show this help\n"
         "\n"
-        "All textures are always output compressed (texconv -c).\n";
+        "All textures are always output compressed and vertically mirrored\n"
+        "(texconv -c --mirrorv) to match the glTF loader's flipped V.\n";
 }
 
 int main(int argc, char** argv) {

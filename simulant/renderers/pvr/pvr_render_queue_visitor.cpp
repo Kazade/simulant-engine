@@ -67,6 +67,20 @@ static inline float pvr_clamp01(float v) {
     return v > 0.0f ? (v < 1.0f ? v : 1.0f) : 0.0f;
 }
 
+/* The depth value the PVR compares, given a clip-space z and w, and the
+ * already-computed 1/w (which we have anyway for the perspective divide).
+ *
+ * The PVR expects 1/w, larger = nearer. That breaks for orthographic
+ * projections: w is always 1, so every vertex in the scene gets the same
+ * depth and nothing can be depth-ordered (every test is a tie). As GLdc does,
+ * use 1/(1 + z) instead when w == 1. Ortho clip-space z runs from -1 (near)
+ * to 1 (far) after near-plane clipping, so this stays positive (as
+ * shz_invf_fsrra requires) and larger = nearer; the small extra avoids a
+ * divide by zero exactly on the near plane. */
+static inline float pvr_depth(float z, float w, float inv_w) {
+    return (w == 1.0f) ? shz_invf_fsrra(1.0001f + z) : inv_w;
+}
+
 /* Build pvr_poly_hdr_t directly without going through pvr_poly_cxt_t.
  *
  * Fixed for all our draw calls:
@@ -1356,7 +1370,7 @@ void PVRRenderQueueVisitor::do_visit_modifier_volume(const Renderable* renderabl
         float inv_w = shz_invf_fsrra(w); /* w >= FLT_EPSILON > 0 */
         sx = (v.x * hw + hw * w) * inv_w;
         sy = (-v.y * hh + hh * w) * inv_w;
-        sz = inv_w;
+        sz = pvr_depth(v.z, v.w, inv_w);
     };
 
     auto append_hdr = [&](const pvr_mod_hdr_t& hdr) {
@@ -2063,7 +2077,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
         sx = vx * inv_w;
         sy = vy * inv_w;
-        sz = inv_w;  /* PVR uses 1/w for depth */
+        sz = pvr_depth(cv.z, cv.w, inv_w);
     };
 
     /* Lambda to do perspective divide and emit a ClipVertex. */
