@@ -39,7 +39,8 @@ public:
         BaseTextureLoader(filename, data) {}
 
 private:
-    bool format_stored_upside_down() const override { return false; }
+    /* .dtex files are stored top row first, like PNGs */
+    bool format_stored_upside_down() const override { return true; }
     bool do_load(std::shared_ptr<FileIfstream> stream, Texture* tex) override;
     bool do_load(const std::vector<uint8_t>& data, Texture* tex) override;
 };

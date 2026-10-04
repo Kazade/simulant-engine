@@ -17,9 +17,11 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <stdexcept>
+#include <utility>
 
 #include "utils/gl_thread_check.h"
 #include "utils/gl_error.h"
@@ -553,15 +555,132 @@ bool Texture::convert(TextureFormat new_format, const TextureChannelSet &channel
 }
 
 
+/* Spreads the bits of x out to the even bit positions (Morton order) */
+static uint32_t twiddle_spread(uint32_t x) {
+    uint32_t ret = 0;
+    for(uint32_t i = 0; i < 16; ++i) {
+        ret |= ((x >> i) & 1) << (2 * i);
+    }
+    return ret;
+}
+
+/* The bits of a PVR twiddled address that hold the v coordinate, for a
+ * power-of-two w x h grid. Twiddled addresses interleave v (even bits) and u
+ * (odd bits) up to the smaller dimension; for rectangular textures the
+ * remaining bits of the larger dimension follow linearly. */
+static uint32_t twiddle_v_mask(uint32_t w, uint32_t h) {
+    uint32_t mn = std::min(w, h);
+    uint32_t mask = twiddle_spread(mn - 1);
+    if(h > w) {
+        uint32_t mn_bits = __builtin_ctz(mn);
+        mask |= (h / mn - 1) << (2 * mn_bits);
+    }
+    return mask;
+}
+
+/* Flips a twiddled w x h grid of elem_size-byte elements vertically, in place.
+ *
+ * Flipping vertically inverts every bit of v, which in a twiddled address is
+ * the same as XOR-ing it with the v mask, so element i swaps with element
+ * i ^ mask. That's an involution, so swapping each pair once does it. */
+static void flip_twiddled_vertically(uint8_t* data, uint32_t w, uint32_t h, uint32_t elem_size) {
+    const uint32_t mask = twiddle_v_mask(w, h);
+    uint8_t tmp[4];
+    for(uint32_t i = 0; i < w * h; ++i) {
+        uint32_t j = i ^ mask;
+        if(i < j) {
+            uint8_t* a = data + i * elem_size;
+            uint8_t* b = data + j * elem_size;
+            memcpy(tmp, a, elem_size);
+            memcpy(a, b, elem_size);
+            memcpy(b, tmp, elem_size);
+        }
+    }
+}
+
+/* Flips PVR VQ compressed data vertically, in place.
+ *
+ * VQ data is a 256 entry codebook of 2x2 texel blocks (2048 bytes) followed by
+ * a twiddled grid of one byte codebook indices per 2x2 block. Flipping is:
+ *
+ *  1. Flip each codebook entry: an entry is stored as texels (0,0), (0,1),
+ *     (1,0), (1,1) in (u, v) order, so swap the first two and last two.
+ *     Entries are shared between blocks, but every block gets flipped the
+ *     same way, so flipping the entries themselves is consistent.
+ *  2. Flip the grid of indices, as with any twiddled data.
+ *
+ * Mipmapped VQ stores each level's indices after the codebook, smallest first,
+ * starting with a single byte for the 1x1 level. Every level shares the
+ * codebook so step 1 is done once, then each level's grid is flipped. */
+static void flip_vq_vertically(uint8_t* data, uint32_t w, uint32_t h, bool mipmapped) {
+    for(uint32_t i = 0; i < 256; ++i) {
+        uint8_t* entry = data + i * 8;
+        std::swap(entry[0], entry[2]);
+        std::swap(entry[1], entry[3]);
+        std::swap(entry[4], entry[6]);
+        std::swap(entry[5], entry[7]);
+    }
+
+    uint8_t* indices = data + 2048;
+
+    if(!mipmapped) {
+        flip_twiddled_vertically(indices, w / 2, h / 2, 1);
+        return;
+    }
+
+    if(w != h) {
+        /* The PVR's mipmap layout is only defined for square textures */
+        S_WARN("Unable to flip non-square mipmapped VQ texture data");
+        return;
+    }
+
+    uint32_t offset = 1; /* The 1x1 level */
+    for(uint32_t s = 2; s <= w; s *= 2) {
+        uint32_t blocks = s / 2;
+        flip_twiddled_vertically(indices + offset, blocks, blocks, 1);
+        offset += blocks * blocks;
+    }
+}
+
 static void do_flip_vertically(uint8_t* data, uint16_t width, uint16_t height, TextureFormat format) {
     /**
      *  Flips the texture data vertically
      */
     auto w = (uint32_t) width;
     auto h = (uint32_t) height;
-    auto c = (uint32_t) texture_format_channels(format);
 
-    auto row_size = w * c;
+    switch(format) {
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID:
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID:
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID:
+            flip_vq_vertically(data, w, h, false);
+            return;
+        case TEXTURE_FORMAT_RGB_1US_565_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_4444_VQ_TWID_MIP:
+        case TEXTURE_FORMAT_ARGB_1US_1555_VQ_TWID_MIP:
+            flip_vq_vertically(data, w, h, true);
+            return;
+        case TEXTURE_FORMAT_RGB_1US_565_TWID:
+        case TEXTURE_FORMAT_ARGB_1US_4444_TWID:
+        case TEXTURE_FORMAT_ARGB_1US_1555_TWID:
+            flip_twiddled_vertically(data, w, h, 2);
+            return;
+        case TEXTURE_FORMAT_RGB8_PALETTED4:
+        case TEXTURE_FORMAT_RGBA8_PALETTED4:
+        case TEXTURE_FORMAT_RGB565_PALETTED4:
+        case TEXTURE_FORMAT_RGB8_PALETTED8:
+        case TEXTURE_FORMAT_RGBA8_PALETTED8:
+        case TEXTURE_FORMAT_RGB565_PALETTED8:
+            S_WARN("Flipping paletted texture data is not supported");
+            return;
+        default:
+            break;
+    }
+
+    /* Linear formats: swap whole rows. Row size comes from the stride (bytes
+     * per texel) rather than the channel count, which differ for the packed
+     * 16-bit formats. */
+    auto row_size = w * (uint32_t) texture_format_stride(format);
 
     uint8_t* src_row = &data[0];
     uint8_t* dst_row = &data[(h - 1) * row_size];
