@@ -42,6 +42,7 @@ public:
 
     void reset_polygons_rendered() {
         polygons_rendered_ = 0;
+        vertices_rendered_ = 0;
     }
 
     /* The number of polygons `element_count` vertices (or indices) make up
@@ -70,6 +71,16 @@ public:
         return polygons_rendered_;
     }
 
+    /* Vertices submitted for drawing this frame: one per index for indexed
+     * geometry. Counted alongside the polygons (increment_polygons_rendered
+     * counts both). */
+    void add_vertices_rendered(uint32_t count) {
+        vertices_rendered_ += count;
+    }
+    uint32_t vertices_rendered() const {
+        return vertices_rendered_;
+    }
+
 private:
     float frame_time_ = 0;
     uint32_t subactors_renderered_ = 0;
@@ -80,6 +91,7 @@ private:
     uint64_t frames_run_ = 0;
 
     uint32_t polygons_rendered_ = 0;
+    uint32_t vertices_rendered_ = 0;
 };
 
 
