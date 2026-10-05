@@ -272,6 +272,18 @@ void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
 
         renderer_->direct_list_ = chosen;
         if(chosen != (pvr_list_type_t) -1) {
+#if HYBRID_RENDERING_ENABLED
+            /* KOS DMAs any list that has a vertex buffer (pvr_list_begin
+             * checks), and this one will have if it was RAM-staged in an
+             * earlier frame (see PVRRenderer::on_post_render). Detach it so
+             * it's opened for direct submission: otherwise it's streamed
+             * without waiting for the TA, and pvr_scene_finish appends to the
+             * stale buffer past its end. Wait first: until the previous
+             * frame's lists have all reached the TA its DMA chain may still
+             * read the buffer pointers. pvr_list_begin would wait here anyway. */
+            pvr_wait_ready();
+            pvr_set_vertbuf(chosen, nullptr, 0);
+#endif
             pvr_list_begin(chosen);
             pvr_dr_init(&renderer_->dr_state_);
             renderer_->prev_list_type_ = chosen;
