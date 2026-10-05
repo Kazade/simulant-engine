@@ -280,6 +280,30 @@ void Application::preload_default_font() {
     fnt->set_garbage_collection_method(smlt::GARBAGE_COLLECT_NEVER);
 }
 
+FontPtr Application::embedded_font(uint16_t size) {
+    smlt::LimitedString<64> name;
+    name = _F("__embedded__-{0}").format(size);
+
+    auto fnt = shared_assets->find_font(name.str());
+    if(fnt) {
+        return fnt;
+    }
+
+    FontFlags flags;
+    flags.size = size;
+
+    fnt = shared_assets->create_font_from_memory(sweet16_ttf, sweet16_ttf_len,
+                                                 flags);
+    if(!fnt) {
+        S_ERROR("Unable to create the embedded font at size {0}", size);
+        return fnt;
+    }
+
+    fnt->set_name(name);
+    fnt->set_garbage_collection_method(smlt::GARBAGE_COLLECT_NEVER);
+    return fnt;
+}
+
 std::vector<std::string> Application::generate_potential_codes(const std::string &language_code) {
     std::vector<std::string> codes;
     codes.push_back(language_code);

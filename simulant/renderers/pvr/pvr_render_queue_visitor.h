@@ -68,10 +68,15 @@ private:
      * list, so do_visit can branch to the modifier-volume submission path. */
     bool emitting_modifier_volume_ = false;
 
+    /* pvr_ortho_depth()'s dz for the current pass: set with the rest of the
+     * pass state in change_material_pass rather than looked up per draw */
+    float ortho_dz_ = -0.5f;
+
     /* Polygons submitted this traversal, reported to the StatsRecorder once in
      * end_traversal rather than per renderable (the call out to it was
      * cold in the instruction cache every time) */
     uint32_t polygons_rendered_ = 0;
+    uint32_t vertices_rendered_ = 0;
 
     VertexLightState lights_[MAX_LIGHTS];
     float ambient_[3] = {0.2f, 0.2f, 0.2f};

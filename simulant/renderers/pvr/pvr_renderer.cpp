@@ -267,8 +267,10 @@ void PVRRenderer::on_post_render() {
             auto& b = buf.buffers[current_buffer_index_];
             auto count = b.size();
 
-            /* Reserve room for KOS's 32-byte zero terminator (appended
-             * in pvr_scene_finish), then round up to 64. */
+            /* Reserve room for the 64 bytes pvr_scene_finish appends to a
+             * DMA'd list - a blank poly header (it never counts such lists
+             * as closed) and a 32-byte zero terminator - then round up
+             * to 64. */
             size_t buf_size = (count + 64 + 63) & ~63;
             if(buf_size < 64) buf_size = 64;
             b.resize(buf_size);

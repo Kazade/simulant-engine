@@ -71,18 +71,20 @@ static inline float pvr_clamp01(float v) {
  *
  * The PVR compares 1/w, larger = nearer. That breaks for orthographic
  * projections: w is always 1, so every vertex in the scene gets the same
- * depth and nothing can be depth-ordered (every test is a tie). As GLdc does,
- * use 1/(1 + z) instead. Ortho clip-space z runs from -1 (near) to 1 (far)
- * after near-plane clipping, so this stays positive (as shz_invf_fsrra
- * requires) and larger = nearer; the small extra avoids a divide by zero
- * exactly on the near plane.
+ * depth and nothing can be depth-ordered (every test is a tie). Instead, as
+ * OpenGL's depth buffer does, use a depth linear in clip-space z:
+ * 1 - z/2, which runs from 1.5 (near) to 0.5 (far), larger = nearer.
  *
- * Whether to use it is decided once per draw from the MVP (pvr_is_ortho)
- * rather than per vertex, so it costs nothing for perspective draws: most
- * vertices are packed by pvr_pack_sh4, which always writes 1/w, and only
- * ortho draws then need their depths rewritten. */
-static inline float pvr_ortho_depth(float z) {
-    return shz_invf_fsrra(1.0001f + z);
+ * Whether a draw is ortho is decided once from the MVP (pvr_is_ortho), so
+ * perspective draws don't pay for this: pvr_pack_sh4 always writes 1/w, and
+ * only ortho draws have their depths rewritten. */
+static inline float pvr_ortho_depth(float z, float dz) {
+    return 1.0f + dz * z;
+}
+
+/* pvr_ortho_depth's dz for a draw */
+static inline float pvr_ortho_depth_dz(bool depth_test) {
+    return depth_test ? -0.5f : 0.0f;
 }
 
 /* True if the MVP's bottom row is (0, 0, 0, 1), so w is always 1 */
@@ -272,6 +274,18 @@ void PVRRenderQueueVisitor::start_traversal(const batcher::RenderQueue& queue,
 
         renderer_->direct_list_ = chosen;
         if(chosen != (pvr_list_type_t) -1) {
+#if HYBRID_RENDERING_ENABLED
+            /* KOS DMAs any list that has a vertex buffer (pvr_list_begin
+             * checks), and this one will have if it was RAM-staged in an
+             * earlier frame (see PVRRenderer::on_post_render). Detach it so
+             * it's opened for direct submission: otherwise it's streamed
+             * without waiting for the TA, and pvr_scene_finish appends to the
+             * stale buffer past its end. Wait first: until the previous
+             * frame's lists have all reached the TA its DMA chain may still
+             * read the buffer pointers. pvr_list_begin would wait here anyway. */
+            pvr_wait_ready();
+            pvr_set_vertbuf(chosen, nullptr, 0);
+#endif
             pvr_list_begin(chosen);
             pvr_dr_init(&renderer_->dr_state_);
             renderer_->prev_list_type_ = chosen;
@@ -290,6 +304,11 @@ void PVRRenderQueueVisitor::end_traversal(const batcher::RenderQueue& queue,
     if(polygons_rendered_) {
         get_app()->stats->add_polygons_rendered(polygons_rendered_);
         polygons_rendered_ = 0;
+    }
+
+    if(vertices_rendered_) {
+        get_app()->stats->add_vertices_rendered(vertices_rendered_);
+        vertices_rendered_ = 0;
     }
 }
 
@@ -342,6 +361,7 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
     const bool to_modifier =
         (next->polygon_list_target() == POLYGON_LIST_TARGET_MODIFIER);
     emitting_modifier_volume_ = to_modifier;
+    ortho_dz_ = pvr_ortho_depth_dz(next->is_depth_test_enabled());
 
     renderer_->current_list_type_ = list_type_for_pass(next);
 
@@ -1317,6 +1337,7 @@ void PVRRenderQueueVisitor::do_visit_modifier_volume(const Renderable* renderabl
     const auto& projection = camera_->projection_matrix();
     Mat4 mvp = projection * (view * model);
     const bool ortho = pvr_is_ortho(mvp);
+    const float ortho_dz = pvr_ortho_depth_dz(true);
 
     const float hw = 320.0f;
     const float hh = 240.0f;
@@ -1380,7 +1401,7 @@ void PVRRenderQueueVisitor::do_visit_modifier_volume(const Renderable* renderabl
         float inv_w = shz_invf_fsrra(w); /* w >= FLT_EPSILON > 0 */
         sx = (v.x * hw + hw * w) * inv_w;
         sy = (-v.y * hh + hh * w) * inv_w;
-        sz = ortho ? pvr_ortho_depth(v.z) : inv_w;
+        sz = ortho ? pvr_ortho_depth(v.z, ortho_dz) : inv_w;
     };
 
     auto append_hdr = [&](const pvr_mod_hdr_t& hdr) {
@@ -1595,6 +1616,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
     Mat4 modelview = view * model;
     Mat4 mvp = projection * modelview;
     const bool ortho = pvr_is_ortho(mvp);
+    const float ortho_dz = ortho_dz_;
 
     /* The lighting geometry pass only uses the xyz of its transforms, so the
      * modelview's fourth row is free: (0, 0, 0, sqrt_eps) makes P.w equal
@@ -1991,8 +2013,11 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
          * for every vertex of an ortho draw; replace it (see pvr_ortho_depth).
          * The window's ClipVertex slots are still in the cache. */
         if(ortho) {
+            /* A local copy: through the capture GCC reloads it every
+             * iteration, as the stores to work_ might alias it. */
+            const float dz = ortho_dz;
             for(uint32_t i = 0; i < count; ++i) {
-                work_[first + i].z = pvr_ortho_depth(cv_window_[i].z);
+                work_[first + i].z = pvr_ortho_depth(cv_window_[i].z, dz);
             }
         }
     };
@@ -2097,7 +2122,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
 
         sx = vx * inv_w;
         sy = vy * inv_w;
-        sz = ortho ? pvr_ortho_depth(cv.z) : inv_w;
+        sz = ortho ? pvr_ortho_depth(cv.z, ortho_dz) : inv_w;
     };
 
     /* Lambda to do perspective divide and emit a ClipVertex. */
@@ -2673,6 +2698,7 @@ void PVRRenderQueueVisitor::do_visit(const Renderable* renderable,
         if(elements) {
             polygons_rendered_ += StatsRecorder::polygon_count(
                 renderable->arrangement, elements);
+            vertices_rendered_ += elements;
         }
     }
 

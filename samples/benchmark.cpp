@@ -842,9 +842,6 @@ private:
 
         stats_panel_ = hud_->create_child<StatsPanel>();
         stats_panel_->activate();
-        /* The stock StatsPanel draws its first line at height - 32 which clips
-         * against the top edge; nudge the whole panel down a little. */
-        stats_panel_->transform->set_position_2d(Vec2(0, -40));
 
         hud_label_ = hud_->create_child<ui::Label>("");
         hud_label_->set_anchor_point(0.0f, 1.0f);

@@ -41,29 +41,37 @@ public:
 
 private:
     void update_stats();
+    void rebuild_ram_graph(float total_mb);
 
-    int32_t get_memory_usage_in_megabytes();
-
-    ui::WidgetPtr fps_;
-    ui::WidgetPtr frame_time_;
-    ui::WidgetPtr ram_usage_;
-    ui::WidgetPtr vram_usage_;
-    ui::WidgetPtr actors_rendered_;
-    ui::WidgetPtr polygons_rendered_;
+    /* A translucent backdrop with two left-aligned multi-line labels on it
+     * (the key and value columns) and the RAM graph below them. All text
+     * uses the engine's embedded font, so the panel never needs a file. */
+    ui::Label* backdrop_ = nullptr;
+    ui::Label* keys_ = nullptr;
+    ui::Label* values_ = nullptr;
 
     MaterialPtr graph_material_;
     MeshPtr ram_graph_mesh_;
     ActorPtr ram_graph_;
-    std::list<float> free_ram_history_;
+    std::list<float> ram_history_;
 
-    void rebuild_ram_graph();
+    /* Graph rectangle, in panel space */
+    float graph_x_ = 0.0f;
+    float graph_y_ = 0.0f;
+    float graph_w_ = 0.0f;
+    float graph_h_ = 0.0f;
 
-    ui::WidgetPtr low_mem_;
-    ui::WidgetPtr high_mem_;
+    /* Totals over the current update interval */
+    float elapsed_ = 0.0f;
+    uint32_t frames_ = 0;
+    float min_dt_ = 0.0f;
+    float max_dt_ = 0.0f;
+    uint64_t polygons_ = 0;
+    uint64_t vertices_ = 0;
+    uint64_t draws_ = 0;
 
     sig::connection frame_started_;
     bool first_update_ = true;
-    float last_update_ = 0.0f;
 
     bool on_create(Params params) override {
         _S_UNUSED(params);

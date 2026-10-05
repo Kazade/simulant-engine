@@ -475,7 +475,12 @@ void Widget::render_text() {
     vdata->reserve(characters.size() * 4);
 
     if(text_alignment() != TEXT_ALIGNMENT_CENTER) {
-        auto cwidth = std::max(requested_width(), content_width()) -
+        /* The content width for the text just laid out: content_width() is
+         * only updated after this, so it'd be the previous build's (e.g. 0
+         * the first time text is set, which shifted left-aligned text right
+         * by half its width until the next rebuild) */
+        auto cwidth = std::max(requested_width(),
+                               calculate_content_dimensions(text_width_, text_height_).width) -
                       padding().left - padding().right;
 
         auto j = 0;

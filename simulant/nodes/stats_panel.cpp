@@ -17,6 +17,10 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <algorithm>
+#include <cstdio>
+#include <iterator>
+
 #include "stats_panel.h"
 #include "../application.h"
 #include "../asset_manager.h"
@@ -25,7 +29,10 @@
 #include "../nodes/camera.h"
 #include "../nodes/ui/label.h"
 #include "../nodes/ui/ui_manager.h"
+#include "../font.h"
 #include "../platform.h"
+#include "../renderers/renderer.h"
+#include "../stats_recorder.h"
 #include "../stage.h"
 #include "../time_keeper.h"
 #include "../window.h"
@@ -43,44 +50,133 @@ namespace smlt {
 StatsPanel::StatsPanel(Scene* owner) :
     Panel(owner, Meta::node_type) {}
 
+/* The embedded font is a pixel font drawn on a 16px grid: it only renders
+ * cleanly at that size */
+static const int FONT_SIZE = 16;
+
+static const float GRAPH_HEIGHT_LINES = 2.0f;
+static const int COLUMN_GAP = 12;
+static const int MARGIN = 8;
+static const int PADDING = 6;
+static const int GRAPH_GAP = 4;
+
+static const char* KEY_TEXT = "STATS\nFPS\nFRAME\nDRAWS\nTRIS\nVERTS\nRAM\nVRAM";
+static const int KEY_LINES = 8;
+
+#define RAM_SAMPLES 30
+
+static float bytes_to_megabytes(uint64_t bytes) {
+    float m = 1.0f / 1024.0f;
+    if(bytes == MEMORY_VALUE_UNAVAILABLE) {
+        return 0;
+    }
+
+    return float(bytes) * m * m;
+}
+
+/* The width of the widest line of `text` in `font`, in pixels */
+static float text_width(FontPtr font, const std::string& text) {
+    float widest = 0.0f, line = 0.0f;
+    for(std::size_t i = 0; i < text.size(); ++i) {
+        if(text[i] == '\n') {
+            widest = std::max(widest, line);
+            line = 0.0f;
+            continue;
+        }
+        const char32_t next = (i + 1 < text.size()) ? char32_t(text[i + 1]) : 0;
+        line += font->character_advance(char32_t(text[i]), next);
+    }
+    return std::max(widest, line);
+}
+
+/* 1234 -> "1234", 12345 -> "12.3K", 1234567 -> "1.23M" */
+static std::string format_count(double value) {
+    char buf[32];
+    if(value >= 1000000.0) {
+        snprintf(buf, sizeof(buf), "%.2fM", value / 1000000.0);
+    } else if(value >= 10000.0) {
+        snprintf(buf, sizeof(buf), "%.1fK", value / 1000.0);
+    } else {
+        snprintf(buf, sizeof(buf), "%d", int(value + 0.5));
+    }
+    return buf;
+}
+
 bool StatsPanel::on_init() {
     if(!Panel::on_init()) {
         return false;
     }
 
-    auto hw = 32;
-    auto label_width = ui::Px(scene->window->width() * 0.5f);
+    const float width = scene->window->width();
+    const float height = scene->window->height();
 
-    const float diff = 32;
-    float vheight = scene->window->height() - diff;
+    auto font = get_app()->embedded_font(FONT_SIZE);
 
-    auto heading1 = create_child<ui::Label>("performance", label_width);
-    heading1->transform->set_position_2d(Vec2(hw, vheight));
-    vheight -= diff;
+    /* The labels are created with the default font (which is the embedded
+     * one, preloaded) and then switched to the embedded font at our size, so
+     * nothing is ever looked up on disk */
+    ui::UIConfig theme;
+    theme.label_resize_mode_ = ui::RESIZE_MODE_FIT_CONTENT;
+    theme.label_background_color_ = Color::none();
 
-    fps_ = create_child<ui::Label>("FPS: 0", label_width);
-    fps_->transform->set_position_2d(Vec2(hw, vheight));
-    vheight -= diff;
+    auto make_label = [&](const Color& text_color) -> ui::Label* {
+        auto label = create_child<ui::Label>(Params()
+            .set("text", std::string(""))
+            .set("theme", theme));
+        if(font) {
+            label->set_font(font);
+        }
+        label->set_text_color(text_color);
+        label->set_text_alignment(ui::TEXT_ALIGNMENT_LEFT);
+        label->set_padding(ui::Px(0));
+        label->set_anchor_point(0.0f, 1.0f);
+        return label;
+    };
 
-    frame_time_ = create_child<ui::Label>("Frame Time: 0ms", label_width);
-    frame_time_->transform->set_position_2d(Vec2(hw, vheight));
-    vheight -= diff;
+    backdrop_ = make_label(Color::none());
+    keys_ = make_label(Color(0.55f, 0.6f, 0.65f, 1.0f));
+    values_ = make_label(Color(0.92f, 0.95f, 1.0f, 1.0f));
+    keys_->set_text(KEY_TEXT);
 
-    ram_usage_ = create_child<ui::Label>("RAM Used: 0", label_width);
+    /* Size the columns to the text: the keys, and a stand-in for the widest
+     * values (the real platform/renderer names and RAM size vary most) */
+    const float total_mb = bytes_to_megabytes(get_platform()->total_ram_in_bytes());
+    char ram[32];
+    snprintf(ram, sizeof(ram), "999.9 / %.0f MB", double(total_mb));
+    const std::string widest_values =
+        get_platform()->name() + " / " + scene->window->renderer->name() +
+        "\n999  (99.99 ms)\n99.9 - 99.9 ms\n9999\n999.9K  (999.9K/s)\n" + ram +
+        "\n99.99 MB free";
 
-    ram_usage_->transform->set_position_2d(Vec2(hw, vheight));
-    vheight -= diff;
+    const float key_width = font ? text_width(font, KEY_TEXT) : keys_->content_width().value;
+    const float value_width = font ? text_width(font, widest_values) : 0.0f;
 
-    vram_usage_ = create_child<ui::Label>("VRAM Used: 0", label_width);
-    vram_usage_->transform->set_position_2d(Vec2(hw, vheight));
-    vheight -= diff;
+    const float line_height = keys_->line_height().value;
+    const float panel_width = std::min(PADDING + key_width + COLUMN_GAP + value_width + PADDING,
+                                       width - 2 * MARGIN);
+    const float top = height - MARGIN;
+    const float text_top = top - PADDING;
 
-    actors_rendered_ = create_child<ui::Label>("Renderables visible: 0", label_width);
-    actors_rendered_->transform->set_position_2d(Vec2(hw, vheight));
-    vheight -= diff;
+    graph_x_ = MARGIN + PADDING;
+    graph_w_ = panel_width - 2 * PADDING;
+    graph_h_ = line_height * GRAPH_HEIGHT_LINES;
+    graph_y_ = text_top - KEY_LINES * line_height - GRAPH_GAP - graph_h_;
 
-    polygons_rendered_ = create_child<ui::Label>("Polygons Rendered: 0", label_width);
-    polygons_rendered_->transform->set_position_2d(Vec2(hw, vheight));
+    const float panel_height = (top - graph_y_) + PADDING;
+
+    backdrop_->set_resize_mode(ui::RESIZE_MODE_FIXED);
+    backdrop_->resize(ui::Px(int(panel_width)), ui::Px(int(panel_height)));
+    backdrop_->set_background_color(Color(0.03f, 0.04f, 0.05f, 0.75f));
+    backdrop_->transform->set_position_2d(Vec2(MARGIN, top));
+
+    keys_->transform->set_position_2d(Vec2(MARGIN + PADDING, text_top));
+    values_->transform->set_position_2d(
+        Vec2(MARGIN + PADDING + key_width + COLUMN_GAP, text_top));
+
+    /* Translucent widgets at equal distance sort by precedence: the
+     * backdrop draws first */
+    keys_->set_precedence(1);
+    values_->set_precedence(1);
 
     graph_material_ =
         scene->assets->load_material(Material::BuiltIns::DIFFUSE_ONLY);
@@ -91,9 +187,7 @@ bool StatsPanel::on_init() {
         scene->assets->create_mesh(smlt::VertexSpecification::DEFAULT);
     ram_graph_ = create_child<Actor>(ram_graph_mesh_);
     ram_graph_->set_cullable(false);
-
-    low_mem_ = create_child<ui::Label>("0M");
-    high_mem_ = create_child<ui::Label>("0M");
+    ram_graph_->set_precedence(1);
 
     frame_started_ = get_app()->signal_frame_started().connect(
         std::bind(&StatsPanel::update_stats, this));
@@ -106,60 +200,22 @@ void StatsPanel::on_clean_up() {
 
     Panel::on_clean_up();
 
-    fps_ = nullptr;
-    frame_time_ = nullptr;
-    ram_usage_ = nullptr;
-    actors_rendered_ = nullptr;
-    polygons_rendered_ = nullptr;
+    backdrop_ = nullptr;
+    keys_ = nullptr;
+    values_ = nullptr;
 }
 
-static float bytes_to_megabytes(uint64_t bytes) {
-    float m = 1.0f / 1024.0f;
-    if(bytes == MEMORY_VALUE_UNAVAILABLE) {
-        return 0;
-    }
-
-    return float(bytes) * m * m;
-}
-
-int32_t StatsPanel::get_memory_usage_in_megabytes() {
-    return bytes_to_megabytes(get_app()->ram_usage_in_bytes());
-}
-
-#ifndef __DREAMCAST__
-static unsigned int round(unsigned int value, unsigned int multiple) {
-    return ((value - 1u) & ~(multiple - 1u)) + multiple;
-}
-#endif
-
-#define RAM_SAMPLES 25
-
-void StatsPanel::rebuild_ram_graph() {
-    smlt::Color color = smlt::Color::blue();
-    color.a = 0.35;
-
-    float width = scene->window->width();
-    float height = 64;
-
+void StatsPanel::rebuild_ram_graph(float total_mb) {
     ram_graph_mesh_->reset(
         ram_graph_mesh_->vertex_data->vertex_specification());
 
-    if(free_ram_history_.size() < 2) {
-        // Can't make a graph with a single sample point
-        return;
-    }
-
-#ifdef __DREAMCAST__
-    float graph_max = 16.0f;
-#else
-    float max_y =
-        *(std::max_element(free_ram_history_.begin(), free_ram_history_.end()));
-    float graph_max = round(max_y, 8.0f);
-#endif
-
-    if(almost_equal(graph_max, 0.0f)) {
-        // Prevent divide by zero
-        return;
+    /* Scale to the machine's RAM where that's small enough for the usage to
+     * register (consoles), otherwise to the peak sample */
+    const float peak = ram_history_.empty() ? 0.0f :
+        *std::max_element(ram_history_.begin(), ram_history_.end());
+    float graph_max = (total_mb > 0.0f && total_mb <= 64.0f) ? total_mb : peak * 1.25f;
+    if(graph_max <= 0.0f) {
+        graph_max = 1.0f;
     }
 
     auto submesh = ram_graph_mesh_->create_submesh("ram-usage", graph_material_,
@@ -168,142 +224,140 @@ void StatsPanel::rebuild_ram_graph() {
     auto& vdata = ram_graph_mesh_->vertex_data;
     auto& idata = submesh->index_data;
 
-    float x = 0;
-    float xstep = width / (RAM_SAMPLES - 1);
+    const Color fill(0.25f, 0.6f, 1.0f, 0.45f);
+    const Color track(1.0f, 1.0f, 1.0f, 0.06f);
 
-    float lowest_mem = std::numeric_limits<float>::max();
-    float lowest_x = 0;
-    float lowest_y = 0;
+    auto quad = [&](float x0, float y0, float x1, float y1, const Color& color) {
+        auto i = vdata->count();
+        vdata->position(x0, y1, 0); vdata->color(color); vdata->move_next();
+        vdata->position(x0, y0, 0); vdata->color(color); vdata->move_next();
+        vdata->position(x1, y0, 0); vdata->color(color); vdata->move_next();
+        vdata->position(x1, y1, 0); vdata->color(color); vdata->move_next();
+        for(int k = 0; k < 4; ++k) idata->index(i + k);
+    };
 
-    float highest_mem = std::numeric_limits<float>::lowest();
-    float highest_x = 0;
-    float highest_y = 0;
+    /* The graph's full extent, faintly, so it reads as a graph even before
+     * there's much history */
+    quad(graph_x_, graph_y_, graph_x_ + graph_w_, graph_y_ + graph_h_, track);
 
+    if(ram_history_.size() < 2) {
+        vdata->done();
+        idata->done();
+        return;
+    }
+
+    const float xstep = graph_w_ / (RAM_SAMPLES - 1);
+    const float yscale = graph_h_ / graph_max;
+
+    /* Right-aligned, so the newest sample is always at the right edge */
+    float x = graph_x_ + graph_w_ - xstep * (ram_history_.size() - 1);
     auto idx = vdata->count();
 
-    auto last_sample_it = free_ram_history_.begin();
-    auto this_sample_it = last_sample_it;
-    this_sample_it++;
+    auto prev = ram_history_.begin();
+    for(auto it = std::next(prev); it != ram_history_.end(); prev = it, ++it) {
+        const float y0 = graph_y_ + std::min(*prev * yscale, graph_h_);
+        const float y1 = graph_y_ + std::min(*it * yscale, graph_h_);
 
-    for(; this_sample_it != free_ram_history_.end(); ++this_sample_it) {
-        auto last_sample = *last_sample_it;
-        auto sample = *this_sample_it;
-
-        float y = (height / graph_max) * last_sample;
-        vdata->position(x, y, 0);
-        vdata->color(color);
+        vdata->position(x, y0, 0);
+        vdata->color(fill);
         vdata->move_next();
         idata->index(idx++);
 
-        vdata->position(x, 0, 0);
-        vdata->color(color);
+        vdata->position(x, graph_y_, 0);
+        vdata->color(fill);
         vdata->move_next();
         idata->index(idx++);
-
-        if(last_sample < lowest_mem) {
-            lowest_x = x;
-            lowest_y = y;
-            lowest_mem = last_sample;
-        }
-
-        if(last_sample > highest_mem) {
-            highest_x = x;
-            highest_y = y;
-            highest_mem = last_sample;
-        }
 
         x += xstep;
 
-        y = (height / graph_max) * sample;
-        vdata->position(x, 0, 0);
-        vdata->color(color);
+        vdata->position(x, graph_y_, 0);
+        vdata->color(fill);
         vdata->move_next();
         idata->index(idx++);
 
-        vdata->position(x, y, 0);
-        vdata->color(color);
+        vdata->position(x, y1, 0);
+        vdata->color(fill);
         vdata->move_next();
         idata->index(idx++);
-
-        if(sample < lowest_mem) {
-            lowest_x = x;
-            lowest_y = y;
-            lowest_mem = sample;
-        }
-
-        if(sample > highest_mem) {
-            highest_x = x;
-            highest_y = y;
-            highest_mem = sample;
-        }
-
-        last_sample_it = this_sample_it;
     }
-
-    low_mem_->set_text(_F("{0}M").format(lowest_mem));
-    low_mem_->transform->set_position_2d(Vec2(lowest_x, lowest_y + 10));
-
-    high_mem_->set_text(_F("{0}M").format(highest_mem));
-    high_mem_->transform->set_position_2d(Vec2(highest_x, highest_y + 10));
 
     vdata->done();
     idata->done();
 }
 
 void StatsPanel::update_stats() {
-    last_update_ += get_app()->time_keeper->delta_time();
+    /* Called at the start of each frame, so the counters hold the previous
+     * frame's totals and delta_time() is that frame's duration */
+    auto app = get_app();
+    const float dt = app->time_keeper->delta_time();
 
-    if(first_update_ || last_update_ >= 1.0f) {
-        auto mem_usage = get_memory_usage_in_megabytes();
-        auto tot_mem = bytes_to_megabytes(get_platform()->total_ram_in_bytes());
-        auto vram_usage =
-            bytes_to_megabytes(get_platform()->available_vram_in_bytes());
-        auto actors_rendered = get_app()->stats->subactors_rendered();
+    if(frames_ == 0 || dt < min_dt_) min_dt_ = dt;
+    if(frames_ == 0 || dt > max_dt_) max_dt_ = dt;
+    elapsed_ += dt;
+    frames_++;
+    polygons_ += app->stats->polygons_rendered();
+    vertices_ += app->stats->vertices_rendered();
+    draws_ += app->stats->subactors_rendered();
 
-        free_ram_history_.push_back(mem_usage);
-        if(free_ram_history_.size() > RAM_SAMPLES) {
-            free_ram_history_.pop_front();
-        }
-
-        rebuild_ram_graph();
-
-        fps_->set_text(
-            _F("FPS: {0}").format(get_app()->stats->frames_per_second()));
-        frame_time_->set_text(
-            _F("Frame Time: {0}ms").format(get_app()->stats->frame_time()));
-        ram_usage_->set_text(
-            _F("RAM Usage: {0} / {1} MB").format(mem_usage, tot_mem));
-        vram_usage_->set_text(_F("VRAM Free: {0} MB").format(vram_usage));
-        actors_rendered_->set_text(
-            _F("Renderables Visible: {0}").format(actors_rendered));
-        polygons_rendered_->set_text(
-            _F("Polygons Rendered: {0}")
-                .format(get_app()->stats->polygons_rendered()));
-
-        last_update_ = 0.0f;
-        first_update_ = false;
-
-        /* FIXME: Restore this...
-         *
-        auto stages = overlay->find("#stages");
-        stages.remove_children();
-
-        this->window_->each_stage([&](uint32_t i, Stage* stage) {
-            auto stage_row = stages.append_row();
-            stage_row.append_row().append_label(
-                (stage->name().empty()) ? "Stage " + smlt::to_string(i) :
-        stage->name().encode()
-            );
-            stage_row.append_row().append_label(
-                "   Actors: " + smlt::to_string(stage->actor_count())
-            );
-
-            stage_row.append_row().append_label(
-                "   Particle Systems: " +
-        smlt::to_string(stage->particle_system_count())
-            );
-        }); */
+    if(!first_update_ && elapsed_ < 1.0f) {
+        return;
     }
+
+    const float seconds = std::max(elapsed_, 1e-6f);
+    const double per_frame = 1.0 / frames_;
+
+    const float ram_mb = bytes_to_megabytes(app->ram_usage_in_bytes());
+    const float total_mb = bytes_to_megabytes(get_platform()->total_ram_in_bytes());
+    const uint64_t vram_free = get_platform()->available_vram_in_bytes();
+
+    ram_history_.push_back(ram_mb);
+    if(ram_history_.size() > RAM_SAMPLES) {
+        ram_history_.pop_front();
+    }
+    rebuild_ram_graph(total_mb);
+
+    char line[64];
+    std::string text;
+
+    text += get_platform()->name() + " / " + scene->window->renderer->name() + "\n";
+
+    snprintf(line, sizeof(line), "%.0f  (%.2f ms)\n", double(frames_ / seconds),
+             double(1000.0f * seconds / frames_));
+    text += line;
+
+    snprintf(line, sizeof(line), "%.1f - %.1f ms\n", double(min_dt_ * 1000.0f),
+             double(max_dt_ * 1000.0f));
+    text += line;
+
+    text += format_count(draws_ * per_frame) + "\n";
+    text += format_count(polygons_ * per_frame) + "  (" +
+            format_count(polygons_ / seconds) + "/s)\n";
+    text += format_count(vertices_ * per_frame) + "  (" +
+            format_count(vertices_ / seconds) + "/s)\n";
+
+    if(total_mb > 0.0f) {
+        snprintf(line, sizeof(line), "%.1f / %.0f MB\n", double(ram_mb), double(total_mb));
+    } else {
+        snprintf(line, sizeof(line), "%.1f MB\n", double(ram_mb));
+    }
+    text += line;
+
+    if(vram_free == MEMORY_VALUE_UNAVAILABLE) {
+        text += "n/a";
+    } else {
+        snprintf(line, sizeof(line), "%.2f MB free",
+                 double(bytes_to_megabytes(vram_free)));
+        text += line;
+    }
+
+    values_->set_text(text);
+
+    elapsed_ = 0.0f;
+    frames_ = 0;
+    polygons_ = 0;
+    vertices_ = 0;
+    draws_ = 0;
+    first_update_ = false;
 }
 
 } // namespace smlt

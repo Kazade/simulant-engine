@@ -211,6 +211,13 @@ public:
 
     bool initialized() const { return initialized_; }
 
+    /** Returns the font built into the engine, at the given pixel size.
+     * Unlike fonts looked up by family, it never needs a file: it's
+     * rasterised from data compiled into the binary, so it's always
+     * available (e.g. for debug overlays). Created on first use for each
+     * size, and kept for the life of the application. */
+    FontPtr embedded_font(uint16_t size);
+
     /** Returns the process ID for the application, or
      * -1 if it's unavailable or unsupported */
     ProcessID process_id() const;
