@@ -133,8 +133,10 @@ static bool load_dtex(std::istream& stream, Texture* result) {
         // Read the VQ codebook
         stream.read((char*)data, 2048);
 
-        // Seek past the mipmaps
-        stream.seekg(offset);
+        // Skip past the mipmap levels that sit between the codebook and the
+        // main image (offset is relative to the current position, which is
+        // already past the header + codebook).
+        stream.seekg(offset, std::ios::cur);
 
         // Read the rest of the data
         stream.read((char*)data + 2048, header.size - 2048 - offset);
