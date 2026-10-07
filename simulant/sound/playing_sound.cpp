@@ -18,6 +18,7 @@ PlayingSound::PlayingSound(AudioSource* parent, std::weak_ptr<Sound> sound, Audi
     buffers_{0, 0, 0, 0},
     sound_(sound),
     loop_stream_(loop_stream),
+    model_(model),
     is_dead_(false) {
 
     SoundDriver* driver = smlt::get_app()->sound_driver.get();
@@ -103,8 +104,10 @@ void PlayingSound::set_reference_distance(float dist) {
 void PlayingSound::update(float dt) {
     SoundDriver* driver = smlt::get_app()->sound_driver.get();
 
-    // Update the position of the source if this is attached to a stagenode
-    if(parent_) {
+    // Update the position of the source if this is attached to a stagenode.
+    // Ambient sounds stay where set_source_as_ambient put them: on the
+    // listener.
+    if(parent_ && model_ != DISTANCE_MODEL_AMBIENT) {
         auto pos = parent_->transform->position();
         driver->set_source_properties(
             source_,
@@ -132,6 +135,8 @@ void PlayingSound::update(float dt) {
      * source instance */
     auto sound = sound_.lock();    
 
+    bool requeued = false;
+
     while(processed--) {
         AudioBufferID buffer = driver->unqueue_buffers_from_source(source_, 1).front();
 
@@ -144,8 +149,19 @@ void PlayingSound::update(float dt) {
                 finished = driver->source_state(source_) == AUDIO_SOURCE_STATE_STOPPED;
             } else {
                 driver->queue_buffers_to_source(source_, 1, {buffer});
+                requeued = true;
             }
         }
+    }
+
+    /* A source stops on its own if it plays every queued buffer before we
+     * refill it (e.g. after a long frame), or if the driver had to take its
+     * hardware channel for another sound. Either way the stream still has
+     * data, which we've just queued, so start it again - otherwise it would
+     * sit stopped (and silent) forever. */
+    if(!finished && requeued &&
+        driver->source_state(source_) == AUDIO_SOURCE_STATE_STOPPED) {
+        driver->play_source(source_);
     }
 
     if(finished) {

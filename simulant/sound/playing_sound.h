@@ -50,6 +50,7 @@ private:
     StreamFunc stream_func_;
 
     AudioRepeat loop_stream_;
+    DistanceModel model_;
     bool is_dead_;
 
     /* This is used to calculate the velocity */
