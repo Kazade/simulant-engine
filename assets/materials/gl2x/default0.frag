@@ -79,7 +79,10 @@ void main() {
     vec3 base_color = base_color_mapped
         ? mix(s_material_base_color.rgb, base_color_tex.rgb, base_color_tex.a)
         : s_material_base_color.rgb;
+    // The vertex colour modulates alpha as well as colour, as it does in the
+    // texture_only/diffuse_only shaders and the GL1/PVR renderers
     float alpha = s_material_base_color.a
+        * frag_color.a
         * (base_color_mapped ? base_color_tex.a : 1.0);
 
     base_color *= frag_color.rgb;
