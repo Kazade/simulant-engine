@@ -20,6 +20,11 @@
 #include <dc/matrix.h>
 #include <dc/fmath.h>
 #include "../../deps/sh4zam/shz_sh4zam.h"
+/* Pre-8670c2b1 KallistiOS lacks this definition (pvr_regs rework) */
+#ifndef PVR_PT_ALPHA_REF
+#define PVR_PT_ALPHA_REF 0x011c
+#endif
+
 #else
 /* Provide fallback definitions for non-Dreamcast builds (stub compilation) */
 #define PVR_LIST_OP_POLY 0
