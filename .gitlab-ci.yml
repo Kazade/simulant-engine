@@ -253,6 +253,8 @@ build:windows-x64-mingw:release:
     - make -j3
     - cp $MINGW_BIN_DIR/zlib1.dll simulant/
     - cp $MINGW_BIN_DIR/SDL2.dll simulant/
+    # Fedora's SDL2.dll is sdl2-compat, which loads SDL3.dll at runtime
+    - cp $MINGW_BIN_DIR/SDL3.dll simulant/
     - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
     - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
     - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/
@@ -275,6 +277,8 @@ build:windows-x64-mingw:debug:
     - make -j3
     - cp $MINGW_BIN_DIR/zlib1.dll simulant/
     - cp $MINGW_BIN_DIR/SDL2.dll simulant/
+    # Fedora's SDL2.dll is sdl2-compat, which loads SDL3.dll at runtime
+    - cp $MINGW_BIN_DIR/SDL3.dll simulant/
     - cp $MINGW_BIN_DIR/libgcc_s_seh-1.dll simulant/
     - cp $MINGW_BIN_DIR/libstdc++-6.dll simulant/
     - cp $MINGW_BIN_DIR/libwinpthread-1.dll simulant/

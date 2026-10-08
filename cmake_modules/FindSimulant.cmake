@@ -38,8 +38,15 @@ ELSEIF(PLATFORM_RASPBERRYPI)
 ELSEIF(WIN32)
     SET(
        SIMULANT_SEARCH_PATHS
+       ${CMAKE_SOURCE_DIR}/libraries/windows-x64-mingw/
        ${CMAKE_SOURCE_DIR}/libraries/windows-x64-gcc/
     )
+
+    # The MinGW libraries ship as DLLs only (no .dll.a import library), which
+    # MinGW's linker can link against directly
+    IF(MINGW)
+        LIST(APPEND CMAKE_FIND_LIBRARY_SUFFIXES .dll)
+    ENDIF()
 ELSE()
     IF(CMAKE_COMPILER_IS_GNUCXX)
         IF(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 10)
