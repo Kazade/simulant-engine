@@ -476,6 +476,29 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
         }
     }
 
+    /* Sync the PVR's global punch-through alpha reference (PVR_PT_ALPHA_REF).
+     * This is the hardware equivalent of glAlphaFunc(GL_GREATER, threshold):
+     * Mirrors gLdc's GPUSetAlphaCutOff(ref * 255).
+     * Without it, materials/textures with different alpha thresholds render wrong! */
+    if(!to_modifier && blend == BLEND_MASK) {
+        auto t = next->alpha_threshold();
+
+        if(t < 0.0f) {
+            t = 0.0f;
+        }
+        else if(t > 1.0f) {
+            t = 1.0f;
+        }
+
+        const auto cutoff = (int32_t)(t * 255.0f);
+
+        auto& r = *renderer_;
+        if(r.pt_alpha_ref_cache_ != cutoff) {
+            PVR_SET(PVR_PT_ALPHA_REF, (uint32_t)cutoff);
+            r.pt_alpha_ref_cache_ = cutoff;
+        }
+    }
+
     /* Resolve texture — bind_texture uploads if needed and returns VRAM object */
     PVRTextureObject* tex_obj = nullptr;
     if((next->textures_enabled() & BASE_COLOR_MAP_ENABLED) != 0) {

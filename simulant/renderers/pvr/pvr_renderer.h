@@ -92,6 +92,12 @@ friend class PVRRenderQueueVisitor;
         float fog_end_cache_ = -1.0f;
         float fog_color_cache_[4] = {-1.0f, -1.0f, -1.0f, -1.0f};
 
+        /* Cache of the PVR's global punch-through alpha-reference register
+         * (PVR_PT_ALPHA_REF). Sample at scene level, otherwise it's set to
+         * whatever set it was left at last hardware reset, which makes it
+         * ignore thresholds. */
+        int32_t pt_alpha_ref_cache_ = -1;
+
         /* Last pvr_poly_hdr_t bytes submitted to each of the 5 PVR lists
          * (indexed by pvr_list_type_t), so do_visit can skip resubmitting a
          * header that's byte-identical to the one already active for that
