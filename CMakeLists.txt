@@ -227,27 +227,19 @@ IF(ANDROID)
     )
 
   add_library(
-        openal
-        SHARED
-        IMPORTED
-    )
-
-  set_target_properties(
-        openal
-        PROPERTIES IMPORTED_LOCATION
-        ${CMAKE_SOURCE_DIR}/platforms/android/openal/lib/${ANDROID_ABI}/libopenal.so
-    )
-
-  add_library(
         native_app_glue STATIC
         ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
     )
-  link_libraries(android openal)
+
+  # Sound is ALdc (built in, see simulant/CMakeLists.txt), which plays
+  # through AAudio
+  link_libraries(android aaudio)
 
   SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
   SET(OPENGL_LIBRARIES GLESv2 EGL)
   FIND_PATH(OPENGL_INCLUDE_DIRS NAMES gl2.h PATH_SUFFIXES GLES2)
-  SET(OPENAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/platforms/android/openal/include)
+  SET(OPENAL_INCLUDE_DIRS "")
+  SET(OPENAL_LIBRARY "")
 
 ELSEIF(PLATFORM_PSP)
   SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP

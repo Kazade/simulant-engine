@@ -630,10 +630,18 @@ void AndroidWindow::check_events() {
             case APP_CMD_PAUSE:
                 S_WARN("CMD: PAUSE");
                 set_has_focus(false);
+                // Nothing stops the sound playing while we're in the
+                // background otherwise
+                if(ALCcontext* context = alcGetCurrentContext()) {
+                    alcDevicePauseSOFT(alcGetContextsDevice(context));
+                }
                 break;
             case APP_CMD_RESUME:
                 S_WARN("CMD: RESUME");
                 set_has_focus(true);
+                if(ALCcontext* context = alcGetCurrentContext()) {
+                    alcDeviceResumeSOFT(alcGetContextsDevice(context));
+                }
                 break;
             default:
                 break;
