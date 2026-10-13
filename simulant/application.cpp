@@ -64,6 +64,7 @@ namespace smlt { typedef SDL2Window SysWindow; }
 #include "compositor.h"
 #include "input/input_manager.h"
 #include "input/input_state.h"
+#include "loaders/adx_loader.h"
 #include "loaders/dcm_loader.h"
 #include "loaders/dds_texture_loader.h"
 #include "loaders/dtex_loader.h"
@@ -208,6 +209,7 @@ Application::Application(const AppConfig& config, void* platform_state) :
     register_loader(std::make_shared<smlt::loaders::FNTLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DDSTextureLoaderType>());
     register_loader(std::make_shared<smlt::loaders::WAVLoaderType>());
+    register_loader(std::make_shared<smlt::loaders::ADXLoaderType>());
     register_loader(std::make_shared<smlt::loaders::MS3DLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DTEXLoaderType>());
     register_loader(std::make_shared<smlt::loaders::DCMLoaderType>());
