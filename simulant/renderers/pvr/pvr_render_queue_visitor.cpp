@@ -20,6 +20,11 @@
 #include <dc/matrix.h>
 #include <dc/fmath.h>
 #include "../../deps/sh4zam/shz_sh4zam.h"
+/* Pre-8670c2b1 KallistiOS lacks this definition (pvr_regs rework) */
+#ifndef PVR_PT_ALPHA_REF
+#define PVR_PT_ALPHA_REF 0x011c
+#endif
+
 #else
 /* Provide fallback definitions for non-Dreamcast builds (stub compilation) */
 #define PVR_LIST_OP_POLY 0
@@ -473,6 +478,29 @@ void PVRRenderQueueVisitor::change_material_pass(const MaterialPass* prev,
             r.fog_color_cache_[1] = fc.g;
             r.fog_color_cache_[2] = fc.b;
             r.fog_color_cache_[3] = fc.a;
+        }
+    }
+
+    /* Sync the PVR's global punch-through alpha reference (PVR_PT_ALPHA_REF).
+     * This is the hardware equivalent of glAlphaFunc(GL_GREATER, threshold):
+     * Mirrors gLdc's GPUSetAlphaCutOff(ref * 255).
+     * Without it, materials/textures with different alpha thresholds render wrong! */
+    if(!to_modifier && blend == BLEND_MASK) {
+        auto t = next->alpha_threshold();
+
+        if(t < 0.0f) {
+            t = 0.0f;
+        }
+        else if(t > 1.0f) {
+            t = 1.0f;
+        }
+
+        const auto cutoff = (int32_t)(t * 255.0f);
+
+        auto& r = *renderer_;
+        if(r.pt_alpha_ref_cache_ != cutoff) {
+            PVR_SET(PVR_PT_ALPHA_REF, (uint32_t)cutoff);
+            r.pt_alpha_ref_cache_ = cutoff;
         }
     }
 
