@@ -57,12 +57,19 @@ public:
         /* Otherwise we'd get back whichever variant was loaded first */
         flags.use_asset_cache = false;
 
-        return scene->assets->load_sound(ADX_PATH, flags);
+        auto sound = scene->assets->load_sound(ADX_PATH, flags);
+
+        /* Fail here, rather than leaving every caller to crash on a null
+         * sound if the asset is missing or wouldn't load */
+        assert_true(sound);
+        return sound;
     }
 
     /* Plays the sound into a recording driver, and pulls buffers until
      * the loader says there is nothing left */
     std::vector<int16_t> decode(SoundPtr sound, RecordingSoundDriver* recorder = nullptr) {
+        assert_true(sound);
+
         RecordingSoundDriver local(window);
         if(!recorder) {
             recorder = &local;
