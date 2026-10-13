@@ -7,7 +7,8 @@ Simulant has a full-featured audio system that makes it easy to load and play so
 `Sounds` are an `Asset`, like `Textures` or `Materials`, and so can be loaded using an asset manager, probably using
 `load_sound(path);`
 
-Supported sound formats are .wav and .ogg.
+Supported sound formats are .wav, .ogg and .adx. See [Sound File Formats](formats.md) for the differences
+between them and how to convert your audio.
 
 ## Playing Sounds
 

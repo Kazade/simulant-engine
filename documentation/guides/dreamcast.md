@@ -235,6 +235,7 @@ pipeline_->viewport->set_color(smlt::Color(0.4f, 0.6f, 0.9f, 1.0f));
 |--------|-----------|-----------|-------|
 | **OGG Vorbis** | `.ogg` | Yes | **Recommended for music**. Streamed from disc. |
 | **WAV** | `.wav` | No | Loaded fully into memory. Use for short SFX. |
+| **ADX** | `.adx` | Yes | Much cheaper to decode than OGG, but larger files. Convert with `ffmpeg -i input.wav -c:a adpcm_adx output.adx`. |
 
 ### Streaming Music
 

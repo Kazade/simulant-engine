@@ -438,7 +438,6 @@ When releasing updates:
 | Problem | Platform | Solution |
 |---------|----------|----------|
 | Texture not rendering | PSP | Check that texture is power-of-two and under 512px |
-| OGG music not playing | PSP | Use WAV format instead |
 | Binary too large | Dreamcast/PSP | Reduce texture sizes, remove unused assets |
 | Model appears wrong | Dreamcast | Use Dreamcast-specific low-poly model variant |
 

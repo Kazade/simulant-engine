@@ -160,7 +160,7 @@ MaterialPtr default_clone = assets->clone_default_material();
 
 ### Sounds
 
-Sounds are loaded from audio files (OGG, WAV). You can control whether audio is streamed or loaded entirely into memory.
+Sounds are loaded from audio files (OGG, WAV, ADX). You can control whether audio is streamed or loaded entirely into memory.
 
 ```cpp
 // Load sound (streams audio by default)
@@ -678,7 +678,7 @@ Available loaders include:
 |------------|-------------------|--------------|
 | Meshes | OBJ, MD2, BSP, OPT, TMX | `OBJLoader`, `MD2Loader`, etc. |
 | Textures | PNG, DTEX, DDS, KMG, WAL, PCX | `PNGLoader`, `DTEXLoader`, `DDSTextureLoader`, etc. |
-| Sounds | OGG, WAV | `OGGLoader`, `WAVLoader` |
+| Sounds | OGG, WAV, ADX | `OGGLoader`, `WAVLoader`, `ADXLoader` |
 | Fonts | TTF, FNT | `TTFLoader`, `FNTLoader` |
 | Materials | `.material` scripts | `MaterialScriptLoader` |
 | Particle Scripts | `.script` files | `ParticleScriptLoader` |

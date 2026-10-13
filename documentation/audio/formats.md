@@ -1,6 +1,6 @@
 # Sound File Formats
 
-Simulant supports loading sound assets in two formats: **OGG Vorbis** and **WAV**. Both are loaded through the asset manager like any other asset, but they differ in how they are handled internally and which platforms support them.
+Simulant supports loading sound assets in three formats: **OGG Vorbis**, **WAV** and **ADX**. All are loaded through the asset manager like any other asset, but they differ in how they are handled internally and which platforms support them.
 
 ## Loading Sounds
 
@@ -13,7 +13,7 @@ auto sound = assets->load_sound("sounds/explosion.wav");
 You can also pass loading flags to customise behaviour:
 
 ```cpp
-smlt::SoundLoadFlags sound_flags;
+smlt::SoundFlags sound_flags;
 // Configure flags as needed
 auto sound = assets->load_sound("sounds/music.ogg", sound_flags);
 ```
@@ -53,11 +53,9 @@ music_node->play_sound(music, smlt::AUDIO_REPEAT_FOREVER, smlt::DISTANCE_MODEL_A
 | **Linux** | Yes |
 | **Windows** | Yes |
 | **Dreamcast** | Yes |
-| **PSP** | **No** |
+| **PSP** | Yes |
 | **Android** | Yes |
 | **macOS** | Yes |
-
-> **Important:** OGG is **not supported on PSP**. Use WAV for PSP projects.
 
 ## WAV
 
@@ -102,6 +100,54 @@ auto jump = assets->load_sound("sfx/jump.wav");
 
 WAV is the most universally supported format across all Simulant platforms.
 
+## ADX
+
+ADX is a lightweight ADPCM format originally created by CRI for the Dreamcast. It stores 4-bit samples in fixed-size blocks, which makes it roughly a quarter of the size of 16-bit WAV while being very cheap to decode. On Dreamcast the inner decode loop is hand-written SH4 assembly.
+
+### Characteristics
+
+| Property | Value |
+|----------|-------|
+| **Extension** | `.adx` |
+| **Compression** | Yes (lossy, about 4:1 against 16-bit PCM) |
+| **Streaming** | Yes - streamed from disk by default |
+| **File size** | Medium (larger than OGG, much smaller than WAV) |
+| **Memory usage** | Low when streamed |
+| **Channels** | Mono or stereo |
+
+### When to Use ADX
+
+Use ADX for audio where decoding cost matters more than file size:
+
+- **Music on Dreamcast** - Decoding takes far less CPU time than OGG Vorbis
+- **Frequently played sound effects** - Load into memory to keep them compressed in RAM
+- **Long voice lines** - Streams from disk like OGG
+
+```cpp
+// Stream background music (the default)
+auto music = assets->load_sound("music/forest.adx");
+music_node->play_sound(music, smlt::AUDIO_REPEAT_FOREVER, smlt::DISTANCE_MODEL_AMBIENT);
+```
+
+### Streaming vs Loading into Memory
+
+ADX sounds are streamed from disk unless you ask otherwise:
+
+```cpp
+smlt::SoundFlags sfx_flags;
+sfx_flags.stream_audio = false;
+auto jump = assets->load_sound("sfx/jump.adx", sfx_flags);
+```
+
+- **Streaming** opens the file again for each playing instance of the sound. Platforms with a low limit on open files (e.g. Dreamcast) can run out if many streamed sounds play at once.
+- **Loading into memory** reads the file once and keeps it compressed. Every playing instance shares that copy and decodes it as it plays, so no extra files are opened.
+
+### Limitations
+
+- Files should be encoded with ffmpeg (see [Converting Audio](#converting-audio)). Files produced by CRI's own tools will load, but play back with reduced quality.
+- Loop points stored in the file are ignored. Use `AUDIO_REPEAT_FOREVER` to loop, which restarts from the beginning.
+- Encrypted files and files with more than two channels are not supported.
+
 ## Internal Audio Data Formats
 
 Under the hood, Simulant represents decoded audio using the `AudioDataFormat` enum. The supported formats are:
@@ -137,29 +183,27 @@ Here is a practical guide for deciding which format to use:
 | **Voice Lines (short)** | WAV | Quick response needed |
 | **Voice Lines (long)** | OGG | Memory savings for longer dialogue |
 | **Environmental Sounds** | OGG | Can be longer ambient recordings |
+| **Music on Dreamcast** | ADX | Much cheaper to decode than OGG, still streamed |
 
 ## Platform-Specific Considerations
 
 ### Dreamcast
 
-Both OGG and WAV are supported on Dreamcast. However, Dreamcast has limited RAM (typically 16MB), so prefer OGG for any non-trivial audio content to avoid exhausting available memory.
+OGG, WAV and ADX are all supported on Dreamcast. However, Dreamcast has limited RAM (typically 16MB), so prefer a streamed, compressed format for any non-trivial audio content to avoid exhausting available memory. ADX was designed for the Dreamcast and costs much less CPU time to decode than OGG, at the price of larger files.
 
 ```cpp
-// On Dreamcast, prefer OGG for music to conserve RAM
-auto music = assets->load_sound("music/level.ogg");
+// On Dreamcast, prefer ADX or OGG for music to conserve RAM
+auto music = assets->load_sound("music/level.adx");
 ```
 
 ### PSP
 
-The PSP build does **not** support OGG audio. All sounds must be in WAV format:
+OGG and WAV are both supported on PSP. With 32MB of RAM, prefer OGG for music so that it is streamed rather than held in memory:
 
 ```cpp
-// PSP only - WAV required
-auto music = assets->load_sound("music/level.wav");
+auto music = assets->load_sound("music/level.ogg");
 auto sfx = assets->load_sound("sfx/explosion.wav");
 ```
-
-For PSP projects, consider keeping WAV files as short as possible to manage memory usage, since they are fully loaded into RAM.
 
 ### Desktop (Linux / Windows / macOS)
 
@@ -169,10 +213,57 @@ Both formats work reliably on all desktop platforms. Use the guidelines above to
 
 ### Converting Audio
 
-Use [Audacity] (free, open-source) or your preferred audio editor to convert between formats:
+[ffmpeg] converts between all of the supported formats from the command line. The input can be anything ffmpeg can read (MP3, OGG, WAV, FLAC...), these commands only differ in the output.
 
-- **Export as OGG Vorbis** for music and ambient audio (quality setting 5-7 is usually sufficient for games)
-- **Export as WAV (16-bit PCM)** for sound effects
+**To ADX:**
+
+```bash
+ffmpeg -i input.mp3 -c:a adpcm_adx output.adx
+```
+
+**To OGG Vorbis** (quality 5-7 is usually sufficient for games):
+
+```bash
+ffmpeg -i input.mp3 -c:a libvorbis -q:a 5 output.ogg
+```
+
+**To WAV (16-bit PCM):**
+
+```bash
+ffmpeg -i input.mp3 -c:a pcm_s16le output.wav
+```
+
+Add these options before the output filename to shrink the result:
+
+| Option | Effect |
+|--------|--------|
+| `-ar 22050` | Resample to 22050 Hz, which halves the size. Often sufficient for sound effects |
+| `-ac 1` | Mix down to mono, which halves the size of a stereo file. Positional sounds should be mono |
+| `-ac 2` | Mix down to stereo. Required for ADX if the source has more than two channels |
+
+For example, to turn a stereo OGG into a mono 22050 Hz ADX sound effect:
+
+```bash
+ffmpeg -i explosion.ogg -c:a adpcm_adx -ar 22050 -ac 1 explosion.adx
+```
+
+When converting from OGG to ADX, ffmpeg may print a long run of `non monotonically increasing dts` warnings. The output is unaffected. Adding `-af asetpts=N/SR/TB` silences them:
+
+```bash
+ffmpeg -i input.ogg -af asetpts=N/SR/TB -c:a adpcm_adx output.adx
+```
+
+To convert a whole directory:
+
+```bash
+for f in *.wav; do
+    ffmpeg -i "$f" -c:a adpcm_adx "${f%.wav}.adx"
+done
+```
+
+ADX, OGG and MP3 are all lossy, so convert from the original recording where you can rather than from another lossy file.
+
+If you prefer a graphical tool, [Audacity] (free, open-source) can export OGG Vorbis and 16-bit PCM WAV.
 
 ### File Organization
 
@@ -219,7 +310,7 @@ sound.reset();
 ### Sound plays silently or not at all
 
 - Verify the file path is correct relative to your assets directory
-- Check that the file format is supported on your target platform (no OGG on PSP)
+- Check that the file extension is one of the supported formats (`.ogg`, `.wav`, `.adx`)
 - Ensure the `AudioSource` node is in the scene and not destroyed prematurely
 - Verify the audio listener is configured on the `Window`
 
@@ -236,3 +327,4 @@ sound.reset();
 - Consider pre-trimming silence from the start and end of looped audio files
 
 [Audacity]: https://www.audacityteam.org/
+[ffmpeg]: https://ffmpeg.org/

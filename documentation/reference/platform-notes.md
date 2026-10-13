@@ -6,7 +6,7 @@ Simulant is currently supported in some form on the following platforms:
  - Windows
  - OSX (should work, not regularly tested)
  - Dreamcast (performance work needed)
- - PSP (runs, missing audio)
+ - PSP
  - Android
  - Evercade (compiles, untested)
 

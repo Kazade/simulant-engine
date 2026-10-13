@@ -26,15 +26,12 @@ This page tracks current limitations, known issues, and planned improvements for
 
 #### Dreamcast
 
-- OGG Vorbis decoding not supported; WAV only due to RAM constraints
 - Custom shaders not supported (GLdc uses fixed-function pipeline)
 - Asset embedding into ELF required; no file system access
 
 #### PSP
 
-- OGG format not supported; WAV only
 - Textures must be power-of-two and max 512px
-- Audio subsystem partially implemented
 
 ## TODO / Planned Features
 

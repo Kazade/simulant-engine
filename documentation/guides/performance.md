@@ -876,7 +876,7 @@ The PSP is moderately constrained:
 | GPU | Custom PSP renderer |
 | Max lights per object | 4 |
 | Max texture size | **512px (power-of-two required)** |
-| Audio | WAV only (no OGG) |
+| Audio | OGG Vorbis (streaming) and WAV |
 
 **Key optimizations:**
 
@@ -884,12 +884,8 @@ The PSP is moderately constrained:
 // 1. All textures MUST be power-of-two
 // 256x256, 512x512, 1024x512 -- non-power-of-two will fail
 
-// 2. Use WAV for audio (OGG not supported)
-#ifdef SIMULANT_PLATFORM_PSP
-    auto music = assets->load_sound("music/level.wav");
-#else
-    auto music = assets->load_sound("music/level.ogg");
-#endif
+// 2. Stream music as OGG rather than loading WAV into memory
+auto music = assets->load_sound("music/level.ogg");
 
 // 3. Reduce texture resolution
 // 512px max -- use 256x256 where possible to save VRAM
@@ -1247,7 +1243,7 @@ Use this checklist when preparing your game for release. Work through items in o
 ### Phase 7: Platform-Specific
 
 - [ ] **Dreamcast:** Reduce polygons, use DTEX/KMG textures, max 2 lights, avoid skyboxes
-- [ ] **PSP:** Power-of-two textures, max 512px, WAV audio, reduce poly count
+- [ ] **PSP:** Power-of-two textures, max 512px, reduce poly count
 - [ ] **Desktop:** Use DDS textures, enable high-quality features conditionally
 - [ ] Use `#ifdef SIMULANT_PLATFORM_*` for platform-specific assets
 - [ ] Test on target hardware (not just desktop)

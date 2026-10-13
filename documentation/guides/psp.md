@@ -32,7 +32,7 @@ The PSP is a handheld gaming device with moderate resources -- more capable than
 | **RAM** | 32MB main memory |
 | **GPU** | Custom PSP graphics processor |
 | **Display** | 480x272 LCD (16:9 aspect ratio) |
-| **Audio** | Hardware audio (WAV support) |
+| **Audio** | Hardware audio (OGG and WAV support) |
 | **Storage** | UMD disc, Memory Stick (homebrew) |
 | **Input** | D-pad, analog nub, face buttons, shoulder buttons |
 
@@ -205,29 +205,15 @@ config.fullscreen = true;
 
 | Format | Extension | Notes |
 |--------|-----------|-------|
-| **WAV** | `.wav` | Supported. Loaded into memory. |
-| **OGG Vorbis** | `.ogg` | **Not supported** on PSP. |
+| **OGG Vorbis** | `.ogg` | Supported. Streamed, use for music. |
+| **WAV** | `.wav` | Supported. Use for short SFX. |
 
-### Audio Status
-
-Audio on PSP is currently **not fully implemented** in Simulant. WAV files may work but functionality is limited. Plan accordingly:
-
-- Test audio thoroughly on actual hardware
-- Provide fallback visual feedback for audio events
-- Monitor Simulant development for improved PSP audio support
-
-### Using WAV
+### Loading Sounds
 
 ```cpp
-#ifdef SIMULANT_PLATFORM_PSP
-    // Use WAV for all audio on PSP
-    auto music = assets->load_sound("music/level.wav");
-    auto sfx = assets->load_sound("sfx/jump.wav");
-#else
-    // Use OGG for music on other platforms
-    auto music = assets->load_sound("music/level.ogg");
-    auto sfx = assets->load_sound("sfx/jump.wav");
-#endif
+// The same formats work on PSP as on other platforms
+auto music = assets->load_sound("music/level.ogg");
+auto sfx = assets->load_sound("sfx/jump.wav");
 ```
 
 ---
@@ -290,7 +276,6 @@ The VFS automatically tries PSP-specific paths first.
 #ifdef SIMULANT_PLATFORM_PSP
     // PSP-specific code
     // - Power-of-two texture enforcement
-    // - WAV-only audio
     // - Reduced polygon counts
     // - Lower physics frequency
 #endif
@@ -400,9 +385,8 @@ Use this checklist when preparing a PSP build:
 - [ ] Test lighting on actual hardware
 
 ### Audio
-- [ ] **Use WAV format only** -- OGG is not supported
-- [ ] Audio may not be fully functional -- test thoroughly
-- [ ] Provide visual fallbacks for audio cues
+- [ ] **Use OGG for music** (streamed) and WAV for short SFX
+- [ ] Test audio on actual hardware
 
 ### Memory
 - [ ] Total binary size under **20MB**
@@ -449,7 +433,7 @@ Before releasing:
 1. Test in **PPSSPP** emulator for basic functionality
 2. Test on **real PSP hardware** if possible
 3. Verify all textures load correctly (power-of-two check)
-4. Verify audio plays (if implemented)
+4. Verify audio plays
 5. Check memory usage does not cause crashes
 
 ---
@@ -461,7 +445,7 @@ PSP development in Simulant requires attention to:
 1. **32MB RAM** -- more than Dreamcast, but still constrained
 2. **Power-of-two textures, max 512px** -- the most critical constraint
 3. **4 lights per object** -- more than Dreamcast, fewer than desktop
-4. **WAV audio only** -- OGG not supported; audio may be partially implemented
+4. **OGG and WAV audio** -- stream music as OGG to save RAM
 5. **Embedded assets** -- all content compiled into the ELF
 6. **480x272 display** -- widescreen aspect ratio
 7. **No RTTI or exceptions** -- toolchain restrictions

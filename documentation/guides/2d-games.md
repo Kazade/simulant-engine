@@ -751,7 +751,7 @@ private:
 | RAM | 32MB | More headroom than Dreamcast |
 | Max texture size | **512px** | **Must be power-of-two** |
 | Max lights | 4 per object | Keep lighting simple |
-| Audio | WAV only | OGG not supported |
+| Audio | OGG and WAV | Stream music as OGG to save RAM |
 | Asset loading | Embedded | All assets built into executable |
 
 ```cpp

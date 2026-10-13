@@ -681,7 +681,7 @@ See [Performance Guide](performance.md) and [Resource Management](../core-concep
 | RAM | 32MB | More headroom than Dreamcast |
 | Max lights | 4 per object | Can use ambient + 2-3 point lights |
 | Max texture | **512px** | **Power-of-two required** |
-| Audio | WAV only | OGG not supported |
+| Audio | OGG and WAV | Stream music as OGG to save RAM |
 | Assets | Embedded | All assets built into executable |
 
 ```cpp

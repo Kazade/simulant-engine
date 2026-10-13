@@ -525,10 +525,9 @@ auto mat2 = assets->load_material("materials/ground.material");
 
 | Format | Extension | Streaming | Platform Support |
 |--------|-----------|-----------|-----------------|
-| **OGG Vorbis** | `.ogg` | Yes | Linux, Windows, Dreamcast |
+| **OGG Vorbis** | `.ogg` | Yes | All platforms |
 | **WAV** | `.wav` | No (loaded into memory) | All platforms |
-
-> **Note:** OGG is **not supported on PSP** due to missing audio implementation. Use WAV for PSP audio.
+| **ADX** | `.adx` | Yes | All platforms |
 
 ### Music vs Sound Effects
 
@@ -588,7 +587,7 @@ application->sound_driver->set_master_volume(0.8f);
 ### Platform-Specific Audio Notes
 
 - **Dreamcast:** File reads from CD can interrupt CD audio playback. Use `vfs->enable_read_blocking()` during music playback if needed.
-- **PSP:** Audio is currently not fully implemented. WAV files may work but OGG is not supported.
+- **PSP:** Both OGG and WAV are supported. Prefer streamed OGG for music to save RAM.
 - **Desktop:** Both OGG and WAV work reliably.
 
 ---
@@ -892,7 +891,7 @@ assets/
 |----------|-----|-----|----------|-------|
 | **Linux/Windows** | Any modern | 1GB+ | GL2X (OpenGL 2.x) | Full feature support |
 | **Dreamcast** | 200MHz | 16MB | GL1X (OpenGL ES 1.x) | 2 max lights per object, 1024 max texture size |
-| **PSP** | 333MHz | 32MB | Custom PSP renderer | 4 max lights per object, 512 max texture size, no OGG audio |
+| **PSP** | 333MHz | 32MB | Custom PSP renderer | 4 max lights per object, 512 max texture size |
 
 ### Desktop (Linux/Windows)
 
@@ -966,7 +965,7 @@ The PSP has similar constraints but with some differences.
 | **RAM** | 32MB total |
 | **Texture size** | 512 pixels maximum, **must be power-of-two** |
 | **Lights per object** | 4 maximum |
-| **Audio** | WAV only (OGG not supported) |
+| **Audio** | OGG and WAV supported |
 | **Filesystem** | Memory Stick / UMD |
 
 #### Asset Embedding
@@ -980,15 +979,13 @@ simulant build psp
 #### Optimization Tips
 
 - **Power-of-two textures** are mandatory (256x256, 512x512, etc.)
-- **Use WAV for all audio** -- OGG is not available
+- **Stream music as OGG** -- keeps long audio out of RAM
 - **Reduce polygon counts** -- similar to Dreamcast
 - **Avoid large textures** -- 512x512 maximum, prefer 256x256
 - **Use platform-specific assets** via `${PLATFORM}` path placeholders
 
 ```cpp
 #ifdef SIMULANT_PLATFORM_PSP
-    // PSP requires WAV audio
-    auto music = assets->load_sound("music/level.wav");
     // PSP requires power-of-two textures
     auto tex = assets->load_texture("textures/ground_256.png");
 #endif
@@ -1269,7 +1266,6 @@ auto hero = assets->load_mesh("models/${PLATFORM}/hero.obj");
 
 | Possible Cause | Solution |
 |----------------|----------|
-| OGG on PSP | Use WAV format instead |
 | Not stored | Store the SoundID returned by `load_sound()` |
 | Volume at zero | Check `set_gain()` and master volume |
 | Streamed audio disposed | Ensure the sound file stays accessible during playback |
@@ -1351,7 +1347,7 @@ ParticleScriptPtr ps = assets->load_particle_script(smlt::ParticleScript::BuiltI
 | 3D Models | glTF 2.0 (.glb) | OBJ, MS3D, MD2 |
 | Textures | PNG | JPG, DDS, DTEX, KMG |
 | Materials | .smat (JSON) | .material |
-| Music | OGG | WAV (for PSP) |
+| Music | OGG | ADX, WAV |
 | Sound Effects | WAV | OGG |
 | Fonts | TTF | FNT |
 | Particles | .kglp (JSON) | .script |
@@ -1364,6 +1360,6 @@ ParticleScriptPtr ps = assets->load_particle_script(smlt::ParticleScript::BuiltI
 | Max texture size | Driver-dependent | 1024 | 512 |
 | Power-of-two required | No | Recommended | **Yes** |
 | Max lights per object | 8 | 2 | 4 |
-| OGG audio | Yes | Yes | **No** |
+| OGG audio | Yes | Yes | Yes |
 | Custom shaders | Yes (GL2X) | No (GL1X fixed) | Limited |
 | Asset loading | Runtime from disk | Embedded in binary | Embedded in binary |
