@@ -37,6 +37,8 @@ public:
     void set_listener_properties(const Vec3& position, const Quaternion& orientation, const Vec3& velocity) override;
     void set_source_properties(AudioSourceID id, const Vec3& position, const Vec3& velocity) override;
 
+    bool supports_format(AudioDataFormat format) const override;
+
     void set_source_reference_distance(AudioSourceID id, float dist) override;
     void set_source_gain(AudioSourceID id, NormalizedFloat value) override;
     void set_source_pitch(AudioSourceID id, NormalizedFloat value) override;

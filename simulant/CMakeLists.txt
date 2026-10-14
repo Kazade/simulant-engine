@@ -63,6 +63,7 @@ IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR ANDROID OR SIMULANT_USE_ALDC)
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/listener.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/platform.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/source.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/adpcm.c
         # The software mixer and its outputs, which compile to nothing on
         # platforms that play through sound hardware instead
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/mixer.c
