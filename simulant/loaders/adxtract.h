@@ -1,5 +1,5 @@
 /*
- * adxtract - v1.0
+ * adxtract - v1.1
  *
  * Public domain ADX decoder. No warranty implied - use at your own risk.
  *
@@ -27,6 +27,7 @@
  *
  * REVISION HISTORY
  *
+ * - 1.1 (2926-10-14) - perf optimisations for SH4
  * - 1.0 (2026-10-13) - initial release
  */
 
@@ -94,6 +95,15 @@ void adx_stream_close(adxtract_stream_t* source);
 // ADXTRACT_NO_ASM to use the C version instead
 #if defined(__DREAMCAST__) && !defined(ADXTRACT_NO_ASM)
 #define ADXTRACT_SH4_ASM
+#endif
+
+// The decoder works in floating point. Doubles hold every intermediate value
+// exactly, so the output matches the integer decoders. The SH4 only has fast
+// single precision so floats are used there, which can be a few LSBs out
+#if defined(__DREAMCAST__) || defined(__SH4__)
+typedef float adx_real_t;
+#else
+typedef double adx_real_t;
 #endif
 
 #ifdef __cplusplus
@@ -175,10 +185,10 @@ struct _adxtract_stream {
     size_t file_block;
 
     // Prediction filter coefficients, and the previous two decoded samples
-    // of each channel. These are floats so that the decode loop stays in the FPU
-    float coef1;
-    float coef2;
-    float history[ADXTRACT_MAX_CHANNELS][2];
+    // of each channel. These are floating point so that the decode loop stays in the FPU
+    adx_real_t coef1;
+    adx_real_t coef2;
+    adx_real_t history[ADXTRACT_MAX_CHANNELS][2];
 
     // The loop points in samples (the end is exclusive), and the history as it
     // was at the start of the loop so that it can be restored when jumping back
@@ -186,7 +196,7 @@ struct _adxtract_stream {
     bool looping;
     size_t loop_begin;
     size_t loop_end;
-    float loop_history[ADXTRACT_MAX_CHANNELS][2];
+    adx_real_t loop_history[ADXTRACT_MAX_CHANNELS][2];
 };
 
 size_t adx_stream_channel_count(const adxtract_stream_t* stream) {
@@ -428,8 +438,8 @@ static adxtract_stream_t* _adx_init_stream(adxtract_stream_t* stream) {
     const double c = (b + a_minus_b - sqrt((b + b + a_minus_b) * a_minus_b)) / b;
 
     // The coefficients are quantised to 12 bits to match what the encoder used
-    stream->coef1 = (float) (int32_t) (c * 8192.0) / 4096.0f;
-    stream->coef2 = (float) (int32_t) (c * c * -4096.0) / 4096.0f;
+    stream->coef1 = (adx_real_t) (int32_t) (c * 8192.0) / 4096.0f;
+    stream->coef2 = (adx_real_t) (int32_t) (c * c * -4096.0) / 4096.0f;
 
     // The audio follows the copyright string, which is where we've just read up to
     stream->audio_start = copyright_start + 6;
@@ -468,56 +478,50 @@ adxtract_stream_t* adx_read_buffer(const uint8_t* buffer, size_t size) {
 
 // Decodes a single sample. Delta is the nibble's value already multiplied by the
 // block's scale, and the history is biased by 32768 (see _adx_read_block)
-static inline void _adx_decode_sample(float delta, float coef1, float coef2, float* hist1, float* hist2, int16_t** buffer, size_t stride, bool odd) {
+static inline void _adx_decode_sample(adx_real_t delta, adx_real_t coef1, adx_real_t coef2, adx_real_t* hist1, adx_real_t* hist2, int16_t** buffer, size_t stride, bool odd) {
 #ifdef ADXTRACT_SH4_ASM
     // This has to round in exactly the same way as the assembly loop in _adx_read_block
     // does, so that the output doesn't depend on how the reads are split up. That means
-    // using fipr, with the history in the same order as the loop has it for this sample
-    float vectors[8] = {
-        1.0f, odd ? coef2 : coef1, odd ? coef1 : coef2, 0.0f,
-        delta, odd ? *hist2 : *hist1, odd ? *hist1 : *hist2, 0.0f
-    };
+    // using fipr, with the history in the same order as the loop has it for this sample.
+    // The vectors are passed in registers so that nothing goes through memory
+    register float r_one __asm__("fr0") = 1.0f;
+    register float r_coef_a __asm__("fr1") = odd ? coef2 : coef1;
+    register float r_coef_b __asm__("fr2") = odd ? coef1 : coef2;
+    register float r_zero __asm__("fr3") = 0.0f;
+    register float r_delta __asm__("fr4") = delta;
+    register float r_hist_a __asm__("fr5") = odd ? *hist2 : *hist1;
+    register float r_hist_b __asm__("fr6") = odd ? *hist1 : *hist2;
+    register float r_result __asm__("fr7") = 0.0f;
 
-    register float* r_vectors __asm__("r1") = vectors;
-    register int32_t r_sample __asm__("r0");
+    int32_t out;
 
-    __asm__ volatile(
-        "fmov.s @r1+,fr0\n\t"
-        "fmov.s @r1+,fr1\n\t"
-        "fmov.s @r1+,fr2\n\t"
-        "fmov.s @r1+,fr3\n\t"
-        "fmov.s @r1+,fr4\n\t"
-        "fmov.s @r1+,fr5\n\t"
-        "fmov.s @r1+,fr6\n\t"
-        "fmov.s @r1+,fr7\n\t"
+    __asm__(
         "fipr fv0,fv4\n\t"
         "ftrc fr7,fpul\n\t"
-        "sts fpul,r0\n\t"
-        : "=r"(r_sample), "+r"(r_vectors)
-        :
-        : "fr0", "fr1", "fr2", "fr3", "fr4", "fr5", "fr6", "fr7", "fpul", "memory"
+        "sts fpul,%0\n\t"
+        : "=r"(out), "+f"(r_result)
+        : "f"(r_one), "f"(r_coef_a), "f"(r_coef_b), "f"(r_zero), "f"(r_delta), "f"(r_hist_a), "f"(r_hist_b)
+        : "fpul"
     );
-
-    int32_t out = r_sample;
 #else
     (void) odd;
 
-    float sample = delta;
+    adx_real_t sample = delta;
     sample += coef2 * *hist2;
     sample += coef1 * *hist1;
 
     // The integer decoders round the prediction down, and without matching that the
-    // error builds up in the filter. Float to int conversion truncates towards zero,
+    // error builds up in the filter. Converting to an int truncates towards zero,
     // but the bias keeps the sum positive which makes the truncation a floor. Anything
     // that is still negative is about to be clamped anyway
     int32_t out = (int32_t) sample;
 #endif
-    float hist = (float) out;
+    adx_real_t hist = (adx_real_t) out;
 
     // Both ends of the clamp are covered by a single rarely taken branch
     if(ADXTRACT_UNLIKELY((uint32_t) out > 65535)) {
         out = ~(out >> 31) & 65535;
-        hist = (float) out;
+        hist = (adx_real_t) out;
     }
 
     *hist2 = *hist1;
@@ -528,38 +532,47 @@ static inline void _adx_decode_sample(float delta, float coef1, float coef2, flo
     *buffer += stride;
 }
 
+// While decoding, samples are kept biased by 32768 (so 0..65535) which lets the
+// truncated result go straight back into the filter
+#define ADXTRACT_BIAS 32768.0f
+
+// Fills in the 16 values that a nibble can decode to in this block. The filter needs a
+// constant correction for the bias, which is folded in here too. At 64 bytes on the
+// SH4 the table is only 2 cache lines
+static void _adx_build_deltas(const adxtract_stream_t* source, const adxtract_block_t* block, adx_real_t* deltas) {
+    // CRI's tools add one to the scale, but ffmpeg doesn't and that's what
+    // files are most likely to have been encoded with
+    const adx_real_t scale = (adx_real_t) ((block->predictor << 8) | block->scale);
+    const adx_real_t correction = ADXTRACT_BIAS * (1.0f - source->coef1 - source->coef2);
+
+    // The nibbles are sign-extended, so 0..7 are positive and 8..15 are -8..-1. Every
+    // value is a whole number well within the precision of a float, so the table can be
+    // built with two independent chains of adds (which is quicker on the SH4 than a
+    // multiply for each entry) without changing the result
+    deltas[0] = correction;
+    deltas[8] = correction - 8 * scale;
+    for(int i = 1; i < 8; ++i) {
+        deltas[i] = deltas[i - 1] + scale;
+        deltas[i + 8] = deltas[i + 7] + scale;
+    }
+}
+
 // Decompress the block for a single channel into the buffer. Buffer should point
 // at the first output sample for this channel, and stride is the distance between
 // its samples (the channel count if interleaving, otherwise 1)
 static size_t _adx_read_block(adxtract_stream_t* source, const adxtract_block_t* block, size_t channel, size_t start_sample, size_t max_samples, int16_t* buffer, size_t stride) {
-    // Sign-extended 4-bit values as floats
-    static const float nibbles[16] = {
-        0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f,
-        -8.0f, -7.0f, -6.0f, -5.0f, -4.0f, -3.0f, -2.0f, -1.0f
-    };
-
     // Everything the loop needs is copied into locals so that it lives in registers
-    // and the loop only touches the block, the table below and the output
-    const float coef1 = source->coef1;
-    const float coef2 = source->coef2;
-    const float bias = 32768.0f;
-    // CRI's tools add one to the scale, but ffmpeg doesn't and that's what
-    // files are most likely to have been encoded with
-    const float scale = (float) ((block->predictor << 8) | block->scale);
+    // and the loop only touches the block, the table and the output
+    const adx_real_t coef1 = source->coef1;
+    const adx_real_t coef2 = source->coef2;
+    const adx_real_t bias = ADXTRACT_BIAS;
 
-    // While decoding, samples are kept biased by 32768 (so 0..65535) which lets the
-    // truncated result go straight back into the filter. The filter needs a constant
-    // correction for that, which is folded into this table of every value that a
-    // nibble can decode to in this block. At 64 bytes it is only 2 cache lines
-    const float correction = bias * (1.0f - coef1 - coef2);
-    float deltas[16];
-    for(int i = 0; i < 16; ++i) {
-        deltas[i] = nibbles[i] * scale + correction;
-    }
+    adx_real_t deltas[16];
+    _adx_build_deltas(source, block, deltas);
 
-    float* history = source->history[channel];
-    float hist1 = history[0] + bias;
-    float hist2 = history[1] + bias;
+    adx_real_t* history = source->history[channel];
+    adx_real_t hist1 = history[0] + bias;
+    adx_real_t hist2 = history[1] + bias;
 
     // Each byte holds two samples with the high nibble first. Whole bytes are
     // decoded in pairs, with an odd sample either side if the read doesn't
@@ -588,17 +601,22 @@ static size_t _adx_read_block(adxtract_stream_t* source, const adxtract_block_t*
          * directly over the older of the two history values. That swaps which register
          * holds the newest sample, which is why there are two coefficient vectors.
          *
-         * The SH4 executes in order, so the instructions that don't depend on the fipr
-         * (looking up the next delta, storing the previous sample) are placed straight
-         * after it to run while it completes.
+         * Each sample depends on the one before, through fipr -> ftrc (4 cycles) ->
+         * float (3 cycles) -> the next fipr (3 cycles), so a sample can't take less
+         * than 10 cycles. The SH4 executes in order, so the loop is laid out to issue
+         * each of those as soon as it can, with everything else fitted in between
+         * (or paired with them). That means a sample is only checked for clipping and
+         * stored once the next one has been started.
          *
          * r0 = scratch          r1 = deltas          r2 = input
          * r3 = output           r4 = output stride   r5 = sample
          * r6 = 65535            r7 = 0x8000          r8 = current byte
-         * r9 = pairs remaining  r10 = state
+         * r9 = pairs remaining
+         *
+         * The coefficients come in fr1 and fr2, and the history in fr5 and fr6. The
+         * memory that the loop reads and writes is listed in the operands, rather than
+         * clobbering all memory, so the compiler can keep everything else in registers
          */
-        float state[4] = {coef1, coef2, hist1, hist2};
-
         register const float* r_deltas __asm__("r1") = deltas;
         register const uint8_t* r_in __asm__("r2") = in;
         register int16_t* r_out __asm__("r3") = buffer;
@@ -606,113 +624,126 @@ static size_t _adx_read_block(adxtract_stream_t* source, const adxtract_block_t*
         register uint32_t r_max __asm__("r6") = 65535;
         register uint32_t r_flip __asm__("r7") = 0x8000;
         register size_t r_pairs __asm__("r9") = pairs;
-        register float* r_state __asm__("r10") = state;
+        register float r_coef1 __asm__("fr1") = coef1;
+        register float r_coef2 __asm__("fr2") = coef2;
+        register float r_hist1 __asm__("fr5") = hist1;
+        register float r_hist2 __asm__("fr6") = hist2;
 
-        __asm__ volatile(
+        __asm__(
             "fldi1   fr0\n\t"
-            "fmov.s  @r10+,fr1\n\t"
-            "fmov.s  @r10+,fr2\n\t"
             "fldi0   fr3\n\t"
             "fldi1   fr8\n\t"
             "fmov    fr2,fr9\n\t"
             "fmov    fr1,fr10\n\t"
             "fldi0   fr11\n\t"
-            "fmov.s  @r10+,fr5\n\t"
-            "fmov.s  @r10,fr6\n\t"
             "fldi0   fr7\n\t"
 
-            // Look up the delta for the high nibble of the first byte
+            // Look up the delta for the high nibble of the first byte, and start its
+            // sample. mov.b sign-extends, but the and only keeps the nibble's bits
             "mov.b   @r2+,r0\n\t"
-            "extu.b  r0,r0\n\t"
             "mov     r0,r8\n\t"
             "shlr2   r0\n\t"
             "and     #60,r0\n\t"
             "fmov.s  @(r0,r1),fr4\n\t"
+            "bra     3f\n\t"
             "fipr    fv0,fv4\n"
 
-            // First sample of the byte. While the fipr completes, look up the delta
-            // for the low nibble
+            // First sample of the byte. While the fipr completes, finish the second
+            // sample of the previous byte (which didn't have time to be checked before
+            // this one started) and look up the delta for the low nibble
             "1:\n\t"
+            "fipr    fv0,fv4\n\t"
+            "cmp/hi  r6,r5\n\t"
+            "bt      5f\n"
+            "2:\n\t"
+            "xor     r7,r5\n\t"
+            "mov.w   r5,@r3\n\t"
+            "add     r4,r3\n"
+            "3:\n\t"
             "mov     r8,r0\n\t"
             "and     #15,r0\n\t"
-            "shll2   r0\n\t"
-            "fmov.s  @(r0,r1),fr4\n\t"
             "ftrc    fr7,fpul\n\t"
-            "float   fpul,fr6\n\t"
+            "shll2   r0\n\t"
             "sts     fpul,r5\n\t"
-            "cmp/hi  r6,r5\n\t"
-            "bt      3f\n"
+            "fmov.s  @(r0,r1),fr4\n\t"
+            "float   fpul,fr6\n\t"
 
-            // Second sample of the byte. While the fipr completes, store the first
+            // Second sample of the byte. While the fipr completes, finish the first
             // sample and look up the delta for the high nibble of the next byte
-            "2:\n\t"
             "fipr    fv8,fv4\n\t"
+            "cmp/hi  r6,r5\n\t"
+            "bt      7f\n"
+            "4:\n\t"
             "xor     r7,r5\n\t"
             "mov.w   r5,@r3\n\t"
             "add     r4,r3\n\t"
             "mov.b   @r2+,r0\n\t"
-            "extu.b  r0,r0\n\t"
+            "dt      r9\n\t"
+            "ftrc    fr7,fpul\n\t"
             "mov     r0,r8\n\t"
             "shlr2   r0\n\t"
+            "sts     fpul,r5\n\t"
             "and     #60,r0\n\t"
             "fmov.s  @(r0,r1),fr4\n\t"
-            "ftrc    fr7,fpul\n\t"
             "float   fpul,fr5\n\t"
-            "sts     fpul,r5\n\t"
-            "cmp/hi  r6,r5\n\t"
-            "bt      5f\n"
+            "bf/s    1b\n\t"
+            "nop\n\t"
 
-            // Start the first sample of the next byte, and store the second sample
-            // of this one while that completes
-            "4:\n\t"
-            "dt      r9\n\t"
-            "bt      6f\n\t"
-            "fipr    fv0,fv4\n\t"
+            // Finish the final sample, which the loop leaves unchecked
+            "cmp/hi  r6,r5\n\t"
+            "bf      10f\n\t"
+            "cmp/pz  r5\n\t"
+            "bt/s    9f\n\t"
+            "mov     r6,r5\n\t"
+            "mov     #0,r5\n"
+            "9:\n\t"
+            "lds     r5,fpul\n\t"
+            "float   fpul,fr5\n"
+            "10:\n\t"
             "xor     r7,r5\n\t"
             "mov.w   r5,@r3\n\t"
-            "bra     1b\n\t"
+            "bra     11f\n\t"
             "add     r4,r3\n"
 
             // The rarely taken clamps. The sample becomes 0 if it was negative or 65535
-            // if it was too large, and the history is converted again from that
-            "3:\n\t"
+            // if it was too large, and its history is converted again from that. The next
+            // sample has already been started with the old history, so it's started again
+            "5:\n\t"
             "cmp/pz  r5\n\t"
-            "bt/s    7f\n\t"
+            "bt/s    6f\n\t"
             "mov     r6,r5\n\t"
             "mov     #0,r5\n"
-            "7:\n\t"
+            "6:\n\t"
             "lds     r5,fpul\n\t"
+            "float   fpul,fr5\n\t"
             "bra     2b\n\t"
-            "float   fpul,fr6\n"
+            "fipr    fv0,fv4\n"
 
-            "5:\n\t"
+            "7:\n\t"
             "cmp/pz  r5\n\t"
             "bt/s    8f\n\t"
             "mov     r6,r5\n\t"
             "mov     #0,r5\n"
             "8:\n\t"
             "lds     r5,fpul\n\t"
+            "float   fpul,fr6\n\t"
             "bra     4b\n\t"
-            "float   fpul,fr5\n"
+            "fipr    fv8,fv4\n"
 
-            // Store the final sample, then the history (the newest is in fr5)
-            "6:\n\t"
-            "xor     r7,r5\n\t"
-            "mov.w   r5,@r3\n\t"
-            "add     r4,r3\n\t"
-            "fmov.s  fr6,@r10\n\t"
-            "fmov.s  fr5,@-r10\n\t"
-            : "+r"(r_in), "+r"(r_out), "+r"(r_pairs), "+r"(r_state)
-            : "r"(r_deltas), "r"(r_stride), "r"(r_max), "r"(r_flip)
-            : "r0", "r5", "r8", "fr0", "fr1", "fr2", "fr3", "fr4", "fr5", "fr6", "fr7", "fr8", "fr9", "fr10", "fr11", "fpul", "t", "memory"
+            "11:\n\t"
+            : "+r"(r_in), "+r"(r_out), "+r"(r_pairs), "+f"(r_hist1), "+f"(r_hist2),
+              "+m"(*(int16_t (*)[]) buffer)
+            : "r"(r_deltas), "r"(r_stride), "r"(r_max), "r"(r_flip), "f"(r_coef1), "f"(r_coef2),
+              "m"(*(const float (*)[16]) deltas), "m"(*(const uint8_t (*)[]) in)
+            : "r0", "r5", "r8", "fr0", "fr3", "fr4", "fr7", "fr8", "fr9", "fr10", "fr11", "fpul", "t"
         );
 
         // The loop always looks up the delta for the byte after the ones it decodes,
         // so it finishes one byte further on than it got to
         in = r_in - 1;
         buffer = r_out;
-        hist1 = state[2];
-        hist2 = state[3];
+        hist1 = r_hist1;
+        hist2 = r_hist2;
     }
 #else
     for(; pairs; --pairs) {
@@ -731,6 +762,281 @@ static size_t _adx_read_block(adxtract_stream_t* source, const adxtract_block_t*
 
     return max_samples;
 }
+
+#ifdef ADXTRACT_SH4_ASM
+// Decompress the blocks for both channels of a stereo stream. Each sample depends on the
+// one before it in the same channel, which leaves the FPU idle for most of the time it
+// takes to decode one. The two channels don't depend on each other, so decoding them
+// together lets each one's work fill the other's gaps
+static size_t _adx_read_block_stereo(adxtract_stream_t* source, size_t start_sample, size_t max_samples, int16_t* left, int16_t* right, size_t stride) {
+    const adxtract_block_t* blocks = source->frame;
+    size_t done = 0;
+
+    // The loop works on whole bytes, so a sample on its own at either end goes
+    // through the single channel decoder
+    if((start_sample & 1) && max_samples) {
+        _adx_read_block(source, &blocks[0], 0, start_sample, 1, left, stride);
+        _adx_read_block(source, &blocks[1], 1, start_sample, 1, right, stride);
+        done = 1;
+    }
+
+    const size_t pairs = (max_samples - done) >> 1;
+
+    if(pairs) {
+        // The left channel's table is first, followed by the right's
+        float deltas[32];
+        _adx_build_deltas(source, &blocks[0], deltas);
+        _adx_build_deltas(source, &blocks[1], deltas + 16);
+
+        /*
+         * This is the same as the loop in _adx_read_block, but with the samples of the
+         * two channels interleaved. The left channel uses fv4 and the right uses fv12
+         * (in the same way as fv4 is used there), and they share the coefficient vectors.
+         *
+         * Per byte, the FPU does fipr, ftrc and float for 4 samples. With the latencies
+         * between them that is 5 cycles per sample, but the integer work alongside takes
+         * longer than that, so the loop is laid out to keep both pipelines issuing. As
+         * FPUL is shared, each channel's ftrc comes after the other's float.
+         *
+         * Each sample is checked for clipping and stored once the next sample of the other
+         * channel has been started, which is still before it's needed by the next sample of
+         * its own channel. The last samples of a byte are only finished at the start of the
+         * next, so the first byte is done separately (before the loop) without that.
+         *
+         * The two blocks are next to each other, so the right channel's input is found
+         * 18 bytes after the left's.
+         *
+         * r0 = scratch          r1 = deltas          r2 = input
+         * r3 = left output      r4 = output stride   r5 = left sample
+         * r6 = 65535            r7 = 0x8000          r8 = left byte
+         * r9 = pairs remaining  r11 = right sample   r13 = right output
+         *
+         * There aren't enough registers to keep the right channel's byte, so it's read
+         * again each time it's needed. The right channel's output is always after the left's in the
+         * buffer, so the memory operand for the left covers both
+         */
+        const uint8_t* in = blocks[0].samples + ((start_sample + done) >> 1);
+        adx_real_t (*history)[2] = source->history;
+
+        register const float* r_deltas __asm__("r1") = deltas;
+        register const uint8_t* r_in __asm__("r2") = in;
+        register int16_t* r_left __asm__("r3") = left + done * stride;
+        register size_t r_stride __asm__("r4") = stride * sizeof(int16_t);
+        register uint32_t r_max __asm__("r6") = 65535;
+        register uint32_t r_flip __asm__("r7") = 0x8000;
+        register size_t r_pairs __asm__("r9") = pairs;
+        register int16_t* r_right __asm__("r13") = right + done * stride;
+        register float r_coef1 __asm__("fr1") = source->coef1;
+        register float r_coef2 __asm__("fr2") = source->coef2;
+        register float r_left1 __asm__("fr5") = history[0][0] + ADXTRACT_BIAS;
+        register float r_left2 __asm__("fr6") = history[0][1] + ADXTRACT_BIAS;
+        register float r_right1 __asm__("fr13") = history[1][0] + ADXTRACT_BIAS;
+        register float r_right2 __asm__("fr14") = history[1][1] + ADXTRACT_BIAS;
+
+        __asm__(
+            "fldi1   fr0\n\t"
+            "fldi0   fr3\n\t"
+            "fldi1   fr8\n\t"
+            "fmov    fr2,fr9\n\t"
+            "fmov    fr1,fr10\n\t"
+            "fldi0   fr11\n\t"
+            "fldi0   fr7\n\t"
+            "fldi0   fr15\n\t"
+
+            // Look up the deltas for the high nibbles of the first bytes. mov.b
+            // sign-extends, but the and only keeps the nibble's bits
+            "mov.b   @r2+,r8\n\t"
+            "mov     r8,r0\n\t"
+            "shlr2   r0\n\t"
+            "and     #60,r0\n\t"
+            "fmov.s  @(r0,r1),fr4\n\t"
+            "mov     #17,r0\n\t"
+            "mov.b   @(r0,r2),r0\n\t"
+            "shlr2   r0\n\t"
+            "and     #60,r0\n\t"
+            "add     #64,r0\n\t"
+            "fmov.s  @(r0,r1),fr12\n\t"
+
+            // The first byte, which has no previous samples to finish
+            "fipr    fv0,fv4\n\t"
+            "mov     r8,r0\n\t"
+            "and     #15,r0\n\t"
+            "ftrc    fr7,fpul\n\t"
+            "shll2   r0\n\t"
+            "fipr    fv0,fv12\n\t"
+            "sts     fpul,r5\n\t"
+            "fmov.s  @(r0,r1),fr4\n\t"
+            "float   fpul,fr6\n\t"
+            "mov     #17,r0\n\t"
+            "mov.b   @(r0,r2),r0\n\t"
+            "cmp/hi  r6,r5\n\t"
+            "ftrc    fr15,fpul\n\t"
+            "bt      6f\n\t"
+            "bra     3f\n\t"
+            "nop\n"
+
+            // First sample of each channel's byte. Finish the second samples of the
+            // previous bytes and look up the deltas for the second samples
+            "1:\n\t"
+            "fipr    fv0,fv4\n\t"
+            "mov.w   r5,@r3\n\t"
+            "add     r4,r3\n\t"
+            "float   fpul,fr13\n\t"
+            "mov     r8,r0\n\t"
+            "cmp/hi  r6,r11\n\t"
+            "and     #15,r0\n\t"
+            "bt      5f\n"
+            "2:\n\t"
+            "ftrc    fr7,fpul\n\t"
+            "shll2   r0\n\t"
+            "fipr    fv0,fv12\n\t"
+            "xor     r7,r11\n\t"
+            "sts     fpul,r5\n\t"
+            "fmov.s  @(r0,r1),fr4\n\t"
+            "float   fpul,fr6\n\t"
+            "mov     #17,r0\n\t"
+            "mov.w   r11,@r13\n\t"
+            "add     r4,r13\n\t"
+            "mov.b   @(r0,r2),r0\n\t"
+            "cmp/hi  r6,r5\n\t"
+            "ftrc    fr15,fpul\n\t"
+            "bt      6f\n"
+
+            // Second sample of each channel's byte. Finish the first samples and look
+            // up the deltas for the next bytes
+            "3:\n\t"
+            "and     #15,r0\n\t"
+            "shll2   r0\n\t"
+            "fipr    fv8,fv4\n\t"
+            "add     #64,r0\n\t"
+            "sts     fpul,r11\n\t"
+            "fmov.s  @(r0,r1),fr12\n\t"
+            "xor     r7,r5\n\t"
+            "float   fpul,fr14\n\t"
+            "mov.w   r5,@r3\n\t"
+            "add     r4,r3\n\t"
+            "mov.b   @r2+,r8\n\t"
+            "cmp/hi  r6,r11\n\t"
+            "ftrc    fr7,fpul\n\t"
+            "mov     r8,r0\n\t"
+            "bt      7f\n"
+            "4:\n\t"
+            "shlr2   r0\n\t"
+            "fipr    fv8,fv12\n\t"
+            "and     #60,r0\n\t"
+            "sts     fpul,r5\n\t"
+            "fmov.s  @(r0,r1),fr4\n\t"
+            "mov     #17,r0\n\t"
+            "xor     r7,r11\n\t"
+            "mov.b   @(r0,r2),r0\n\t"
+            "float   fpul,fr5\n\t"
+            "mov.w   r11,@r13\n\t"
+            "add     r4,r13\n\t"
+            "shlr2   r0\n\t"
+            "cmp/hi  r6,r5\n\t"
+            "ftrc    fr15,fpul\n\t"
+            "and     #60,r0\n\t"
+            "bt      8f\n"
+            "9:\n\t"
+            "add     #64,r0\n\t"
+            "fmov.s  @(r0,r1),fr12\n\t"
+            "dt      r9\n\t"
+            "sts     fpul,r11\n\t"
+            "bf/s    1b\n\t"
+            "xor     r7,r5\n\t"
+
+            // Finish the final samples, which the loop leaves to the next byte
+            "mov.w   r5,@r3\n\t"
+            "add     r4,r3\n\t"
+            "float   fpul,fr13\n\t"
+            "cmp/hi  r6,r11\n\t"
+            "bf      10f\n\t"
+            "cmp/pz  r11\n\t"
+            "bt/s    11f\n\t"
+            "mov     r6,r11\n\t"
+            "mov     #0,r11\n"
+            "11:\n\t"
+            "lds     r11,fpul\n\t"
+            "float   fpul,fr13\n"
+            "10:\n\t"
+            "xor     r7,r11\n\t"
+            "mov.w   r11,@r13\n\t"
+            "bra     12f\n\t"
+            "add     r4,r13\n"
+
+            // The rarely taken clamps. The sample becomes 0 if it was negative or 65535
+            // if it was too large, and its history is converted again from that. Each one
+            // happens before the next sample of the same channel has been started. Most
+            // come after the other channel's ftrc, which uses FPUL too, so that's done again
+            "5:\n\t"
+            "cmp/pz  r11\n\t"
+            "bt/s    13f\n\t"
+            "mov     r6,r11\n\t"
+            "mov     #0,r11\n"
+            "13:\n\t"
+            "lds     r11,fpul\n\t"
+            "bra     2b\n\t"
+            "float   fpul,fr13\n"
+
+            "6:\n\t"
+            "cmp/pz  r5\n\t"
+            "bt/s    14f\n\t"
+            "mov     r6,r5\n\t"
+            "mov     #0,r5\n"
+            "14:\n\t"
+            "lds     r5,fpul\n\t"
+            "float   fpul,fr6\n\t"
+            "bra     3b\n\t"
+            "ftrc    fr15,fpul\n"
+
+            "7:\n\t"
+            "cmp/pz  r11\n\t"
+            "bt/s    15f\n\t"
+            "mov     r6,r11\n\t"
+            "mov     #0,r11\n"
+            "15:\n\t"
+            "lds     r11,fpul\n\t"
+            "float   fpul,fr14\n\t"
+            "bra     4b\n\t"
+            "ftrc    fr7,fpul\n"
+
+            "8:\n\t"
+            "cmp/pz  r5\n\t"
+            "bt/s    16f\n\t"
+            "mov     r6,r5\n\t"
+            "mov     #0,r5\n"
+            "16:\n\t"
+            "lds     r5,fpul\n\t"
+            "float   fpul,fr5\n\t"
+            "bra     9b\n\t"
+            "ftrc    fr15,fpul\n"
+
+            "12:\n\t"
+            : "+r"(r_in), "+r"(r_left), "+r"(r_right), "+r"(r_pairs),
+              "+f"(r_left1), "+f"(r_left2), "+f"(r_right1), "+f"(r_right2),
+              "+m"(*(int16_t (*)[]) left)
+            : "r"(r_deltas), "r"(r_stride), "r"(r_max), "r"(r_flip), "f"(r_coef1), "f"(r_coef2),
+              "m"(*(const float (*)[32]) deltas), "m"(*(const uint8_t (*)[]) blocks)
+            : "r0", "r5", "r8", "r11", "fr0", "fr3", "fr4", "fr7", "fr8", "fr9", "fr10",
+              "fr11", "fr12", "fr15", "fpul", "t"
+        );
+
+        history[0][0] = r_left1 - ADXTRACT_BIAS;
+        history[0][1] = r_left2 - ADXTRACT_BIAS;
+        history[1][0] = r_right1 - ADXTRACT_BIAS;
+        history[1][1] = r_right2 - ADXTRACT_BIAS;
+
+        done += pairs * 2;
+    }
+
+    if(done < max_samples) {
+        _adx_read_block(source, &blocks[0], 0, start_sample + done, 1, left + done * stride, stride);
+        _adx_read_block(source, &blocks[1], 1, start_sample + done, 1, right + done * stride, stride);
+    }
+
+    return max_samples;
+}
+#endif
 
 /*
  * Reads the next batch of samples from the stream. If interleave is true then channels will
@@ -815,6 +1121,18 @@ size_t adx_stream_read_samples(adxtract_stream_t* stream, bool interleave, size_
             stream->file_block = stream->current_block + stream->header.channel_count;
         }
 
+#ifdef ADXTRACT_SH4_ASM
+        // Stereo has its own decoder which does both channels at once
+        if(stream->header.channel_count == 2) {
+            const adxtract_block_t* blocks = stream->frame;
+            if((blocks[0].predictor == 0x80 && blocks[0].scale == 0x01) || (blocks[1].predictor == 0x80 && blocks[1].scale == 0x01)) {
+                break;
+            }
+
+            int16_t* outp = buffer + (samples_read * stride);
+            new_samples_read = _adx_read_block_stereo(stream, stream->current_sample, samples_to_read, outp, outp + channel_offset, stride);
+        } else
+#endif
         for(int i = 0; i < stream->header.channel_count; ++i) {
             const adxtract_block_t* block = &stream->frame[i];
 
