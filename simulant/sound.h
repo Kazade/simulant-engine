@@ -113,7 +113,7 @@ private:
     std::shared_ptr<std::istream> sound_data_;
 
     uint32_t sample_rate_ = 0;
-    AudioDataFormat format_;
+    AudioDataFormat format_ = AUDIO_DATA_FORMAT_MONO8;
     uint8_t channels_ = 0;
     std::size_t stream_length_ = 0;
 

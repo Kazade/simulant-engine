@@ -48,15 +48,27 @@ enum AudioDataFormat {
     // These formats aren't supported, but are set
     // when loading files before down conversion
     AUDIO_DATA_FORMAT_MONO24,
-    AUDIO_DATA_FORMAT_STEREO24
+    AUDIO_DATA_FORMAT_STEREO24,
+
+    // 4-bit Yamaha ADPCM, as played by the Dreamcast's AICA. Only drivers
+    // that say so in SoundDriver::supports_format() accept these, everywhere
+    // else loaders decode to 16-bit before uploading.
+    //  - Mono: two samples per byte, the first in the low 4 bits
+    //  - Stereo: a frame per byte, left in the low 4 bits, right in the high
+    AUDIO_DATA_FORMAT_MONO_ADPCM,
+    AUDIO_DATA_FORMAT_STEREO_ADPCM
 };
 
+/* The size of a frame in bytes. Note that a mono ADPCM frame is only half a
+ * byte, so this is rounded up for it. */
 constexpr uint32_t audio_data_format_byte_size(AudioDataFormat format) {
     return (format == AUDIO_DATA_FORMAT_MONO8) ? 1 :
            (format == AUDIO_DATA_FORMAT_MONO16) ? 2 :
            (format == AUDIO_DATA_FORMAT_STEREO8) ? 2 :
            (format == AUDIO_DATA_FORMAT_STEREO16) ? 4 :
-           (format == AUDIO_DATA_FORMAT_MONO24) ? 3 : 6;
+           (format == AUDIO_DATA_FORMAT_MONO24) ? 3 :
+           (format == AUDIO_DATA_FORMAT_MONO_ADPCM) ? 1 :
+           (format == AUDIO_DATA_FORMAT_STEREO_ADPCM) ? 1 : 6;
 }
 
 
@@ -92,6 +104,13 @@ public:
     virtual void queue_buffers_to_source(AudioSourceID source, uint32_t count, const std::vector<AudioBufferID>& buffers) = 0;
     virtual std::vector<AudioBufferID> unqueue_buffers_from_source(AudioSourceID source, uint32_t count) = 0;
     virtual void upload_buffer_data(AudioBufferID buffer, AudioDataFormat format, const uint8_t* data, std::size_t bytes, uint32_t frequency) = 0;
+
+    /* Whether upload_buffer_data() accepts this format as it is. All drivers
+     * take 8 and 16-bit PCM, compressed formats depend on the platform. */
+    virtual bool supports_format(AudioDataFormat format) const {
+        return format == AUDIO_DATA_FORMAT_MONO8 || format == AUDIO_DATA_FORMAT_MONO16 ||
+               format == AUDIO_DATA_FORMAT_STEREO8 || format == AUDIO_DATA_FORMAT_STEREO16;
+    }
 
     virtual AudioSourceState source_state(AudioSourceID source) = 0;
     virtual int32_t source_buffers_processed_count(AudioSourceID source) const = 0;

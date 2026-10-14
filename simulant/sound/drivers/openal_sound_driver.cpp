@@ -112,12 +112,33 @@ void OpenALSoundDriver::upload_buffer_data(AudioBufferID buffer, AudioDataFormat
     case AUDIO_DATA_FORMAT_MONO16: al_format = AL_FORMAT_MONO16; break;
     case AUDIO_DATA_FORMAT_STEREO8: al_format = AL_FORMAT_STEREO8; break;
     case AUDIO_DATA_FORMAT_STEREO16: al_format = AL_FORMAT_STEREO16; break;
+#ifdef AL_ALDC_YAMAHA_ADPCM
+    case AUDIO_DATA_FORMAT_MONO_ADPCM: al_format = AL_FORMAT_MONO_YAMAHA_ADPCM_ALDC; break;
+    case AUDIO_DATA_FORMAT_STEREO_ADPCM: al_format = AL_FORMAT_STEREO_YAMAHA_ADPCM_ALDC; break;
+#endif
     default:
-        S_ERROR("Passed invalid format {0} to upload_buffer_data");
+        S_ERROR("Passed invalid format {0} to upload_buffer_data", (int) format);
         return;
     }
 
     ALCheck(alBufferData, buffer, al_format, &data[0], bytes, frequency);
+}
+
+bool OpenALSoundDriver::supports_format(AudioDataFormat format) const {
+    if(format == AUDIO_DATA_FORMAT_MONO_ADPCM || format == AUDIO_DATA_FORMAT_STEREO_ADPCM) {
+#if defined(__DREAMCAST__) && defined(AL_ALDC_YAMAHA_ADPCM)
+        /* The AICA plays this itself, from a quarter of the sound RAM that
+         * 16-bit PCM needs. ALdc accepts it on its other platforms too, but
+         * only by decoding it when it's uploaded - which saves nothing, and
+         * loaders can do that themselves without being limited to a single
+         * buffer. */
+        return alIsExtensionPresent("AL_ALDC_YAMAHA_ADPCM") == AL_TRUE;
+#else
+        return false;
+#endif
+    }
+
+    return SoundDriver::supports_format(format);
 }
 
 AudioSourceState OpenALSoundDriver::source_state(AudioSourceID source) {
