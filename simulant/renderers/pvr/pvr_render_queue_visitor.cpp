@@ -106,7 +106,8 @@ static inline bool pvr_is_ortho(const Mat4& mvp) {
  *   txr_alpha     = PVR_TXRALPHA_ENABLE (= 0, contributes nothing)
  *   uv_flip/clamp = none  (= 0)
  *   mipmap_bias   = PVR_MIPBIAS_NORMAL (= 4)
- *   mipmap        = disabled (= 0)
+ *   mipmap        = enabled only for mipmapped textures (the uploaded
+ *                   data contains the mip chain, which the PVR must skip)
  *   no modifier volumes, no user-clip
  *   specular (oargb) = enabled only when the pass has lighting on, so the
  *   TSP's extra per-pixel offset-color add is only paid for where it's
@@ -169,8 +170,11 @@ static inline void pvr_build_poly_hdr(
                     | (v                    << PVR_TA_PM2_VSIZE_SHIFT)
                     | ((uint32_t)filter     << __builtin_ctz(PVR_TA_PM2_FILTER));
 
-        /* mode3: format bits are pre-encoded; OR in the VRAM address >> 3 */
-        hdr->mode3 = (uint32_t)tex_obj->format | txr_base;
+        /* mode3: format bits are pre-encoded; OR in the VRAM address >> 3.
+         * Mipmapped data starts with the mip chain, so without the mipmap
+         * bit the PVR would sample the small levels as the full image. */
+        hdr->mode3 = (uint32_t)tex_obj->format | txr_base
+                   | (tex_obj->has_mipmaps ? PVR_TA_PM3_MIPMAP : 0u);
     }
     /* bytes 16-31 are unused for non-modifier polygon headers;
      * they were zeroed at construction and we leave them as-is */
