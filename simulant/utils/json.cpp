@@ -1,5 +1,6 @@
 #include "json.h"
 #include "../logging.h"
+#include "../streams/file_ifstream.h"
 #include <cstddef>
 #include <istream>
 #include <sstream>
@@ -371,11 +372,14 @@ JSONIterator JSONIterator::operator[](const std::string& key) const {
 }
 
 JSONIterator json_load(const Path& path) {
-    std::shared_ptr<std::istream> filein =
-        std::make_shared<std::ifstream>(path.str());
-    if(!*filein) {
+    // Opened like any other asset (rather than with std::ifstream), so that
+    // it works where assets aren't ordinary files, such as in an Android APK
+    auto buffer = std::make_shared<FileStreamBuf>(path.str(), "rb");
+    if(!buffer->file()) {
         return JSONIterator();
     }
+
+    std::shared_ptr<std::istream> filein = std::make_shared<FileIfstream>(buffer);
 
     return json_read(filein);
 }

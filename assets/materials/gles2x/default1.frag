@@ -1,72 +1,70 @@
 #version {0}
 
 #ifdef GL_ES
+// The lighting maths (e.g. the specular term) can exceed what mediump
+// holds, which shows up as surfaces blown out to white
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
 #endif
+#endif
 
-uniform vec4 s_light_ambient;
-uniform vec4 s_light_diffuse;
-uniform vec4 s_light_specular;
-uniform float s_light_constant_attenuation;
-uniform float s_light_linear_attenuation;
-uniform float s_light_quadratic_attenuation;
+uniform vec4 s_light_color;
+uniform float s_light_intensity;
+uniform float s_light_range;
+uniform vec4 s_light_position;
 
-uniform sampler2D s_diffuse_map;
+uniform sampler2D s_base_color_map;
 uniform vec4 s_global_ambient;
-uniform vec4 s_material_ambient;
-uniform vec4 s_material_diffuse;
-uniform vec4 s_material_specular;
-uniform float s_material_shininess;
-uniform mat4 s_diffuse_map_matrix;
+uniform vec4 s_material_base_color;
+uniform vec4 s_material_specular_color;
+uniform float s_material_specular;
+uniform mat4 s_base_color_map_matrix;
 
-varying vec4 vertex_position_eye;
-varying vec4 vertex_normal_eye;
-varying vec4 light_position_eye;
+uniform int s_alpha_func;
+uniform float s_alpha_threshold;
+
 varying vec2 frag_texcoord0;
+varying vec3 frag_position;
+varying vec3 frag_normal;
 
-vec4 ambient_lighting() {
-    return s_material_ambient * s_light_ambient;
-}
-
-vec4 diffuse_lighting(vec4 N, vec4 L) {
-    float term = clamp(dot(N, L), float(0.0), float(1.0));
-    return s_material_diffuse * s_light_diffuse * term;
-}
-
-vec4 specular_lighting(vec4 N, vec4 L, vec4 V) {
-    float term = 0.0;
-    if(dot(N, L) > float(0.0)) {
-        vec4 H = normalize(L + V);
-        term = pow(dot(N, N), s_material_shininess);
+void alpha_test(vec4 c) {
+    if(s_alpha_func == 1) {        // LESS
+        if(c.a >= s_alpha_threshold) discard;
+    } else if(s_alpha_func == 2) { // LEQUAL
+        if(c.a > s_alpha_threshold) discard;
+    } else if(s_alpha_func == 3) { // EQUAL
+        if(c.a != s_alpha_threshold) discard;
+    } else if(s_alpha_func == 4) { // GEQUAL
+        if(c.a < s_alpha_threshold) discard;
+    } else if(s_alpha_func == 5) { // GREATER
+        if(c.a <= s_alpha_threshold) discard;
     }
-
-    return s_material_specular * s_light_specular * term;
 }
 
 void main() {
-    vec4 light_dir = light_position_eye - (vertex_position_eye * vec4(light_position_eye.w));
-    vec4 n_eye = normalize(vertex_normal_eye);
-    vec4 s_eye = normalize(light_dir);
-    vec4 v_eye = normalize(-vertex_position_eye);
-    vec4 h_eye = normalize(v_eye + s_eye);
+    vec3 normal = normalize(frag_normal);
 
-    vec4 amb = ambient_lighting();
-    vec4 diff = diffuse_lighting(n_eye, s_eye);
-    vec4 spec = specular_lighting(n_eye, s_eye, v_eye);
+    vec3 light_direction = normalize(s_light_position.xyz - frag_position);
+    float distance = length(s_light_position.xyz - frag_position);
+    float attenuation = clamp(1.0 - (distance / s_light_range), 0.0, 1.0);
 
-    vec4 map_diffuse = texture2D(s_diffuse_map, frag_texcoord0.st);
+    vec4 base_color = texture2D(s_base_color_map, frag_texcoord0);
+    base_color *= s_material_base_color;
 
-    float attenuation = 1.0;
+    vec4 ambient = s_global_ambient * base_color;
 
-    if(light_position_eye.w > 0.0) {
-        float d = length(light_dir);
-        attenuation = 1.0 / (
-            s_light_constant_attenuation +
-            s_light_linear_attenuation * d +
-            s_light_quadratic_attenuation * d * d
-        );
-    }
+    float diff = max(dot(normal, light_direction), 0.0);
+    vec4 diffuse = s_light_color * s_light_intensity * diff * base_color * attenuation;
 
-    gl_FragColor = map_diffuse * (amb + diff + spec) * attenuation;
+    vec3 view_direction = normalize(-frag_position);
+    vec3 reflect_direction = reflect(-light_direction, normal);
+    float spec = pow(max(dot(view_direction, reflect_direction), 0.0), s_material_specular);
+    vec4 specular = s_material_specular_color * s_light_color * s_light_intensity * spec * attenuation;
+
+    vec4 final_color = ambient + diffuse + specular;
+    alpha_test(final_color);
+    gl_FragColor = final_color;
 }
 

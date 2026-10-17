@@ -290,10 +290,23 @@ optional<Path> VirtualFileSystem::locate_file(const Path& filename,
 
             S_DEBUG("Trying path: {0}", full_path);
 
-            FILE* f = fopen(full_path.c_str(), "r");
-            if(f) {
-                fclose(f);
+            bool found = false;
 
+#ifdef __ANDROID__
+            /* The path is now relative to the APK's assets, which fopen()
+             * can't see: kfs looks there with the asset manager */
+            found = kfs::path::exists(full_path);
+#endif
+
+            if(!found) {
+                FILE* f = fopen(full_path.c_str(), "r");
+                if(f) {
+                    fclose(f);
+                    found = true;
+                }
+            }
+
+            if(found) {
                 S_INFO("Located file: {0}", full_path);
 
                 if(use_cache) {

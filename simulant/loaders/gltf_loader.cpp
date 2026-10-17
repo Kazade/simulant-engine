@@ -20,6 +20,7 @@
 #include "../utils/half.hpp"
 #include "../utils/random.h"
 #include "../vfs.h"
+#include "../streams/file_ifstream.h"
 #include "dtex_loader.h"
 #include "png_loader.h"
 #include "texture_loader.h"
@@ -1939,9 +1940,18 @@ bool GLTFLoader::into(Loadable& resource, const LoaderOptions& options) {
         uint32_t json_end = here + chunk_length;
 
         if(json_end < file_length) {
-            // Now let's open a second stream and seek to the bin chunk
-            bin_chunk = std::make_shared<std::ifstream>(filename_.str(),
-                                                        std::ios::binary);
+            // Now let's open a second stream and seek to the bin chunk. It's
+            // opened like any other asset (rather than with std::ifstream),
+            // so that it works where assets aren't ordinary files, such as
+            // in an Android APK.
+            auto bin_buffer =
+                std::make_shared<FileStreamBuf>(filename_.str(), "rb");
+            if(!bin_buffer->file()) {
+                S_ERROR("Unable to open {0} to read its binary chunk", filename_);
+                return false;
+            }
+
+            bin_chunk = std::make_shared<FileIfstream>(bin_buffer);
 
             uint32_t bin_length;
             uint32_t bin_type;
