@@ -108,8 +108,11 @@ std::streampos FileStreamBuf::seekpos(std::streampos sp, std::ios_base::openmode
 
     fseek(filein_, sp, SEEK_SET);
 
-    // Invalidate the buffer so underflow will be called
+    // Invalidate the buffer so underflow will be called. The buffer now
+    // starts (empty) at the new position, which tellg() and relative seeks
+    // work from.
     setg(buffer_, buffer_, buffer_);
+    last_read_pos_ = sp;
 
     return sp;
 }
@@ -164,10 +167,12 @@ std::streampos FileStreamBuf::seekoff(std::streamoff off, std::ios_base::seekdir
         (way == std::ios_base::cur) ? SEEK_SET : SEEK_END
     );
 
-    // Invalidate the buffer so underflow will be called
+    // Invalidate the buffer so underflow will be called, and note where it
+    // now starts (see seekpos)
     setg(buffer_, buffer_, buffer_);
+    last_read_pos_ = ftell(filein_);
 
-    return pos_type(off_type(ftell(filein_)));
+    return pos_type(off_type(last_read_pos_));
 }
 
 FileStreamBuf::int_type FileStreamBuf::pbackfail(FileStreamBuf::int_type c) {
