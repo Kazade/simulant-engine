@@ -23,6 +23,7 @@
 #include "../texture.h"
 #include "../asset_manager.h"
 #include "../shortcuts.h"
+#include "../streams/file_ifstream.h"
 #include "opt_loader.h"
 
 namespace smlt {
@@ -458,8 +459,11 @@ bool OPTLoader::into(Loadable& resource, const LoaderOptions& options) {
     Mesh* mesh = dynamic_cast<Mesh*>(res_ptr);
     assert(mesh && "You passed a Resource that is not a mesh to the OPT loader");
 
-    std::ifstream file(filename_.str(), std::ios::binary);
-    if(!file.good()) {
+    // Opened like any other asset (rather than with std::ifstream), so that
+    // it works where assets aren't ordinary files, such as in an Android APK
+    auto buffer = std::make_shared<FileStreamBuf>(filename_.str(), "rb");
+    FileIfstream file(buffer);
+    if(!buffer->file() || !file.good()) {
         S_ERROR("Couldn't load the OPT file: " + filename_.str());
         return false;
     }
