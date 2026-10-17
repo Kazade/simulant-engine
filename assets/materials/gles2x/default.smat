@@ -1,4 +1,5 @@
 {
+    "name": "Default",
     "property_values": {
         "s_blend_func": "alpha"
     },
@@ -6,14 +7,6 @@
         {
             "vertex_shader": "default0.vert",
             "fragment_shader": "default0.frag"
-        },
-        {
-            "iteration": "once_per_light",
-            "vertex_shader": "default1.vert",
-            "fragment_shader": "default1.frag",
-            "property_values": {
-                "s_blend_func": "add"
-            }
         }
     ]
 }
