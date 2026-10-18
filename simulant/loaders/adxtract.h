@@ -49,6 +49,10 @@ typedef struct _adxtract_stream adxtract_stream_t;
 // Streams from a file, which is closed by adx_stream_close
 adxtract_stream_t* adx_load_stream(FILE* file);
 
+// Streams from a file that adx_stream_close leaves open, for when something
+// else owns it. It must stay open until adx_stream_close
+adxtract_stream_t* adx_load_stream_unowned(FILE* file);
+
 // Streams from a file that is already in memory. The buffer isn't copied, so it
 // must stay valid until adx_stream_close (which won't free it)
 adxtract_stream_t* adx_read_buffer(const uint8_t* buffer, size_t size);
@@ -172,6 +176,7 @@ typedef struct _adxtract_block {
 struct _adxtract_stream {
     // The data comes from either a file, or a buffer in memory (if file is NULL)
     FILE* file;
+    bool owns_file;
     const uint8_t* buffer;
     size_t buffer_size;
     size_t buffer_offset;
@@ -245,7 +250,7 @@ void adx_stream_close(adxtract_stream_t* stream) {
         return;
     }
 
-    if(stream->file) {
+    if(stream->file && stream->owns_file) {
         fclose(stream->file);
     }
 
@@ -462,6 +467,15 @@ static adxtract_stream_t* _adx_init_stream(adxtract_stream_t* stream) {
 }
 
 adxtract_stream_t* adx_load_stream(FILE* file) {
+    adxtract_stream_t* stream = adx_load_stream_unowned(file);
+    if(stream) {
+        stream->owns_file = true;
+    }
+
+    return stream;
+}
+
+adxtract_stream_t* adx_load_stream_unowned(FILE* file) {
     adxtract_stream_t* stream = (adxtract_stream_t*) calloc(1, sizeof(adxtract_stream_t));
     if(!stream) {
         return NULL;

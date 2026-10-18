@@ -13,6 +13,7 @@ namespace smlt {
 
 class Sound;
 class AudioSource;
+class SoundDriver;
 
 typedef uint32_t AudioBufferID;
 typedef uint32_t AudioSourceID;
@@ -44,6 +45,10 @@ private:
 
     AudioSource* parent_;
 
+    /* The sound's driver. The loaders fill buffers through it, so the
+     * buffers and source must belong to it too */
+    SoundDriver* driver_;
+
     AudioSourceID source_;
     std::vector<AudioBufferID> buffers_;
     std::weak_ptr<Sound> sound_;
@@ -59,6 +64,8 @@ private:
 
     void start();
     void do_stop();
+
+    SoundDriver* driver() const;
 
 public:
     PlayingSound(AudioSource* parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model=DISTANCE_MODEL_POSITIONAL);

@@ -6,21 +6,29 @@
 #define ADXTRACT_IMPLEMENTATION
 #include "adxtract.h"
 
+#include "../application.h"
 #include "../logging.h"
 #include "../sound.h"
+#include "../streams/file_ifstream.h"
+#include "../vfs.h"
 
 namespace smlt {
 namespace loaders {
 
 typedef std::shared_ptr<const std::vector<uint8_t>> ADXData;
 
-/* Owns the decoder for a single playing sound. When playing from memory this
- * also keeps the (shared) file data alive, as adxtract doesn't copy it */
+/* Owns the decoder for a single playing sound. As adxtract doesn't take a
+ * copy, this also keeps alive either the file it streams from, or the
+ * (shared) file data when playing from memory */
 class ADXStream {
 public:
     typedef std::shared_ptr<ADXStream> ptr;
 
-    ADXStream(adxtract_stream_t* stream, ADXData data = ADXData()):
+    ADXStream(adxtract_stream_t* stream, std::shared_ptr<FileIfstream> file):
+        stream_(stream),
+        file_(file) {}
+
+    ADXStream(adxtract_stream_t* stream, ADXData data):
         stream_(stream),
         data_(data) {}
 
@@ -36,6 +44,7 @@ public:
 
 private:
     adxtract_stream_t* stream_;
+    std::shared_ptr<FileIfstream> file_;
     ADXData data_;
 };
 
@@ -75,22 +84,22 @@ static void init_source(std::weak_ptr<Sound> sound, Path path, ADXData data, Pla
     source.set_stream_func(StreamFunc());
 
     adxtract_stream_t* adx = nullptr;
+    std::shared_ptr<FileIfstream> file;
 
     if(data) {
         adx = adx_read_buffer(&(*data)[0], data->size());
     } else {
-        /* Each playing sound gets its own file handle, because the decoder
-         * tracks the file position and closes the file when it's done */
-        FILE* file = fopen(path.str().c_str(), "rb");
-        if(!file) {
+        /* Each playing sound gets its own file, because the decoder tracks
+         * the file position. The file is opened through the VFS (rather than
+         * with fopen) so that it can be in the app's assets on Android */
+        file = std::dynamic_pointer_cast<FileIfstream>(get_app()->vfs->open_file(path));
+        if(!file || !file->file()) {
             S_ERROR("Unable to open ADX file for streaming: {0}", path.str());
             return;
         }
 
-        adx = adx_load_stream(file);
-        if(!adx) {
-            fclose(file);
-        }
+        /* The FileIfstream closes the file, so adxtract mustn't */
+        adx = adx_load_stream_unowned(file->file());
     }
 
     if(!adx) {
@@ -98,7 +107,7 @@ static void init_source(std::weak_ptr<Sound> sound, Path path, ADXData data, Pla
         return;
     }
 
-    auto stream = std::make_shared<ADXStream>(adx, data);
+    auto stream = (file) ? std::make_shared<ADXStream>(adx, file) : std::make_shared<ADXStream>(adx, data);
 
     /* Using a weak_ptr is important, otherwise the sound would never be
      * destroyed while it is playing */

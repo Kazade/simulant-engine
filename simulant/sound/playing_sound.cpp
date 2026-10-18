@@ -14,6 +14,7 @@ PlayingAssetID PlayingSound::counter_ = 0;
 PlayingSound::PlayingSound(AudioSource* parent, std::weak_ptr<Sound> sound, AudioRepeat loop_stream, DistanceModel model):
     id_(++PlayingSound::counter_),
     parent_(parent),
+    driver_(nullptr),
     source_(0),
     buffers_{0, 0, 0, 0},
     sound_(sound),
@@ -21,7 +22,13 @@ PlayingSound::PlayingSound(AudioSource* parent, std::weak_ptr<Sound> sound, Audi
     model_(model),
     is_dead_(false) {
 
-    SoundDriver* driver = smlt::get_app()->sound_driver.get();
+    auto locked = sound.lock();
+    driver_ = (locked) ? locked->_driver() : nullptr;
+    if(!driver_) {
+        driver_ = smlt::get_app()->sound_driver.get();
+    }
+
+    SoundDriver* driver = driver_;
 
     source_ = driver->generate_sources(1).back();
     buffers_ = driver->generate_buffers(BUFFER_COUNT);
@@ -31,8 +38,15 @@ PlayingSound::PlayingSound(AudioSource* parent, std::weak_ptr<Sound> sound, Audi
     }
 }
 
+SoundDriver* PlayingSound::driver() const {
+    /* The driver is shut down before the application is destroyed, and
+     * sounds can still be around then, so check it's still running */
+    auto app = smlt::get_app();
+    return (app && app->sound_driver) ? driver_ : nullptr;
+}
+
 PlayingSound::~PlayingSound() {
-    SoundDriver* driver = smlt::get_app()->sound_driver.get();
+    SoundDriver* driver = this->driver();
 
     if(driver) {
         driver->stop_source(source_); // Make sure we have stopped playing!
@@ -47,7 +61,7 @@ void PlayingSound::start() {
         return;
     }
 
-    SoundDriver* driver = smlt::get_app()->sound_driver.get();
+    SoundDriver* driver = this->driver();
 
     for(int i = 0; i < BUFFER_COUNT; ++i) {
         auto bs = stream_func_(buffers_[i]);
@@ -72,8 +86,7 @@ void PlayingSound::start() {
 }
 
 void PlayingSound::do_stop() {
-    auto app = smlt::get_app();
-    SoundDriver* driver = (app) ? app->sound_driver.get() : nullptr;
+    SoundDriver* driver = this->driver();
 
     if(driver) {
         driver->stop_source(source_);
@@ -82,27 +95,27 @@ void PlayingSound::do_stop() {
 }
 
 bool PlayingSound::is_playing() const {
-    SoundDriver* driver = smlt::get_app()->sound_driver.get();
+    SoundDriver* driver = this->driver();
     return driver->source_state(source_) == AUDIO_SOURCE_STATE_PLAYING;
 }
 
 void PlayingSound::set_gain(NormalizedFloat gain) {
-    auto driver = get_app()->sound_driver.get();
+    auto driver = this->driver();
     driver->set_source_gain(source_, gain);
 }
 
 void PlayingSound::set_pitch(NormalizedFloat pitch) {
-    auto driver = get_app()->sound_driver.get();
+    auto driver = this->driver();
     driver->set_source_pitch(source_, pitch);
 }
 
 void PlayingSound::set_reference_distance(float dist) {
-    auto driver = get_app()->sound_driver.get();
+    auto driver = this->driver();
     driver->set_source_reference_distance(source_, dist);
 }
 
 void PlayingSound::update(float dt) {
-    SoundDriver* driver = smlt::get_app()->sound_driver.get();
+    SoundDriver* driver = this->driver();
 
     // Update the position of the source if this is attached to a stagenode.
     // Ambient sounds stay where set_source_as_ambient put them: on the
