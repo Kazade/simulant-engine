@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <android/input.h>
 #include <GLES/gl.h>
@@ -264,6 +266,8 @@ void AndroidWindow::on_native_window_created(android_app* aapp) {
        eglMakeCurrent(dpy_, surface_, surface_, ctx_) == EGL_FALSE) {
         S_ERROR("Couldn't make the context current: {0}", eglGetError());
     }
+
+    update_safe_area();
 }
 
 void AndroidWindow::on_native_window_destroyed() {
@@ -282,6 +286,121 @@ void AndroidWindow::on_native_window_destroyed() {
 
     eglDestroySurface(dpy_, surface_);
     surface_ = EGL_NO_SURFACE;
+}
+
+void AndroidWindow::update_safe_area() {
+    android_app* aapp = (android_app*) smlt::get_app()->platform_state();
+    if(!aapp) {
+        return;
+    }
+
+    JavaVM* vm = aapp->activity->vm;
+    JNIEnv* jni = nullptr;
+
+    /* Only detach afterwards if we're the ones that attached */
+    bool attached = false;
+    if(vm->GetEnv((void**) &jni, JNI_VERSION_1_6) != JNI_OK) {
+        if(vm->AttachCurrentThread(&jni, nullptr) != JNI_OK) {
+            return;
+        }
+        attached = true;
+    }
+
+    SafeArea insets;
+
+    auto activity_class = jni->GetObjectClass(aapp->activity->clazz);
+    auto get_window = jni->GetMethodID(activity_class, "getWindow", "()Landroid/view/Window;");
+    auto window_class = jni->FindClass("android/view/Window");
+    auto get_decor_view = jni->GetMethodID(window_class, "getDecorView", "()Landroid/view/View;");
+    auto view_class = jni->FindClass("android/view/View");
+    auto get_root_window_insets = jni->GetMethodID(view_class, "getRootWindowInsets", "()Landroid/view/WindowInsets;");
+
+    auto window = jni->CallObjectMethod(aapp->activity->clazz, get_window);
+    auto decor_view = (window) ? jni->CallObjectMethod(window, get_decor_view) : nullptr;
+
+    /* Null until the view's been laid out */
+    auto window_insets = (decor_view) ? jni->CallObjectMethod(decor_view, get_root_window_insets) : nullptr;
+
+    if(window_insets) {
+        auto insets_class = jni->FindClass("android/view/WindowInsets");
+
+        auto get_cutout = jni->GetMethodID(insets_class, "getDisplayCutout", "()Landroid/view/DisplayCutout;");
+        auto cutout = jni->CallObjectMethod(window_insets, get_cutout);
+        if(cutout) {
+            auto cutout_class = jni->FindClass("android/view/DisplayCutout");
+            auto inset = [&](const char* name) -> uint16_t {
+                auto method = jni->GetMethodID(cutout_class, name, "()I");
+                return (uint16_t) std::max(0, (int) jni->CallIntMethod(cutout, method));
+            };
+
+            insets.left = inset("getSafeInsetLeft");
+            insets.top = inset("getSafeInsetTop");
+            insets.right = inset("getSafeInsetRight");
+            insets.bottom = inset("getSafeInsetBottom");
+
+            jni->DeleteLocalRef(cutout);
+            jni->DeleteLocalRef(cutout_class);
+        }
+
+        /* Rounded corners (Android 12 onwards) cut into the edges near them.
+         * Something square in a corner is clear of the curve once it's in
+         * from both edges by r * (1 - 1/sqrt(2)) */
+        if(AConfiguration_getSdkVersion(aapp->config) >= 31) {
+            auto get_corner = jni->GetMethodID(insets_class, "getRoundedCorner", "(I)Landroid/view/RoundedCorner;");
+            auto corner_class = jni->FindClass("android/view/RoundedCorner");
+            auto get_radius = jni->GetMethodID(corner_class, "getRadius", "()I");
+
+            auto corner_inset = [&](int position) -> uint16_t {
+                auto corner = jni->CallObjectMethod(window_insets, get_corner, position);
+                if(!corner) {
+                    return 0;
+                }
+
+                int radius = jni->CallIntMethod(corner, get_radius);
+                jni->DeleteLocalRef(corner);
+                return (uint16_t) std::ceil(std::max(0, radius) * (1.0f - 0.70710678f));
+            };
+
+            // RoundedCorner.POSITION_TOP_LEFT, _TOP_RIGHT, _BOTTOM_RIGHT, _BOTTOM_LEFT
+            uint16_t top_left = corner_inset(0);
+            uint16_t top_right = corner_inset(1);
+            uint16_t bottom_right = corner_inset(2);
+            uint16_t bottom_left = corner_inset(3);
+
+            insets.left = std::max({insets.left, top_left, bottom_left});
+            insets.right = std::max({insets.right, top_right, bottom_right});
+            insets.top = std::max({insets.top, top_left, top_right});
+            insets.bottom = std::max({insets.bottom, bottom_left, bottom_right});
+
+            jni->DeleteLocalRef(corner_class);
+        }
+
+        jni->DeleteLocalRef(insets_class);
+        jni->DeleteLocalRef(window_insets);
+    }
+
+    /* e.g. a method that's missing on an older version of Android */
+    if(jni->ExceptionCheck()) {
+        jni->ExceptionClear();
+    }
+
+    if(decor_view) jni->DeleteLocalRef(decor_view);
+    if(window) jni->DeleteLocalRef(window);
+    jni->DeleteLocalRef(view_class);
+    jni->DeleteLocalRef(window_class);
+    jni->DeleteLocalRef(activity_class);
+
+    if(attached) {
+        vm->DetachCurrentThread();
+    }
+
+    if(insets != safe_area()) {
+        S_INFO(
+            "Safe area insets: left {0}, top {1}, right {2}, bottom {3}",
+            insets.left, insets.top, insets.right, insets.bottom
+        );
+        set_safe_area(insets);
+    }
 }
 
 void AndroidWindow::release_all_fingers() {
@@ -691,8 +810,16 @@ void AndroidWindow::check_events() {
                 set_has_context(false);
                 destroy_window();
                 break;
+            /* The insets change with the layout, e.g. when the device is
+             * turned around */
+            case APP_CMD_CONFIG_CHANGED:
+            case APP_CMD_CONTENT_RECT_CHANGED:
+            case APP_CMD_WINDOW_RESIZED:
+                update_safe_area();
+                break;
             case APP_CMD_GAINED_FOCUS:
                 S_INFO("CMD: Focus gained");
+                update_safe_area();
                // {
                //     //See Window::context_lock_ for details
                //     thread::Lock<thread::Mutex> context_lock(this->context_lock());

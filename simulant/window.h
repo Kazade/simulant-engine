@@ -62,6 +62,24 @@ typedef sig::signal<void (std::string, Screen*)> ScreenRemovedSignal;
 typedef sig::signal<void ()> FocusLostSignal;
 typedef sig::signal<void ()> FocusGainedSignal;
 
+/* How far in from each edge of a window, in pixels, it can be covered or
+ * cut off by the screen (e.g. by a camera cutout, or rounded corners) */
+struct SafeArea {
+    uint16_t left = 0;
+    uint16_t top = 0;
+    uint16_t right = 0;
+    uint16_t bottom = 0;
+
+    bool operator==(const SafeArea& rhs) const {
+        return left == rhs.left && top == rhs.top &&
+               right == rhs.right && bottom == rhs.bottom;
+    }
+
+    bool operator!=(const SafeArea& rhs) const {
+        return !(*this == rhs);
+    }
+};
+
 class Window :
     public Loadable,
     public RenderTarget,
@@ -224,7 +242,15 @@ public:
      *  not be called by user code directly. */
     void set_has_focus(bool v=true);
 
+    /** Returns the edges of the window that the screen can cover or cut
+     *  off (e.g. with a camera cutout). Anything that has to be seen or
+     *  touched should be kept inside them. These can change, e.g. when the
+     *  device is turned around. */
+    const SafeArea& safe_area() const { return safe_area_; }
+
 protected:
+    void set_safe_area(const SafeArea& insets) { safe_area_ = insets; }
+
     std::shared_ptr<Renderer> renderer_;
 
     void set_vsync_enabled(bool vsync) {
@@ -287,6 +313,8 @@ private:
     uint16_t bpp_ = 0;
     bool fullscreen_ = false;
     bool vsync_enabled_ = false;
+
+    SafeArea safe_area_;
 
     bool escape_to_quit_ = true;
 

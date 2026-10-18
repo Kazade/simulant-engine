@@ -57,6 +57,9 @@ private:
      * won't hear about them being lifted */
     void release_all_fingers();
 
+    /* Reads the safe area from the window's insets */
+    void update_safe_area();
+
     struct FingerState {
         float x = 0.0f;
         float y = 0.0f;
