@@ -95,6 +95,15 @@ void adx_stream_close(adxtract_stream_t* source);
 // ADXTRACT_NO_ASM to use the C version instead
 #if defined(__DREAMCAST__) && !defined(ADXTRACT_NO_ASM)
 #define ADXTRACT_SH4_ASM
+
+// The assembly lists the memory it reads and writes as operands, so the compiler
+// can keep everything else in registers. That needs a register for each memory
+// operand's address, which GCC can't find when almost all of them are taken by
+// the loops and it's also keeping a frame pointer or not optimising. So debug
+// builds, which usually do one or the other, clobber all memory instead
+#if defined(__OPTIMIZE__) && defined(NDEBUG)
+#define ADXTRACT_SH4_MEMORY_OPERANDS
+#endif
 #endif
 
 // The decoder works in floating point. Doubles hold every intermediate value
@@ -616,6 +625,7 @@ static size_t _adx_read_block(adxtract_stream_t* source, const adxtract_block_t*
          * The coefficients come in fr1 and fr2, and the history in fr5 and fr6. The
          * memory that the loop reads and writes is listed in the operands, rather than
          * clobbering all memory, so the compiler can keep everything else in registers
+         * (except in unoptimised builds, see ADXTRACT_SH4_MEMORY_OPERANDS)
          */
         register const float* r_deltas __asm__("r1") = deltas;
         register const uint8_t* r_in __asm__("r2") = in;
@@ -731,11 +741,18 @@ static size_t _adx_read_block(adxtract_stream_t* source, const adxtract_block_t*
             "fipr    fv8,fv4\n"
 
             "11:\n\t"
-            : "+r"(r_in), "+r"(r_out), "+r"(r_pairs), "+f"(r_hist1), "+f"(r_hist2),
-              "+m"(*(int16_t (*)[]) buffer)
-            : "r"(r_deltas), "r"(r_stride), "r"(r_max), "r"(r_flip), "f"(r_coef1), "f"(r_coef2),
-              "m"(*(const float (*)[16]) deltas), "m"(*(const uint8_t (*)[]) in)
+            : "+r"(r_in), "+r"(r_out), "+r"(r_pairs), "+f"(r_hist1), "+f"(r_hist2)
+#ifdef ADXTRACT_SH4_MEMORY_OPERANDS
+              , "+m"(*(int16_t (*)[]) buffer)
+#endif
+            : "r"(r_deltas), "r"(r_stride), "r"(r_max), "r"(r_flip), "f"(r_coef1), "f"(r_coef2)
+#ifdef ADXTRACT_SH4_MEMORY_OPERANDS
+              , "m"(*(const float (*)[16]) deltas), "m"(*(const uint8_t (*)[]) in)
+#endif
             : "r0", "r5", "r8", "fr0", "fr3", "fr4", "fr7", "fr8", "fr9", "fr10", "fr11", "fpul", "t"
+#ifndef ADXTRACT_SH4_MEMORY_OPERANDS
+              , "memory"
+#endif
         );
 
         // The loop always looks up the delta for the byte after the ones it decodes,
@@ -1013,12 +1030,19 @@ static size_t _adx_read_block_stereo(adxtract_stream_t* source, size_t start_sam
 
             "12:\n\t"
             : "+r"(r_in), "+r"(r_left), "+r"(r_right), "+r"(r_pairs),
-              "+f"(r_left1), "+f"(r_left2), "+f"(r_right1), "+f"(r_right2),
-              "+m"(*(int16_t (*)[]) left)
-            : "r"(r_deltas), "r"(r_stride), "r"(r_max), "r"(r_flip), "f"(r_coef1), "f"(r_coef2),
-              "m"(*(const float (*)[32]) deltas), "m"(*(const uint8_t (*)[]) blocks)
+              "+f"(r_left1), "+f"(r_left2), "+f"(r_right1), "+f"(r_right2)
+#ifdef ADXTRACT_SH4_MEMORY_OPERANDS
+              , "+m"(*(int16_t (*)[]) left)
+#endif
+            : "r"(r_deltas), "r"(r_stride), "r"(r_max), "r"(r_flip), "f"(r_coef1), "f"(r_coef2)
+#ifdef ADXTRACT_SH4_MEMORY_OPERANDS
+              , "m"(*(const float (*)[32]) deltas), "m"(*(const uint8_t (*)[]) blocks)
+#endif
             : "r0", "r5", "r8", "r11", "fr0", "fr3", "fr4", "fr7", "fr8", "fr9", "fr10",
               "fr11", "fr12", "fr15", "fpul", "t"
+#ifndef ADXTRACT_SH4_MEMORY_OPERANDS
+              , "memory"
+#endif
         );
 
         history[0][0] = r_left1 - ADXTRACT_BIAS;
