@@ -81,6 +81,12 @@ private:
 
     std::vector<UIEvent> queued_events_;
 
+    /* Events are only processed when the UI is rendered, so they're only
+     * cleared once it has been. Otherwise a frame that isn't rendered (e.g.
+     * on Android while the app's in the background) would lose them, and a
+     * lost finger lift leaves a widget pressed */
+    mutable bool events_processed_ = false;
+
     WidgetPtr find_widget_at_window_coordinate(const Camera* camera,
                                                const Viewport* viewport,
                                                const Vec2& window_coord) const;

@@ -215,6 +215,11 @@ public:
     /** Returns true if the window currently has focus */
     bool has_focus() const { return has_focus_; }
 
+    /** Returns true if there's anything to render to. A window can lose its
+     *  surface while keeping its context (e.g. while an Android app is in the
+     *  background), and then frames aren't rendered */
+    virtual bool can_render() const { return true; }
+
     /** Sets whether or not the window has focus, this should
      *  not be called by user code directly. */
     void set_has_focus(bool v=true);

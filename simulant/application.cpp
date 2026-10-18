@@ -638,7 +638,7 @@ bool Application::run_frame() {
 
         S_PROFILE_SUBSECTION("rendering");
         thread::Lock<thread::Mutex> rendering_lock(window_->context_lock());
-        if(window_->has_context()) {
+        if(window_->has_context() && window_->can_render()) {
             S_PROFILE_SECTION("compositor");
             stats->reset_polygons_rendered();
             window_->compositor->run();

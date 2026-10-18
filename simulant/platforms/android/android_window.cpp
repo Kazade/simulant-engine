@@ -1,3 +1,4 @@
+#include <cstring>
 #include <android/input.h>
 #include <GLES/gl.h>
 #include <android_native_app_glue.h>
@@ -45,6 +46,8 @@ static std::queue<AndroidEvent> EVENTS;
 
 namespace smlt {
 
+const static MouseID TOUCH_MOUSE_ID(0);
+
 static const EGLint attrib_list [] = {
     EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -56,10 +59,20 @@ static const EGLint attrib_list [] = {
 };
 
 static void android_handle_command(struct android_app* app, int32_t cmd) {
-    _S_UNUSED(app);
-
     S_INFO("Received command: {0}", cmd);
-    COMMANDS.push(cmd);
+
+    /* The window has to be dealt with before this returns, rather than
+     * queued with everything else: once it has, native_app_glue clears
+     * app->window and lets Android destroy the old one, so a surface still
+     * using it would be drawn to after it's gone */
+    AndroidWindow* window = (AndroidWindow*) app->userData;
+    if(window && cmd == APP_CMD_INIT_WINDOW) {
+        window->on_native_window_created(app);
+    } else if(window && cmd == APP_CMD_TERM_WINDOW) {
+        window->on_native_window_destroyed();
+    } else {
+        COMMANDS.push(cmd);
+    }
 }
 
 static int android_handle_input(struct android_app* app, AInputEvent* evt) {
@@ -110,17 +123,32 @@ static int android_handle_input(struct android_app* app, AInputEvent* evt) {
 
         EVENTS.push(out);
     } else if(out.type == AINPUT_EVENT_TYPE_MOTION) {
-        out.touch.action = AMotionEvent_getAction(evt);
-        auto i = (out.touch.action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
-        out.touch.action &= AMOTION_EVENT_ACTION_MASK;
+        int32_t action = AMotionEvent_getAction(evt);
+        std::size_t index = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+        out.touch.action = action & AMOTION_EVENT_ACTION_MASK;
 
-        out.touch.pointer_id = AMotionEvent_getPointerId(evt, i);
-        out.touch.x = getX(i);
-        out.touch.y = getY(i);
-        out.touch.pressure = std::min(
-            AMotionEvent_getPressure(evt, i), 1.0f
-        );
-        EVENTS.push(out);
+        auto push = [&](std::size_t i) {
+            out.touch.pointer_id = AMotionEvent_getPointerId(evt, i);
+            out.touch.x = getX(i);
+            out.touch.y = getY(i);
+            out.touch.pressure = std::min(
+                AMotionEvent_getPressure(evt, i), 1.0f
+            );
+            EVENTS.push(out);
+        };
+
+        /* A move is for every finger that's down, and a cancel (e.g. when the
+         * system takes over a gesture) lifts all of them. The rest are for
+         * the one finger the action's index says */
+        if(out.touch.action == AMOTION_EVENT_ACTION_MOVE ||
+           out.touch.action == AMOTION_EVENT_ACTION_CANCEL) {
+            std::size_t count = AMotionEvent_getPointerCount(evt);
+            for(std::size_t i = 0; i < count; ++i) {
+                push(i);
+            }
+        } else {
+            push(index);
+        }
     }
 
     return 1;
@@ -193,7 +221,8 @@ void AndroidWindow::on_application_set(Application* app) {
 }
 
 void AndroidWindow::do_swap_buffers() {
-    if(dpy_ != EGL_NO_DISPLAY && has_focus()) {
+    /* Focus comes back (on resume) before the window does */
+    if(dpy_ != EGL_NO_DISPLAY && surface_ != EGL_NO_SURFACE && has_focus()) {
         eglSwapBuffers(dpy_, surface_);
     }
 }
@@ -202,11 +231,80 @@ void AndroidWindow::create_egl_surface(android_app* aapp) {
     EGLint width, height;
 
     surface_ = eglCreateWindowSurface(dpy_, config_, aapp->window, NULL);
+    if(surface_ == EGL_NO_SURFACE) {
+        S_ERROR("Couldn't create a window surface: {0}", eglGetError());
+        return;
+    }
+
     eglQuerySurface(dpy_, surface_, EGL_WIDTH, &width);
     eglQuerySurface(dpy_, surface_, EGL_HEIGHT, &height);
 
     set_width(width);
     set_height(height);
+}
+
+void AndroidWindow::on_native_window_created(android_app* aapp) {
+    S_INFO("Native window created");
+
+    /* At startup, _init_window sets everything up once there's a window */
+    if(dpy_ == EGL_NO_DISPLAY || ctx_ == EGL_NO_CONTEXT || !aapp->window) {
+        return;
+    }
+
+    if(surface_ != EGL_NO_SURFACE) {
+        on_native_window_destroyed();
+    }
+
+    EGLint format;
+    eglGetConfigAttrib(dpy_, config_, EGL_NATIVE_VISUAL_ID, &format);
+    ANativeWindow_setBuffersGeometry(aapp->window, 0, 0, format);
+
+    create_egl_surface(aapp);
+    if(surface_ != EGL_NO_SURFACE &&
+       eglMakeCurrent(dpy_, surface_, surface_, ctx_) == EGL_FALSE) {
+        S_ERROR("Couldn't make the context current: {0}", eglGetError());
+    }
+}
+
+void AndroidWindow::on_native_window_destroyed() {
+    S_INFO("Native window destroyed");
+
+    if(dpy_ == EGL_NO_DISPLAY || surface_ == EGL_NO_SURFACE) {
+        return;
+    }
+
+    /* Keep the context current if it can be without a surface, otherwise
+     * nothing can be */
+    if(!surfaceless_ ||
+       eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx_) == EGL_FALSE) {
+        eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
+
+    eglDestroySurface(dpy_, surface_);
+    surface_ = EGL_NO_SURFACE;
+}
+
+void AndroidWindow::release_all_fingers() {
+    for(auto& finger: finger_states_) {
+        auto& state = finger.second;
+        if(!state.down) {
+            continue;
+        }
+
+        on_finger_up(finger.first, state.x, state.y);
+        if(finger.first == 0) {
+            on_mouse_up(
+                TOUCH_MOUSE_ID,
+                finger.first,
+                state.x * float(width()),
+                state.y * float(height()),
+                true
+            );
+        }
+
+        state.down = false;
+        state.pressure = 0.0f;
+    }
 }
 
 bool AndroidWindow::_init_window() {
@@ -238,6 +336,9 @@ bool AndroidWindow::_init_window() {
         S_ERROR("Couldn't initialize EGL");
         return false;
     }
+
+    const char* extensions = eglQueryString(dpy_, EGL_EXTENSIONS);
+    surfaceless_ = extensions && strstr(extensions, "EGL_KHR_surfaceless_context");
 
     EGLint num_configs;
 
@@ -542,7 +643,6 @@ static const KeyboardCode KEYCODE_MAPPING[256] = {
     KEYBOARD_CODE_NONE,
 };
 
-const static MouseID TOUCH_MOUSE_ID(0);
 
 void AndroidWindow::check_events() {
     android_app* aapp = (android_app*) get_app()->platform_state();
@@ -585,25 +685,8 @@ void AndroidWindow::check_events() {
                 S_INFO("CMD: Save state");
                 break;
 
-            case APP_CMD_INIT_WINDOW:
-                S_INFO("CMD: Init window");
-                if(dpy_ != EGL_NO_DISPLAY && surface_ == EGL_NO_SURFACE && ctx_ != EGL_NO_CONTEXT) {
-                    // Rebind the context to the display/surface
-                    create_egl_surface(aapp);
-                    eglMakeCurrent(dpy_, surface_, surface_, ctx_);
-                }
-
-                break;
-            case APP_CMD_TERM_WINDOW:
-                S_INFO("CMD: Term window");
-
-                if(dpy_ != EGL_NO_DISPLAY && surface_ != EGL_NO_SURFACE && ctx_ != EGL_NO_CONTEXT) {
-                    eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-                    eglDestroySurface(dpy_, surface_);
-                    surface_ = EGL_NO_SURFACE;
-                }
-
-                break;
+            /* APP_CMD_INIT_WINDOW and APP_CMD_TERM_WINDOW are handled as
+             * they arrive, see android_handle_command */
             case APP_CMD_DESTROY:
                 set_has_context(false);
                 destroy_window();
@@ -621,6 +704,8 @@ void AndroidWindow::check_events() {
             case APP_CMD_LOST_FOCUS:
                 S_INFO("CMD: Focus lost");
                 set_has_focus(false);
+                // We won't hear about any fingers being lifted now
+                release_all_fingers();
                // {
                //     //See Window::context_lock_ for details
                //     thread::Lock<thread::Mutex> context_lock(this->context_lock());
@@ -630,6 +715,7 @@ void AndroidWindow::check_events() {
             case APP_CMD_PAUSE:
                 S_WARN("CMD: PAUSE");
                 set_has_focus(false);
+                release_all_fingers();
                 // Nothing stops the sound playing while we're in the
                 // background otherwise
                 if(ALCcontext* context = alcGetCurrentContext()) {
@@ -670,6 +756,14 @@ void AndroidWindow::check_events() {
 
                 if(evt.touch.action == AMOTION_EVENT_ACTION_DOWN ||
                    evt.touch.action == AMOTION_EVENT_ACTION_POINTER_DOWN) {
+                    // A finger that never came up (we missed it), so lift it
+                    // first rather than leaving it down twice
+                    auto& previous = finger_states_[pointer];
+                    if(previous.down) {
+                        on_finger_up(pointer, previous.x, previous.y);
+                        previous.down = false;
+                    }
+
                     on_finger_down(
                         pointer,
                         x,
@@ -691,6 +785,7 @@ void AndroidWindow::check_events() {
                     state.x = x;
                     state.y = 1.0f - y;
                     state.pressure = evt.touch.pressure;
+                    state.down = true;
                 } else if(
                     evt.touch.action == AMOTION_EVENT_ACTION_POINTER_UP ||
                     evt.touch.action == AMOTION_EVENT_ACTION_UP ||
@@ -698,8 +793,10 @@ void AndroidWindow::check_events() {
 
                     auto& state = finger_states_[pointer];
 
-                    // This avoids a double-release if we get ACTION_UP and then CANCEL
-                    if(state.pressure > 0.0f) {
+                    // This avoids a double-release if we get ACTION_UP and
+                    // then CANCEL. (It's not the pressure that's checked,
+                    // as some touch screens always report 0.)
+                    if(state.down) {
                         on_finger_up(pointer, x, 1.0f - y);
 
                         if(pointer == 0) {
@@ -715,12 +812,16 @@ void AndroidWindow::check_events() {
                         state.x = x;
                         state.y = 1.0f - y;
                         state.pressure = 0.0f;
+                        state.down = false;
                     }
                 } else if(evt.touch.action == AMOTION_EVENT_ACTION_MOVE) {
                     auto& state = finger_states_[pointer];
+                    if(!state.down) {
+                        break;
+                    }
 
                     float dx = x - state.x;
-                    float dy = y - state.y;
+                    float dy = (1.0f - y) - state.y;
 
                     on_finger_motion(pointer, x, 1.0f - y, dx, dy);
 
@@ -739,7 +840,7 @@ void AndroidWindow::check_events() {
                 } else {
                     S_ERROR("ACTION_UNKNOWN ({0}) {1}", evt.touch.action, pointer);
                 }
-            }
+            } break;
 
             default:
                 S_INFO("Event type: {0}", evt.type);

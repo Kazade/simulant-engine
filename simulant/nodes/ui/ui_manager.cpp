@@ -40,16 +40,28 @@ namespace ui {
 
 using namespace std::placeholders;
 
+static const std::size_t MAX_UNPROCESSED_EVENTS = 256;
+
 UIManager::UIManager(Scene* owner, UIConfig config) :
     StageNode(owner, Meta::node_type), config_(config) {
 
     auto window = get_app()->window.get();
     window->register_event_listener(this);
 
-    /* We clear queued events at the end of each frame */
+    /* We clear queued events at the end of each frame they've been
+     * processed in */
     frame_finished_connection_ =
         get_app()->signal_frame_finished().connect([this]() {
-        this->clear_event_queue();
+        if(events_processed_) {
+            this->clear_event_queue();
+            events_processed_ = false;
+        } else if(queued_events_.size() > MAX_UNPROCESSED_EVENTS) {
+            /* The UI isn't being rendered, so don't let them pile up */
+            queued_events_.erase(
+                queued_events_.begin(),
+                queued_events_.end() - MAX_UNPROCESSED_EVENTS
+            );
+        }
     });
 }
 
@@ -209,6 +221,8 @@ void UIManager::queue_event(const TouchEvent& e) {
 
 void UIManager::process_event_queue(const Camera* camera,
                                     const Viewport* viewport) const {
+
+    events_processed_ = true;
 
     if(queued_events_.empty()) {
         return;
