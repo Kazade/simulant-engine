@@ -248,9 +248,7 @@ On PSP, the VFS supports these path prefixes:
 | Prefix | Description |
 |--------|-------------|
 | `./` | Current directory |
-| `umd0:` | UMD disc drive |
 | `ms0:` | Memory Stick |
-| `disc0:` | Disc device |
 
 ### Platform-Specific Assets
 

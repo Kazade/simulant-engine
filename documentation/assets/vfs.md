@@ -81,9 +81,7 @@ The VFS automatically populates its search path list during construction. The pa
 | Path | Notes |
 |------|-------|
 | `.` | Current directory |
-| `umd0:` | UMD drive |
 | `ms0:` | Memory Stick |
-| `disc0:` | Disc drive |
 
 ### Android
 

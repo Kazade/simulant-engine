@@ -68,10 +68,11 @@ VirtualFileSystem::VirtualFileSystem() {
 #endif
 
 #ifdef __PSP__
+    // Add the current directory, ms0 (memory card), and host only
+    // there's no point adding umd0: or disc0:
     add_search_path(".");
-    add_search_path("umd0:");
     add_search_path("ms0:");
-    add_search_path("disc0:");
+    add_search_path("host0:");
 #endif
 
 #ifdef __linux__

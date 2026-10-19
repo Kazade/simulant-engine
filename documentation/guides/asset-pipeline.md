@@ -849,7 +849,7 @@ Simulant automatically adds these search paths:
 | `simulant/` subdirectory | All |
 | `/usr/local/share`, `/usr/share` | Linux |
 | `/cd`, `/pc` | Dreamcast |
-| `.`, `umd0:`, `ms0:`, `disc0:` | PSP |
+| `.`, `ms0:` | PSP |
 
 Add custom search paths in your `AppConfig`:
 

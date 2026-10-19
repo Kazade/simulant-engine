@@ -264,7 +264,7 @@ The VFS automatically adds these search paths on initialization:
 | `/usr/local/share` | Linux | System-wide shared data |
 | `/usr/share` | Linux | System-wide shared data |
 | `/cd` and `/pc` | Dreamcast | CD-ROM and program paths |
-| `.`, `umd0:`, `ms0:`, `disc0:` | PSP | Various PSP storage locations |
+| `.`, `ms0:` | PSP | Various PSP storage locations |
 | Relative paths | Android | Android assets are always relative |
 
 ### Adding Custom Search Paths
