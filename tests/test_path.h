@@ -23,6 +23,18 @@ public:
                      Path("/etc/my_path/another_path").normalize().str());
     }
 
+    void test_join() {
+        Path p1("a/b");
+        Path p2("c/d");
+        Path p3("/ef");
+
+        assert_equal(p1.append(p2), Path("a/b/c/d"));
+
+        // Appending an absolute path should just return the absolute
+        // path
+        assert_equal(p1.append(p3), Path("/ef"));
+    }
+
     void test_is_absolute() {
 #ifdef _WIN32
         Path p1("C:\\etc\\my_path");

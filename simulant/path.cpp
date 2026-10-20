@@ -72,8 +72,8 @@ Path Path::absoluted() const {
     return kfs::path::abs_path(path_);
 }
 
-Path Path::append(const std::string &name) const {
-    return kfs::path::join(path_, name);
+Path Path::append(const Path& name) const {
+    return kfs::path::join(path_, name.str());
 }
 
 bool Path::operator==(const Path& p) const {

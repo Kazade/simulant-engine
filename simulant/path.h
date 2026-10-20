@@ -36,7 +36,7 @@ public:
 
     Path absoluted() const;
 
-    Path append(const std::string& name) const;
+    Path append(const Path& rhs) const;
 
     /** Convert the full path to a std::string */
     std::string str() const {

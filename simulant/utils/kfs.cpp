@@ -31,7 +31,7 @@
 #include <unistd.h>
 #include <utime.h>
 #elif defined(__WIN32__)
-  
+
 #if defined(_MSC_VER)
     #include <direct.h>
 
@@ -503,6 +503,10 @@ Path get_cwd() {
 namespace path {
 
 Path join(const Path& p1, const Path& p2) {
+    if(is_absolute(p2)) {
+        return p2;
+    }
+
     return p1 + SEP + p2;
 }
 
