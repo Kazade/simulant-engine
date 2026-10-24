@@ -403,6 +403,182 @@ void AndroidWindow::update_safe_area() {
     }
 }
 
+namespace {
+
+/* The JNI environment for the current thread, attaching it to Java for as
+ * long as this is around if it isn't already */
+class JavaThread {
+public:
+    JavaThread() {
+        android_app* aapp = (android_app*) smlt::get_app()->platform_state();
+        if(!aapp) {
+            return;
+        }
+
+        vm_ = aapp->activity->vm;
+        activity_ = aapp->activity->clazz;
+        if(vm_->GetEnv((void**) &env_, JNI_VERSION_1_6) != JNI_OK) {
+            if(vm_->AttachCurrentThread(&env_, nullptr) != JNI_OK) {
+                env_ = nullptr;
+                return;
+            }
+            attached_ = true;
+        }
+    }
+
+    ~JavaThread() {
+        if(env_ && env_->ExceptionCheck()) {
+            env_->ExceptionClear();
+        }
+
+        if(attached_) {
+            vm_->DetachCurrentThread();
+        }
+    }
+
+    JNIEnv* env() const { return env_; }
+    jobject activity() const { return activity_; }
+
+    /* Clears any exception, returning true if there was one */
+    bool failed() const {
+        if(env_->ExceptionCheck()) {
+            env_->ExceptionClear();
+            return true;
+        }
+        return false;
+    }
+
+private:
+    JavaVM* vm_ = nullptr;
+    JNIEnv* env_ = nullptr;
+    jobject activity_ = nullptr;
+    bool attached_ = false;
+};
+
+}
+
+void AndroidWindow::find_vibrator() const {
+    if(vibrator_checked_) {
+        return;
+    }
+    vibrator_checked_ = true;
+
+    JavaThread java;
+    JNIEnv* env = java.env();
+    if(!env) {
+        return;
+    }
+
+    /* context.getSystemService(Context.VIBRATOR_SERVICE). From Android 12
+     * the vibrator's meant to come from the VibratorManager service, but
+     * this still works and goes back further. */
+    jclass activity_class = env->GetObjectClass(java.activity());
+    jmethodID get_system_service = env->GetMethodID(
+        activity_class, "getSystemService", "(Ljava/lang/String;)Ljava/lang/Object;");
+    jstring name = env->NewStringUTF("vibrator");
+    jobject vibrator = env->CallObjectMethod(java.activity(), get_system_service, name);
+
+    if(vibrator && !java.failed()) {
+        jclass vibrator_class = env->FindClass("android/os/Vibrator");
+        jmethodID has_vibrator = env->GetMethodID(vibrator_class, "hasVibrator", "()Z");
+        jmethodID has_amplitude_control = env->GetMethodID(vibrator_class, "hasAmplitudeControl", "()Z");
+
+        if(env->CallBooleanMethod(vibrator, has_vibrator) && !java.failed()) {
+            vibrator_ = env->NewGlobalRef(vibrator);
+            has_amplitude_control_ = env->CallBooleanMethod(vibrator, has_amplitude_control) && !java.failed();
+        }
+
+        env->DeleteLocalRef(vibrator_class);
+    }
+
+    S_INFO("Haptics: {0}{1}", vibrator_ ? "yes" : "no",
+           has_amplitude_control_ ? " (with amplitude control)" : "");
+
+    if(vibrator) env->DeleteLocalRef(vibrator);
+    env->DeleteLocalRef(name);
+    env->DeleteLocalRef(activity_class);
+}
+
+bool AndroidWindow::has_haptics() const {
+    find_vibrator();
+    return vibrator_ != nullptr;
+}
+
+void AndroidWindow::start_haptics(NormalizedFloat strength, const Seconds& duration) {
+    if(!has_haptics() || strength <= 0.0f) {
+        return;
+    }
+
+    JavaThread java;
+    JNIEnv* env = java.env();
+    if(!env) {
+        return;
+    }
+
+    jlong ms = std::max(jlong(1), jlong(std::round(duration.to_float() * 1000.0f)));
+
+    /* Without amplitude control, VibrationEffect.DEFAULT_AMPLITUDE (-1) */
+    jint amplitude = has_amplitude_control_ ?
+        jint(std::max(1.0f, std::min(255.0f, std::round(strength * 255.0f)))) : -1;
+
+    jclass effect_class = env->FindClass("android/os/VibrationEffect");
+    jmethodID create_one_shot = env->GetStaticMethodID(
+        effect_class, "createOneShot", "(JI)Landroid/os/VibrationEffect;");
+    jobject effect = env->CallStaticObjectMethod(effect_class, create_one_shot, ms, amplitude);
+
+    /* Tagged as a game's, so it follows the player's settings for those */
+    const jint USAGE_GAME = 14;
+    jclass builder_class = env->FindClass("android/media/AudioAttributes$Builder");
+    jmethodID builder_init = env->GetMethodID(builder_class, "<init>", "()V");
+    jmethodID set_usage = env->GetMethodID(
+        builder_class, "setUsage", "(I)Landroid/media/AudioAttributes$Builder;");
+    jmethodID build = env->GetMethodID(builder_class, "build", "()Landroid/media/AudioAttributes;");
+
+    jobject builder = env->NewObject(builder_class, builder_init);
+    jobject builder_again = env->CallObjectMethod(builder, set_usage, USAGE_GAME);
+    jobject attributes = env->CallObjectMethod(builder, build);
+
+    if(effect && attributes && !java.failed()) {
+        jclass vibrator_class = env->FindClass("android/os/Vibrator");
+        jmethodID vibrate = env->GetMethodID(
+            vibrator_class, "vibrate",
+            "(Landroid/os/VibrationEffect;Landroid/media/AudioAttributes;)V");
+        env->CallVoidMethod(vibrator_, vibrate, effect, attributes);
+
+        /* e.g. without the VIBRATE permission */
+        if(java.failed()) {
+            S_WARN("Couldn't vibrate the device");
+        }
+
+        env->DeleteLocalRef(vibrator_class);
+    }
+
+    if(attributes) env->DeleteLocalRef(attributes);
+    if(builder_again) env->DeleteLocalRef(builder_again);
+    if(builder) env->DeleteLocalRef(builder);
+    env->DeleteLocalRef(builder_class);
+    if(effect) env->DeleteLocalRef(effect);
+    env->DeleteLocalRef(effect_class);
+}
+
+void AndroidWindow::stop_haptics() {
+    if(!has_haptics()) {
+        return;
+    }
+
+    JavaThread java;
+    JNIEnv* env = java.env();
+    if(!env) {
+        return;
+    }
+
+    jclass vibrator_class = env->FindClass("android/os/Vibrator");
+    jmethodID cancel = env->GetMethodID(vibrator_class, "cancel", "()V");
+    env->CallVoidMethod(vibrator_, cancel);
+    java.failed();
+    env->DeleteLocalRef(vibrator_class);
+}
+
 void AndroidWindow::release_all_fingers() {
     for(auto& finger: finger_states_) {
         auto& state = finger.second;

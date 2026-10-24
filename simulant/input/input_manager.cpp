@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "input_axis.h"
 #include "input_manager.h"
 #include "input_state.h"
@@ -89,6 +90,42 @@ InputManager::InputManager(InputState *controller):
     mouse_y->set_mouse_axis(MOUSE_AXIS_1);
 
     smlt::get_app()->window->register_event_listener(&event_listener_);
+}
+
+bool InputManager::rumble(float low, float high, const Seconds& duration) {
+    bool rumbled = false;
+    for(std::size_t i = 0; i < controller_->game_controller_count(); ++i) {
+        auto controller = controller_->game_controller(GameControllerIndex(int8_t(i)));
+        if(controller && controller->start_rumble(low, high, duration)) {
+            rumbled = true;
+        }
+    }
+
+    if(rumbled) {
+        return true;
+    }
+
+    auto window = controller_->window();
+    if(window && window->has_haptics()) {
+        window->start_haptics(std::max(low, high), duration);
+        return true;
+    }
+
+    return false;
+}
+
+void InputManager::stop_rumble() {
+    for(std::size_t i = 0; i < controller_->game_controller_count(); ++i) {
+        auto controller = controller_->game_controller(GameControllerIndex(int8_t(i)));
+        if(controller && controller->has_rumble_effect()) {
+            controller->stop_rumble();
+        }
+    }
+
+    auto window = controller_->window();
+    if(window && window->has_haptics()) {
+        window->stop_haptics();
+    }
 }
 
 InputManager::~InputManager() {

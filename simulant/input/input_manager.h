@@ -14,6 +14,7 @@ namespace smlt {
 
 class Scene;
 class InputState;
+class Seconds;
 class InputAxis;
 class GameController;
 
@@ -98,6 +99,17 @@ public:
     bool onscreen_keyboard_active() const {
         return bool(keyboard_);
     }
+
+    /** Rumbles every game controller that can. If none of them can (e.g. on
+     *  a phone without a controller), the device itself vibrates instead
+     *  where it can (see Window::start_haptics), with the stronger of low
+     *  and high. low and high (0 to 1) are the strength of a controller's
+     *  heavy, low frequency motor and its light, high frequency one.
+     *  Returns false if there was nothing to rumble. */
+    bool rumble(float low, float high, const Seconds& duration);
+
+    /** Stops anything that rumble() started */
+    void stop_rumble();
 
 private:
     InputState* controller_;

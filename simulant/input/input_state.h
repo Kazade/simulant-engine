@@ -255,6 +255,9 @@ public:
     InputState(Window* window):
         window_(window) {}
 
+    /** The window the input comes from */
+    Window* window() const { return window_; }
+
     void pre_update(float dt);
     void update(float dt);
 

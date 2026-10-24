@@ -1,6 +1,7 @@
 #pragma once
 
 #include <EGL/egl.h>
+#include <jni.h>
 #include "../../window.h"
 
 struct android_app;
@@ -28,6 +29,11 @@ public:
     std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) override;
 
     bool can_render() const override { return surface_ != EGL_NO_SURFACE; }
+
+    /* Vibrates the phone (or whatever device), with the system's vibrator */
+    bool has_haptics() const override;
+    void start_haptics(NormalizedFloat strength, const Seconds& duration) override;
+    void stop_haptics() override;
 
     /* Called as Android creates and destroys the native window. These have
      * to be dealt with straight away, see android_handle_command */
@@ -59,6 +65,13 @@ private:
 
     /* Reads the safe area from the window's insets */
     void update_safe_area();
+
+    /* The system's vibrator, looked up the first time it's needed (and kept
+     * as a global reference) */
+    void find_vibrator() const;
+    mutable bool vibrator_checked_ = false;
+    mutable jobject vibrator_ = nullptr;
+    mutable bool has_amplitude_control_ = false;
 
     struct FingerState {
         float x = 0.0f;

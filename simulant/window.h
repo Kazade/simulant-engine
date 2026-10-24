@@ -248,6 +248,23 @@ public:
      *  device is turned around. */
     const SafeArea& safe_area() const { return safe_area_; }
 
+    /** Returns true if the device itself can vibrate (e.g. a phone). That's
+     *  separate from game controllers, which rumble with
+     *  GameController::start_rumble. See also InputManager::rumble, which
+     *  uses whichever there is. */
+    virtual bool has_haptics() const { return false; }
+
+    /** Vibrates the device for the given time. strength is how hard, where
+     *  the device can vary it; otherwise anything above 0 is full strength.
+     *  This does nothing if the device can't vibrate (see has_haptics). */
+    virtual void start_haptics(NormalizedFloat strength, const Seconds& duration) {
+        _S_UNUSED(strength);
+        _S_UNUSED(duration);
+    }
+
+    /** Stops the device vibrating early */
+    virtual void stop_haptics() {}
+
 protected:
     void set_safe_area(const SafeArea& insets) { safe_area_ = insets; }
 
