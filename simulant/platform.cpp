@@ -1,6 +1,7 @@
 
 
 #include "platform.h"
+#include "macros.h"
 
 #ifdef __DREAMCAST__
 
@@ -21,6 +22,11 @@ typedef smlt::WindowsPlatform ThisPlatform;
 
 #include "platforms/android/platform.h"
 typedef smlt::AndroidPlatform ThisPlatform;
+
+#elif defined(__IOS__)
+
+#include "platforms/ios/platform.h"
+typedef smlt::IOSPlatform ThisPlatform;
 
 #elif defined(__EVERCADE__)
 

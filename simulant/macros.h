@@ -46,3 +46,13 @@
     _S_SELECT_10TH(__VA_ARGS__, TWOORMORE, TWOORMORE, TWOORMORE, TWOORMORE,    \
                    TWOORMORE, TWOORMORE, TWOORMORE, TWOORMORE, ONE, throwaway)
 #define _S_SELECT_10TH(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, ...) a10
+
+/* iOS (and the iOS simulator). Apple's compilers don't define anything that
+ * tells it apart from macOS, so __IOS__ is defined here to match the other
+ * platform defines. Simulant's own build defines it on the command line. */
+#if defined(__APPLE__) && !defined(__IOS__)
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+#define __IOS__ 1
+#endif
+#endif

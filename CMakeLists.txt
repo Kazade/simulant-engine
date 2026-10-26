@@ -18,19 +18,24 @@ IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 ENDIF()
 
 # Set module options
-IF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+# FIXME: The tests (and samples) need building as app bundles to run on iOS
+IF(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR IOS)
   OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" OFF)
 ELSE()
   OPTION(SIMULANT_BUILD_TESTS "Build Simulant tests" ON)
 ENDIF()
 
-IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR PLATFORM_XBOX OR ANDROID)
+IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR PLATFORM_XBOX OR ANDROID OR IOS)
   OPTION(SIMULANT_BUILD_TOOLS "Build Simulant host tools (e.g. optimise_gltf)" OFF)
 ELSE()
   OPTION(SIMULANT_BUILD_TOOLS "Build Simulant host tools (e.g. optimise_gltf)" ON)
 ENDIF()
 
-OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
+IF(IOS)
+  OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" OFF)
+ELSE()
+  OPTION(SIMULANT_BUILD_SAMPLES "Build Simulant samples" ON)
+ENDIF()
 OPTION(SIMULANT_BUILD_SAMPLE_CDI "Build Dreamcast samples as CDI images" OFF)
 OPTION(SIMULANT_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 OPTION(SIMULANT_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
@@ -88,9 +93,13 @@ IF(SIMULANT_PROFILE)
   ADD_DEFINITIONS(-DSIMULANT_PROFILE)
 ENDIF()
 
-INCLUDE(CheckFunctionExists)
-check_function_exists("pthread_yield" HAS_PTHREAD_YIELD)
-IF(${HAS_PTHREAD_YIELD})
+# Apple platforms only have pthread_yield_np. (The check also wrongly passes
+# when cross-compiling for iOS, as try_compile only builds static libraries)
+IF(NOT APPLE)
+  INCLUDE(CheckFunctionExists)
+  check_function_exists("pthread_yield" HAS_PTHREAD_YIELD)
+ENDIF()
+IF(HAS_PTHREAD_YIELD)
   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMULANT_HAS_PTHREAD_YIELD")
 ENDIF()
@@ -115,10 +124,21 @@ IF(PLATFORM_PSP)
   SET(FLTO_SUPPORTED False)
 ENDIF()
 
+# The iOS library is built with upstream clang, but linked by apps with
+# Xcode's. LTO objects are LLVM bitcode, which Xcode's (older) LLVM can't
+# read, so the library has to be plain machine code.
+IF(IOS)
+  SET(FLTO_SUPPORTED False)
+ENDIF()
+
 # We force disable debugging information in release builds - this is so we override settings in the
 # kallistios gnu-wrappers which sometimes pick up -g through the default env vars
 # Fast-math is important on DC!
-IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+IF(IOS)
+  # Apple's arm64 ABI expects frame pointers (crash reports rely on them)
+  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -g0 -ffast-math -finline-functions")
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g0 -ffast-math -finline-functions")
+ELSEIF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -fomit-frame-pointer -O3 -g0 -ffast-math -finline-functions")
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fomit-frame-pointer -O3 -g0 -ffast-math -finline-functions")
 ENDIF()
@@ -128,7 +148,8 @@ IF(PLATFORM_DREAMCAST)
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mfsrra -mfsca -ffp-contract=fast")
 ENDIF()
 
-IF(NOT PLATFORM_PSP)
+# (iOS only builds a static library, which isn't linked so can't be stripped)
+IF(NOT PLATFORM_PSP AND NOT IOS)
   IF(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
     SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
@@ -241,6 +262,30 @@ IF(ANDROID)
   SET(OPENAL_INCLUDE_DIRS "")
   SET(OPENAL_LIBRARY "")
 
+ELSEIF(IOS)
+  MESSAGE("-- Cross-Compiling for iOS.")
+
+  # The window is UIKit and EAGL (see simulant/platforms/ios), not SDL2
+  SET(SDL2_INCLUDE_DIR "")
+  SET(SDL2_LIBRARIES "")
+
+  # Sound is ALdc (built in, see simulant/CMakeLists.txt), mixed in software
+  # and played through CoreAudio
+  SET(OPENAL_INCLUDE_DIRS "")
+  SET(OPENAL_LIBRARY "")
+  add_definitions(-D__IOS__ -DALDC_SOFTWARE_MIXER -DGLES_SILENCE_DEPRECATION)
+
+  # Apps linking libsimulant.a need these too
+  SET(OPENGL_INCLUDE_DIRS "")
+  SET(OPENGL_LIBRARIES
+        "-framework Foundation"
+        "-framework UIKit"
+        "-framework QuartzCore"
+        "-framework OpenGLES"
+        "-framework AudioToolbox"
+        "-framework AVFoundation"
+        "-framework CoreHaptics"
+    )
 ELSEIF(PLATFORM_PSP)
   SET(SDL2_INCLUDE_DIR "") # Don't use SDL2 on PSP
   SET(SDL2_LIBRARIES "")

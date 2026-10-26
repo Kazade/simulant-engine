@@ -138,6 +138,7 @@ Simulant is a cross-platform C++ game engine with support for desktop (Linux, Wi
 - **[3D Game Development](guides/3d-games.md)** - Tips for 3D games
 - **[Dreamcast Development](guides/dreamcast.md)** - Sega Dreamcast specifics
 - **[PSP Development](guides/psp.md)** - PSP specifics
+- **[iOS Development](guides/ios.md)** - iPhone and iPad specifics
 - **[Performance Optimization](guides/performance.md)** - Making your game run faster
 - **[Asset Pipeline](guides/asset-pipeline.md)** - Importing and preparing assets
 - **[sprite_gen Tool](guides/sprite-gen.md)** - Generate sprite sheets from 3D model animations
