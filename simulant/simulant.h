@@ -19,6 +19,7 @@
 #ifndef SIMULANT_MAIN_H
 #define SIMULANT_MAIN_H
 
+#include "macros.h"
 #include "types.h"
 
 /* In some cases you might want to override window creation, in which case
@@ -32,6 +33,8 @@
 #include "platforms/psp/psp_window.h"
 #elif defined(__ANDROID__)
 #include "platforms/android/android_window.h"
+#elif defined(__IOS__)
+#include "platforms/ios/ios_window.h"
 #else
 #include "platforms/sdl/sdl2_window.h"
 #endif

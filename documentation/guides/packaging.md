@@ -309,6 +309,7 @@ First-time builds are slow because the Docker image must be downloaded. Subseque
 | **PSP** | Homebrew package | Embedded | Place in `PSP/GAME/` on Memory Stick |
 | **macOS** | Executable | Separate directory | Untested regularly |
 | **Android** | APK | Embedded/packaged | Via Android toolchain |
+| **iOS** | `.app` (via Xcode) | In the app bundle | Link `simulant.xcframework`, see the [iOS Guide](ios.md) |
 
 ### Runtime Dependencies
 
@@ -464,4 +465,5 @@ Key steps for packaging and distributing a Simulant game:
 - [Performance Guide](performance.md) -- Optimization before release
 - [Dreamcast Guide](dreamcast.md) -- Dreamcast-specific constraints
 - [PSP Guide](psp.md) -- PSP-specific constraints
+- [iOS Guide](ios.md) -- Building for iOS and using Simulant from Xcode
 - [Building a Complete Game](complete-game.md) -- Step-by-step game tutorial
