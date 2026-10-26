@@ -1,6 +1,6 @@
 #pragma once
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !defined(__IOS__)
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 #else

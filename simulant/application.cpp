@@ -43,6 +43,9 @@ namespace smlt { typedef PSPWindow SysWindow; }
 #include <android_native_app_glue.h>
 #include "platforms/android/android_window.h"
 namespace smlt { typedef AndroidWindow SysWindow; }
+#elif defined(__IOS__)
+#include "platforms/ios/ios_window.h"
+namespace smlt { typedef IOSWindow SysWindow; }
 #else
 #include "platforms/sdl/sdl2_window.h"
 namespace smlt { typedef SDL2Window SysWindow; }

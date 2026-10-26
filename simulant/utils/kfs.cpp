@@ -443,6 +443,14 @@ std::string temp_dir() {
      * we have no writeable memory on the DC (aside the VMU)
      * this is the best we got */
     return "/ram";
+#elif defined(__IOS__)
+    /* Apps can only write inside their own sandbox, which has its own
+     * temporary directory */
+    char buffer[PATH_MAX];
+    if(confstr(_CS_DARWIN_USER_TEMP_DIR, buffer, sizeof(buffer)) > 0) {
+        return std::string(buffer);
+    }
+    return "/tmp";
 #else
     return "/tmp";
 #endif

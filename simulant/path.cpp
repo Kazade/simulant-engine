@@ -25,6 +25,8 @@ Path Path::system_temp_dir() {
      * we have no writeable memory on the DC (aside the VMU)
      * this is the best we got */
     return "/ram";
+#elif defined(__IOS__)
+    return kfs::temp_dir();
 #else
     return "/tmp";
 #endif

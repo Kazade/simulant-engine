@@ -17,7 +17,7 @@
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(__IOS__)
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 #else

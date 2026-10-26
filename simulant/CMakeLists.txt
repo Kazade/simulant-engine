@@ -52,7 +52,7 @@ IF(PLATFORM_PSP)
     )
 ENDIF()
 
-IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR ANDROID OR SIMULANT_USE_ALDC)
+IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR ANDROID OR IOS OR SIMULANT_USE_ALDC)
   SET(
         LIBAL
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/buffer.c
@@ -68,6 +68,7 @@ IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR ANDROID OR SIMULANT_USE_ALDC)
         # platforms that play through sound hardware instead
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/mixer.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/output_aaudio.c
+        ${CMAKE_SOURCE_DIR}/deps/libAL/src/output_coreaudio.c
         ${CMAKE_SOURCE_DIR}/deps/libAL/src/output_null.c
     )
 
@@ -132,6 +133,30 @@ ELSEIF(PLATFORM_PSP)
         sound/drivers/al_error.cpp
         sound/drivers/null_sound_driver.cpp
     )
+ELSEIF(IOS)
+  FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/ios/*.mm)
+
+  IF(PLATFORM)
+    MESSAGE("-- Including platform specific files: ${PLATFORM}")
+  ENDIF()
+
+  # Objective-C++, compiled as C++ so it gets the same flags as everything
+  # else
+  set_source_files_properties(
+        ${PLATFORM}
+        PROPERTIES
+        LANGUAGE CXX
+        COMPILE_OPTIONS "-xobjective-c++;-fobjc-arc"
+    )
+
+  SET(
+        SIMULANT_FILES
+        ${SIMULANT_FILES}
+        ${PLATFORM}
+        sound/drivers/openal_sound_driver.cpp
+        sound/drivers/al_error.cpp
+        sound/drivers/null_sound_driver.cpp
+    )
 ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Android")
   FILE(GLOB_RECURSE PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/platforms/android/*.cpp)
 
@@ -186,7 +211,7 @@ ENDIF()
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/deps/bounce/include)
 
-IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+IF(PLATFORM_DREAMCAST OR PLATFORM_PSP OR IOS OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   ADD_LIBRARY(simulant STATIC ${SIMULANT_FILES})
 ELSE()
   ADD_LIBRARY(simulant SHARED ${SIMULANT_FILES}

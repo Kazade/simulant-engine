@@ -87,6 +87,30 @@ prepare:windows-x64-mingw:
       changes:
         - platforms/windows/Dockerfile
 
+# Toolchain only: the iOS SDK isn't allowed in a public image, see
+# .build:ios-clang
+prepare:ios-toolchain:
+  stage: prepare
+  image: docker:latest
+  services:
+    - docker:dind
+  # The image builds part of LLVM (Apple's libtapi) from source
+  timeout: 3h
+  before_script:
+    - cp platforms/ios/Dockerfile Dockerfile
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:ios-toolchain || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:ios-toolchain -t $CI_REGISTRY_IMAGE:ios-toolchain .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:ios-toolchain
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - platforms/ios/Dockerfile
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
+      changes:
+        - platforms/ios/Dockerfile
+
 prepare:deploy:
   stage: prepare
   image: docker:latest
@@ -153,6 +177,41 @@ build:android-all-clang:debug:
     TARGET: android-all-clang
     BUILD_TYPE: debug
     BUILD_JOB: assembleDebug
+
+# The iPhoneOS and iPhoneSimulator SDKs come from Xcode, and can't be
+# redistributed, so they're downloaded from somewhere private:
+# IOS_SDK_URL and IOS_SIMULATOR_SDK_URL must be masked CI/CD variables with
+# the URLs of .tar.xz archives of them (see documentation/guides/ios.md).
+# Without them, the iOS jobs don't run.
+.build:ios-clang:
+  stage: build
+  image: $CI_REGISTRY_IMAGE:ios-toolchain
+  rules:
+    - if: $IOS_SDK_URL && $IOS_SIMULATOR_SDK_URL
+  before_script:
+    - mkdir -p /opt/ios-sdks
+    - curl -fsSL "$IOS_SDK_URL" | tar -xJ -C /opt/ios-sdks
+    - curl -fsSL "$IOS_SIMULATOR_SDK_URL" | tar -xJ -C /opt/ios-sdks
+    - export IOS_DEVICE_SDK=$(ls -d /opt/ios-sdks/iPhoneOS*.sdk | head -n 1)
+    - export IOS_SIMULATOR_SDK=$(ls -d /opt/ios-sdks/iPhoneSimulator*.sdk | head -n 1)
+    - echo "Using ${IOS_DEVICE_SDK} and ${IOS_SIMULATOR_SDK}"
+  script:
+    - JOBS=3 platforms/ios/build_libraries.sh ${BUILD_TYPE}
+  artifacts:
+    paths:
+      - ios-arm64-clang/
+      - ios-simulator-clang/
+      - ios-xcframework/
+
+build:ios-clang:debug:
+  extends: .build:ios-clang
+  variables:
+    BUILD_TYPE: Debug
+
+build:ios-clang:release:
+  extends: .build:ios-clang
+  variables:
+    BUILD_TYPE: Release
 
 build:psp-mips-gcc:debug:
   stage: build
@@ -734,6 +793,43 @@ deploy:android-all-clang:
   variables:
     TARGET: android-all-clang
     LIB_EXT: aar
+
+# Only where the iOS libraries were built (see .build:ios-clang)
+.deploy:ios:
+  extends: .deploy:deploy
+  only: null
+  rules:
+    - if: $IOS_SDK_URL && $IOS_SIMULATOR_SDK_URL && ($CI_COMMIT_REF_NAME =~ /^(main|legacy|next)$/ || $CI_COMMIT_TAG)
+  needs:
+    - build:ios-clang:debug
+    - build:ios-clang:release
+  dependencies:
+    - build:ios-clang:debug
+    - build:ios-clang:release
+
+deploy:ios-arm64-clang:
+  extends: .deploy:ios
+  variables:
+    TARGET: ios-arm64-clang
+
+deploy:ios-simulator-clang:
+  extends: .deploy:ios
+  variables:
+    TARGET: ios-simulator-clang
+
+# The same libraries as an XCFramework, which is what Xcode uses
+deploy:ios-xcframework:
+  extends: .deploy:ios
+  variables:
+    TARGET: ios-xcframework
+  script:
+    - mkdir -p upload
+    - mv ios-xcframework upload/
+    - cd upload
+    - zip -r ios-xcframework.zip ios-xcframework/
+    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
+    - gsutil cp ios-xcframework.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+    - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/ios-xcframework.zip
 
 deploy:assets:
   stage: deploy

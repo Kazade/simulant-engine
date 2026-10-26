@@ -27,6 +27,8 @@
 #define LUA_USE_WINDOWS
 #elif defined(__linux__)
 #define LUA_USE_LINUX
+#elif defined(__IOS__)
+#define LUA_USE_IOS
 #elif defined(__APPLE__)
 #define LUA_USE_MACOSX
 #elif defined(__DREAMCAST__) || defined(__PSP__)

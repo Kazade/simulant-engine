@@ -32,6 +32,8 @@
 #ifdef __ANDROID__
 #include <dlfcn.h>
 #include <EGL/egl.h>
+#elif defined(__IOS__)
+#include <dlfcn.h>
 #endif
 
 #include "../../application.h"
@@ -947,10 +949,15 @@ static GLADloadproc gles_get_proc_address(const char* name) {
 
     return ret;
 }
+#elif defined(__IOS__)
+static GLADloadproc gles_get_proc_address(const char* name) {
+    /* OpenGLES.framework is linked, so everything's already loaded */
+    return (GLADloadproc)dlsym(RTLD_DEFAULT, name);
+}
 #endif
 
 void GenericRenderer::init_context() {
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(__IOS__)
     if(!gladLoadGLES2Loader((GLADloadproc)gles_get_proc_address)) {
 #else
     if(!gladLoadGL()) {
