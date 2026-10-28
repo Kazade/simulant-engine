@@ -122,15 +122,17 @@ void PlayingSound::update(float dt) {
     // listener.
     if(parent_ && model_ != DISTANCE_MODEL_AMBIENT) {
         auto pos = parent_->transform->position();
-        driver->set_source_properties(
-            source_,
-            pos,
-            // Use the last position to calculate the velocity, this is a bit of
-            // a hack... FIXME maybe..
-            // FIXME: This is value is "scaled" to assume the velocity over a second
-            // this isn't accurate as update isn't called with a fixed timestep
-            (first_update_) ? smlt::Vec3() : (pos - previous_position_) * (1.0f / dt)
-        );
+
+        /* dt can legitimately be zero: the audio thread scales its step by the
+         * time scale, which games set to zero when paused. Dividing by it
+         * would turn the velocity into NaN/Inf and OpenAL rejects that with
+         * AL_INVALID_VALUE, so report a stationary source for that frame. */
+        const smlt::Vec3 velocity =
+            (first_update_ || dt <= 0.0f)
+                ? smlt::Vec3()
+                : (pos - previous_position_) * (1.0f / dt);
+
+        driver->set_source_properties(source_, pos, velocity);
 
         previous_position_ = pos;
 
