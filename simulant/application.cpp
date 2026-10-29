@@ -559,13 +559,11 @@ bool Application::run_frame() {
 
     _S_PROFILE_SUBSECTION("frame");
 
-    static bool first_frame = true;
-
     await_frame_time(); /* Frame limiter */
 
     float dt = 0.0f;
 
-    if(first_frame) {
+    if(first_frame_) {
         _S_PROFILE_SECTION("init");
         if(!_call_init()) {
             S_ERROR("Error while initializing, terminating application");
@@ -655,8 +653,8 @@ bool Application::run_frame() {
     /* We totally ignore the first frame as it can take a while and messes up
      * delta time for both updates (like particle systems) and FPS
      */
-    if(first_frame) {
-        first_frame = false;
+    if(first_frame_) {
+        first_frame_ = false;
         time_keeper_->restart();
     } else {
         stats->increment_frames();

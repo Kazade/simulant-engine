@@ -389,6 +389,11 @@ private:
     bool initialized_ = false;
     bool is_running_ = true;
 
+    /* Per application rather than static: on Android the process can outlive
+     * the activity, and when it's recreated a new Application is run, which
+     * has to be initialized again */
+    bool first_frame_ = true;
+
     float frame_counter_time_ = 0.0f;
     int32_t frame_counter_frames_ = 0;
     float frame_time_in_milliseconds_ = 0.0f;

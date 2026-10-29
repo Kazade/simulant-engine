@@ -223,9 +223,17 @@ void AndroidWindow::on_application_set(Application* app) {
 }
 
 void AndroidWindow::do_swap_buffers() {
-    /* Focus comes back (on resume) before the window does */
-    if(dpy_ != EGL_NO_DISPLAY && surface_ != EGL_NO_SURFACE && has_focus()) {
-        eglSwapBuffers(dpy_, surface_);
+    /* Whether there's a surface is what matters, not focus: the window can
+     * be on screen without it, e.g. under something translucent (like
+     * Google Play's purchase sheet) or in split screen, and focus doesn't
+     * always come back cleanly afterwards, which would leave the game
+     * running behind a frozen picture */
+    if(dpy_ != EGL_NO_DISPLAY && surface_ != EGL_NO_SURFACE) {
+        static bool warned = false;
+        if(eglSwapBuffers(dpy_, surface_) == EGL_FALSE && !warned) {
+            S_WARN("eglSwapBuffers failed: {0}", eglGetError());
+            warned = true;
+        }
     }
 }
 
@@ -1017,6 +1025,7 @@ void AndroidWindow::check_events() {
                 break;
             case APP_CMD_PAUSE:
                 S_WARN("CMD: PAUSE");
+                paused_ = true;
                 set_has_focus(false);
                 release_all_fingers();
                 // Nothing stops the sound playing while we're in the
@@ -1027,6 +1036,7 @@ void AndroidWindow::check_events() {
                 break;
             case APP_CMD_RESUME:
                 S_WARN("CMD: RESUME");
+                paused_ = false;
                 set_has_focus(true);
                 if(ALCcontext* context = alcGetCurrentContext()) {
                     alcDeviceResumeSOFT(alcGetContextsDevice(context));

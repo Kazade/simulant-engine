@@ -28,7 +28,10 @@ public:
 
     std::shared_ptr<SoundDriver> create_sound_driver(const std::string& from_config) override;
 
-    bool can_render() const override { return surface_ != EGL_NO_SURFACE; }
+    /* Not while paused: the window can stay on screen underneath something
+     * else (e.g. a full screen ad), and rendering frames nobody can see just
+     * competes with it for the GPU */
+    bool can_render() const override { return surface_ != EGL_NO_SURFACE && !paused_; }
 
     /* Vibrates the phone (or whatever device), with the system's vibrator */
     bool has_haptics() const override;
@@ -51,6 +54,9 @@ private:
     /* Whether the context can be current without a surface, so GL calls made
      * while there's no window (e.g. texture uploads) still work */
     bool surfaceless_ = false;
+
+    /* Between APP_CMD_PAUSE and APP_CMD_RESUME */
+    bool paused_ = false;
 
     bool _init_window() override;
     bool _init_renderer(Renderer *renderer) override;
