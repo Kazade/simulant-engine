@@ -149,8 +149,16 @@ Application::Application(const AppConfig& config, void* platform_state) :
     pool_(std::make_shared<MaterialValuePool>()),
     config_(config) {
 
-    /* Start off with debug logging, this might change when the window is constructed */
-    smlt::get_logger("/")->add_handler(smlt::Handler::ptr(new smlt::StdIOHandler));
+    /* Start off with debug logging, this might change when the window is constructed.
+     * The logger's shared by the whole process, which can run more than one
+     * application (e.g. on Android, where the process can outlive the
+     * activity), so it's only given the handler once, or each message would
+     * be written again for every application there's been */
+    static bool added_stdio_handler = false;
+    if(!added_stdio_handler) {
+        smlt::get_logger("/")->add_handler(smlt::Handler::ptr(new smlt::StdIOHandler));
+        added_stdio_handler = true;
+    }
     smlt::get_logger("/")->set_level(smlt::LOG_LEVEL_DEBUG);
 
     /* Initialize the VFS after we've got some logging available */

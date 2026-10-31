@@ -163,6 +163,13 @@ AndroidWindow::AndroidWindow() {
 void AndroidWindow::on_application_set(Application* app) {
     android_app* aapp = (android_app*) app->platform_state();
     aapp->userData = this;
+
+    /* The process can outlive the activity, and run the game again for a new
+     * one. Anything left over from the last run (e.g. its APP_CMD_DESTROY,
+     * which is never processed as it stops on destroyRequested) mustn't be
+     * acted on now, or the new activity would be finished straight away */
+    COMMANDS = std::queue<int32_t>();
+    EVENTS = std::queue<AndroidEvent>();
     aapp->onAppCmd = android_handle_command;
     aapp->onInputEvent = android_handle_input;
 
@@ -718,6 +725,20 @@ void AndroidWindow::destroy_window() {
 
     android_app* aapp = (android_app*) smlt::get_app()->platform_state();
     ANativeActivity_finish(aapp->activity);
+
+    /* android_main mustn't return until the activity's been destroyed.
+     * Finishing it pauses and stops it first, and native_app_glue blocks
+     * Android's main thread on each of those until this thread has seen the
+     * command, so if nobody's left to see them, the app stops responding
+     * (and Android kills it) */
+    while(!aapp->destroyRequested) {
+        struct android_poll_source* source = nullptr;
+        int events = 0;
+        int ident = ALooper_pollOnce(100, nullptr, &events, (void**) &source);
+        if(ident >= 0 && source) {
+            source->process(aapp, source);
+        }
+    }
 }
 
 static const KeyboardCode KEYCODE_MAPPING[256] = {
