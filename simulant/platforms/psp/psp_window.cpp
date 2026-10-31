@@ -25,6 +25,8 @@ bool PSPWindow::_init_window() {
     sceCtrlSetSamplingCycle(0);
     sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 
+    scePowerSetClockFrequency(333, 333, 166);
+
     return true;
 }
 
