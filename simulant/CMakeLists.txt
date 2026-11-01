@@ -49,6 +49,7 @@ IF(PLATFORM_PSP)
         pspctrl
         pspaudio
         pspgum
+        psppower
     )
 ENDIF()
 

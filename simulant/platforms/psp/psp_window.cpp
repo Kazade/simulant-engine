@@ -4,6 +4,7 @@
 #include <pspdisplay.h>
 #include <pspgu.h>
 #include <pspkernel.h>
+#include <psppower.h>
 
 
 #include "../../sound/drivers/openal_sound_driver.h"

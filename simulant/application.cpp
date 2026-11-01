@@ -21,6 +21,7 @@
 #include <chrono>
 #include <future>
 #include <cstdlib>
+#include <exception>
 
 #include "core/memory_log.h"
 #include "scripting/lua/interpreter.h"
@@ -479,6 +480,18 @@ bool Application::_call_init() {
 }
 
 static void on_terminate() {
+    /* Say why, if it was an exception nobody caught (e.g. std::bad_alloc when
+     * memory runs out), as otherwise the game just stops */
+    if(std::exception_ptr exception = std::current_exception()) {
+        try {
+            std::rethrow_exception(exception);
+        } catch(const std::exception& e) {
+            S_ERROR("Uncaught exception: {0}", e.what());
+        } catch(...) {
+            S_ERROR("Uncaught exception");
+        }
+    }
+
 #ifdef __DREAMCAST__
     if(PROFILING) {
         profiler_stop();

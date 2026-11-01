@@ -3,6 +3,10 @@
 #include <pspgum.h>
 #include <pspkernel.h>
 
+#include <algorithm>
+#include <cstring>
+#include <vector>
+
 #include "../../application.h"
 #include "../../meshes/submesh.h"
 #include "../../nodes/camera.h"
@@ -288,14 +292,22 @@ void PSPRenderQueueVisitor::apply_lights(const LightPtr* lights, const uint8_t c
     }
 }
 
+/* The GE's vertex format. Normals aren't included: lighting is worked out in
+ * software (see VertexConverter), so the GE never reads them. The color's
+ * padded so the position is 4 byte aligned, as the GE expects. */
 struct PSPVertex {
     float u, v;
     uint16_t color;
-    int16_t nx, ny, nz;
+    uint16_t pad;
     float x, y, z;
 };
 
-void convert_position(float* vout, const uint8_t* vin, VertexAttribute type) {
+static_assert(sizeof(PSPVertex) == 24, "PSPVertex must match PSP_VERTEX_FORMAT");
+
+#define PSP_VERTEX_FORMAT \
+    (GU_TEXTURE_32BITF | GU_COLOR_4444 | GU_VERTEX_32BITF | GU_TRANSFORM_3D)
+
+static void convert_position(float* vout, const uint8_t* vin, VertexAttribute type) {
     switch(type) {
         case VERTEX_ATTRIBUTE_2F:
             vout[0] = ((float*)vin)[0];
@@ -309,54 +321,32 @@ void convert_position(float* vout, const uint8_t* vin, VertexAttribute type) {
             vout[2] = ((float*)vin)[2];
             break;
         default:
+            vout[0] = vout[1] = vout[2] = 0.0f;
             break;
     }
 }
 
-void convert_uv(float* vout, const uint8_t* vin, VertexAttribute type) {
-    switch(type) {
-        case VERTEX_ATTRIBUTE_2F:
-        case VERTEX_ATTRIBUTE_3F:
-        case VERTEX_ATTRIBUTE_4F:
-            vout[0] = ((float*)vin)[0];
-            vout[1] = ((float*)vin)[1];
-            break;
-        default:
-            break;
-    }
-}
-
-void convert_color(uint16_t* vout, const uint8_t* vin, VertexAttribute type) {
-    const float* v = (const float*)vin;
-    switch(type) {
-        case VERTEX_ATTRIBUTE_4F:
-            *vout = smlt::Color(v[0], v[1], v[2], v[3]).to_abgr_4444();
-            break;
-        case VERTEX_ATTRIBUTE_3F:
-            *vout = smlt::Color(v[0], v[1], v[2], 1.0f).to_abgr_4444();
-            break;
-        case VERTEX_ATTRIBUTE_4UB_RGBA:
-            *vout = smlt::Color::from_bytes(vin[0], vin[1], vin[2], vin[3]).to_abgr_4444();
-            break;
+static bool read_color(float* out, const uint8_t* c, VertexAttribute attr) {
+    switch(attr) {
+        case VERTEX_ATTRIBUTE_4F: {
+            const float* fc = (const float*)c;
+            out[0] = fc[0]; out[1] = fc[1]; out[2] = fc[2]; out[3] = fc[3];
+        } return true;
+        case VERTEX_ATTRIBUTE_3F: {
+            const float* fc = (const float*)c;
+            out[0] = fc[0]; out[1] = fc[1]; out[2] = fc[2]; out[3] = 1.0f;
+        } return true;
+        case VERTEX_ATTRIBUTE_4UB_RGBA:  // Also VERTEX_ATTRIBUTE_4UB
+            out[0] = c[0] / 255.0f; out[1] = c[1] / 255.0f;
+            out[2] = c[2] / 255.0f; out[3] = c[3] / 255.0f;
+            return true;
         case VERTEX_ATTRIBUTE_4UB_BGRA:
-            *vout = smlt::Color::from_bytes(vin[2], vin[1], vin[0], vin[3]).to_abgr_4444();
-            break;
+            out[0] = c[2] / 255.0f; out[1] = c[1] / 255.0f;
+            out[2] = c[0] / 255.0f; out[3] = c[3] / 255.0f;
+            return true;
         default:
-            *vout = 0xFFFF;
-            break;
-    }
-}
-
-void convert_normal(int16_t* vout, const uint8_t* vin, VertexAttribute type) {
-    float* v = (float*)vin;
-    switch(type) {
-        case VERTEX_ATTRIBUTE_3F:
-            vout[0] = ((float*)v)[0] * 32767.0f;
-            vout[1] = ((float*)v)[1] * 32767.0f;
-            vout[2] = ((float*)v)[2] * 32767.0f;
-            break;
-        default:
-            S_ERROR("{0}", type);
+            out[0] = out[1] = out[2] = out[3] = 1.0f;
+            return false;
     }
 }
 
@@ -371,141 +361,208 @@ struct PSPLightingContext {
     bool  lighting_enabled;
 };
 
-static void convert_and_push(std::vector<PSPVertex>& buffer, const uint8_t* it,
-                             const VertexSpecification& spec,
-                             const PSPLightingContext& lctx) {
-    auto pos_off    = spec.position_offset(false);
-    auto uv_off     = spec.has_texcoord0() ? spec.texcoord0_offset(false) : 0;
-    auto color_off  = spec.has_color()     ? spec.color_offset(false)     : 0;
-    auto normal_off = spec.has_normals()   ? spec.normal_offset(false)    : 0;
+/* Converts Simulant's vertices to the GE's. Everything that's the same for
+ * every vertex of a draw (where the attributes are, their formats, whether
+ * it's lit) is worked out once, up front. */
+class VertexConverter {
+public:
+    VertexConverter(const VertexSpecification& spec, const PSPLightingContext& lctx):
+        lctx_(lctx),
+        position_offset_(spec.position_offset(false)),
+        position_attribute_(spec.position_attribute),
+        has_uv_(spec.has_texcoord0() && (
+            spec.texcoord0_attribute == VERTEX_ATTRIBUTE_2F ||
+            spec.texcoord0_attribute == VERTEX_ATTRIBUTE_3F ||
+            spec.texcoord0_attribute == VERTEX_ATTRIBUTE_4F)),
+        uv_offset_(has_uv_ ? spec.texcoord0_offset(false) : 0),
+        has_color_(spec.has_color()),
+        color_offset_(has_color_ ? spec.color_offset(false) : 0),
+        color_attribute_(spec.color_attribute) {
 
-    int idx = buffer.size();
-    buffer.push_back(PSPVertex());
+        /* Lighting needs float normals */
+        bool has_normals = spec.has_normals() &&
+            spec.normal_attribute == VERTEX_ATTRIBUTE_3F;
+        normal_offset_ = has_normals ? spec.normal_offset(false) : 0;
+        lit_ = lctx.lighting_enabled && has_normals && lctx.light_count > 0;
 
-    PSPVertex* v = &buffer[idx];
-    memset(v, 0, sizeof(PSPVertex));
-    v->color = 0xFFFF;
-
-    if(uv_off) {
-        convert_uv(&v->u, it + uv_off, spec.texcoord0_attribute);
+        /* Without lighting or vertex colors, every vertex is the
+         * material's color */
+        flat_color_ = smlt::Color(
+            lctx.base_color[0], lctx.base_color[1],
+            lctx.base_color[2], lctx.base_color[3]
+        ).to_abgr_4444();
     }
 
-    /* Base colour from material (or vertex colour if present) */
-    float base_r = lctx.base_color[0];
-    float base_g = lctx.base_color[1];
-    float base_b = lctx.base_color[2];
-    float base_a = lctx.base_color[3];
-
-    if(color_off) {
-        float vc_r, vc_g, vc_b, vc_a;
-        const uint8_t* c = it + color_off;
-        VertexAttribute attr = spec.color_attribute;
-        if(attr == smlt::VERTEX_ATTRIBUTE_4F) {
-            const float* fc = (const float*)c;
-            vc_r = fc[0]; vc_g = fc[1]; vc_b = fc[2]; vc_a = fc[3];
-        } else if(attr == smlt::VERTEX_ATTRIBUTE_3F) {
-            const float* fc = (const float*)c;
-            vc_r = fc[0]; vc_g = fc[1]; vc_b = fc[2]; vc_a = 1.0f;
-        } else if(attr == smlt::VERTEX_ATTRIBUTE_4UB_RGBA || attr == smlt::VERTEX_ATTRIBUTE_4UB) {
-            vc_r = c[0]/255.0f; vc_g = c[1]/255.0f; vc_b = c[2]/255.0f; vc_a = c[3]/255.0f;
-        } else if(attr == smlt::VERTEX_ATTRIBUTE_4UB_BGRA) {
-            vc_b = c[0]/255.0f; vc_g = c[1]/255.0f; vc_r = c[2]/255.0f; vc_a = c[3]/255.0f;
+    void convert(const uint8_t* in, PSPVertex* out) const {
+        if(has_uv_) {
+            const float* uv = (const float*)(in + uv_offset_);
+            out->u = uv[0];
+            out->v = uv[1];
         } else {
-            vc_r = vc_g = vc_b = vc_a = 1.0f;
+            out->u = out->v = 0.0f;
         }
-        base_r *= vc_r; base_g *= vc_g; base_b *= vc_b; base_a *= vc_a;
-    }
 
-    float pos[3] = {0, 0, 0};
-    convert_position(pos, it + pos_off, spec.position_attribute);
-    v->x = pos[0]; v->y = pos[1]; v->z = pos[2];
+        out->pad = 0;
 
-    if(lctx.lighting_enabled && normal_off && lctx.light_count > 0) {
-        /* Transform position to eye space */
-        Vec4 ep = *lctx.modelview * Vec4(pos[0], pos[1], pos[2], 1.0f);
+        float pos[3];
+        convert_position(pos, in + position_offset_, position_attribute_);
+        out->x = pos[0];
+        out->y = pos[1];
+        out->z = pos[2];
+
+        if(!lit_ && !has_color_) {
+            out->color = flat_color_;
+            return;
+        }
+
+        /* Vertex color modulates the base color (before lighting, as in
+         * the GL2X shader) */
+        float color[4] = {
+            lctx_.base_color[0], lctx_.base_color[1],
+            lctx_.base_color[2], lctx_.base_color[3]
+        };
+
+        if(has_color_) {
+            float vc[4];
+            read_color(vc, in + color_offset_, color_attribute_);
+            color[0] *= vc[0]; color[1] *= vc[1];
+            color[2] *= vc[2]; color[3] *= vc[3];
+        }
+
+        if(!lit_) {
+            out->color = smlt::Color(color[0], color[1], color[2], color[3]).to_abgr_4444();
+            return;
+        }
+
+        /* Lighting's done in eye space */
+        const Mat4& modelview = *lctx_.modelview;
+        Vec4 ep = modelview * Vec4(pos[0], pos[1], pos[2], 1.0f);
         float eye_pos[3] = {ep.x, ep.y, ep.z};
 
-        /* Transform normal to eye space (direction — Mat4*Vec3 uses upper-3x3) */
-        const uint8_t* n_raw = it + normal_off;
-        float nx_model = ((float*)n_raw)[0];
-        float ny_model = ((float*)n_raw)[1];
-        float nz_model = ((float*)n_raw)[2];
-        Vec3 nv = (*lctx.modelview * Vec3(nx_model, ny_model, nz_model)).normalized();
-        float N[3] = {nv.x, nv.y, nv.z};
+        const float* n = (const float*)(in + normal_offset_);
+        Vec3 nv = (modelview * Vec3(n[0], n[1], n[2])).normalized();
+        float normal[3] = {nv.x, nv.y, nv.z};
 
-        /* Vertex colour modulates base_color BEFORE PBR (same as GL2X shader) */
-        float combined[4] = {base_r, base_g, base_b, base_a};
         float lit_color[4];
-        smlt::compute_pbr_vertex_color(N, eye_pos, combined, lctx.metallic,
-                                       lctx.roughness, lctx.ambient,
-                                       lctx.lights, lctx.light_count, lit_color);
+        smlt::compute_pbr_vertex_color(normal, eye_pos, color, lctx_.metallic,
+                                       lctx_.roughness, lctx_.ambient,
+                                       lctx_.lights, lctx_.light_count, lit_color);
 
-        v->color = smlt::Color(lit_color[0], lit_color[1], lit_color[2], base_a).to_abgr_4444();
+        out->color = smlt::Color(lit_color[0], lit_color[1], lit_color[2], color[3]).to_abgr_4444();
+    }
 
-        /* Store normals for format compatibility (hardware lighting is disabled) */
-        if(spec.normal_attribute == smlt::VERTEX_ATTRIBUTE_3F) {
-            v->nx = (int16_t)(nx_model * 32767.0f);
-            v->ny = (int16_t)(ny_model * 32767.0f);
-            v->nz = (int16_t)(nz_model * 32767.0f);
-        }
-    } else {
-        /* No lighting: use base colour directly */
-        v->color = smlt::Color(base_r, base_g, base_b, base_a).to_abgr_4444();
+private:
+    const PSPLightingContext& lctx_;
 
-        if(normal_off) {
-            convert_normal(&v->nx, it + normal_off, spec.normal_attribute);
-        }
+    std::size_t position_offset_;
+    VertexAttribute position_attribute_;
+    bool has_uv_;
+    std::size_t uv_offset_;
+    bool has_color_;
+    std::size_t color_offset_;
+    VertexAttribute color_attribute_;
+    std::size_t normal_offset_ = 0;
+    bool lit_ = false;
+    uint16_t flat_color_ = 0xFFFF;
+};
+
+static int gu_primitive(MeshArrangement arrangement) {
+    switch(arrangement) {
+        case MESH_ARRANGEMENT_TRIANGLE_STRIP: return GU_TRIANGLE_STRIP;
+        case MESH_ARRANGEMENT_TRIANGLES: return GU_TRIANGLES;
+        default: return -1;
     }
 }
 
-static std::vector<PSPVertex> buffer;
-
-static void zclip_tristrips_and_submit_range(const VertexRange* range,
-                                             const VertexSpecification& spec,
-                                             const uint8_t* data,
-                                             std::size_t stride,
-                                             const PSPLightingContext& lctx) {
-    buffer.clear();
-
-    const uint8_t* it = data + (stride * range->start);
-
-    for(std::size_t i = 0; i < range->count; ++i) {
-        convert_and_push(buffer, it, spec, lctx);
-        it += stride;
+/* Vertices and indices go straight into the display list, where the GE reads
+ * them from, rather than being built up somewhere else and copied in */
+static void submit_range(int prim, const VertexRange& range,
+                         const uint8_t* data, std::size_t stride,
+                         const VertexConverter& converter) {
+    if(!range.count) {
+        return;
     }
 
-    PSPVertex* output =
-        (PSPVertex*)sceGuGetMemory(buffer.size() * sizeof(PSPVertex));
-    memcpy(output, buffer.data(), buffer.size() * sizeof(PSPVertex));
+    auto out = (PSPVertex*) sceGuGetMemory(range.count * sizeof(PSPVertex));
+    const uint8_t* it = data + (stride * range.start);
+    for(std::size_t i = 0; i < range.count; ++i, it += stride) {
+        converter.convert(it, out + i);
+    }
 
-    sceGumDrawArray(GU_TRIANGLE_STRIP,
-                    GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_NORMAL_16BIT |
-                        GU_TRANSFORM_3D | GU_COLOR_4444,
-                    buffer.size(), 0, output);
+    sceGumDrawArray(prim, PSP_VERTEX_FORMAT, range.count, 0, out);
 }
 
-static void zclip_triangles_and_submit_range(const VertexRange* range,
-                                             const VertexSpecification& spec,
-                                             const uint8_t* data,
-                                             std::size_t stride,
-                                             const PSPLightingContext& lctx) {
-    buffer.clear();
-
-    const uint8_t* it = data + (stride * range->start);
-
-    for(std::size_t i = 0; i < range->count; ++i) {
-        convert_and_push(buffer, it, spec, lctx);
-        it += stride;
+/* Indexed meshes share vertices between triangles (typically each is used by
+ * several), so each vertex the draw uses is converted - and lit, the costly
+ * part - just once, and the GE is given indices into them. They're
+ * renumbered from 0, in the order they're first used, so a draw that only
+ * uses a few of a big mesh's vertices only converts those. */
+static void submit_indexed(int prim, const IndexData& indices,
+                           std::size_t first, std::size_t count,
+                           const VertexData& vertices,
+                           const VertexConverter& converter) {
+    if(!count) {
+        return;
     }
 
-    PSPVertex* output =
-        (PSPVertex*)sceGuGetMemory(buffer.size() * sizeof(PSPVertex));
-    memcpy(output, buffer.data(), buffer.size() * sizeof(PSPVertex));
+    const uint8_t* data = vertices.data();
+    std::size_t stride = vertices.stride();
 
-    sceGumDrawArray(GU_TRIANGLES,
-                    GU_TEXTURE_32BITF | GU_VERTEX_32BITF | GU_NORMAL_16BIT |
-                        GU_TRANSFORM_3D | GU_COLOR_4444,
-                    buffer.size(), 0, output);
+    /* The GE's indices are 16 bit at most. Each vertex gets one at most,
+     * so up to this many indices there can't be more vertices than that. */
+    if(count > 0xFFFF) {
+        auto out = (PSPVertex*) sceGuGetMemory(count * sizeof(PSPVertex));
+        for(std::size_t i = 0; i < count; ++i) {
+            converter.convert(data + indices.at(first + i) * stride, out + i);
+        }
+        sceGumDrawArray(prim, PSP_VERTEX_FORMAT, count, 0, out);
+        return;
+    }
+
+    /* The new number of each vertex in this draw, if it has one: it has if
+     * its stamp is this draw's. Stamping saves clearing the whole table
+     * (sized for the biggest mesh) for each draw. */
+    static std::vector<uint32_t> stamps;
+    static std::vector<uint16_t> numbers;
+    static std::vector<uint32_t> used;  // The vertices used, by new number
+    static uint32_t stamp = 0;
+
+    std::size_t vertex_count = vertices.count();
+    if(stamps.size() < vertex_count) {
+        stamps.resize(vertex_count, 0);
+        numbers.resize(vertex_count, 0);
+    }
+
+    if(++stamp == 0) {
+        std::fill(stamps.begin(), stamps.end(), 0);
+        stamp = 1;
+    }
+
+    used.clear();
+
+    auto out_indices = (uint16_t*) sceGuGetMemory(count * sizeof(uint16_t));
+    for(std::size_t i = 0; i < count; ++i) {
+        uint32_t index = indices.at(first + i);
+        if(index >= vertex_count) {
+            index = 0;
+        }
+
+        if(stamps[index] != stamp) {
+            stamps[index] = stamp;
+            numbers[index] = (uint16_t) used.size();
+            used.push_back(index);
+        }
+
+        out_indices[i] = numbers[index];
+    }
+
+    auto out = (PSPVertex*) sceGuGetMemory(used.size() * sizeof(PSPVertex));
+    for(std::size_t i = 0; i < used.size(); ++i) {
+        converter.convert(data + used[i] * stride, out + i);
+    }
+
+    sceGumDrawArray(prim, PSP_VERTEX_FORMAT | GU_INDEX_16BIT, count,
+                    out_indices, out);
 }
 
 void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const MaterialPass* material_pass, batcher::Iteration iteration) {
@@ -516,6 +573,11 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     auto vertex_range_count = renderable->vertex_range_count;
 
     if(!element_count && !vertex_range_count) {
+        return;
+    }
+
+    int prim = gu_primitive(renderable->arrangement);
+    if(prim < 0) {
         return;
     }
 
@@ -562,62 +624,20 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     lctx.modelview       = &modelview;
     lctx.lighting_enabled = mat_lighting_enabled_;
 
-    auto total = 0;
+    const auto& spec = renderable->vertex_data->vertex_specification();
+    VertexConverter converter(spec, lctx);
 
+    std::size_t total = 0;
     if(element_count) {
-        std::vector<uint8_t> buffer;
-        auto stride = renderable->vertex_data->stride();
-        buffer.resize(renderable->index_element_count * stride);
-
-        uint8_t* dst = &buffer[0];
-
-        for(std::size_t i = 0; i < renderable->index_element_count; ++i) {
-            auto idx = renderable->index_data->at(i);
-            auto offset = idx * stride;
-            std::memcpy(dst, renderable->vertex_data->data() + offset, stride);
-            dst += stride;
-        }
-
-        VertexRange range;
-        range.start = 0;
-        range.count = renderable->index_element_count;
-
-        switch(renderable->arrangement) {
-            case MESH_ARRANGEMENT_TRIANGLE_STRIP:
-                zclip_tristrips_and_submit_range(
-                    &range, renderable->vertex_data->vertex_specification(),
-                    &buffer[0], stride, lctx);
-                break;
-            case MESH_ARRANGEMENT_TRIANGLES:
-                zclip_triangles_and_submit_range(
-                    &range, renderable->vertex_data->vertex_specification(),
-                    &buffer[0], stride, lctx);
-                break;
-            default:
-                break;
-        }
-
-        total += range.count;
+        submit_indexed(prim, *renderable->index_data, renderable->first_index,
+                       element_count, *renderable->vertex_data, converter);
+        total = element_count;
     } else {
+        auto stride = spec.stride();
+        auto data = renderable->vertex_data->data();
         auto range = renderable->vertex_ranges;
-        auto spec_stride = renderable->vertex_data->vertex_specification().stride();
-
-        for(std::size_t i = 0; i < renderable->vertex_range_count; ++i, ++range) {
-            switch(renderable->arrangement) {
-                case MESH_ARRANGEMENT_TRIANGLE_STRIP:
-                    zclip_tristrips_and_submit_range(
-                        range, renderable->vertex_data->vertex_specification(),
-                        renderable->vertex_data->data(), spec_stride, lctx);
-                    break;
-                case MESH_ARRANGEMENT_TRIANGLES:
-                    zclip_triangles_and_submit_range(
-                        range, renderable->vertex_data->vertex_specification(),
-                        renderable->vertex_data->data(), spec_stride, lctx);
-                    break;
-                default:
-                    break;
-            }
-
+        for(std::size_t i = 0; i < vertex_range_count; ++i, ++range) {
+            submit_range(prim, *range, data, stride, converter);
             total += range->count;
         }
     }
@@ -625,4 +645,5 @@ void PSPRenderQueueVisitor::do_visit(const Renderable* renderable, const Materia
     get_app()->stats->increment_polygons_rendered(renderable->arrangement,
                                                   total);
 }
+
 }
