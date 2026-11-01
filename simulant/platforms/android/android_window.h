@@ -72,6 +72,12 @@ private:
     /* Reads the safe area from the window's insets */
     void update_safe_area();
 
+    /* Keeps the window's size up to date with Android's window, which can
+     * change after its surface is created, e.g. when it's created while
+     * something portrait-only (like a sign-in screen) is in front, and is
+     * then turned to the game's landscape */
+    void update_window_size();
+
     /* The system's vibrator, looked up the first time it's needed (and kept
      * as a global reference) */
     void find_vibrator() const;

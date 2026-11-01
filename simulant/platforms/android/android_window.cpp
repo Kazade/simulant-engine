@@ -282,7 +282,27 @@ void AndroidWindow::on_native_window_created(android_app* aapp) {
         S_ERROR("Couldn't make the context current: {0}", eglGetError());
     }
 
+    update_window_size();
     update_safe_area();
+}
+
+void AndroidWindow::update_window_size() {
+    android_app* aapp = (android_app*) smlt::get_app()->platform_state();
+    if(!aapp || !aapp->window) {
+        return;
+    }
+
+    int32_t width = ANativeWindow_getWidth(aapp->window);
+    int32_t height = ANativeWindow_getHeight(aapp->window);
+    if(width <= 0 || height <= 0) {
+        return;
+    }
+
+    if(width != this->width() || height != this->height()) {
+        S_INFO("Window resized: {0}x{1}", width, height);
+        set_width(width);
+        set_height(height);
+    }
 }
 
 void AndroidWindow::on_native_window_destroyed() {
@@ -1015,15 +1035,18 @@ void AndroidWindow::check_events() {
                 set_has_context(false);
                 destroy_window();
                 break;
-            /* The insets change with the layout, e.g. when the device is
-             * turned around */
+            /* The size and insets change with the layout, e.g. when the
+             * device is turned around */
             case APP_CMD_CONFIG_CHANGED:
             case APP_CMD_CONTENT_RECT_CHANGED:
             case APP_CMD_WINDOW_RESIZED:
+            case APP_CMD_WINDOW_REDRAW_NEEDED:
+                update_window_size();
                 update_safe_area();
                 break;
             case APP_CMD_GAINED_FOCUS:
                 S_INFO("CMD: Focus gained");
+                update_window_size();
                 update_safe_area();
                // {
                //     //See Window::context_lock_ for details
