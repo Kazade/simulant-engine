@@ -226,19 +226,14 @@ build:windows-x64-vcxx:release:
     - saas-windows-medium-amd64
   variables:
     TARGET: windows-x64-vcxx
-    MSBUILD: 'C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild.exe'
-  before_script:
-    - choco install -y cmake
-    - $env:Path += ';C:\Program Files\CMake\bin'
   script:
-    - mkdir -p ${TARGET}/release
-    - cd ${TARGET}/release
-    - cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_BUILD_TYPE=Release -DSIMULANT_BUILD_SAMPLES=OFF ../..
-    - dir
-    - '& "$MSBUILD" my.vcxproj'
+    - New-Item -ItemType Directory -Force -Path "${TARGET}/release" | Out-Null
+    - cd "${TARGET}/release"
+    - cmake -G "Visual Studio 17 2022" -A x64 -DSIMULANT_BUILD_SAMPLES=OFF ../..
+    - cmake --build . --config Release --target simulant
   artifacts:
     paths:
-      - ${TARGET}/release/simulant/*.dll
+      - ${TARGET}/release/simulant/Release/*.dll
 
 build:windows-x64-mingw:release:
   stage: build
