@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/sysinfo.h>
 
+#include "../posix.h"
 #include "platform.h"
 #include "../../application.h"
 #include "../../window.h"
@@ -60,6 +61,10 @@ uint64_t LinuxPlatform::process_ram_usage_in_bytes(ProcessID process_id) const {
 
     long page_size = sysconf(_SC_PAGESIZE); // in case x86-64 is configured to use 2MB pages
     return resident * page_size;
+}
+
+User LinuxPlatform::current_user() const {
+    return posix::current_user();
 }
 
 }

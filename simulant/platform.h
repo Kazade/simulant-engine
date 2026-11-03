@@ -15,6 +15,11 @@ struct Resolution {
 
 const uint64_t MEMORY_VALUE_UNAVAILABLE = (uint64_t) -1;
 
+struct User {
+    unicode username;
+    unicode display_name;
+};
+
 class Platform {
 public:
     virtual ~Platform() {}
@@ -55,6 +60,10 @@ public:
      * to retrieve the info this function returns MEMORY_VALUE_UNAVAILABLE
      */
     virtual uint64_t available_vram_in_bytes() const = 0;
+
+    /* Returns the currently logged in user, all members are optional
+     * so check before using */
+    virtual User current_user() const = 0;
 };
 
 /* Returns the current platform */

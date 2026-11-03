@@ -55,4 +55,18 @@ uint64_t WindowsPlatform::available_ram_in_bytes() const {
     return memInfo.ullAvailPhys;
 }
 
+User WindowsPlatform::current_user() const {
+    wchar_t name[256];
+    DWORD size = 256;
+
+    if (!GetUserNameW(name, &size) || size < 2) {
+        return User();
+    }
+
+    static_assert(sizeof(wchar_t) == 2);
+
+    // FIXME: get display name
+    return User{unicode(name, name + (size - 1)), ""};
+}
+
 }

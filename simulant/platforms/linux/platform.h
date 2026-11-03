@@ -19,6 +19,8 @@ public:
     }
 
     uint64_t process_ram_usage_in_bytes(ProcessID process_id) const override;
+
+    User current_user() const override;
 };
 
 }
