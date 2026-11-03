@@ -84,107 +84,6 @@ bool UIManager::on_create(Params params) {
     return StageNode::on_create(params);
 }
 
-// Keyboard* UIManager::new_widget_as_keyboard(const KeyboardMode& mode, const
-// unicode &initial_text) {
-//     auto keyboard = manager_->make_as<Keyboard>(this, &config_, stage_, mode,
-//     initial_text); stage_->append_child(keyboard); return keyboard;
-// }
-
-// Frame* UIManager::new_widget_as_frame(const unicode& title, const Px& width,
-// const Px& height) {
-//     auto frame = manager_->make_as<Frame>(this, &config_, stage_);
-//     frame->set_text(title);
-//     frame->resize(width, height);
-//     stage_->append_child(frame);
-
-//    return frame;
-//}
-
-// Button* UIManager::new_widget_as_button(const unicode &text, Px width, Px
-// height, std::shared_ptr<WidgetStyle> shared_style) {
-//     auto button = manager_->make_as<Button>(this, &config_, stage_,
-//     shared_style); button->set_text(text); button->resize(width, height);
-//     stage_->append_child(button);
-
-//    return button;
-//}
-
-// TextEntry* UIManager::new_widget_as_text_entry(const unicode &text, Px width,
-// Px height) {
-//     auto label = (TextEntry*) &(*manager_->make_as<TextEntry>(this, &config_,
-//     stage_)); label->set_text(text); label->resize(width, height);
-
-//    stage_->append_child(label);
-
-//    return label;
-//}
-
-// Label* UIManager::new_widget_as_label(const unicode &text, Px width, Px
-// height) {
-//     auto label = (Label*) &(*manager_->make_as<Label>(this, &config_,
-//     stage_)); label->set_text(text); label->resize(width, height);
-
-//    stage_->append_child(label);
-
-//    return label;
-//}
-
-// Image* UIManager::new_widget_as_image(const TexturePtr& texture) {
-//     auto image = (Image*) &(*manager_->make_as<Image>(this, &config_,
-//     stage_)); image->set_texture(texture);
-
-//    stage_->append_child(image);
-
-//    return image;
-//}
-
-// Widget* UIManager::widget(StageNodeID widget_id) {
-//     return manager_->get(widget_id);
-// }
-
-// ProgressBar* UIManager::new_widget_as_progress_bar(float min, float max,
-// float value) {
-//     auto pg = (ProgressBar*) &(*manager_->make_as<ProgressBar>(this,
-//     &config_, stage_));
-
-//    pg->set_range(min, max);
-//    pg->set_value(value);
-
-//    stage_->append_child(pg);
-
-//    return pg;
-//}
-
-// void UIManager::destroy_widget(StageNodeID widget_id) {
-//     if(!widget_id) {
-//         return;
-//     }
-
-//    auto w = widget(widget_id);
-//    if(!w) {
-//        return;
-//    }
-
-//    // Release any presses on the widget
-//    w->force_release();
-
-//    // Queue for destruction
-//    manager_->destroy(widget_id);
-//}
-
-// void UIManager::destroy_object(Widget* object) {
-//     // Release any presses on the widget
-//     object->force_release();
-
-//    // Queue for destruction
-//    manager_->destroy(object->id());
-//}
-
-// void UIManager::destroy_object_immediately(Widget* object) {
-//     object->force_release();
-//     manager_->destroy_immediately(object->id());
-// }
-
 void UIManager::on_mouse_down(const MouseEvent& evt) {
     if(!evt.is_touch_device) {
         queue_event(evt);
@@ -340,16 +239,6 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(
 
     auto window = get_app()->window.get();
 
-    std::list<Widget*> sorted_widgets;
-
-    for(auto widget: find_child_widgets()) {
-        if(!widget->is_visible()) {
-            continue;
-        }
-
-        sorted_widgets.push_back(widget);
-    }
-
     auto is_descendent = [](Widget* item, Widget* potential_parent) {
         StageNode* it = (StageNode*)item->parent();
         while(it && it != item->scene.get()) {
@@ -365,49 +254,71 @@ WidgetPtr UIManager::find_widget_at_window_coordinate(
     smlt::Plane cam_plane(camera->transform->forward(),
                           camera->transform->position());
 
-    // Order widgets by distance to camera desc. This is hacky, if the two
-    // widgets have approx the same distance, we check to see if one is a
-    // descendent of the other, if so we sort descendents after ancestors
-    sorted_widgets.sort(
-        [cam_plane, &is_descendent](Widget* lhs, Widget* rhs) -> bool {
-        float lhd = cam_plane.distance_to(lhs->transform->position());
-        float rhd = cam_plane.distance_to(rhs->transform->position());
+    /* Widgets are almost always coplanar (2D UI).
+     * Pick the best candidate explicitly, nearest to the camera wins,
+     * a descendent beats its ancestor, and otherwise the widget later in the
+     * traversal (which is deterministic, and effectively the most recently
+     * created one) wins. */
+    float best_distance = 0.0f;
+    bool have_best = false;
 
-        if(almost_equal(lhd, rhd)) {
-            if(is_descendent(lhs, rhs)) {
-                // If lhs is a descendent of rhs, make sure it comes first in
-                // the list
-                return true;
-            } else {
-                // Not related, return false
-                return false;
-            }
+    for(auto widget: find_child_widgets()) {
+        if(!widget->is_visible()) {
+            continue;
         }
 
-        return lhd < rhd;
-    });
-
-    for(auto widget: sorted_widgets) {
         auto aabb = widget->transformed_aabb();
 
         std::vector<Vec3> ss_points;
-
         for(auto& corner: aabb.corners()) {
-            ss_points.push_back(
-                camera->project_point(*window, *viewport, corner).value());
+            auto projected =
+                camera->project_point(*window, *viewport, corner);
+            if(!projected) {
+                continue;
+            }
+            ss_points.push_back(*projected);
+        }
+
+        if(ss_points.empty()) {
+            continue;
         }
 
         AABB ss_aabb(&ss_points[0], ss_points.size());
 
-        // FIXME: Return the nearest if overlapping!
-        if(ss_aabb.min().x <= window_coord.x &&
-           ss_aabb.max().x >= window_coord.x &&
-           ss_aabb.min().y <= window_coord.y &&
-           ss_aabb.max().y >= window_coord.y) {
-            result = widget;
-            break;
+        if(ss_aabb.min().x > window_coord.x ||
+           ss_aabb.max().x < window_coord.x ||
+           ss_aabb.min().y > window_coord.y ||
+           ss_aabb.max().y < window_coord.y) {
+            continue;
         }
-    };
+
+        const float distance =
+            cam_plane.distance_to(widget->transform->position());
+
+        if(!have_best) {
+            result = widget;
+            best_distance = distance;
+            have_best = true;
+            continue;
+        }
+
+        if(!almost_equal(distance, best_distance)) {
+            if(distance < best_distance) {
+                result = widget;
+                best_distance = distance;
+            }
+            continue;
+        }
+
+        /* Same depth: a child sits on top of the frame that contains it. */
+        if(is_descendent(widget, result)) {
+            result = widget;
+        } else if(is_descendent(result, widget)) {
+            /* Keep the child we already have. */
+        } else {
+            result = widget;
+        }
+    }
 
     return result;
 }
