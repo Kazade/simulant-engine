@@ -31,6 +31,8 @@ public:
     uint64_t process_ram_usage_in_bytes(ProcessID) const override {
         return MEMORY_VALUE_UNAVAILABLE;
     }
+
+    User current_user() const override;
 };
 
 

@@ -26,6 +26,8 @@ public:
         _S_UNUSED(process_id);
         return MEMORY_VALUE_UNAVAILABLE;
     }
+
+    User current_user() const override;
 };
 
 }

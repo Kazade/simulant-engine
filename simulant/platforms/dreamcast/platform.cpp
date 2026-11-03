@@ -64,4 +64,9 @@ uint64_t DreamcastPlatform::process_ram_usage_in_bytes(uint32_t process_id) cons
     return used_ram_in_bytes();
 }
 
+User DreamcastPlatform::current_user() const {
+    // Dreamcast can't return anything useful
+    return User{};
+}
+
 }
