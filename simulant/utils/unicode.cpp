@@ -18,6 +18,7 @@
 //
 
 #include <cstring>
+#include <set>
 #include <algorithm>
 #include <string>
 #include <iomanip>
@@ -34,12 +35,12 @@
 #include "formatter.h"
 
 std::ostream& operator<< (std::ostream& os, const unicode& str) {
-    os << str.encode();
+    os << str.encode().value();
     return os;
 }
 
 bool operator==(const char* c_str, const unicode& uni_str) {
-    return uni_str.encode() == c_str;
+    return uni_str.encode().value() == c_str;
 }
 
 bool operator!=(const char* c_str, const unicode& uni_str) {
@@ -107,7 +108,7 @@ unicode::unicode(const char16_t *utf16_string) {
 }
 
 bool unicode::contains(const unicode& thing) const {
-    return contains(thing.encode());
+    return string_.find(thing.string_) != std::string::npos;
 }
 
 unicode unicode::substr(std::size_t pos, std::size_t len) const {
@@ -129,13 +130,73 @@ bool unicode::contains(const char *thing) const {
     return contains(std::string(thing));
 }
 
-std::string unicode::encode() const {
-    std::string result;
-    if(string_.empty()) {
+smlt::optional<std::string> unicode::encode(const char* encoding) const {
+    if(!strcmp(encoding, "latin1") || !strcmp(encoding, "latin-1") || !strcmp(encoding, "iso-8859-1")) {
+        std::string result;
+        result.reserve(string_.size());
+
+        for(std::size_t i = 0; i < string_.size(); ++i) {
+            const char16_t c = string_[i];
+            if(c <= 0xFF) {
+                // Latin-1 maps directly onto the first 256 code points
+                result.push_back((char) c);
+            } else {
+                // Not representable, a surrogate pair is still only one character
+                if(c >= 0xD800 && c <= 0xDBFF && i + 1 < string_.size() &&
+                    string_[i + 1] >= 0xDC00 && string_[i + 1] <= 0xDFFF) {
+                    ++i;
+                }
+
+                result.push_back('?');
+            }
+        }
+
         return result;
+    } else if(!strcmp(encoding, "utf8") || !strcmp(encoding, "utf-8")) {
+        // Default to utf-8
+        std::string result;
+        result.reserve(string_.size());
+
+        for(std::size_t i = 0; i < string_.size(); ++i) {
+            const char16_t c = string_[i];
+            if(c >= 0xD800 && c <= 0xDBFF && i + 1 < string_.size() &&
+                string_[i + 1] >= 0xDC00 && string_[i + 1] <= 0xDFFF) {
+                // A surrogate pair is a single code point
+                const uint32_t cp = 0x10000 + ((uint32_t(c) - 0xD800) << 10) + (uint32_t(string_[i + 1]) - 0xDC00);
+                utf8::append(cp, std::back_inserter(result));
+                ++i;
+            } else if(c >= 0xD800 && c <= 0xDFFF) {
+                // An unpaired surrogate isn't a character, so can't be encoded
+                result.push_back('?');
+            } else {
+                utf8::append(uint32_t(c), std::back_inserter(result));
+            }
+        }
+
+        return result;
+    } else if(std::string(encoding) == "ascii") {
+        std::string result;
+        result.reserve(string_.size());
+
+        for(std::size_t i = 0; i < string_.size(); ++i) {
+            const char16_t c = string_[i];
+            if(c < 128) {
+                result.push_back(char(c));
+            } else {
+                // Not representable, a surrogate pair is still only one character
+                if(c >= 0xD800 && c <= 0xDBFF && i + 1 < string_.size() &&
+                    string_[i + 1] >= 0xDC00 && string_[i + 1] <= 0xDFFF) {
+                    ++i;
+                }
+
+                result.push_back('?');
+            }
+        }
+
+        return result;
+    } else {
+        return smlt::no_value;
     }
-    utf8::utf16to8(string_.begin(), string_.end(), std::back_inserter(result));
-    return result;
 }
 
 void unicode::push_back(const wchar_t c) {
@@ -185,13 +246,13 @@ unicode unicode::lower() const {
 unicode unicode::lpad(int32_t indent) {
     auto to_pad = std::max((int32_t) 0, (int32_t) (indent - length()));
     std::string prefix(to_pad, ' ');
-    return _F("{0}{1}").format(prefix, this->encode());
+    return unicode(prefix) + *this;
 }
 
 unicode unicode::rpad(int32_t count) {
     auto to_pad = std::max((int32_t) 0, (int32_t) (count - length()));
     std::string prefix(to_pad, ' ');
-    return _F("{0}{1}").format(this->encode(), prefix);
+    return *this + unicode(prefix);
 }
 
 std::vector<unicode> unicode::split(const unicode &delimiter, int32_t count, bool keep_empty) const {
@@ -296,11 +357,11 @@ unicode unicode::slice(void* null, int32_t end) const {
 }
 
 int32_t unicode::to_int() const {
-    return smlt::stoi(encode());
+    return smlt::stoi(encode().value());
 }
 
 float unicode::to_float() const {
-    return smlt::stof(encode());
+    return smlt::stof(encode().value());
 }
 
 bool unicode::to_boolean() const {

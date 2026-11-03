@@ -423,7 +423,7 @@ bool Application::construct_window(const AppConfig& config) {
         return false;
     }
 
-    window_->set_title(config.title.encode());
+    window_->set_title(config.title.encode().value_or(""));
 
     if(config.desktop.enable_virtual_screen) {
         window->initialize_virtual_screen(

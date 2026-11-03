@@ -34,7 +34,7 @@ namespace smlt {
 class SyntaxError : public std::logic_error {
 public:
     SyntaxError(const unicode& what):
-        std::logic_error(what.encode()) {}
+        std::logic_error(what.encode().value_or("")) {}
 };
 
 class MaterialScript :

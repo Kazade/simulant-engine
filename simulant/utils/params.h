@@ -151,7 +151,7 @@ private:
     }
 
     bool set_arg(const std::string& name, const unicode& text) {
-        return set_arg(name, text.encode());
+        return set_arg(name, text.encode("utf-8").value());
     }
 
     bool set_arg(const std::string& name, ParamValue value) {

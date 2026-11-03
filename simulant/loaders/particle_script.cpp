@@ -90,7 +90,7 @@ static auto parse_color = [](const std::string& color) -> smlt::Color {
         );
     } else if(parts.size() == 1 && parts[0][0] == '#') {
         // Hex color
-        return Color::from_hex_string(parts[0].encode());
+        return Color::from_hex_string(parts[0].encode().value_or("#FFFFFF"));
     } else {
         S_WARN("Invalid number of color components to color fader");
         return Color::white();

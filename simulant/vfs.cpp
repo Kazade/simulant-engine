@@ -233,7 +233,7 @@ optional<Path> VirtualFileSystem::locate_file(const Path& filename,
                             .replace(p.first, p.second)
                             .replace(q.first, q.second);
 
-            auto new_path = Path(kfs::path::norm_path(repl.encode()));
+            auto new_path = Path(kfs::path::norm_path(repl.encode().value()));
             if(std::find(names_to_try.begin(), names_to_try.end(), new_path) ==
                names_to_try.end()) {
                 names_to_try.push_back(new_path);

@@ -24,6 +24,7 @@
 #include <vector>
 #include <sstream>
 #include <stdexcept>
+#include "../generic/optional.h"
 
 typedef std::u16string ustring;
 
@@ -66,7 +67,7 @@ public:
         return string_.size();
     }
 
-    std::string encode() const;
+    smlt::optional<std::string> encode(const char* encoding="utf-8") const;
 
     unicode capitalize() const;
     unicode title() const;
@@ -170,8 +171,7 @@ public:
     }
 
     bool operator<(const unicode& rhs) const {
-        //FIXME: need to do a proper lexigraphical compare - probably
-        return encode() < rhs.encode();
+        return string_ < rhs.string_;
     }
 
     ustring::iterator begin() { return string_.begin(); }
