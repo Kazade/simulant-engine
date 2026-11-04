@@ -86,16 +86,22 @@ public:
         return *value_ptr();
     }
 
-    T value_or(const T& def) const {
-        return *this ? **this : def;
+    /* As with std::optional, this leaves the value in place unless the optional
+     * is a temporary, which is the only time it's safe to move out of it */
+    T value_or(T def) const& {
+        if(has_value()) {
+            return value();
+        }
+
+        return def;
     }
 
-    T value_or(T&& def) const {
-        return bool(*this) ? **this : static_cast<T>(std::forward<T>(def));
-    }
+    T value_or(T def) && {
+        if(has_value()) {
+            return std::move(value());
+        }
 
-    T value_or(T&& def) {
-        return bool(*this) ? std::move(**this) : static_cast<T>(std::forward<T>(def));
+        return def;
     }
 
     const T* operator->() const {
