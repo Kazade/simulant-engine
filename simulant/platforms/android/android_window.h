@@ -55,6 +55,14 @@ private:
      * while there's no window (e.g. texture uploads) still work */
     bool surfaceless_ = false;
 
+    /* Where that isn't supported, a tiny offscreen surface to keep the
+     * context current on instead */
+    EGLSurface pbuffer_ = EGL_NO_SURFACE;
+
+    /* Keeps the context current while there's no window, so loading (e.g.
+     * compiling shaders) can carry on. Returns false if it can't be */
+    bool make_current_without_window();
+
     /* Between APP_CMD_PAUSE and APP_CMD_RESUME */
     bool paused_ = false;
 

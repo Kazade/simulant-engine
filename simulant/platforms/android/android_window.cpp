@@ -50,6 +50,18 @@ namespace smlt {
 
 const static MouseID TOUCH_MOUSE_ID(0);
 
+/* Configs that can also make offscreen (pbuffer) surfaces are preferred, see
+ * make_current_without_window */
+static const EGLint pbuffer_attrib_list [] = {
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT,
+    EGL_RED_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_BLUE_SIZE, 8,
+    EGL_DEPTH_SIZE, 16,
+    EGL_NONE
+};
+
 static const EGLint attrib_list [] = {
     EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -312,15 +324,32 @@ void AndroidWindow::on_native_window_destroyed() {
         return;
     }
 
-    /* Keep the context current if it can be without a surface, otherwise
-     * nothing can be */
-    if(!surfaceless_ ||
-       eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx_) == EGL_FALSE) {
-        eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    }
+    /* The window can go while the game's still loading (e.g. Android
+     * destroying the activity straight after it started), and loading
+     * makes GL calls */
+    make_current_without_window();
 
     eglDestroySurface(dpy_, surface_);
     surface_ = EGL_NO_SURFACE;
+}
+
+bool AndroidWindow::make_current_without_window() {
+    if(surfaceless_ &&
+       eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx_) == EGL_TRUE) {
+        return true;
+    }
+
+    if(pbuffer_ != EGL_NO_SURFACE &&
+       eglMakeCurrent(dpy_, pbuffer_, pbuffer_, ctx_) == EGL_TRUE) {
+        return true;
+    }
+
+    /* Nothing can be current, so GL calls will fail until there's a window
+     * again */
+    S_WARN("Couldn't keep the GL context current without a window: {0}",
+           eglGetError());
+    eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    return false;
 }
 
 void AndroidWindow::update_safe_area() {
@@ -670,16 +699,24 @@ bool AndroidWindow::_init_window() {
     const char* extensions = eglQueryString(dpy_, EGL_EXTENSIONS);
     surfaceless_ = extensions && strstr(extensions, "EGL_KHR_surfaceless_context");
 
-    EGLint num_configs;
+    EGLint num_configs = 0;
 
-    eglChooseConfig(dpy_, attrib_list, nullptr, 0, &num_configs);
+    /* Prefer configs that can also make a pbuffer, but any that can make a
+     * window will do */
+    const EGLint* chosen_attribs = pbuffer_attrib_list;
+    if(eglChooseConfig(dpy_, chosen_attribs, nullptr, 0, &num_configs) == EGL_FALSE ||
+       !num_configs) {
+        chosen_attribs = attrib_list;
+        eglChooseConfig(dpy_, chosen_attribs, nullptr, 0, &num_configs);
+    }
+
     if(!num_configs) {
         return false;
     }
 
     std::vector<EGLConfig> supported_configs(num_configs);
     eglChooseConfig(
-        dpy_, attrib_list, &supported_configs[0], num_configs,
+        dpy_, chosen_attribs, &supported_configs[0], num_configs,
         &num_configs
     );
 
@@ -724,6 +761,26 @@ bool AndroidWindow::_init_window() {
         return false;
     }
 
+    /* Without surfaceless contexts, the context needs a surface to stay
+     * current on when the window goes, see make_current_without_window */
+    EGLint surface_type = 0;
+    eglGetConfigAttrib(dpy_, config_, EGL_SURFACE_TYPE, &surface_type);
+    if(!surfaceless_ && (surface_type & EGL_PBUFFER_BIT)) {
+        const EGLint pbuffer_attribs[] = {
+            EGL_WIDTH, 1,
+            EGL_HEIGHT, 1,
+            EGL_NONE
+        };
+
+        pbuffer_ = eglCreatePbufferSurface(dpy_, config_, pbuffer_attribs);
+        if(pbuffer_ == EGL_NO_SURFACE) {
+            S_WARN("Couldn't create a pbuffer surface: {0}", eglGetError());
+        }
+    }
+
+    S_INFO("Surfaceless context: {0}, pbuffer: {1}", surfaceless_,
+           pbuffer_ != EGL_NO_SURFACE);
+
     S_DEBUG("GL initialized, initializing the context");
 
     return true;
@@ -739,9 +796,14 @@ bool AndroidWindow::_init_renderer(Renderer *renderer) {
 void AndroidWindow::destroy_window() {
     S_DEBUG("Destroying the EGL display");
     if(dpy_ != EGL_NO_DISPLAY) {
+        if(pbuffer_ != EGL_NO_SURFACE) {
+            eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+            eglDestroySurface(dpy_, pbuffer_);
+        }
         eglTerminate(dpy_);
     }
     dpy_ = EGL_NO_DISPLAY;
+    pbuffer_ = EGL_NO_SURFACE;
 
     android_app* aapp = (android_app*) smlt::get_app()->platform_state();
     ANativeActivity_finish(aapp->activity);
