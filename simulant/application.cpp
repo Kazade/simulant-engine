@@ -705,10 +705,9 @@ int32_t Application::run() {
     /* Try to write samples even if bad things happen */
     std::set_terminate(on_terminate);
 
+    /* Shutting down (at the end of the last frame) stops any coroutines that
+     * are still running, so there are none left to run here */
     while(run_frame()) {}
-
-    /* Run any coroutines before we shut down */
-    update_coroutines();
 
     /* Make sure we unload and destroy all scenes */
     scene_manager_->destroy_all();
@@ -845,6 +844,14 @@ void Application::shutdown() {
     is_running_ = false;
 
     signal_shutdown_();
+
+    /* Coroutines can use scenes (e.g. one loading a scene's assets behind a
+     * splash screen), so they're stopped while the scenes are still there.
+     * Otherwise they'd be resumed after the scenes are unloaded. Stopping one
+     * ends it at the cr_yield() it's waiting in, which can also destroy its
+     * local variables (e.g. a mesh from the scene's assets) */
+    stop_all_coroutines();
+
     _call_clean_up();
 
     if(sound_driver_) {
