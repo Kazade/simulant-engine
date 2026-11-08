@@ -51,4 +51,8 @@ uint64_t IOSPlatform::process_ram_usage_in_bytes(ProcessID process_id) const {
     return info.phys_footprint;
 }
 
+User IOSPlatform::current_user() const {
+    return User{};
+}
+
 }

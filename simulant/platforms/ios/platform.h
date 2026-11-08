@@ -18,6 +18,10 @@ public:
     }
 
     uint64_t process_ram_usage_in_bytes(ProcessID process_id) const override;
+
+    /* Always empty: iOS doesn't tell apps who the user is (and the device's
+     * name is just "iPhone" or "iPad" since iOS 16) */
+    User current_user() const override;
 };
 
 }

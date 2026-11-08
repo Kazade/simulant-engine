@@ -280,6 +280,7 @@ ELSEIF(IOS)
   SET(OPENGL_LIBRARIES
         "-framework Foundation"
         "-framework UIKit"
+        "-framework CoreGraphics"
         "-framework QuartzCore"
         "-framework OpenGLES"
         "-framework AudioToolbox"

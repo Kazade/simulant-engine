@@ -79,10 +79,11 @@ MAINTAINER Luke Benstead <kazade@gmail.com>
 ENV IOS_TOOLCHAIN=/opt/ios-toolchain
 COPY --from=build /opt/ios-toolchain /opt/ios-toolchain
 
-# python3 is for the test generator, curl and xz for fetching an SDK, and
-# rsync and zip for packaging the libraries
+# python3 is for the test generator, curl and xz for fetching an SDK, rsync
+# and zip for packaging the libraries, and openssl for reading the .p12
+# certificates simulant-tools signs apps with
 RUN dnf install -y \
-        clang lld llvm cmake make python3 git curl xz tar rsync zip findutils libuuid \
+        clang lld llvm cmake make python3 git curl xz tar rsync zip findutils libuuid openssl \
     && dnf clean all
 
 # ld64 needs libtapi and libdispatch at runtime
@@ -92,3 +93,22 @@ ENV PATH=${PATH}:${IOS_TOOLCHAIN}/bin
 
 # Fail the image build if the linker can't run
 RUN ld64 -v
+
+# rcodesign (apple-codesign, MPL-2.0), for signing app bundles without a Mac:
+# simulant-tools uses it to sign iOS apps with a .p12 certificate and a
+# provisioning profile, and to ad-hoc sign simulator builds. Pinned, with the
+# release's checksums.
+ARG RCODESIGN_VERSION=0.29.0
+RUN case "$(uname -m)" in \
+        x86_64) sha=dbe85cedd8ee4217b64e9a0e4c2aef92ab8bcaaa41f20bde99781ff02e600002 ;; \
+        aarch64) sha=4af92c87ddf52f5f2d1258a3b4e56c7dcb8f1b2468df744976c5f139e031961f ;; \
+        *) echo "No rcodesign for $(uname -m)"; exit 1 ;; \
+    esac \
+    && name=apple-codesign-${RCODESIGN_VERSION}-$(uname -m)-unknown-linux-musl \
+    && curl -fsSL -o /tmp/rcodesign.tar.gz \
+        https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign/${RCODESIGN_VERSION}/${name}.tar.gz \
+    && echo "${sha}  /tmp/rcodesign.tar.gz" | sha256sum -c - \
+    && tar -xzf /tmp/rcodesign.tar.gz -C /tmp \
+    && install -m 755 /tmp/${name}/rcodesign ${IOS_TOOLCHAIN}/bin/rcodesign \
+    && rm -rf /tmp/rcodesign.tar.gz /tmp/${name} \
+    && rcodesign --version

@@ -53,7 +53,7 @@ tar -C iPhoneSimulator.platform/Developer/SDKs -cJf ~/iPhoneSimulator${VERSION}.
 
 (`--transform` needs GNU tar, `gtar` from Homebrew. Or copy the `.sdk` directories somewhere, rename them, and archive them from there.) Each archive should contain one directory, e.g. `iPhoneOS26.0.sdk/`.
 
-You can also unpack the SDKs from an Xcode `.xip` on Linux, using [xar](https://github.com/tpoechtrager/xar) and [pbzx](https://github.com/tpoechtrager/pbzx). The [cctools-port](https://github.com/tpoechtrager/cctools-port) and Godot documentation describe how.
+You can also unpack the SDKs from an Xcode `.xip` on Linux, without a Mac: simulant-tools does it the first time a project's built for iOS (see section 3). It also removes architectures from the SDK's `.tbd` stubs that cctools-port's linker doesn't know yet (`arm64e.x1` in the iOS 27 SDKs), which it would otherwise fail on.
 
 ### For CI
 
@@ -65,6 +65,8 @@ The GitLab CI jobs download the SDKs when they run. Upload the two archives some
 | `IOS_SIMULATOR_SDK_URL` | URL of the `iPhoneSimulator*.sdk.tar.xz` archive |
 
 Without them, the iOS jobs don't run. If they're also *protected*, the jobs only run on protected branches.
+
+Projects built with simulant-tools can use the same archives: set `SIMULANT_IOS_SDK_URL` to both URLs, separated by a space, and `SIMULANT_ACCEPT_XCODE_LICENSE=1`. An Xcode `.xip` works there too.
 
 ---
 
@@ -109,6 +111,18 @@ The CI publishes `ios-arm64-clang.zip`, `ios-simulator-clang.zip` and `ios-xcfra
 
 > The library is built without LTO. LTO objects are LLVM bitcode, and Xcode's LLVM is older than the clang the library's built with, so it couldn't read them.
 
+### Using them from simulant-tools
+
+[simulant-tools](https://gitlab.com/simulant/simulant-tools) builds Simulant projects for iOS without Xcode: `simulant build ios` (or `ios-simulator`) builds the app bundle, and `simulant package ios` an `.ipa`. The `.ipa` is signed when it's given a provisioning profile and a certificate (`.p12`), on any OS. App Store uploads still need a Mac, for the icon's asset catalog. The first time, it sets the SDKs up itself: on Linux it has you download Xcode in your browser (after accepting Apple's terms) and extracts them from it; on a Mac it copies them from Xcode. They're kept in `~/.local/share/simulant-tools/ios/sdks`. See its README.
+
+`simulant update` downloads the iOS libraries when the CI has published them. Until then (or to try changes to Simulant), install the ones built above into a project:
+
+```bash
+platforms/ios/install_libraries.sh /path/to/project
+```
+
+This copies whichever of Debug and Release have been built, with the headers, into the project's `libraries/ios-arm64-clang` and `libraries/ios-simulator-clang`, as `simulant update` would.
+
 ---
 
 ## 4. Using Simulant in an Xcode Project
@@ -116,7 +130,7 @@ The CI publishes `ios-arm64-clang.zip`, `ios-simulator-clang.zip` and `ios-xcfra
 ### Linking
 
 1. Add `simulant.xcframework` to the app target (**General → Frameworks, Libraries, and Embedded Content**, "Do Not Embed": it's a static library).
-2. Link these system frameworks too: `UIKit`, `QuartzCore`, `OpenGLES`, `AudioToolbox`, `AVFoundation`, `CoreHaptics` and `Foundation`.
+2. Link these system frameworks too: `UIKit`, `CoreGraphics`, `QuartzCore`, `OpenGLES`, `AudioToolbox`, `AVFoundation`, `CoreHaptics` and `Foundation`.
 3. Simulant is C++20. Set **C++ Language Dialect** to C++20 (or later) and use libc++.
 
 Headers are included as normal, e.g. `#include <simulant/simulant.h>`.

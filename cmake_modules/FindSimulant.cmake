@@ -35,6 +35,20 @@ ELSEIF(PLATFORM_RASPBERRYPI)
        SIMULANT_SEARCH_PATHS
        ${CMAKE_SOURCE_DIR}/libraries/raspberrypi-armv7-gcc/
     )
+ELSEIF(IOS)
+    # Devices and the simulator have libraries of their own (IOS_SIMULATOR
+    # is set by toolchains/iOS.cmake)
+    IF(IOS_SIMULATOR)
+        SET(
+           SIMULANT_SEARCH_PATHS
+           ${CMAKE_SOURCE_DIR}/libraries/ios-simulator-clang/
+        )
+    ELSE()
+        SET(
+           SIMULANT_SEARCH_PATHS
+           ${CMAKE_SOURCE_DIR}/libraries/ios-arm64-clang/
+        )
+    ENDIF()
 ELSEIF(WIN32)
     SET(
        SIMULANT_SEARCH_PATHS
