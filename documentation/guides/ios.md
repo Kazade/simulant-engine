@@ -51,22 +51,29 @@ tar -C iPhoneSimulator.platform/Developer/SDKs -cJf ~/iPhoneSimulator${VERSION}.
     --transform "s/^iPhoneSimulator.sdk/iPhoneSimulator${VERSION}.sdk/"
 ```
 
-(`--transform` needs GNU tar, `gtar` from Homebrew. Or copy the `.sdk` directories somewhere, rename them, and archive them from there.) Each archive should contain one directory, e.g. `iPhoneOS26.0.sdk/`.
+(`--transform` needs GNU tar, `gtar` from Homebrew. Or copy the `.sdk` directories somewhere, rename them, and archive them from there.) Each archive should contain one directory, e.g. `iPhoneOS27.2.sdk/`.
 
-You can also unpack the SDKs from an Xcode `.xip` on Linux, without a Mac: simulant-tools does it the first time a project's built for iOS (see section 3). It also removes architectures from the SDK's `.tbd` stubs that cctools-port's linker doesn't know yet (`arm64e.x1` in the iOS 27 SDKs), which it would otherwise fail on.
+You can also unpack the SDKs from an Xcode `.xip` on Linux, without a Mac (download it from [Apple's developer downloads](https://developer.apple.com/download/all/), signed in with a free Apple Account):
+
+```bash
+platforms/ios/extract_sdks.py ~/Downloads/Xcode_27.2.xip ~/ios-sdks
+```
+
+This leaves `~/ios-sdks/iPhoneOS27.2.sdk` and `~/ios-sdks/iPhoneSimulator27.2.sdk`, without unpacking the rest of Xcode. It only needs Python 3, and it's in the toolchain image as `extract-ios-sdks`. simulant-tools uses it to set the SDKs up the first time a project's built for iOS (see section 3).
+
+It also removes architectures from the SDKs' `.tbd` stubs that cctools-port's linker doesn't know yet (`arm64e.x1` in the iOS 27 SDKs), which it would otherwise fail on. For SDKs from elsewhere (e.g. copied from a Mac), `extract_sdks.py --fix <sdk>...` does only that. The CI's library builds don't link anything, so they don't need it.
 
 ### For CI
 
-The GitLab CI jobs download the SDKs when they run. Upload the two archives somewhere private (e.g. a private bucket, behind a signed URL), and add these as **masked** CI/CD variables:
+The GitLab CI jobs download Xcode when they run, and extract the SDKs from it with `extract_sdks.py`. Upload the Xcode `.xip` (the same one simulant-tools uses) somewhere private, at a URL that doesn't expire, and add it as a **masked** CI/CD variable:
 
 | Variable | Value |
 |---|---|
-| `IOS_SDK_URL` | URL of the `iPhoneOS*.sdk.tar.xz` archive |
-| `IOS_SIMULATOR_SDK_URL` | URL of the `iPhoneSimulator*.sdk.tar.xz` archive |
+| `IOS_XCODE_URL` | URL of the Xcode `.xip` |
 
-Without them, the iOS jobs don't run. If they're also *protected*, the jobs only run on protected branches.
+Without it, the iOS jobs don't run. If it's also *protected*, the jobs only run on protected branches. Each build job downloads the `.xip` (about 2 GB): the SDKs are never kept as artifacts or cache, as they'd be public.
 
-Projects built with simulant-tools can use the same archives: set `SIMULANT_IOS_SDK_URL` to both URLs, separated by a space, and `SIMULANT_ACCEPT_XCODE_LICENSE=1`. An Xcode `.xip` works there too.
+Projects built with simulant-tools can use the same `.xip`: set `SIMULANT_IOS_SDK_URL` to its URL, and `SIMULANT_ACCEPT_XCODE_LICENSE=1`.
 
 ---
 
@@ -78,12 +85,12 @@ The toolchain is in `platforms/ios/Dockerfile`. CI publishes it as the `ios-tool
 docker build -t simulant-ios-toolchain platforms/ios
 ```
 
-Then, with the SDKs unpacked into `~/ios-sdks`:
+Then, with the SDKs extracted into `~/ios-sdks` (see section 2):
 
 ```bash
 docker run --rm -v $(pwd):/src -v ~/ios-sdks:/sdks -w /src \
-    -e IOS_DEVICE_SDK=/sdks/iPhoneOS26.0.sdk \
-    -e IOS_SIMULATOR_SDK=/sdks/iPhoneSimulator26.0.sdk \
+    -e IOS_DEVICE_SDK=/sdks/iPhoneOS27.2.sdk \
+    -e IOS_SIMULATOR_SDK=/sdks/iPhoneSimulator27.2.sdk \
     simulant-ios-toolchain platforms/ios/build_libraries.sh Release
 ```
 
@@ -99,7 +106,7 @@ To build a single slice, use the CMake toolchain file directly:
 
 ```bash
 cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchains/iOS.cmake \
-      -DIOS_SDK=/sdks/iPhoneOS26.0.sdk \
+      -DIOS_SDK=/sdks/iPhoneOS27.2.sdk \
       -DIOS_ARCH=arm64 \
       -DCMAKE_BUILD_TYPE=Release ../..
 make simulant

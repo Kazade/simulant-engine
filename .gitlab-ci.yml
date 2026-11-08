@@ -96,20 +96,21 @@ prepare:ios-toolchain:
     - docker:dind
   # The image builds part of LLVM (Apple's libtapi) from source
   timeout: 3h
-  before_script:
-    - cp platforms/ios/Dockerfile Dockerfile
   script:
     - docker pull $CI_REGISTRY_IMAGE:ios-toolchain || true
-    - docker build --cache-from $CI_REGISTRY_IMAGE:ios-toolchain -t $CI_REGISTRY_IMAGE:ios-toolchain .
+    # platforms/ios is the context, for extract_sdks.py
+    - docker build --cache-from $CI_REGISTRY_IMAGE:ios-toolchain -t $CI_REGISTRY_IMAGE:ios-toolchain platforms/ios
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker push $CI_REGISTRY_IMAGE:ios-toolchain
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         - platforms/ios/Dockerfile
+        - platforms/ios/extract_sdks.py
     - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
       changes:
         - platforms/ios/Dockerfile
+        - platforms/ios/extract_sdks.py
 
 prepare:deploy:
   stage: prepare
@@ -179,19 +180,26 @@ build:android-all-clang:debug:
     BUILD_JOB: assembleDebug
 
 # The iPhoneOS and iPhoneSimulator SDKs come from Xcode, and can't be
-# redistributed, so they're downloaded from somewhere private:
-# IOS_SDK_URL and IOS_SIMULATOR_SDK_URL must be masked CI/CD variables with
-# the URLs of .tar.xz archives of them (see documentation/guides/ios.md).
-# Without them, the iOS jobs don't run.
+# redistributed, so Xcode is downloaded from somewhere private: IOS_XCODE_URL
+# must be a masked CI/CD variable with the URL of an Xcode .xip (the same one
+# simulant-tools uses, see documentation/guides/ios.md), and the SDKs are
+# extracted from it. Without it, the iOS jobs don't run.
+#
+# Never make the .xip or the SDKs artifacts or cache: the project's public,
+# and so would they be.
 .build:ios-clang:
   stage: build
   image: $CI_REGISTRY_IMAGE:ios-toolchain
   rules:
-    - if: $IOS_SDK_URL && $IOS_SIMULATOR_SDK_URL
+    - if: $IOS_XCODE_URL
   before_script:
     - mkdir -p /opt/ios-sdks
-    - curl -fsSL "$IOS_SDK_URL" | tar -xJ -C /opt/ios-sdks
-    - curl -fsSL "$IOS_SIMULATOR_SDK_URL" | tar -xJ -C /opt/ios-sdks
+    # Outside the project directory, so it can't end up in the artifacts
+    - curl -fsSL --retry 3 -o /tmp/Xcode.xip "$IOS_XCODE_URL"
+    # From the checkout rather than the image's copy (extract-ios-sdks), so
+    # changes to it are used straight away
+    - python3 platforms/ios/extract_sdks.py /tmp/Xcode.xip /opt/ios-sdks
+    - rm /tmp/Xcode.xip
     - export IOS_DEVICE_SDK=$(ls -d /opt/ios-sdks/iPhoneOS*.sdk | head -n 1)
     - export IOS_SIMULATOR_SDK=$(ls -d /opt/ios-sdks/iPhoneSimulator*.sdk | head -n 1)
     - echo "Using ${IOS_DEVICE_SDK} and ${IOS_SIMULATOR_SDK}"
@@ -794,7 +802,7 @@ deploy:android-all-clang:
   extends: .deploy:deploy
   only: null
   rules:
-    - if: $IOS_SDK_URL && $IOS_SIMULATOR_SDK_URL && ($CI_COMMIT_REF_NAME =~ /^(main|legacy|next)$/ || $CI_COMMIT_TAG)
+    - if: $IOS_XCODE_URL && ($CI_COMMIT_REF_NAME =~ /^(main|legacy|next)$/ || $CI_COMMIT_TAG)
   needs:
     - build:ios-clang:debug
     - build:ios-clang:release

@@ -12,7 +12,12 @@
 #   cmake -DCMAKE_TOOLCHAIN_FILE=../../toolchains/iOS.cmake \
 #         -DIOS_SDK=/sdk/iPhoneOS.sdk ../..
 #
-# See documentation/guides/ios.md for how to package an SDK from Xcode.
+# extract-ios-sdks (extract_sdks.py) extracts the SDKs from an Xcode .xip,
+# e.g. into a mounted directory. See documentation/guides/ios.md.
+#
+# Build it with platforms/ios as the context:
+#
+#   docker build -t simulant-ios-toolchain platforms/ios
 #
 FROM fedora:44 AS build
 MAINTAINER Luke Benstead <kazade@gmail.com>
@@ -112,3 +117,7 @@ RUN case "$(uname -m)" in \
     && install -m 755 /tmp/${name}/rcodesign ${IOS_TOOLCHAIN}/bin/rcodesign \
     && rm -rf /tmp/rcodesign.tar.gz /tmp/${name} \
     && rcodesign --version
+
+# For extracting the SDKs from an Xcode .xip (see the top of this file)
+COPY extract_sdks.py ${IOS_TOOLCHAIN}/bin/extract-ios-sdks
+RUN chmod 755 ${IOS_TOOLCHAIN}/bin/extract-ios-sdks
