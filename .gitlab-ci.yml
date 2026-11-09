@@ -87,6 +87,55 @@ prepare:windows-x64-mingw:
       changes:
         - platforms/windows/Dockerfile
 
+# Toolchain only: the iOS SDK isn't allowed in a public image, see
+# .build:ios-clang
+prepare:ios-toolchain:
+  stage: prepare
+  image: docker:latest
+  services:
+    - docker:dind
+  # The image builds part of LLVM (Apple's libtapi) from source
+  timeout: 3h
+  variables:
+    IOS_TOOLCHAIN_IMAGE: $CI_REGISTRY_IMAGE:ios-toolchain
+    # BuildKit's cache of every stage's layers, including the build stage's
+    # (which the image itself doesn't have), so that changes to the end of
+    # the Dockerfile don't build the toolchain again
+    IOS_TOOLCHAIN_CACHE: $CI_REGISTRY_IMAGE:ios-toolchain-cache
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    # The image only depends on these files, so it's also tagged with their
+    # hash, and isn't built again if it already has been. (In merge request
+    # pipelines, this job runs every time while the merge request changes
+    # them.)
+    - IOS_TOOLCHAIN_HASH=$(cat platforms/ios/Dockerfile platforms/ios/extract_sdks.py | sha256sum | cut -c1-16)
+    - |
+      if docker buildx imagetools inspect "$IOS_TOOLCHAIN_IMAGE-$IOS_TOOLCHAIN_HASH" > /dev/null 2>&1; then
+        echo "Already built as ios-toolchain-$IOS_TOOLCHAIN_HASH"
+        docker buildx imagetools create -t "$IOS_TOOLCHAIN_IMAGE" "$IOS_TOOLCHAIN_IMAGE-$IOS_TOOLCHAIN_HASH"
+        exit 0
+      fi
+    # The docker-container driver, as the default one can't export the cache
+    - docker buildx create --use --driver docker-container
+    # platforms/ios is the context, for extract_sdks.py
+    - >
+      docker buildx build
+      --cache-from type=registry,ref=$IOS_TOOLCHAIN_CACHE
+      --cache-to type=registry,ref=$IOS_TOOLCHAIN_CACHE,mode=max
+      -t $IOS_TOOLCHAIN_IMAGE
+      -t $IOS_TOOLCHAIN_IMAGE-$IOS_TOOLCHAIN_HASH
+      --push
+      platforms/ios
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - platforms/ios/Dockerfile
+        - platforms/ios/extract_sdks.py
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
+      changes:
+        - platforms/ios/Dockerfile
+        - platforms/ios/extract_sdks.py
+
 prepare:deploy:
   stage: prepare
   image: docker:latest
@@ -153,6 +202,48 @@ build:android-all-clang:debug:
     TARGET: android-all-clang
     BUILD_TYPE: debug
     BUILD_JOB: assembleDebug
+
+# The iPhoneOS and iPhoneSimulator SDKs come from Xcode, and can't be
+# redistributed, so Xcode is downloaded from somewhere private: IOS_XCODE_URL
+# must be a masked CI/CD variable with the URL of an Xcode .xip (the same one
+# simulant-tools uses, see documentation/guides/ios.md), and the SDKs are
+# extracted from it. Without it, the iOS jobs don't run.
+#
+# Never make the .xip or the SDKs artifacts or cache: the project's public,
+# and so would they be.
+.build:ios-clang:
+  stage: build
+  image: $CI_REGISTRY_IMAGE:ios-toolchain
+  rules:
+    - if: $IOS_XCODE_URL
+  before_script:
+    - mkdir -p /opt/ios-sdks
+    # Outside the project directory, so it can't end up in the artifacts
+    - curl -fsSL --retry 3 -o /tmp/Xcode.xip "$IOS_XCODE_URL"
+    # From the checkout rather than the image's copy (extract-ios-sdks), so
+    # changes to it are used straight away
+    - python3 platforms/ios/extract_sdks.py /tmp/Xcode.xip /opt/ios-sdks
+    - rm /tmp/Xcode.xip
+    - export IOS_DEVICE_SDK=$(ls -d /opt/ios-sdks/iPhoneOS*.sdk | head -n 1)
+    - export IOS_SIMULATOR_SDK=$(ls -d /opt/ios-sdks/iPhoneSimulator*.sdk | head -n 1)
+    - echo "Using ${IOS_DEVICE_SDK} and ${IOS_SIMULATOR_SDK}"
+  script:
+    - JOBS=3 platforms/ios/build_libraries.sh ${BUILD_TYPE}
+  artifacts:
+    paths:
+      - ios-arm64-clang/
+      - ios-simulator-clang/
+      - ios-xcframework/
+
+build:ios-clang:debug:
+  extends: .build:ios-clang
+  variables:
+    BUILD_TYPE: Debug
+
+build:ios-clang:release:
+  extends: .build:ios-clang
+  variables:
+    BUILD_TYPE: Release
 
 build:psp-mips-gcc:debug:
   stage: build
@@ -729,6 +820,43 @@ deploy:android-all-clang:
   variables:
     TARGET: android-all-clang
     LIB_EXT: aar
+
+# Only where the iOS libraries were built (see .build:ios-clang)
+.deploy:ios:
+  extends: .deploy:deploy
+  only: null
+  rules:
+    - if: $IOS_XCODE_URL && ($CI_COMMIT_REF_NAME =~ /^(main|legacy|next)$/ || $CI_COMMIT_TAG)
+  needs:
+    - build:ios-clang:debug
+    - build:ios-clang:release
+  dependencies:
+    - build:ios-clang:debug
+    - build:ios-clang:release
+
+deploy:ios-arm64-clang:
+  extends: .deploy:ios
+  variables:
+    TARGET: ios-arm64-clang
+
+deploy:ios-simulator-clang:
+  extends: .deploy:ios
+  variables:
+    TARGET: ios-simulator-clang
+
+# The same libraries as an XCFramework, which is what Xcode uses
+deploy:ios-xcframework:
+  extends: .deploy:ios
+  variables:
+    TARGET: ios-xcframework
+  script:
+    - mkdir -p upload
+    - mv ios-xcframework upload/
+    - cd upload
+    - zip -r ios-xcframework.zip ios-xcframework/
+    - echo -e "${GCS_ACCESS_KEY}\n${GCS_SECRET}\nsimulant-engine\n" | gsutil config -a
+    - gsutil cp ios-xcframework.zip gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/
+    - gsutil acl ch -u AllUsers:R gs://staging.simulant-engine.appspot.com/${CI_COMMIT_REF_NAME}/ios-xcframework.zip
 
 deploy:assets:
   stage: deploy
