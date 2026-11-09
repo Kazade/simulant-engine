@@ -23,6 +23,11 @@
 	<string>@IOS_BUNDLE_NAME@</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<!-- iPhoneOS for devices, iPhoneSimulator for the simulator -->
+	<key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>@IOS_SUPPORTED_PLATFORM@</string>
+	</array>
 	<key>CFBundleShortVersionString</key>
 	<string>@IOS_BUNDLE_VERSION@</string>
 	<key>CFBundleVersion</key>

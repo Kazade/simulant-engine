@@ -62,6 +62,33 @@ class _ChunkReader(object):
             self._buffer += chunk
 
 
+def _describe(path):
+    """
+    What a file that should have been a .xip is instead, as a hint about what
+    went wrong: usually a download that got a web page (a sign-in page, or a
+    file sharing site's preview) instead of the file.
+    """
+    size = os.path.getsize(path)
+    with open(path, "rb") as f:
+        start = f.read(64 * 1024)
+
+    text = start.lstrip().lower()
+    if text.startswith((b"<!doctype html", b"<html", b"<?xml")) or b"<html" in text[:1024]:
+        title = re.search(rb"<title[^>]*>(.*?)</title>", start, re.I | re.S)
+        title = title.group(1).decode("utf-8", "replace").strip() if title else ""
+        return (
+            "it's a %d byte web page%s, not Xcode. Is the URL a direct download "
+            "(not a sign-in, preview or sharing page)? Apple's own download link "
+            "needs signing in, so it can't be used here."
+            % (size, ' ("%s")' % title[:100] if title else "")
+        )
+
+    if size < 100 * 1024 * 1024:
+        return "it's only %d bytes, and Xcode is several GB" % size
+
+    return "it's %d bytes, and starts %r" % (size, start[:8])
+
+
 def _xip_payload(xip):
     """
     Yields the decompressed contents of an Xcode .xip, which is a cpio
@@ -76,7 +103,7 @@ def _xip_payload(xip):
     with open(xip, "rb") as f:
         header = f.read(28)
         if header[:4] != b"xar!":
-            raise ValueError("%s isn't a .xip (xar) archive" % xip)
+            raise ValueError("%s isn't a .xip (xar) archive: %s" % (xip, _describe(xip)))
 
         header_size, _, toc_length = struct.unpack(">HHQ", header[4:16])
         f.seek(header_size)

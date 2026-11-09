@@ -36,6 +36,11 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS | INIT_NET);
 
 #include "simulant/test.h"
 
+#ifdef __IOS__
+/* For smlt::ios_main(): UIKit has to own the main thread */
+#include "simulant/platforms/ios/ios_window.h"
+#endif
+
 %(includes)s
 
 
@@ -66,7 +71,7 @@ std::map<std::string, std::string> parse_args(int argc, char* argv[]) {
     return ret;
 }
 
-int main(int argc, char* argv[]) {
+static int run_tests(int argc, char* argv[]) {
     auto runner = std::make_shared<smlt::test::TestRunner>();
 
     auto args = parse_args(argc, argv);
@@ -87,6 +92,16 @@ int main(int argc, char* argv[]) {
     %(registrations)s
 
     return runner->run(test_case, junit_xml);
+}
+
+int main(int argc, char* argv[]) {
+#ifdef __IOS__
+    /* Runs the tests once the app has a window, then exits with their
+     * result */
+    return smlt::ios_main(argc, argv, run_tests);
+#else
+    return run_tests(argc, argv);
+#endif
 }
 
 
