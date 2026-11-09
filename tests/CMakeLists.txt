@@ -95,3 +95,40 @@ TARGET_LINK_LIBRARIES(
     simulant_tests
     simulant
 )
+
+IF(IOS)
+  # On iOS the tests run as an app: UIKit has to own the main thread, so the
+  # generated main() hands over to smlt::ios_main(). It's put together here
+  # as SimulantTests.app: the executable, an Info.plist, and the assets and
+  # test data that the tests read relative to the working directory (which
+  # ios_main() makes the bundle). platforms/ios/run_simulator_tests.sh runs
+  # it in the iOS simulator.
+  SET_TARGET_PROPERTIES(simulant_tests PROPERTIES MACOSX_BUNDLE OFF)
+
+  SET(IOS_EXECUTABLE_NAME simulant_tests)
+  SET(IOS_BUNDLE_IDENTIFIER org.simulant.tests)
+  SET(IOS_BUNDLE_NAME SimulantTests)
+  SET(IOS_BUNDLE_VERSION 1.0)
+  IF(IOS_SIMULATOR)
+    SET(IOS_SUPPORTED_PLATFORM iPhoneSimulator)
+  ELSE()
+    SET(IOS_SUPPORTED_PLATFORM iPhoneOS)
+  ENDIF()
+  CONFIGURE_FILE(
+    ${CMAKE_SOURCE_DIR}/platforms/ios/Info.plist.in
+    ${CMAKE_CURRENT_BINARY_DIR}/Info.plist
+    @ONLY
+  )
+
+  SET(TEST_APP ${CMAKE_CURRENT_BINARY_DIR}/SimulantTests.app)
+  ADD_CUSTOM_COMMAND(
+    TARGET simulant_tests POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E rm -rf ${TEST_APP}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_APP}/tests
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:simulant_tests> ${TEST_APP}/
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/Info.plist ${TEST_APP}/
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/assets ${TEST_APP}/assets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tests/data ${TEST_APP}/tests/data
+    COMMENT "Putting SimulantTests.app together"
+  )
+ENDIF()

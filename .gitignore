@@ -37,3 +37,11 @@ evbuild
 gradle
 tools/**/build
 **/PLAN.md
+
+# iOS build outputs (platforms/ios/build_libraries.sh)
+build-ios/
+build-ios-*.log
+ios-arm64-clang/
+ios-simulator-clang/
+ios-xcframework/
+ios-tests/

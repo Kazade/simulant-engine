@@ -13,6 +13,12 @@
 # IOS_DEVICE_SDK and IOS_SIMULATOR_SDK must be the paths of the iPhoneOS and
 # iPhoneSimulator SDKs. Runs in the image from platforms/ios/Dockerfile.
 #
+# With IOS_BUILD_TESTS=1, the test suite is built too, as an app for the
+# simulator on Apple Silicon Macs (arm64), which
+# platforms/ios/run_simulator_tests.sh runs:
+#
+#   ios-tests/<type>/SimulantTests.app
+#
 
 set -euo pipefail
 
@@ -25,8 +31,12 @@ JOBS=${JOBS:-$(nproc)}
 : "${IOS_SIMULATOR_SDK:?Set IOS_SIMULATOR_SDK to the path of an iPhoneSimulator SDK}"
 
 build() {
-    local name=$1 sdk=$2 arch=$3
+    local name=$1 sdk=$2 arch=$3 tests=${4:-OFF}
     local dir=build-ios/${name}-${TYPE}
+    local targets=(simulant)
+    if [ "${tests}" = ON ]; then
+        targets+=(simulant_tests)
+    fi
 
     echo "=== Building ${name} (${BUILD_TYPE}) ==="
     cmake -S "${SOURCE_DIR}" -B "${dir}" \
@@ -35,13 +45,25 @@ build() {
         -DIOS_ARCH="${arch}" \
         -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
         -DSIMULANT_BUILD_SAMPLES=OFF \
-        -DSIMULANT_BUILD_TESTS=OFF
-    cmake --build "${dir}" --target simulant -j "${JOBS}"
+        -DSIMULANT_BUILD_TESTS="${tests}"
+    cmake --build "${dir}" --target "${targets[@]}" -j "${JOBS}"
 }
 
+TESTS=OFF
+if [ "${IOS_BUILD_TESTS:-0}" = 1 ]; then
+    TESTS=ON
+fi
+
 build device-arm64 "${IOS_DEVICE_SDK}" arm64
-build simulator-arm64 "${IOS_SIMULATOR_SDK}" arm64
+build simulator-arm64 "${IOS_SIMULATOR_SDK}" arm64 "${TESTS}"
 build simulator-x86_64 "${IOS_SIMULATOR_SDK}" x86_64
+
+if [ "${TESTS}" = ON ]; then
+    TEST_APP=ios-tests/${TYPE}/SimulantTests.app
+    rm -rf "${TEST_APP}"
+    mkdir -p "$(dirname "${TEST_APP}")"
+    cp -R "build-ios/simulator-arm64-${TYPE}/tests/SimulantTests.app" "${TEST_APP}"
+fi
 
 DEVICE_LIB=ios-arm64-clang/${TYPE}/simulant/libsimulant.a
 SIMULATOR_LIB=ios-simulator-clang/${TYPE}/simulant/libsimulant.a
@@ -124,3 +146,6 @@ EOF
 
 echo "=== Built ==="
 lipo -info "${DEVICE_LIB}" "${SIMULATOR_LIB}"
+if [ "${TESTS}" = ON ]; then
+    echo "${TEST_APP}"
+fi

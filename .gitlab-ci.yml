@@ -219,7 +219,9 @@ build:android-all-clang:debug:
   before_script:
     - mkdir -p /opt/ios-sdks
     # Outside the project directory, so it can't end up in the artifacts
-    - curl -fsSL --retry 3 -o /tmp/Xcode.xip "$IOS_XCODE_URL"
+    # What was downloaded, and from which host (not the whole URL, which is
+    # secret), to show what went wrong if it isn't Xcode
+    - curl -fsSL --retry 3 -o /tmp/Xcode.xip -w 'Downloaded %{size_download} bytes (%{content_type}) from %{urle.host}\n' "$IOS_XCODE_URL"
     # From the checkout rather than the image's copy (extract-ios-sdks), so
     # changes to it are used straight away
     - python3 platforms/ios/extract_sdks.py /tmp/Xcode.xip /opt/ios-sdks
@@ -228,12 +230,57 @@ build:android-all-clang:debug:
     - export IOS_SIMULATOR_SDK=$(ls -d /opt/ios-sdks/iPhoneSimulator*.sdk | head -n 1)
     - echo "Using ${IOS_DEVICE_SDK} and ${IOS_SIMULATOR_SDK}"
   script:
-    - JOBS=3 platforms/ios/build_libraries.sh ${BUILD_TYPE}
+    # IOS_BUILD_TESTS: SimulantTests.app too, for test:ios-simulator-clang
+    - IOS_BUILD_TESTS=1 JOBS=3 platforms/ios/build_libraries.sh ${BUILD_TYPE}
   artifacts:
     paths:
       - ios-arm64-clang/
       - ios-simulator-clang/
       - ios-xcframework/
+      - ios-tests/
+
+# Runs SimulantTests.app (from the build jobs, which cross-compile it with the
+# libraries they publish) in the iOS simulator, on one of GitLab's hosted Macs
+# (Premium/Ultimate, or the Open Source programme). The Linux build jobs can't
+# run it: iOS apps only run on Apple's own systems.
+test:ios-simulator-clang:
+  stage: test
+  image: macos-26-xcode-26
+  tags:
+    - saas-macos-medium-m1
+  timeout: 1h
+  # Mac runner minutes cost more, so this only runs by itself where the iOS
+  # libraries are deployed (deploy:ios-* need it), and is a manual job in
+  # merge requests. allow_failure keeps a manual job that isn't run from
+  # blocking the pipeline (rules make manual jobs blocking by default), but
+  # it also means that a failure, when it is run, is only a warning there.
+  rules:
+    - if: $IOS_XCODE_URL && ($CI_COMMIT_REF_NAME =~ /^(main|legacy|next)$/ || $CI_COMMIT_TAG)
+    - if: $IOS_XCODE_URL
+      when: manual
+      allow_failure: true
+  needs:
+    - build:ios-clang:debug
+    - build:ios-clang:release
+  dependencies:
+    - build:ios-clang:debug
+    - build:ios-clang:release
+  variables:
+    # Only run_simulator_tests.sh is needed from the repository
+    GIT_SUBMODULE_STRATEGY: none
+  script:
+    # Both, even if the first fails
+    - status=0
+    - platforms/ios/run_simulator_tests.sh ios-tests/debug/SimulantTests.app reports/debug.xml || status=1
+    - platforms/ios/run_simulator_tests.sh ios-tests/release/SimulantTests.app reports/release.xml || status=1
+    - exit $status
+  artifacts:
+    when: always
+    reports:
+      junit: reports/*.xml
+    paths:
+      - reports/
+      - crash-reports/
 
 build:ios-clang:debug:
   extends: .build:ios-clang
@@ -827,9 +874,13 @@ deploy:android-all-clang:
   only: null
   rules:
     - if: $IOS_XCODE_URL && ($CI_COMMIT_REF_NAME =~ /^(main|legacy|next)$/ || $CI_COMMIT_TAG)
+  # Only once the tests have passed, as for the other platforms. The
+  # libraries come from the build jobs.
   needs:
     - build:ios-clang:debug
     - build:ios-clang:release
+    - job: test:ios-simulator-clang
+      artifacts: false
   dependencies:
     - build:ios-clang:debug
     - build:ios-clang:release

@@ -2,7 +2,7 @@
 
 This guide covers building Simulant for iOS (iPhone and iPad) and using it in an Xcode project.
 
-> **Status:** iOS support is new. The library is cross-compiled on Linux. The test suite and samples aren't built for iOS yet, and the port hasn't been tried on many devices.
+> **Status:** iOS support is new. The library is cross-compiled on Linux. The test suite runs in the iOS simulator in CI. The samples aren't built for iOS yet, and the port hasn't been tried on many devices.
 
 ---
 
@@ -17,7 +17,8 @@ This guide covers building Simulant for iOS (iPhone and iPad) and using it in an
 7. [Input and Haptics](#7-input-and-haptics)
 8. [App Lifecycle](#8-app-lifecycle)
 9. [Files](#9-files)
-10. [Limitations](#10-limitations)
+10. [Tests](#10-tests)
+11. [Limitations](#11-limitations)
 
 ---
 
@@ -268,9 +269,25 @@ iOS can end a backgrounded app at any time without warning, so save anything imp
 
 ---
 
-## 10. Limitations
+## 10. Tests
 
-- The test suite and samples aren't built for iOS yet. They need to be built as signed app bundles to run.
+The test suite runs as an app, `SimulantTests.app`, as the tests need a window: on iOS, the generated `main()` hands over to `smlt::ios_main()`. `build_libraries.sh` builds it for the simulator (arm64) with `IOS_BUILD_TESTS=1`, into `ios-tests/<type>/SimulantTests.app`, with the assets and test data in the bundle.
+
+On a Mac with Xcode, `platforms/ios/run_simulator_tests.sh` runs it in a new simulator (the newest iOS one installed, deleted afterwards) and writes a JUnit report:
+
+```bash
+platforms/ios/run_simulator_tests.sh ios-tests/debug/SimulantTests.app report.xml
+platforms/ios/run_simulator_tests.sh ios-tests/debug/SimulantTests.app report.xml SomeTest.test_something
+```
+
+In CI, `test:ios-simulator-clang` does this on one of GitLab's hosted Macs, with the apps the Linux build jobs made, and the iOS libraries are only published once it passes. As Mac runner minutes cost more, it only runs by itself on `main`, `next`, `legacy` and tags. In merge requests it's a manual job (start it from the pipeline page), and the pipeline passes whether or not it's run; a failure there is only a warning.
+
+---
+
+## 11. Limitations
+
+- The samples aren't built for iOS yet.
+- The tests only run in the simulator, not on devices (that needs a signed build).
 - No game controller support yet.
 - No on-screen keyboard.
 - Only one window (scene). Extra scenes, e.g. on an iPad, are ignored.

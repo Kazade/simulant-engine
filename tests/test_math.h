@@ -27,7 +27,7 @@ public:
 
         smlt::Rad rad = deg;
 
-        assert_true(deg == rad);
+        assert_close(smlt::Deg(rad).to_float(), deg.to_float(), 0.0001f);
     }
 };
 

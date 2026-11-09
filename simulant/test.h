@@ -519,9 +519,11 @@ public:
                 for(auto& line: junit_lines) {
                     fwrite(line.c_str(), sizeof(char), line.length(), f);
                 }
-            }
 
-            fclose(f);
+                fclose(f);
+            } else {
+                std::cout << "Couldn't write " << junit_output << std::endl;
+            }
         }
 
         std::cout << "-----------------------" << std::endl;
