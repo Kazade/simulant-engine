@@ -989,46 +989,36 @@ if (tk->use_fixed_step()) {
 
 ---
 
-## 10. Simplex Noise
+## 10. Noise
 
-Source: `simulant/utils/simplex.h`
+Sources: `simulant/utils/noise.h`, `simulant/utils/simplex.h`
 
-The `Simplex` class generates gradient noise in 2D, 3D, and 4D.
+Simulant provides three gradient noise generators:
 
-```cpp
-#include <simulant/utils/simplex.h>
+- `smlt::noise::Perlin`: a single layer of Perlin noise in 1D, 2D and 3D
+- `smlt::noise::FractalNoise`: several octaves of Perlin noise added together, for terrain, biomes and clouds
+- `smlt::Simplex`: simplex noise in 2D, 3D and 4D
 
-// Auto-seeded with current time
-auto simplex = Simplex::create();
-
-// Or seed explicitly
-auto simplex = Simplex::create(42);
-
-// 2D noise (returns values roughly in [-1, 1])
-float n2d = simplex->noise(x, y);
-
-// 3D noise
-float n3d = simplex->noise(x, y, z);
-
-// 4D noise
-float n4d = simplex->noise(x, y, z, w);
-```
-
-### Typical Usage: Terrain Heightmap
+All of them return values in roughly -1..1. `Perlin` and `FractalNoise` also provide `normalized_noise()`, which returns 0..1.
 
 ```cpp
-auto noise = Simplex::create(12345);
+#include <simulant/utils/noise.h>
+
+using namespace smlt::noise;
+
+// FractalNoise(octaves, seed=0, lacunarity=2.0f, persistence=0.5f)
+FractalNoise noise(6, 12345);
 
 for (int x = 0; x < width; x++) {
     for (int z = 0; z < height; z++) {
         float scale = 0.01f;
-        float h = noise->noise(x * scale, z * scale);
-        // h is roughly in [-1, 1], map to your height range
-        float height = (h + 1.0f) * 0.5f * max_height;
-        terrain[x][z] = height;
+        float h = noise.normalized_noise(x * scale, z * scale);  // 0..1
+        terrain[x][z] = h * max_height;
     }
 }
 ```
+
+See **[Noise](noise.md)** for the full reference, including parameters, a biome generation example, and performance tips.
 
 ---
 
@@ -1209,6 +1199,7 @@ if (f10.has_value()) {
 | Profiler | `<simulant/tools/profiler.h>` |
 | Arg parsing | `<simulant/arg_parser.h>` |
 | TimeKeeper | `<simulant/time_keeper.h>` |
+| Perlin, FractalNoise | `<simulant/utils/noise.h>` |
 | Simplex noise | `<simulant/utils/simplex.h>` |
 | Base64 | `<simulant/utils/base64.h>` |
 | String utilities | `<simulant/utils/string.h>` |

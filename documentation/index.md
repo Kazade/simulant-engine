@@ -123,6 +123,7 @@ Simulant is a cross-platform C++ game engine with support for desktop (Linux, Wi
 
 - **[Math Library](utilities/math.md)** - Vectors, matrices, quaternions
 - **[Random Numbers](utilities/random.md)** - PRNG utilities
+- **[Noise](utilities/noise.md)** - Perlin, fractal, and simplex noise for procedural generation
 - **[JSON Parsing](utilities/json.md)** - Reading JSON files
 - **[Logging](utilities/logging.md)** - Debug output and diagnostics
 - **[Debug Drawing](utilities/debug-drawing.md)** - Visualization helpers
