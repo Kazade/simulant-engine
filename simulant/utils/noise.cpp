@@ -1,8 +1,10 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
+#include <cmath>
 #include <numeric>
 #include "../types.h"
+#include "../math/lerp.h"
 
 #include "noise.h"
 
@@ -12,18 +14,14 @@
 namespace smlt {
 namespace noise {
 
-static double fade(double t) {
-    return t * t * t * (t * (t * 6 - 15) + 10);
+static float fade(float t) {
+    return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
 }
 
-static double lerp(double t, double a, double b) {
-    return a + t * (b - a);
-}
-
-static double grad(int hash, double x, double y, double z) {
+static float grad(int hash, float x, float y, float z) {
     int h = hash & 15;
-    double u = h < 8 ? x : y;
-    double v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+    float u = h < 8 ? x : y;
+    float v = h < 4 ? y : h == 12 || h == 14 ? x : z;
     return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
 }
 
@@ -45,7 +43,7 @@ Perlin::Perlin(uint32_t seed) {
     rotation_ = Quaternion(Radians(r), Radians(r), Radians(r)); //Create a quaternion rotated 3.1 degrees around each axis
 }
 
-double Perlin::noise(double x, double y, double z) const {
+float Perlin::noise(float x, float y, float z) const {
     //FIXME: Use rotation_ to rotate the coordinates
 
     //See here for algorithm: http://cs.nyu.edu/~perlin/noise/
@@ -58,9 +56,9 @@ double Perlin::noise(double x, double y, double z) const {
     y -= std::floor(y);
     z -= std::floor(z);
 
-    const double u = fade(x);
-    const double v = fade(y);
-    const double w = fade(z);
+    const float u = fade(x);
+    const float v = fade(y);
+    const float w = fade(z);
 
     const auto A = p[X] + Y;
     const auto AA = p[A] + Z;
@@ -78,39 +76,90 @@ double Perlin::noise(double x, double y, double z) const {
     const auto PAB1 = p[AB + 1];
     const auto PBB1 = p[BB + 1];
 
-    const auto a = lerp(v,
-        lerp(u, grad(PAA, x, y, z), grad(PBA, x-1, y, z)),
-        lerp(u, grad(PAB, x, y-1, z), grad(PBB, x-1, y-1, z))
+    const auto a = smlt::lerp(
+        smlt::lerp(grad(PAA, x, y, z), grad(PBA, x-1, y, z), u),
+        smlt::lerp(grad(PAB, x, y-1, z), grad(PBB, x-1, y-1, z), u),
+        v
     );
 
-    const auto b = lerp(v,
-        lerp(u, grad(PAA1, x, y, z-1), grad(PBA1, x-1, y, z-1)),
-        lerp(u, grad(PAB1, x, y-1, z-1), grad(PBB1, x-1, y-1, z-1))
+    const auto b = smlt::lerp(
+        smlt::lerp(grad(PAA1, x, y, z-1), grad(PBA1, x-1, y, z-1), u),
+        smlt::lerp(grad(PAB1, x, y-1, z-1), grad(PBB1, x-1, y-1, z-1), u),
+        v
     );
 
-    return lerp(w, a, b);
+    return smlt::lerp(a, b, w);
 }
 
-PerlinOctave::PerlinOctave(int octaves, uint32_t seed):
-    perlin_(seed),
-    octaves_(octaves) {
-
+uint32_t FractalNoise::resolve_seed(uint32_t seed) {
+    if(!seed) {
+        seed = std::chrono::system_clock::now().time_since_epoch().count();
+        // Perlin treats 0 as "pick a seed", so make sure we never pass it on
+        if(!seed) {
+            seed = 1;
+        }
+    }
+    return seed;
 }
 
-double PerlinOctave::noise(double x, double y, double z) const {
-    double result = 0.0;
-    double amp = 1.0;
+FractalNoise::FractalNoise(int octaves, uint32_t seed, float lacunarity, float persistence):
+    seed_(resolve_seed(seed)),
+    perlin_(seed_),
+    octaves_(std::max(octaves, 1)),
+    lacunarity_(lacunarity),
+    persistence_(persistence) {
 
-    int i = octaves_;
-    while(i--) {
-        result += perlin_.noise(x, y, z) * amp;
-        x *= 2.0;
-        y *= 2.0;
-        z *= 2.0;
-        amp *= 0.5;
+    /* Generate a distinct, non-integer offset per octave. Without this every
+     * octave samples the same lattice scaled about the origin, so features
+     * line up around (0, 0, 0) and the noise is always 0 there. Use a
+     * separate engine (derived from the seed) to the permutation shuffle so
+     * the two don't correlate. */
+    std::mt19937 engine(seed_ ^ 0x9E3779B9u);
+
+    /* mt19937's raw output is fully specified by the standard, whereas
+     * uniform_real_distribution isn't, so map it to [0, 256) by hand to keep
+     * offsets identical across standard libraries. */
+    auto dist = [](std::mt19937& e) -> float {
+        // Use the top 24 bits so the result is exactly representable as a float
+        return float(e() >> 8) * (256.0f / 16777216.0f);
+    };
+
+    offsets_.resize(octaves_);
+    for(auto& offset: offsets_) {
+        offset = {dist(engine), dist(engine), dist(engine)};
     }
 
-    return result;
+    float amp = 1.0f;
+    amplitude_sum_ = 0.0f;
+    for(int i = 0; i < octaves_; ++i) {
+        amplitude_sum_ += amp;
+        amp *= persistence_;
+    }
+
+    if(amplitude_sum_ <= 0.0f) {
+        amplitude_sum_ = 1.0f;
+    }
+}
+
+float FractalNoise::noise(float x, float y, float z) const {
+    float result = 0.0f;
+    float amp = 1.0f;
+    float freq = 1.0f;
+
+    for(int i = 0; i < octaves_; ++i) {
+        const auto& o = offsets_[i];
+        result += perlin_.noise(
+            x * freq + o[0],
+            y * freq + o[1],
+            z * freq + o[2]
+        ) * amp;
+
+        freq *= lacunarity_;
+        amp *= persistence_;
+    }
+
+    // Clamp to guard against float rounding pushing us fractionally outside -1..1
+    return std::min(1.0f, std::max(-1.0f, result / amplitude_sum_));
 }
 
 }

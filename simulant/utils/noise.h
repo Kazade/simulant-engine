@@ -3,6 +3,7 @@
 
 #include <random>
 #include <array>
+#include <vector>
 #include "../math/quaternion.h"
 
 namespace smlt {
@@ -12,20 +13,20 @@ class Perlin {
 public:
     Perlin(uint32_t seed=0);
 
-    double noise(double x) const { return noise(x, 0, 0); }
-    double noise(double x, double y) const { return noise(x, y, 0); }
-    double noise(double x, double y, double z) const;
+    float noise(float x) const { return noise(x, 0, 0); }
+    float noise(float x, float y) const { return noise(x, y, 0); }
+    float noise(float x, float y, float z) const;
 
-    double normalized_noise(double x) {
-        return (noise(x) + 1.0) * 0.5;
+    float normalized_noise(float x) const {
+        return (noise(x) + 1.0f) * 0.5f;
     }
 
-    double normalized_noise(double x, double y) {
-        return (noise(x, y) + 1.0) * 0.5;
+    float normalized_noise(float x, float y) const {
+        return (noise(x, y) + 1.0f) * 0.5f;
     }
 
-    double normalized_noise(double x, double y, double z) {
-        return (noise(x, y, z) + 1.0) * 0.5;
+    float normalized_noise(float x, float y, float z) const {
+        return (noise(x, y, z) + 1.0f) * 0.5f;
     }
 
 private:
@@ -33,29 +34,56 @@ private:
     Quaternion rotation_;
 };
 
-class PerlinOctave {
+/**
+ * Fractal (fBm) noise built from multiple octaves of Perlin noise.
+ *
+ * Each successive octave is sampled at `lacunarity` times the frequency
+ * and `persistence` times the amplitude of the previous one.
+ *
+ * The result is divided by the sum of the octave amplitudes, so noise()
+ * stays within the same range as single-octave Perlin (roughly -1..1)
+ * regardless of the octave count, and normalized_noise() stays in 0..1.
+ */
+class FractalNoise {
 public:
-    PerlinOctave(int octaves, uint32_t seed=0);
+    FractalNoise(
+        int octaves,
+        uint32_t seed=0,
+        float lacunarity=2.0f,
+        float persistence=0.5f
+    );
 
-    double noise(double x) const { return noise(x, 0, 0); }
-    double noise(double x, double y) const { return noise(x, y, 0); }
-    double noise(double x, double y, double z) const;
+    float noise(float x) const { return noise(x, 0, 0); }
+    float noise(float x, float y) const { return noise(x, y, 0); }
+    float noise(float x, float y, float z) const;
 
-    double normalized_noise(double x) {
-        return (noise(x) + 1.0) * 0.5;
+    float normalized_noise(float x) const {
+        return (noise(x) + 1.0f) * 0.5f;
     }
 
-    double normalized_noise(double x, double y) {
-        return (noise(x, y) + 1.0) * 0.5;
+    float normalized_noise(float x, float y) const {
+        return (noise(x, y) + 1.0f) * 0.5f;
     }
 
-    double normalized_noise(double x, double y, double z) {
-        return (noise(x, y, z) + 1.0) * 0.5;
+    float normalized_noise(float x, float y, float z) const {
+        return (noise(x, y, z) + 1.0f) * 0.5f;
     }
+
+    int octaves() const { return octaves_; }
+    float lacunarity() const { return lacunarity_; }
+    float persistence() const { return persistence_; }
 
 private:
+    static uint32_t resolve_seed(uint32_t seed);
+
+    // Must be declared before perlin_ so it's initialized first
+    uint32_t seed_;
     Perlin perlin_;
     int octaves_;
+    float lacunarity_;
+    float persistence_;
+    float amplitude_sum_ = 1.0f;
+    std::vector<std::array<float, 3>> offsets_;
 };
 
 }
