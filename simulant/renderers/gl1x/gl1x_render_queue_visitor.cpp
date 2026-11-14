@@ -679,7 +679,9 @@ void GL1RenderQueueVisitor::do_visit(const Renderable* renderable,
 
     if(element_count) {
         /* Indexed renderable */
-        const auto index_data = renderable->index_data->data();
+        const auto index_data = renderable->index_data->data() +
+                                (renderable->first_index *
+                                 renderable->index_data->stride());
         auto index_type =
             convert_index_type(renderable->index_data->index_type());
 

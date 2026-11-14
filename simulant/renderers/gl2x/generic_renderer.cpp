@@ -909,7 +909,9 @@ void GenericRenderer::send_geometry(const Renderable* renderable,
 
     if(element_count) {
         auto index_type = convert_id_type(renderable->index_data->index_type());
-        auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot);
+        auto offset = buffers->index_vbo->byte_offset(buffers->index_vbo_slot) +
+                      (renderable->first_index *
+                       renderable->index_data->stride());
         GLCheck(glDrawElements, arrangement, element_count, index_type,
                 BUFFER_OFFSET(offset));
         get_app()->stats->increment_polygons_rendered(renderable->arrangement,
