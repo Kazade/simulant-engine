@@ -136,14 +136,16 @@ public:
         std::string anim_name;
         std::vector<PrefabAnimationChannel> channels;
         for(auto& animation: animations_) {
-            if(!anim_name.empty() && anim_name != animation.first) {
-                cb(anim_name, channels);
-                channels.clear();                
-            } else {
-                channels.push_back(animation.second);
+            if(anim_name != animation.first) {
+                if(!anim_name.empty()) {
+                    cb(anim_name, channels);
+                }
+
+                channels.clear();
+                anim_name = animation.first;
             }
 
-            anim_name = animation.first;
+            channels.push_back(animation.second);
         }
 
         if(!channels.empty()) {

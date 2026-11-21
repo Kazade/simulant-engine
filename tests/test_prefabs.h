@@ -1,5 +1,8 @@
 #pragma once
 
+#include <map>
+#include <vector>
+
 #include "simulant/simulant.h"
 
 namespace {
@@ -136,6 +139,53 @@ public:
         assert_close(after.x, before.x, 0.0001f);
         assert_close(after.y, before.y, 0.0001f);
         assert_close(after.z, before.z, 0.0001f);
+    }
+
+    /* Regression test: each_animation() used to drop the first channel of
+     * every animation group after the first. The consequence was that an
+     * animation's first channel never reached the AnimationController - e.g.
+     * "idle" lost its torso rotation and the character appeared static. */
+    void test_each_animation_includes_first_channel_of_every_group() {
+        auto prefab = scene->assets->create_prefab();
+
+        auto add_channel = [&](const std::string& animation,
+                               uint32_t target_id) {
+            PrefabNode target;
+            target.id = target_id;
+
+            auto data = std::make_shared<AnimationData>(
+                std::vector<float>{0.0f, 1.0f},
+                std::vector<float>{0.0f, 1.0f});
+
+            prefab->push_animation_channel(
+                animation, target, ANIMATION_PATH_TRANSLATION,
+                ANIMATION_INTERPOLATION_LINEAR, data);
+        };
+
+        // Two groups: "a_first" is the first group, "b_second" follows it.
+        // The old code only dropped the first channel of later groups.
+        add_channel("a_first", 1);
+        add_channel("a_first", 2);
+        add_channel("b_second", 3);
+        add_channel("b_second", 4);
+        add_channel("b_second", 5);
+
+        std::map<std::string, std::vector<uint32_t>> targets;
+        prefab->each_animation(
+            [&](const std::string& name,
+                const std::vector<PrefabAnimationChannel>& channels) {
+                for(auto& channel: channels) {
+                    targets[name].push_back(channel.target.id);
+                }
+            });
+
+        assert_equal(targets["a_first"].size(), 2u);
+        assert_equal(targets["b_second"].size(), 3u);
+
+        // In particular, the first channel of the second group must be kept.
+        assert_equal(targets["b_second"][0], 3u);
+        assert_equal(targets["b_second"][1], 4u);
+        assert_equal(targets["b_second"][2], 5u);
     }
 };
 
