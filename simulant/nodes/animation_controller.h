@@ -295,6 +295,14 @@ public:
         return ret;
     }
 
+    smlt::optional<std::string> current_animation() const {
+        if(animations_.empty() || current_animation_ >= animations_.size()) {
+            return smlt::no_value;
+        }
+
+        return animations_[current_animation_].name.str();
+    }
+
 private:
     /* Applies the current_animation_'s channels at time_ to their target
      * nodes and re-poses any armature being driven. Returns true if any

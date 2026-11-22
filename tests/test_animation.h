@@ -169,4 +169,49 @@ private:
     float last_interp_ = -1.0f;
 };
 
+class AnimationControllerTests : public smlt::test::SimulantTestCase {
+public:
+    void test_current_animation_is_empty_without_animations() {
+        auto node = scene->create_child<Stage>();
+        auto controller = node->create_mixin<AnimationController>();
+        assert_is_not_null(controller);
+
+        assert_false(controller->current_animation());
+    }
+
+    void test_current_animation_reports_played_and_queued_animations() {
+        auto node = scene->create_child<Stage>();
+        auto controller = node->create_mixin<AnimationController>();
+        assert_is_not_null(controller);
+
+        Animation idle;
+        idle.name = "idle";
+
+        Animation run;
+        run.name = "run";
+
+        controller->push_animation(idle);
+        controller->push_animation(run);
+
+        assert_true(controller->play("idle"));
+        auto current = controller->current_animation();
+        assert_true(current);
+        assert_equal(current.value(), std::string("idle"));
+
+        // Queueing must not change the current animation until the active
+        // one finishes.
+        assert_true(controller->queue("run"));
+        current = controller->current_animation();
+        assert_true(current);
+        assert_equal(current.value(), std::string("idle"));
+
+        // Neither animation has channels, so the first update finishes
+        // "idle" and advances to the queued animation.
+        controller->on_update(0.0f);
+        current = controller->current_animation();
+        assert_true(current);
+        assert_equal(current.value(), std::string("run"));
+    }
+};
+
 }
