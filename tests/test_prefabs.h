@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <map>
 #include <vector>
 
@@ -186,6 +187,61 @@ public:
         assert_equal(targets["b_second"][0], 3u);
         assert_equal(targets["b_second"][1], 4u);
         assert_equal(targets["b_second"][2], 5u);
+    }
+
+    /* Switching to an animation that doesn't drive a given joint should
+     * return that joint to its rest pose rather than leaving it at whatever
+     * the previous animation set. */
+    void test_switching_animation_resets_uncovered_joints() {
+        auto a = scene->create_child<smlt::Stage>();
+        a->set_name("A");
+        auto b = a->create_child<smlt::Stage>();
+        b->set_name("B");
+
+        auto prefab = scene->assets->create_prefab(a);
+
+        auto rotation_data = std::make_shared<AnimationData>(
+            std::vector<float>{0.0f, 1.0f},
+            std::vector<Quaternion>{
+                Quaternion(),
+                Quaternion(Vec3(0, 1, 0), Degrees(90))
+            });
+
+        prefab->push_animation_channel(
+            "turn_a", prefab->node(a->id()).value(), ANIMATION_PATH_ROTATION,
+            ANIMATION_INTERPOLATION_LINEAR, rotation_data);
+        prefab->push_animation_channel(
+            "turn_b", prefab->node(b->id()).value(), ANIMATION_PATH_ROTATION,
+            ANIMATION_INTERPOLATION_LINEAR, rotation_data);
+
+        auto instance = scene->create_child<PrefabInstance>(prefab);
+        auto* controller = instance->find_mixin<AnimationController>();
+        assert_is_not_null(controller);
+
+        auto* inst_a = instance->child_at(0);
+        assert_is_not_null(inst_a);
+        auto* inst_b = inst_a->child_at(0);
+        assert_is_not_null(inst_b);
+
+        // turn_a only rotates A, so B stays at its rest pose.
+        assert_true(controller->play("turn_a", -1));
+        controller->seek(1.0f);
+
+        assert_close(
+            std::fabs(inst_a->transform->rotation().yaw().to_float()),
+            90.0f, 0.1f);
+        assert_close(inst_b->transform->rotation().yaw().to_float(), 0.0f,
+                     0.1f);
+
+        // turn_b only rotates B, so A should snap back to its rest pose.
+        assert_true(controller->play("turn_b", -1));
+        controller->seek(1.0f);
+
+        assert_close(inst_a->transform->rotation().yaw().to_float(), 0.0f,
+                     0.1f);
+        assert_close(
+            std::fabs(inst_b->transform->rotation().yaw().to_float()),
+            90.0f, 0.1f);
     }
 };
 

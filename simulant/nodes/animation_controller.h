@@ -143,6 +143,14 @@ struct Channel {
     AnimationInterpolation interpolation;
     AnimationDataPtr data;
     AnimationPath path;
+
+    // Rest (bind) pose captured the first time this channel is seen before
+    // the controller starts animating. Used to reset targets that the next
+    // animation doesn't drive, so they don't keep a stale pose.
+    Vec3 rest_translation;
+    Quaternion rest_rotation;
+    Vec3 rest_scale = Vec3(1, 1, 1);
+    bool has_rest_pose = false;
 };
 
 struct Animation {
@@ -176,6 +184,12 @@ public:
     bool play(const std::string& animation, const int32_t loop_count = 1, bool restart=false) {
         if(auto index = find_animation_index(animation)) {
             bool same_animation = current_animation_ == index.value();
+
+            // Reset any joint not driven by the incoming animation back to
+            // its rest pose before switching to it.
+            if(!same_animation) {
+                reset_channels_to_rest_pose();
+            }
 
             // Restart if we're switching animations, the caller explicitly
             // asked to restart, or the current animation has already
@@ -367,6 +381,37 @@ private:
     /* Re-poses every armature below the node this controller is attached
      * to. Mixins live outside the tree, so the search starts at base(). */
     void update_armatures();
+
+    /* Returns every animated target to its rest (bind) pose. The rest pose
+     * is captured the first time this runs, before the controller has
+     * started animating, so targets the next animation doesn't drive fall
+     * back to standing rather than keeping a stale pose. */
+    void reset_channels_to_rest_pose() {
+        for(auto& anim: animations_) {
+            for(auto& channel: anim.channels) {
+                if(!channel.target) {
+                    continue;
+                }
+
+                if(!channel.has_rest_pose) {
+                    channel.rest_translation =
+                        channel.target->transform->translation();
+                    channel.rest_rotation =
+                        channel.target->transform->rotation();
+                    channel.rest_scale =
+                        channel.target->transform->scale_factor();
+                    channel.has_rest_pose = true;
+                } else {
+                    channel.target->transform->set_translation(
+                        channel.rest_translation);
+                    channel.target->transform->set_rotation(
+                        channel.rest_rotation);
+                    channel.target->transform->set_scale_factor(
+                        channel.rest_scale);
+                }
+            }
+        }
+    }
 
     optional<std::size_t>
         find_animation_index(const std::string& animation) const {
