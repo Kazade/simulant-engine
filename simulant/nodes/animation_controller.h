@@ -173,10 +173,23 @@ public:
         return true;
     }
 
-    bool play(const std::string& animation, const int32_t loop_count = 1) {
+    bool play(const std::string& animation, const int32_t loop_count = 1, bool restart=false) {
         if(auto index = find_animation_index(animation)) {
+            bool same_animation = current_animation_ == index.value();
+
+            // Restart if we're switching animations, the caller explicitly
+            // asked to restart, or the current animation has already
+            // finished (in which case play() is expected to replay it).
+            bool reset_time =
+                !same_animation || restart ||
+                (same_animation && time_ >= animation_duration(animation));
+
             current_animation_ = index.value();
-            time_ = 0.0f;
+
+            if(reset_time) {
+                time_ = 0.0f;
+            }
+
             state_ = ANIMATION_STATE_PLAYING;
             loop_count_ = (loop_count > 0) ? loop_count - 1 : loop_count;
             std::queue<std::size_t> empty;
@@ -279,6 +292,10 @@ public:
 
     void push_animation(const Animation& a) {
         animations_.push_back(a);
+        if(animations_.size() == 1) {
+            // Play the first animation that's pushed
+            play(a.name.str());
+        }
     }
 
     std::vector<std::string> animation_names() const {
@@ -308,6 +325,10 @@ private:
      * nodes and re-poses any armature being driven. Returns true if any
      * channel has not yet reached the end of its data at time_. */
     bool apply_current_frame() {
+        if(current_animation_ >= animations_.size()) {
+            return false;
+        }
+
         auto& anim = animations_[current_animation_];
         int unfinished = 0;
         for(auto& channel: anim.channels) {
@@ -361,7 +382,7 @@ private:
     }
 
     std::vector<Animation> animations_;
-    std::size_t current_animation_ = 0;
+    std::size_t current_animation_ = -1;
     std::queue<std::size_t> animation_queue_;
     AnimationState state_ = ANIMATION_STATE_PLAYING;
     float time_ = 0.0f;

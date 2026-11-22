@@ -691,6 +691,7 @@ public:
         auto anim_node = node->child_at(0);
         assert_equal(anim_node->name(), "anim_node");
 
+        assert_true(controller->play("anim"));
         controller->seek(1.0f);
 
         auto translation = anim_node->transform->translation();

@@ -169,6 +169,18 @@ private:
     float last_interp_ = -1.0f;
 };
 
+static void add_translation_channel(Animation& animation, StageNode* target,
+                                    Scene* scene) {
+    Channel channel;
+    channel.target = FindDescendentByID(target->id(), scene);
+    channel.path = ANIMATION_PATH_TRANSLATION;
+    channel.interpolation = ANIMATION_INTERPOLATION_LINEAR;
+    channel.data = std::make_shared<AnimationData>(
+        std::vector<float>{0.0f, 1.0f},
+        std::vector<Vec3>{Vec3(0, 0, 0), Vec3(1, 0, 0)});
+    animation.channels.push_back(channel);
+}
+
 class AnimationControllerTests : public smlt::test::SimulantTestCase {
 public:
     void test_current_animation_is_empty_without_animations() {
@@ -177,6 +189,28 @@ public:
         assert_is_not_null(controller);
 
         assert_false(controller->current_animation());
+    }
+
+    void test_first_animation_auto_plays() {
+        auto node = scene->create_child<Stage>();
+        auto controller = node->create_mixin<AnimationController>();
+        assert_is_not_null(controller);
+
+        auto target = scene->create_child<Stage>();
+
+        Animation idle;
+        idle.name = "idle";
+        add_translation_channel(idle, target, scene);
+
+        controller->push_animation(idle);
+
+        auto current = controller->current_animation();
+        assert_true(current);
+        assert_equal(current.value(), std::string("idle"));
+
+        // No explicit play() should be needed for the first animation.
+        controller->on_update(0.5f);
+        assert_close(0.5f, target->transform->translation().x, 0.0001f);
     }
 
     void test_current_animation_reports_played_and_queued_animations() {
@@ -193,7 +227,7 @@ public:
         controller->push_animation(idle);
         controller->push_animation(run);
 
-        assert_true(controller->play("idle"));
+        // Pushing the first animation selects and auto-plays it.
         auto current = controller->current_animation();
         assert_true(current);
         assert_equal(current.value(), std::string("idle"));
@@ -211,6 +245,104 @@ public:
         current = controller->current_animation();
         assert_true(current);
         assert_equal(current.value(), std::string("run"));
+    }
+
+    void test_playing_current_animation_does_not_restart_by_default() {
+        auto node = scene->create_child<Stage>();
+        auto controller = node->create_mixin<AnimationController>();
+        assert_is_not_null(controller);
+
+        auto target = scene->create_child<Stage>();
+
+        Animation idle;
+        idle.name = "idle";
+        add_translation_channel(idle, target, scene);
+
+        controller->push_animation(idle);
+
+        controller->seek(0.5f);
+        assert_close(0.5f, target->transform->translation().x, 0.0001f);
+
+        // Playing the already-active animation without restarting must not
+        // rewind it to the beginning.
+        assert_true(controller->play("idle"));
+        controller->on_update(0.0f);
+        assert_close(0.5f, target->transform->translation().x, 0.0001f);
+
+        // Passing restart=true explicitly should rewind it.
+        assert_true(controller->play("idle", 1, true));
+        controller->on_update(0.0f);
+        assert_close(0.0f, target->transform->translation().x, 0.0001f);
+    }
+
+    void test_playing_current_animation_resumes_it() {
+        auto node = scene->create_child<Stage>();
+        auto controller = node->create_mixin<AnimationController>();
+        assert_is_not_null(controller);
+
+        auto target = scene->create_child<Stage>();
+
+        Animation idle;
+        idle.name = "idle";
+        add_translation_channel(idle, target, scene);
+
+        controller->push_animation(idle);
+        controller->seek(0.5f);
+
+        controller->pause();
+        assert_true(controller->is_paused());
+
+        // Playing the active animation should resume it from where it was.
+        assert_true(controller->play("idle"));
+        assert_false(controller->is_paused());
+
+        controller->on_update(0.0f);
+        assert_close(0.5f, target->transform->translation().x, 0.0001f);
+    }
+
+    void test_playing_current_animation_restarts_it_after_finishing() {
+        auto node = scene->create_child<Stage>();
+        auto controller = node->create_mixin<AnimationController>();
+        assert_is_not_null(controller);
+
+        auto target = scene->create_child<Stage>();
+
+        Animation idle;
+        idle.name = "idle";
+        add_translation_channel(idle, target, scene);
+
+        controller->push_animation(idle);
+        controller->seek(1.0f);
+        assert_close(1.0f, target->transform->translation().x, 0.0001f);
+
+        // The animation has reached the end, so play() should replay it.
+        assert_true(controller->play("idle"));
+        controller->on_update(0.0f);
+        assert_close(0.0f, target->transform->translation().x, 0.0001f);
+    }
+
+    void test_playing_current_animation_clears_the_queue() {
+        auto node = scene->create_child<Stage>();
+        auto controller = node->create_mixin<AnimationController>();
+        assert_is_not_null(controller);
+
+        Animation idle;
+        idle.name = "idle";
+
+        Animation run;
+        run.name = "run";
+
+        controller->push_animation(idle);
+        controller->push_animation(run);
+
+        assert_true(controller->queue("run"));
+
+        // Replaying the active animation clears any queued animations.
+        assert_true(controller->play("idle"));
+        controller->on_update(0.0f);
+        auto current = controller->current_animation();
+        assert_true(current);
+        assert_equal(current.value(), std::string("idle"));
     }
 };
 
