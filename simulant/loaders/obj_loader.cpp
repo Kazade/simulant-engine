@@ -16,6 +16,7 @@
 //     You should have received a copy of the GNU Lesser General Public License
 //     along with Simulant.  If not, see <http://www.gnu.org/licenses/>.
 //
+#include <algorithm>
 #include <string>
 #include <map>
 
@@ -145,7 +146,12 @@ static bool map_Kd(LoadInfo* info, std::string,
     auto mat = (info->current_material) ? info->current_material
                                         : info->default_material.get();
 
+    /* Some exporters write Windows-style separators in the MTL file
+     * regardless of the host platform. Normalize before searching for the
+     * file so paths like "textures\\something.png" resolve correctly. */
     std::string tex_path = parts[0];
+    std::replace(tex_path.begin(), tex_path.end(), '\\', kfs::SEP[0]);
+    tex_path = kfs::path::norm_path(tex_path);
 
     /* Handle replacing the texture extension if that was desired */
     if(!info->overridden_tex_format.empty()) {

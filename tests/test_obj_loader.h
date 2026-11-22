@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fstream>
+
 #include "simulant/test.h"
 #include "simulant/utils/kfs.h"
 #include "simulant/loaders/obj_loader.h"
@@ -8,6 +10,23 @@
 namespace {
 
 using namespace smlt;
+
+/* Writes a tiny uncompressed 32-bit TGA so the OBJ loader has a real
+ * texture file to resolve. */
+static void write_obj_test_texture(const std::string& path) {
+    uint8_t header[18] = {};
+    header[2] = 2; // uncompressed truecolor
+    header[12] = 2; // width
+    header[14] = 2; // height
+    header[16] = 32; // bits per pixel
+    header[17] = 0x28;
+
+    std::ofstream out(path, std::ios::binary);
+    out.write((const char*)header, sizeof(header));
+
+    std::vector<uint8_t> pixels(2 * 2 * 4, 0xFF);
+    out.write((const char*)pixels.data(), pixels.size());
+}
 
 class OBJLoaderTest : public smlt::test::SimulantTestCase {
 public:
@@ -120,6 +139,59 @@ public:
         assert_false(spec.has_color());
         assert_false(spec.has_normals());
         assert_false(spec.has_texcoord0());
+    }
+
+    void test_windows_texture_paths_are_normalized() {
+        auto temp_dir = kfs::path::join(kfs::temp_dir(),
+                                        "obj_windows_path_test");
+        auto textures_dir = kfs::path::join(temp_dir, "textures");
+
+        if(!kfs::path::exists(temp_dir)) {
+            kfs::make_dir(temp_dir);
+        }
+
+        if(!kfs::path::exists(textures_dir)) {
+            kfs::make_dir(textures_dir);
+        }
+
+        auto texture_path = kfs::path::join(textures_dir, "something.tga");
+        write_obj_test_texture(texture_path);
+
+        auto mtl_path = kfs::path::join(temp_dir, "model.mtl");
+        {
+            std::ofstream mtl(mtl_path);
+            assert_true(mtl.good());
+            mtl << "newmtl mat\n"
+                   "Kd 1 1 1\n"
+                   // Windows-style relative path, as written by some
+                   // exporters regardless of the host platform.
+                   "map_Kd textures\\something.tga\n";
+        }
+
+        auto obj_path = kfs::path::join(temp_dir, "model.obj");
+        {
+            std::ofstream obj(obj_path);
+            assert_true(obj.good());
+            obj << "mtllib model.mtl\n"
+                   "v 0 0 0\n"
+                   "v 1 0 0\n"
+                   "v 0 1 0\n"
+                   "usemtl mat\n"
+                   "f 1 2 3\n";
+        }
+
+        auto mesh = application->shared_assets->load_mesh(obj_path);
+        assert_is_not_null(mesh.get());
+
+        auto sm = mesh->first_submesh();
+        assert_is_not_null(sm);
+
+        auto material = sm->material();
+        assert_is_not_null(material.get());
+
+        auto texture = material->base_color_map();
+        assert_is_not_null(texture.get());
+        assert_equal(texture->source().name(), std::string("something.tga"));
     }
 };
 
