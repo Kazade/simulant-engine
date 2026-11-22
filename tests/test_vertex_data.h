@@ -36,6 +36,38 @@ public:
         assert_equal(sizeof(float) * 5, (uint32_t) data->vertex_specification().normal_offset());
     }
 
+    void test_ushort_joints_have_distinct_offsets() {
+        smlt::VertexSpecification spec;
+        spec.position_attribute = VERTEX_ATTRIBUTE_3F;
+        spec.joint_attribute = VERTEX_ATTRIBUTE_4US;
+        spec.weight_attribute = VERTEX_ATTRIBUTE_4F;
+
+        // Weights come immediately after the joints, so the offsets must not
+        // overlap.
+        assert_equal((uint32_t) spec.weight_offset(),
+                     (uint32_t) spec.joint_offset() + (sizeof(uint16_t) * 4u));
+
+        smlt::VertexData data(spec);
+
+        data.position(smlt::Vec3(1, 2, 3));
+        data.joints<uint16_t>(1, 2, 3, 4);
+        data.weights<float>(0.25f, 0.25f, 0.25f, 0.25f);
+        data.move_next();
+        data.done();
+
+        const uint16_t* joints = data.joints_at<uint16_t>(0);
+        assert_equal(joints[0], 1u);
+        assert_equal(joints[1], 2u);
+        assert_equal(joints[2], 3u);
+        assert_equal(joints[3], 4u);
+
+        const Vec4* weights = data.weights_at<Vec4>(0);
+        assert_close(weights->x, 0.25f, 0.00001f);
+        assert_close(weights->y, 0.25f, 0.00001f);
+        assert_close(weights->z, 0.25f, 0.00001f);
+        assert_close(weights->w, 0.25f, 0.00001f);
+    }
+
     void test_position_works_with_a_subset_of_components() {
         /* Position should automatically fill z == 0, and w == 1 if they aren't
          * specified */

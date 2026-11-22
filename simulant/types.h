@@ -566,6 +566,7 @@ constexpr uint16_t vertex_attribute_size(VertexAttribute attr) {
     return round_to_bytes((attr == VERTEX_ATTRIBUTE_2F)   ? sizeof(float) * 2
                           : (attr == VERTEX_ATTRIBUTE_3F) ? sizeof(float) * 3
                           : (attr == VERTEX_ATTRIBUTE_4F) ? sizeof(float) * 4
+                          : (attr == VERTEX_ATTRIBUTE_4US) ? sizeof(uint16_t) * 4
                           : (attr == VERTEX_ATTRIBUTE_4UB_RGBA ||
                              attr == VERTEX_ATTRIBUTE_4UB_BGRA)
                               ? sizeof(uint8_t) * 4
