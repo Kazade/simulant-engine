@@ -213,6 +213,70 @@ public:
         assert_close(0.5f, target->transform->translation().x, 0.0001f);
     }
 
+    void test_overlay_animation_is_applied_after_the_base_animation() {
+        auto node = scene->create_child<Stage>();
+        auto controller = node->create_mixin<AnimationController>();
+        assert_is_not_null(controller);
+
+        auto shared = scene->create_child<Stage>();
+        auto base_only = scene->create_child<Stage>();
+
+        auto make_channel = [&](StageNode* target, const Vec3& from,
+                                const Vec3& to) {
+            Channel channel;
+            channel.target = FindDescendentByID(target->id(), scene);
+            channel.path = ANIMATION_PATH_TRANSLATION;
+            channel.interpolation = ANIMATION_INTERPOLATION_LINEAR;
+            channel.data = std::make_shared<AnimationData>(
+                std::vector<float>{0.0f, 1.0f},
+                std::vector<Vec3>{from, to});
+            return channel;
+        };
+
+        Animation base;
+        base.name = "base";
+        base.channels.push_back(
+            make_channel(shared, Vec3(0, 0, 0), Vec3(1, 0, 0)));
+        base.channels.push_back(
+            make_channel(base_only, Vec3(0, 0, 0), Vec3(1, 0, 0)));
+
+        Animation overlay;
+        overlay.name = "overlay";
+        // A constant pose on a target the base also animates, so it's clear
+        // which animation won.
+        overlay.channels.push_back(
+            make_channel(shared, Vec3(2, 0, 0), Vec3(2, 0, 0)));
+
+        controller->push_animation(base);
+        controller->push_animation(overlay);
+
+        controller->seek(1.0f);
+        assert_close(1.0f, shared->transform->translation().x, 0.0001f);
+        assert_close(1.0f, base_only->transform->translation().x, 0.0001f);
+
+        assert_false(controller->play_overlay("does-not-exist"));
+        assert_true(controller->play_overlay("overlay"));
+
+        // The overlay wins on the shared target, but the base still drives
+        // everything it exclusively animates.
+        controller->seek(1.0f);
+        assert_close(2.0f, shared->transform->translation().x, 0.0001f);
+        assert_close(1.0f, base_only->transform->translation().x, 0.0001f);
+
+        // Switching the base animation must not clear the overlay.
+        assert_true(controller->play("base", ANIMATION_LOOP_FOREVER));
+        controller->seek(1.0f);
+        assert_close(2.0f, shared->transform->translation().x, 0.0001f);
+
+        // Removing the overlay hands the shared target back to the base.
+        assert_true(controller->stop_overlay("overlay"));
+        controller->seek(1.0f);
+        assert_close(1.0f, shared->transform->translation().x, 0.0001f);
+        assert_close(1.0f, base_only->transform->translation().x, 0.0001f);
+
+        assert_false(controller->stop_overlay("overlay"));
+    }
+
     void test_current_animation_reports_played_and_queued_animations() {
         auto node = scene->create_child<Stage>();
         auto controller = node->create_mixin<AnimationController>();

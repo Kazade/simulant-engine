@@ -7,6 +7,8 @@
 #include "simulant/time_keeper.h"
 #include "stage_node.h"
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -158,6 +160,17 @@ struct Animation {
     std::vector<Channel> channels;
 };
 
+/* An animation that is applied on top of the base animation. Channels in the
+ * overlay replace the base animation's channels for the same target, so an
+ * overlay that only drives a subset of the skeleton (e.g. just the arms) can
+ * be combined with a full-body animation such as a walk cycle. */
+struct AnimationOverlay {
+    std::size_t animation;
+    float time = 0.0f;
+    int32_t loop_count = -1;
+    float speed = 1.0f;
+};
+
 enum AnimationState {
     ANIMATION_STATE_PAUSED,
     ANIMATION_STATE_PLAYING,
@@ -223,6 +236,52 @@ public:
         return false;
     }
 
+    /* Plays an animation on top of the current one. Overlay channels are
+     * applied after the base animation's channels each frame, so they win for
+     * the targets they animate while the base keeps driving everything else.
+     * Overlays advance independently of the base and survive play() switches.
+     */
+    bool play_overlay(const std::string& animation,
+                      const int32_t loop_count = -1) {
+        auto index = find_animation_index(animation);
+        if(!index) {
+            return false;
+        }
+
+        const int32_t loops = (loop_count > 0) ? loop_count - 1 : loop_count;
+
+        for(auto& overlay: overlays_) {
+            if(overlay.animation == index.value()) {
+                overlay.time = 0.0f;
+                overlay.loop_count = loops;
+                return true;
+            }
+        }
+
+        overlays_.push_back(
+            AnimationOverlay{index.value(), 0.0f, loops, 1.0f});
+        return true;
+    }
+
+    /* Stops playing the named overlay animation. Channels it was driving fall
+     * back to the base animation (if it animates them) on the next update. */
+    bool stop_overlay(const std::string& animation) {
+        auto index = find_animation_index(animation);
+        if(!index) {
+            return false;
+        }
+
+        auto it = std::remove_if(
+            overlays_.begin(), overlays_.end(),
+            [&](const AnimationOverlay& o) {
+                return o.animation == index.value();
+            });
+
+        bool removed = it != overlays_.end();
+        overlays_.erase(it, overlays_.end());
+        return removed;
+    }
+
     void pause() {
         state_ = ANIMATION_STATE_PAUSED;
     }
@@ -250,6 +309,8 @@ public:
         }
 
         time_ += dt * animation_speed_;
+
+        advance_overlays(dt);
 
         bool unfinished = apply_current_frame();
 
@@ -297,11 +358,7 @@ public:
             return 0.0f;
         }
 
-        float max_time = 0.0f;
-        for(auto& channel: animations_[index.value()].channels) {
-            max_time = std::max(max_time, channel.data->max_time());
-        }
-        return max_time;
+        return animation_duration(index.value());
     }
 
     void push_animation(const Animation& a) {
@@ -335,6 +392,46 @@ public:
     }
 
 private:
+    float animation_duration(const std::size_t index) const {
+        if(index >= animations_.size()) {
+            return 0.0f;
+        }
+
+        float max_time = 0.0f;
+        for(auto& channel: animations_[index].channels) {
+            max_time = std::max(max_time, channel.data->max_time());
+        }
+        return max_time;
+    }
+
+    /* Advances every overlay independently of the base animation, looping or
+     * holding its final frame according to its loop count. */
+    void advance_overlays(float dt) {
+        for(auto& overlay: overlays_) {
+            const float duration = animation_duration(overlay.animation);
+
+            if(duration <= 0.0f) {
+                overlay.time = 0.0f;
+                continue;
+            }
+
+            overlay.time += dt * overlay.speed;
+
+            if(overlay.time < duration) {
+                continue;
+            }
+
+            if(overlay.loop_count < 0) {
+                overlay.time = std::fmod(overlay.time, duration);
+            } else if(overlay.loop_count == 0) {
+                overlay.time = duration;
+            } else {
+                overlay.loop_count--;
+                overlay.time = 0.0f;
+            }
+        }
+    }
+
     /* Applies the current_animation_'s channels at time_ to their target
      * nodes and re-poses any armature being driven. Returns true if any
      * channel has not yet reached the end of its data at time_. */
@@ -343,8 +440,24 @@ private:
             return false;
         }
 
-        auto& anim = animations_[current_animation_];
         int unfinished = 0;
+        apply_channels(animations_[current_animation_], time_, &unfinished);
+
+        /* Overlays are applied after the base so their channels take
+         * precedence for any target they share. */
+        for(auto& overlay: overlays_) {
+            apply_channels(animations_[overlay.animation], overlay.time,
+                           nullptr);
+        }
+
+        /* The channels above have just moved the joints, so anything
+         * skinned to them needs re-posing. */
+        update_armatures();
+
+        return unfinished > 0;
+    }
+
+    void apply_channels(Animation& anim, float time, int* unfinished) {
         for(auto& channel: anim.channels) {
             if(!channel.target) {
                 continue;
@@ -353,29 +466,25 @@ private:
             auto& data = channel.data;
 
             if(channel.path == ANIMATION_PATH_TRANSLATION) {
-                auto interp = data->interpolated_value<Vec3>(
-                    channel.interpolation, time_);
+                auto interp =
+                    data->interpolated_value<Vec3>(channel.interpolation, time);
                 channel.target->transform->set_translation(interp);
             } else if(channel.path == ANIMATION_PATH_ROTATION) {
                 auto interp = data->interpolated_value<Quaternion>(
-                    channel.interpolation, time_);
+                    channel.interpolation, time);
                 channel.target->transform->set_rotation(interp);
             } else if(channel.path == ANIMATION_PATH_SCALE) {
-                auto interp = data->interpolated_value<Vec3>(
-                    channel.interpolation, time_);
+                auto interp =
+                    data->interpolated_value<Vec3>(channel.interpolation, time);
                 channel.target->transform->set_scale_factor(interp);
             } else if(channel.path == ANIMATION_PATH_WEIGHTS) {
                 S_WARN_ONCE("Animation of weights is not yet implemented");
             }
 
-            unfinished += !channel.data->finished(time_);
+            if(unfinished) {
+                *unfinished += !channel.data->finished(time);
+            }
         }
-
-        /* The channels above have just moved the joints, so anything
-         * skinned to them needs re-posing. */
-        update_armatures();
-
-        return unfinished > 0;
     }
 
     /* Re-poses every armature below the node this controller is attached
@@ -427,6 +536,7 @@ private:
     }
 
     std::vector<Animation> animations_;
+    std::vector<AnimationOverlay> overlays_;
     std::size_t current_animation_ = -1;
     std::queue<std::size_t> animation_queue_;
     AnimationState state_ = ANIMATION_STATE_PLAYING;
