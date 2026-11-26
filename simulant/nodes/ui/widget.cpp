@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 
 #include "../../application.h"
@@ -676,7 +677,8 @@ SubMeshPtr Widget::new_rectangle(const std::string& name, WidgetBounds bounds,
 }
 
 void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image,
-                              ImageRect& rect) {
+                              const ImageRect& rect,
+                              std::size_t range_index) {
     auto dim = image->dimensions();
 
     Vec2 min = Vec2(rect.bottom_left.x.value / dim.x,
@@ -687,13 +689,13 @@ void Widget::apply_image_rect(SubMeshPtr submesh, TexturePtr image,
 
     auto vertices = mesh_->vertex_data.get();
 
-    if(!submesh->vertex_range_count()) {
+    if(range_index >= submesh->vertex_range_count()) {
         S_ERROR("Something went wrong with the generation of a widget. Could "
                 "not apply image rect");
         return;
     }
 
-    auto idx = submesh->vertex_ranges()[0].start;
+    auto idx = submesh->vertex_ranges()[range_index].start;
     auto first_idx = idx;
     vertices->move_to(first_idx);
     vertices->tex_coord0(min.x, min.y);
@@ -718,11 +720,111 @@ void Widget::render_background(const WidgetBounds& background_bounds) {
     auto color = style_->background_color_;
     color.set_alpha(color.af() * style_->opacity_);
 
-    auto bg = new_rectangle("background", background_bounds, color,
-                            style_->border_radius_);
-    if(has_background_image()) {
-        apply_image_rect(bg, style_->background_image_,
-                         style_->background_image_rect_);
+    const auto& border = style_->background_image_border_;
+    bool use_nine_slice =
+        has_background_image() &&
+        (border.left > 0 || border.right > 0 || border.bottom > 0 ||
+         border.top > 0);
+
+    if(use_nine_slice) {
+        render_image_nine_slice("background", background_bounds, color,
+                                style_->background_image_,
+                                style_->background_image_rect_, border);
+    } else {
+        auto bg = new_rectangle("background", background_bounds, color,
+                                style_->border_radius_);
+        if(has_background_image()) {
+            apply_image_rect(bg, style_->background_image_,
+                             style_->background_image_rect_);
+        }
+    }
+}
+
+void Widget::render_image_nine_slice(const std::string& name,
+                                     const WidgetBounds& bounds,
+                                     const smlt::Color& color,
+                                     TexturePtr image,
+                                     const ImageRect& image_rect,
+                                     const UInt4& border) {
+    if(!image || !bounds.has_non_zero_area()) {
+        return;
+    }
+
+    const int width = bounds.width().value;
+    const int height = bounds.height().value;
+
+    /* Destination border sizes. The borders are specified in texels and are
+     * drawn 1:1. If the widget is too small, shrink them proportionally so
+     * the centre never gets a negative size. */
+    float left = std::max(0, (int)border.left.value);
+    float right = std::max(0, (int)border.right.value);
+    float bottom = std::max(0, (int)border.bottom.value);
+    float top = std::max(0, (int)border.top.value);
+
+    if(left + right > width) {
+        float scale = float(width) / (left + right);
+        left *= scale;
+        right *= scale;
+    }
+
+    if(bottom + top > height) {
+        float scale = float(height) / (bottom + top);
+        bottom *= scale;
+        top *= scale;
+    }
+
+    const float x0 = float(bounds.min.x.value);
+    const float y0 = float(bounds.min.y.value);
+    const float xs[4] = {x0, x0 + left, x0 + width - right, x0 + width};
+    const float ys[4] = {y0, y0 + bottom, y0 + height - top, y0 + height};
+
+    /* Source UV edges, clamped to the source rect. */
+    float src_left = std::min(float(border.left.value),
+                              float(image_rect.size.x.value));
+    float src_right = std::min(
+        float(border.right.value),
+        std::max(0.0f, float(image_rect.size.x.value) - src_left));
+    float src_bottom = std::min(float(border.bottom.value),
+                                float(image_rect.size.y.value));
+    float src_top = std::min(
+        float(border.top.value),
+        std::max(0.0f, float(image_rect.size.y.value) - src_bottom));
+
+    const float sx = float(image_rect.bottom_left.x.value);
+    const float sy = float(image_rect.bottom_left.y.value);
+    const float us[4] = {sx, sx + src_left,
+                         sx + image_rect.size.x.value - src_right,
+                         sx + image_rect.size.x.value};
+    const float vs[4] = {sy, sy + src_bottom,
+                         sy + image_rect.size.y.value - src_top,
+                         sy + image_rect.size.y.value};
+
+    for(int row = 0; row < 3; ++row) {
+        for(int col = 0; col < 3; ++col) {
+            float cell_width = xs[col + 1] - xs[col];
+            float cell_height = ys[row + 1] - ys[row];
+
+            if(cell_width <= 0.0f || cell_height <= 0.0f) {
+                // The border consumed the whole widget; nothing to draw
+                continue;
+            }
+
+            WidgetBounds cell;
+            cell.min = UICoord(Px((int)xs[col]), Px((int)ys[row]));
+            cell.max =
+                UICoord(Px((int)xs[col + 1]), Px((int)ys[row + 1]));
+
+            auto sm = new_rectangle(name, cell, color, Px(0));
+
+            ImageRect src_rect;
+            src_rect.bottom_left =
+                UICoord(Px((int)us[col]), Px((int)vs[row]));
+            src_rect.size = UICoord(Px((int)(us[col + 1] - us[col])),
+                                    Px((int)(vs[row + 1] - vs[row])));
+
+            apply_image_rect(sm, image, src_rect,
+                             sm->vertex_range_count() - 1);
+        }
     }
 }
 
@@ -1044,6 +1146,30 @@ void Widget::set_background_image_source_rect(const UICoord& bottom_left,
     style_->background_image_rect_.bottom_left = bottom_left;
     style_->background_image_rect_.size = size;
     rebuild();
+}
+
+void Widget::set_background_image_border(Px left, Px right, Px bottom,
+                                         Px top) {
+    auto& border = style_->background_image_border_;
+
+    if(border.left == left && border.right == right &&
+       border.bottom == bottom && border.top == top) {
+        return;
+    }
+
+    border.left = left;
+    border.right = right;
+    border.bottom = bottom;
+    border.top = top;
+    rebuild();
+}
+
+void Widget::set_background_image_border(Px border) {
+    set_background_image_border(border, border, border, border);
+}
+
+UInt4 Widget::background_image_border() const {
+    return style_->background_image_border_;
 }
 
 void Widget::set_foreground_image(TexturePtr texture) {

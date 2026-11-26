@@ -319,6 +319,26 @@ public:
         _setup_frame();
     }
 
+    void test_background_image_nine_slice() {
+        auto texture = scene->assets->create_texture(32, 32);
+        auto frame = scene->create_child<ui::Frame>();
+        frame->resize(smlt::ui::Px(100), smlt::ui::Px(100));
+        frame->set_background_image(texture);
+        frame->set_background_image_border(smlt::ui::Px(8));
+
+        auto sm = frame->mesh()->find_submesh("background");
+        assert_equal(sm->vertex_range_count(), 9u);
+
+        auto border = frame->background_image_border();
+        assert_equal(border.left, smlt::ui::Px(8));
+        assert_equal(border.right, smlt::ui::Px(8));
+        assert_equal(border.bottom, smlt::ui::Px(8));
+        assert_equal(border.top, smlt::ui::Px(8));
+
+        frame->set_background_image_border(smlt::ui::Px(0));
+        assert_equal(sm->vertex_range_count(), 1u);
+    }
+
     void test_remove_child() {
         smlt::ui::Frame* frame = _setup_frame();
 

@@ -86,6 +86,7 @@ struct WidgetStyle {
 
     TexturePtr background_image_;
     ImageRect background_image_rect_;
+    UInt4 background_image_border_ = {Px(), Px(), Px(), Px()};
 
     TexturePtr foreground_image_;
     ImageRect foreground_image_rect_;
@@ -220,6 +221,13 @@ public:
      */
     void set_background_image_source_rect(const UICoord& bottom_left,
                                           const UICoord& size);
+
+    /** Draw the background image with 9-slice scaling. The borders are in
+     * texels and describe the fixed corner/edge regions of the image. The
+     * centre and edges stretch to fill the widget. */
+    void set_background_image_border(Px left, Px right, Px bottom, Px top);
+    void set_background_image_border(Px border);
+    UInt4 background_image_border() const;
 
     void set_background_color(const Color& color);
     void set_foreground_color(const Color& color);
@@ -394,7 +402,14 @@ protected:
     virtual UIDim calculate_content_dimensions(Px text_width, Px text_height);
 
     void apply_image_rect(SubMeshPtr submesh, TexturePtr image,
-                          ImageRect& rect);
+                          const ImageRect& rect,
+                          std::size_t range_index = 0);
+
+    void render_image_nine_slice(const std::string& name,
+                                 const WidgetBounds& bounds,
+                                 const smlt::Color& color, TexturePtr image,
+                                 const ImageRect& image_rect,
+                                 const UInt4& border);
 
     SubMeshPtr new_rectangle(const std::string& name, WidgetBounds bounds,
                              const smlt::Color& color, const Px& border_radius,
