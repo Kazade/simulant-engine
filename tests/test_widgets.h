@@ -673,6 +673,29 @@ public:
         assert_equal(sm->vertex_range_count(), 1u);
     }
 
+    void test_partially_visible_child_mesh_is_clipped() {
+        auto frame = scene->create_child<ui::Frame>("");
+        frame->set_scrolling_enabled(ui::SCROLL_DIRECTION_VERTICAL);
+        frame->resize(smlt::ui::Px(-1), smlt::ui::Px(100));
+
+        auto child = scene->create_child<ui::Frame>("");
+        child->resize(smlt::ui::Px(100), smlt::ui::Px(200));
+        frame->pack_child(child);
+
+        assert_true(bool(child->clip_rect()));
+
+        auto clip = child->clip_rect().value();
+        auto min = clip.min();
+        auto max = clip.max();
+
+        auto vdata = child->mesh()->vertex_data.get();
+        for(uint32_t i = 0; i < vdata->count(); ++i) {
+            auto p = *vdata->position_at<smlt::Vec3>(i);
+            assert_true(p.x >= min.x - 0.01f && p.x <= max.x + 0.01f);
+            assert_true(p.y >= min.y - 0.01f && p.y <= max.y + 0.01f);
+        }
+    }
+
     void test_vertical_scrollbar_ignores_padding() {
         auto frame = scene->create_child<ui::Frame>("");
         frame->set_layout_direction(ui::LAYOUT_DIRECTION_TOP_TO_BOTTOM);

@@ -588,6 +588,20 @@ void Frame::clip_packed_children() {
     auto clip_min = clip_area_.min();
     auto clip_max = clip_area_.max();
 
+    /* If this frame is itself inside another clipped frame, intersect the
+     * inherited clip with our own content clip. */
+    if(clip_rect_) {
+        auto inherited_min = clip_rect_->min();
+        auto inherited_max = clip_rect_->max();
+
+        clip_min.x = std::max(clip_min.x, inherited_min.x);
+        clip_min.y = std::max(clip_min.y, inherited_min.y);
+        clip_max.x = std::min(clip_max.x, inherited_max.x);
+        clip_max.y = std::min(clip_max.y, inherited_max.y);
+    }
+
+    bool clip_has_area = clip_min.x < clip_max.x && clip_min.y < clip_max.y;
+
     for(auto& child: packed_children()) {
         auto pos = child->transform->translation_2d();
         auto anchor = child->anchor_point();
@@ -603,11 +617,24 @@ void Frame::clip_packed_children() {
         float child_bottom = pos.y - (anchor.y * height);
         float child_top = pos.y + ((1.0f - anchor.y) * height);
 
-        bool intersects =
-            child_right > clip_min.x && child_left < clip_max.x &&
-            child_top > clip_min.y && child_bottom < clip_max.y;
+        bool intersects = clip_has_area && child_right > clip_min.x &&
+                          child_left < clip_max.x && child_top > clip_min.y &&
+                          child_bottom < clip_max.y;
 
         child->set_visible(intersects);
+
+        if(!intersects) {
+            child->set_clip_rect(smlt::no_value);
+            continue;
+        }
+
+        /* The child's mesh is in its own anchored local space; translate
+         * the parent-space clip rect into it. */
+        AABB child_clip;
+        child_clip.set_min_max(
+            Vec3(clip_min.x - pos.x, clip_min.y - pos.y, 0.0f),
+            Vec3(clip_max.x - pos.x, clip_max.y - pos.y, 0.0f));
+        child->set_clip_rect(child_clip);
     }
 }
 

@@ -903,10 +903,19 @@ void Widget::rebuild() {
     float xoff = -((anchor_point_.x * width) - (width / 2.0f));
     float yoff = -((anchor_point_.y * height) - (height / 2.0f));
     auto& vdata = mesh_->vertex_data;
+    auto clip_min = (clip_rect_) ? clip_rect_->min() : Vec3();
+    auto clip_max = (clip_rect_) ? clip_rect_->max() : Vec3();
+
     for(auto i = 0u; i < vdata->count(); ++i) {
         auto p = *vdata->position_at<smlt::Vec3>(i);
         p.x += xoff;
         p.y += yoff;
+
+        if(clip_rect_) {
+            p.x = std::max(clip_min.x, std::min(p.x, clip_max.x));
+            p.y = std::max(clip_min.y, std::min(p.y, clip_max.y));
+        }
+
         vdata->move_to(i);
         vdata->position(p);
     }
@@ -1396,6 +1405,27 @@ void Widget::set_precedence(int16_t precedence) {
 
 int16_t Widget::precedence() const {
     return actor_->precedence();
+}
+
+void Widget::set_clip_rect(const smlt::optional<AABB>& rect) {
+    bool changed = bool(clip_rect_) != bool(rect);
+
+    if(!changed && rect) {
+        auto old_min = clip_rect_->min();
+        auto old_max = clip_rect_->max();
+        auto new_min = rect->min();
+        auto new_max = rect->max();
+
+        changed = old_min.x != new_min.x || old_min.y != new_min.y ||
+                  old_max.x != new_max.x || old_max.y != new_max.y;
+    }
+
+    if(!changed) {
+        return;
+    }
+
+    clip_rect_ = rect;
+    rebuild();
 }
 
 void Widget::on_render_priority_changed(RenderPriority old_priority,

@@ -299,6 +299,14 @@ public:
 
     int16_t precedence() const;
 
+    /** Clips this widget's generated geometry to a rectangle in its own
+     *  local space. Used by Frame to clip packed children to a scroll
+     *  viewport. Pass no_value to clear. */
+    void set_clip_rect(const smlt::optional<AABB>& rect);
+    const smlt::optional<AABB>& clip_rect() const {
+        return clip_rect_;
+    }
+
 public:
     MaterialPtr border_material() const {
         return style_->materials_[0];
@@ -356,6 +364,7 @@ protected:
     /* A normalized vector representing the relative
      * anchor position for movement (0, 0 == bottom left) */
     smlt::Vec2 anchor_point_;
+    smlt::optional<AABB> clip_rect_;
     bool anchor_point_dirty_ = true;
 
     uint16_t fingers_down_ = 0;
