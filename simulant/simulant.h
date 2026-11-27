@@ -81,6 +81,7 @@
 #include "nodes/ui/keyboard.h"
 #include "nodes/ui/label.h"
 #include "nodes/ui/progress_bar.h"
+#include "nodes/ui/scrollbar.h"
 #include "nodes/ui/text_entry.h"
 #include "nodes/ui/ui_manager.h"
 #include "nodes/shadow_caster.h"

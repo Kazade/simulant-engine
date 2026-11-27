@@ -619,6 +619,266 @@ public:
         }
     }
 
+    void test_scrollbar_inset() {
+        auto frame = scene->create_child<ui::Frame>("");
+        frame->set_layout_direction(ui::LAYOUT_DIRECTION_TOP_TO_BOTTOM);
+        frame->set_scrolling_enabled(ui::SCROLL_DIRECTION_VERTICAL);
+        frame->resize(smlt::ui::Px(-1), smlt::ui::Px(200));
+
+        auto child = scene->create_child<ui::Label>("child");
+        child->resize(smlt::ui::Px(100), smlt::ui::Px(20));
+        frame->pack_child(child);
+
+        auto bar = frame->vertical_scrollbar();
+        auto initial_width = frame->outer_width();
+        auto initial_bar_y = bar->transform->translation_2d().y;
+        auto initial_bar_height = bar->outer_height();
+
+        frame->set_scrollbar_inset(smlt::ui::Px(6));
+
+        float bar_right = bar->transform->translation_2d().x +
+                          float(bar->outer_width().value);
+        float inner_right = float(frame->outer_width().value) -
+                            float(frame->border_width().value);
+        assert_close(inner_right - bar_right, 6.0f, 0.01f);
+
+        assert_close(float(bar->transform->translation_2d().y),
+                     initial_bar_y + 6.0f, 0.01f);
+        assert_close(float(bar->outer_height().value),
+                     float(initial_bar_height.value) - 12.0f, 0.01f);
+
+        // Fit-content width must grow to reserve the inset too
+        assert_equal(frame->outer_width().value,
+                     initial_width.value + 6);
+    }
+
+    void test_foreground_image_nine_slice() {
+        auto texture = scene->assets->create_texture(32, 32);
+        auto frame = scene->create_child<ui::Frame>("");
+        frame->set_text("Title");
+        frame->resize(smlt::ui::Px(100), smlt::ui::Px(100));
+        frame->set_foreground_image(texture);
+        frame->set_foreground_image_border(smlt::ui::Px(2));
+
+        auto sm = frame->mesh()->find_submesh("foreground");
+        assert_equal(sm->vertex_range_count(), 9u);
+
+        auto border = frame->foreground_image_border();
+        assert_equal(border.left, smlt::ui::Px(2));
+        assert_equal(border.right, smlt::ui::Px(2));
+        assert_equal(border.bottom, smlt::ui::Px(2));
+        assert_equal(border.top, smlt::ui::Px(2));
+
+        frame->set_foreground_image_border(smlt::ui::Px(0));
+        assert_equal(sm->vertex_range_count(), 1u);
+    }
+
+    void test_vertical_scrollbar_ignores_padding() {
+        auto frame = scene->create_child<ui::Frame>("");
+        frame->set_layout_direction(ui::LAYOUT_DIRECTION_TOP_TO_BOTTOM);
+        frame->set_scrolling_enabled(ui::SCROLL_DIRECTION_VERTICAL);
+        frame->resize(smlt::ui::Px(-1), smlt::ui::Px(200));
+
+        auto child = scene->create_child<ui::Label>("child");
+        child->resize(smlt::ui::Px(100), smlt::ui::Px(20));
+        frame->pack_child(child);
+
+        auto bar = frame->vertical_scrollbar();
+        assert_true(bar);
+        assert_true(bar->is_visible());
+
+        auto check_bar_pinned_to_inner_edge = [&]() {
+            float bar_right = bar->transform->translation_2d().x +
+                              float(bar->outer_width().value);
+            float inner_right = float(frame->outer_width().value) -
+                                float(frame->border_width().value);
+            assert_close(bar_right, inner_right, 0.01f);
+        };
+
+        frame->set_padding(smlt::ui::Px(8));
+        check_bar_pinned_to_inner_edge();
+
+        frame->set_padding(smlt::ui::Px(32));
+        check_bar_pinned_to_inner_edge();
+
+        /* With a fit-content width the frame must reserve the scrollbar's
+         * width, so the packed child cannot end up underneath it. */
+        auto child_pos = child->transform->translation_2d();
+        auto child_anchor = child->anchor_point();
+        float child_right =
+            child_pos.x + (1.0f - child_anchor.x) *
+                              float(child->outer_width().value);
+        assert_true(child_right <= bar->transform->translation_2d().x);
+    }
+
+    void test_scrollbars_are_child_widgets() {
+        auto frame = scene->create_child<ui::Frame>("");
+
+        assert_is_not_null(frame->vertical_scrollbar());
+        assert_is_not_null(frame->horizontal_scrollbar());
+
+        assert_equal(frame->vertical_scrollbar()->parent(),
+                     (StageNode*)frame);
+        assert_equal(frame->horizontal_scrollbar()->parent(),
+                     (StageNode*)frame);
+
+        // Callers can style the scrollbars like any other widget.
+        auto texture = scene->assets->create_texture(8, 8);
+        frame->vertical_scrollbar()->set_background_image(texture);
+        assert_true(frame->vertical_scrollbar()->has_background_image());
+    }
+
+    void test_scrollbars_hidden_when_size_not_fixed() {
+        auto frame = scene->create_child<ui::Frame>("");
+        frame->set_scroll_direction(ui::SCROLL_DIRECTION_BOTH);
+
+        // Width fixed, height dynamic -> only the horizontal scrollbar.
+        frame->resize(ui::Px(100), ui::Px(-1));
+        assert_true(frame->horizontal_scrollbar()->is_visible());
+        assert_false(frame->vertical_scrollbar()->is_visible());
+
+        // Height fixed, width dynamic -> only the vertical scrollbar.
+        frame->resize(ui::Px(-1), ui::Px(100));
+        assert_false(frame->horizontal_scrollbar()->is_visible());
+        assert_true(frame->vertical_scrollbar()->is_visible());
+
+        // Both fixed -> both scrollbars.
+        frame->resize(ui::Px(100), ui::Px(100));
+        assert_true(frame->horizontal_scrollbar()->is_visible());
+        assert_true(frame->vertical_scrollbar()->is_visible());
+
+        // Fit content -> neither scrollbar.
+        frame->resize(ui::Px(-1), ui::Px(-1));
+        assert_false(frame->horizontal_scrollbar()->is_visible());
+        assert_false(frame->vertical_scrollbar()->is_visible());
+    }
+
+    void test_vertical_scrolling_and_clipping() {
+        auto frame = scene->create_child<ui::Frame>("");
+        frame->set_border_width(ui::Px(0));
+        frame->set_padding(ui::Px(0));
+        frame->resize(ui::Px(100), ui::Px(100));
+        frame->set_scroll_direction(ui::SCROLL_DIRECTION_VERTICAL);
+
+        std::vector<ui::Label*> rows;
+        for(int i = 0; i < 5; ++i) {
+            auto row = _make_scroll_test_widget(80, 40);
+            frame->pack_child(row);
+            rows.push_back(row);
+        }
+
+        assert_true(frame->vertical_scrollbar()->is_visible());
+        assert_false(frame->horizontal_scrollbar()->is_visible());
+
+        assert_equal(frame->max_scroll_y(), ui::Px(100));
+        assert_equal(frame->max_scroll_x(), ui::Px(0));
+
+        // The scrollbar sits inside the frame and reduces the clip area.
+        auto clip = frame->clip_area();
+        assert_close(clip.width(), 84.0f, 0.01f);
+        assert_close(clip.height(), 100.0f, 0.01f);
+        assert_equal(frame->vertical_scrollbar()->outer_width(), ui::Px(16));
+        assert_equal(frame->vertical_scrollbar()->outer_height(),
+                     ui::Px(100));
+
+        auto row0_y = rows[0]->transform->translation_2d().y;
+
+        // Rows 0 and 1 are visible; rows below the frame are clipped.
+        assert_true(rows[0]->is_visible());
+        assert_true(rows[1]->is_visible());
+        assert_true(rows[2]->is_visible());
+        assert_false(rows[3]->is_visible());
+        assert_false(rows[4]->is_visible());
+
+        frame->set_scroll_y(ui::Px(60));
+        assert_equal(frame->scroll_y(), ui::Px(60));
+
+        // Content moved up by the scroll amount and the clip followed it.
+        assert_close(rows[0]->transform->translation_2d().y,
+                     row0_y - 60.0f, 0.01f);
+        assert_true(rows[0]->is_visible());
+        assert_false(rows[1]->is_visible());
+        assert_false(rows[4]->is_visible());
+
+        // Offsets are clamped to the scrollable range.
+        frame->set_scroll_y(ui::Px(1000));
+        assert_equal(frame->scroll_y(), ui::Px(100));
+    }
+
+    void test_horizontal_scrolling_and_clipping() {
+        auto frame = scene->create_child<ui::Frame>("");
+        frame->set_border_width(ui::Px(0));
+        frame->set_padding(ui::Px(0));
+        frame->resize(ui::Px(100), ui::Px(100));
+        frame->set_layout_direction(ui::LAYOUT_DIRECTION_LEFT_TO_RIGHT);
+        frame->set_scroll_direction(ui::SCROLL_DIRECTION_HORIZONTAL);
+
+        std::vector<ui::Label*> columns;
+        for(int i = 0; i < 3; ++i) {
+            auto column = _make_scroll_test_widget(50, 20);
+            frame->pack_child(column);
+            columns.push_back(column);
+        }
+
+        assert_true(frame->horizontal_scrollbar()->is_visible());
+        assert_false(frame->vertical_scrollbar()->is_visible());
+
+        assert_equal(frame->max_scroll_x(), ui::Px(50));
+        assert_equal(frame->max_scroll_y(), ui::Px(0));
+
+        auto clip = frame->clip_area();
+        assert_close(clip.width(), 100.0f, 0.01f);
+        assert_close(clip.height(), 84.0f, 0.01f);
+        assert_equal(frame->horizontal_scrollbar()->outer_width(),
+                     ui::Px(100));
+        assert_equal(frame->horizontal_scrollbar()->outer_height(),
+                     ui::Px(16));
+
+        auto column0_x = columns[0]->transform->translation_2d().x;
+
+        assert_true(columns[0]->is_visible());
+        assert_true(columns[1]->is_visible());
+        assert_false(columns[2]->is_visible());
+
+        frame->set_scroll_x(ui::Px(50));
+        assert_equal(frame->scroll_x(), ui::Px(50));
+
+        assert_close(columns[0]->transform->translation_2d().x,
+                     column0_x - 50.0f, 0.01f);
+        assert_false(columns[0]->is_visible());
+        assert_true(columns[1]->is_visible());
+        assert_true(columns[2]->is_visible());
+    }
+
+    void test_both_scrollbars_reduce_clip_area() {
+        auto frame = scene->create_child<ui::Frame>("");
+        frame->set_border_width(ui::Px(0));
+        frame->set_padding(ui::Px(0));
+        frame->resize(ui::Px(100), ui::Px(100));
+        frame->set_scroll_direction(ui::SCROLL_DIRECTION_BOTH);
+
+        for(int i = 0; i < 4; ++i) {
+            frame->pack_child(_make_scroll_test_widget(80, 40));
+        }
+
+        assert_true(frame->vertical_scrollbar()->is_visible());
+        assert_true(frame->horizontal_scrollbar()->is_visible());
+
+        // Scrollbars are inside the frame, they don't grow it.
+        assert_equal(frame->outer_width(), ui::Px(100));
+        assert_equal(frame->outer_height(), ui::Px(100));
+
+        // Both bars reduce the clip rectangle, and each bar is shortened so
+        // they meet at the bottom-right corner instead of overlapping.
+        auto clip = frame->clip_area();
+        assert_close(clip.width(), 84.0f, 0.01f);
+        assert_close(clip.height(), 84.0f, 0.01f);
+        assert_equal(frame->vertical_scrollbar()->outer_height(),
+                     ui::Px(84));
+        assert_equal(frame->horizontal_scrollbar()->outer_width(),
+                     ui::Px(84));
+    }
+
     void test_widgets_are_orphaned_if_retained() {
         smlt::ui::Frame* frame = _setup_frame();
         auto& children = frame->packed_children();
@@ -635,6 +895,15 @@ public:
     }
 
 private:
+    smlt::ui::Label* _make_scroll_test_widget(int width, int height) {
+        auto label = scene->create_child<ui::Label>(" ");
+        label->set_background_color(Color::white());
+        label->set_border_width(ui::Px(0));
+        label->set_padding(ui::Px(0));
+        label->resize(ui::Px(width), ui::Px(height));
+        return label;
+    }
+
     smlt::ui::Frame* _setup_frame() {
         smlt::ui::Frame* frame = scene->create_child<ui::Frame>("");
         smlt::ui::Button* button = scene->create_child<ui::Button>("Button 1");

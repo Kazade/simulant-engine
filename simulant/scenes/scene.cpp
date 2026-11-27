@@ -53,6 +53,7 @@
 #include "../nodes/ui/keyboard.h"
 #include "../nodes/ui/label.h"
 #include "../nodes/ui/progress_bar.h"
+#include "../nodes/ui/scrollbar.h"
 #include "../nodes/ui/text_entry.h"
 #include "../nodes/ui/ui_manager.h"
 #include "../platform.h"
@@ -123,6 +124,7 @@ void Scene::register_builtin_nodes() {
     register_stage_node<ui::Image>();
     register_stage_node<ui::ProgressBar>();
     register_stage_node<ui::Frame>();
+    register_stage_node<ui::Scrollbar>();
     register_stage_node<ui::Button>();
     register_stage_node<ui::TextEntry>();
     register_stage_node<ui::Keyboard>();

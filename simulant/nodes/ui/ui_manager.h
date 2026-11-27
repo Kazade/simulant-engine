@@ -25,6 +25,7 @@ class Label;
 class ProgressBar;
 class Image;
 class Frame;
+class Scrollbar;
 class Keyboard;
 class TextEntry;
 

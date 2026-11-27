@@ -831,11 +831,24 @@ void Widget::render_image_nine_slice(const std::string& name,
 void Widget::render_foreground(const WidgetBounds& foreground_bounds) {
     auto color = style_->foreground_color_;
     color.set_alpha(color.af() * style_->opacity_);
-    auto fg = new_rectangle("foreground", foreground_bounds, color,
-                            style_->border_radius_);
-    if(has_foreground_image()) {
-        apply_image_rect(fg, style_->foreground_image_,
-                         style_->foreground_image_rect_);
+
+    const auto& border = style_->foreground_image_border_;
+    bool use_nine_slice =
+        has_foreground_image() &&
+        (border.left > 0 || border.right > 0 || border.bottom > 0 ||
+         border.top > 0);
+
+    if(use_nine_slice) {
+        render_image_nine_slice("foreground", foreground_bounds, color,
+                                style_->foreground_image_,
+                                style_->foreground_image_rect_, border);
+    } else {
+        auto fg = new_rectangle("foreground", foreground_bounds, color,
+                                style_->border_radius_);
+        if(has_foreground_image()) {
+            apply_image_rect(fg, style_->foreground_image_,
+                             style_->foreground_image_rect_);
+        }
     }
 }
 
@@ -1209,6 +1222,30 @@ void Widget::set_foreground_image_source_rect(const UICoord& bottom_left,
     style_->foreground_image_rect_.bottom_left = bottom_left;
     style_->foreground_image_rect_.size = size;
     rebuild();
+}
+
+void Widget::set_foreground_image_border(Px left, Px right, Px bottom,
+                                         Px top) {
+    auto& border = style_->foreground_image_border_;
+
+    if(border.left == left && border.right == right &&
+       border.bottom == bottom && border.top == top) {
+        return;
+    }
+
+    border.left = left;
+    border.right = right;
+    border.bottom = bottom;
+    border.top = top;
+    rebuild();
+}
+
+void Widget::set_foreground_image_border(Px border) {
+    set_foreground_image_border(border, border, border, border);
+}
+
+UInt4 Widget::foreground_image_border() const {
+    return style_->foreground_image_border_;
 }
 
 void Widget::set_background_color(const Color& color) {

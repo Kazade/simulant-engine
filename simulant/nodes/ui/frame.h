@@ -28,6 +28,24 @@ enum ChildCleanup {
     CHILD_CLEANUP_RETAIN
 };
 
+enum ScrollDirection : uint8_t {
+    SCROLL_DIRECTION_NONE = 0,
+    SCROLL_DIRECTION_VERTICAL = 1 << 0,
+    SCROLL_DIRECTION_HORIZONTAL = 1 << 1,
+    SCROLL_DIRECTION_BOTH =
+        SCROLL_DIRECTION_VERTICAL | SCROLL_DIRECTION_HORIZONTAL
+};
+
+inline ScrollDirection operator|(ScrollDirection lhs, ScrollDirection rhs) {
+    return ScrollDirection(uint8_t(lhs) | uint8_t(rhs));
+}
+
+inline ScrollDirection operator&(ScrollDirection lhs, ScrollDirection rhs) {
+    return ScrollDirection(uint8_t(lhs) & uint8_t(rhs));
+}
+
+class Scrollbar;
+
 class Frame: public Widget, public RefCounted<Frame> {
 
     friend class FrameTests;
@@ -59,6 +77,67 @@ public:
         return space_between_;
     }
 
+    /** Enables scrolling in the given direction(s). A scrollbar is only
+     *  shown when the frame's size in that direction is fixed. */
+    void set_scroll_direction(ScrollDirection direction);
+    ScrollDirection scroll_direction() const {
+        return scroll_direction_;
+    }
+
+    void set_vertical_scrolling_enabled(bool enabled);
+    void set_horizontal_scrolling_enabled(bool enabled);
+    void set_scrolling_enabled(bool vertical, bool horizontal);
+    void set_scrolling_enabled(bool enabled) {
+        set_scrolling_enabled(enabled, enabled);
+    }
+    void set_scrolling_enabled(ScrollDirection direction) {
+        set_scroll_direction(direction);
+    }
+    void enable_scrolling(ScrollDirection direction) {
+        set_scroll_direction(direction);
+    }
+
+    bool vertical_scrolling_enabled() const;
+    bool horizontal_scrolling_enabled() const;
+
+    void set_scroll_offset(Px x, Px y);
+    void set_scroll_x(Px x);
+    void set_scroll_y(Px y);
+
+    Px scroll_x() const {
+        return scroll_x_;
+    }
+    Px scroll_y() const {
+        return scroll_y_;
+    }
+
+    Px max_scroll_x() const;
+    Px max_scroll_y() const;
+
+    /** The local-space rectangle that packed children are clipped against.
+     *  It excludes borders, padding, the title bar, and any visible
+     *  scrollbars. */
+    AABB clip_area() const {
+        return clip_area_;
+    }
+
+    Scrollbar* horizontal_scrollbar() const {
+        return horizontal_scrollbar_;
+    }
+    Scrollbar* vertical_scrollbar() const {
+        return vertical_scrollbar_;
+    }
+
+    void set_scrollbar_width(Px width);
+
+    /** Inset the scrollbars from the frame's inner edges. This does not
+     *  affect the packed content's padding. */
+    void set_scrollbar_inset(Px inset);
+    void set_scrollbar_inset(Px left, Px right, Px bottom, Px top);
+    UInt4 scrollbar_inset() const {
+        return scrollbar_inset_;
+    }
+
 private:
     std::vector<smlt::ui::Widget*> children_;
 
@@ -69,6 +148,30 @@ private:
 
     LayoutDirection direction_ = LAYOUT_DIRECTION_TOP_TO_BOTTOM;
     Px space_between_;
+
+    ScrollDirection scroll_direction_ = SCROLL_DIRECTION_NONE;
+    Px scroll_x_ = Px(0);
+    Px scroll_y_ = Px(0);
+    Px scrollbar_width_ = Px(16);
+    UInt4 scrollbar_inset_ = {Px(), Px(), Px(), Px()};
+
+    Scrollbar* horizontal_scrollbar_ = nullptr;
+    Scrollbar* vertical_scrollbar_ = nullptr;
+
+    AABB clip_area_;
+
+    UIDim calculate_packed_content_dimensions() const;
+    UIDim calculate_scroll_viewport() const;
+
+    bool width_is_fixed() const;
+    bool height_is_fixed() const;
+    bool vertical_scrollbar_visible() const;
+    bool horizontal_scrollbar_visible() const;
+
+    void update_scrollbars(Px inner_left, Px inner_right, Px inner_bottom,
+                           Px inner_top, Px content_left, Px content_right,
+                           Px content_bottom, Px content_top);
+    void clip_packed_children();
 
     virtual WidgetBounds calculate_foreground_size(
         const UIDim& content_dimensions) const override;

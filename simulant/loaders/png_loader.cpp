@@ -26,14 +26,11 @@ static void draw_cb(pngle_t* pngle, uint32_t x, uint32_t y, uint32_t w,
         // We need to set the format before we do anything
         auto hdr = pngle_get_ihdr(pngle);
 
-        // color type 2 is true color (no alpha) and color type 3 is paletted
-        // which is 24 bit. For both we use RGB.
-        auto channels = (hdr->color_type == 2 || hdr->color_type == 3) ? 3 : 4;
-        // fixme: we can convert this down based on the header color type
-        // to save on ram/vram
-        auto format = (channels == 3) ? TEXTURE_FORMAT_RGB_3UB_888
-                                      : TEXTURE_FORMAT_RGBA_4UB_8888;
-        result->set_format(format);
+        // pngle expands any transparency (alpha channel or tRNS, including
+        // paletted images) into the RGBA components passed to draw_cb().
+        // Always keep four channels: choosing RGB for paletted/truecolour
+        // images drops tRNS and turns transparent pixels into opaque black.
+        result->set_format(TEXTURE_FORMAT_RGBA_4UB_8888);
         result->resize(hdr->width, hdr->height);
     }
 

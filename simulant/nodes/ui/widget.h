@@ -90,6 +90,7 @@ struct WidgetStyle {
 
     TexturePtr foreground_image_;
     ImageRect foreground_image_rect_;
+    UInt4 foreground_image_border_ = {Px(), Px(), Px(), Px()};
 
     PackedColor4444 background_color_ = Color::white();
     PackedColor4444 foreground_color_ = Color::none(); // Transparent
@@ -240,6 +241,12 @@ public:
      */
     void set_foreground_image_source_rect(const UICoord& bottom_left,
                                           const UICoord& size);
+
+    /** Draw the foreground image with 9-slice scaling. The borders are in
+     * texels and describe the fixed corner/edge regions of the image. */
+    void set_foreground_image_border(Px left, Px right, Px bottom, Px top);
+    void set_foreground_image_border(Px border);
+    UInt4 foreground_image_border() const;
 
     void set_text_color(const Color& color);
 
